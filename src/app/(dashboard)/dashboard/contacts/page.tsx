@@ -9,6 +9,7 @@ import '@/styles/engagement.css'
 import '@/styles/home.css'
 import { getCategoryIcon } from '@/lib/dashboard/icons'
 import { GoogleContactsImport } from '@/components/contacts'
+import { TornEdgeFilterPill } from '@/components/ui/TornEdgeFilter'
 
 // ============================================
 // TYPES
@@ -323,24 +324,13 @@ export default function ContactsPage() {
               />
             </div>
 
-            {/* Category Filter Buttons */}
-            <div className="flex gap-2 flex-wrap">
-              <button
-                onClick={() => setSelectedCategory(null)}
-                className={`filter-btn ${!selectedCategory ? 'filter-btn-active' : ''}`}
-              >
-                All
-              </button>
-              {RELATIONSHIP_OPTIONS.map(group => (
-                <button
-                  key={group.category}
-                  onClick={() => setSelectedCategory(selectedCategory === group.category ? null : group.category)}
-                  className={`filter-btn ${selectedCategory === group.category ? 'filter-btn-active' : ''}`}
-                >
-                  {group.category}
-                </button>
-              ))}
-            </div>
+            {/* Category Filter Buttons - Torn Edge Style */}
+            <TornEdgeFilterPill
+              options={RELATIONSHIP_OPTIONS.map(g => g.category)}
+              value={selectedCategory}
+              onChange={setSelectedCategory}
+              allLabel="All"
+            />
           </div>
 
           {contacts.length === 0 ? (
