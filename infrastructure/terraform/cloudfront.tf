@@ -4,7 +4,7 @@ resource "aws_cloudfront_distribution" "main" {
   is_ipv6_enabled     = true
   default_root_object = ""
   price_class         = "PriceClass_100" # US, Canada, Europe
-  aliases             = [var.domain_name, "www.${var.domain_name}"]
+  aliases             = ["app.${var.domain_name}", var.domain_name]
 
   # Origin: ALB
   origin {
