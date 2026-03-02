@@ -61,10 +61,10 @@ export async function GET(request: NextRequest) {
         if (prompt.photo_id) {
           const { data: photo } = await supabase
             .from('memory_media')
-            .select('url, thumbnail_url')
+            .select('file_url')
             .eq('id', prompt.photo_id)
             .single();
-          photoUrl = photo?.thumbnail_url || photo?.url;
+          photoUrl = photo?.file_url;
         }
 
         // Fetch contact if present

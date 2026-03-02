@@ -93,26 +93,35 @@ export default function ForgotPasswordPage() {
             Enter your email address and we&apos;ll send you a link to reset your password.
           </p>
 
+          {/* Live region for error announcements */}
+          <div aria-live="polite" aria-atomic="true" className="sr-only">
+            {error}
+          </div>
+
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
-              <label className="block text-sm font-medium text-[#2d2d2d] mb-1.5">
-                Email
+              <label htmlFor="forgot-email" className="block text-sm font-medium text-[#2d2d2d] mb-1.5">
+                Email <span className="text-red-500" aria-hidden="true">*</span>
               </label>
               <div className="relative">
-                <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+                <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" aria-hidden="true" />
                 <input
+                  id="forgot-email"
                   type="email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   className="w-full pl-10 pr-4 py-3 rounded-xl bg-white/50 border border-[#406A56]/20 text-[#2d2d2d] placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#406A56]/30 focus:border-[#406A56]/40 transition-all"
                   placeholder="you@example.com"
                   required
+                  aria-required="true"
+                  aria-invalid={!!error}
+                  aria-describedby={error ? "forgot-error" : undefined}
                 />
               </div>
             </div>
 
             {error && (
-              <div className="p-3 rounded-xl bg-red-50 border border-red-200 text-red-600 text-sm">
+              <div id="forgot-error" role="alert" className="p-3 rounded-xl bg-red-50 border border-red-200 text-red-600 text-sm">
                 {error}
               </div>
             )}

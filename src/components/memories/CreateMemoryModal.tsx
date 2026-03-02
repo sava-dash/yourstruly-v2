@@ -241,6 +241,10 @@ export default function CreateMemoryModal({ isOpen, onClose, onCreated }: Create
             onDragOver={(e) => e.preventDefault()}
             onClick={() => fileInputRef.current?.click()}
             className="border-2 border-dashed border-white/30 rounded-xl p-8 text-center cursor-pointer hover:border-amber-500/50 hover:bg-white/5 transition-all"
+            role="button"
+            tabIndex={0}
+            onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') fileInputRef.current?.click(); }}
+            aria-label="Upload photos or videos. Drop files here or click to browse."
           >
             <input
               ref={fileInputRef}
@@ -249,8 +253,9 @@ export default function CreateMemoryModal({ isOpen, onClose, onCreated }: Create
               multiple
               onChange={handleFileSelect}
               className="hidden"
+              aria-label="Select photos or videos to upload"
             />
-            <Upload size={32} className="mx-auto text-white/40 mb-3" />
+            <Upload size={32} className="mx-auto text-white/40 mb-3" aria-hidden="true" />
             <p className="text-white font-medium mb-1">Drop photos or videos here</p>
             <p className="text-white/40 text-sm">or click to browse</p>
           </div>
@@ -279,8 +284,9 @@ export default function CreateMemoryModal({ isOpen, onClose, onCreated }: Create
                     <button
                       onClick={(e) => { e.stopPropagation(); removeFile(i); }}
                       className="absolute top-1 right-1 p-1 bg-black/60 rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
+                      aria-label={`Remove file ${i + 1}`}
                     >
-                      <X size={14} className="text-white" />
+                      <X size={14} className="text-white" aria-hidden="true" />
                     </button>
                   )}
                 </div>
@@ -338,8 +344,9 @@ export default function CreateMemoryModal({ isOpen, onClose, onCreated }: Create
 
           {/* Title */}
           <div>
-            <label className="block text-white/50 text-sm mb-1">Title</label>
+            <label htmlFor="memory-title" className="block text-white/50 text-sm mb-1">Title</label>
             <input
+              id="memory-title"
               type="text"
               value={title}
               onChange={(e) => setTitle(e.target.value)}
@@ -350,8 +357,9 @@ export default function CreateMemoryModal({ isOpen, onClose, onCreated }: Create
 
           {/* Description */}
           <div>
-            <label className="block text-white/50 text-sm mb-1">Description (optional)</label>
+            <label htmlFor="memory-description" className="block text-white/50 text-sm mb-1">Description (optional)</label>
             <textarea
+              id="memory-description"
               value={description}
               onChange={(e) => setDescription(e.target.value)}
               placeholder="What happened? How did you feel?"
@@ -363,10 +371,11 @@ export default function CreateMemoryModal({ isOpen, onClose, onCreated }: Create
           {/* Date & Type Row */}
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="block text-white/50 text-sm mb-1">Date</label>
+              <label htmlFor="memory-date" className="block text-white/50 text-sm mb-1">Date</label>
               <div className="relative">
-                <Calendar size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-white/40" />
+                <Calendar size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-white/40" aria-hidden="true" />
                 <input
+                  id="memory-date"
                   type="date"
                   value={memoryDate}
                   onChange={(e) => setMemoryDate(e.target.value)}
@@ -375,8 +384,9 @@ export default function CreateMemoryModal({ isOpen, onClose, onCreated }: Create
               </div>
             </div>
             <div>
-              <label className="block text-white/50 text-sm mb-1">Type</label>
+              <label htmlFor="memory-type" className="block text-white/50 text-sm mb-1">Type</label>
               <select
+                id="memory-type"
                 value={memoryType}
                 onChange={(e) => setMemoryType(e.target.value)}
                 className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-amber-500/50 transition-all"
@@ -392,10 +402,11 @@ export default function CreateMemoryModal({ isOpen, onClose, onCreated }: Create
 
           {/* Location */}
           <div>
-            <label className="block text-white/50 text-sm mb-1">Location (optional)</label>
+            <label htmlFor="memory-location" className="block text-white/50 text-sm mb-1">Location (optional)</label>
             <div className="relative">
-              <MapPin size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-white/40" />
+              <MapPin size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-white/40" aria-hidden="true" />
               <input
+                id="memory-location"
                 type="text"
                 value={locationName}
                 onChange={(e) => setLocationName(e.target.value)}
