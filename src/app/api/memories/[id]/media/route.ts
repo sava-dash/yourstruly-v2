@@ -216,6 +216,14 @@ export async function POST(
     return NextResponse.json({ error: 'Failed to save media' }, { status: 500 })
   }
 
+  console.log('[Media Upload] Successfully saved media:', {
+    mediaId: media.id,
+    memoryId,
+    userId: user.id,
+    fileType,
+    fileSize: file.size,
+  })
+
   // Store face embeddings for recognition (if faces detected)
   if (detectedFaces.length > 0) {
     const faceRecords = detectedFaces.map((face) => ({

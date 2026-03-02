@@ -45,7 +45,7 @@ export function VoiceWisdomCapture({
       .from('memories')
       .update({ 
         memory_type: 'wisdom',
-        category: category || null,
+        ai_category: category || null,
       })
       .eq('id', memoryId)
 

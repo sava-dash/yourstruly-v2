@@ -1,10 +1,13 @@
 'use client'
 
-import { useState, useCallback, useRef, useEffect } from 'react'
+import { useState, useCallback, useRef, useEffect, lazy, Suspense } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { X, Send, Mic, Video, VideoOff, Camera, Loader2, Sparkles, UserPlus, Check } from 'lucide-react'
 import { VoiceVideoChat } from '@/components/voice'
 import type { PersonaConfig } from '@/types/voice'
+
+// Lazy load ConversationView for text mode with follow-ups
+const ConversationView = lazy(() => import('@/components/conversation/ConversationView').then(mod => ({ default: mod.ConversationView })))
 
 interface UnifiedEngagementModalProps {
   prompt: {
@@ -247,53 +250,74 @@ GOOD (concise): "I love that! Who taught you this recipe?"`
         {/* Content Area */}
         <div className="p-5">
           {inputMode === 'text' ? (
-            /* Text Input Mode */
-            <div className="space-y-4">
-              <textarea
-                ref={textareaRef}
-                value={textValue}
-                onChange={(e) => setTextValue(e.target.value)}
-                placeholder="Type your response here..."
-                rows={4}
-                className="w-full p-4 bg-white border border-[#406A56]/20 rounded-xl text-gray-800 placeholder-gray-400 resize-none focus:outline-none focus:ring-2 focus:ring-[#406A56]/30 focus:border-[#406A56]"
-              />
-              
-              {/* Action Buttons */}
-              <div className="flex items-center justify-between">
-                {/* Voice/Video Options */}
-                <div className="flex items-center gap-2">
-                  <span className="text-xs text-[#406A56]/50">Or use:</span>
+            /* Text Input Mode - Uses ConversationView for follow-up questions */
+            <Suspense fallback={
+              <div className="flex items-center justify-center py-8">
+                <Loader2 size={24} className="animate-spin text-[#406A56]" />
+              </div>
+            }>
+              <div className="space-y-4">
+                {/* Mode switcher - voice/video options */}
+                <div className="flex items-center gap-2 pb-3 border-b border-[#406A56]/10">
+                  <span className="text-xs text-[#406A56]/50">Switch to:</span>
                   <button
                     onClick={startVoice}
-                    className="flex items-center gap-1.5 px-3 py-2 bg-[#406A56]/10 hover:bg-[#406A56]/20 text-[#406A56] text-sm font-medium rounded-lg transition-colors"
+                    className="flex items-center gap-1.5 px-3 py-1.5 bg-[#406A56]/10 hover:bg-[#406A56]/20 text-[#406A56] text-sm font-medium rounded-lg transition-colors"
                   >
-                    <Mic size={16} />
+                    <Mic size={14} />
                     Voice
                   </button>
                   <button
                     onClick={startVideo}
-                    className="flex items-center gap-1.5 px-3 py-2 bg-[#406A56]/10 hover:bg-[#406A56]/20 text-[#406A56] text-sm font-medium rounded-lg transition-colors"
+                    className="flex items-center gap-1.5 px-3 py-1.5 bg-[#406A56]/10 hover:bg-[#406A56]/20 text-[#406A56] text-sm font-medium rounded-lg transition-colors"
                   >
-                    <Video size={16} />
+                    <Video size={14} />
                     Video
                   </button>
                 </div>
                 
-                {/* Submit Button */}
-                <button
-                  onClick={handleTextSubmit}
-                  disabled={!textValue.trim() || isSubmitting}
-                  className="flex items-center gap-2 px-5 py-2.5 bg-[#406A56] hover:bg-[#4a7a64] text-white font-medium rounded-xl disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-                >
-                  {isSubmitting ? (
-                    <Loader2 size={18} className="animate-spin" />
-                  ) : (
-                    <Send size={18} />
-                  )}
-                  {isSubmitting ? 'Saving...' : 'Submit'}
-                </button>
+                {/* ConversationView handles the multi-turn conversation */}
+                <ConversationView
+                  prompt={{
+                    id: prompt.id,
+                    type: prompt.type,
+                    promptText: prompt.promptText,
+                    photoUrl: prompt.photoUrl,
+                    contactName: prompt.contactName,
+                    contactId: prompt.contactId,
+                  }}
+                  expectedXp={expectedXp}
+                  onComplete={(result) => {
+                    // Extract people from entities if available
+                    if (result.exchanges) {
+                      const allText = result.exchanges.map(e => e.response).join(' ');
+                      // Simple name extraction
+                      const nameMatches = allText.match(/\b[A-Z][a-z]+\b/g) || [];
+                      const filtered = nameMatches.filter(n => 
+                        !['The', 'And', 'But', 'This', 'That', 'When', 'Where', 'What', 'I', 'We'].includes(n)
+                      );
+                      if (filtered.length > 0) {
+                        setExtractedPeople(prev => [...new Set([...prev, ...filtered])]);
+                      }
+                    }
+                    
+                    setSavedMemoryId(result.memoryId || null);
+                    setCompleted(true);
+                    
+                    // If no people to add, complete after delay
+                    if (extractedPeople.length === 0) {
+                      setTimeout(() => {
+                        onComplete({
+                          memoryId: result.memoryId,
+                          xpAwarded: result.xpAwarded || expectedXp,
+                        });
+                      }, 1500);
+                    }
+                  }}
+                  onClose={onClose}
+                />
               </div>
-            </div>
+            </Suspense>
           ) : (
             /* Voice/Video Mode */
             <div className="space-y-4">

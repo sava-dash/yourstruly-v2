@@ -106,6 +106,7 @@ export function ConversationView({ prompt, expectedXp = 15, onComplete, onClose 
   ): Promise<string | null> => {
     try {
       setIsGeneratingFollowup(true);
+      console.log('[Follow-up] Generating for type:', promptType, 'exchanges:', previousExchanges.length);
       
       const response = await fetch('/api/conversation/follow-up', {
         method: 'POST',
@@ -122,9 +123,10 @@ export function ConversationView({ prompt, expectedXp = 15, onComplete, onClose 
       }
 
       const data = await response.json();
+      console.log('[Follow-up] Response:', data);
       return data.shouldEnd ? null : data.followUpQuestion;
     } catch (err) {
-      console.error('Error generating follow-up:', err);
+      console.error('[Follow-up] Error generating follow-up:', err);
       return null;
     } finally {
       setIsGeneratingFollowup(false);
@@ -188,6 +190,7 @@ export function ConversationView({ prompt, expectedXp = 15, onComplete, onClose 
 
   // Handle user confirming their response (after optional edit)
   const handleConfirmResponse = useCallback(async (confirmedText: string) => {
+    console.log('[Confirm] handleConfirmResponse called with:', confirmedText.substring(0, 50) + '...');
     if (!confirmedText.trim()) {
       setError('Please enter a response before continuing.');
       return;
@@ -214,7 +217,9 @@ export function ConversationView({ prompt, expectedXp = 15, onComplete, onClose 
       setViewState('continue-prompt');
     } else {
       // Generate follow-up based on CONFIRMED text
+      console.log('[Confirm] Calling generateFollowUp...');
       const followUp = await generateFollowUp(updatedExchanges, prompt.type);
+      console.log('[Confirm] Follow-up result:', followUp);
       
       if (followUp) {
         setCurrentQuestion(followUp);
@@ -222,6 +227,7 @@ export function ConversationView({ prompt, expectedXp = 15, onComplete, onClose 
         setTextInput('');
       } else {
         // No more follow-ups needed
+        console.log('[Confirm] No follow-up, going to review');
         setViewState('review');
       }
     }

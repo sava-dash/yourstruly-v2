@@ -46,8 +46,11 @@ export async function POST(request: NextRequest) {
     // Generate AI insights from the conversation
     const aiInsights = await generateAIInsights(exchanges, promptType);
 
-    // Build tags - include memoryType for easier querying
-    const tags = [promptType, memoryType, 'conversation'].filter((v, i, a) => a.indexOf(v) === i);
+    // Generate smart, searchable tags from content
+    const smartTags = await generateSmartTags(exchanges, summary, promptType);
+    
+    // Combine with base tags (deduped)
+    const tags = [...new Set([...smartTags, memoryType])].filter(Boolean);
 
     // Map prompt type to a display-friendly category
     const aiCategory = getAICategoryFromPromptType(promptType);
@@ -67,8 +70,7 @@ export async function POST(request: NextRequest) {
         description: storyContent,        // Full Q&A content
         ai_summary: aiInsights,            // AI-generated insights
         memory_type: memoryType,
-        ai_category: aiCategory,           // Category for UI pills
-        category: wisdomCategory,          // AI-detected wisdom category
+        ai_category: wisdomCategory || aiCategory, // Use wisdom category if detected, else general category
         audio_url: primaryAudioUrl,
         tags: wisdomCategory ? [...tags, wisdomCategory] : tags,
         memory_date: new Date().toISOString().split('T')[0],
@@ -424,4 +426,120 @@ Reply with ONLY the category name (e.g., "life_lessons"). No explanation.`;
   if (/\b(value|believe|principle|ethics|moral|important)\b/.test(text)) return 'values';
   
   return 'life_lessons'; // Default fallback
+}
+
+/**
+ * Generate 4-5 useful, searchable tags from conversation content
+ * Tags should help users find this memory later
+ */
+async function generateSmartTags(
+  exchanges: Exchange[], 
+  summary: string, 
+  promptType: string
+): Promise<string[]> {
+  const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
+  
+  // Build conversation context
+  const conversationText = exchanges.map((e) => 
+    `Q: ${e.question}\nA: ${e.response}`
+  ).join('\n\n');
+
+  const prompt = `Generate 4-5 searchable tags for this memory/story. Tags should help someone find it later.
+
+GOOD TAGS:
+- People mentioned by name or relationship (e.g., "grandma", "dad", "uncle-joe", "childhood-friend")
+- Specific places (e.g., "chicago", "grandmas-house", "summer-cabin")
+- Time periods or life stages (e.g., "1980s", "childhood", "college-years", "first-job")
+- Emotions or themes (e.g., "funny", "bittersweet", "life-lesson", "family-tradition")
+- Activities or topics (e.g., "cooking", "road-trip", "holiday", "career-advice")
+
+BAD TAGS (avoid):
+- Generic words like "memory", "story", "conversation"
+- Single letters or numbers
+- Overly long phrases
+
+CONVERSATION:
+${conversationText}
+
+SUMMARY:
+${summary}
+
+PROMPT TYPE: ${promptType}
+
+Reply with ONLY a comma-separated list of 4-5 lowercase tags with hyphens instead of spaces.
+Example: grandma, sunday-dinners, 1970s, family-recipes, love`;
+
+  if (GEMINI_API_KEY) {
+    try {
+      const response = await fetch(
+        `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${GEMINI_API_KEY}`,
+        {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            contents: [{ parts: [{ text: prompt }] }],
+            generationConfig: {
+              temperature: 0.7,
+              maxOutputTokens: 100,
+            }
+          }),
+        }
+      );
+
+      if (response.ok) {
+        const data = await response.json();
+        const tagString = data.candidates?.[0]?.content?.parts?.[0]?.text?.trim();
+        
+        if (tagString) {
+          // Parse comma-separated tags, clean them up
+          const tags = tagString
+            .split(',')
+            .map((t: string) => t.trim().toLowerCase().replace(/\s+/g, '-'))
+            .filter((t: string) => t.length >= 2 && t.length <= 30)
+            .slice(0, 5);
+          
+          if (tags.length >= 3) {
+            console.log('AI generated tags:', tags);
+            return tags;
+          }
+        }
+      }
+    } catch (e) {
+      console.error('Gemini tag generation error:', e);
+    }
+  }
+
+  // Fallback: Extract tags from content using heuristics
+  const text = (conversationText + ' ' + summary).toLowerCase();
+  const fallbackTags: string[] = [];
+  
+  // Extract potential people (relationship words)
+  const peopleMatches = text.match(/\b(mom|dad|mother|father|grandma|grandmother|grandpa|grandfather|brother|sister|aunt|uncle|cousin|friend|husband|wife|son|daughter)\b/g);
+  if (peopleMatches) {
+    fallbackTags.push(...[...new Set(peopleMatches)].slice(0, 2));
+  }
+  
+  // Extract potential places
+  const placeMatches = text.match(/\b(home|house|school|church|park|beach|mountain|city|town|neighborhood)\b/g);
+  if (placeMatches) {
+    fallbackTags.push(...[...new Set(placeMatches)].slice(0, 1));
+  }
+  
+  // Extract time references
+  const timeMatches = text.match(/\b(childhood|teenager|college|young|1\d{3}0s|19[5-9]\d|20[0-2]\d)\b/g);
+  if (timeMatches) {
+    fallbackTags.push(...[...new Set(timeMatches)].slice(0, 1));
+  }
+  
+  // Add prompt type as tag if not too generic
+  if (!['memory_prompt', 'knowledge'].includes(promptType)) {
+    fallbackTags.push(promptType.replace(/_/g, '-'));
+  }
+  
+  // Ensure minimum tags
+  if (fallbackTags.length < 3) {
+    fallbackTags.push('personal-story');
+  }
+  
+  return [...new Set(fallbackTags)].slice(0, 5);
 }

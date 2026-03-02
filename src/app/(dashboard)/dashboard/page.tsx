@@ -129,6 +129,13 @@ export default function DashboardPage() {
   const { subscription } = useSubscription()
   const { prompts: rawPrompts, isLoading, shuffle, answerPrompt, skipPrompt, stats: engagementStats } = useEngagementPrompts(8)
   
+  // Debug: Log prompt counts
+  useEffect(() => {
+    if (rawPrompts.length > 0) {
+      console.log('[Engagement] Raw prompts from DB:', rawPrompts.length)
+    }
+  }, [rawPrompts])
+  
   // Track locally answered prompts (to remove from display without full refetch)
   const [answeredPromptIds, setAnsweredPromptIds] = useState<string[]>([])
 
@@ -152,6 +159,13 @@ export default function DashboardPage() {
   // Note: incompleteContactPrompts is computed below after incompleteContacts state is declared
 
   const prompts = uniquePrompts.slice(0, 5)
+  
+  // Debug: Log filtered prompt count
+  useEffect(() => {
+    if (uniquePrompts.length > 0 || prompts.length > 0) {
+      console.log('[Engagement] After filtering:', uniquePrompts.length, '→ showing:', prompts.length)
+    }
+  }, [uniquePrompts.length, prompts.length])
 
   // Track current user ID for scoped localStorage
   const [currentUserId, setCurrentUserId] = useState<string | null>(null)
