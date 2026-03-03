@@ -20,6 +20,7 @@ import {
   Crown,
   BookOpen,
   HeartHandshake,
+  Mail,
 } from 'lucide-react';
 
 interface AdminSidebarProps {
@@ -44,6 +45,7 @@ const navItems: NavItem[] = [
   { label: 'Photobooks', href: '/admin/photobook', icon: BookOpen, permission: 'marketplace:read' },
   { label: 'AI Config', href: '/admin/ai', icon: Brain, permission: 'ai:read' },
   { label: 'Engagement', href: '/admin/engagement', icon: Puzzle, permission: 'engagement:read' },
+  { label: 'Email Templates', href: '/admin/email-templates', icon: Mail, permission: 'settings:read' },
   { label: 'Moderation', href: '/admin/moderation', icon: ShieldAlert, permission: 'moderation:read' },
   { label: 'Settings', href: '/admin/settings', icon: Settings, permission: 'settings:read' },
 ];
