@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { Plus, Edit2, Trash2, X, Users, ChevronLeft, Calendar, MapPin, Phone, Mail, Heart, Search } from 'lucide-react'
 import Link from 'next/link'
+import { parseISO, format } from 'date-fns'
 import '@/styles/page-styles.css'
 import '@/styles/engagement.css'
 import '@/styles/home.css'
@@ -408,7 +409,7 @@ export default function ContactsPage() {
                       {contact.date_of_birth && (
                         <div className="flex items-center gap-2 text-[#666]">
                           <Calendar size={13} className="text-[#406A56]" />
-                          <span>{new Date(contact.date_of_birth).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}</span>
+                          <span>{format(parseISO(contact.date_of_birth), 'MMM d')}</span>
                         </div>
                       )}
                       {contact.email && (
@@ -501,7 +502,7 @@ export default function ContactsPage() {
                       {pet.personality && <p className="text-[#666] line-clamp-1">{pet.personality}</p>}
                       {pet.is_deceased && (
                         <p className="text-[#888] italic">
-                          🌈 Rainbow Bridge {pet.date_of_passing ? `· ${new Date(pet.date_of_passing).toLocaleDateString()}` : ''}
+                          🌈 Rainbow Bridge {pet.date_of_passing ? `· ${format(parseISO(pet.date_of_passing), 'MMM d, yyyy')}` : ''}
                         </p>
                       )}
                     </div>

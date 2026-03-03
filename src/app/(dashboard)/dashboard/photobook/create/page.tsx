@@ -625,28 +625,27 @@ function ArrangeStep({
   const [dragStart, setDragStart] = useState({ x: 0, y: 0 })
   const [cropZoomSlotStart, setCropZoomSlotStart] = useState({ offsetX: 0, offsetY: 0 })
   
-  // Text content and styles per slot (keyed by pageId:slotId)
-  const [textContents, setTextContents] = useState<Record<string, string>>({})
-  const [textStyles, setTextStyles] = useState<Record<string, TextStyle>>({})
+  // Track the last used text style to persist font selection across pages
+  const [lastTextStyle, setLastTextStyle] = useState<TextStyle>(DEFAULT_TEXT_STYLE)
   
-  // Get current text style for active slot
+  // Get current text style for active slot - uses slot data from pages, falling back to last used style
   const getTextStyle = (pageId: string, slotId: string): TextStyle => {
-    const key = `${pageId}:${slotId}`
-    return textStyles[key] || DEFAULT_TEXT_STYLE
+    const page = pages.find(p => p.id === pageId)
+    const slot = page?.slots.find(s => s.slotId === slotId)
+    return slot?.textStyle || lastTextStyle
   }
   
-  // Update text style
+  // Update text style - updates both the page data and the last used style
   const updateTextStyle = (pageId: string, slotId: string, updates: Partial<TextStyle>) => {
-    const key = `${pageId}:${slotId}`
-    const newStyle = { ...getTextStyle(pageId, slotId), ...updates }
-    setTextStyles(prev => ({
-      ...prev,
-      [key]: newStyle
-    }))
-    // Also sync to page slot data for preview
+    const currentStyle = getTextStyle(pageId, slotId)
+    const newStyle = { ...currentStyle, ...updates }
+    
+    // Update last used style so new text slots inherit this
+    setLastTextStyle(newStyle)
+    
+    // Sync to page slot data
     setPages(pages.map(p => {
       if (p.id !== pageId) return p
-      // Check if slot exists, if not add it
       const existingSlot = p.slots.find(s => s.slotId === slotId)
       if (existingSlot) {
         return {
@@ -663,17 +662,16 @@ function ArrangeStep({
     }))
   }
   
-  // Get/set text content
+  // Get/set text content - stored directly in page slots
   const getTextContent = (pageId: string, slotId: string): string => {
-    return textContents[`${pageId}:${slotId}`] || ''
+    const page = pages.find(p => p.id === pageId)
+    const slot = page?.slots.find(s => s.slotId === slotId)
+    return slot?.text || ''
   }
 
   const setTextContent = (pageId: string, slotId: string, content: string) => {
-    setTextContents(prev => ({ ...prev, [`${pageId}:${slotId}`]: content }))
-    // Also sync to page slot data for preview
     setPages(pages.map(p => {
       if (p.id !== pageId) return p
-      // Check if slot exists, if not add it
       const existingSlot = p.slots.find(s => s.slotId === slotId)
       if (existingSlot) {
         return {
@@ -681,10 +679,10 @@ function ArrangeStep({
           slots: p.slots.map(s => s.slotId === slotId ? { ...s, text: content } : s)
         }
       } else {
-        // Create new text slot
+        // Create new text slot with last used style for consistency
         return {
           ...p,
-          slots: [...p.slots, { slotId, type: 'text' as const, text: content }]
+          slots: [...p.slots, { slotId, type: 'text' as const, text: content, textStyle: { ...lastTextStyle } }]
         }
       }
     }))
