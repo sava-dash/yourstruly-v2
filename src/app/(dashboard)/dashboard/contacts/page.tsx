@@ -4,13 +4,43 @@ import { useState, useEffect } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { Plus, Edit2, Trash2, X, Users, ChevronLeft, Calendar, MapPin, Phone, Mail, Heart, Search } from 'lucide-react'
 import Link from 'next/link'
-import { parseISO, format } from 'date-fns'
+import { useSearchParams } from 'next/navigation'
 import '@/styles/page-styles.css'
 import '@/styles/engagement.css'
 import '@/styles/home.css'
 import { getCategoryIcon } from '@/lib/dashboard/icons'
 import { GoogleContactsImport } from '@/components/contacts'
 import { TornEdgeFilterPill } from '@/components/ui/TornEdgeFilter'
+
+// ============================================
+// HELPER FUNCTIONS
+// ============================================
+
+/**
+ * Format a date string (YYYY-MM-DD) for display without timezone conversion.
+ * Dates should display exactly as stored - if user enters May 15, show May 15.
+ */
+function formatDateNoTimezone(dateStr: string | undefined | null, pattern: 'short' | 'long' = 'short'): string {
+  if (!dateStr) return ''
+  
+  // Parse YYYY-MM-DD directly without creating a Date object
+  // This avoids any timezone conversion issues
+  const match = dateStr.match(/^(\d{4})-(\d{2})-(\d{2})$/)
+  if (!match) return ''
+  
+  const [, year, month, day] = match
+  const monthNum = parseInt(month, 10)
+  const dayNum = parseInt(day, 10)
+  
+  const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
+  const monthFullNames = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December']
+  
+  if (pattern === 'long') {
+    return `${monthFullNames[monthNum - 1]} ${dayNum}, ${year}`
+  }
+  
+  return `${monthNames[monthNum - 1]} ${dayNum}`
+}
 
 // ============================================
 // TYPES
@@ -114,6 +144,46 @@ export default function ContactsPage() {
   const [searchQuery, setSearchQuery] = useState('')
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null)
   const supabase = createClient()
+  const searchParams = useSearchParams()
+
+  // Handle edit query parameter from contact detail page
+  useEffect(() => {
+    const editId = searchParams.get('edit')
+    if (editId && contacts.length > 0) {
+      const contactToEdit = contacts.find(c => c.id === editId)
+      if (contactToEdit) {
+        setEditingContact(contactToEdit)
+        setShowContactModal(true)
+      }
+    }
+  }, [searchParams, contacts])
+
+  // Legacy relationship type mapping (for contacts created with old generic values)
+  const LEGACY_RELATIONSHIP_MAP: Record<string, string> = {
+    'parent': 'Family',
+    'child': 'Family',
+    'sibling': 'Family',
+    'grandparent': 'Family',
+    'grandchild': 'Family',
+    'aunt_uncle': 'Family',
+    'niece_nephew': 'Family',
+    'step_family': 'Family',
+  }
+
+  // Check if a relationship type belongs to a category (including legacy mappings)
+  const relationshipMatchesCategory = (relType: string | undefined, category: string): boolean => {
+    if (!relType) return false
+    
+    // Direct match with current options
+    const categoryOptions = RELATIONSHIP_OPTIONS.find(g => g.category === category)?.options.map(o => o.id) || []
+    if (categoryOptions.includes(relType)) return true
+    
+    // Check legacy mapping
+    const legacyCategory = LEGACY_RELATIONSHIP_MAP[relType]
+    if (legacyCategory === category) return true
+    
+    return false
+  }
 
   // Filter contacts based on search and category
   const filteredContacts = contacts.filter(contact => {
@@ -123,7 +193,7 @@ export default function ContactsPage() {
       contact.email?.toLowerCase().includes(searchQuery.toLowerCase())
     
     const matchesCategory = !selectedCategory || 
-      RELATIONSHIP_OPTIONS.find(g => g.category === selectedCategory)?.options.some(o => o.id === contact.relationship_type)
+      relationshipMatchesCategory(contact.relationship_type, selectedCategory)
     
     return matchesSearch && matchesCategory
   })
@@ -409,7 +479,7 @@ export default function ContactsPage() {
                       {contact.date_of_birth && (
                         <div className="flex items-center gap-2 text-[#666]">
                           <Calendar size={13} className="text-[#406A56]" />
-                          <span>{format(parseISO(contact.date_of_birth), 'MMM d')}</span>
+                          <span>{formatDateNoTimezone(contact.date_of_birth, 'short')}</span>
                         </div>
                       )}
                       {contact.email && (
@@ -503,7 +573,7 @@ export default function ContactsPage() {
                         {pet.personality && <p className="text-[#666] line-clamp-1">{pet.personality}</p>}
                         {pet.is_deceased && (
                           <p className="text-[#888] italic">
-                            🌈 Rainbow Bridge {pet.date_of_passing ? `· ${format(parseISO(pet.date_of_passing), 'MMM d, yyyy')}` : ''}
+                            🌈 Rainbow Bridge {pet.date_of_passing ? `· ${formatDateNoTimezone(pet.date_of_passing, 'long')}` : ''}
                           </p>
                         )}
                       </div>
