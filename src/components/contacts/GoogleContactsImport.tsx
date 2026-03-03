@@ -195,6 +195,11 @@ export function GoogleContactsImport({ onImportComplete }: GoogleContactsImportP
     setError(null)
 
     try {
+      // Check if crypto is available (required for PKCE)
+      if (!window.crypto || !window.crypto.subtle) {
+        throw new Error('Your browser does not support secure authentication. Please use a modern browser.')
+      }
+
       // Generate PKCE parameters
       const codeVerifier = generateCodeVerifier()
       const state = generateState()
@@ -204,12 +209,22 @@ export function GoogleContactsImport({ onImportComplete }: GoogleContactsImportP
       localStorage.setItem('google_oauth_verifier', codeVerifier)
       localStorage.setItem('google_oauth_state', state)
 
-      // Get auth URL from API with code_challenge
-      const response = await fetch(`/api/contacts/import/google?code_challenge=${encodeURIComponent(codeChallenge)}`)
+      // Get auth URL from API with code_challenge and state
+      const response = await fetch(`/api/contacts/import/google?code_challenge=${encodeURIComponent(codeChallenge)}&state=${encodeURIComponent(state)}`)
+      
+      if (!response.ok) {
+        const errorData = await response.json()
+        throw new Error(errorData.message || 'Failed to get authorization URL')
+      }
+      
       const data = await response.json()
 
       if (data.setupRequired) {
         throw new Error('Google OAuth is not configured. Please contact support.')
+      }
+
+      if (!data.authUrl) {
+        throw new Error('Failed to get authorization URL from server')
       }
 
       if (data.authUrl) {
@@ -227,10 +242,12 @@ export function GoogleContactsImport({ onImportComplete }: GoogleContactsImportP
 
         if (!popup || popup.closed) {
           // Fallback to redirect if popup blocked
+          console.log('[Google Import] Popup blocked, falling back to redirect')
           window.location.href = data.authUrl
         }
       }
     } catch (err) {
+      console.error('[Google Import] Start OAuth error:', err)
       setError(err instanceof Error ? err.message : 'Failed to start authentication')
       setStep('error')
     }

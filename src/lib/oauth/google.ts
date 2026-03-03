@@ -124,8 +124,21 @@ export async function exchangeCodeForTokens(params: {
   })
 
   if (!response.ok) {
-    const error = await response.text()
-    throw new Error(`Token exchange failed: ${error}`)
+    const errorText = await response.text()
+    let errorMessage = `Token exchange failed: ${errorText}`
+    
+    try {
+      const errorJson = JSON.parse(errorText)
+      if (errorJson.error_description) {
+        errorMessage = `Google OAuth error: ${errorJson.error_description}`
+      } else if (errorJson.error) {
+        errorMessage = `Google OAuth error: ${errorJson.error}`
+      }
+    } catch {
+      // Use raw error text if not JSON
+    }
+    
+    throw new Error(errorMessage)
   }
 
   return response.json()
@@ -270,8 +283,21 @@ export async function fetchGoogleContacts(
   })
 
   if (!response.ok) {
-    const error = await response.text()
-    throw new Error(`Failed to fetch contacts: ${error}`)
+    const errorText = await response.text()
+    let errorMessage = `Failed to fetch contacts: ${errorText}`
+    
+    try {
+      const errorJson = JSON.parse(errorText)
+      if (errorJson.error?.message) {
+        errorMessage = `Google API error: ${errorJson.error.message}`
+      } else if (errorJson.error_description) {
+        errorMessage = `Google API error: ${errorJson.error_description}`
+      }
+    } catch {
+      // Use raw error text if not JSON
+    }
+    
+    throw new Error(errorMessage)
   }
 
   const data = await response.json()

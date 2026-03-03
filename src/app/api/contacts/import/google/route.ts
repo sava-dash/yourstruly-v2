@@ -47,6 +47,7 @@ export async function GET(request: NextRequest) {
   const { searchParams } = new URL(request.url)
   const code = searchParams.get('code')
   const codeVerifier = searchParams.get('code_verifier')
+  const state = searchParams.get('state')
   const error = searchParams.get('error')
 
   // Handle OAuth errors
@@ -57,32 +58,45 @@ export async function GET(request: NextRequest) {
     )
   }
 
+  // Validate state parameter for CSRF protection when code is present
+  if (code && !state) {
+    return NextResponse.json(
+      { error: 'Missing state', message: 'State parameter is required for security' },
+      { status: 400 }
+    )
+  }
+
   // Validate required parameters
   if (!code) {
     // Return auth URL for client to redirect
     // Use the popup callback page for better UX
     const redirectUri = `${request.nextUrl.origin}/auth/google-callback`
-    const newState = crypto.randomUUID()
     
-    // Accept code_challenge from client (generated with PKCE)
+    // Accept code_challenge and state from client (generated with PKCE)
     const clientCodeChallenge = searchParams.get('code_challenge')
-    const codeChallenge = clientCodeChallenge || crypto.randomUUID()
+    const clientState = searchParams.get('state')
+    
+    if (!clientCodeChallenge) {
+      return NextResponse.json(
+        { error: 'Missing code_challenge', message: 'PKCE code_challenge is required' },
+        { status: 400 }
+      )
+    }
     
     const authUrl = new URL('https://accounts.google.com/o/oauth2/v2/auth')
     authUrl.searchParams.set('client_id', GOOGLE_CLIENT_ID!)
     authUrl.searchParams.set('redirect_uri', redirectUri)
     authUrl.searchParams.set('response_type', 'code')
     authUrl.searchParams.set('scope', 'https://www.googleapis.com/auth/contacts.readonly https://www.googleapis.com/auth/userinfo.email https://www.googleapis.com/auth/userinfo.profile')
-    authUrl.searchParams.set('state', newState)
+    authUrl.searchParams.set('state', clientState || crypto.randomUUID())
     authUrl.searchParams.set('access_type', 'offline')
     authUrl.searchParams.set('prompt', 'consent')
-    authUrl.searchParams.set('code_challenge', codeChallenge)
+    authUrl.searchParams.set('code_challenge', clientCodeChallenge)
     authUrl.searchParams.set('code_challenge_method', 'S256')
 
     return NextResponse.json({
       authUrl: authUrl.toString(),
-      state: newState,
-      codeChallenge,
+      state: clientState,
     })
   }
 
@@ -96,13 +110,28 @@ export async function GET(request: NextRequest) {
   try {
     // Exchange code for tokens
     const redirectUri = `${request.nextUrl.origin}/auth/google-callback`
-    const tokens = await exchangeCodeForTokens({
-      code,
-      clientId: GOOGLE_CLIENT_ID!,
-      clientSecret: GOOGLE_CLIENT_SECRET!,
-      redirectUri,
-      codeVerifier,
-    })
+    console.log('[Google Import] Exchanging code for tokens with redirect URI:', redirectUri)
+    
+    let tokens
+    try {
+      tokens = await exchangeCodeForTokens({
+        code,
+        clientId: GOOGLE_CLIENT_ID!,
+        clientSecret: GOOGLE_CLIENT_SECRET!,
+        redirectUri,
+        codeVerifier,
+      })
+      console.log('[Google Import] Token exchange successful')
+    } catch (tokenError) {
+      console.error('[Google Import] Token exchange failed:', tokenError)
+      return NextResponse.json(
+        { 
+          error: 'Token exchange failed', 
+          message: tokenError instanceof Error ? tokenError.message : 'Failed to exchange authorization code'
+        },
+        { status: 400 }
+      )
+    }
 
     // Fetch all contacts from Google
     const allContacts: Awaited<ReturnType<typeof fetchGoogleContacts>>['connections'] = []
@@ -111,16 +140,28 @@ export async function GET(request: NextRequest) {
     let pageCount = 0
     const maxPages = 10 // Safety limit
 
-    while (hasMore && pageCount < maxPages) {
-      const result = await fetchGoogleContacts(tokens.access_token, {
-        pageSize: 100,
-        pageToken,
-      })
+    try {
+      while (hasMore && pageCount < maxPages) {
+        const result = await fetchGoogleContacts(tokens.access_token, {
+          pageSize: 100,
+          pageToken,
+        })
 
-      allContacts.push(...result.connections)
-      pageToken = result.nextPageToken
-      hasMore = !!pageToken
-      pageCount++
+        allContacts.push(...result.connections)
+        pageToken = result.nextPageToken
+        hasMore = !!pageToken
+        pageCount++
+      }
+      console.log(`[Google Import] Fetched ${allContacts.length} contacts from Google`)
+    } catch (fetchError) {
+      console.error('[Google Import] Failed to fetch contacts:', fetchError)
+      return NextResponse.json(
+        { 
+          error: 'Failed to fetch contacts', 
+          message: fetchError instanceof Error ? fetchError.message : 'Could not retrieve contacts from Google'
+        },
+        { status: 500 }
+      )
     }
 
     // Normalize contacts
