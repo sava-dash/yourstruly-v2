@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { Plus, Edit2, Trash2, X, Users, ChevronLeft, Calendar, MapPin, Phone, Mail, Heart, Search } from 'lucide-react'
 import Link from 'next/link'
-import { useSearchParams } from 'next/navigation'
+import { useSearchParams, useRouter } from 'next/navigation'
 import '@/styles/page-styles.css'
 import '@/styles/engagement.css'
 import '@/styles/home.css'
@@ -145,6 +145,7 @@ export default function ContactsPage() {
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null)
   const supabase = createClient()
   const searchParams = useSearchParams()
+  const router = useRouter()
 
   // Handle edit query parameter from contact detail page
   useEffect(() => {
@@ -157,6 +158,16 @@ export default function ContactsPage() {
       }
     }
   }, [searchParams, contacts])
+
+  // Close modal and clear edit query param from URL
+  const handleCloseContactModal = () => {
+    setShowContactModal(false)
+    setEditingContact(null)
+    // Clear the edit query param from URL to prevent modal reopening
+    if (searchParams.get('edit')) {
+      router.replace('/dashboard/contacts', { scroll: false })
+    }
+  }
 
   // Legacy relationship type mapping (for contacts created with old generic values)
   const LEGACY_RELATIONSHIP_MAP: Record<string, string> = {
@@ -590,8 +601,8 @@ export default function ContactsPage() {
       {showContactModal && (
         <ContactModal
           contact={editingContact}
-          onClose={() => setShowContactModal(false)}
-          onSave={() => { setShowContactModal(false); loadData() }}
+          onClose={handleCloseContactModal}
+          onSave={() => { handleCloseContactModal(); loadData() }}
         />
       )}
 
