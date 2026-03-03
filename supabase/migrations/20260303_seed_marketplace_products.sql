@@ -1,5 +1,19 @@
 -- Seed curated marketplace products
 -- These are example gift products for the YoursTruly marketplace
+-- 
+-- PREREQUISITE: Run migration 20260224_admin_portal_phase3_business.sql first
+-- to create the marketplace_products table.
+--
+-- If you get "relation marketplace_products does not exist", apply that migration first.
+
+-- Skip if table doesn't exist (safer for partial migrations)
+DO $$
+BEGIN
+  IF NOT EXISTS (SELECT FROM pg_tables WHERE tablename = 'marketplace_products') THEN
+    RAISE NOTICE 'marketplace_products table does not exist. Run 20260224_admin_portal_phase3_business.sql first.';
+    RETURN;
+  END IF;
+END $$;
 
 INSERT INTO marketplace_products (
   name,

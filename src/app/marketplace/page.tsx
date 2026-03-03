@@ -271,9 +271,9 @@ export default function MarketplacePage() {
             {categoriesLoading ? (
               <Loader2 size={16} className="animate-spin text-gray-400" />
             ) : (
-              categories.map((cat) => (
+              categories.map((cat, idx) => (
                 <button
-                  key={cat.id}
+                  key={`${cat.provider || 'cat'}-${cat.id}-${idx}`}
                   onClick={() => setSelectedCategory(cat.id)}
                   className={`px-4 py-2 rounded-full text-sm whitespace-nowrap transition-colors ${
                     selectedCategory === cat.id

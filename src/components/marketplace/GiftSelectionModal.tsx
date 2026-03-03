@@ -222,9 +222,9 @@ export default function GiftSelectionModal({
             >
               All
             </button>
-            {categories.map((cat) => (
+            {categories.map((cat, idx) => (
               <button
-                key={cat.id}
+                key={`${cat.provider || 'cat'}-${cat.id}-${idx}`}
                 onClick={() => setSelectedCategory(cat.id)}
                 className={`px-3 py-1.5 rounded-full text-sm whitespace-nowrap transition-colors ${
                   selectedCategory === cat.id
