@@ -1,10 +1,11 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { createClient } from '@/lib/supabase/client';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { Eye, EyeOff, Loader2, Mail, Lock, User, ArrowRight, Check } from 'lucide-react';
+import { Eye, EyeOff, Loader2, Mail, Lock, User, ArrowRight, Check, X } from 'lucide-react';
+import { validatePassword, type PasswordValidationResult } from '@/lib/auth/password';
 
 export default function SignupPage() {
   const [fullName, setFullName] = useState('');
@@ -14,14 +15,24 @@ export default function SignupPage() {
   const [agreedToTerms, setAgreedToTerms] = useState(false);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+  const [showRequirements, setShowRequirements] = useState(false);
   const router = useRouter();
   const supabase = createClient();
+
+  const validation = useMemo<PasswordValidationResult>(() => {
+    return validatePassword(password);
+  }, [password]);
 
   const handleSignup = async (e: React.FormEvent) => {
     e.preventDefault();
     
     if (!agreedToTerms) {
       setError('Please agree to the Terms of Service and Privacy Policy');
+      return;
+    }
+
+    if (!validation.isValid) {
+      setError('Please meet all password requirements');
       return;
     }
 
@@ -54,17 +65,7 @@ export default function SignupPage() {
     }
   };
 
-  const passwordStrength = () => {
-    if (password.length === 0) return 0;
-    if (password.length < 6) return 1;
-    if (password.length < 8) return 2;
-    if (/[A-Z]/.test(password) && /[0-9]/.test(password) && /[^A-Za-z0-9]/.test(password)) return 4;
-    return 3;
-  };
-
-  const strengthLabels = ['', 'Weak', 'Fair', 'Good', 'Strong'];
-  const strengthColors = ['', 'bg-red-500', 'bg-yellow-500', 'bg-blue-500', 'bg-[#406A56]'];
-  const currentStrength = passwordStrength();
+  const { requirements, strength } = validation;
 
   return (
     <div className="min-h-screen bg-[#FDF8F3] flex items-center justify-center p-4 relative overflow-hidden">
@@ -147,14 +148,19 @@ export default function SignupPage() {
                   id="signup-password"
                   type={showPassword ? 'text' : 'password'}
                   value={password}
-                  onChange={(e) => setPassword(e.target.value)}
+                  onChange={(e) => {
+                    setPassword(e.target.value);
+                    if (!showRequirements && e.target.value.length > 0) {
+                      setShowRequirements(true);
+                    }
+                  }}
+                  onFocus={() => setShowRequirements(true)}
                   className="w-full pl-10 pr-12 py-3 rounded-xl bg-white border border-gray-200 text-[#2d2d2d] placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#406A56]/40 focus:border-[#406A56] transition-all"
                   placeholder="••••••••"
-                  minLength={6}
                   required
                   aria-required="true"
-                  aria-invalid={!!error}
-                  aria-describedby={password.length > 0 ? "password-strength signup-error" : error ? "signup-error" : undefined}
+                  aria-invalid={!!error || (password.length > 0 && !validation.isValid)}
+                  aria-describedby="password-requirements password-strength"
                 />
                 <button
                   type="button"
@@ -166,20 +172,70 @@ export default function SignupPage() {
                 </button>
               </div>
               
+              {/* Password Requirements Checklist */}
+              {showRequirements && (
+                <div id="password-requirements" className="mt-3 p-3 bg-gray-50 rounded-lg border border-gray-100">
+                  <p className="text-xs font-medium text-gray-600 mb-2">Password must contain:</p>
+                  <ul className="space-y-1.5">
+                    <li className={`flex items-center gap-2 text-xs transition-colors ${requirements.minLength ? 'text-[#406A56]' : 'text-gray-500'}`}>
+                      {requirements.minLength ? (
+                        <Check className="w-3.5 h-3.5" />
+                      ) : (
+                        <X className="w-3.5 h-3.5" />
+                      )}
+                      At least 8 characters
+                    </li>
+                    <li className={`flex items-center gap-2 text-xs transition-colors ${requirements.hasUppercase ? 'text-[#406A56]' : 'text-gray-500'}`}>
+                      {requirements.hasUppercase ? (
+                        <Check className="w-3.5 h-3.5" />
+                      ) : (
+                        <X className="w-3.5 h-3.5" />
+                      )}
+                      At least 1 uppercase letter
+                    </li>
+                    <li className={`flex items-center gap-2 text-xs transition-colors ${requirements.hasLowercase ? 'text-[#406A56]' : 'text-gray-500'}`}>
+                      {requirements.hasLowercase ? (
+                        <Check className="w-3.5 h-3.5" />
+                      ) : (
+                        <X className="w-3.5 h-3.5" />
+                      )}
+                      At least 1 lowercase letter
+                    </li>
+                    <li className={`flex items-center gap-2 text-xs transition-colors ${requirements.hasNumber ? 'text-[#406A56]' : 'text-gray-500'}`}>
+                      {requirements.hasNumber ? (
+                        <Check className="w-3.5 h-3.5" />
+                      ) : (
+                        <X className="w-3.5 h-3.5" />
+                      )}
+                      At least 1 number
+                    </li>
+                    <li className={`flex items-center gap-2 text-xs transition-colors ${requirements.hasSpecialChar ? 'text-[#406A56]' : 'text-gray-500'}`}>
+                      {requirements.hasSpecialChar ? (
+                        <Check className="w-3.5 h-3.5" />
+                      ) : (
+                        <X className="w-3.5 h-3.5" />
+                      )}
+                      At least 1 special character (!@#$%^&*)
+                    </li>
+                  </ul>
+                </div>
+              )}
+              
+              {/* Password Strength Indicator */}
               {password.length > 0 && (
                 <div className="mt-2" aria-live="polite">
-                  <div className="flex gap-1 h-1" role="progressbar" aria-valuenow={currentStrength} aria-valuemin={0} aria-valuemax={4} aria-label="Password strength">
+                  <div className="flex gap-1 h-1" role="progressbar" aria-valuenow={strength.score} aria-valuemin={0} aria-valuemax={4} aria-label="Password strength">
                     {[1, 2, 3, 4].map((level) => (
                       <div
                         key={level}
                         className={`flex-1 rounded-full ${
-                          level <= currentStrength ? strengthColors[currentStrength] : 'bg-gray-200'
+                          level <= strength.score ? strength.color : 'bg-gray-200'
                         }`}
                       />
                     ))}
                   </div>
-                  <p id="password-strength" className={`text-xs mt-1 ${currentStrength >= 3 ? 'text-[#406A56]' : 'text-gray-400'}`}>
-                    Password strength: {strengthLabels[currentStrength]}
+                  <p id="password-strength" className={`text-xs mt-1 ${strength.score >= 3 ? 'text-[#406A56]' : 'text-gray-400'}`}>
+                    Password strength: {strength.label}
                   </p>
                 </div>
               )}
