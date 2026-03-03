@@ -225,13 +225,9 @@ export function getApiUrl(): string {
 }
 
 /**
- * Fetch products from Goody API
+ * Fetch products from database (curated products)
  * Note: Goody doesn't have a public product catalog endpoint in the Commerce API.
- * Products are typically managed through the Goody dashboard.
- * For Commerce API, you need to know product IDs upfront (via Developer Mode or dashboard).
- * 
- * This function fetches products using the /me endpoint to verify connection
- * and returns a curated list of popular products.
+ * Products are curated and stored in our marketplace_products table.
  */
 export async function getProducts(
   category?: string,
@@ -239,20 +235,87 @@ export async function getProducts(
   page: number = 1,
   perPage: number = 50
 ): Promise<PaginatedProducts> {
-  // Goody Commerce API doesn't have a traditional product listing endpoint
-  // Products must be selected via Developer Mode or dashboard
-  // We'll return an empty list here - actual product IDs should be curated
-  
-  console.log('Goody Commerce API: Product catalog browsing not available via API.');
-  console.log('Please use Developer Mode in Goody dashboard to get product IDs.');
-  
-  return {
-    products: [],
-    total: 0,
-    page,
-    perPage,
-    hasMore: false,
-  };
+  // Check cache first
+  const cacheKey = `goody_products_${category || 'all'}_${search || ''}_${page}_${perPage}`;
+  const cached = getMarketplaceCache(cacheKey);
+  if (cached) return cached;
+
+  try {
+    // Import Supabase client dynamically to avoid build issues
+    const { createClient } = await import('@/lib/supabase/server');
+    const supabase = await createClient();
+    
+    // Build query
+    let query = supabase
+      .from('marketplace_products')
+      .select('*', { count: 'exact' })
+      .eq('is_active', true)
+      .or('provider.eq.goody,provider.eq.internal,provider.is.null');
+    
+    // Filter by search
+    if (search) {
+      query = query.or(`name.ilike.%${search}%,description.ilike.%${search}%`);
+    }
+    
+    // Filter by category (occasion)
+    if (category) {
+      query = query.contains('occasions', [category.toLowerCase()]);
+    }
+    
+    // Order by curated score
+    query = query.order('curated_score', { ascending: false, nullsFirst: false });
+    
+    // Pagination
+    const start = (page - 1) * perPage;
+    query = query.range(start, start + perPage - 1);
+    
+    const { data, error, count } = await query;
+    
+    if (error) {
+      console.error('Database query error:', error);
+      return { products: [], total: 0, page, perPage, hasMore: false };
+    }
+    
+    // Normalize products
+    const products: Product[] = (data || []).map(row => ({
+      id: row.id,
+      name: row.name,
+      description: row.description || '',
+      price: row.sale_price_cents ? row.sale_price_cents / 100 : row.base_price_cents / 100,
+      originalPrice: row.sale_price_cents ? row.base_price_cents / 100 : undefined,
+      currency: row.currency || 'USD',
+      images: row.images || [],
+      thumbnail: row.images?.[0] || '',
+      provider: 'goody',
+      category: row.occasions?.[0] || 'gifts',
+      inStock: row.in_stock,
+      brand: row.provider,
+      providerData: {
+        goodyId: row.external_id,
+        occasions: row.occasions,
+        emotionalImpact: row.emotional_impact,
+        whyWeLoveIt: row.why_we_love_it,
+        curatedScore: row.curated_score,
+      },
+    }));
+    
+    const total = count || 0;
+    const result: PaginatedProducts = {
+      products,
+      total,
+      page,
+      perPage,
+      hasMore: start + products.length < total,
+    };
+    
+    // Cache for 5 minutes
+    setMarketplaceCache(cacheKey, result, 300000);
+    
+    return result;
+  } catch (error) {
+    console.error('Failed to fetch products from database:', error);
+    return { products: [], total: 0, page, perPage, hasMore: false };
+  }
 }
 
 /**
