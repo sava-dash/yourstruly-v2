@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
+import { analyzeMood } from '@/lib/ai/moodAnalysis';
 
 interface Exchange {
   question: string;
@@ -84,6 +85,32 @@ export async function POST(request: NextRequest) {
     }
     
     console.log('Created memory:', { id: memory.id, title, memory_type: memoryType, tags });
+
+    // Auto-detect mood using AI (non-blocking)
+    try {
+      const moodResult = await analyzeMood(
+        title,
+        storyContent,
+        memoryType,
+        tags
+      );
+      
+      if (moodResult?.mood) {
+        await supabase
+          .from('memories')
+          .update({
+            mood: moodResult.mood,
+            mood_confidence: moodResult.confidence,
+            mood_override: false
+          })
+          .eq('id', memory.id);
+        
+        console.log('Auto-detected mood:', moodResult.mood, 'confidence:', moodResult.confidence);
+      }
+    } catch (moodError) {
+      console.error('Mood detection failed (non-critical):', moodError);
+      // Non-critical - continue without mood
+    }
 
     // Link photo if this is a photo_backstory prompt
     if (promptType === 'photo_backstory' && photoId) {
