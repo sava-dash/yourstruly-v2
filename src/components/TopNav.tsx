@@ -40,12 +40,9 @@ interface TopNavProps {
   profile: Profile | null
 }
 
-// Top-level nav items
+// Top-level nav items (just Home now - others are dropdowns)
 const primaryNav = [
   { href: '/dashboard', label: 'Home', icon: Home },
-  { href: '/dashboard/messages', label: 'Messages', icon: Mail },
-  { href: '/dashboard/profile', label: 'Profile', icon: UserIcon },
-  { href: '/marketplace', label: 'Shop', icon: ShoppingBag },
 ]
 
 // My Story dropdown - content about you
@@ -53,8 +50,15 @@ const myStoryItems = [
   { href: '/dashboard/memories', label: 'Memories', icon: Camera },
   { href: '/dashboard/wisdom', label: 'Wisdom', icon: Lightbulb },
   { href: '/dashboard/gallery', label: 'Gallery', icon: FolderOpen },
+]
+
+// Tools dropdown - utilities + postscripts + books
+const toolsItems = [
+  { href: '/dashboard/journalist', label: 'Interviews', icon: MessageSquare },
   { href: '/dashboard/postscripts', label: 'PostScripts', icon: Gift },
-  { href: '/dashboard/photobook/create', label: '📚 Create Book', icon: BookOpen },
+  { href: '/dashboard/photobook/create', label: 'Create Book', icon: BookOpen },
+  { href: '/dashboard/avatar', label: 'AI Avatar', icon: Bot, disabled: true },
+  { href: '/dashboard/trips', label: 'Trip Planning', icon: Plane, disabled: true },
 ]
 
 // People dropdown - who you share with
@@ -63,11 +67,10 @@ const peopleItems = [
   { href: '/dashboard/circles', label: 'Circles', icon: UsersRound },
 ]
 
-// Tools dropdown - utilities
-const toolsItems = [
-  { href: '/dashboard/journalist', label: 'Interviews', icon: MessageSquare },
-  { href: '/dashboard/avatar', label: 'AI Avatar', icon: Bot, disabled: true },
-  { href: '/dashboard/trips', label: 'Trip Planning', icon: Plane, disabled: true },
+// Right-side icon buttons
+const rightIcons = [
+  { href: '/dashboard/messages', icon: Mail, label: 'Messages' },
+  { href: '/marketplace', icon: ShoppingBag, label: 'Shop' },
 ]
 
 export default function TopNav({ user, profile }: TopNavProps) {
@@ -135,9 +138,6 @@ export default function TopNav({ user, profile }: TopNavProps) {
                 )
               })}
 
-              {/* Divider */}
-              <div className="w-px h-5 bg-black/10 mx-4" />
-
               {/* My Story Dropdown */}
               <div ref={myStoryRef} className="relative mx-3">
                 <SlideUpButton
@@ -159,42 +159,6 @@ export default function TopNav({ user, profile }: TopNavProps) {
                           key={item.href}
                           href={item.href}
                           onClick={() => setMyStoryOpen(false)}
-                          className={`flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-all ${
-                            isActive
-                              ? 'bg-[#C35F33]/15 text-[#C35F33]'
-                              : 'text-gray-600 hover:bg-[#C35F33]/5 hover:text-[#C35F33]'
-                          }`}
-                        >
-                          <Icon size={16} />
-                          <span>{item.label}</span>
-                        </Link>
-                      )
-                    })}
-                  </div>
-                )}
-              </div>
-
-              {/* People Dropdown */}
-              <div ref={peopleRef} className="relative mx-3">
-                <SlideUpButton
-                  onClick={() => { setPeopleOpen(!peopleOpen); setMyStoryOpen(false); setToolsOpen(false) }}
-                  isActive={peopleItems.some(i => pathname === i.href)}
-                  className="text-sm"
-                  suffix={<ChevronDown size={14} className={`transition-transform ${peopleOpen ? 'rotate-180' : ''}`} />}
-                >
-                  People
-                </SlideUpButton>
-                
-                {peopleOpen && (
-                  <div className="absolute top-full left-0 mt-1 w-44 glass-modal rounded-refined p-1.5 dropdown-menu">
-                    {peopleItems.map((item) => {
-                      const Icon = item.icon
-                      const isActive = pathname === item.href
-                      return (
-                        <Link
-                          key={item.href}
-                          href={item.href}
-                          onClick={() => setPeopleOpen(false)}
                           className={`flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-all ${
                             isActive
                               ? 'bg-[#C35F33]/15 text-[#C35F33]'
@@ -254,18 +218,69 @@ export default function TopNav({ user, profile }: TopNavProps) {
                   </div>
                 )}
               </div>
+
+              {/* People Dropdown */}
+              <div ref={peopleRef} className="relative mx-3">
+                <SlideUpButton
+                  onClick={() => { setPeopleOpen(!peopleOpen); setMyStoryOpen(false); setToolsOpen(false) }}
+                  isActive={peopleItems.some(i => pathname === i.href)}
+                  className="text-sm"
+                  suffix={<ChevronDown size={14} className={`transition-transform ${peopleOpen ? 'rotate-180' : ''}`} />}
+                >
+                  People
+                </SlideUpButton>
+                
+                {peopleOpen && (
+                  <div className="absolute top-full left-0 mt-1 w-44 glass-modal rounded-refined p-1.5 dropdown-menu">
+                    {peopleItems.map((item) => {
+                      const Icon = item.icon
+                      const isActive = pathname === item.href
+                      return (
+                        <Link
+                          key={item.href}
+                          href={item.href}
+                          onClick={() => setPeopleOpen(false)}
+                          className={`flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-all ${
+                            isActive
+                              ? 'bg-[#C35F33]/15 text-[#C35F33]'
+                              : 'text-gray-600 hover:bg-[#C35F33]/5 hover:text-[#C35F33]'
+                          }`}
+                        >
+                          <Icon size={16} />
+                          <span>{item.label}</span>
+                        </Link>
+                      )
+                    })}
+                  </div>
+                )}
+              </div>
             </div>
           </div>
 
-          {/* Right: User Menu */}
-          <div className="flex items-center gap-2">
-            {/* Settings - Desktop */}
-            <Link
-              href="/dashboard/settings"
-              className="hidden lg:flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm font-medium text-gray-500 hover:bg-[#C35F33]/5 hover:text-[#C35F33] transition-all"
-            >
-              <Settings size={16} />
-            </Link>
+          {/* Right: Icon Buttons + User Menu */}
+          <div className="flex items-center gap-1">
+            {/* Messages & Shop Icons - Desktop */}
+            {rightIcons.map((item) => {
+              const Icon = item.icon
+              const isActive = pathname === item.href
+              return (
+                <Link
+                  key={item.href}
+                  href={item.href}
+                  className={`hidden lg:flex items-center justify-center w-9 h-9 rounded-lg transition-all ${
+                    isActive
+                      ? 'bg-[#C35F33]/15 text-[#C35F33]'
+                      : 'text-gray-500 hover:bg-[#C35F33]/5 hover:text-[#C35F33]'
+                  }`}
+                  title={item.label}
+                >
+                  <Icon size={18} />
+                </Link>
+              )
+            })}
+
+            {/* Divider */}
+            <div className="hidden lg:block w-px h-6 bg-black/10 mx-2" />
 
             {/* User Dropdown */}
             <div ref={userRef} className="relative">
@@ -330,7 +345,7 @@ export default function TopNav({ user, profile }: TopNavProps) {
       {mobileOpen && (
         <div className="lg:hidden fixed inset-0 top-14 glass-modal z-40 overflow-y-auto">
           <div className="p-4 space-y-1">
-            {/* Primary items */}
+            {/* Primary items (Home) */}
             {primaryNav.map((item) => {
               const Icon = item.icon
               const isActive = pathname === item.href
@@ -356,30 +371,6 @@ export default function TopNav({ user, profile }: TopNavProps) {
               <p className="px-4 text-xs font-semibold text-[#C35F33]/60 uppercase tracking-wider">My Story</p>
             </div>
             {myStoryItems.map((item) => {
-              const Icon = item.icon
-              const isActive = pathname === item.href
-              return (
-                <Link
-                  key={item.href}
-                  href={item.href}
-                  onClick={() => setMobileOpen(false)}
-                  className={`flex items-center gap-3 px-4 py-3 rounded-xl text-base transition-all ${
-                    isActive
-                      ? 'bg-[#C35F33]/15 text-[#C35F33]'
-                      : 'text-gray-600 hover:bg-[#C35F33]/5 hover:text-[#C35F33]'
-                  }`}
-                >
-                  <Icon size={20} />
-                  <span>{item.label}</span>
-                </Link>
-              )
-            })}
-
-            {/* People Section */}
-            <div className="pt-3 pb-1">
-              <p className="px-4 text-xs font-semibold text-[#C35F33]/60 uppercase tracking-wider">People</p>
-            </div>
-            {peopleItems.map((item) => {
               const Icon = item.icon
               const isActive = pathname === item.href
               return (
@@ -428,6 +419,53 @@ export default function TopNav({ user, profile }: TopNavProps) {
                   {isDisabled && (
                     <span className="ml-auto text-xs bg-gray-100 text-gray-400 px-2 py-0.5 rounded">Soon</span>
                   )}
+                </Link>
+              )
+            })}
+
+            {/* People Section */}
+            <div className="pt-3 pb-1">
+              <p className="px-4 text-xs font-semibold text-[#C35F33]/60 uppercase tracking-wider">People</p>
+            </div>
+            {peopleItems.map((item) => {
+              const Icon = item.icon
+              const isActive = pathname === item.href
+              return (
+                <Link
+                  key={item.href}
+                  href={item.href}
+                  onClick={() => setMobileOpen(false)}
+                  className={`flex items-center gap-3 px-4 py-3 rounded-xl text-base transition-all ${
+                    isActive
+                      ? 'bg-[#C35F33]/15 text-[#C35F33]'
+                      : 'text-gray-600 hover:bg-[#C35F33]/5 hover:text-[#C35F33]'
+                  }`}
+                >
+                  <Icon size={20} />
+                  <span>{item.label}</span>
+                </Link>
+              )
+            })}
+
+            <div className="border-t border-[#C35F33]/10 my-3" />
+
+            {/* Messages & Shop in mobile */}
+            {rightIcons.map((item) => {
+              const Icon = item.icon
+              const isActive = pathname === item.href
+              return (
+                <Link
+                  key={item.href}
+                  href={item.href}
+                  onClick={() => setMobileOpen(false)}
+                  className={`flex items-center gap-3 px-4 py-3 rounded-xl text-base transition-all ${
+                    isActive
+                      ? 'bg-[#C35F33]/15 text-[#C35F33]'
+                      : 'text-gray-600 hover:bg-[#C35F33]/5 hover:text-[#C35F33]'
+                  }`}
+                >
+                  <Icon size={20} />
+                  <span>{item.label}</span>
                 </Link>
               )
             })}

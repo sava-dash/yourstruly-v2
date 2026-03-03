@@ -6,7 +6,7 @@ import { X, Sparkles, Mic, Keyboard, RotateCcw } from 'lucide-react';
 import { MediaRecorder } from './MediaRecorder';
 import { TranscriptionPreview } from './TranscriptionPreview';
 import { ConversationHistory } from './ConversationHistory';
-import { AIPromptBubble } from './AIPromptBubble';
+import { AnimatedQuestion } from './AnimatedQuestion';
 import { ReviewScreen } from './ReviewScreen';
 import { ScopeSelector, type ScopeSelection } from '@/components/circles';
 
@@ -449,11 +449,13 @@ export function ConversationView({ prompt, expectedXp = 15, onComplete, onClose 
               </div>
 
               {/* Question display - TTS enabled by default */}
-              <AIPromptBubble
+              <AnimatedQuestion
                 question={currentQuestion}
-                isNew={true}
+                animate={true}
                 isLoading={isGeneratingFollowup}
                 enableTTS={true}
+                showAvatar={true}
+                size="lg"
               />
 
               {/* Conversation history */}
@@ -553,11 +555,13 @@ export function ConversationView({ prompt, expectedXp = 15, onComplete, onClose 
           {viewState === 'confirming' && pendingResponse && (
             <div className="conversation-confirming">
               {/* Show the question they answered */}
-              <AIPromptBubble
+              <AnimatedQuestion
                 question={currentQuestion}
-                isNew={false}
+                animate={false}
                 isLoading={false}
                 enableTTS={false}
+                showAvatar={true}
+                size="lg"
               />
 
               {/* Editable transcription preview */}

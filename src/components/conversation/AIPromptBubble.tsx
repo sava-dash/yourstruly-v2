@@ -1,193 +1,108 @@
 'use client';
 
-import { useState, useEffect, useRef, useCallback } from 'react';
+import { useCallback, useEffect, useRef } from 'react';
 import { motion } from 'framer-motion';
 import { Bot, Volume2, VolumeX, Play, Square } from 'lucide-react';
+import { useTypewriter } from '@/hooks/useTypewriter';
+import { useTTS } from '@/hooks/useTTS';
 
-interface AIPromptBubbleProps {
+export interface AIPromptBubbleProps {
+  /** The question text to display */
   question: string;
+  /** Whether this is a new question (triggers animation) */
   isNew?: boolean;
+  /** Whether to show loading state */
   isLoading?: boolean;
+  /** Enable TTS functionality */
   enableTTS?: boolean;
+  /** Typing speed in ms per character (default: 25) */
+  typingSpeed?: number;
+  /** Callback when typing completes */
+  onTypingComplete?: () => void;
+  /** Additional CSS class */
+  className?: string;
 }
 
+/**
+ * AIPromptBubble - AI question display with typewriter animation and TTS
+ * 
+ * Used in conversation flows to display AI prompts with consistent animation.
+ * Uses useTypewriter and useTTS hooks for unified behavior across the app.
+ * 
+ * For simpler question displays, consider using AnimatedQuestion instead.
+ * 
+ * @example
+ * ```tsx
+ * // Standard usage in conversation
+ * <AIPromptBubble 
+ *   question="What is your favorite memory?"
+ *   isNew={true}
+ *   isLoading={false}
+ *   enableTTS={true}
+ * />
+ * ```
+ */
 export function AIPromptBubble({ 
   question, 
   isNew = false, 
   isLoading = false,
-  enableTTS = false 
+  enableTTS = false,
+  typingSpeed = 25,
+  onTypingComplete,
+  className = '',
 }: AIPromptBubbleProps) {
-  const [displayText, setDisplayText] = useState('');
-  const [isSpeaking, setIsSpeaking] = useState(false);
-  const [ttsEnabled, setTtsEnabled] = useState(enableTTS);
-  const [typingDone, setTypingDone] = useState(false);
   const hasSpokenRef = useRef(false);
   const questionRef = useRef(question);
-  const audioRef = useRef<HTMLAudioElement | null>(null);
+
+  // Use the typewriter hook for consistent animation
+  const { displayText, isComplete: typingDone } = useTypewriter({
+    text: question,
+    animate: isNew,
+    speed: typingSpeed,
+    onComplete: onTypingComplete,
+  });
+
+  // Use the TTS hook for consistent speech
+  const { 
+    isSpeaking, 
+    enabled: ttsEnabled, 
+    speak, 
+    stop, 
+    toggle: toggleTTS,
+  } = useTTS({
+    enabled: enableTTS,
+  });
 
   // Track question changes
   useEffect(() => {
     if (question !== questionRef.current) {
       questionRef.current = question;
       hasSpokenRef.current = false;
-      setTypingDone(false);
     }
   }, [question]);
 
-  // Text-to-speech using multiple fallbacks
-  const speakText = useCallback(async (text: string) => {
-    // Stop any current audio
-    if (audioRef.current) {
-      audioRef.current.pause();
-      audioRef.current = null;
-    }
-
-    // Try browser speech synthesis first
-    if ('speechSynthesis' in window) {
-      const voices = window.speechSynthesis.getVoices();
-      
-      if (voices.length > 0) {
-        console.log('TTS: Using browser voices');
-        window.speechSynthesis.cancel();
-        
-        const utterance = new SpeechSynthesisUtterance(text);
-        utterance.rate = 0.95;
-        utterance.pitch = 1;
-        utterance.volume = 1;
-        
-        const preferredVoice = voices.find(v => 
-          v.name.includes('Samantha') || 
-          v.name.includes('Google US English') ||
-          v.name.includes('Karen') ||
-          (v.lang.startsWith('en') && v.localService)
-        ) || voices.find(v => v.lang.startsWith('en-US')) || voices[0];
-        
-        if (preferredVoice) {
-          utterance.voice = preferredVoice;
-        }
-
-        utterance.onstart = () => setIsSpeaking(true);
-        utterance.onend = () => setIsSpeaking(false);
-        utterance.onerror = () => setIsSpeaking(false);
-
-        window.speechSynthesis.speak(utterance);
-        return;
-      }
-    }
-
-    // Fallback: Use our TTS proxy API
-    console.log('TTS: Using TTS proxy API');
-    try {
-      setIsSpeaking(true);
-      
-      // Split long text into chunks (TTS has a limit)
-      const maxLen = 200;
-      const chunks: string[] = [];
-      let remaining = text;
-      
-      while (remaining.length > 0) {
-        if (remaining.length <= maxLen) {
-          chunks.push(remaining);
-          break;
-        }
-        let breakPoint = remaining.lastIndexOf(' ', maxLen);
-        if (breakPoint === -1) breakPoint = maxLen;
-        chunks.push(remaining.slice(0, breakPoint));
-        remaining = remaining.slice(breakPoint).trim();
-      }
-
-      // Play chunks sequentially
-      for (const chunk of chunks) {
-        const url = `/api/tts?text=${encodeURIComponent(chunk)}`;
-        
-        await new Promise<void>((resolve, reject) => {
-          const audio = new Audio(url);
-          audioRef.current = audio;
-          
-          audio.onended = () => resolve();
-          audio.onerror = () => reject(new Error('Audio playback failed'));
-          
-          audio.play().catch(reject);
-        });
-      }
-      
-      setIsSpeaking(false);
-    } catch (err) {
-      console.error('TTS proxy failed:', err);
-      setIsSpeaking(false);
-    }
-  }, []);
-
-  // Stop speaking
-  const stopSpeaking = useCallback(() => {
-    if ('speechSynthesis' in window) {
-      window.speechSynthesis.cancel();
-    }
-    if (audioRef.current) {
-      audioRef.current.pause();
-      audioRef.current = null;
-    }
-    setIsSpeaking(false);
-  }, []);
-
-  // Typing animation for new questions
-  useEffect(() => {
-    if (!isNew) {
-      setDisplayText(question);
-      setTypingDone(true);
-      return;
-    }
-
-    setDisplayText('');
-    setTypingDone(false);
-    let index = 0;
-    
-    const interval = setInterval(() => {
-      if (index < question.length) {
-        setDisplayText(question.slice(0, index + 1));
-        index++;
-      } else {
-        clearInterval(interval);
-        setTypingDone(true);
-      }
-    }, 25);
-
-    return () => clearInterval(interval);
-  }, [question, isNew]);
-
-  // Speak immediately when TTS is enabled (don't wait for typing)
+  // Auto-speak when TTS is enabled (don't wait for typing)
   useEffect(() => {
     if (ttsEnabled && !hasSpokenRef.current && isNew && question) {
       hasSpokenRef.current = true;
       // Small delay to ensure audio context is ready
-      setTimeout(() => speakText(question), 100);
+      const timer = setTimeout(() => {
+        speak(question);
+      }, 100);
+      return () => clearTimeout(timer);
     }
-  }, [ttsEnabled, question, isNew, speakText]);
+  }, [ttsEnabled, question, isNew, speak]);
 
-  // Stop speaking on unmount
-  useEffect(() => {
-    return () => {
-      stopSpeaking();
-    };
-  }, [stopSpeaking]);
-
-  // Toggle TTS
-  const toggleTTS = () => {
+  // Handle play/stop button
+  const handlePlayStop = useCallback(() => {
     if (isSpeaking) {
-      stopSpeaking();
-    }
-    setTtsEnabled(!ttsEnabled);
-  };
-
-  // Manual play/stop button
-  const handlePlayStop = () => {
-    if (isSpeaking) {
-      stopSpeaking();
+      stop();
     } else {
-      speakText(question);
+      speak(question);
     }
-  };
+  }, [isSpeaking, stop, speak, question]);
 
+  // Loading state
   if (isLoading) {
     return (
       <motion.div
@@ -222,7 +137,7 @@ export function AIPromptBubble({
     <motion.div
       initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
-      className="ai-prompt-bubble"
+      className={`ai-prompt-bubble ${className}`}
     >
       <div className="ai-prompt-avatar">
         <Bot size={20} />
@@ -237,37 +152,41 @@ export function AIPromptBubble({
       <div className="ai-prompt-content">
         <div className="ai-prompt-text">
           {displayText}
-          {isNew && displayText.length < question.length && (
+          {isNew && !typingDone && (
             <span className="ai-prompt-cursor" />
           )}
         </div>
       </div>
-      <div className="ai-prompt-tts-controls">
-        {/* Play/Stop button - always visible when typing is done */}
-        {typingDone && (
+      {enableTTS && (
+        <div className="ai-prompt-tts-controls">
+          {/* Play/Stop button - always visible when typing is done */}
+          {typingDone && (
+            <button
+              onClick={handlePlayStop}
+              className={`ai-prompt-play-btn ${isSpeaking ? 'speaking' : ''}`}
+              aria-label={isSpeaking ? 'Stop' : 'Play question'}
+              title={isSpeaking ? 'Stop' : 'Play question'}
+            >
+              {isSpeaking ? (
+                <Square size={12} fill="currentColor" />
+              ) : (
+                <Play size={14} fill="currentColor" />
+              )}
+            </button>
+          )}
+          {/* TTS toggle */}
           <button
-            onClick={handlePlayStop}
-            className={`ai-prompt-play-btn ${isSpeaking ? 'speaking' : ''}`}
-            aria-label={isSpeaking ? 'Stop' : 'Play question'}
-            title={isSpeaking ? 'Stop' : 'Play question'}
+            onClick={toggleTTS}
+            className={`ai-prompt-tts-btn ${ttsEnabled ? 'enabled' : ''}`}
+            aria-label={ttsEnabled ? 'Auto-speak on' : 'Auto-speak off'}
+            title={ttsEnabled ? 'Auto-speak: ON' : 'Auto-speak: OFF'}
           >
-            {isSpeaking ? (
-              <Square size={12} fill="currentColor" />
-            ) : (
-              <Play size={14} fill="currentColor" />
-            )}
+            {ttsEnabled ? <Volume2 size={16} /> : <VolumeX size={16} />}
           </button>
-        )}
-        {/* TTS toggle */}
-        <button
-          onClick={toggleTTS}
-          className={`ai-prompt-tts-btn ${ttsEnabled ? 'enabled' : ''}`}
-          aria-label={ttsEnabled ? 'Auto-speak on' : 'Auto-speak off'}
-          title={ttsEnabled ? 'Auto-speak: ON' : 'Auto-speak: OFF'}
-        >
-          {ttsEnabled ? <Volume2 size={16} /> : <VolumeX size={16} />}
-        </button>
-      </div>
+        </div>
+      )}
     </motion.div>
   );
 }
+
+export default AIPromptBubble;
