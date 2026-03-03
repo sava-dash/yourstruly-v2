@@ -1,9 +1,9 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono, Caveat, Playfair_Display, Patrick_Hand, Inter_Tight, Dancing_Script, Crimson_Text } from "next/font/google";
+import Script from "next/script";
 import "./globals.css";
 import 'mapbox-gl/dist/mapbox-gl.css';
 import { SkipToMain } from "@/components/ui/AccessibleIcon";
-import CookieConsent from "@/components/ui/CookieConsent";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -67,12 +67,21 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
+      <head>
+        {/* Cookiebot GDPR Cookie Consent - must load first to block non-essential cookies */}
+        <Script
+          id="Cookiebot"
+          src="https://consent.cookiebot.com/uc.js"
+          data-cbid="4c3722ae-6bc8-454a-9330-fdad835a58cc"
+          data-blockingmode="auto"
+          strategy="beforeInteractive"
+        />
+      </head>
       <body
         className={`${geistSans.variable} ${geistMono.variable} ${interTight.variable} ${caveat.variable} ${patrickHand.variable} ${playfair.variable} ${dancingScript.variable} ${crimsonText.variable} antialiased`}
       >
         <SkipToMain />
         {children}
-        <CookieConsent />
       </body>
     </html>
   );
