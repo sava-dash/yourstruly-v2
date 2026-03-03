@@ -15,11 +15,12 @@ import type {
 } from './types';
 import * as Floristone from './providers/floristone';
 import * as Prodigi from './providers/prodigi';
+import * as Goody from './providers/goody';
 import { getMarketplaceCache, setMarketplaceCache } from './cache';
 
 // Re-export types
 export * from './types';
-export { Floristone, Prodigi };
+export { Floristone, Prodigi, Goody };
 
 // Provider configurations
 const PROVIDER_CONFIGS: Record<ProductProvider, ProviderConfig> = {
@@ -32,6 +33,11 @@ const PROVIDER_CONFIGS: Record<ProductProvider, ProviderConfig> = {
     name: 'prodigi',
     enabled: Prodigi.isConfigured(),
     markupPercent: 0, // Prodigi pricing is already wholesale
+  },
+  goody: {
+    name: 'goody',
+    enabled: Goody.isConfigured(),
+    markupPercent: 0, // Revenue share handled by Goody
   },
 };
 
@@ -76,11 +82,15 @@ export class MarketplaceService {
     switch (this.provider) {
       case 'floristone':
         return Floristone.getProducts(category, search, page, perPage);
-      
+
       case 'prodigi':
         // Prodigi supports category filtering
         return Prodigi.getProducts(category, page, perPage);
-      
+
+      case 'goody':
+        // Goody Commerce API doesn't have product browsing - products are curated
+        return Goody.getProducts(category, search, page, perPage);
+
       default:
         throw new Error(`Unknown provider: ${this.provider}`);
     }
@@ -93,10 +103,14 @@ export class MarketplaceService {
     switch (this.provider) {
       case 'floristone':
         return Floristone.getProductDetails(productId);
-      
+
       case 'prodigi':
         return Prodigi.getProductDetails(productId);
-      
+
+      case 'goody':
+        // Goody doesn't have a product details endpoint in Commerce API
+        return Goody.getProductDetails(productId);
+
       default:
         throw new Error(`Unknown provider: ${this.provider}`);
     }
@@ -119,10 +133,13 @@ export class MarketplaceService {
           { id: 'ty', name: 'Thank You' },
           { id: 'sy', name: 'Sympathy' },
         ];
-      
+
       case 'prodigi':
         return Prodigi.getCategories();
-      
+
+      case 'goody':
+        return Goody.getCategories();
+
       default:
         throw new Error(`Unknown provider: ${this.provider}`);
     }
@@ -253,6 +270,8 @@ export function isProviderConfigured(provider: ProductProvider): boolean {
       return Floristone.isConfigured();
     case 'prodigi':
       return Prodigi.isConfigured();
+    case 'goody':
+      return Goody.isConfigured();
     default:
       return false;
   }
@@ -354,7 +373,7 @@ export async function getFeaturedProducts(
  * Helper function to validate provider string
  */
 export function isValidProvider(provider: string): provider is ProductProvider {
-  return ['floristone', 'prodigi'].includes(provider);
+  return ['floristone', 'prodigi', 'goody'].includes(provider);
 }
 
 /**

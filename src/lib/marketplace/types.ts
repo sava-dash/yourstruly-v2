@@ -4,7 +4,7 @@
  */
 
 // Product provider types
-export type ProductProvider = 'floristone' | 'prodigi';
+export type ProductProvider = 'floristone' | 'prodigi' | 'goody';
 
 // Unified Product type that normalizes across all providers
 export interface Product {

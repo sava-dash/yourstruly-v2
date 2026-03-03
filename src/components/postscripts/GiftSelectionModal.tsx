@@ -4,11 +4,11 @@ import React, { useState, useEffect } from 'react'
 import { 
   X, Gift, Search, ShoppingBag, Heart, Calendar,
   ChevronRight, Clock, Package, Sparkles, Loader2,
-  CheckCircle2, AlertCircle
+  CheckCircle2, AlertCircle, Store
 } from 'lucide-react'
-import Image from 'next/image'
 
-export type ProductProvider = 'floristone' | 'doba' | 'printful'
+// Product provider types - now includes goody
+export type ProductProvider = 'floristone' | 'doba' | 'printful' | 'goody'
 
 export interface GiftProduct {
   id: string
@@ -22,6 +22,10 @@ export interface GiftProduct {
   provider: ProductProvider
   category?: string
   inStock: boolean
+  brandName?: string
+  allowShipping?: boolean
+  allowGifting?: boolean
+  tags?: string[]
   variants?: Array<{
     id: string
     name: string
@@ -46,6 +50,11 @@ interface GiftSelectionModalProps {
   onSelect: (selection: GiftSelection) => void
   preselectedContactId?: string
   preselectedContactName?: string
+  context?: {
+    eventType?: string
+    relationship?: string
+    budget?: { min: number; max: number }
+  }
 }
 
 // Holiday options for relative delivery
@@ -88,93 +97,13 @@ const TIMING_OPTIONS = [
   }
 ]
 
-// Gift categories with icons and descriptions
-const GIFT_CATEGORIES = [
-  { key: 'all', label: 'All Gifts', icon: Gift, description: 'Browse all available gifts' },
-  { key: 'flowers', label: 'Flowers', icon: '💐', description: 'Fresh bouquets and arrangements' },
-  { key: 'plants', label: 'Plants', icon: '🪴', description: 'Living plants and succulents' },
-  { key: 'gourmet', label: 'Gourmet', icon: '🍫', description: 'Chocolates, snacks, and treats' },
-  { key: 'home', label: 'Home', icon: '🏠', description: 'Cozy home decor and accessories' },
-  { key: 'photo_gifts', label: 'Photo Gifts', icon: '📸', description: 'Personalized photo items' },
-  { key: 'jewelry', label: 'Jewelry', icon: '💎', description: 'Elegant jewelry pieces' },
-  { key: 'experiences', label: 'Experiences', icon: '🎁', description: 'Memorable experiences' },
-]
-
-// Mock products for demo - in production, these would come from the marketplace API
-const MOCK_PRODUCTS: GiftProduct[] = [
-  {
-    id: 'FL-001',
-    name: 'Dozen Red Roses',
-    description: 'Classic long-stem red roses, perfect for expressing love and appreciation',
-    price: 49.99,
-    originalPrice: 39.99,
-    currency: 'USD',
-    images: ['https://images.unsplash.com/photo-1518709268805-4e9042af9f23?w=400'],
-    thumbnail: 'https://images.unsplash.com/photo-1518709268805-4e9042af9f23?w=200',
-    provider: 'floristone',
-    category: 'flowers',
-    inStock: true
-  },
-  {
-    id: 'FL-002',
-    name: 'Spring Tulip Bouquet',
-    description: 'Colorful mixed tulips arranged beautifully',
-    price: 39.99,
-    currency: 'USD',
-    images: ['https://images.unsplash.com/photo-1520763185298-1b434c919102?w=400'],
-    thumbnail: 'https://images.unsplash.com/photo-1520763185298-1b434c919102?w=200',
-    provider: 'floristone',
-    category: 'flowers',
-    inStock: true
-  },
-  {
-    id: 'FL-003',
-    name: 'Orchid Plant',
-    description: 'Elegant white orchid in decorative pot',
-    price: 59.99,
-    currency: 'USD',
-    images: ['https://images.unsplash.com/photo-1566638761605-9f7b4385a5e0?w=400'],
-    thumbnail: 'https://images.unsplash.com/photo-1566638761605-9f7b4385a5e0?w=200',
-    provider: 'floristone',
-    category: 'plants',
-    inStock: true
-  },
-  {
-    id: 'DO-001',
-    name: 'Premium Chocolate Box',
-    description: 'Assorted gourmet chocolates in elegant packaging',
-    price: 34.99,
-    currency: 'USD',
-    images: ['https://images.unsplash.com/photo-1549007994-cb92caebd54b?w=400'],
-    thumbnail: 'https://images.unsplash.com/photo-1549007994-cb92caebd54b?w=200',
-    provider: 'doba',
-    category: 'gourmet',
-    inStock: true
-  },
-  {
-    id: 'DO-002',
-    name: 'Cozy Throw Blanket',
-    description: 'Soft knitted blanket, perfect for relaxing',
-    price: 45.99,
-    currency: 'USD',
-    images: ['https://images.unsplash.com/photo-1580587771525-78b9dba3b914?w=400'],
-    thumbnail: 'https://images.unsplash.com/photo-1580587771525-78b9dba3b914?w=200',
-    provider: 'doba',
-    category: 'home',
-    inStock: true
-  },
-  {
-    id: 'PF-001',
-    name: 'Custom Photo Mug',
-    description: 'Personalized ceramic mug with your photo',
-    price: 24.99,
-    currency: 'USD',
-    images: ['https://images.unsplash.com/photo-1514228742587-6b1558fcca3d?w=400'],
-    thumbnail: 'https://images.unsplash.com/photo-1514228742587-6b1558fcca3d?w=200',
-    provider: 'printful',
-    category: 'photo_gifts',
-    inStock: true
-  },
+// Price ranges
+const PRICE_RANGES = [
+  { key: 'all', label: 'All Prices', min: 0, max: 10000 },
+  { key: 'under50', label: 'Under $50', min: 0, max: 50 },
+  { key: '50to100', label: '$50 - $100', min: 50, max: 100 },
+  { key: '100to200', label: '$100 - $200', min: 100, max: 200 },
+  { key: 'over200', label: '$200+', min: 200, max: 10000 },
 ]
 
 export function GiftSelectionModal({ 
@@ -182,7 +111,8 @@ export function GiftSelectionModal({
   onClose, 
   onSelect,
   preselectedContactId,
-  preselectedContactName 
+  preselectedContactName,
+  context
 }: GiftSelectionModalProps) {
   const [step, setStep] = useState<'browse' | 'configure' | 'confirm'>('browse')
   const [selectedProduct, setSelectedProduct] = useState<GiftProduct | null>(null)
@@ -193,8 +123,54 @@ export function GiftSelectionModal({
   const [deliveryEvent, setDeliveryEvent] = useState('')
   const [deliveryOffsetDays, setDeliveryOffsetDays] = useState(0)
   const [searchQuery, setSearchQuery] = useState('')
-  const [selectedCategory, setSelectedCategory] = useState<string | null>(null)
+  const [selectedCategory, setSelectedCategory] = useState<string>('all')
+  const [selectedPriceRange, setSelectedPriceRange] = useState<string>('all')
   const [isLoading, setIsLoading] = useState(false)
+  const [products, setProducts] = useState<GiftProduct[]>([])
+  const [categories, setCategories] = useState<{ id: string; name: string; count: number }[]>([])
+  const [error, setError] = useState<string | null>(null)
+
+  // Fetch products from API
+  useEffect(() => {
+    if (!isOpen) return
+    
+    const fetchProducts = async () => {
+      setIsLoading(true)
+      setError(null)
+      
+      try {
+        const params = new URLSearchParams()
+        if (selectedCategory && selectedCategory !== 'all') {
+          params.append('category', selectedCategory)
+        }
+        if (searchQuery) {
+          params.append('search', searchQuery)
+        }
+        if (selectedPriceRange && selectedPriceRange !== 'all') {
+          params.append('priceRange', selectedPriceRange)
+        }
+        params.append('includeCategories', 'true')
+        params.append('limit', '50')
+        
+        const response = await fetch(`/api/goody/curated?${params}`)
+        
+        if (!response.ok) {
+          throw new Error('Failed to fetch products')
+        }
+        
+        const data = await response.json()
+        setProducts(data.products || [])
+        setCategories(data.categories || [])
+      } catch (err) {
+        console.error('Error fetching products:', err)
+        setError('Failed to load products. Please try again.')
+      } finally {
+        setIsLoading(false)
+      }
+    }
+    
+    fetchProducts()
+  }, [isOpen, selectedCategory, searchQuery, selectedPriceRange])
 
   // Reset state when modal opens/closes
   useEffect(() => {
@@ -208,20 +184,15 @@ export function GiftSelectionModal({
       setDeliveryEvent('')
       setDeliveryOffsetDays(0)
       setSearchQuery('')
-      setSelectedCategory(null)
+      setSelectedCategory('all')
+      setSelectedPriceRange('all')
+      setError(null)
     }
   }, [isOpen])
 
   if (!isOpen) return null
 
-  const filteredProducts = MOCK_PRODUCTS.filter(product => {
-    const matchesSearch = product.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                         product.description.toLowerCase().includes(searchQuery.toLowerCase())
-    const matchesCategory = !selectedCategory || product.category === selectedCategory
-    return matchesSearch && matchesCategory
-  })
-
-  const categories = Array.from(new Set(MOCK_PRODUCTS.map(p => p.category)))
+  const filteredProducts = products
 
   const handleProductSelect = (product: GiftProduct) => {
     setSelectedProduct(product)
@@ -260,6 +231,7 @@ export function GiftSelectionModal({
       case 'floristone': return 'Flowers'
       case 'doba': return 'Gifts'
       case 'printful': return 'Custom'
+      case 'goody': return 'Goody'
       default: return provider
     }
   }
@@ -269,8 +241,20 @@ export function GiftSelectionModal({
       case 'floristone': return 'bg-pink-100 text-pink-700'
       case 'doba': return 'bg-blue-100 text-blue-700'
       case 'printful': return 'bg-purple-100 text-purple-700'
+      case 'goody': return 'bg-green-100 text-green-700'
       default: return 'bg-gray-100 text-gray-700'
     }
+  }
+
+  const getCategoryIcon = (categoryId: string) => {
+    const icons: Record<string, string> = {
+      'food': '🍫',
+      'home': '🏠',
+      'wellness': '💆',
+      'electronics': '🔌',
+      'all': '🎁',
+    }
+    return icons[categoryId] || '🎁'
   }
 
   return (
@@ -291,6 +275,11 @@ export function GiftSelectionModal({
               {preselectedContactName && (
                 <p className="text-sm text-gray-500">
                   For {preselectedContactName}
+                </p>
+              )}
+              {context?.eventType && (
+                <p className="text-xs text-gray-400 capitalize">
+                  {context.eventType.replace(/-/g, ' ')}
                 </p>
               )}
             </div>
@@ -320,24 +309,49 @@ export function GiftSelectionModal({
                 />
               </div>
 
-              {/* Categories - Enhanced with icons */}
+              {/* Categories */}
+              {categories.length > 0 && (
+                <div className="flex gap-2 overflow-x-auto pb-2">
+                  {categories.map(cat => {
+                    const isSelected = selectedCategory === cat.id
+                    return (
+                      <button
+                        key={cat.id}
+                        onClick={() => setSelectedCategory(cat.id)}
+                        className={`px-4 py-2 rounded-full text-sm font-medium whitespace-nowrap transition-all flex items-center gap-2
+                          ${isSelected 
+                            ? 'bg-[#C35F33] text-white shadow-md' 
+                            : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                          }`}
+                      >
+                        <span>{getCategoryIcon(cat.id)}</span>
+                        {cat.name}
+                        {cat.count > 0 && (
+                          <span className={`text-xs ${isSelected ? 'text-white/70' : 'text-gray-400'}`}>
+                            ({cat.count})
+                          </span>
+                        )}
+                      </button>
+                    )
+                  })}
+                </div>
+              )}
+
+              {/* Price Range Filter */}
               <div className="flex gap-2 overflow-x-auto pb-2">
-                {GIFT_CATEGORIES.map(cat => {
-                  const isSelected = (cat.key === 'all' && !selectedCategory) || selectedCategory === cat.key
-                  const Icon = typeof cat.icon === 'function' ? cat.icon : null
+                {PRICE_RANGES.map(range => {
+                  const isSelected = selectedPriceRange === range.key
                   return (
                     <button
-                      key={cat.key}
-                      onClick={() => setSelectedCategory(cat.key === 'all' ? null : cat.key)}
-                      className={`px-4 py-2 rounded-full text-sm font-medium whitespace-nowrap transition-all flex items-center gap-2
+                      key={range.key}
+                      onClick={() => setSelectedPriceRange(range.key)}
+                      className={`px-3 py-1.5 rounded-full text-xs font-medium whitespace-nowrap transition-all
                         ${isSelected 
-                          ? 'bg-[#C35F33] text-white shadow-md' 
+                          ? 'bg-[#406A56] text-white' 
                           : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
                         }`}
-                      title={cat.description}
                     >
-                      {Icon ? <Icon size={14} /> : <span>{cat.icon}</span>}
-                      {cat.label}
+                      {range.label}
                     </button>
                   )
                 })}
@@ -346,7 +360,7 @@ export function GiftSelectionModal({
               {/* Results Count */}
               <div className="flex items-center justify-between text-sm">
                 <p className="text-gray-500">
-                  {filteredProducts.length} gift{filteredProducts.length !== 1 ? 's' : ''} found
+                  {isLoading ? 'Loading...' : `${filteredProducts.length} gift${filteredProducts.length !== 1 ? 's' : ''} found`}
                 </p>
                 {searchQuery && (
                   <button
@@ -358,49 +372,90 @@ export function GiftSelectionModal({
                 )}
               </div>
 
-              {/* Products Grid */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                {filteredProducts.map(product => (
-                  <button
-                    key={product.id}
-                    onClick={() => handleProductSelect(product)}
-                    className="group text-left bg-white border border-gray-200 rounded-xl overflow-hidden
-                             hover:border-[#C35F33]/50 hover:shadow-lg transition-all"
-                  >
-                    <div className="aspect-square bg-gray-100 relative overflow-hidden">
-                      <img
-                        src={product.thumbnail}
-                        alt={product.name}
-                        className="w-full h-full object-cover group-hover:scale-105 transition-transform"
-                      />
-                      <div className={`absolute top-2 left-2 px-2 py-1 rounded-full text-xs font-medium
-                                     ${getProviderColor(product.provider)}`}>
-                        {getProviderLabel(product.provider)}
-                      </div>
-                    </div>
-                    <div className="p-4">
-                      <h3 className="font-semibold text-gray-900 mb-1 line-clamp-1">{product.name}</h3>
-                      <p className="text-sm text-gray-500 mb-3 line-clamp-2">{product.description}</p>
-                      <div className="flex items-center justify-between">
-                        <span className="text-lg font-bold text-[#C35F33]">
-                          {formatPrice(product.price, product.currency)}
-                        </span>
-                        <span className="text-xs text-gray-400 flex items-center gap-1">
-                          <ShoppingBag className="w-3 h-3" />
-                          Select
-                        </span>
-                      </div>
-                    </div>
-                  </button>
-                ))}
-              </div>
+              {/* Error State */}
+              {error && (
+                <div className="p-4 bg-red-50 rounded-xl border border-red-100">
+                  <div className="flex items-center gap-2 text-red-600">
+                    <AlertCircle className="w-5 h-5" />
+                    <p>{error}</p>
+                  </div>
+                </div>
+              )}
 
-              {filteredProducts.length === 0 && (
+              {/* Products Grid */}
+              {isLoading ? (
+                <div className="flex items-center justify-center py-12">
+                  <Loader2 className="w-8 h-8 animate-spin text-[#C35F33]" />
+                </div>
+              ) : (
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                  {filteredProducts.map(product => (
+                    <button
+                      key={product.id}
+                      onClick={() => handleProductSelect(product)}
+                      className="group text-left bg-white border border-gray-200 rounded-xl overflow-hidden
+                               hover:border-[#C35F33]/50 hover:shadow-lg transition-all"
+                    >
+                      <div className="aspect-square bg-gray-100 relative overflow-hidden">
+                        <img
+                          src={product.thumbnail}
+                          alt={product.name}
+                          className="w-full h-full object-cover group-hover:scale-105 transition-transform"
+                        />
+                        <div className={`absolute top-2 left-2 px-2 py-1 rounded-full text-xs font-medium
+                                       ${getProviderColor(product.provider)}`}>
+                          {getProviderLabel(product.provider)}
+                        </div>
+                        {product.isBestseller && (
+                          <div className="absolute top-2 right-2 px-2 py-1 rounded-full text-xs font-medium
+                                         bg-amber-100 text-amber-700">
+                            ⭐ Bestseller
+                          </div>
+                        )}
+                        {product.isNew && (
+                          <div className="absolute top-2 right-2 px-2 py-1 rounded-full text-xs font-medium
+                                         bg-blue-100 text-blue-700">
+                            New
+                          </div>
+                        )}
+                      </div>
+                      <div className="p-4">
+                        <h3 className="font-semibold text-gray-900 mb-1 line-clamp-1">{product.name}</h3>
+                        {product.brandName && (
+                          <p className="text-xs text-gray-400 mb-2">{product.brandName}</p>
+                        )}
+                        <p className="text-sm text-gray-500 mb-3 line-clamp-2">{product.description}</p>
+                        <div className="flex items-center justify-between">
+                          <span className="text-lg font-bold text-[#C35F33]">
+                            {formatPrice(product.price, product.currency)}
+                          </span>
+                          <span className="text-xs text-gray-400 flex items-center gap-1">
+                            <ShoppingBag className="w-3 h-3" />
+                            Select
+                          </span>
+                        </div>
+                      </div>
+                    </button>
+                  ))}
+                </div>
+              )}
+
+              {!isLoading && filteredProducts.length === 0 && (
                 <div className="text-center py-12">
                   <div className="w-16 h-16 rounded-full bg-gray-100 flex items-center justify-center mx-auto mb-4">
                     <Search className="w-8 h-8 text-gray-400" />
                   </div>
                   <p className="text-gray-500">No gifts found matching your search</p>
+                  <button
+                    onClick={() => {
+                      setSearchQuery('')
+                      setSelectedCategory('all')
+                      setSelectedPriceRange('all')
+                    }}
+                    className="mt-4 text-[#C35F33] hover:underline text-sm"
+                  >
+                    Clear all filters
+                  </button>
                 </div>
               )}
             </div>
@@ -417,6 +472,9 @@ export function GiftSelectionModal({
                 />
                 <div className="flex-1">
                   <h3 className="font-semibold text-gray-900">{selectedProduct.name}</h3>
+                  {selectedProduct.brandName && (
+                    <p className="text-xs text-gray-400">{selectedProduct.brandName}</p>
+                  )}
                   <p className="text-sm text-gray-500 mb-2">{selectedProduct.description}</p>
                   <span className="text-lg font-bold text-[#C35F33]">
                     {formatPrice(selectedProduct.price, selectedProduct.currency)}
@@ -563,9 +621,20 @@ export function GiftSelectionModal({
         {/* Footer */}
         <div className="px-6 py-4 border-t border-gray-100 bg-gray-50">
           {step === 'browse' && (
-            <p className="text-sm text-gray-500 text-center">
-              Choose from our curated selection of gifts for your loved ones
-            </p>
+            <div className="flex items-center justify-between">
+              <p className="text-sm text-gray-500">
+                Powered by <span className="font-medium text-[#C35F33]">Goody</span>
+              </p>
+              <a 
+                href="https://www.ongoody.com" 
+                target="_blank" 
+                rel="noopener noreferrer"
+                className="text-xs text-gray-400 hover:text-gray-600 flex items-center gap-1"
+              >
+                <Store className="w-3 h-3" />
+                Browse more on Goody
+              </a>
+            </div>
           )}
           
           {step === 'configure' && selectedProduct && (
