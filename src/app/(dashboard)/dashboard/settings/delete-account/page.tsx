@@ -106,9 +106,9 @@ export default function DeleteAccountPage() {
       supabase.from('subscription_seats').select('*, profiles(id, full_name, email)').eq('subscription_id', user.id),
     ])
 
-    // Process postscripts
+    // Process postscripts (draft and scheduled are not yet sent)
     const pendingPostscripts = (postscriptsRes.data || [])
-      .filter(p => p.status === 'scheduled' || p.status === 'pending')
+      .filter(p => p.status === 'draft' || p.status === 'scheduled')
       .map(p => ({
         id: p.id,
         title: p.title || 'Untitled',
@@ -192,7 +192,7 @@ export default function DeleteAccountPage() {
           .from('postscripts')
           .update({ orphaned: true, orphaned_at: new Date().toISOString() })
           .eq('user_id', user.id)
-          .in('status', ['scheduled', 'pending'])
+          .in('status', ['draft', 'scheduled'])
       }
 
       // If admin and transferring, update subscription ownership
