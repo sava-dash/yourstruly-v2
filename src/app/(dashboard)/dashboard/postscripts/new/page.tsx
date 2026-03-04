@@ -12,6 +12,7 @@ import Link from 'next/link'
 import '@/styles/home.css'
 import { EVENT_OPTIONS } from '@/lib/postscripts/events'
 import { AttachmentSelectorModal, type SelectedAttachment } from '@/components/postscripts'
+import { GiftSelectionModal, type GiftSelection } from '@/components/postscripts/GiftSelectionModal'
 
 interface Contact {
   id: string
@@ -42,6 +43,8 @@ interface SelectedGift {
   price: number
   image_url: string
   provider: string
+  giftType: 'product' | 'choice'
+  flexGiftAmount?: number
 }
 
 interface FormData {
@@ -1080,18 +1083,36 @@ export default function NewPostScriptPage() {
     )
   }
 
-  // Sample gift options (replace with API call later)
-  const giftOptions = [
-    { id: 'flowers-1', name: 'Spring Bouquet', price: 49.99, image_url: 'https://images.unsplash.com/photo-1487530811176-3780de880c2d?w=200', provider: 'Floristone' },
-    { id: 'flowers-2', name: 'Rose Arrangement', price: 79.99, image_url: 'https://images.unsplash.com/photo-1518709268805-4e9042af9f23?w=200', provider: 'Floristone' },
-    { id: 'gift-1', name: 'Cozy Blanket Set', price: 59.99, image_url: 'https://images.unsplash.com/photo-1580301762395-21ce84d00bc6?w=200', provider: 'Prodigi' },
-    { id: 'gift-2', name: 'Artisan Candle Trio', price: 34.99, image_url: 'https://images.unsplash.com/photo-1602607206385-e3048cf3e7a0?w=200', provider: 'Prodigi' },
-    { id: 'print-1', name: 'Custom Photo Book', price: 44.99, image_url: 'https://images.unsplash.com/photo-1544716278-ca5e3f4abd8c?w=200', provider: 'Prodigi' },
-    { id: 'print-2', name: 'Framed Memory Print', price: 29.99, image_url: 'https://images.unsplash.com/photo-1513519245088-0e12902e35ca?w=200', provider: 'Prodigi' },
-  ]
-
-  function selectGift(gift: SelectedGift) {
-    setForm({ ...form, gift })
+  // Handle gift selection from the modal
+  function handleGiftSelect(selection: GiftSelection) {
+    if (selection.giftType === 'choice') {
+      // Gift of Choice
+      setForm({ 
+        ...form, 
+        gift: {
+          id: 'gift-of-choice',
+          name: `Gift of Choice - $${selection.flexGiftAmount}`,
+          price: selection.flexGiftAmount || 50,
+          image_url: 'https://assets.ongoody.com/store/gift-of-choice-card.png',
+          provider: 'Goody',
+          giftType: 'choice',
+          flexGiftAmount: selection.flexGiftAmount,
+        }
+      })
+    } else if (selection.product) {
+      // Specific product
+      setForm({ 
+        ...form, 
+        gift: {
+          id: selection.product.id,
+          name: selection.product.name,
+          price: selection.product.price,
+          image_url: selection.product.thumbnail,
+          provider: selection.product.provider,
+          giftType: 'product',
+        }
+      })
+    }
     setShowGiftModal(false)
   }
 
@@ -1118,53 +1139,14 @@ export default function NewPostScriptPage() {
       />
 
       {/* Gift Selection Modal */}
-      {showGiftModal && (
-        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
-          <div className="bg-white rounded-2xl w-full max-w-lg max-h-[80vh] overflow-hidden">
-            <div className="p-4 border-b border-gray-100 flex items-center justify-between">
-              <div>
-                <h3 className="font-bold text-lg text-gray-900">Add a Gift</h3>
-                <p className="text-sm text-gray-500">Surprise them with something special</p>
-              </div>
-              <button
-                onClick={() => setShowGiftModal(false)}
-                className="p-2 hover:bg-gray-100 rounded-full"
-              >
-                <X size={20} className="text-gray-500" />
-              </button>
-            </div>
-            
-            <div className="p-4 overflow-y-auto max-h-[60vh]">
-              <div className="grid grid-cols-2 gap-3">
-                {giftOptions.map(gift => (
-                  <button
-                    key={gift.id}
-                    onClick={() => selectGift(gift)}
-                    className="bg-white border border-gray-200 rounded-xl p-3 hover:border-[#C35F33] 
-                             hover:shadow-md transition-all text-left"
-                  >
-                    <img 
-                      src={gift.image_url} 
-                      alt={gift.name}
-                      className="w-full aspect-square rounded-lg object-cover mb-2"
-                    />
-                    <p className="font-medium text-gray-900 text-sm truncate">{gift.name}</p>
-                    <p className="text-[#C35F33] font-semibold">${gift.price.toFixed(2)}</p>
-                    <p className="text-xs text-gray-400">{gift.provider}</p>
-                  </button>
-                ))}
-              </div>
-              
-              <Link 
-                href="/marketplace"
-                className="mt-4 block text-center text-[#C35F33] hover:underline text-sm"
-              >
-                Browse full marketplace →
-              </Link>
-            </div>
-          </div>
-        </div>
-      )}
+      <GiftSelectionModal
+        isOpen={showGiftModal}
+        onClose={() => setShowGiftModal(false)}
+        onSelect={handleGiftSelect}
+        deliveryDate={form.delivery_date}
+        deliveryType={form.delivery_type}
+        preselectedContactName={form.recipient_name || contacts.find(c => c.id === form.recipient_contact_id)?.full_name}
+      />
 
       {/* Warm background */}
       <div className="home-background">
