@@ -1,8 +1,8 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { createClient } from '@/lib/supabase/client'
-import { ChevronLeft, User, Bell, Download, Trash2, LogOut, Sparkles, Loader2, CreditCard, ChevronRight } from 'lucide-react'
+import { ChevronLeft, User, Bell, Download, Upload, Trash2, LogOut, Sparkles, Loader2, CreditCard, ChevronRight, AlertTriangle } from 'lucide-react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import '@/styles/page-styles.css'
@@ -24,6 +24,10 @@ export default function SettingsPage() {
   const [message, setMessage] = useState('')
   const [generatingEmbeddings, setGeneratingEmbeddings] = useState(false)
   const [embeddingStats, setEmbeddingStats] = useState<{ processed: number; errors: number } | null>(null)
+  const [importing, setImporting] = useState(false)
+  const [importPreview, setImportPreview] = useState<{ data: any; counts: Record<string, number> } | null>(null)
+  const [showImportModal, setShowImportModal] = useState(false)
+  const fileInputRef = useRef<HTMLInputElement>(null)
   const router = useRouter()
   const supabase = createClient()
 
@@ -260,6 +264,146 @@ export default function SettingsPage() {
     setTimeout(() => setMessage(''), 5000)
   }
 
+  const handleFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+
+    try {
+      const text = await file.text()
+      const data = JSON.parse(text)
+
+      // Validate it's a YoursTruly export
+      if (!data._meta?.version && !data.profile) {
+        setMessage('Invalid backup file. Please select a YoursTruly export file.')
+        return
+      }
+
+      // Count items for preview
+      const counts: Record<string, number> = {}
+      const countableKeys = [
+        'memories', 'contacts', 'postscripts', 'wisdom', 'circles', 
+        'pets', 'media_items', 'albums', 'interview_sessions', 
+        'video_responses', 'voice_clones', 'education_history',
+        'chat_sessions', 'xp_transactions'
+      ]
+      
+      for (const key of countableKeys) {
+        if (Array.isArray(data[key]) && data[key].length > 0) {
+          counts[key] = data[key].length
+        }
+      }
+
+      setImportPreview({ data, counts })
+      setShowImportModal(true)
+    } catch (error) {
+      console.error('Parse error:', error)
+      setMessage('Failed to read backup file. Make sure it\'s a valid JSON file.')
+    }
+
+    // Reset file input
+    if (fileInputRef.current) {
+      fileInputRef.current.value = ''
+    }
+  }
+
+  const handleImportConfirm = async () => {
+    if (!importPreview?.data) return
+
+    setImporting(true)
+    setMessage('Importing your data... This may take a moment.')
+
+    const { data: { user } } = await supabase.auth.getUser()
+    if (!user) {
+      setMessage('Not authenticated. Please log in again.')
+      setImporting(false)
+      return
+    }
+
+    const backup = importPreview.data
+    let imported = 0
+    let errors = 0
+
+    try {
+      // Helper to import array data with user_id override
+      const importTable = async (table: string, items: any[], userIdField = 'user_id') => {
+        if (!items || items.length === 0) return
+
+        for (const item of items) {
+          // Remove id to let DB generate new ones, override user_id
+          const { id, ...rest } = item
+          const newItem = { ...rest, [userIdField]: user.id }
+          
+          const { error } = await supabase.from(table).insert(newItem)
+          if (error) {
+            console.error(`Error importing to ${table}:`, error)
+            errors++
+          } else {
+            imported++
+          }
+        }
+      }
+
+      // Import profile data (merge with existing)
+      if (backup.profile) {
+        const { id, email, created_at, updated_at, ...profileData } = backup.profile
+        await supabase.from('profiles').update(profileData).eq('id', user.id)
+        imported++
+      }
+
+      // Import education history
+      await importTable('education_history', backup.education_history)
+
+      // Import contacts
+      await importTable('contacts', backup.contacts)
+
+      // Import memories
+      await importTable('memories', backup.memories)
+
+      // Import pets
+      await importTable('pets', backup.pets)
+
+      // Import wisdom/knowledge entries
+      await importTable('knowledge_entries', backup.wisdom)
+
+      // Import postscripts
+      await importTable('postscripts', backup.postscripts)
+
+      // Import circles (owner_id instead of user_id)
+      await importTable('circles', backup.circles, 'owner_id')
+
+      // Import media items
+      await importTable('media_items', backup.media_items)
+
+      // Import albums
+      await importTable('memory_albums', backup.albums)
+
+      // Import smart albums
+      await importTable('smart_albums', backup.smart_albums)
+
+      // Import interview sessions
+      await importTable('interview_sessions', backup.interview_sessions)
+
+      // Import video responses
+      await importTable('video_responses', backup.video_responses)
+
+      // Import voice clones
+      await importTable('voice_clones', backup.voice_clones)
+
+      // Import chat sessions
+      await importTable('chat_sessions', backup.chat_sessions)
+
+      setMessage(`Import complete! Restored ${imported} items.${errors > 0 ? ` (${errors} items skipped due to conflicts)` : ''}`)
+    } catch (error) {
+      console.error('Import error:', error)
+      setMessage('Import failed. Some data may have been partially restored.')
+    } finally {
+      setImporting(false)
+      setShowImportModal(false)
+      setImportPreview(null)
+      setTimeout(() => setMessage(''), 8000)
+    }
+  }
+
   return (
     <div className="page-container">
       {/* Warm gradient background with blobs */}
@@ -405,6 +549,24 @@ export default function SettingsPage() {
                 <Download size={18} />
                 Export All Data
               </button>
+              
+              <button
+                onClick={() => fileInputRef.current?.click()}
+                className="w-full flex items-center justify-center gap-2 py-3 bg-[#8DACAB]/5 hover:bg-[#8DACAB]/10 text-[#5d8585] rounded-xl transition-colors font-medium"
+              >
+                <Upload size={18} />
+                Import Backup
+              </button>
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept=".json"
+                onChange={handleFileSelect}
+                className="hidden"
+              />
+              <p className="text-xs text-[#999] text-center">
+                Restore data from a previous YoursTruly export
+              </p>
             </div>
           </section>
 
@@ -474,6 +636,81 @@ export default function SettingsPage() {
           </div>
         </div>
       </div>
+
+      {/* Import Confirmation Modal */}
+      {showImportModal && importPreview && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-2xl max-w-md w-full p-6 shadow-xl">
+            <div className="flex items-center gap-3 mb-4">
+              <div className="w-10 h-10 rounded-xl bg-[#D9C61A]/10 flex items-center justify-center">
+                <AlertTriangle size={20} className="text-[#8a7c08]" />
+              </div>
+              <h3 className="text-lg font-semibold text-[#2d2d2d]">Confirm Import</h3>
+            </div>
+
+            <p className="text-[#666] mb-4">
+              This will restore data from your backup file. Existing data will not be deleted, but duplicates may be created.
+            </p>
+
+            {importPreview.data._meta && (
+              <div className="bg-[#406A56]/5 rounded-xl p-3 mb-4 text-sm">
+                <p className="text-[#666]">
+                  <span className="font-medium">Exported:</span>{' '}
+                  {new Date(importPreview.data._meta.exported_at).toLocaleDateString()}
+                </p>
+                {importPreview.data._meta.user_email && (
+                  <p className="text-[#666]">
+                    <span className="font-medium">From:</span>{' '}
+                    {importPreview.data._meta.user_email}
+                  </p>
+                )}
+              </div>
+            )}
+
+            <div className="mb-6">
+              <p className="text-sm font-medium text-[#2d2d2d] mb-2">Items to restore:</p>
+              <div className="grid grid-cols-2 gap-2 text-sm">
+                {Object.entries(importPreview.counts).map(([key, count]) => (
+                  <div key={key} className="flex justify-between bg-[#f5f5f5] rounded-lg px-3 py-1.5">
+                    <span className="text-[#666] capitalize">{key.replace(/_/g, ' ')}</span>
+                    <span className="font-medium text-[#2d2d2d]">{count}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            <div className="flex gap-3">
+              <button
+                onClick={() => {
+                  setShowImportModal(false)
+                  setImportPreview(null)
+                }}
+                disabled={importing}
+                className="flex-1 py-2.5 px-4 bg-gray-100 hover:bg-gray-200 text-[#666] rounded-xl transition-colors font-medium"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleImportConfirm}
+                disabled={importing}
+                className="flex-1 py-2.5 px-4 bg-[#406A56] hover:bg-[#355a48] text-white rounded-xl transition-colors font-medium flex items-center justify-center gap-2"
+              >
+                {importing ? (
+                  <>
+                    <Loader2 size={16} className="animate-spin" />
+                    Importing...
+                  </>
+                ) : (
+                  <>
+                    <Upload size={16} />
+                    Import
+                  </>
+                )}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }
