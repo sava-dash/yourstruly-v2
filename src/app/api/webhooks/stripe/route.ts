@@ -78,7 +78,15 @@ async function handleCheckoutSessionCompleted(session: Stripe.Checkout.Session) 
   const subscriptionId = session.subscription as string;
   const userId = session.metadata?.userId;
   const planId = session.metadata?.planId;
+  const checkoutType = session.metadata?.type;
 
+  // Handle PostScript gift payments
+  if (checkoutType === 'postscript_gift') {
+    await handlePostscriptGiftPayment(session);
+    return;
+  }
+
+  // Handle subscription checkout
   if (!userId || !planId) {
     console.error('Missing userId or planId in checkout session metadata');
     return;
@@ -184,4 +192,45 @@ async function handlePaymentFailed(invoice: any) {
 async function handleTrialEnding(subscription: Stripe.Subscription) {
   // Could send email notification here
   console.log(`Trial ending soon for subscription: ${subscription.id}`);
+}
+
+async function handlePostscriptGiftPayment(session: Stripe.Checkout.Session) {
+  const giftId = session.metadata?.giftId;
+  const postscriptId = session.metadata?.postscriptId;
+  const userId = session.metadata?.userId;
+  const paymentIntentId = session.payment_intent as string;
+
+  if (!giftId || !postscriptId) {
+    console.error('Missing giftId or postscriptId in postscript gift checkout metadata');
+    return;
+  }
+
+  const supabase = getSupabaseAdmin();
+
+  // Update the gift record with payment info
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const { error } = await (supabase.from('postscript_gifts') as any)
+    .update({
+      payment_intent_id: paymentIntentId,
+      payment_status: 'paid',
+      status: 'paid', // Ready to be fulfilled when postscript is sent
+      updated_at: new Date().toISOString(),
+    })
+    .eq('id', giftId);
+
+  if (error) {
+    console.error('Error updating postscript gift payment status:', error);
+    throw error;
+  }
+
+  // Update postscript has_gift flag
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  await (supabase.from('postscripts') as any)
+    .update({ 
+      has_gift: true,
+      updated_at: new Date().toISOString(),
+    })
+    .eq('id', postscriptId);
+
+  console.log(`PostScript gift payment completed: gift=${giftId}, postscript=${postscriptId}, user=${userId}`);
 }

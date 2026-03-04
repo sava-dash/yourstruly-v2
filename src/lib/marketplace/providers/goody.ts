@@ -348,7 +348,7 @@ export async function getCategories(): Promise<{ id: string; name: string }[]> {
 export async function calculatePrice(params: {
   sendMethod: 'email_and_link' | 'link_multiple_custom_list' | 'direct_send';
   recipients: GoodyRecipient[];
-  cartItems: { productId: string; quantity: number }[];
+  cartItems: { productId: string; quantity: number; variablePrice?: number }[];
 }): Promise<{
   amountProduct: number;
   amountShipping: number;
@@ -371,6 +371,7 @@ export async function calculatePrice(params: {
           items: params.cartItems.map(item => ({
             product_id: item.productId,
             quantity: item.quantity,
+            ...(item.variablePrice && { variable_price: item.variablePrice }),
           })),
         },
       }),
@@ -408,11 +409,12 @@ export async function createOrderBatch(params: {
   fromName: string;
   sendMethod: 'email_and_link' | 'link_multiple_custom_list' | 'direct_send';
   recipients: GoodyRecipient[];
-  cartItems: { productId: string; quantity: number }[];
+  cartItems: { productId: string; quantity: number; variablePrice?: number }[];
   message?: string;
   cardId?: string;
   scheduledSendOn?: string; // ISO 8601 date string
   expiresAt?: string; // ISO 8601 date string
+  swap?: 'single' | 'multiple' | 'disabled'; // Gift swap mode
 }): Promise<GoodyOrderBatch> {
   const response = await fetch(`${GOODY_API_BASE_URL}/v1/order_batches`, {
     method: 'POST',
@@ -428,6 +430,7 @@ export async function createOrderBatch(params: {
         items: params.cartItems.map(item => ({
           product_id: item.productId,
           quantity: item.quantity,
+          ...(item.variablePrice && { variable_price: item.variablePrice }),
         })),
       },
       payment_method_id: 'COMMERCE_STORED_VALUE',
@@ -435,6 +438,7 @@ export async function createOrderBatch(params: {
       card_id: params.cardId,
       scheduled_send_on: params.scheduledSendOn,
       expires_at: params.expiresAt,
+      ...(params.swap && { swap: params.swap }),
     }),
   });
 
