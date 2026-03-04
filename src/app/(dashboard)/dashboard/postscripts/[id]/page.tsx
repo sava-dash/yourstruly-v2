@@ -1,7 +1,7 @@
 'use client'
 
 import React, { useState, useEffect, use } from 'react'
-import { useRouter } from 'next/navigation'
+import { useRouter, useSearchParams } from 'next/navigation'
 import { 
   ChevronLeft, Send, Calendar, Clock, CheckCircle, 
   Edit2, Trash2, Eye, User, Mail, Phone, Gift, Users,
@@ -11,6 +11,7 @@ import Link from 'next/link'
 import '@/styles/page-styles.css'
 import Modal from '@/components/ui/Modal'
 import { EVENT_LABELS, getEventIcon } from '@/lib/postscripts/events'
+import { GiftSelectorModal } from '@/components/postscripts'
 
 interface PostScript {
   id: string
@@ -107,12 +108,36 @@ const STATUS_CONFIG = {
 export default function PostScriptDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params)
   const router = useRouter()
+  const searchParams = useSearchParams()
   
   const [postscript, setPostscript] = useState<PostScript | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
   const [deleting, setDeleting] = useState(false)
+  const [showGiftModal, setShowGiftModal] = useState(false)
+  const [giftMessage, setGiftMessage] = useState<{ type: 'success' | 'error', text: string } | null>(null)
+
+  // Handle gift payment callback from Stripe
+  useEffect(() => {
+    const giftPayment = searchParams.get('gift_payment')
+    if (giftPayment === 'success') {
+      setGiftMessage({ type: 'success', text: 'Gift added successfully! Payment complete.' })
+      // Clear URL params
+      router.replace(`/dashboard/postscripts/${id}`, { scroll: false })
+    } else if (giftPayment === 'cancelled') {
+      setGiftMessage({ type: 'error', text: 'Gift payment was cancelled.' })
+      router.replace(`/dashboard/postscripts/${id}`, { scroll: false })
+    }
+  }, [searchParams, id, router])
+
+  // Auto-dismiss gift message
+  useEffect(() => {
+    if (giftMessage) {
+      const timer = setTimeout(() => setGiftMessage(null), 5000)
+      return () => clearTimeout(timer)
+    }
+  }, [giftMessage])
 
   useEffect(() => {
     fetchPostScript()
@@ -232,6 +257,28 @@ export default function PostScriptDetailPage({ params }: { params: Promise<{ id:
         <div className="page-blob page-blob-2" />
         <div className="page-blob page-blob-3" />
       </div>
+
+      {/* Gift payment toast */}
+      {giftMessage && (
+        <div className={`fixed top-4 right-4 z-50 p-4 rounded-xl shadow-lg flex items-center gap-3 animate-in slide-in-from-top-2 ${
+          giftMessage.type === 'success' 
+            ? 'bg-green-50 border border-green-200 text-green-800' 
+            : 'bg-red-50 border border-red-200 text-red-800'
+        }`}>
+          {giftMessage.type === 'success' ? (
+            <CheckCircle size={20} className="text-green-500" />
+          ) : (
+            <AlertCircle size={20} className="text-red-500" />
+          )}
+          <span className="font-medium">{giftMessage.text}</span>
+          <button 
+            onClick={() => setGiftMessage(null)}
+            className="ml-2 text-gray-400 hover:text-gray-600"
+          >
+            ×
+          </button>
+        </div>
+      )}
 
       <div className="relative z-10 max-w-3xl mx-auto">
         {/* Header */}
@@ -439,7 +486,7 @@ export default function PostScriptDetailPage({ params }: { params: Promise<{ id:
             </div>
 
             {/* Gift Info Card */}
-            {postscript.has_gift && (
+            {postscript.has_gift ? (
               <div className="glass-card-page p-5">
                 <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-4 flex items-center gap-2">
                   <Gift size={12} className="text-[#D9C61A]" />
@@ -461,6 +508,21 @@ export default function PostScriptDetailPage({ params }: { params: Promise<{ id:
                   )}
                 </div>
               </div>
+            ) : (postscript.status === 'draft' || postscript.status === 'scheduled') && (
+              <button
+                onClick={() => setShowGiftModal(true)}
+                className="w-full glass-card-page p-5 text-left hover:bg-rose-50/50 transition-colors group"
+              >
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-rose-500 to-pink-600 flex items-center justify-center group-hover:scale-105 transition-transform">
+                    <Gift size={20} className="text-white" />
+                  </div>
+                  <div>
+                    <h3 className="font-medium text-gray-900">Add a Gift</h3>
+                    <p className="text-sm text-gray-500">Surprise them with something special</p>
+                  </div>
+                </div>
+              </button>
             )}
 
             {/* Timestamps Card */}
@@ -548,6 +610,19 @@ export default function PostScriptDetailPage({ params }: { params: Promise<{ id:
           </div>
         </div>
       </Modal>
+
+      {/* Gift Selector Modal */}
+      <GiftSelectorModal
+        isOpen={showGiftModal}
+        onClose={() => setShowGiftModal(false)}
+        postscriptId={postscript.id}
+        deliveryDate={postscript.delivery_date ? new Date(postscript.delivery_date) : null}
+        deliveryType={postscript.delivery_type === 'after_passing' ? 'passing' : postscript.delivery_type}
+        onGiftAdded={(gift) => {
+          // Refresh postscript data after gift is added
+          fetchPostScript()
+        }}
+      />
     </div>
   )
 }
