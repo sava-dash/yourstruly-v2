@@ -272,7 +272,7 @@ export default function CreateMemoryModal({ isOpen, onClose, onCreated }: Create
                   />
                   {file.uploading && (
                     <div className="absolute inset-0 bg-black/60 flex items-center justify-center">
-                      <Loader2 size={24} className="text-amber-500 animate-spin" />
+                      <Loader2 size={24} className="text-[#406A56] animate-spin" />
                     </div>
                   )}
                   {file.uploaded && (
@@ -298,7 +298,7 @@ export default function CreateMemoryModal({ isOpen, onClose, onCreated }: Create
           {files.length > 0 && (
             <button
               onClick={() => setStep(2)}
-              className="w-full mt-4 py-3 bg-gradient-to-r from-amber-500 to-orange-600 hover:from-amber-600 hover:to-orange-700 text-white rounded-xl font-medium transition-all"
+              className="w-full mt-4 py-3 bg-[#406A56] hover:bg-[#355a48] text-white rounded-xl font-medium transition-all"
             >
               Continue ({files.length} {files.length === 1 ? 'file' : 'files'})
             </button>
@@ -319,15 +319,15 @@ export default function CreateMemoryModal({ isOpen, onClose, onCreated }: Create
             ))}
             {files.length > 5 && (
               <div className="w-16 h-16 rounded-xl bg-gray-100 flex items-center justify-center flex-shrink-0">
-                <span className="text-gray-700 text-sm">+{files.length - 5}</span>
+                <span className="text-gray-600 text-sm">+{files.length - 5}</span>
               </div>
             )}
           </div>
 
           {/* AI Suggestions */}
           {aiSuggestions && (
-            <div className="p-3 bg-amber-500/10 border border-amber-500/30 rounded-xl">
-              <div className="flex items-center gap-2 text-amber-500 text-sm mb-2">
+            <div className="p-3 bg-[#406A56]/10 border border-[#406A56]/30 rounded-xl">
+              <div className="flex items-center gap-2 text-[#406A56] text-sm mb-2">
                 <Sparkles size={14} />
                 AI Suggestions
               </div>
@@ -336,7 +336,7 @@ export default function CreateMemoryModal({ isOpen, onClose, onCreated }: Create
                   onClick={() => setTitle(aiSuggestions.title!)}
                   className="text-sm text-white/70 hover:text-gray-700"
                 >
-                  Title: "{aiSuggestions.title}" — <span className="text-amber-500">use this</span>
+                  Title: "{aiSuggestions.title}" — <span className="text-[#406A56]">use this</span>
                 </button>
               )}
             </div>
@@ -351,7 +351,7 @@ export default function CreateMemoryModal({ isOpen, onClose, onCreated }: Create
               value={title}
               onChange={(e) => setTitle(e.target.value)}
               placeholder="Give this memory a name..."
-              className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#406A56]/50 transition-all"
+              className="w-full px-4 py-3 form-input placeholder-gray-400"
             />
           </div>
 
@@ -364,7 +364,7 @@ export default function CreateMemoryModal({ isOpen, onClose, onCreated }: Create
               onChange={(e) => setDescription(e.target.value)}
               placeholder="What happened? How did you feel?"
               rows={3}
-              className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#406A56]/50 resize-none transition-all"
+              className="w-full px-4 py-3 form-input resize-none"
             />
           </div>
 
@@ -379,7 +379,7 @@ export default function CreateMemoryModal({ isOpen, onClose, onCreated }: Create
                   type="date"
                   value={memoryDate}
                   onChange={(e) => setMemoryDate(e.target.value)}
-                  className="w-full pl-10 pr-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-[#406A56]/50 transition-all"
+                  className="w-full pl-10 pr-4 py-3 form-input"
                 />
               </div>
             </div>
@@ -389,10 +389,10 @@ export default function CreateMemoryModal({ isOpen, onClose, onCreated }: Create
                 id="memory-type"
                 value={memoryType}
                 onChange={(e) => setMemoryType(e.target.value)}
-                className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-[#406A56]/50 transition-all"
+                className="w-full px-4 py-3 form-input"
               >
                 {MEMORY_TYPES.map((type) => (
-                  <option key={type.id} value={type.id} className="bg-white">
+                  <option key={type.id} value={type.id} className="bg-white text-[#2d2d2d]">
                     {type.label}
                   </option>
                 ))}
@@ -411,7 +411,7 @@ export default function CreateMemoryModal({ isOpen, onClose, onCreated }: Create
                 value={locationName}
                 onChange={(e) => setLocationName(e.target.value)}
                 placeholder="Where was this?"
-                className="w-full pl-10 pr-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#406A56]/50 transition-all"
+                className="w-full pl-10 pr-4 py-3 form-input placeholder-gray-400"
               />
             </div>
           </div>
@@ -423,10 +423,10 @@ export default function CreateMemoryModal({ isOpen, onClose, onCreated }: Create
               className="w-full flex items-center justify-between p-3 bg-gray-50 rounded-xl hover:bg-gray-100 transition-all"
             >
               <div className="flex items-center gap-3">
-                <Users size={18} className="text-amber-500" />
+                <Users size={18} className="text-[#406A56]" />
                 <span className="text-gray-700">Share with Contacts</span>
                 {selectedContacts.size > 0 && (
-                  <span className="px-2 py-0.5 bg-amber-500/20 text-amber-400 text-xs rounded-full">
+                  <span className="px-2 py-0.5 bg-[#406A56]/20 text-[#406A56] text-xs rounded-full">
                     {selectedContacts.size} selected
                   </span>
                 )}
@@ -457,7 +457,7 @@ export default function CreateMemoryModal({ isOpen, onClose, onCreated }: Create
                           type="checkbox"
                           checked={selectedContacts.has(contact.id)}
                           onChange={() => toggleContact(contact.id)}
-                          className="w-4 h-4 rounded border-gray-300 bg-gray-50 text-amber-500 focus:ring-[#406A56]/50"
+                          className="w-4 h-4 rounded border-gray-300 bg-gray-50 text-[#406A56] focus:ring-[#406A56]/50"
                         />
                         <div>
                           <div className="text-gray-700 text-sm">{contact.full_name}</div>
@@ -484,7 +484,7 @@ export default function CreateMemoryModal({ isOpen, onClose, onCreated }: Create
             <button
               onClick={handleCreate}
               disabled={creating}
-              className="flex-1 py-3 bg-gradient-to-r from-amber-500 to-orange-600 hover:from-amber-600 hover:to-orange-700 disabled:opacity-50 text-white rounded-xl font-medium transition-all flex items-center justify-center gap-2"
+              className="flex-1 py-3 bg-[#406A56] hover:bg-[#355a48] disabled:opacity-50 text-white rounded-xl font-medium transition-all flex items-center justify-center gap-2"
             >
               {creating ? (
                 <>
