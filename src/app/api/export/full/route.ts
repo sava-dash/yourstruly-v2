@@ -327,7 +327,7 @@ export async function POST(request: NextRequest) {
     // Return as download
     const filename = `yourstruly-full-backup-${new Date().toISOString().split('T')[0]}.zip`
     
-    return new NextResponse(zipBuffer, {
+    return new NextResponse(new Uint8Array(zipBuffer), {
       headers: {
         'Content-Type': 'application/zip',
         'Content-Disposition': `attachment; filename="${filename}"`,
