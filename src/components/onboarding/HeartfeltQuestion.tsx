@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback, useRef, lazy, Suspense } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Heart, Users, Briefcase, Sparkles, BookOpen, Brain, Target, Mic, Keyboard, Video, Loader2, X, Check } from 'lucide-react';
+import { Heart, Users, Briefcase, Sparkles, BookOpen, Brain, Target, Mic, Keyboard, Video, Loader2, X } from 'lucide-react';
 import { AnimatedQuestion } from '@/components/conversation/AnimatedQuestion';
 
 // Lazy load MediaRecorder for voice/video recording
@@ -223,6 +223,7 @@ export function HeartfeltQuestion({ userProfile, onComplete, onSkip }: Heartfelt
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [mediaUrl, setMediaUrl] = useState<string | undefined>(undefined);
   const [mediaType, setMediaType] = useState<'audio' | 'video' | undefined>(undefined);
+  const [transcriptionFailed, setTranscriptionFailed] = useState(false);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
   // Generate personalized question on mount
@@ -249,13 +250,14 @@ export function HeartfeltQuestion({ userProfile, onComplete, onSkip }: Heartfelt
   // Handle voice/video recording complete
   const handleRecordingComplete = useCallback(async (blob: Blob, duration: number, type: 'video' | 'audio') => {
     setIsTranscribing(true);
+    setTranscriptionFailed(false);
+    
+    // Create a local URL for the media blob immediately
+    const url = URL.createObjectURL(blob);
+    setMediaUrl(url);
+    setMediaType(type);
     
     try {
-      // Create a local URL for the media blob
-      const url = URL.createObjectURL(blob);
-      setMediaUrl(url);
-      setMediaType(type);
-      
       const formData = new FormData();
       formData.append('audio', blob, `recording.${type === 'video' ? 'webm' : 'webm'}`);
       formData.append('mediaType', type);
@@ -268,27 +270,47 @@ export function HeartfeltQuestion({ userProfile, onComplete, onSkip }: Heartfelt
       if (!response.ok) throw new Error('Transcription failed');
       
       const data = await response.json();
-      setAnswer(data.transcription || '');
+      const transcription = data.transcription || '';
+      
+      if (transcription.trim()) {
+        setAnswer(transcription);
+        setTranscriptionFailed(false);
+      } else {
+        // Transcription returned empty - may happen with short recordings or unclear audio
+        setTranscriptionFailed(true);
+        // Set a placeholder so submit is enabled, but user knows to review
+        setAnswer('[Transcription unavailable - your recording is saved]');
+      }
       setInputMode('text'); // Switch to text to show/edit transcription
     } catch (err) {
       console.error('Transcription error:', err);
-      // Still switch to text mode so user can type their answer
+      setTranscriptionFailed(true);
+      // Set placeholder so submit is enabled even without transcription
+      setAnswer('[Transcription unavailable - your recording is saved]');
       setInputMode('text');
     } finally {
       setIsTranscribing(false);
     }
   }, []);
 
+  // Check if we can submit - either has text answer or has media recording
+  const canSubmit = !isSubmitting && (answer.trim().length > 0 || !!mediaUrl);
+
   const handleSubmit = useCallback(async () => {
-    if (!answer.trim() || isSubmitting) return;
+    if (!canSubmit) return;
     setIsSubmitting(true);
     
     // Pass the appropriate URL based on media type
     const audioUrl = mediaType === 'audio' ? mediaUrl : undefined;
     const videoUrl = mediaType === 'video' ? mediaUrl : undefined;
     
-    onComplete(answer, audioUrl, videoUrl);
-  }, [answer, isSubmitting, mediaUrl, mediaType, onComplete]);
+    // Clean up placeholder text if transcription failed but we have media
+    const finalAnswer = transcriptionFailed && mediaUrl 
+      ? '' // Empty string - the media URL is what matters
+      : answer;
+    
+    onComplete(finalAnswer, audioUrl, videoUrl);
+  }, [canSubmit, answer, transcriptionFailed, mediaUrl, mediaType, onComplete]);
 
   const config = generatedQuestion ? CATEGORY_CONFIG[generatedQuestion.category] : null;
 
@@ -312,7 +334,7 @@ export function HeartfeltQuestion({ userProfile, onComplete, onSkip }: Heartfelt
             A Question Just for You
           </h2>
           <p className="text-gray-500 text-sm">
-            Based on what you've shared, we'd love to hear more...
+            Based on what you&apos;ve shared, we&apos;d love to hear more...
           </p>
         </motion.div>
 
@@ -415,9 +437,19 @@ export function HeartfeltQuestion({ userProfile, onComplete, onSkip }: Heartfelt
                       <div>
                         <textarea
                           ref={textareaRef}
-                          value={answer}
-                          onChange={(e) => setAnswer(e.target.value)}
-                          placeholder="Share your thoughts... This becomes your first memory."
+                          value={transcriptionFailed && answer.startsWith('[') ? '' : answer}
+                          onChange={(e) => {
+                            setAnswer(e.target.value);
+                            // Clear transcription failed state when user starts typing
+                            if (transcriptionFailed && e.target.value.length > 0) {
+                              setTranscriptionFailed(false);
+                            }
+                          }}
+                          placeholder={
+                            transcriptionFailed && mediaUrl
+                              ? "Your recording is saved. Optionally add a description..."
+                              : "Share your thoughts... This becomes your first memory."
+                          }
                           className="w-full p-4 rounded-xl bg-white/80 border border-[#406A56]/20 
                                      text-[#2d2d2d] placeholder-gray-400 resize-none
                                      focus:outline-none focus:ring-2 focus:ring-[#406A56]/30 focus:border-[#406A56]/40
@@ -475,6 +507,16 @@ export function HeartfeltQuestion({ userProfile, onComplete, onSkip }: Heartfelt
                           </div>
                         )}
                         
+                        {/* Transcription warning */}
+                        {transcriptionFailed && mediaUrl && (
+                          <div className="mt-3 p-3 bg-amber-50 border border-amber-200 rounded-xl text-sm text-amber-700">
+                            <p className="font-medium">Transcription unavailable</p>
+                            <p className="mt-1 text-amber-600">
+                              Your {mediaType} recording is saved. You can type a description or just submit the recording.
+                            </p>
+                          </div>
+                        )}
+                        
                         <div className="flex items-center justify-between mt-4">
                           {onSkip && (
                             <button
@@ -486,7 +528,7 @@ export function HeartfeltQuestion({ userProfile, onComplete, onSkip }: Heartfelt
                           )}
                           <button
                             onClick={handleSubmit}
-                            disabled={!answer.trim() || isSubmitting}
+                            disabled={!canSubmit}
                             className="ml-auto flex items-center gap-2 px-6 py-2.5 
                                        bg-[#406A56] text-white rounded-xl font-medium
                                        hover:bg-[#355a48] disabled:opacity-50 disabled:cursor-not-allowed
