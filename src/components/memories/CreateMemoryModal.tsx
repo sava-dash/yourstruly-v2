@@ -240,7 +240,7 @@ export default function CreateMemoryModal({ isOpen, onClose, onCreated }: Create
             onDrop={handleDrop}
             onDragOver={(e) => e.preventDefault()}
             onClick={() => fileInputRef.current?.click()}
-            className="border-2 border-dashed border-white/30 rounded-xl p-8 text-center cursor-pointer hover:border-amber-500/50 hover:bg-white/5 transition-all"
+            className="border-2 border-dashed border-gray-300 rounded-xl p-8 text-center cursor-pointer hover:border-[#406A56] hover:bg-[#406A56]/5 transition-all"
             role="button"
             tabIndex={0}
             onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') fileInputRef.current?.click(); }}
@@ -255,9 +255,9 @@ export default function CreateMemoryModal({ isOpen, onClose, onCreated }: Create
               className="hidden"
               aria-label="Select photos or videos to upload"
             />
-            <Upload size={32} className="mx-auto text-white/40 mb-3" aria-hidden="true" />
-            <p className="text-white font-medium mb-1">Drop photos or videos here</p>
-            <p className="text-white/40 text-sm">or click to browse</p>
+            <Upload size={32} className="mx-auto text-gray-400 mb-3" aria-hidden="true" />
+            <p className="text-gray-700 font-medium mb-1">Drop photos or videos here</p>
+            <p className="text-gray-400 text-sm">or click to browse</p>
           </div>
 
           {/* Preview Grid */}
@@ -286,7 +286,7 @@ export default function CreateMemoryModal({ isOpen, onClose, onCreated }: Create
                       className="absolute top-1 right-1 p-1 bg-black/60 rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
                       aria-label={`Remove file ${i + 1}`}
                     >
-                      <X size={14} className="text-white" aria-hidden="true" />
+                      <X size={14} className="text-gray-700" aria-hidden="true" />
                     </button>
                   )}
                 </div>
@@ -318,8 +318,8 @@ export default function CreateMemoryModal({ isOpen, onClose, onCreated }: Create
               />
             ))}
             {files.length > 5 && (
-              <div className="w-16 h-16 rounded-xl bg-white/10 flex items-center justify-center flex-shrink-0">
-                <span className="text-white text-sm">+{files.length - 5}</span>
+              <div className="w-16 h-16 rounded-xl bg-gray-100 flex items-center justify-center flex-shrink-0">
+                <span className="text-gray-700 text-sm">+{files.length - 5}</span>
               </div>
             )}
           </div>
@@ -334,7 +334,7 @@ export default function CreateMemoryModal({ isOpen, onClose, onCreated }: Create
               {aiSuggestions.title && !title && (
                 <button
                   onClick={() => setTitle(aiSuggestions.title!)}
-                  className="text-sm text-white/70 hover:text-white"
+                  className="text-sm text-white/70 hover:text-gray-700"
                 >
                   Title: "{aiSuggestions.title}" — <span className="text-amber-500">use this</span>
                 </button>
@@ -344,55 +344,55 @@ export default function CreateMemoryModal({ isOpen, onClose, onCreated }: Create
 
           {/* Title */}
           <div>
-            <label htmlFor="memory-title" className="block text-white/50 text-sm mb-1">Title</label>
+            <label htmlFor="memory-title" className="block text-gray-500 text-sm mb-1">Title</label>
             <input
               id="memory-title"
               type="text"
               value={title}
               onChange={(e) => setTitle(e.target.value)}
               placeholder="Give this memory a name..."
-              className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white placeholder-white/30 focus:outline-none focus:ring-2 focus:ring-amber-500/50 transition-all"
+              className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#406A56]/50 transition-all"
             />
           </div>
 
           {/* Description */}
           <div>
-            <label htmlFor="memory-description" className="block text-white/50 text-sm mb-1">Description (optional)</label>
+            <label htmlFor="memory-description" className="block text-gray-500 text-sm mb-1">Description (optional)</label>
             <textarea
               id="memory-description"
               value={description}
               onChange={(e) => setDescription(e.target.value)}
               placeholder="What happened? How did you feel?"
               rows={3}
-              className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white placeholder-white/30 focus:outline-none focus:ring-2 focus:ring-amber-500/50 resize-none transition-all"
+              className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#406A56]/50 resize-none transition-all"
             />
           </div>
 
           {/* Date & Type Row */}
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label htmlFor="memory-date" className="block text-white/50 text-sm mb-1">Date</label>
+              <label htmlFor="memory-date" className="block text-gray-500 text-sm mb-1">Date</label>
               <div className="relative">
-                <Calendar size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-white/40" aria-hidden="true" />
+                <Calendar size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" aria-hidden="true" />
                 <input
                   id="memory-date"
                   type="date"
                   value={memoryDate}
                   onChange={(e) => setMemoryDate(e.target.value)}
-                  className="w-full pl-10 pr-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-amber-500/50 transition-all"
+                  className="w-full pl-10 pr-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-[#406A56]/50 transition-all"
                 />
               </div>
             </div>
             <div>
-              <label htmlFor="memory-type" className="block text-white/50 text-sm mb-1">Type</label>
+              <label htmlFor="memory-type" className="block text-gray-500 text-sm mb-1">Type</label>
               <select
                 id="memory-type"
                 value={memoryType}
                 onChange={(e) => setMemoryType(e.target.value)}
-                className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-amber-500/50 transition-all"
+                className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-[#406A56]/50 transition-all"
               >
                 {MEMORY_TYPES.map((type) => (
-                  <option key={type.id} value={type.id} className="bg-gray-900">
+                  <option key={type.id} value={type.id} className="bg-white">
                     {type.label}
                   </option>
                 ))}
@@ -402,29 +402,29 @@ export default function CreateMemoryModal({ isOpen, onClose, onCreated }: Create
 
           {/* Location */}
           <div>
-            <label htmlFor="memory-location" className="block text-white/50 text-sm mb-1">Location (optional)</label>
+            <label htmlFor="memory-location" className="block text-gray-500 text-sm mb-1">Location (optional)</label>
             <div className="relative">
-              <MapPin size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-white/40" aria-hidden="true" />
+              <MapPin size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" aria-hidden="true" />
               <input
                 id="memory-location"
                 type="text"
                 value={locationName}
                 onChange={(e) => setLocationName(e.target.value)}
                 placeholder="Where was this?"
-                className="w-full pl-10 pr-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white placeholder-white/30 focus:outline-none focus:ring-2 focus:ring-amber-500/50 transition-all"
+                className="w-full pl-10 pr-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#406A56]/50 transition-all"
               />
             </div>
           </div>
 
           {/* Share with Contacts */}
-          <div className="border-t border-white/10 pt-4">
+          <div className="border-t border-gray-200 pt-4">
             <button
               onClick={() => setShowShareSection(!showShareSection)}
-              className="w-full flex items-center justify-between p-3 bg-white/5 rounded-xl hover:bg-white/10 transition-all"
+              className="w-full flex items-center justify-between p-3 bg-gray-50 rounded-xl hover:bg-gray-100 transition-all"
             >
               <div className="flex items-center gap-3">
                 <Users size={18} className="text-amber-500" />
-                <span className="text-white">Share with Contacts</span>
+                <span className="text-gray-700">Share with Contacts</span>
                 {selectedContacts.size > 0 && (
                   <span className="px-2 py-0.5 bg-amber-500/20 text-amber-400 text-xs rounded-full">
                     {selectedContacts.size} selected
@@ -433,36 +433,36 @@ export default function CreateMemoryModal({ isOpen, onClose, onCreated }: Create
               </div>
               <ChevronRight 
                 size={18} 
-                className={`text-white/50 transition-transform ${showShareSection ? 'rotate-90' : ''}`} 
+                className={`text-gray-500 transition-transform ${showShareSection ? 'rotate-90' : ''}`} 
               />
             </button>
 
             {showShareSection && (
-              <div className="mt-3 p-3 bg-white/5 rounded-xl border border-white/10 max-h-48 overflow-y-auto">
+              <div className="mt-3 p-3 bg-gray-50 rounded-xl border border-gray-200 max-h-48 overflow-y-auto">
                 {contacts.length === 0 ? (
-                  <p className="text-white/40 text-sm text-center py-4">
+                  <p className="text-gray-400 text-sm text-center py-4">
                     No contacts yet. Add contacts from the Contacts page.
                   </p>
                 ) : (
                   <div className="space-y-2">
-                    <p className="text-white/50 text-xs mb-2">
+                    <p className="text-gray-500 text-xs mb-2">
                       Shared contacts can leave comments and add their own photos
                     </p>
                     {contacts.map((contact) => (
                       <label
                         key={contact.id}
-                        className="flex items-center gap-3 p-2 rounded-lg hover:bg-white/5 cursor-pointer transition-all"
+                        className="flex items-center gap-3 p-2 rounded-lg hover:bg-gray-50 cursor-pointer transition-all"
                       >
                         <input
                           type="checkbox"
                           checked={selectedContacts.has(contact.id)}
                           onChange={() => toggleContact(contact.id)}
-                          className="w-4 h-4 rounded border-white/30 bg-white/5 text-amber-500 focus:ring-amber-500/50"
+                          className="w-4 h-4 rounded border-gray-300 bg-gray-50 text-amber-500 focus:ring-[#406A56]/50"
                         />
                         <div>
-                          <div className="text-white text-sm">{contact.full_name}</div>
+                          <div className="text-gray-700 text-sm">{contact.full_name}</div>
                           {contact.relationship_type && (
-                            <div className="text-white/40 text-xs">{contact.relationship_type}</div>
+                            <div className="text-gray-400 text-xs">{contact.relationship_type}</div>
                           )}
                         </div>
                       </label>
@@ -474,10 +474,10 @@ export default function CreateMemoryModal({ isOpen, onClose, onCreated }: Create
           </div>
 
           {/* Actions */}
-          <div className="flex gap-3 pt-4 border-t border-white/10">
+          <div className="flex gap-3 pt-4 border-t border-gray-200">
             <button
               onClick={() => setStep(1)}
-              className="flex-1 py-3 text-white/50 hover:text-white transition-colors"
+              className="flex-1 py-3 text-gray-500 hover:text-gray-900 transition-colors"
             >
               Back
             </button>
