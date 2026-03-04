@@ -950,6 +950,27 @@ function EditModal({
                   ))}
                 </div>
               </div>
+              <div>
+                <label className="block text-sm text-[#666] mb-1.5">Phone Number</label>
+                <input
+                  type="tel"
+                  value={profile.phone}
+                  onChange={e => setProfile(p => ({ ...p, phone: e.target.value }))}
+                  className="form-input"
+                  placeholder="+1 (555) 123-4567"
+                />
+                <div className="mt-3 p-3 bg-[#406A56]/5 rounded-xl border border-[#406A56]/10">
+                  <label className="flex items-start gap-3 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      className="mt-0.5 w-4 h-4 rounded border-gray-300 text-[#406A56] focus:ring-[#406A56]"
+                    />
+                    <span className="text-sm text-gray-600">
+                      I agree to receive SMS notifications from YoursTruly when someone wants to interview me about my life story. Message and data rates may apply. Reply STOP to unsubscribe.
+                    </span>
+                  </label>
+                </div>
+              </div>
             </>
           )}
 

@@ -107,34 +107,157 @@ export default function SettingsPage() {
   }
 
   const handleExportData = async () => {
-    setMessage('Preparing export...')
+    setMessage('Preparing full export... This may take a moment.')
     
     const { data: { user } } = await supabase.auth.getUser()
     if (!user) return
 
-    const [profileRes, memoriesRes, contactsRes] = await Promise.all([
-      supabase.from('profiles').select('*').eq('id', user.id).single(),
-      supabase.from('memories').select('*').eq('user_id', user.id),
-      supabase.from('contacts').select('*').eq('user_id', user.id),
-    ])
+    try {
+      // Fetch all user data in parallel
+      const [
+        profileRes,
+        memoriesRes,
+        contactsRes,
+        educationRes,
+        postscriptsRes,
+        postscriptAttachmentsRes,
+        wisdomRes,
+        circlesRes,
+        circleMembershipsRes,
+        petsRes,
+        mediaItemsRes,
+        albumsRes,
+        smartAlbumsRes,
+        interviewSessionsRes,
+        videoResponsesRes,
+        voiceClonesRes,
+        voiceSamplesRes,
+        ordersRes,
+        notificationsRes,
+        chatSessionsRes,
+        chatMessagesRes,
+        xpRes,
+        xpTransactionsRes,
+        streakRes,
+      ] = await Promise.all([
+        supabase.from('profiles').select('*').eq('id', user.id).single(),
+        supabase.from('memories').select('*').eq('user_id', user.id),
+        supabase.from('contacts').select('*').eq('user_id', user.id),
+        supabase.from('education_history').select('*').eq('user_id', user.id),
+        supabase.from('postscripts').select('*').eq('user_id', user.id),
+        supabase.from('postscript_attachments').select('*').eq('user_id', user.id),
+        supabase.from('knowledge_entries').select('*').eq('user_id', user.id),
+        supabase.from('circles').select('*').eq('owner_id', user.id),
+        supabase.from('circle_members').select('*').eq('user_id', user.id),
+        supabase.from('pets').select('*').eq('user_id', user.id),
+        supabase.from('media_items').select('*').eq('user_id', user.id),
+        supabase.from('memory_albums').select('*').eq('user_id', user.id),
+        supabase.from('smart_albums').select('*').eq('user_id', user.id),
+        supabase.from('interview_sessions').select('*').eq('user_id', user.id),
+        supabase.from('video_responses').select('*').eq('user_id', user.id),
+        supabase.from('voice_clones').select('*').eq('user_id', user.id),
+        supabase.from('voice_clone_samples').select('*').eq('user_id', user.id),
+        supabase.from('marketplace_orders').select('*').eq('user_id', user.id),
+        supabase.from('notifications').select('*').eq('user_id', user.id).order('created_at', { ascending: false }).limit(500),
+        supabase.from('chat_sessions').select('*').eq('user_id', user.id),
+        supabase.from('chat_messages').select('*').eq('user_id', user.id),
+        supabase.from('user_xp').select('*').eq('user_id', user.id).single(),
+        supabase.from('xp_transactions').select('*').eq('user_id', user.id),
+        supabase.from('streak_log').select('*').eq('user_id', user.id),
+      ])
 
-    const exportData = {
-      exported_at: new Date().toISOString(),
-      profile: profileRes.data,
-      memories: memoriesRes.data,
-      contacts: contactsRes.data,
+      // Get memory IDs for related data
+      const memoryIds = memoriesRes.data?.map(m => m.id) || []
+      
+      // Fetch memory-related data
+      const [memoryMediaRes, memoryCommentsRes, memorySharesRes] = await Promise.all([
+        memoryIds.length > 0 
+          ? supabase.from('memory_media').select('*').in('memory_id', memoryIds)
+          : { data: [] },
+        memoryIds.length > 0 
+          ? supabase.from('memory_comments').select('*').in('memory_id', memoryIds)
+          : { data: [] },
+        memoryIds.length > 0 
+          ? supabase.from('memory_shares').select('*').in('memory_id', memoryIds)
+          : { data: [] },
+      ])
+
+      // Get circle IDs for related data
+      const circleIds = circlesRes.data?.map(c => c.id) || []
+      
+      // Fetch circle-related data
+      const [circleContentRes, circleMessagesRes, circlePostscriptsRes] = await Promise.all([
+        circleIds.length > 0
+          ? supabase.from('circle_content').select('*').in('circle_id', circleIds)
+          : { data: [] },
+        circleIds.length > 0
+          ? supabase.from('circle_messages').select('*').in('circle_id', circleIds)
+          : { data: [] },
+        circleIds.length > 0
+          ? supabase.from('circle_postscripts').select('*').in('circle_id', circleIds)
+          : { data: [] },
+      ])
+
+      const exportData = {
+        _meta: {
+          exported_at: new Date().toISOString(),
+          version: '2.0',
+          user_id: user.id,
+          user_email: user.email,
+        },
+        profile: profileRes.data,
+        education_history: educationRes.data || [],
+        memories: memoriesRes.data || [],
+        memory_media: memoryMediaRes.data || [],
+        memory_comments: memoryCommentsRes.data || [],
+        memory_shares: memorySharesRes.data || [],
+        contacts: contactsRes.data || [],
+        postscripts: postscriptsRes.data || [],
+        postscript_attachments: postscriptAttachmentsRes.data || [],
+        wisdom: wisdomRes.data || [],
+        circles: circlesRes.data || [],
+        circle_memberships: circleMembershipsRes.data || [],
+        circle_content: circleContentRes.data || [],
+        circle_messages: circleMessagesRes.data || [],
+        circle_postscripts: circlePostscriptsRes.data || [],
+        pets: petsRes.data || [],
+        media_items: mediaItemsRes.data || [],
+        albums: albumsRes.data || [],
+        smart_albums: smartAlbumsRes.data || [],
+        interview_sessions: interviewSessionsRes.data || [],
+        video_responses: videoResponsesRes.data || [],
+        voice_clones: voiceClonesRes.data || [],
+        voice_clone_samples: voiceSamplesRes.data || [],
+        orders: ordersRes.data || [],
+        notifications: notificationsRes.data || [],
+        chat_sessions: chatSessionsRes.data || [],
+        chat_messages: chatMessagesRes.data || [],
+        xp: xpRes.data || null,
+        xp_transactions: xpTransactionsRes.data || [],
+        streaks: streakRes.data || [],
+      }
+
+      const blob = new Blob([JSON.stringify(exportData, null, 2)], { type: 'application/json' })
+      const url = URL.createObjectURL(blob)
+      const a = document.createElement('a')
+      a.href = url
+      a.download = `yourstruly-full-export-${new Date().toISOString().split('T')[0]}.json`
+      a.click()
+      URL.revokeObjectURL(url)
+
+      const totalItems = Object.values(exportData).reduce((sum, val) => {
+        if (Array.isArray(val)) return sum + val.length
+        if (val && typeof val === 'object') return sum + 1
+        return sum
+      }, 0)
+
+      setMessage(`Export complete! Downloaded ${totalItems} items.`)
+    } catch (error) {
+      console.error('Export error:', error)
+      setMessage('Export failed. Please try again.')
     }
-
-    const blob = new Blob([JSON.stringify(exportData, null, 2)], { type: 'application/json' })
-    const url = URL.createObjectURL(blob)
-    const a = document.createElement('a')
-    a.href = url
-    a.download = `yourstruly-export-${new Date().toISOString().split('T')[0]}.json`
-    a.click()
-    URL.revokeObjectURL(url)
-
-    setMessage('Export downloaded!')
-    setTimeout(() => setMessage(''), 3000)
+    
+    setTimeout(() => setMessage(''), 5000)
   }
 
   return (
