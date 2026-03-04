@@ -20,6 +20,37 @@ const FULFILLMENT_LEAD_DAYS = {
   product: 21, // Physical product - 3 weeks before
 }
 
+// Type for pending gift query result
+interface PendingGift {
+  id: string
+  postscript_id: string
+  gift_type: string
+  flex_gift_amount: number | null
+  product_id: string | null
+  name: string | null
+  quantity: number
+  provider_data: Record<string, unknown> | null
+  postscripts: {
+    id: string
+    delivery_date: string | null
+    delivery_type: string
+    recipient_name: string | null
+    recipient_email: string | null
+    recipient_phone: string | null
+    recipient_contact_id: string | null
+    status: string
+  } | {
+    id: string
+    delivery_date: string | null
+    delivery_type: string
+    recipient_name: string | null
+    recipient_email: string | null
+    recipient_phone: string | null
+    recipient_contact_id: string | null
+    status: string
+  }[]
+}
+
 // Lazy-init Supabase admin client
 let _supabaseAdmin: ReturnType<typeof createClient> | null = null
 function getSupabaseAdmin() {
@@ -90,7 +121,7 @@ export async function GET(request: NextRequest) {
       `)
       .eq('payment_status', 'paid')
       .eq('status', 'paid')
-      .is('sent_at', null)
+      .is('sent_at', null) as { data: PendingGift[] | null, error: typeof fetchError }
 
     if (fetchError) {
       console.error('Error fetching pending gifts:', fetchError)
