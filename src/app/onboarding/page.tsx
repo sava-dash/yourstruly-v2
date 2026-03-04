@@ -123,7 +123,26 @@ export default function OnboardingPage() {
     );
   }
 
+  const handleSkipOnboarding = useCallback(async () => {
+    if (!user) return;
+    
+    try {
+      await supabase
+        .from('profiles')
+        .update({ onboarding_completed: true })
+        .eq('id', user.id);
+      
+      router.push('/dashboard');
+    } catch (error) {
+      console.error('Error skipping onboarding:', error);
+      router.push('/dashboard');
+    }
+  }, [user, router, supabase]);
+
   return (
-    <EnhancedOnboardingFlow onComplete={handleOnboardingComplete} />
+    <EnhancedOnboardingFlow 
+      onComplete={handleOnboardingComplete} 
+      onSkipAll={handleSkipOnboarding}
+    />
   );
 }

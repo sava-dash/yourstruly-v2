@@ -57,6 +57,7 @@ type OnboardingStep =
 
 interface EnhancedOnboardingFlowProps {
   onComplete: (data: OnboardingData) => void;
+  onSkipAll?: () => void;
 }
 
 // ============================================
@@ -109,7 +110,7 @@ const RELIGION_OPTIONS = [
 // MAIN COMPONENT
 // ============================================
 
-export function EnhancedOnboardingFlow({ onComplete }: EnhancedOnboardingFlowProps) {
+export function EnhancedOnboardingFlow({ onComplete, onSkipAll }: EnhancedOnboardingFlowProps) {
   const [step, setStep] = useState<OnboardingStep>('welcome');
   const [data, setData] = useState<OnboardingData>({
     name: '',
@@ -364,6 +365,18 @@ export function EnhancedOnboardingFlow({ onComplete }: EnhancedOnboardingFlowPro
             />
           )}
         </AnimatePresence>
+        
+        {/* Skip option for testing/development */}
+        {onSkipAll && step !== 'celebration' && (
+          <div className="text-center mt-6">
+            <button
+              onClick={onSkipAll}
+              className="text-sm text-gray-400 hover:text-gray-600 underline transition-colors"
+            >
+              Skip onboarding for now
+            </button>
+          </div>
+        )}
         </div>
       </div>
     </div>
