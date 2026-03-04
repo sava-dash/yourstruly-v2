@@ -80,12 +80,22 @@ export default function FaceTagger({ mediaId, imageUrl, onXPEarned }: FaceTagger
     setLoading(true)
     try {
       const res = await fetch(`/api/media/${mediaId}/detect-faces`, { method: 'POST' })
+      
+      // Check content type before parsing
+      const contentType = res.headers.get('content-type')
+      if (!contentType?.includes('application/json')) {
+        console.error('Face detection returned non-JSON response:', res.status, contentType)
+        setLoading(false)
+        return
+      }
+      
+      const data = await res.json()
+      
       if (res.ok) {
         // Now load the detected faces
         await loadFaces()
       } else {
-        const error = await res.json()
-        console.error('Face detection failed:', error)
+        console.error('Face detection failed:', data.error, data.details || data.hint || '')
       }
     } catch (err) {
       console.error('Face detection error:', err)
