@@ -190,8 +190,8 @@ export async function POST(
       const giftLink = orderBatch.orders_preview?.[0]?.individual_gift_link
 
       // Update gift record
-      await supabase
-        .from('postscript_gifts')
+      await (supabase
+        .from('postscript_gifts') as any)
         .update({
           status: 'sent',
           provider_order_batch_id: orderBatch.id,
