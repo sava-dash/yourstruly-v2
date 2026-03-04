@@ -12,4 +12,3 @@ export { default as FaceDetector, useFaceDetection, detectFaces } from './FaceDe
 export type { DetectedFace, FaceDetectionResult } from './FaceDetector'
 export { default as FaceBrowser, FaceBrowser as FaceBrowserComponent } from './FaceBrowser'
 export { default as FaceManager } from './FaceManager'
-export { default as FaceOverlay } from './FaceOverlay'
