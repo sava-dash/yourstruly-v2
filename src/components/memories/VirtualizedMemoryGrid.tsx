@@ -1,7 +1,7 @@
 'use client'
 
-import { useCallback, useMemo, useRef, memo, useEffect, useState } from 'react'
-import { List, useDynamicRowHeight, useListRef, type RowComponentProps } from 'react-window'
+import { useCallback, useMemo, memo, useState } from 'react'
+import { List, useListRef, type RowComponentProps } from 'react-window'
 import { AutoSizer } from 'react-virtualized-auto-sizer'
 import { Calendar } from 'lucide-react'
 import MemoryCard from './MemoryCard'
@@ -117,6 +117,37 @@ function RowComponent({ index, style, rowData, itemWidth, gap }: RowComponentPro
   )
 }
 
+// Inner list component to receive size from AutoSizer
+interface InnerListProps {
+  height: number | undefined
+  width: number | undefined
+  rowData: RowData[]
+  getRowHeight: (index: number) => number
+  itemWidth: number
+  gap: number
+}
+
+function InnerList({ height, width, rowData, getRowHeight, itemWidth, gap }: InnerListProps) {
+  const listRef = useListRef(null)
+  
+  if (!height || !width) {
+    return null
+  }
+
+  return (
+    <List
+      listRef={listRef}
+      style={{ height, width }}
+      rowComponent={RowComponent}
+      rowCount={rowData.length}
+      rowHeight={getRowHeight}
+      rowProps={{ rowData, itemWidth, gap }}
+      overscanCount={5}
+      className="scrollbar-thin scrollbar-thumb-[#406A56]/20 scrollbar-track-transparent"
+    />
+  )
+}
+
 // Main virtualized grid component
 export default function VirtualizedMemoryGrid({
   memories,
@@ -124,7 +155,6 @@ export default function VirtualizedMemoryGrid({
   gap = GAP,
   showDateHeaders = true,
 }: VirtualizedMemoryGridProps) {
-  const listRef = useListRef()
   const [containerWidth, setContainerWidth] = useState(0)
 
   // Calculate columns based on container width
@@ -218,20 +248,19 @@ export default function VirtualizedMemoryGrid({
 
   return (
     <div className="w-full h-[calc(100vh-400px)] min-h-[500px]">
-      <AutoSizer onResize={handleResize}>
-        {({ height, width }) => (
-          <List
-            listRef={listRef}
-            style={{ height, width }}
-            rowComponent={RowComponent}
-            rowCount={rowData.length}
-            rowHeight={getRowHeight}
-            rowProps={{ rowData, itemWidth, gap }}
-            overscanCount={5}
-            className="scrollbar-thin scrollbar-thumb-[#406A56]/20 scrollbar-track-transparent"
+      <AutoSizer 
+        onResize={handleResize}
+        ChildComponent={({ height, width }) => (
+          <InnerList
+            height={height}
+            width={width}
+            rowData={rowData}
+            getRowHeight={getRowHeight}
+            itemWidth={itemWidth}
+            gap={gap}
           />
         )}
-      </AutoSizer>
+      />
     </div>
   )
 }
