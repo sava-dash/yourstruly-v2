@@ -19,12 +19,17 @@ import {
   Trophy
 } from 'lucide-react';
 import { PillSelector } from './PillSelector';
-import { HeartfeltQuestion } from './HeartfeltQuestion';
+import { HeartfeltConversation } from './HeartfeltConversation';
 import { OnboardingStepExplanation } from './OnboardingStepExplanation';
 
 // ============================================
 // TYPES
 // ============================================
+
+interface ConversationMessage {
+  role: 'assistant' | 'user';
+  content: string;
+}
 
 interface OnboardingData {
   name: string;
@@ -38,6 +43,7 @@ interface OnboardingData {
   favoriteQuote: string;
   background: string;
   heartfeltAnswer?: string;
+  heartfeltConversation?: ConversationMessage[];
 }
 
 type OnboardingStep = 
@@ -153,8 +159,18 @@ export function EnhancedOnboardingFlow({ onComplete, onSkipAll }: EnhancedOnboar
     }
   }, [currentIndex]);
 
-  const handleHeartfeltComplete = useCallback((answer: string) => {
-    setData(prev => ({ ...prev, heartfeltAnswer: answer }));
+  const handleHeartfeltComplete = useCallback((conversation: ConversationMessage[]) => {
+    // Extract user's responses as the "answer" for backward compatibility
+    const userResponses = conversation
+      .filter(m => m.role === 'user')
+      .map(m => m.content)
+      .join('\n\n');
+    
+    setData(prev => ({ 
+      ...prev, 
+      heartfeltAnswer: userResponses,
+      heartfeltConversation: conversation,
+    }));
     setStep('celebration');
   }, []);
 
@@ -340,17 +356,10 @@ export function EnhancedOnboardingFlow({ onComplete, onSkipAll }: EnhancedOnboar
               exit={{ opacity: 0 }}
               className="w-full"
             >
-              <HeartfeltQuestion
-                userProfile={{
-                  interests: data.interests,
-                  hobbies: data.hobbies,
-                  skills: data.skills,
-                  lifeGoals: data.lifeGoals,
-                  personalityTraits: data.personalityTraits,
-                  religion: data.religion,
-                  background: data.background,
-                  favoriteQuote: data.favoriteQuote,
-                }}
+              <HeartfeltConversation
+                whyHere={data.background}
+                whatDrives={data.lifeGoals}
+                userName={data.name}
                 onComplete={handleHeartfeltComplete}
                 onSkip={() => setStep('celebration')}
               />
