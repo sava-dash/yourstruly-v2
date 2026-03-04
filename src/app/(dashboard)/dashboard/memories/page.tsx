@@ -280,7 +280,7 @@ export default function MemoriesPage() {
       })
       
       if (closestCard) {
-        const dateStr = closestCard.getAttribute('data-memory-date')
+        const dateStr = (closestCard as Element).getAttribute('data-memory-date')
         if (dateStr) {
           setCurrentScrollDate(new Date(dateStr))
         }
@@ -327,7 +327,8 @@ export default function MemoriesPage() {
     
     if (closestMemory) {
       // Find the corresponding card element
-      const card = memoriesGridRef.current.querySelector(`[data-memory-id="${closestMemory.id}"]`)
+      const targetMemory = closestMemory as Memory
+      const card = memoriesGridRef.current.querySelector(`[data-memory-id="${targetMemory.id}"]`)
       if (card) {
         card.scrollIntoView({ 
           behavior: 'smooth', 

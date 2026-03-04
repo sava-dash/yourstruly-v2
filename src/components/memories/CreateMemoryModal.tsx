@@ -1,9 +1,11 @@
 'use client'
 
 import { useState, useRef, useCallback, useEffect } from 'react'
-import { X, Upload, Calendar, MapPin, Sparkles, Loader2, Image as ImageIcon, Check, Users, ChevronRight } from 'lucide-react'
+import { X, Upload, Calendar, MapPin, Sparkles, Loader2, Image as ImageIcon, Check, Users, ChevronRight, Scan } from 'lucide-react'
 import Modal from '@/components/ui/Modal'
 import { createClient } from '@/lib/supabase/client'
+import { useFaceDetection, type FaceDetectionResult } from '@/components/memories/FaceDetector'
+import { storeFaceDetections } from '@/lib/faces'
 
 interface CreateMemoryModalProps {
   isOpen: boolean
@@ -16,6 +18,10 @@ interface UploadedFile {
   preview: string
   uploading: boolean
   uploaded: boolean
+  mediaId?: string
+  mediaUrl?: string
+  facesDetected?: number
+  detectingFaces?: boolean
   analysis?: {
     labels: any[]
     faces: any[]
@@ -58,6 +64,8 @@ export default function CreateMemoryModal({ isOpen, onClose, onCreated }: Create
 
   const fileInputRef = useRef<HTMLInputElement>(null)
   const supabase = createClient()
+  const { isReady: faceDetectionReady, detectInImage } = useFaceDetection()
+  const [faceDetectionProgress, setFaceDetectionProgress] = useState<{ current: number; total: number } | null>(null)
 
   // Load contacts for sharing
   useEffect(() => {
@@ -137,6 +145,10 @@ export default function CreateMemoryModal({ isOpen, onClose, onCreated }: Create
     setCreating(true)
 
     try {
+      // Get current user for face detection storage
+      const { data: { user } } = await supabase.auth.getUser()
+      if (!user) throw new Error('Not authenticated')
+
       // 1. Create the memory
       const memoryRes = await fetch('/api/memories', {
         method: 'POST',
@@ -154,6 +166,8 @@ export default function CreateMemoryModal({ isOpen, onClose, onCreated }: Create
       if (!memory?.id) throw new Error('Failed to create memory')
 
       // 2. Upload each file
+      const uploadedMedia: { index: number; mediaId: string; mediaUrl: string; isImage: boolean }[] = []
+      
       for (let i = 0; i < files.length; i++) {
         setFiles(prev => {
           const newFiles = [...prev]
@@ -169,15 +183,27 @@ export default function CreateMemoryModal({ isOpen, onClose, onCreated }: Create
           body: formData,
         })
 
-        const { analysis } = await uploadRes.json()
+        const { media, analysis } = await uploadRes.json()
 
         setFiles(prev => {
           const newFiles = [...prev]
           newFiles[i].uploading = false
           newFiles[i].uploaded = true
+          newFiles[i].mediaId = media?.id
+          newFiles[i].mediaUrl = media?.file_url
           newFiles[i].analysis = analysis
           return newFiles
         })
+
+        // Track uploaded images for face detection
+        if (media?.id && files[i].file.type.startsWith('image/')) {
+          uploadedMedia.push({
+            index: i,
+            mediaId: media.id,
+            mediaUrl: media.file_url,
+            isImage: true
+          })
+        }
 
         // Get AI suggestions from first image
         if (i === 0 && analysis) {
@@ -189,7 +215,50 @@ export default function CreateMemoryModal({ isOpen, onClose, onCreated }: Create
         }
       }
 
-      // 3. Share with selected contacts
+      // 3. Face detection on uploaded images (client-side)
+      const imageMedia = uploadedMedia.filter(m => m.isImage)
+      if (imageMedia.length > 0 && faceDetectionReady) {
+        setFaceDetectionProgress({ current: 0, total: imageMedia.length })
+        
+        for (let i = 0; i < imageMedia.length; i++) {
+          const { index, mediaId, mediaUrl } = imageMedia[i]
+          
+          setFiles(prev => {
+            const newFiles = [...prev]
+            newFiles[index].detectingFaces = true
+            return newFiles
+          })
+
+          try {
+            const result = await detectInImage(mediaUrl)
+            
+            if (result.faces.length > 0) {
+              // Store faces in database
+              await storeFaceDetections(mediaId, user.id, result.faces, mediaUrl)
+            }
+            
+            setFiles(prev => {
+              const newFiles = [...prev]
+              newFiles[index].detectingFaces = false
+              newFiles[index].facesDetected = result.faces.length
+              return newFiles
+            })
+          } catch (err) {
+            console.error('Face detection failed for image:', err)
+            setFiles(prev => {
+              const newFiles = [...prev]
+              newFiles[index].detectingFaces = false
+              return newFiles
+            })
+          }
+          
+          setFaceDetectionProgress({ current: i + 1, total: imageMedia.length })
+        }
+        
+        setFaceDetectionProgress(null)
+      }
+
+      // 4. Share with selected contacts
       if (selectedContacts.size > 0) {
         await fetch(`/api/memories/${memory.id}/share`, {
           method: 'POST',
@@ -200,7 +269,7 @@ export default function CreateMemoryModal({ isOpen, onClose, onCreated }: Create
         })
       }
 
-      // 4. Done!
+      // 5. Done!
       onCreated()
       resetForm()
     } catch (error) {
@@ -208,6 +277,7 @@ export default function CreateMemoryModal({ isOpen, onClose, onCreated }: Create
       alert('Failed to create memory')
     } finally {
       setCreating(false)
+      setFaceDetectionProgress(null)
     }
   }
 
