@@ -149,7 +149,7 @@ export default function SettingsPage() {
         supabase.from('postscripts').select('*').eq('user_id', user.id),
         supabase.from('postscript_attachments').select('*').eq('user_id', user.id),
         supabase.from('knowledge_entries').select('*').eq('user_id', user.id),
-        supabase.from('circles').select('*').eq('owner_id', user.id),
+        supabase.from('circles').select('*').eq('created_by', user.id),
         supabase.from('circle_members').select('*').eq('user_id', user.id),
         supabase.from('pets').select('*').eq('user_id', user.id),
         supabase.from('media_items').select('*').eq('user_id', user.id),
