@@ -96,7 +96,7 @@ export default function DeleteAccountPage() {
     ] = await Promise.all([
       supabase.from('memories').select('id', { count: 'exact', head: true }).eq('user_id', user.id),
       supabase.from('contacts').select('id', { count: 'exact', head: true }).eq('user_id', user.id),
-      supabase.from('postscripts').select('id, title, status, scheduled_date, recipients').eq('user_id', user.id),
+      supabase.from('postscripts').select('id, title, status, delivery_date, recipient_name').eq('user_id', user.id),
       supabase.from('media_items').select('id', { count: 'exact', head: true }).eq('user_id', user.id),
       supabase.from('circles').select('id', { count: 'exact', head: true }).eq('created_by', user.id),
       supabase.from('knowledge_entries').select('id', { count: 'exact', head: true }).eq('user_id', user.id),
@@ -112,8 +112,8 @@ export default function DeleteAccountPage() {
       .map(p => ({
         id: p.id,
         title: p.title || 'Untitled',
-        recipient_name: p.recipients?.[0]?.name || 'Unknown',
-        scheduled_date: p.scheduled_date,
+        recipient_name: p.recipient_name || 'Unknown',
+        scheduled_date: p.delivery_date,
         status: p.status,
       }))
 
