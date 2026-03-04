@@ -1,23 +1,26 @@
 'use client'
 
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useRef } from 'react'
 import { useSearchParams, useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
-import { Plus, Image as ImageIcon, Calendar, MapPin, Sparkles, Grid, List, Globe, ChevronLeft, Search, X, Clock, Users, Share2, BookOpen, Album, User, Mic } from 'lucide-react'
+import { Plus, Image as ImageIcon, Calendar, MapPin, Sparkles, Grid, List, Globe, ChevronLeft, Search, X, Clock, Users, Share2, BookOpen, Album, User, Mic, Map } from 'lucide-react'
 import Link from 'next/link'
 import CreateMemoryModal from '@/components/memories/CreateMemoryModal'
 import MemoryCard from '@/components/memories/MemoryCard'
 import MemoryCardClean from '@/components/memories/MemoryCardClean'
 import ScrapbookCard from '@/components/memories/ScrapbookCard'
 import GlobeView from '@/components/memories/GlobeView'
+import MapView from '@/components/memories/MapView'
 import { MemoryTimeline } from '@/components/memories/MemoryTimeline'
 import { PeopleBrowse } from '@/components/memories/PeopleBrowse'
 import { PlacesBrowse } from '@/components/memories/PlacesBrowse'
 import { TimelineBrowse } from '@/components/memories/TimelineBrowse'
+import VirtualizedMemoryGrid, { VirtualizedSimpleGrid } from '@/components/memories/VirtualizedMemoryGrid'
 import MilestonePrompt from '@/components/photobook/MilestonePrompt'
 import MemoryStats from '@/components/memories/MemoryStats'
 import MoodFilterChips from '@/components/memories/MoodFilterChips'
 import EmotionalJourney from '@/components/memories/EmotionalJourney'
+import { TimelineScrubber } from '@/components/memories/TimelineScrubber'
 import { MoodType, MOOD_DEFINITIONS } from '@/lib/ai/moodAnalysis'
 import '@/styles/page-styles.css'
 import '@/styles/scrapbook.css'
@@ -59,7 +62,7 @@ interface SharedMemory extends Memory {
 
 type ViewMode = 'grid' | 'cards' | 'scrapbook' | 'timeline'
 type TabMode = 'mine' | 'shared'
-type BrowseMode = 'all' | 'people' | 'places' | 'timeline'
+type BrowseMode = 'all' | 'people' | 'places' | 'map' | 'timeline'
 
 const VALID_MOODS: MoodType[] = ['joyful', 'proud', 'grateful', 'bittersweet', 'peaceful', 'nostalgic', 'loving']
 
@@ -84,6 +87,8 @@ export default function MemoriesPage() {
   const [showFilters, setShowFilters] = useState(false)
   const [userId, setUserId] = useState<string | undefined>()
   const [browseMode, setBrowseMode] = useState<BrowseMode>('all')
+  const [currentScrollDate, setCurrentScrollDate] = useState<Date | null>(null)
+  const memoriesGridRef = useRef<HTMLDivElement>(null)
   const supabase = createClient()
   
   // Initialize mood filter from URL params
@@ -249,6 +254,87 @@ export default function MemoriesPage() {
     )
     setFilteredMemories(filtered)
   }, [searchQuery, memories])
+
+  // Track scroll position for timeline scrubber
+  useEffect(() => {
+    const handleScroll = () => {
+      if (!memoriesGridRef.current || filteredMemories.length === 0) return
+      
+      // Find the memory card that's currently most visible in the viewport
+      const cards = memoriesGridRef.current.querySelectorAll('[data-memory-date]')
+      const viewportCenter = window.innerHeight / 2
+      
+      let closestCard: Element | null = null
+      let closestDistance = Infinity
+      
+      cards.forEach(card => {
+        const rect = card.getBoundingClientRect()
+        const cardCenter = rect.top + rect.height / 2
+        const distance = Math.abs(cardCenter - viewportCenter)
+        
+        if (distance < closestDistance) {
+          closestDistance = distance
+          closestCard = card
+        }
+      })
+      
+      if (closestCard) {
+        const dateStr = closestCard.getAttribute('data-memory-date')
+        if (dateStr) {
+          setCurrentScrollDate(new Date(dateStr))
+        }
+      }
+    }
+    
+    // Throttle scroll handler
+    let ticking = false
+    const throttledScroll = () => {
+      if (!ticking) {
+        requestAnimationFrame(() => {
+          handleScroll()
+          ticking = false
+        })
+        ticking = true
+      }
+    }
+    
+    window.addEventListener('scroll', throttledScroll, { passive: true })
+    // Initial check
+    handleScroll()
+    
+    return () => window.removeEventListener('scroll', throttledScroll)
+  }, [filteredMemories])
+
+  // Handle timeline scrubber jump
+  const handleTimelineJump = useCallback((targetDate: Date) => {
+    if (!memoriesGridRef.current || filteredMemories.length === 0) return
+    
+    // Find the memory closest to the target date
+    let closestMemory: Memory | null = null
+    let closestDiff = Infinity
+    
+    filteredMemories.forEach(memory => {
+      if (!memory.memory_date) return
+      const memoryDate = new Date(memory.memory_date)
+      const diff = Math.abs(memoryDate.getTime() - targetDate.getTime())
+      
+      if (diff < closestDiff) {
+        closestDiff = diff
+        closestMemory = memory
+      }
+    })
+    
+    if (closestMemory) {
+      // Find the corresponding card element
+      const card = memoriesGridRef.current.querySelector(`[data-memory-id="${closestMemory.id}"]`)
+      if (card) {
+        card.scrollIntoView({ 
+          behavior: 'smooth', 
+          block: 'center' 
+        })
+      }
+    }
+  }, [filteredMemories])
 
   const categories = [
     { id: 'all', label: 'All' },
@@ -483,6 +569,15 @@ export default function MemoriesPage() {
                   Places
                 </button>
                 <button
+                  onClick={() => setBrowseMode('map')}
+                  className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium transition-all ${
+                    browseMode === 'map' ? 'bg-[#406A56] text-white' : 'text-[#406A56]/60 hover:text-[#406A56]'
+                  }`}
+                >
+                  <Map size={14} />
+                  Map
+                </button>
+                <button
                   onClick={() => setBrowseMode('timeline')}
                   className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium transition-all ${
                     browseMode === 'timeline' ? 'bg-[#406A56] text-white' : 'text-[#406A56]/60 hover:text-[#406A56]'
@@ -653,12 +748,8 @@ export default function MemoriesPage() {
               ))}
             </div>
           ) : viewMode === 'grid' ? (
-            /* Grid View - Square cards with overlay */
-            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3">
-              {filteredMemories.map((memory) => (
-                <MemoryCard key={memory.id} memory={memory} />
-              ))}
-            </div>
+            /* Grid View - Virtualized square cards */
+            <VirtualizedSimpleGrid memories={filteredMemories} gap={12} />
           ) : viewMode === 'cards' ? (
             /* Cards View - Photo on top, info below, reactions */
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
@@ -667,32 +758,8 @@ export default function MemoriesPage() {
               ))}
             </div>
           ) : (
-            /* Timeline View (default) */
-            <div className="space-y-8">
-              {sortedGroups.map((groupKey) => {
-                const [year, month] = groupKey.split('-')
-                const monthName = new Date(parseInt(year), parseInt(month) - 1).toLocaleString('default', { month: 'long' })
-                
-                return (
-                  <div key={groupKey}>
-                    <div className="flex items-center gap-3 mb-4">
-                      <div className="flex items-center gap-2 px-3 py-1.5 glass-card-page">
-                        <Calendar size={14} className="text-[#D9C61A]" />
-                        <span className="text-[#2d2d2d] font-medium">{monthName} {year}</span>
-                      </div>
-                      <div className="flex-1 h-px bg-[#406A56]/10" />
-                      <span className="text-[#406A56]/60 text-sm">{groupedMemories[groupKey].length} memories</span>
-                    </div>
-                    
-                    <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
-                      {groupedMemories[groupKey].map((memory) => (
-                        <MemoryCard key={memory.id} memory={memory} />
-                      ))}
-                    </div>
-                  </div>
-                )
-              })}
-            </div>
+            /* Timeline View - Virtualized with date headers */
+            <VirtualizedMemoryGrid memories={filteredMemories} gap={12} showDateHeaders={true} />
           )}
         </main>
       </div>
@@ -709,6 +776,15 @@ export default function MemoriesPage() {
 
       {/* Milestone Prompt for Photobook */}
       <MilestonePrompt memoryCount={memories.length} userId={userId} />
+
+      {/* Timeline Scrubber - only show for My Memories tab and All browse mode with dated memories */}
+      {!loading && tabMode === 'mine' && browseMode === 'all' && filteredMemories.length > 0 && (
+        <TimelineScrubber
+          memories={filteredMemories}
+          onJumpTo={handleTimelineJump}
+          currentScrollDate={currentScrollDate}
+        />
+      )}
     </div>
   )
 }

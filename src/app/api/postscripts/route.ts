@@ -19,9 +19,7 @@ export async function GET(request: NextRequest) {
       *,
       recipient:contacts!recipient_contact_id(id, full_name, relationship_type, avatar_url),
       circle:circles!circle_id(id, name),
-      attachments:postscript_attachments(id, file_url, file_type),
-      memories:postscript_memory_attachments(id, memory_id, memory_title, memory_date, memory_image_url),
-      wisdom:postscript_wisdom_attachments(id, wisdom_id, wisdom_title, wisdom_category)
+      attachments:postscript_attachments(id, file_url, file_type)
     `)
     .eq('user_id', user.id)
     .order('created_at', { ascending: false })

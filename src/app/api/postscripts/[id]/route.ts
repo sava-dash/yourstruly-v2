@@ -43,9 +43,7 @@ export async function GET(
     .select(`
       *,
       recipient:contacts!recipient_contact_id(id, full_name, relationship_type, avatar_url),
-      attachments:postscript_attachments(*),
-      memories:postscript_memory_attachments(id, memory_id, memory_title, memory_date, memory_image_url),
-      wisdom:postscript_wisdom_attachments(id, wisdom_id, wisdom_title, wisdom_category)
+      attachments:postscript_attachments(*)
     `)
     .eq('id', id)
     .eq('user_id', user.id)
