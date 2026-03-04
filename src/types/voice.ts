@@ -23,10 +23,16 @@ export type Voice = 'alloy' | 'ash' | 'ballad' | 'coral' | 'echo' | 'fable' | 'm
 // PersonaPlex Voice Types
 // ============================================================================
 
-// PersonaPlex native voice IDs
+// PersonaPlex native voice IDs (all 18 voices)
 export type PersonaPlexVoice = 
-  | 'NATF0' | 'NATF1' | 'NATF2'  // Female voices (Natural Female 0-2)
-  | 'NATM0' | 'NATM1' | 'NATM2'  // Male voices (Natural Male 0-2)
+  // Natural Female (4)
+  | 'NATF0' | 'NATF1' | 'NATF2' | 'NATF3'
+  // Natural Male (4)
+  | 'NATM0' | 'NATM1' | 'NATM2' | 'NATM3'
+  // Variety Female (5)
+  | 'VARF0' | 'VARF1' | 'VARF2' | 'VARF3' | 'VARF4'
+  // Variety Male (5)
+  | 'VARM0' | 'VARM1' | 'VARM2' | 'VARM3' | 'VARM4'
 
 // Union type for any supported voice
 export type AnyVoice = Voice | PersonaPlexVoice
