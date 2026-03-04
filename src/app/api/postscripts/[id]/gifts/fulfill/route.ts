@@ -13,6 +13,21 @@ import * as Goody from '@/lib/marketplace/providers/goody'
 // Goody Gift of Choice product ID
 const GOODY_FLEX_GIFT_PRODUCT_ID = 'b54200a5-b7a9-4812-bab3-d65bb81c3c16'
 
+// Type for gift
+interface PostscriptGift {
+  id: string
+  postscript_id: string
+  gift_type: string
+  flex_gift_amount: number | null
+  product_id: string | null
+  name: string | null
+  quantity: number
+  provider_data: Record<string, unknown> | null
+  payment_status: string
+  status: string
+  sent_at: string | null
+}
+
 // Type for postscript with contacts
 interface PostscriptWithContact {
   id: string
@@ -98,7 +113,7 @@ export async function POST(
     .select('*')
     .eq('postscript_id', postscriptId)
     .eq('payment_status', 'paid')
-    .eq('status', 'paid')
+    .eq('status', 'paid') as unknown as { data: PostscriptGift[] | null, error: Error | null }
 
   if (giftsError) {
     console.error('Error fetching gifts:', giftsError)
