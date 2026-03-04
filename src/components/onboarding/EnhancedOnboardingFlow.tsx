@@ -61,6 +61,7 @@ type OnboardingStep =
   | 'favorite-quote'
   | 'background'
   | 'heartfelt-question'
+  | 'image-upload'
   | 'celebration';
 
 interface EnhancedOnboardingFlowProps {
@@ -141,7 +142,8 @@ export function EnhancedOnboardingFlow({ onComplete, onSkipAll }: EnhancedOnboar
   const stepOrder: OnboardingStep[] = [
     'welcome', 'name', 'interests', 'hobbies', 'skills', 
     'personality', 'life-goals', 'religion', 'location', 
-    'favorite-quote', 'background', 'heartfelt-question', 'celebration'
+    'favorite-quote', 'background', 'heartfelt-question', 
+    'image-upload', 'celebration'
   ];
   
   const currentIndex = stepOrder.indexOf(step);
@@ -172,6 +174,14 @@ export function EnhancedOnboardingFlow({ onComplete, onSkipAll }: EnhancedOnboar
       ...prev, 
       heartfeltAnswer: userResponses,
       heartfeltConversation: conversation,
+    }));
+    setStep('image-upload');
+  }, []);
+
+  const handleImageUploadComplete = useCallback((uploadedCount: number) => {
+    setData(prev => ({ 
+      ...prev, 
+      uploadedImagesCount: uploadedCount,
     }));
     setStep('celebration');
   }, []);
@@ -363,9 +373,18 @@ export function EnhancedOnboardingFlow({ onComplete, onSkipAll }: EnhancedOnboar
                 whatDrives={data.lifeGoals}
                 userName={data.name}
                 onComplete={handleHeartfeltComplete}
-                onSkip={() => setStep('celebration')}
+                onSkip={() => setStep('image-upload')}
               />
             </motion.div>
+          )}
+
+          {step === 'image-upload' && (
+            <ImageUploadStep
+              key="image-upload"
+              onBack={() => setStep('heartfelt-question')}
+              onContinue={handleImageUploadComplete}
+              onSkip={() => setStep('celebration')}
+            />
           )}
 
           {step === 'celebration' && (
