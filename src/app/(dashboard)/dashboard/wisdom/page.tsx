@@ -157,31 +157,30 @@ export default function WisdomPage() {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return;
 
-    // Get all wisdom memories (by memory_type)
-    const { data: memories, error } = await supabase
-      .from('memories')
+    // Get all wisdom from knowledge_entries table
+    const { data: wisdomEntries, error } = await supabase
+      .from('knowledge_entries')
       .select('*')
       .eq('user_id', user.id)
-      .eq('memory_type', 'wisdom')
       .order('created_at', { ascending: false });
     
     if (error) {
       console.error('Error fetching wisdom:', error);
     }
 
-    if (memories) {
-      setEntries(memories);
+    if (wisdomEntries) {
+      setEntries(wisdomEntries);
       
       // Calculate stats by category
       const categoryCount: Record<string, number> = {};
-      memories.forEach(m => {
+      wisdomEntries.forEach(m => {
         const cat = m.category || m.ai_category || 'other';
         const normalizedCat = cat.toLowerCase().replace(/\s+/g, '_');
         categoryCount[normalizedCat] = (categoryCount[normalizedCat] || 0) + 1;
       });
 
       setStats({
-        total: memories.length,
+        total: wisdomEntries.length,
         categories: categoryCount,
       });
     }
@@ -194,46 +193,53 @@ export default function WisdomPage() {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return;
 
-    // Get wisdom shared with current user
-    const { data: shares, error } = await supabase
-      .from('knowledge_shares')
-      .select(`
-        knowledge_id,
-        created_at,
-        owner_id,
-        knowledge_entries!inner(
-          id,
-          title,
-          description,
-          audio_url,
-          tags,
+    try {
+      // Get wisdom shared with current user
+      const { data: shares, error } = await supabase
+        .from('knowledge_shares')
+        .select(`
+          knowledge_id,
           created_at,
-          category,
-          ai_category
-        ),
-        contacts!inner(
-          shared_with_user_id,
-          full_name
-        )
-      `)
-      .eq('contacts.shared_with_user_id', user.id)
-      .order('created_at', { ascending: false });
+          owner_id,
+          knowledge_entries!inner(
+            id,
+            title,
+            description,
+            audio_url,
+            tags,
+            created_at,
+            category,
+            ai_category
+          ),
+          contacts!inner(
+            shared_with_user_id,
+            full_name
+          )
+        `)
+        .eq('contacts.shared_with_user_id', user.id)
+        .order('created_at', { ascending: false });
 
-    if (error) {
-      console.error('Error loading shared wisdom:', error);
+      if (error) {
+        // Table might not exist yet (migration 035)
+        console.error('Error loading shared wisdom:', error);
+        setLoadingShared(false);
+        return;
+      }
+
+      // Transform the data
+      const transformedEntries: SharedWisdomEntry[] = (shares || []).map((share: any) => ({
+        ...share.knowledge_entries,
+        shared_by: { full_name: share.contacts?.full_name || 'Someone' },
+        shared_at: share.created_at,
+      }));
+
+      setSharedEntries(transformedEntries);
+    } catch (err) {
+      // Table might not exist (migration 035 not run)
+      console.error('Error loading shared wisdom:', err);
+    } finally {
       setLoadingShared(false);
-      return;
     }
-
-    // Transform the data
-    const transformedEntries: SharedWisdomEntry[] = (shares || []).map((share: any) => ({
-      ...share.knowledge_entries,
-      shared_by: { full_name: share.contacts?.full_name || 'Someone' },
-      shared_at: share.created_at,
-    }));
-
-    setSharedEntries(transformedEntries);
-    setLoadingShared(false);
   };
 
   const clearFilters = () => {
