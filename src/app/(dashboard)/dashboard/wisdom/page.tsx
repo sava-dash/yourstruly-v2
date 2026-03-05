@@ -508,9 +508,10 @@ export default function WisdomPage() {
       {/* Voice Capture Modal */}
       {voiceQuestion && (
         <VoiceWisdomCapture
-          question={voiceQuestion}
+          question={voiceQuestion.question_text}
+          category={voiceQuestion.category}
           onClose={() => setVoiceQuestion(null)}
-          onComplete={() => {
+          onSaved={() => {
             setVoiceQuestion(null);
             loadWisdom();
           }}
