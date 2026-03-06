@@ -71,38 +71,38 @@ export default function GalleryGlobe({ media, onSelectMedia, selectedTimeframe }
         })
         setLoaded(true)
       })
+
+      // Slow rotation
+      const secondsPerRevolution = 240
+      const maxSpinZoom = 5
+      let userInteracting = false
+
+      function spinGlobe() {
+        if (!map.current) return
+        const zoom = map.current.getZoom()
+        if (spinEnabledRef.current && !userInteracting && zoom < maxSpinZoom) {
+          let distancePerSecond = 360 / secondsPerRevolution
+          if (zoom > maxSpinZoom - 1) {
+            distancePerSecond *= (maxSpinZoom - zoom)
+          }
+          const center = map.current.getCenter()
+          center.lng -= distancePerSecond / 60
+          map.current.easeTo({ center, duration: 1000, easing: (n) => n })
+        }
+      }
+
+      map.current.on('mousedown', () => { userInteracting = true })
+      map.current.on('mouseup', () => { userInteracting = false; spinGlobe() })
+      map.current.on('dragend', () => { userInteracting = false; spinGlobe() })
+      map.current.on('pitchend', spinGlobe)
+      map.current.on('rotateend', spinGlobe)
+      map.current.on('moveend', spinGlobe)
+
+      spinGlobe()
     } catch (err) {
       console.error('Failed to initialize map:', err)
       setWebglError(true)
     }
-
-    // Slow rotation
-    const secondsPerRevolution = 240
-    const maxSpinZoom = 5
-    let userInteracting = false
-
-    function spinGlobe() {
-      if (!map.current) return
-      const zoom = map.current.getZoom()
-      if (spinEnabledRef.current && !userInteracting && zoom < maxSpinZoom) {
-        let distancePerSecond = 360 / secondsPerRevolution
-        if (zoom > maxSpinZoom - 1) {
-          distancePerSecond *= (maxSpinZoom - zoom)
-        }
-        const center = map.current.getCenter()
-        center.lng -= distancePerSecond / 60
-        map.current.easeTo({ center, duration: 1000, easing: (n) => n })
-      }
-    }
-
-    map.current.on('mousedown', () => { userInteracting = true })
-    map.current.on('mouseup', () => { userInteracting = false; spinGlobe() })
-    map.current.on('dragend', () => { userInteracting = false; spinGlobe() })
-    map.current.on('pitchend', spinGlobe)
-    map.current.on('rotateend', spinGlobe)
-    map.current.on('moveend', spinGlobe)
-
-    spinGlobe()
 
     return () => {
       map.current?.remove()

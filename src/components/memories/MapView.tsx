@@ -155,15 +155,15 @@ export default function MapView({
       // Add touch gestures for mobile
       map.current.touchZoomRotate.enable()
       map.current.touchPitch.enable()
+      map.current.dragPan.enable()
+
+      map.current.on('load', () => {
+        setLoaded(true)
+      })
     } catch (err) {
       console.error('Failed to initialize map:', err)
       setWebglError(true)
     }
-    map.current.dragPan.enable()
-
-    map.current.on('load', () => {
-      setLoaded(true)
-    })
 
     return () => {
       map.current?.remove()
