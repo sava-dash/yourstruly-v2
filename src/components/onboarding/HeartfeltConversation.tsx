@@ -161,8 +161,12 @@ export function HeartfeltConversation({
       if (!response.ok) throw new Error('Transcription failed');
 
       const data = await response.json();
-      if (data.text) {
-        setInput(prev => prev + (prev ? ' ' : '') + data.text);
+      // API returns 'transcription', not 'text'
+      const transcribedText = data.transcription || data.text || '';
+      if (transcribedText) {
+        setInput(prev => prev + (prev ? ' ' : '') + transcribedText);
+      } else {
+        console.warn('Empty transcription received');
       }
     } catch (error) {
       console.error('Transcription error:', error);
