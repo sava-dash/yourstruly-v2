@@ -15,6 +15,7 @@ import { MemoryTimeline } from '@/components/memories/MemoryTimeline'
 import { PeopleBrowse } from '@/components/memories/PeopleBrowse'
 import { PlacesBrowse } from '@/components/memories/PlacesBrowse'
 import { TimelineBrowse } from '@/components/memories/TimelineBrowse'
+import { LibraryBrowse } from '@/components/memories/LibraryBrowse'
 import VirtualizedMemoryGrid, { VirtualizedSimpleGrid } from '@/components/memories/VirtualizedMemoryGrid'
 import MilestonePrompt from '@/components/photobook/MilestonePrompt'
 import MemoryStats from '@/components/memories/MemoryStats'
@@ -60,7 +61,7 @@ interface SharedMemory extends Memory {
 
 type ViewMode = 'grid' | 'cards' | 'scrapbook' | 'timeline'
 type TabMode = 'mine' | 'shared'
-type BrowseMode = 'all' | 'people' | 'places' | 'map' | 'timeline'
+type BrowseMode = 'all' | 'library' | 'people' | 'places' | 'map' | 'timeline'
 
 const VALID_MOODS: MoodType[] = ['joyful', 'proud', 'grateful', 'bittersweet', 'peaceful', 'nostalgic', 'loving']
 
@@ -515,6 +516,7 @@ export default function MemoriesPage() {
                     aria-label="Browse by"
                   >
                     <option value="all">All Memories</option>
+                    <option value="library">📷 Library</option>
                     <option value="people">People</option>
                     <option value="places">Places</option>
                     <option value="timeline">Timeline</option>
@@ -649,6 +651,15 @@ export default function MemoriesPage() {
                 ))}
               </div>
             )
+          ) : browseMode === 'library' ? (
+            /* Library Browse Mode - All photos with unassigned filter */
+            <LibraryBrowse 
+              onSelectMedia={(media) => {
+                if (media.memory_id) {
+                  router.push(`/dashboard/memories/${media.memory_id}`)
+                }
+              }}
+            />
           ) : browseMode === 'people' ? (
             /* People Browse Mode */
             <PeopleBrowse />
