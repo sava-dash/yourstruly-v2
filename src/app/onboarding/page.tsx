@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import { createClient } from '@/lib/supabase/client';
 import { useRouter } from 'next/navigation';
 import { Loader2 } from 'lucide-react';
@@ -24,11 +24,17 @@ export default function OnboardingPage() {
   const [loading, setLoading] = useState(true);
   const [user, setUser] = useState<any>(null);
   const router = useRouter();
-  const supabase = createClient();
+  // Memoize supabase client to prevent re-creation on every render
+  const supabase = useMemo(() => createClient(), []);
 
   useEffect(() => {
+    let mounted = true;
+    
     const checkUser = async () => {
       const { data: { user } } = await supabase.auth.getUser();
+      
+      if (!mounted) return;
+      
       if (!user) {
         router.push('/login');
         return;
@@ -41,6 +47,8 @@ export default function OnboardingPage() {
         .eq('id', user.id)
         .single();
       
+      if (!mounted) return;
+      
       if (profile?.onboarding_completed) {
         router.push('/dashboard');
         return;
@@ -51,6 +59,10 @@ export default function OnboardingPage() {
     };
     
     checkUser();
+    
+    return () => {
+      mounted = false;
+    };
   }, [router, supabase]);
 
   const handleOnboardingComplete = useCallback(async (data: OnboardingData) => {
