@@ -4,10 +4,13 @@ import { transcribeBuffer, getWordCount } from '@/lib/ai/transcription';
 import type { TranscriptionResponse } from '@/types/api';
 
 /**
- * POST /api/conversation/transcribe
+ * POST /api/transcribe
  * 
- * Transcription endpoint for conversations.
- * Uses unified transcription lib.
+ * Unified transcription endpoint for all audio/video content.
+ * Uses shared transcription lib with provider fallback.
+ * 
+ * Request: multipart/form-data with 'audio' file
+ * Response: TranscriptionResponse
  */
 export async function POST(request: NextRequest): Promise<NextResponse<TranscriptionResponse | { error: string }>> {
   try {
@@ -18,6 +21,7 @@ export async function POST(request: NextRequest): Promise<NextResponse<Transcrip
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
+    // Get audio file from form data
     const formData = await request.formData();
     const audioFile = formData.get('audio') as File;
 
@@ -25,15 +29,17 @@ export async function POST(request: NextRequest): Promise<NextResponse<Transcrip
       return NextResponse.json({ error: 'No audio file provided' }, { status: 400 });
     }
 
+    // Validate file size (max 50MB)
     if (audioFile.size > 50 * 1024 * 1024) {
       return NextResponse.json({ error: 'File too large (max 50MB)' }, { status: 400 });
     }
 
+    // Convert file to buffer
     const arrayBuffer = await audioFile.arrayBuffer();
     const buffer = Buffer.from(arrayBuffer);
     const mimeType = audioFile.type || 'audio/webm';
 
-    // Upload to storage
+    // Upload to Supabase Storage
     const timestamp = Date.now();
     const extension = audioFile.name?.split('.').pop() || 'webm';
     const filename = `voice/${user.id}/${timestamp}.${extension}`;
@@ -42,11 +48,18 @@ export async function POST(request: NextRequest): Promise<NextResponse<Transcrip
     
     const { data: uploadData, error: uploadError } = await supabase.storage
       .from('memories')
-      .upload(filename, buffer, { contentType: mimeType, upsert: false });
+      .upload(filename, buffer, {
+        contentType: mimeType,
+        upsert: false,
+      });
 
     if (!uploadError && uploadData) {
-      const { data: urlData } = supabase.storage.from('memories').getPublicUrl(filename);
+      const { data: urlData } = supabase.storage
+        .from('memories')
+        .getPublicUrl(filename);
       audioUrl = urlData.publicUrl;
+    } else {
+      console.warn('Failed to upload audio, continuing with transcription:', uploadError);
     }
 
     // Transcribe using shared lib

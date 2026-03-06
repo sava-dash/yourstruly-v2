@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import type { AnswerPromptRequest, AnswerPromptResponse } from '@/types/engagement';
 import { transcribeAudio } from '@/lib/ai/transcription';
+// Using shared transcription lib for consistency
 
 // XP rewards configuration (matching TYPE_CONFIG in Bubble.tsx)
 const XP_REWARDS: Record<string, number> = {
