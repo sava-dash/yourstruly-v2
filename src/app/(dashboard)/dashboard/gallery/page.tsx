@@ -17,11 +17,11 @@ import { SlideshowPlayer, PlayButtonOverlay } from '@/components/slideshow'
 import '@/styles/page-styles.css'
 import '@/styles/gallery.css'
 
-const GalleryGlobe = dynamic(() => import('@/components/gallery/GalleryGlobe'), {
+const GalleryMap = dynamic(() => import('@/components/gallery/GalleryMap'), {
   ssr: false,
   loading: () => (
     <div className="gallery-globe-section flex items-center justify-center">
-      <div className="text-[#406A56]/50">Loading globe...</div>
+      <div className="text-[#406A56]/50">Loading map...</div>
     </div>
   )
 })
@@ -386,9 +386,9 @@ export default function GalleryPage() {
                   </button>
                 </div>
 
-                {/* Globe View */}
+                {/* Map View */}
                 {viewMode === 'globe' && (
-                  <GalleryGlobe
+                  <GalleryMap
                     media={sortedMedia}
                     selectedTimeframe={selectedYear ? { yearRange: [selectedYear, selectedYear] } : null}
                     onSelectMedia={(item) => {

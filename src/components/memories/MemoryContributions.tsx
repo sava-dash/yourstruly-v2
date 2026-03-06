@@ -49,11 +49,11 @@ export default function MemoryContributions({ memoryId }: MemoryContributionsPro
           .from('memory_contributions')
           .select(`
             id,
-            type,
+            contribution_type,
             content,
             media_url,
             created_at,
-            contributor:profiles!memory_contributions_contributor_id_fkey(
+            contributor:profiles!user_id(
               id,
               full_name,
               avatar_url
@@ -69,7 +69,7 @@ export default function MemoryContributions({ memoryId }: MemoryContributionsPro
           // Transform to our Contribution type
           const transformed: Contribution[] = data.map((c: any) => ({
             id: c.id,
-            type: c.type || 'comment',
+            type: c.contribution_type || 'comment',
             content: c.content,
             media_url: c.media_url,
             user: {

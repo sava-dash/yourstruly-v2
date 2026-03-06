@@ -21,13 +21,13 @@ interface Face {
   contact?: {
     id: string
     full_name: string
-    photo_url?: string
+    avatar_url?: string
   }
   suggestions: Array<{
     contact: {
       id: string
       full_name: string
-      photo_url?: string
+      avatar_url?: string
     }
     confidence: number
   }>
@@ -36,7 +36,7 @@ interface Face {
 interface Contact {
   id: string
   full_name: string
-  photo_url?: string
+  avatar_url?: string
 }
 
 interface FaceTaggerProps {
@@ -118,7 +118,7 @@ export default function FaceTagger({ mediaId, imageUrl, onXPEarned }: FaceTagger
 
     const { data } = await supabase
       .from('contacts')
-      .select('id, full_name, photo_url')
+      .select('id, full_name, avatar_url')
       .eq('user_id', user.id)
       .order('full_name')
 
@@ -270,9 +270,9 @@ export default function FaceTagger({ mediaId, imageUrl, onXPEarned }: FaceTagger
                           className="w-full flex items-center gap-3 p-2 bg-gray-800 hover:bg-gray-700 rounded-lg transition-colors"
                         >
                           <div className="w-8 h-8 rounded-full bg-amber-600/30 flex items-center justify-center overflow-hidden">
-                            {s.contact.photo_url ? (
+                            {s.contact.avatar_url ? (
                               
-<img src={s.contact.photo_url} alt="" className="w-full h-full object-cover" />
+<img src={s.contact.avatar_url} alt="" className="w-full h-full object-cover" />
                             ) : (
                               <User size={16} className="text-amber-500" />
                             )}
@@ -312,9 +312,9 @@ export default function FaceTagger({ mediaId, imageUrl, onXPEarned }: FaceTagger
                             className="w-full flex items-center gap-3 p-2 bg-gray-800 hover:bg-gray-700 rounded-lg transition-colors"
                           >
                             <div className="w-8 h-8 rounded-full bg-gray-700 flex items-center justify-center overflow-hidden">
-                              {contact.photo_url ? (
+                              {contact.avatar_url ? (
                                 
-<img src={contact.photo_url} alt="" className="w-full h-full object-cover" />
+<img src={contact.avatar_url} alt="" className="w-full h-full object-cover" />
                               ) : (
                                 <span className="text-white/50 text-sm">
                                   {contact.full_name.charAt(0)}
@@ -362,9 +362,9 @@ export default function FaceTagger({ mediaId, imageUrl, onXPEarned }: FaceTagger
               className="flex items-center gap-2 px-3 py-1.5 bg-gray-800 rounded-full group"
             >
               <div className="w-5 h-5 rounded-full bg-green-600/30 flex items-center justify-center overflow-hidden">
-                {face.contact?.photo_url ? (
+                {face.contact?.avatar_url ? (
                   
-<img src={face.contact.photo_url} alt="" className="w-full h-full object-cover" />
+<img src={face.contact.avatar_url} alt="" className="w-full h-full object-cover" />
                 ) : (
                   <User size={12} className="text-green-500" />
                 )}
@@ -440,7 +440,7 @@ export default function FaceTagger({ mediaId, imageUrl, onXPEarned }: FaceTagger
                           boundingBox: { x: 0, y: 0, width: 0, height: 0 },
                           confidence: 1,
                           tagged: true,
-                          contact: { id: contact.id, full_name: contact.full_name, photo_url: contact.photo_url },
+                          contact: { id: contact.id, full_name: contact.full_name, avatar_url: contact.avatar_url },
                           suggestions: []
                         }])
                         setShowAllContacts(false)
@@ -450,9 +450,9 @@ export default function FaceTagger({ mediaId, imageUrl, onXPEarned }: FaceTagger
                     className="w-full flex items-center gap-3 p-2 bg-gray-50 hover:bg-[#406A56]/10 rounded-lg transition-colors"
                   >
                     <div className="w-8 h-8 rounded-full bg-[#406A56]/20 flex items-center justify-center overflow-hidden">
-                      {contact.photo_url ? (
+                      {contact.avatar_url ? (
                         
-<img src={contact.photo_url} alt="" className="w-full h-full object-cover" />
+<img src={contact.avatar_url} alt="" className="w-full h-full object-cover" />
                       ) : (
                         <span className="text-[#406A56] text-sm font-medium">
                           {contact.full_name.charAt(0)}
