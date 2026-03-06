@@ -9,7 +9,7 @@ import CreateMemoryModal from '@/components/memories/CreateMemoryModal'
 import MemoryCard from '@/components/memories/MemoryCard'
 import MemoryCardClean from '@/components/memories/MemoryCardClean'
 import ScrapbookCard from '@/components/memories/ScrapbookCard'
-import GlobeView from '@/components/memories/GlobeView'
+// GlobeView removed - using Leaflet MapView for better device compatibility
 import MapView from '@/components/memories/MapView'
 import { MemoryTimeline } from '@/components/memories/MemoryTimeline'
 import { PeopleBrowse } from '@/components/memories/PeopleBrowse'
@@ -83,7 +83,7 @@ export default function MemoriesPage() {
   const [dateFilter, setDateFilter] = useState<{ start: string; end: string }>({ start: '', end: '' })
   const [userId, setUserId] = useState<string | undefined>()
   const [browseMode, setBrowseMode] = useState<BrowseMode>('all')
-  const [isGlobeMode, setIsGlobeMode] = useState(false) // Toggle between Map and Globe in map view
+  // Globe mode removed - using Leaflet MapView for better device compatibility
   const [currentScrollDate, setCurrentScrollDate] = useState<Date | null>(null)
   const memoriesGridRef = useRef<HTMLDivElement>(null)
   const supabase = createClient()
@@ -656,50 +656,13 @@ export default function MemoriesPage() {
             /* Places Browse Mode */
             <PlacesBrowse memories={memories} />
           ) : browseMode === 'map' ? (
-            /* Map Browse Mode - Full interactive map with Globe toggle */
-            <div className="space-y-4">
-              {isGlobeMode ? (
-                <div className="relative">
-                  {/* Globe/Map Toggle */}
-                  <div className="absolute top-4 left-4 z-10 flex items-center bg-white/95 backdrop-blur-sm rounded-xl shadow-lg p-1">
-                    <button
-                      onClick={() => setIsGlobeMode(false)}
-                      className={`flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium transition-all ${
-                        !isGlobeMode ? 'bg-[#406A56] text-white' : 'text-[#406A56] hover:bg-[#406A56]/10'
-                      }`}
-                    >
-                      <Map size={16} />
-                      Map
-                    </button>
-                    <button
-                      onClick={() => setIsGlobeMode(true)}
-                      className={`flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium transition-all ${
-                        isGlobeMode ? 'bg-[#406A56] text-white' : 'text-[#406A56] hover:bg-[#406A56]/10'
-                      }`}
-                    >
-                      <Globe size={16} />
-                      Globe
-                    </button>
-                  </div>
-                  <GlobeView 
-                    memories={memories}
-                    onSelectMemory={(memory) => {
-                      router.push(`/dashboard/memories/${memory.id}`)
-                    }}
-                  />
-                </div>
-              ) : (
-                <MapView 
-                  memories={memories}
-                  onSelectMemory={(memory) => {
-                    router.push(`/dashboard/memories/${memory.id}`)
-                  }}
-                  showGlobeToggle={true}
-                  onToggleGlobe={() => setIsGlobeMode(true)}
-                  isGlobeMode={isGlobeMode}
-                />
-              )}
-            </div>
+            /* Map Browse Mode - Leaflet interactive map */
+            <MapView 
+              memories={memories}
+              onSelectMemory={(memory) => {
+                router.push(`/dashboard/memories/${memory.id}`)
+              }}
+            />
           ) : browseMode === 'timeline' ? (
             /* Timeline Browse Mode */
             <TimelineBrowse memories={memories} />
