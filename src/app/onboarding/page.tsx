@@ -1,10 +1,11 @@
 'use client';
 
-import { useState, useEffect, useCallback, useMemo } from 'react';
+import { useState, useEffect, useCallback, useMemo, Suspense } from 'react';
 import { createClient } from '@/lib/supabase/client';
 import { useRouter } from 'next/navigation';
 import { Loader2 } from 'lucide-react';
 import { EnhancedOnboardingFlow } from '@/components/onboarding';
+import { OnboardingErrorBoundary } from '@/components/ui/OnboardingErrorBoundary';
 
 interface OnboardingData {
   name: string;
@@ -65,6 +66,24 @@ export default function OnboardingPage() {
     };
   }, [router, supabase]);
 
+  // IMPORTANT: All hooks must be called before any early returns!
+  // This was causing React error #310 (different number of hooks between renders)
+  const handleSkipOnboarding = useCallback(async () => {
+    if (!user) return;
+    
+    try {
+      await supabase
+        .from('profiles')
+        .update({ onboarding_completed: true })
+        .eq('id', user.id);
+      
+      router.push('/dashboard');
+    } catch (error) {
+      console.error('Error skipping onboarding:', error);
+      router.push('/dashboard');
+    }
+  }, [user, router, supabase]);
+
   const handleOnboardingComplete = useCallback(async (data: OnboardingData) => {
     if (!user) {
       console.error('No user found');
@@ -124,6 +143,7 @@ export default function OnboardingPage() {
     }
   }, [user, router, supabase]);
 
+  // Early return AFTER all hooks are called
   if (loading) {
     return (
       <div className="min-h-screen bg-[#FDF8F3] relative overflow-hidden flex items-center justify-center">
@@ -135,26 +155,19 @@ export default function OnboardingPage() {
     );
   }
 
-  const handleSkipOnboarding = useCallback(async () => {
-    if (!user) return;
-    
-    try {
-      await supabase
-        .from('profiles')
-        .update({ onboarding_completed: true })
-        .eq('id', user.id);
-      
-      router.push('/dashboard');
-    } catch (error) {
-      console.error('Error skipping onboarding:', error);
-      router.push('/dashboard');
-    }
-  }, [user, router, supabase]);
-
   return (
-    <EnhancedOnboardingFlow 
-      onComplete={handleOnboardingComplete} 
-      onSkipAll={handleSkipOnboarding}
-    />
+    <OnboardingErrorBoundary>
+      <Suspense fallback={
+        <div className="min-h-screen bg-[#FDF8F3] relative overflow-hidden flex items-center justify-center">
+          <div className="home-background" />
+          <Loader2 className="w-8 h-8 animate-spin text-[#406A56]" />
+        </div>
+      }>
+        <EnhancedOnboardingFlow 
+          onComplete={handleOnboardingComplete} 
+          onSkipAll={handleSkipOnboarding}
+        />
+      </Suspense>
+    </OnboardingErrorBoundary>
   );
 }
