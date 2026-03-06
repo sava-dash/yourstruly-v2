@@ -164,7 +164,18 @@ export function EnhancedOnboardingFlow({ onComplete, onSkipAll }: EnhancedOnboar
   }, [currentIndex]);
 
   const handleHeartfeltComplete = useCallback((conversation: ConversationMessage[]) => {
-    // Extract user's responses as the "answer" for backward compatibility
+    // Format the full conversation with questions and answers
+    let formattedConversation = '';
+    
+    conversation.forEach((msg, index) => {
+      if (msg.role === 'assistant') {
+        formattedConversation += `**Q${Math.floor(index / 2) + 1}:** ${msg.content}\n\n`;
+      } else {
+        formattedConversation += `**A${Math.floor(index / 2) + 1}:** ${msg.content}\n\n---\n\n`;
+      }
+    });
+    
+    // Also keep just user responses for backward compatibility
     const userResponses = conversation
       .filter(m => m.role === 'user')
       .map(m => m.content)
@@ -172,7 +183,8 @@ export function EnhancedOnboardingFlow({ onComplete, onSkipAll }: EnhancedOnboar
     
     setData(prev => ({ 
       ...prev, 
-      heartfeltAnswer: userResponses,
+      // Save formatted conversation with Q&A pairs
+      heartfeltAnswer: formattedConversation.trim() || userResponses,
       heartfeltConversation: conversation,
     }));
     setStep('image-upload');

@@ -1,9 +1,10 @@
 'use client'
 
-import { useState } from 'react'
-import { Plus, Camera, MessageCircle, Sparkles, Quote, Heart, ThumbsUp, Laugh, PartyPopper, Flame } from 'lucide-react'
+import { useState, useEffect } from 'react'
+import { Plus, Camera, MessageCircle, Sparkles, Quote, Heart, ThumbsUp, Laugh, PartyPopper, Flame, Users } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 import AddContributionModal from './AddContributionModal'
+import { createClient } from '@/lib/supabase/client'
 
 interface Contribution {
   id: string
@@ -23,55 +24,6 @@ interface MemoryContributionsProps {
   memoryId: string
 }
 
-// Mock contributions data
-const MOCK_CONTRIBUTIONS: Contribution[] = [
-  {
-    id: '1',
-    type: 'photo',
-    content: 'Found this gem from the party! 📸',
-    media_url: 'https://images.unsplash.com/photo-1529543544277-750e01d1a1e3?w=600',
-    user: { id: 'u1', full_name: 'Sarah Johnson' },
-    reactions: [
-      { emoji: '❤️', count: 3, hasReacted: true },
-      { emoji: '🔥', count: 2, hasReacted: false },
-    ],
-    created_at: new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString(), // 2 hours ago
-  },
-  {
-    id: '2',
-    type: 'comment',
-    content: 'This was such an amazing day! I still remember how nervous we all were before the surprise. Mom had no idea what was coming 😂',
-    user: { id: 'u2', full_name: 'Mike Chen' },
-    reactions: [
-      { emoji: '😂', count: 5, hasReacted: false },
-      { emoji: '👍', count: 2, hasReacted: true },
-    ],
-    created_at: new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString(), // 1 day ago
-  },
-  {
-    id: '3',
-    type: 'moment',
-    content: 'The moment when Dad realized the whole family was there and started crying happy tears. None of us could hold it together after that.',
-    user: { id: 'u3', full_name: 'Emma Davis' },
-    reactions: [
-      { emoji: '❤️', count: 8, hasReacted: true },
-      { emoji: '🥹', count: 4, hasReacted: false },
-    ],
-    created_at: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000).toISOString(), // 3 days ago
-  },
-  {
-    id: '4',
-    type: 'quote',
-    content: '"These are the moments that make life worth living. Thank you all for being here."',
-    user: { id: 'u4', full_name: 'James Wilson' },
-    reactions: [
-      { emoji: '🎉', count: 6, hasReacted: true },
-      { emoji: '❤️', count: 9, hasReacted: true },
-    ],
-    created_at: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000).toISOString(), // 5 days ago
-  },
-]
-
 const TYPE_ICONS = {
   photo: { icon: Camera, color: 'text-blue-600', bg: 'bg-blue-100', label: 'Photo' },
   comment: { icon: MessageCircle, color: 'text-emerald-600', bg: 'bg-emerald-100', label: 'Comment' },
@@ -82,9 +34,64 @@ const TYPE_ICONS = {
 const REACTION_EMOJIS = ['❤️', '👍', '😂', '🎉', '🔥']
 
 export default function MemoryContributions({ memoryId }: MemoryContributionsProps) {
-  const [contributions, setContributions] = useState<Contribution[]>(MOCK_CONTRIBUTIONS)
+  const [contributions, setContributions] = useState<Contribution[]>([])
+  const [loading, setLoading] = useState(true)
   const [showAddModal, setShowAddModal] = useState(false)
   const [activeReactionPicker, setActiveReactionPicker] = useState<string | null>(null)
+  const supabase = createClient()
+
+  // Fetch real contributions from database
+  useEffect(() => {
+    async function fetchContributions() {
+      setLoading(true)
+      try {
+        const { data, error } = await supabase
+          .from('memory_contributions')
+          .select(`
+            id,
+            type,
+            content,
+            media_url,
+            created_at,
+            contributor:profiles!memory_contributions_contributor_id_fkey(
+              id,
+              full_name,
+              avatar_url
+            )
+          `)
+          .eq('memory_id', memoryId)
+          .order('created_at', { ascending: false })
+
+        if (error) {
+          console.error('Error fetching contributions:', error)
+          setContributions([])
+        } else if (data) {
+          // Transform to our Contribution type
+          const transformed: Contribution[] = data.map((c: any) => ({
+            id: c.id,
+            type: c.type || 'comment',
+            content: c.content,
+            media_url: c.media_url,
+            user: {
+              id: c.contributor?.id || 'unknown',
+              full_name: c.contributor?.full_name || 'Anonymous',
+              avatar_url: c.contributor?.avatar_url,
+            },
+            reactions: [], // TODO: Fetch reactions separately if needed
+            created_at: c.created_at,
+          }))
+          setContributions(transformed)
+        }
+      } catch (err) {
+        console.error('Error:', err)
+        setContributions([])
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    fetchContributions()
+  }, [memoryId, supabase])
 
   const getInitials = (name: string) => {
     return name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2)
@@ -185,6 +192,36 @@ export default function MemoryContributions({ memoryId }: MemoryContributionsPro
           </div>
         )
     }
+  }
+
+  // Don't show the section while loading or if there are no contributions and user hasn't clicked add
+  if (loading) {
+    return null
+  }
+
+  // If no contributions, show a minimal "invite others" section instead of empty state
+  if (contributions.length === 0) {
+    return (
+      <div className="border-t border-gray-200 pt-6">
+        <div className="text-center py-8 bg-gradient-to-r from-[#406A56]/5 to-[#8DACAB]/5 rounded-xl">
+          <Users size={32} className="mx-auto mb-3 text-[#406A56]/50" />
+          <p className="text-sm text-gray-600 mb-3">Share this memory with family or friends</p>
+          <button
+            onClick={() => setShowAddModal(true)}
+            className="inline-flex items-center gap-2 px-4 py-2 bg-[#406A56]/10 text-[#406A56] rounded-lg text-sm font-medium hover:bg-[#406A56]/20 transition-colors"
+          >
+            <Plus size={16} />
+            Invite to Contribute
+          </button>
+        </div>
+        <AddContributionModal
+          isOpen={showAddModal}
+          onClose={() => setShowAddModal(false)}
+          memoryId={memoryId}
+          onSubmit={handleAddContribution}
+        />
+      </div>
+    )
   }
 
   return (
