@@ -4,7 +4,16 @@ import { useState, useEffect } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { motion } from 'framer-motion'
 import { X, Plus, Check, Sparkles, FolderPlus } from 'lucide-react'
-import { MemoryAlbum, CAPSULE_THEMES } from '@/types/album'
+import { CAPSULE_THEMES } from '@/types/album'
+
+interface Album {
+  id: string
+  name: string
+  theme?: string
+  cover_image_url?: string
+  memory_count: number
+  has_memory: boolean
+}
 
 interface AddToAlbumModalProps {
   isOpen: boolean
@@ -14,7 +23,7 @@ interface AddToAlbumModalProps {
 }
 
 export default function AddToAlbumModal({ isOpen, onClose, memoryId, onAdded }: AddToAlbumModalProps) {
-  const [albums, setAlbums] = useState<MemoryAlbum[]>([])
+  const [albums, setAlbums] = useState<Album[]>([])
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState<string | null>(null)
   const [showCreate, setShowCreate] = useState(false)
@@ -31,43 +40,80 @@ export default function AddToAlbumModal({ isOpen, onClose, memoryId, onAdded }: 
       const { data: { user } } = await supabase.auth.getUser()
       if (!user) return
 
-      const { data } = await supabase
+      // Get albums with memory count and check if current memory is in each
+      const { data: albumsData } = await supabase
         .from('memory_albums')
-        .select('*')
+        .select('id, name, theme, cover_image_url')
         .eq('user_id', user.id)
         .order('updated_at', { ascending: false })
 
-      setAlbums(data || [])
+      if (!albumsData) {
+        setAlbums([])
+        setLoading(false)
+        return
+      }
+
+      // Get memory counts and check membership for each album
+      const albumsWithCounts = await Promise.all(albumsData.map(async (album) => {
+        const { count } = await supabase
+          .from('album_memories')
+          .select('*', { count: 'exact', head: true })
+          .eq('album_id', album.id)
+
+        const { data: membership } = await supabase
+          .from('album_memories')
+          .select('album_id')
+          .eq('album_id', album.id)
+          .eq('memory_id', memoryId)
+          .single()
+
+        return {
+          ...album,
+          memory_count: count || 0,
+          has_memory: !!membership,
+        }
+      }))
+
+      setAlbums(albumsWithCounts)
       setLoading(false)
     }
 
     loadAlbums()
-  }, [isOpen, supabase])
+  }, [isOpen, supabase, memoryId])
 
-  const isInAlbum = (album: MemoryAlbum) => {
-    return album.memory_ids?.includes(memoryId)
-  }
-
-  const toggleAlbum = async (album: MemoryAlbum) => {
+  const toggleAlbum = async (album: Album) => {
     setSaving(album.id)
     
     try {
-      const isCurrentlyIn = isInAlbum(album)
-      const newMemoryIds = isCurrentlyIn
-        ? album.memory_ids.filter(id => id !== memoryId)
-        : [...(album.memory_ids || []), memoryId]
+      if (album.has_memory) {
+        // Remove from album
+        const { error } = await supabase
+          .from('album_memories')
+          .delete()
+          .eq('album_id', album.id)
+          .eq('memory_id', memoryId)
 
-      const { error } = await supabase
-        .from('memory_albums')
-        .update({ memory_ids: newMemoryIds })
-        .eq('id', album.id)
+        if (error) throw error
 
-      if (error) throw error
+        setAlbums(prev => prev.map(a => 
+          a.id === album.id 
+            ? { ...a, has_memory: false, memory_count: a.memory_count - 1 } 
+            : a
+        ))
+      } else {
+        // Add to album
+        const { error } = await supabase
+          .from('album_memories')
+          .insert({ album_id: album.id, memory_id: memoryId })
 
-      // Update local state
-      setAlbums(prev => prev.map(c => 
-        c.id === album.id ? { ...c, memory_ids: newMemoryIds } : c
-      ))
+        if (error) throw error
+
+        setAlbums(prev => prev.map(a => 
+          a.id === album.id 
+            ? { ...a, has_memory: true, memory_count: a.memory_count + 1 } 
+            : a
+        ))
+      }
       
       onAdded?.()
     } catch (error) {
@@ -88,20 +134,31 @@ export default function AddToAlbumModal({ isOpen, onClose, memoryId, onAdded }: 
     }
 
     try {
-      const { data, error } = await supabase
+      // Create album
+      const { data: albumData, error: albumError } = await supabase
         .from('memory_albums')
         .insert({
           user_id: user.id,
           name: newName.trim(),
-          memory_ids: [memoryId],
           theme: 'custom',
         })
         .select()
         .single()
 
-      if (error) throw error
+      if (albumError) throw albumError
 
-      setAlbums(prev => [data, ...prev])
+      // Add memory to album
+      const { error: linkError } = await supabase
+        .from('album_memories')
+        .insert({ album_id: albumData.id, memory_id: memoryId })
+
+      if (linkError) throw linkError
+
+      setAlbums(prev => [{
+        ...albumData,
+        memory_count: 1,
+        has_memory: true,
+      }, ...prev])
       setNewName('')
       setShowCreate(false)
       onAdded?.()
@@ -199,7 +256,6 @@ export default function AddToAlbumModal({ isOpen, onClose, memoryId, onAdded }: 
             <div className="space-y-2">
               {albums.map(album => {
                 const theme = CAPSULE_THEMES.find(t => t.value === album.theme) || CAPSULE_THEMES[3]
-                const isIn = isInAlbum(album)
                 const isSaving = saving === album.id
                 
                 return (
@@ -208,7 +264,7 @@ export default function AddToAlbumModal({ isOpen, onClose, memoryId, onAdded }: 
                     onClick={() => toggleAlbum(album)}
                     disabled={isSaving}
                     className={`w-full p-4 rounded-xl border-2 transition-all flex items-center gap-4 text-left ${
-                      isIn 
+                      album.has_memory 
                         ? 'border-[#406A56] bg-[#406A56]/5' 
                         : 'border-gray-200 hover:border-gray-300'
                     } disabled:opacity-50`}
@@ -218,8 +274,7 @@ export default function AddToAlbumModal({ isOpen, onClose, memoryId, onAdded }: 
                       !album.cover_image_url ? `bg-gradient-to-br ${theme.color}` : ''
                     } flex items-center justify-center`}>
                       {album.cover_image_url ? (
-                        
-<img src={album.cover_image_url} alt="" className="w-full h-full object-cover" />
+                        <img src={album.cover_image_url} alt="" className="w-full h-full object-cover" />
                       ) : (
                         <span className="text-2xl">{theme.icon}</span>
                       )}
@@ -229,17 +284,17 @@ export default function AddToAlbumModal({ isOpen, onClose, memoryId, onAdded }: 
                     <div className="flex-1 min-w-0">
                       <p className="font-medium text-gray-800 truncate">{album.name}</p>
                       <p className="text-xs text-gray-500">
-                        {album.memory_ids?.length || 0} memories • {theme.label}
+                        {album.memory_count} memories • {theme.label}
                       </p>
                     </div>
                     
                     {/* Status */}
                     <div className={`w-6 h-6 rounded-full flex items-center justify-center transition-colors ${
-                      isIn ? 'bg-[#406A56] text-white' : 'border-2 border-gray-300'
+                      album.has_memory ? 'bg-[#406A56] text-white' : 'border-2 border-gray-300'
                     }`}>
                       {isSaving ? (
                         <div className="w-3 h-3 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                      ) : isIn ? (
+                      ) : album.has_memory ? (
                         <Check size={14} />
                       ) : null}
                     </div>

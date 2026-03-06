@@ -817,41 +817,8 @@ export default function MemoryDetailPage({ params }: { params: Promise<{ id: str
             )}
           </div>
 
-          {/* RIGHT COLUMN - Metadata & Actions */}
+          {/* RIGHT COLUMN - Metadata */}
           <div className="lg:col-span-4 space-y-4 order-1 lg:order-2">
-            
-            {/* Quick Actions Card */}
-            <div className="bg-white/90 backdrop-blur-sm rounded-2xl p-4 shadow-sm border border-gray-100">
-              <div className="flex flex-wrap gap-2">
-                <button
-                  onClick={() => setIsEditing(true)}
-                  className="flex items-center gap-2 px-3 py-2 bg-[#406A56]/10 hover:bg-[#406A56]/20 text-[#406A56] rounded-lg transition-colors text-sm font-medium"
-                >
-                  <Edit2 size={14} />
-                  Edit
-                </button>
-                <button
-                  onClick={() => setShowShareModal(true)}
-                  className="flex items-center gap-2 px-3 py-2 bg-[#406A56] hover:bg-[#4a7a64] text-white rounded-lg transition-colors text-sm font-medium"
-                >
-                  <Share2 size={14} />
-                  Share
-                </button>
-                <button
-                  onClick={() => setShowCapsuleModal(true)}
-                  className="flex items-center gap-2 px-3 py-2 bg-amber-500 hover:bg-amber-600 text-white rounded-lg transition-colors text-sm font-medium"
-                >
-                  <FolderPlus size={14} />
-                  Album
-                </button>
-                <button
-                  onClick={toggleFavorite}
-                  className={`p-2 rounded-lg transition-colors ${memory.is_favorite ? 'bg-[#C35F33]/10 text-[#C35F33]' : 'bg-gray-100 text-gray-400 hover:text-[#C35F33]'}`}
-                >
-                  <Heart size={16} fill={memory.is_favorite ? 'currentColor' : 'none'} />
-                </button>
-              </div>
-            </div>
 
             {/* Metadata Card */}
             <div className="bg-white/90 backdrop-blur-sm rounded-2xl p-5 shadow-sm border border-gray-100">
@@ -894,46 +861,23 @@ export default function MemoryDetailPage({ params }: { params: Promise<{ id: str
               />
             </div>
 
-            {/* Smart Tags */}
-            {(memory.ai_summary || memory.ai_mood || memory.ai_category || (memory.ai_labels?.length ?? 0) > 0) && (
+            {/* Smart Tags - Categories only */}
+            {(memory.ai_mood || memory.ai_category) && (
               <div className="bg-white/90 backdrop-blur-sm rounded-2xl p-5 shadow-sm border border-gray-100">
                 <h3 className="text-sm font-medium text-[#406A56] flex items-center gap-2 mb-3">
                   <Sparkles size={14} />
                   Smart Tags
                 </h3>
                 
-                {memory.ai_summary && (
-                  <div className="space-y-2 mb-3">
-                    {memory.ai_summary.split('\n').map((line, i) => {
-                      const match = line.match(/^-\s*\*\*(.+?)\*\*:\s*(.+)$/);
-                      if (match) {
-                        return (
-                          <div key={i} className="flex items-start gap-2 text-sm">
-                            <div className="w-1.5 h-1.5 rounded-full bg-[#D9C61A] mt-2 flex-shrink-0" />
-                            <div>
-                              <span className="font-semibold text-[#4A3552]">{match[1]}:</span>
-                              <span className="text-gray-600 ml-1">{match[2]}</span>
-                            </div>
-                          </div>
-                        );
-                      }
-                      if (line.trim()) {
-                        return <p key={i} className="text-gray-600 text-sm">{line}</p>;
-                      }
-                      return null;
-                    })}
-                  </div>
-                )}
-                
                 <div className="flex flex-wrap gap-2">
-                  {memory.ai_mood && (
-                    <span className="px-2 py-1 bg-[#4A3552]/10 text-[#4A3552] rounded-full text-xs capitalize">
-                      {memory.ai_mood}
+                  {memory.ai_category && (
+                    <span className="px-3 py-1.5 bg-[#8DACAB]/20 text-[#406A56] rounded-full text-sm capitalize">
+                      {memory.ai_category}
                     </span>
                   )}
-                  {memory.ai_category && (
-                    <span className="px-2 py-1 bg-[#8DACAB]/20 text-[#406A56] rounded-full text-xs capitalize">
-                      {memory.ai_category}
+                  {memory.ai_mood && (
+                    <span className="px-3 py-1.5 bg-[#4A3552]/10 text-[#4A3552] rounded-full text-sm capitalize">
+                      {memory.ai_mood}
                     </span>
                   )}
                 </div>
