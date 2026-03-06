@@ -894,7 +894,7 @@ export default function MemoryDetailPage({ params }: { params: Promise<{ id: str
             </div>
 
             {/* Smart Tags */}
-            {(memory.ai_summary || memory.ai_mood || memory.ai_category || memory.ai_labels?.length) && (
+            {(memory.ai_summary || memory.ai_mood || memory.ai_category || (memory.ai_labels?.length ?? 0) > 0) && (
               <div className="bg-white/90 backdrop-blur-sm rounded-2xl p-5 shadow-sm border border-gray-100">
                 <h3 className="text-sm font-medium text-[#406A56] flex items-center gap-2 mb-3">
                   <Sparkles size={14} />

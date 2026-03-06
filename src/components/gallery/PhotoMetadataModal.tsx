@@ -127,7 +127,7 @@ export default function PhotoMetadataModal({ media, onClose, onSave }: Props) {
           animate={{ opacity: 1, scale: 1, y: 0 }}
           exit={{ opacity: 0, scale: 0.95, y: 20 }}
           onClick={(e) => e.stopPropagation()}
-          className="bg-white/90 backdrop-blur-[24px] border border-white/50 rounded-[20px] shadow-[0_4px_16px_rgba(195,95,51,0.06),0_20px_60px_rgba(0,0,0,0.1)] w-full max-w-md max-h-[90vh] overflow-hidden flex flex-col"
+          className="bg-white/90 backdrop-blur-[24px] border border-white/50 rounded-[20px] shadow-[0_4px_16px_rgba(195,95,51,0.06),0_20px_60px_rgba(0,0,0,0.1)] w-full max-w-md max-h-[90vh] flex flex-col"
         >
           {/* Header with photo preview */}
           <div className="relative h-40 bg-gray-100 flex-shrink-0">
@@ -150,7 +150,7 @@ export default function PhotoMetadataModal({ media, onClose, onSave }: Props) {
           </div>
 
           {/* Form */}
-          <div className="p-5 space-y-5 overflow-y-auto flex-1">
+          <div className="p-5 space-y-5 flex-1 min-h-[320px]">
             {/* Date & Time */}
             <div>
               <label className="flex items-center gap-2 text-sm font-semibold text-[#1a1a1a] mb-2">
