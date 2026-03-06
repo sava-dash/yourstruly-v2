@@ -66,7 +66,7 @@ export async function POST(request: NextRequest) {
         description: '',
         memory_date: today,
         memory_type: 'moment',
-        source: 'onboarding',
+        tags: ['onboarding'], // Use tags instead of non-existent 'source' column
       })
       .select()
       .single();
@@ -94,7 +94,6 @@ export async function POST(request: NextRequest) {
         mime_type: file.type || 'image/jpeg',
         file_size: file.size,
         is_cover: true,
-        source: 'onboarding',
       })
       .select()
       .single();
