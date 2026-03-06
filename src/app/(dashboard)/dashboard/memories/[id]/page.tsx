@@ -46,16 +46,15 @@ interface Media {
 
 interface MemoryShare {
   id: string
-  contact_id: string
-  can_comment: boolean
-  can_add_media: boolean
-  contact: {
+  shared_with_user_id: string
+  permission_level?: string
+  status?: string
+  shared_with?: {
     id: string
-    name: string
+    full_name: string
     email?: string
-    phone?: string
-    relationship_type?: string
-  }
+    avatar_url?: string
+  } | null
 }
 
 // Parse conversation markdown into structured content
@@ -268,14 +267,14 @@ export default function MemoryDetailPage({ params }: { params: Promise<{ id: str
     }
   }
 
-  const handleRemoveShare = async (contactId: string) => {
-    setRemovingShareId(contactId)
+  const handleRemoveShare = async (userId: string) => {
+    setRemovingShareId(userId)
     try {
-      const res = await fetch(`/api/memories/${id}/share?contact_id=${contactId}`, {
+      const res = await fetch(`/api/memories/${id}/share?user_id=${userId}`, {
         method: 'DELETE',
       })
       if (res.ok) {
-        setShares(prev => prev.filter(s => s.contact_id !== contactId))
+        setShares(prev => prev.filter(s => s.shared_with_user_id !== userId))
         showXP(undefined, 'Share removed')
       }
     } catch (err) {
@@ -583,35 +582,37 @@ export default function MemoryDetailPage({ params }: { params: Promise<{ id: str
                 </button>
               </div>
               <div className="space-y-2">
-                {shares.map(share => (
+                {shares.filter(share => share.shared_with).map(share => (
                   <div
                     key={share.id}
                     className="flex items-center gap-3 p-2 rounded-xl hover:bg-[#F2F1E5] transition-colors group"
                   >
                     <div className="w-10 h-10 rounded-full bg-gradient-to-br from-[#406A56] to-[#5A8A72] flex items-center justify-center text-white text-sm font-medium flex-shrink-0">
-                      {getInitials(share.contact.name)}
+                      {getInitials(share.shared_with?.full_name || 'Unknown')}
                     </div>
                     <div className="flex-1 min-w-0">
                       <div className="text-[#2d2d2d] font-medium text-sm truncate">
-                        {share.contact.name}
+                        {share.shared_with?.full_name || 'Unknown'}
                       </div>
                       <div className="flex items-center gap-2 text-xs text-gray-500">
-                        {share.contact.relationship_type && (
-                          <span className="text-[#406A56]">{share.contact.relationship_type}</span>
-                        )}
-                        {share.can_add_media && (
+                        {share.permission_level === 'contributor' && (
                           <span className="px-1.5 py-0.5 bg-[#D9C61A]/20 text-[#8a7c08] rounded text-[10px]">
                             Contributor
+                          </span>
+                        )}
+                        {share.status === 'pending' && (
+                          <span className="px-1.5 py-0.5 bg-amber-100 text-amber-700 rounded text-[10px]">
+                            Pending
                           </span>
                         )}
                       </div>
                     </div>
                     <button
-                      onClick={() => setShowRemoveConfirm({ shareId: share.contact_id, name: share.contact.name })}
-                      disabled={removingShareId === share.contact_id}
+                      onClick={() => setShowRemoveConfirm({ shareId: share.shared_with_user_id, name: share.shared_with?.full_name || 'Unknown' })}
+                      disabled={removingShareId === share.shared_with_user_id}
                       className="p-2 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors opacity-0 group-hover:opacity-100"
                     >
-                      {removingShareId === share.contact_id ? (
+                      {removingShareId === share.shared_with_user_id ? (
                         <div className="w-4 h-4 border-2 border-red-500 border-t-transparent rounded-full animate-spin" />
                       ) : (
                         <X size={16} />
@@ -947,12 +948,12 @@ export default function MemoryDetailPage({ params }: { params: Promise<{ id: str
                   Shared with {shares.length}
                 </h3>
                 <div className="space-y-2">
-                  {shares.map(share => (
+                  {shares.filter(share => share.shared_with).map(share => (
                     <div key={share.id} className="flex items-center gap-2 text-sm">
                       <div className="w-6 h-6 rounded-full bg-gradient-to-br from-[#406A56] to-[#5A8A72] flex items-center justify-center text-white text-xs">
-                        {getInitials(share.contact.name)}
+                        {getInitials(share.shared_with?.full_name || 'Unknown')}
                       </div>
-                      <span className="text-gray-700">{share.contact.name}</span>
+                      <span className="text-gray-700">{share.shared_with?.full_name || 'Unknown'}</span>
                     </div>
                   ))}
                 </div>
