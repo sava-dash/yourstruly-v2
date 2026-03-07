@@ -129,11 +129,19 @@ export async function POST(request: NextRequest) {
     
     const results: { sms?: { success: boolean; messageId?: string; error?: string }; email?: { success: boolean; error?: string } } = {};
 
+    // Get sender's name for the SMS
+    const { data: senderProfile } = await supabase
+      .from('profiles')
+      .select('full_name, display_name')
+      .eq('id', user.id)
+      .single();
+    const senderName = senderProfile?.display_name || senderProfile?.full_name || 'Someone';
+
     // Send SMS if phone provided
     if (phone) {
       const smsMessage = message 
-        ? `${message}\n\nStart your interview: ${interviewLink}`
-        : SMS_TEMPLATES.interviewInvite(name, interviewLink);
+        ? `${message}\n\n${interviewLink}`
+        : SMS_TEMPLATES.interviewInvite(senderName, interviewLink);
       
       const smsResult = await sendSMS(phone, smsMessage);
       results.sms = smsResult;
@@ -160,31 +168,32 @@ export async function POST(request: NextRequest) {
       try {
         const resend = getResend();
         if (resend) {
-          const { data: profile } = await supabase
-            .from('profiles')
-            .select('display_name')
-            .eq('id', user.id)
-            .single();
-
-          const senderName = profile?.display_name || 'Someone';
-          
           await resend.emails.send({
-            from: process.env.EMAIL_FROM || 'YoursTruly <noreply@yourstruly.love>',
+            from: process.env.EMAIL_FROM || 'YoursTruly <hello@yourstruly.love>',
             to: email,
-            subject: `${senderName} invited you to share your story`,
+            subject: `${senderName} asked you a question on YoursTruly`,
             html: `
-              <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto;">
-                <h2>You're Invited to Share Your Story</h2>
-                <p>Hi ${name},</p>
-                <p>${message || `${senderName} would love to hear your stories and memories. YoursTruly makes it easy to record and preserve your life experiences through a guided interview.`}</p>
-                <p style="margin: 24px 0;">
-                  <a href="${interviewLink}" style="background: #4F46E5; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px;">
-                    Start Your Interview
-                  </a>
+              <div style="font-family: Georgia, serif; max-width: 580px; margin: 0 auto; padding: 40px 20px; color: #2d2d2d;">
+                <div style="text-align: center; margin-bottom: 32px;">
+                  <img src="https://yourstruly.love/logo.png" alt="YoursTruly" style="height: 40px;" onerror="this.style.display='none'" />
+                </div>
+                <h2 style="font-size: 22px; font-weight: 600; margin-bottom: 12px;">${senderName} asked you a question</h2>
+                <p style="font-size: 16px; color: #555; line-height: 1.6; margin-bottom: 32px;">
+                  ${message || `${senderName} would love to hear your answer. Click the link below to respond — it only takes a few minutes.`}
                 </p>
-                <p style="color: #666; font-size: 14px;">Or copy this link: ${interviewLink}</p>
+                <div style="text-align: center; margin: 32px 0;">
+                  <a href="${interviewLink}" 
+                     style="background: #406A56; color: white; padding: 14px 32px; text-decoration: none; border-radius: 10px; font-size: 16px; font-weight: 600; display: inline-block;">
+                    Answer the Question →
+                  </a>
+                </div>
+                <p style="color: #999; font-size: 13px; text-align: center; margin-top: 32px;">
+                  Or copy this link: <a href="${interviewLink}" style="color: #406A56;">${interviewLink}</a>
+                </p>
                 <hr style="margin: 32px 0; border: none; border-top: 1px solid #eee;">
-                <p style="color: #999; font-size: 12px;">This invitation was sent via YoursTruly. Your stories matter.</p>
+                <p style="color: #bbb; font-size: 11px; text-align: center;">
+                  Sent via <a href="https://yourstruly.love" style="color: #bbb;">YoursTruly</a> · Your stories deserve to be told.
+                </p>
               </div>
             `,
           });

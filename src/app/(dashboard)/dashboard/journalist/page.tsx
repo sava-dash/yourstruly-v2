@@ -126,7 +126,7 @@ export default function JournalistPage() {
       supabase
         .from('interview_sessions')
         .select(`
-          *, contact:contacts!contact_id(id, full_name),
+          *, contact:contacts!contact_id(id, full_name, phone, email),
           session_questions(id, question_text, status),
           video_responses(id, duration, ai_summary)
         `)
@@ -284,6 +284,25 @@ export default function JournalistPage() {
           question_text: questionText,
           sort_order: 0,
         })
+
+        // Auto-send invite via SMS and/or email
+        if (recipient.phone || recipient.email) {
+          try {
+            await fetch('/api/interviews/invite', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                name: recipient.full_name,
+                phone: recipient.phone || null,
+                email: recipient.email || null,
+                sessionId: session.id,
+              }),
+            })
+          } catch (inviteErr) {
+            console.error('Failed to send invite for', recipient.full_name, inviteErr)
+            // Don't block session creation if invite fails
+          }
+        }
       }
 
       closeModal()
@@ -325,10 +344,35 @@ export default function JournalistPage() {
     window.open(`mailto:?subject=${subject}&body=${body}`)
   }
 
-  const shareViaSMS = (token: string) => {
+  const shareViaSMS = async (sessionId: string, token: string, recipientPhone?: string, recipientName?: string) => {
     const url = `${window.location.origin}/interview/${token}`
-    const text = encodeURIComponent(`I'd love to hear your story! Click here to share: ${url}`)
-    window.open(`sms:?body=${text}`)
+    
+    // If we have a phone number, send via Telnyx
+    if (recipientPhone) {
+      try {
+        const res = await fetch('/api/interviews/invite', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            name: recipientName || 'there',
+            phone: recipientPhone,
+            sessionId,
+          }),
+        })
+        const data = await res.json()
+        if (data.success) {
+          alert(`SMS sent to ${recipientPhone}!`)
+        } else {
+          // Fallback to native SMS
+          window.open(`sms:${recipientPhone}?body=${encodeURIComponent(url)}`)
+        }
+      } catch {
+        window.open(`sms:${recipientPhone}?body=${encodeURIComponent(url)}`)
+      }
+    } else {
+      // No phone stored - open native SMS to let user choose
+      window.open(`sms:?body=${encodeURIComponent(url)}`)
+    }
   }
 
   const getStatusStyle = (status: string) => {
@@ -517,7 +561,7 @@ export default function JournalistPage() {
                               <span className="hidden sm:inline">Email</span>
                             </button>
                             <button
-                              onClick={() => shareViaSMS(session.access_token)}
+                              onClick={() => shareViaSMS(session.id, session.access_token, (session.contact as any)?.phone, (session.contact as any)?.full_name)}
                               className="flex items-center gap-1.5 px-3 py-1.5 bg-[#406A56]/10 hover:bg-[#406A56]/20 text-[#406A56] text-sm rounded-lg transition-all"
                               title="Share via SMS"
                             >

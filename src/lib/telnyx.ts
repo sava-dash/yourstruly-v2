@@ -83,8 +83,8 @@ function normalizePhoneNumber(phone: string): string {
 
 // SMS Templates for YoursTruly
 export const SMS_TEMPLATES = {
-  interviewInvite: (name: string, link: string) => 
-    `Hi ${name}! You've been invited to share your story on YoursTruly. Click here to start your interview: ${link}`,
+  interviewInvite: (senderName: string, link: string) => 
+    `${senderName} asked you a question on YoursTruly. Click the link below to answer: ${link}`,
   
   interviewReminder: (name: string, link: string) =>
     `Hi ${name}, this is a reminder to complete your YoursTruly interview. Continue here: ${link}`,
