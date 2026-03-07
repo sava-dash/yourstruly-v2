@@ -16,9 +16,12 @@ interface Session {
   access_token: string
   video_responses: {
     id: string
-    video_url: string
-    transcription: string
-    ai_summary: string
+    video_url: string | null
+    audio_url: string | null
+    transcript: string | null
+    text_response: string | null
+    ai_summary: string | null
+    ai_category: string | null
     duration: number
     created_at: string
   }[]
@@ -63,7 +66,7 @@ export default function GroupStoryTimePage({ params }: { params: Promise<{ group
         .select(`
           id, status, access_token, group_question,
           contact:contacts(id, full_name),
-          video_responses(id, video_url, transcription, ai_summary, duration, created_at)
+          video_responses(id, video_url, audio_url, transcript, text_response, ai_summary, ai_category, duration, created_at)
         `)
         .eq('interview_group_id', groupId)
         .eq('user_id', user.id)
@@ -104,10 +107,23 @@ export default function GroupStoryTimePage({ params }: { params: Promise<{ group
     window.open(`mailto:?subject=${subject}&body=${body}`)
   }
 
-  const shareViaSMS = (token: string) => {
+  const shareViaSMS = async (sessionId: string, token: string, recipientPhone?: string, recipientName?: string) => {
     const url = `${window.location.origin}/interview/${token}`
-    const text = encodeURIComponent(`I'd love to hear your story! Click here to share: ${url}`)
-    window.open(`sms:?body=${text}`)
+    if (recipientPhone) {
+      try {
+        const res = await fetch('/api/interviews/invite', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ name: recipientName || 'there', phone: recipientPhone, sessionId }),
+        })
+        const d = await res.json()
+        if (!d.success) throw new Error('failed')
+      } catch {
+        window.open(`sms:${recipientPhone}?body=${encodeURIComponent(url)}`)
+      }
+    } else {
+      window.open(`sms:?body=${encodeURIComponent(url)}`)
+    }
   }
 
   // Get responses with completed sessions
@@ -254,7 +270,7 @@ export default function GroupStoryTimePage({ params }: { params: Promise<{ group
                           <span className="hidden sm:inline">Email</span>
                         </button>
                         <button
-                          onClick={() => shareViaSMS(session.access_token)}
+                          onClick={() => shareViaSMS(session.id, session.access_token, (getContact(session) as any)?.phone, getContact(session)?.full_name)}
                           className="flex items-center gap-1.5 px-3 py-1.5 bg-[#406A56]/80 hover:bg-[#406A56] text-white text-sm rounded-lg transition-all"
                           title="Share via SMS"
                         >
@@ -394,16 +410,16 @@ function ResponseCard({
         </div>
 
         {/* Transcription/Summary */}
-        {(response.transcription || response.ai_summary) && (
+        {(response.transcript || response.text_response || response.ai_summary) && (
           <div className="mb-4">
             {response.ai_summary && (
               <p className="text-white/90 text-lg leading-relaxed">
                 &ldquo;{response.ai_summary}&rdquo;
               </p>
             )}
-            {response.transcription && !response.ai_summary && (
+            {response.transcript || response.text_response && !response.ai_summary && (
               <p className="text-white/70 text-sm">
-                {response.transcription}
+                {response.transcript || response.text_response}
               </p>
             )}
           </div>
