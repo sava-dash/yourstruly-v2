@@ -164,14 +164,16 @@ export default function GalleryPage() {
     if (!user) { setLoading(false); return }
 
     // Get media with memory info
+    // Order by created_at desc so recent uploads (incl. onboarding) appear first
+    // then sort client-side by effective date (exif/memory date takes priority)
     const { data } = await supabase
       .from('memory_media')
       .select(`
-        id, file_url, file_type, exif_lat, exif_lng, taken_at, created_at, memory_id,
+        id, file_url, file_type, exif_lat, exif_lng, taken_at, created_at, memory_id, source,
         memory:memories(id, title, location_name, location_lat, location_lng, memory_type, memory_date)
       `)
       .eq('user_id', user.id)
-      .order('taken_at', { ascending: false, nullsFirst: false })
+      .order('created_at', { ascending: false })
 
     // Transform and filter out interview media
     const transformed: MediaItem[] = (data || [])

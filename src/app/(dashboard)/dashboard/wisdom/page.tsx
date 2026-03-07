@@ -204,32 +204,103 @@ export default function WisdomPage() {
 
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#4A3552]" />
+      <div className="page-container">
+        <div className="page-background">
+          <div className="page-blob page-blob-1" />
+          <div className="page-blob page-blob-2" />
+          <div className="page-blob page-blob-3" />
+        </div>
+        <div className="loading-container">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#4A3552]" />
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="flex min-h-screen bg-gradient-to-br from-[#faf9f7] to-[#f5f3f0]">
-      {/* Left Sidebar */}
-      <aside 
-        className={`${sidebarCollapsed ? 'w-16' : 'w-60'} flex-shrink-0 bg-white border-r border-gray-200 
-                    sticky top-0 h-screen overflow-y-auto transition-all duration-300`}
-      >
-        <div className="p-4">
-          {/* Back + Title */}
-          <div className="flex items-center gap-2 mb-6">
-            <Link href="/dashboard" className="p-2 hover:bg-gray-100 rounded-lg transition-colors">
-              <ChevronLeft size={20} className="text-gray-600" />
-            </Link>
-            {!sidebarCollapsed && (
-              <h1 className="text-lg font-semibold text-[#4A3552]">Wisdom</h1>
-            )}
+    <div className="page-container">
+      {/* Warm gradient background with blobs */}
+      <div className="page-background">
+        <div className="page-blob page-blob-1" />
+        <div className="page-blob page-blob-2" />
+        <div className="page-blob page-blob-3" />
+      </div>
+
+      {/* Content */}
+      <div className="relative z-10">
+        {/* Header */}
+        <header className="mb-6">
+          <div className="flex items-center justify-between flex-wrap gap-4">
+            <div className="flex items-center gap-4">
+              <Link href="/dashboard" className="page-header-back">
+                <ChevronLeft size={20} />
+              </Link>
+              <div>
+                <h1 className="page-header-title">Wisdom</h1>
+                <p className="page-header-subtitle">
+                  {filteredEntries.length} {filteredEntries.length === 1 ? 'insight' : 'insights'}
+                </p>
+              </div>
+            </div>
+
+            <div className="flex items-center gap-3">
+              {/* Search */}
+              <div className="relative">
+                <Search size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-[#406A56]/50 z-10 pointer-events-none" />
+                <input
+                  type="text"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  placeholder="Search wisdom..."
+                  className="form-input !pl-10 pr-10 w-48 sm:w-64"
+                />
+                {searchQuery && (
+                  <button 
+                    onClick={() => setSearchQuery('')}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-[#406A56]/50 hover:text-[#406A56]"
+                  >
+                    <X size={16} />
+                  </button>
+                )}
+              </div>
+
+              {/* View Mode Toggle */}
+              <div className="hidden sm:flex items-center glass-card-page p-1">
+                {[
+                  { mode: 'grid' as ViewMode, icon: Grid3X3, label: 'Grid' },
+                  { mode: 'list' as ViewMode, icon: List, label: 'List' },
+                  { mode: 'timeline' as ViewMode, icon: Clock, label: 'Timeline' },
+                ].map(({ mode, icon: Icon, label }) => (
+                  <button
+                    key={mode}
+                    onClick={() => setViewMode(mode)}
+                    className={`p-2 rounded-lg transition-all ${
+                      viewMode === mode 
+                        ? 'bg-[#406A56] text-white' 
+                        : 'text-[#406A56]/60 hover:text-[#406A56]'
+                    }`}
+                    title={label}
+                  >
+                    <Icon size={18} />
+                  </button>
+                ))}
+              </div>
+
+              {/* Sort */}
+              <select
+                value={sortMode}
+                onChange={(e) => setSortMode(e.target.value as SortMode)}
+                className="form-select w-auto"
+              >
+                <option value="newest">Newest</option>
+                <option value="oldest">Oldest</option>
+                <option value="alphabetical">A-Z</option>
+              </select>
+            </div>
           </div>
 
-          {/* Categories */}
-          <nav className="space-y-1">
+          {/* Category Filters - Horizontal scroll */}
+          <div className="flex gap-2 mt-6 overflow-x-auto pb-2 scrollbar-thin">
             {CATEGORIES.map(cat => {
               const Icon = cat.icon;
               const count = categoryCounts[cat.key] || 0;
@@ -241,142 +312,43 @@ export default function WisdomPage() {
                 <button
                   key={cat.key}
                   onClick={() => setSelectedCategory(cat.key)}
-                  className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm transition-all
-                    ${isActive 
-                      ? 'bg-[#4A3552] text-white' 
-                      : 'text-gray-700 hover:bg-gray-100'
-                    }`}
+                  className={`filter-btn flex-shrink-0 flex items-center gap-2 ${isActive ? 'filter-btn-active' : ''}`}
                 >
-                  <Icon size={18} style={{ color: isActive ? 'white' : cat.color }} />
-                  {!sidebarCollapsed && (
-                    <>
-                      <span className="flex-1 text-left">{cat.label}</span>
-                      <span className={`text-xs px-1.5 py-0.5 rounded-full ${
-                        isActive ? 'bg-white/20' : 'bg-gray-100'
-                      }`}>
-                        {count}
-                      </span>
-                    </>
-                  )}
+                  <Icon size={14} />
+                  {cat.label}
+                  {count > 0 && <span className="opacity-60">({count})</span>}
                 </button>
               );
             })}
-          </nav>
+          </div>
 
           {/* Smart Tags */}
-          {!sidebarCollapsed && allTags.length > 0 && (
-            <div className="mt-8">
-              <h3 className="text-xs font-medium text-gray-500 uppercase tracking-wider mb-3 px-3">
-                Smart Tags
-              </h3>
-              <div className="flex flex-wrap gap-1.5 px-2">
-                {allTags.slice(0, 12).map(([tag, count]) => (
-                  <button
-                    key={tag}
-                    onClick={() => toggleTag(tag)}
-                    className={`px-2 py-1 text-xs rounded-full transition-all ${
-                      selectedTags.includes(tag)
-                        ? 'bg-[#406A56] text-white'
-                        : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-                    }`}
-                  >
-                    {tag}
-                    <span className="ml-1 opacity-60">{count}</span>
-                  </button>
-                ))}
-              </div>
+          {allTags.length > 0 && (
+            <div className="flex flex-wrap gap-2 mt-4">
+              {allTags.slice(0, 8).map(([tag, count]) => (
+                <button
+                  key={tag}
+                  onClick={() => toggleTag(tag)}
+                  className={`px-3 py-1.5 text-xs rounded-full transition-all ${
+                    selectedTags.includes(tag)
+                      ? 'bg-[#406A56] text-white'
+                      : 'glass-card-page text-gray-600 hover:text-[#406A56]'
+                  }`}
+                >
+                  <Tag size={10} className="inline mr-1" />
+                  {tag}
+                </button>
+              ))}
             </div>
           )}
-
-          {/* Collapse Toggle */}
-          <button
-            onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
-            className="mt-6 w-full p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-lg transition-colors"
-          >
-            <ChevronRight 
-              size={18} 
-              className={`mx-auto transition-transform ${sidebarCollapsed ? '' : 'rotate-180'}`} 
-            />
-          </button>
-        </div>
-      </aside>
-
-      {/* Main Content */}
-      <main className="flex-1 p-6">
-        {/* Top Bar */}
-        <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4 mb-6">
-          {/* Search */}
-          <div className="relative flex-1 max-w-md">
-            <Search size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
-            <input
-              type="text"
-              placeholder="Search wisdom..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full pl-10 pr-4 py-2.5 bg-white border border-gray-200 rounded-xl
-                       focus:ring-2 focus:ring-[#4A3552]/20 focus:border-[#4A3552] outline-none"
-            />
-            {searchQuery && (
-              <button 
-                onClick={() => setSearchQuery('')}
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
-              >
-                <X size={16} />
-              </button>
-            )}
-          </div>
-
-          {/* View Mode Toggle */}
-          <div className="flex items-center gap-1 bg-white border border-gray-200 rounded-xl p-1">
-            {[
-              { mode: 'grid' as ViewMode, icon: Grid3X3, label: 'Grid' },
-              { mode: 'list' as ViewMode, icon: List, label: 'List' },
-              { mode: 'timeline' as ViewMode, icon: Clock, label: 'Timeline' },
-            ].map(({ mode, icon: Icon, label }) => (
-              <button
-                key={mode}
-                onClick={() => setViewMode(mode)}
-                className={`p-2 rounded-lg transition-all ${
-                  viewMode === mode 
-                    ? 'bg-[#4A3552] text-white' 
-                    : 'text-gray-500 hover:bg-gray-100'
-                }`}
-                title={label}
-              >
-                <Icon size={18} />
-              </button>
-            ))}
-          </div>
-
-          {/* Sort Dropdown */}
-          <select
-            value={sortMode}
-            onChange={(e) => setSortMode(e.target.value as SortMode)}
-            className="px-3 py-2.5 bg-white border border-gray-200 rounded-xl text-sm
-                     focus:ring-2 focus:ring-[#4A3552]/20 focus:border-[#4A3552] outline-none"
-          >
-            <option value="newest">Newest First</option>
-            <option value="oldest">Oldest First</option>
-            <option value="alphabetical">A-Z</option>
-          </select>
-
-          {/* Add Wisdom Button */}
-          <Link
-            href="/dashboard/wisdom/new"
-            className="flex items-center gap-2 px-4 py-2.5 bg-[#406A56] text-white rounded-xl
-                     hover:bg-[#345745] transition-colors font-medium text-sm"
-          >
-            <Plus size={18} />
-            Add Wisdom
-          </Link>
-        </div>
+        </header>
 
         {/* Active Filters */}
         {(selectedCategory !== 'all' || selectedTags.length > 0) && (
-          <div className="flex flex-wrap items-center gap-2 mb-4">
-            <span className="text-sm text-gray-500">Filters:</span>
+          <div className="flex flex-wrap items-center gap-2 mb-6">
+            <span className="text-sm text-gray-500">Active:</span>
             {selectedCategory !== 'all' && (
-              <span className="flex items-center gap-1 px-2 py-1 bg-[#4A3552]/10 text-[#4A3552] rounded-full text-sm">
+              <span className="flex items-center gap-1 px-3 py-1.5 bg-[#4A3552]/10 text-[#4A3552] rounded-full text-sm">
                 {getCategoryInfo(selectedCategory).label}
                 <button onClick={() => setSelectedCategory('all')} className="ml-1 hover:text-[#4A3552]/70">
                   <X size={14} />
@@ -384,7 +356,7 @@ export default function WisdomPage() {
               </span>
             )}
             {selectedTags.map(tag => (
-              <span key={tag} className="flex items-center gap-1 px-2 py-1 bg-[#406A56]/10 text-[#406A56] rounded-full text-sm">
+              <span key={tag} className="flex items-center gap-1 px-3 py-1.5 bg-[#406A56]/10 text-[#406A56] rounded-full text-sm">
                 {tag}
                 <button onClick={() => toggleTag(tag)} className="ml-1 hover:text-[#406A56]/70">
                   <X size={14} />
@@ -489,7 +461,7 @@ export default function WisdomPage() {
             ))}
           </div>
         )}
-      </main>
+      </div>
 
       {/* Engagement Modal */}
       {engagementPrompt && (
