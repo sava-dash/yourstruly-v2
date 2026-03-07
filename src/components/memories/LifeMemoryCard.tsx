@@ -4,7 +4,6 @@ import { useState } from 'react'
 import Link from 'next/link'
 import { MapPin, Calendar, Mic } from 'lucide-react'
 import { MoodType } from '@/lib/ai/moodAnalysis'
-import { getCategoryIcon } from '@/lib/dashboard/icons'
 
 interface Memory {
   id: string
@@ -27,7 +26,43 @@ interface Memory {
   }[]
 }
 
-// Warm gradient palettes — varied by category/mood
+// ── Helpers ────────────────────────────────────────────────────────────────────
+
+/** Strip common markdown syntax so AI-generated text renders cleanly */
+function stripMarkdown(text: string): string {
+  if (!text) return ''
+  return text
+    .replace(/^#{1,6}\s+/gm, '')         // ## headers
+    .replace(/\*\*(.+?)\*\*/g, '$1')     // **bold**
+    .replace(/\*(.+?)\*/g, '$1')         // *italic*
+    .replace(/__(.+?)__/g, '$1')         // __bold__
+    .replace(/_(.+?)_/g, '$1')           // _italic_
+    .replace(/^[\s]*[-*+]\s+/gm, '')     // - bullet / * bullet
+    .replace(/^[\s]*\d+\.\s+/gm, '')     // 1. numbered list
+    .replace(/```[\s\S]*?```/g, '')      // ```code blocks```
+    .replace(/`(.+?)`/g, '$1')           // `inline code`
+    .replace(/\[(.+?)\]\(.+?\)/g, '$1') // [link](url)
+    .replace(/^[-*_]{3,}$/gm, '')        // --- horizontal rules
+    .replace(/^>\s+/gm, '')              // > blockquotes
+    .replace(/\n{2,}/g, ' ')
+    .replace(/\n/g, ' ')
+    .trim()
+}
+
+/** Only treat URLs pointing to external storage as real photos (not local /images/ paths) */
+function isRealImageUrl(url?: string): boolean {
+  if (!url) return false
+  return url.startsWith('http://') || url.startsWith('https://')
+}
+
+function formatDate(dateStr: string) {
+  if (!dateStr) return ''
+  const d = new Date(dateStr)
+  return d.toLocaleDateString('en-US', { month: 'short', year: 'numeric' })
+}
+
+// ── Themes ─────────────────────────────────────────────────────────────────────
+
 const TEXT_CARD_THEMES: Record<string, { bg: string; accent: string; text: string }> = {
   family:      { bg: 'linear-gradient(135deg, #FDF8F3 0%, #F5EDE4 100%)', accent: '#C35F33', text: '#3d2d20' },
   travel:      { bg: 'linear-gradient(135deg, #EDF6F4 0%, #D4EDE8 100%)', accent: '#406A56', text: '#1d3028' },
@@ -51,7 +86,6 @@ const MOOD_THEMES: Record<string, { bg: string; accent: string; text: string }> 
   reflective:  { bg: 'linear-gradient(135deg, #F0EDF8 0%, #E0DBF0 100%)', accent: '#504070', text: '#20163a' },
 }
 
-// Special interview theme — dark, editorial
 const INTERVIEW_THEME = {
   bg: 'linear-gradient(135deg, #1a1a2e 0%, #16213e 80%, #0f3460 100%)',
   accent: '#D9C61A',
@@ -65,16 +99,11 @@ function getTheme(memory: Memory) {
   return TEXT_CARD_THEMES.default
 }
 
-function formatDate(dateStr: string) {
-  if (!dateStr) return ''
-  const d = new Date(dateStr)
-  return d.toLocaleDateString('en-US', { month: 'short', year: 'numeric' })
-}
-
 // ── Interview Card ─────────────────────────────────────────────────────────────
 function InterviewCard({ memory }: { memory: Memory }) {
-  const snippet = memory.ai_summary || memory.description || ''
-  const displayText = snippet.length > 90 ? snippet.slice(0, 87) + '…' : snippet
+  const raw = memory.ai_summary || memory.description || ''
+  const displayText = stripMarkdown(raw)
+  const snippet = displayText.length > 90 ? displayText.slice(0, 87) + '…' : displayText
 
   return (
     <Link href={`/dashboard/memories/${memory.id}`} className="block group">
@@ -87,18 +116,14 @@ function InterviewCard({ memory }: { memory: Memory }) {
           <div
             key={i}
             className="absolute w-0.5 h-0.5 bg-white rounded-full"
-            style={{
-              left: `${15 + i * 15}%`,
-              top: `${10 + (i % 3) * 20}%`,
-              opacity: 0.3 + (i % 3) * 0.2,
-            }}
+            style={{ left: `${15 + i * 15}%`, top: `${10 + (i % 3) * 20}%`, opacity: 0.3 + (i % 3) * 0.2 }}
           />
         ))}
 
         {/* Mic badge */}
         <div className="relative z-10 flex items-center gap-1.5">
-          <div className="w-6 h-6 rounded-full bg-[#D9C61A]/20 flex items-center justify-center">
-            <Mic size={12} className="text-[#D9C61A]" />
+          <div className="w-5 h-5 rounded-full bg-[#D9C61A]/20 flex items-center justify-center">
+            <Mic size={10} className="text-[#D9C61A]" />
           </div>
           <span className="text-[9px] font-bold uppercase tracking-widest" style={{ color: INTERVIEW_THEME.accent }}>
             Interview
@@ -109,23 +134,16 @@ function InterviewCard({ memory }: { memory: Memory }) {
         <div className="relative z-10 flex-1 flex flex-col justify-center py-1">
           <p
             className="text-[13px] leading-snug line-clamp-3"
-            style={{
-              color: INTERVIEW_THEME.text,
-              fontFamily: 'Georgia, serif',
-              fontStyle: 'italic',
-            }}
+            style={{ color: INTERVIEW_THEME.text, fontFamily: 'Georgia, serif', fontStyle: 'italic' }}
           >
-            {displayText || memory.title}
+            {snippet || stripMarkdown(memory.title)}
           </p>
         </div>
 
         {/* Footer */}
         <div className="relative z-10">
-          <p
-            className="text-[10px] font-semibold line-clamp-1 mb-0.5"
-            style={{ color: INTERVIEW_THEME.accent }}
-          >
-            {memory.title}
+          <p className="text-[10px] font-semibold line-clamp-1 mb-0.5" style={{ color: INTERVIEW_THEME.accent }}>
+            {stripMarkdown(memory.title)}
           </p>
           {memory.memory_date && (
             <span className="flex items-center gap-0.5 text-[9px]" style={{ color: INTERVIEW_THEME.sub }}>
@@ -135,11 +153,8 @@ function InterviewCard({ memory }: { memory: Memory }) {
           )}
         </div>
 
-        {/* Gradient line at bottom */}
-        <div
-          className="absolute bottom-0 left-0 right-0 h-[2px]"
-          style={{ background: `linear-gradient(90deg, #D9C61A, #C35F33)` }}
-        />
+        {/* Gold bottom bar */}
+        <div className="absolute bottom-0 left-0 right-0 h-[2px]" style={{ background: 'linear-gradient(90deg, #D9C61A, #C35F33)' }} />
       </div>
     </Link>
   )
@@ -148,8 +163,10 @@ function InterviewCard({ memory }: { memory: Memory }) {
 // ── Text Card ─────────────────────────────────────────────────────────────────
 function TextCard({ memory }: { memory: Memory }) {
   const theme = getTheme(memory)
-  const snippet = memory.ai_summary || memory.description || ''
-  const displayText = snippet.length > 90 ? snippet.slice(0, 87) + '…' : snippet
+  const raw = memory.ai_summary || memory.description || ''
+  const displayText = stripMarkdown(raw)
+  const snippet = displayText.length > 90 ? displayText.slice(0, 87) + '…' : displayText
+  const cleanTitle = stripMarkdown(memory.title)
 
   return (
     <Link href={`/dashboard/memories/${memory.id}`} className="block group">
@@ -175,23 +192,16 @@ function TextCard({ memory }: { memory: Memory }) {
         <div className="relative z-10 flex-1 flex flex-col pt-3">
           <p
             className="text-[13px] leading-snug line-clamp-3 flex-1"
-            style={{
-              color: theme.text,
-              fontFamily: 'Georgia, serif',
-              fontStyle: 'italic',
-            }}
+            style={{ color: theme.text, fontFamily: 'Georgia, serif', fontStyle: 'italic' }}
           >
-            {displayText || memory.title}
+            {snippet || cleanTitle}
           </p>
         </div>
 
         {/* Footer */}
         <div className="relative z-10 mt-1 space-y-0.5">
-          <p
-            className="text-[11px] font-semibold line-clamp-1"
-            style={{ color: theme.accent }}
-          >
-            {memory.title}
+          <p className="text-[11px] font-semibold line-clamp-1" style={{ color: theme.accent }}>
+            {cleanTitle}
           </p>
           <div className="flex items-center gap-2 flex-wrap">
             {memory.memory_date && (
@@ -225,33 +235,27 @@ function TextCard({ memory }: { memory: Memory }) {
 function PhotoCard({ memory, coverUrl }: { memory: Memory; coverUrl: string }) {
   const [imgFailed, setImgFailed] = useState(false)
 
-  if (imgFailed) {
-    return <TextCard memory={memory} />
-  }
+  if (imgFailed) return <TextCard memory={memory} />
+
+  const cleanTitle = stripMarkdown(memory.title)
 
   return (
     <Link href={`/dashboard/memories/${memory.id}`} className="block group">
       <div className="relative aspect-square rounded-xl overflow-hidden bg-gray-100">
         <img
           src={coverUrl}
-          alt={memory.title}
+          alt={cleanTitle}
           className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
           onError={() => setImgFailed(true)}
         />
         {/* Gradient overlay */}
         <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
-        {/* Title at bottom */}
+        {/* Title */}
         <div className="absolute bottom-0 left-0 right-0 p-2">
           <p className="text-white text-[11px] font-medium leading-tight line-clamp-2 drop-shadow">
-            {memory.title}
+            {cleanTitle}
           </p>
         </div>
-        {/* Category badge */}
-        {memory.ai_category && (
-          <div className="absolute top-1.5 right-1.5 bg-black/30 backdrop-blur-sm rounded-full px-1.5 py-0.5 text-[9px] text-white/90">
-            {getCategoryIcon(memory.ai_category)}
-          </div>
-        )}
       </div>
     </Link>
   )
@@ -259,22 +263,21 @@ function PhotoCard({ memory, coverUrl }: { memory: Memory; coverUrl: string }) {
 
 // ── Main export ────────────────────────────────────────────────────────────────
 export default function LifeMemoryCard({ memory }: { memory: Memory }) {
-  // Interview memories → special dark card
+  // Interview memories → special dark editorial card
   if (memory.memory_type === 'interview') {
     return <InterviewCard memory={memory} />
   }
 
-  // Check for image media (not audio/video)
+  // Only use media with real external URLs as photos (not local /images/ placeholders)
   const coverMedia = memory.memory_media?.find(m => m.is_cover) || memory.memory_media?.[0]
-  const isImage = coverMedia && (
-    coverMedia.file_type?.startsWith('image/') ||
-    /\.(jpg|jpeg|png|gif|webp|heic)$/i.test(coverMedia.file_url || '')
-  )
+  const isRealPhoto = coverMedia &&
+    isRealImageUrl(coverMedia.file_url) &&
+    (coverMedia.file_type?.startsWith('image/') ||
+     /\.(jpg|jpeg|png|gif|webp|heic)$/i.test(coverMedia.file_url || ''))
 
-  if (isImage && coverMedia?.file_url) {
+  if (isRealPhoto && coverMedia?.file_url) {
     return <PhotoCard memory={memory} coverUrl={coverMedia.file_url} />
   }
 
-  // Text-only (or audio/video media) → warm text card
   return <TextCard memory={memory} />
 }

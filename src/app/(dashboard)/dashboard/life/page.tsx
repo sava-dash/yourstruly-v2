@@ -257,13 +257,16 @@ export default function LifePage() {
     return ft.startsWith('image/') || /\.(jpg|jpeg|png|gif|webp|heic)$/i.test(url)
   })
 
-  // Slide items for Life Story Engine
-  const slideItems = imageMedia.slice(0, 100).map(m => ({
-    id: m.id,
-    url: m.file_url,
-    title: m.memory?.title,
-    date: m.taken_at ? new Date(m.taken_at).toLocaleDateString() : undefined,
-  }))
+  // Only use real external URLs for the slideshow (not /images/icons/ placeholders)
+  const slideItems = imageMedia
+    .filter(m => m.file_url?.startsWith('http://') || m.file_url?.startsWith('https://'))
+    .slice(0, 100)
+    .map(m => ({
+      id: m.id,
+      url: m.file_url,
+      title: m.memory?.title,
+      date: m.taken_at ? new Date(m.taken_at).toLocaleDateString() : undefined,
+    }))
 
   const MEMORY_GRID = 'grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-8 gap-2'
 
@@ -627,7 +630,9 @@ export default function LifePage() {
                 </div>
               ) : (
                 <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-8 gap-2">
-                  {allMedia.map(item => {
+                  {allMedia
+                    .filter(item => item.file_url?.startsWith('http://') || item.file_url?.startsWith('https://'))
+                    .map(item => {
                     const isImg = item.file_type?.startsWith('image/') || /\.(jpg|jpeg|png|gif|webp|heic)$/i.test(item.file_url || '')
                     const isVid = item.file_type?.startsWith('video/') || /\.(mp4|mov|avi|webm)$/i.test(item.file_url || '')
                     return (
@@ -641,7 +646,7 @@ export default function LifePage() {
                             src={item.file_url}
                             alt=""
                             className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                            onError={(e) => { (e.target as HTMLImageElement).style.display = 'none' }}
+                            onError={(e) => { (e.target as HTMLImageElement).parentElement!.style.display = 'none' }}
                           />
                         ) : isVid ? (
                           <div className="w-full h-full bg-gradient-to-br from-[#1a1a2e] to-[#0f3460] flex items-center justify-center">
