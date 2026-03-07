@@ -4,6 +4,7 @@ import { useState, useRef, useCallback } from 'react'
 import { Heart, MessageCircle, Image as ImageIcon, FolderOpen, Smile } from 'lucide-react'
 import Link from 'next/link'
 import { getCategoryIcon } from '@/lib/dashboard/icons'
+import { stripMarkdown } from '@/components/memories/LifeMemoryCard'
 
 interface Memory {
   id: string
@@ -69,12 +70,9 @@ export default function MemoryCardClean({ memory, showReactions = true }: Memory
   const categoryIcon = memory.ai_category ? getCategoryIcon(memory.ai_category) : null
   const categoryPaper = memory.ai_category ? CATEGORY_PAPER_COLORS[memory.ai_category.toLowerCase()] : null
 
-  // Truncate description
-  const truncatedDesc = memory.description 
-    ? memory.description.length > 80 
-      ? memory.description.slice(0, 80) + '...' 
-      : memory.description
-    : memory.ai_summary?.slice(0, 80) + '...' || ''
+  // Truncate description — strip markdown first
+  const rawDesc = stripMarkdown(memory.description || memory.ai_summary || '')
+  const truncatedDesc = rawDesc.length > 80 ? rawDesc.slice(0, 80) + '...' : rawDesc
 
   // Long press handlers
   const handleTouchStart = useCallback(() => {

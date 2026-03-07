@@ -29,12 +29,12 @@ interface Memory {
 // ── Helpers ────────────────────────────────────────────────────────────────────
 
 /** Strip common markdown syntax so AI-generated text renders cleanly */
-function stripMarkdown(text: string): string {
+export function stripMarkdown(text: string): string {
   if (!text) return ''
   return text
     .replace(/^#{1,6}\s+/gm, '')         // ## headers
-    .replace(/\*\*(.+?)\*\*/g, '$1')     // **bold**
-    .replace(/\*(.+?)\*/g, '$1')         // *italic*
+    .replace(/\*\*(.+?)\*\*/g, '$1')     // **bold** (complete)
+    .replace(/\*(.+?)\*/g, '$1')         // *italic* (complete)
     .replace(/__(.+?)__/g, '$1')         // __bold__
     .replace(/_(.+?)_/g, '$1')           // _italic_
     .replace(/^[\s]*[-*+]\s+/gm, '')     // - bullet / * bullet
@@ -44,8 +44,11 @@ function stripMarkdown(text: string): string {
     .replace(/\[(.+?)\]\(.+?\)/g, '$1') // [link](url)
     .replace(/^[-*_]{3,}$/gm, '')        // --- horizontal rules
     .replace(/^>\s+/gm, '')              // > blockquotes
+    // Final pass — remove any dangling/unclosed markdown characters
+    .replace(/[*_#`~]/g, '')
     .replace(/\n{2,}/g, ' ')
     .replace(/\n/g, ' ')
+    .replace(/\s{2,}/g, ' ')
     .trim()
 }
 
