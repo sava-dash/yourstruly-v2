@@ -144,7 +144,11 @@ export default function InterviewPage({ params }: { params: Promise<{ token: str
             <Check size={48} />
           </motion.div>
           <h1>Thank You!</h1>
-          <p>Your responses have been saved and shared with {session?.title?.replace('Interview with ', '') || 'your loved one'}.</p>
+          <p>Your responses have been saved and shared with {
+            (session as any)?.owner?.display_name || 
+            (session as any)?.owner?.full_name || 
+            'your loved one'
+          }.</p>
           <div className="interview-completed-heart">
             <Heart size={24} className="text-red-400" fill="currentColor" />
           </div>
