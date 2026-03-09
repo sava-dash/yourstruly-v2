@@ -27,6 +27,7 @@ interface ConversationMessage {
 
 interface OnboardingData {
   name: string;
+  birthday: string;
   interests: string[];
   hobbies: string[];
   skills: string[];
@@ -190,13 +191,21 @@ async function geocodeLocation(
 
 function MapboxGlobeReveal({
   name,
+  birthday,
   location,
   onDone,
 }: {
   name: string;
+  birthday: string;
   location: string;
   onDone: () => void;
 }) {
+  const formatBirthday = (dateStr: string): string => {
+    if (!dateStr) return '';
+    const date = new Date(dateStr + 'T00:00:00');
+    return date.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
+  };
+  const formattedBirthday = formatBirthday(birthday);
   const mapContainer = useRef<HTMLDivElement>(null);
   const mapRef = useRef<mapboxgl.Map | null>(null);
   const markerRef = useRef<mapboxgl.Marker | null>(null);
@@ -250,8 +259,8 @@ function MapboxGlobeReveal({
       setPhase('spinning');
       rotate();
 
-      // Pause on globe for 2.5s then fly in
-      await delay(2500);
+      // Pause on globe for 1.5s then fly in
+      await delay(1500);
       rotating = false;
 
       const coords = await geocodeLocation(location);
@@ -283,8 +292,8 @@ function MapboxGlobeReveal({
               </svg>
             </div>
             <div class="marker-card">
-              <p class="marker-name">${name}</p>
-              <p class="marker-loc">${location}</p>
+              <p class="marker-name">${name}'s adventure began</p>
+              <p class="marker-loc">${formattedBirthday}</p>
             </div>
           </div>
         `;
@@ -373,7 +382,7 @@ function MapboxGlobeReveal({
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: 1.0 }}
                 >
-                  We can't wait to discover your story.
+                  {name}'s adventure began on {formattedBirthday}
                 </motion.h2>
                 <motion.div
                   className="globe-location-row"
@@ -667,6 +676,7 @@ export function QuickOnboardingFlow({
   const [direction, setDirection] = useState<1 | -1>(1);
   const [data, setData] = useState<OnboardingData>({
     name: '',
+    birthday: '',
     interests: [],
     hobbies: [],
     skills: [],
@@ -719,6 +729,7 @@ export function QuickOnboardingFlow({
     return (
       <MapboxGlobeReveal
         name={data.name}
+        birthday={data.birthday}
         location={data.location || 'somewhere beautiful'}
         onDone={goNext}
       />
@@ -842,6 +853,8 @@ export function QuickOnboardingFlow({
                   <NameStep
                     value={data.name}
                     onChange={(name) => updateData({ name })}
+                    birthday={data.birthday}
+                    onBirthdayChange={(birthday) => updateData({ birthday })}
                     onContinue={goNext}
                   />
                 )}
@@ -972,6 +985,7 @@ export function QuickOnboardingFlow({
           display: flex;
           flex-direction: column;
           align-items: center;
+          justify-content: center;
           min-height: 100vh;
           padding: 32px 20px 24px;
           padding-top: calc(32px + env(safe-area-inset-top));
@@ -987,7 +1001,7 @@ export function QuickOnboardingFlow({
           flex-direction: column;
           align-items: flex-start;
           gap: 24px;
-          flex: 1;
+          margin: auto 0;
         }
 
         /* Tiles + form side by side on desktop */
@@ -1163,10 +1177,14 @@ const SHARED = `
 function NameStep({
   value,
   onChange,
+  birthday,
+  onBirthdayChange,
   onContinue,
 }: {
   value: string;
   onChange: (v: string) => void;
+  birthday: string;
+  onBirthdayChange: (v: string) => void;
   onContinue: () => void;
 }) {
   return (
@@ -1204,12 +1222,28 @@ function NameStep({
           placeholder="Your first name"
           autoFocus
           autoComplete="given-name"
-          onKeyDown={(e) => e.key === 'Enter' && value.trim() && onContinue()}
+          onKeyDown={(e) => e.key === 'Enter' && value.trim() && birthday && onContinue()}
+        />
+      </motion.div>
+
+      <motion.div
+        initial={{ opacity: 0, y: 10 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.45 }}
+      >
+        <h3 className="birthday-label">When's your birthday?</h3>
+        <p className="birthday-subtitle">We'll use this to personalize your story.</p>
+        <input
+          className="yt-input"
+          type="date"
+          value={birthday}
+          onChange={(e) => onBirthdayChange(e.target.value)}
+          autoComplete="bday"
         />
         <button
           className="primary-btn full-width"
           onClick={onContinue}
-          disabled={!value.trim()}
+          disabled={!value.trim() || !birthday}
         >
           Nice to meet you <ChevronRight size={18} />
         </button>
@@ -1220,6 +1254,18 @@ function NameStep({
         .step-card { text-align: center; }
         .step-icon { font-size: 40px; margin-bottom: 20px; display: block; }
         .full-width { width: 100%; }
+        .birthday-label {
+          font-size: 1.1rem;
+          font-weight: 600;
+          color: #2d2d2d;
+          margin-top: 24px;
+          margin-bottom: 4px;
+        }
+        .birthday-subtitle {
+          font-size: 0.85rem;
+          color: rgba(45, 45, 45, 0.55);
+          margin-bottom: 12px;
+        }
       `}</style>
     </div>
   );
@@ -1258,9 +1304,9 @@ function LocationStep({
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.2 }}
       >
-        <h2>Where are you from, {name}?</h2>
+        <h2>Where were you born, {name}?</h2>
         <p className="subtitle">
-          City, state or country — however you'd describe home.
+          City, state or country — wherever your story began.
         </p>
       </motion.div>
 
@@ -1274,7 +1320,7 @@ function LocationStep({
           type="text"
           value={value}
           onChange={(e) => onChange(e.target.value)}
-          placeholder="e.g. Miami, FL"
+          placeholder="e.g. Brooklyn, NY"
           autoFocus
           autoComplete="off"
           onKeyDown={(e) => e.key === 'Enter' && value.trim() && onContinue()}
@@ -1288,7 +1334,7 @@ function LocationStep({
             onClick={onContinue}
             disabled={!value.trim()}
           >
-            Show me on the map <Sparkles size={16} />
+            Next <ChevronRight size={16} />
           </button>
         </div>
       </motion.div>

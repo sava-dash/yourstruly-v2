@@ -1,9 +1,8 @@
 'use client'
 
-import { useState, useEffect } from 'react'
-import { Package, Plus, Search, Edit2, Trash2, Eye, EyeOff, Loader2, Filter, Gift } from 'lucide-react'
+import { useState, useEffect, useCallback } from 'react'
+import { Package, Plus, Search, Edit2, Trash2, Eye, EyeOff, Loader2, Gift, ChevronLeft, ChevronRight, CheckSquare, Square, ToggleLeft, ToggleRight } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
-import Link from 'next/link'
 
 interface MarketplaceProduct {
   id: string
@@ -25,87 +24,151 @@ interface MarketplaceProduct {
   created_at: string
 }
 
+const PAGE_SIZE = 50
+
 export default function MarketplacePage() {
   const [products, setProducts] = useState<MarketplaceProduct[]>([])
+  const [total, setTotal] = useState(0)
   const [loading, setLoading] = useState(true)
   const [searchQuery, setSearchQuery] = useState('')
+  const [debouncedSearch, setDebouncedSearch] = useState('')
   const [filterActive, setFilterActive] = useState<'all' | 'active' | 'inactive'>('all')
+  const [page, setPage] = useState(1)
+  const [toggling, setToggling] = useState<Set<string>>(new Set())
+  const [selected, setSelected] = useState<Set<string>>(new Set())
+  const [bulkWorking, setBulkWorking] = useState(false)
   const [showAddModal, setShowAddModal] = useState(false)
   const [editingProduct, setEditingProduct] = useState<MarketplaceProduct | null>(null)
-  const [saving, setSaving] = useState(false)
 
   const supabase = createClient()
 
-  // Fetch products
+  // Debounce search
   useEffect(() => {
-    fetchProducts()
-  }, [])
+    const t = setTimeout(() => {
+      setDebouncedSearch(searchQuery)
+      setPage(1)
+      setSelected(new Set())
+    }, 300)
+    return () => clearTimeout(t)
+  }, [searchQuery])
 
-  const fetchProducts = async () => {
+  const fetchProducts = useCallback(async () => {
     setLoading(true)
-    const { data, error } = await supabase
+    let query = supabase
       .from('marketplace_products')
-      .select('*')
-      .order('created_at', { ascending: false })
+      .select('*', { count: 'exact' })
 
+    if (debouncedSearch) {
+      query = query.or(`name.ilike.%${debouncedSearch}%,description.ilike.%${debouncedSearch}%,provider.ilike.%${debouncedSearch}%`)
+    }
+    if (filterActive === 'active') query = query.eq('is_active', true)
+    if (filterActive === 'inactive') query = query.eq('is_active', false)
+
+    const start = (page - 1) * PAGE_SIZE
+    query = query
+      .order('created_at', { ascending: false })
+      .range(start, start + PAGE_SIZE - 1)
+
+    const { data, error, count } = await query
     if (!error && data) {
       setProducts(data)
+      setTotal(count || 0)
     }
     setLoading(false)
-  }
+  }, [debouncedSearch, filterActive, page])
 
-  // Filter products
-  const filteredProducts = products.filter(p => {
-    const matchesSearch = p.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      p.description?.toLowerCase().includes(searchQuery.toLowerCase())
-    const matchesFilter = filterActive === 'all' || 
-      (filterActive === 'active' && p.is_active) ||
-      (filterActive === 'inactive' && !p.is_active)
-    return matchesSearch && matchesFilter
-  })
+  useEffect(() => { fetchProducts() }, [fetchProducts])
 
-  // Toggle active status
+  // Reset page when filter changes
+  useEffect(() => { setPage(1); setSelected(new Set()) }, [filterActive])
+
+  // Stats (fetch totals separately)
+  const [stats, setStats] = useState({ total: 0, active: 0 })
+  useEffect(() => {
+    const fetchStats = async () => {
+      const [{ count: total }, { count: active }] = await Promise.all([
+        supabase.from('marketplace_products').select('*', { count: 'exact', head: true }),
+        supabase.from('marketplace_products').select('*', { count: 'exact', head: true }).eq('is_active', true),
+      ])
+      setStats({ total: total || 0, active: active || 0 })
+    }
+    fetchStats()
+  }, [products]) // refresh when products change
+
+  // Toggle single product
   const toggleActive = async (product: MarketplaceProduct) => {
+    setToggling(prev => new Set(prev).add(product.id))
     const { error } = await supabase
       .from('marketplace_products')
       .update({ is_active: !product.is_active })
       .eq('id', product.id)
 
     if (!error) {
-      setProducts(products.map(p => 
+      setProducts(prev => prev.map(p =>
         p.id === product.id ? { ...p, is_active: !p.is_active } : p
       ))
     }
+    setToggling(prev => { const s = new Set(prev); s.delete(product.id); return s })
+  }
+
+  // Bulk toggle selected
+  const bulkToggle = async (activate: boolean) => {
+    if (selected.size === 0) return
+    setBulkWorking(true)
+    const ids = [...selected]
+    const { error } = await supabase
+      .from('marketplace_products')
+      .update({ is_active: activate })
+      .in('id', ids)
+
+    if (!error) {
+      setProducts(prev => prev.map(p =>
+        selected.has(p.id) ? { ...p, is_active: activate } : p
+      ))
+      setSelected(new Set())
+    }
+    setBulkWorking(false)
   }
 
   // Delete product
   const deleteProduct = async (id: string) => {
-    if (!confirm('Are you sure you want to delete this product?')) return
-
-    const { error } = await supabase
-      .from('marketplace_products')
-      .delete()
-      .eq('id', id)
-
+    if (!confirm('Delete this product?')) return
+    const { error } = await supabase.from('marketplace_products').delete().eq('id', id)
     if (!error) {
-      setProducts(products.filter(p => p.id !== id))
+      setProducts(prev => prev.filter(p => p.id !== id))
+      setTotal(prev => prev - 1)
     }
   }
 
-  // Stats
-  const stats = {
-    total: products.length,
-    active: products.filter(p => p.is_active).length,
-    curated: products.filter(p => p.is_curated).length,
-    inStock: products.filter(p => p.in_stock).length,
+  // Selection helpers
+  const allSelected = products.length > 0 && products.every(p => selected.has(p.id))
+  const someSelected = products.some(p => selected.has(p.id))
+  const toggleSelectAll = () => {
+    if (allSelected) {
+      setSelected(prev => { const s = new Set(prev); products.forEach(p => s.delete(p.id)); return s })
+    } else {
+      setSelected(prev => { const s = new Set(prev); products.forEach(p => s.add(p.id)); return s })
+    }
   }
+  const toggleSelect = (id: string) => {
+    setSelected(prev => {
+      const s = new Set(prev)
+      s.has(id) ? s.delete(id) : s.add(id)
+      return s
+    })
+  }
+
+  const totalPages = Math.ceil(total / PAGE_SIZE)
 
   return (
     <div className="space-y-6">
+      {/* Header */}
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold text-[#2a1f1a]">Marketplace Products</h1>
-          <p className="text-[#2a1f1a]/60 mt-1">Manage curated gifts and products</p>
+          <p className="text-[#2a1f1a]/60 mt-1">
+            {stats.active} of {stats.total} products active
+          </p>
         </div>
         <button
           onClick={() => setShowAddModal(true)}
@@ -117,179 +180,212 @@ export default function MarketplacePage() {
       </div>
 
       {/* Stats */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+      <div className="grid grid-cols-3 gap-4">
         <div className="p-4 bg-white/60 backdrop-blur-sm rounded-xl border border-[#C35F33]/10">
-          <Package className="w-6 h-6 text-[#406A56]" />
+          <Package className="w-5 h-5 text-[#406A56]" />
           <p className="text-2xl font-bold text-[#2a1f1a] mt-2">{stats.total}</p>
-          <p className="text-sm text-[#2a1f1a]/60">Total Products</p>
+          <p className="text-sm text-[#2a1f1a]/60">Total</p>
         </div>
         <div className="p-4 bg-white/60 backdrop-blur-sm rounded-xl border border-[#C35F33]/10">
-          <Eye className="w-6 h-6 text-green-600" />
-          <p className="text-2xl font-bold text-[#2a1f1a] mt-2">{stats.active}</p>
+          <Eye className="w-5 h-5 text-green-600" />
+          <p className="text-2xl font-bold text-green-700 mt-2">{stats.active}</p>
           <p className="text-sm text-[#2a1f1a]/60">Active</p>
         </div>
         <div className="p-4 bg-white/60 backdrop-blur-sm rounded-xl border border-[#C35F33]/10">
-          <Gift className="w-6 h-6 text-[#C35F33]" />
-          <p className="text-2xl font-bold text-[#2a1f1a] mt-2">{stats.curated}</p>
-          <p className="text-sm text-[#2a1f1a]/60">Curated</p>
-        </div>
-        <div className="p-4 bg-white/60 backdrop-blur-sm rounded-xl border border-[#C35F33]/10">
-          <Package className="w-6 h-6 text-blue-600" />
-          <p className="text-2xl font-bold text-[#2a1f1a] mt-2">{stats.inStock}</p>
-          <p className="text-sm text-[#2a1f1a]/60">In Stock</p>
+          <EyeOff className="w-5 h-5 text-gray-400" />
+          <p className="text-2xl font-bold text-gray-500 mt-2">{stats.total - stats.active}</p>
+          <p className="text-sm text-[#2a1f1a]/60">Inactive</p>
         </div>
       </div>
 
       {/* Filters */}
-      <div className="flex flex-col sm:flex-row gap-4">
+      <div className="flex flex-col sm:flex-row gap-3">
         <div className="relative flex-1">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-[#2a1f1a]/40" />
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#2a1f1a]/40" />
           <input
             type="text"
-            placeholder="Search products..."
+            placeholder="Search by name, brand..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full pl-10 pr-4 py-2 bg-white/60 border border-[#C35F33]/10 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#406A56]/30"
+            className="w-full pl-9 pr-4 py-2 bg-white/60 border border-[#C35F33]/10 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#406A56]/30 text-sm"
           />
         </div>
         <div className="flex gap-2">
-          {['all', 'active', 'inactive'].map((filter) => (
+          {(['all', 'active', 'inactive'] as const).map((f) => (
             <button
-              key={filter}
-              onClick={() => setFilterActive(filter as any)}
-              className={`px-4 py-2 rounded-lg capitalize transition-colors ${
-                filterActive === filter
+              key={f}
+              onClick={() => setFilterActive(f)}
+              className={`px-4 py-2 rounded-lg capitalize text-sm transition-colors ${
+                filterActive === f
                   ? 'bg-[#406A56] text-white'
                   : 'bg-white/60 text-[#2a1f1a]/60 hover:bg-white/80'
               }`}
             >
-              {filter}
+              {f}
             </button>
           ))}
         </div>
       </div>
 
-      {/* Products Table */}
+      {/* Bulk Action Bar */}
+      {someSelected && (
+        <div className="flex items-center gap-3 px-4 py-3 bg-[#406A56]/10 border border-[#406A56]/20 rounded-xl">
+          <span className="text-sm font-medium text-[#406A56]">
+            {selected.size} selected
+          </span>
+          <div className="flex gap-2 ml-auto">
+            <button
+              onClick={() => bulkToggle(true)}
+              disabled={bulkWorking}
+              className="flex items-center gap-1.5 px-3 py-1.5 bg-green-600 text-white rounded-lg text-sm hover:bg-green-700 disabled:opacity-50 transition-colors"
+            >
+              {bulkWorking ? <Loader2 size={14} className="animate-spin" /> : <Eye size={14} />}
+              Enable All
+            </button>
+            <button
+              onClick={() => bulkToggle(false)}
+              disabled={bulkWorking}
+              className="flex items-center gap-1.5 px-3 py-1.5 bg-gray-500 text-white rounded-lg text-sm hover:bg-gray-600 disabled:opacity-50 transition-colors"
+            >
+              {bulkWorking ? <Loader2 size={14} className="animate-spin" /> : <EyeOff size={14} />}
+              Disable All
+            </button>
+            <button
+              onClick={() => setSelected(new Set())}
+              className="px-3 py-1.5 text-sm text-[#2a1f1a]/50 hover:text-[#2a1f1a] transition-colors"
+            >
+              Clear
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Table */}
       {loading ? (
-        <div className="flex items-center justify-center py-12">
+        <div className="flex items-center justify-center py-16">
           <Loader2 className="w-8 h-8 animate-spin text-[#406A56]" />
         </div>
-      ) : filteredProducts.length === 0 ? (
+      ) : products.length === 0 ? (
         <div className="p-12 bg-white/40 backdrop-blur-sm rounded-xl border border-[#C35F33]/10 text-center">
-          <Package className="w-16 h-16 mx-auto text-[#C35F33]/30" />
+          <Package className="w-12 h-12 mx-auto text-[#C35F33]/30" />
           <h3 className="text-lg font-medium text-[#2a1f1a] mt-4">No Products Found</h3>
-          <p className="text-[#2a1f1a]/60 mt-2">
-            {searchQuery ? 'Try a different search term' : 'Add your first product to get started'}
+          <p className="text-[#2a1f1a]/60 mt-2 text-sm">
+            {searchQuery ? 'Try a different search term' : 'No products match this filter'}
           </p>
-          <button
-            onClick={() => setShowAddModal(true)}
-            className="mt-4 px-4 py-2 bg-[#406A56] text-white rounded-lg hover:bg-[#355847] transition-colors"
-          >
-            Add Product
-          </button>
         </div>
       ) : (
         <div className="bg-white/60 backdrop-blur-sm rounded-xl border border-[#C35F33]/10 overflow-hidden">
           <table className="w-full">
             <thead className="bg-[#406A56]/5 border-b border-[#C35F33]/10">
               <tr>
-                <th className="text-left p-4 font-medium text-[#2a1f1a]/80">Product</th>
-                <th className="text-left p-4 font-medium text-[#2a1f1a]/80">Price</th>
-                <th className="text-left p-4 font-medium text-[#2a1f1a]/80">Occasions</th>
-                <th className="text-left p-4 font-medium text-[#2a1f1a]/80">Status</th>
-                <th className="text-right p-4 font-medium text-[#2a1f1a]/80">Actions</th>
+                <th className="p-4 w-10">
+                  <button onClick={toggleSelectAll} className="text-[#2a1f1a]/40 hover:text-[#406A56]">
+                    {allSelected ? <CheckSquare size={18} className="text-[#406A56]" /> : <Square size={18} />}
+                  </button>
+                </th>
+                <th className="text-left p-4 font-medium text-[#2a1f1a]/80 text-sm">Product</th>
+                <th className="text-left p-4 font-medium text-[#2a1f1a]/80 text-sm">Price</th>
+                <th className="text-left p-4 font-medium text-[#2a1f1a]/80 text-sm hidden md:table-cell">Occasions</th>
+                <th className="text-center p-4 font-medium text-[#2a1f1a]/80 text-sm">Active</th>
+                <th className="text-right p-4 font-medium text-[#2a1f1a]/80 text-sm">Actions</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-[#C35F33]/10">
-              {filteredProducts.map((product) => (
-                <tr key={product.id} className="hover:bg-white/40">
+              {products.map((product) => (
+                <tr
+                  key={product.id}
+                  className={`hover:bg-white/40 transition-colors ${
+                    selected.has(product.id) ? 'bg-[#406A56]/5' : ''
+                  }`}
+                >
+                  <td className="p-4">
+                    <button onClick={() => toggleSelect(product.id)} className="text-[#2a1f1a]/40 hover:text-[#406A56]">
+                      {selected.has(product.id)
+                        ? <CheckSquare size={18} className="text-[#406A56]" />
+                        : <Square size={18} />}
+                    </button>
+                  </td>
                   <td className="p-4">
                     <div className="flex items-center gap-3">
                       {product.images?.[0] ? (
                         <img
                           src={product.images[0]}
                           alt={product.name}
-                          className="w-12 h-12 rounded-lg object-cover"
+                          className="w-10 h-10 rounded-lg object-cover flex-shrink-0"
                         />
                       ) : (
-                        <div className="w-12 h-12 rounded-lg bg-[#406A56]/10 flex items-center justify-center">
-                          <Package className="w-6 h-6 text-[#406A56]/40" />
+                        <div className="w-10 h-10 rounded-lg bg-[#406A56]/10 flex items-center justify-center flex-shrink-0">
+                          <Package className="w-5 h-5 text-[#406A56]/40" />
                         </div>
                       )}
-                      <div>
-                        <p className="font-medium text-[#2a1f1a]">{product.name}</p>
-                        <p className="text-sm text-[#2a1f1a]/60">{product.provider || 'Internal'}</p>
+                      <div className="min-w-0">
+                        <p className="font-medium text-[#2a1f1a] text-sm truncate max-w-[200px]">{product.name}</p>
+                        <p className="text-xs text-[#2a1f1a]/50 truncate">{product.provider || 'Internal'}</p>
                       </div>
                     </div>
                   </td>
                   <td className="p-4">
-                    <p className="font-medium text-[#2a1f1a]">
+                    <p className="font-medium text-[#2a1f1a] text-sm">
                       ${(product.base_price_cents / 100).toFixed(2)}
                     </p>
                     {product.sale_price_cents && (
-                      <p className="text-sm text-green-600">
-                        Sale: ${(product.sale_price_cents / 100).toFixed(2)}
+                      <p className="text-xs text-green-600">
+                        ${(product.sale_price_cents / 100).toFixed(2)}
                       </p>
                     )}
                   </td>
-                  <td className="p-4">
+                  <td className="p-4 hidden md:table-cell">
                     <div className="flex flex-wrap gap-1">
-                      {product.occasions?.slice(0, 3).map((occ) => (
+                      {product.occasions?.slice(0, 2).map((occ) => (
                         <span
                           key={occ}
-                          className="px-2 py-0.5 bg-[#406A56]/10 text-[#406A56] text-xs rounded-full capitalize"
+                          className="px-1.5 py-0.5 bg-[#406A56]/10 text-[#406A56] text-xs rounded-full capitalize"
                         >
                           {occ}
                         </span>
                       ))}
-                      {(product.occasions?.length || 0) > 3 && (
-                        <span className="px-2 py-0.5 text-[#2a1f1a]/40 text-xs">
-                          +{product.occasions.length - 3}
-                        </span>
+                      {(product.occasions?.length || 0) > 2 && (
+                        <span className="text-xs text-[#2a1f1a]/40">+{product.occasions.length - 2}</span>
                       )}
                     </div>
                   </td>
+
+                  {/* Toggle Switch */}
                   <td className="p-4">
-                    <div className="flex items-center gap-2">
-                      <span
-                        className={`w-2 h-2 rounded-full ${
-                          product.is_active ? 'bg-green-500' : 'bg-gray-400'
-                        }`}
-                      />
-                      <span className="text-sm text-[#2a1f1a]/60">
-                        {product.is_active ? 'Active' : 'Inactive'}
-                      </span>
-                      {product.is_curated && (
-                        <span className="px-2 py-0.5 bg-[#C35F33]/10 text-[#C35F33] text-xs rounded-full">
-                          Curated
-                        </span>
+                    <div className="flex justify-center">
+                      {toggling.has(product.id) ? (
+                        <Loader2 size={20} className="animate-spin text-[#406A56]" />
+                      ) : (
+                        <button
+                          onClick={() => toggleActive(product)}
+                          className="transition-colors"
+                          title={product.is_active ? 'Click to disable' : 'Click to enable'}
+                        >
+                          {product.is_active ? (
+                            <ToggleRight size={28} className="text-green-500 hover:text-green-600" />
+                          ) : (
+                            <ToggleLeft size={28} className="text-gray-300 hover:text-gray-400" />
+                          )}
+                        </button>
                       )}
                     </div>
                   </td>
+
                   <td className="p-4">
-                    <div className="flex items-center justify-end gap-2">
-                      <button
-                        onClick={() => toggleActive(product)}
-                        className="p-2 hover:bg-[#406A56]/10 rounded-lg transition-colors"
-                        title={product.is_active ? 'Deactivate' : 'Activate'}
-                      >
-                        {product.is_active ? (
-                          <EyeOff size={18} className="text-[#2a1f1a]/60" />
-                        ) : (
-                          <Eye size={18} className="text-[#2a1f1a]/60" />
-                        )}
-                      </button>
+                    <div className="flex items-center justify-end gap-1">
                       <button
                         onClick={() => setEditingProduct(product)}
-                        className="p-2 hover:bg-[#406A56]/10 rounded-lg transition-colors"
+                        className="p-1.5 hover:bg-[#406A56]/10 rounded-lg transition-colors"
+                        title="Edit"
                       >
-                        <Edit2 size={18} className="text-[#2a1f1a]/60" />
+                        <Edit2 size={15} className="text-[#2a1f1a]/50" />
                       </button>
                       <button
                         onClick={() => deleteProduct(product.id)}
-                        className="p-2 hover:bg-red-50 rounded-lg transition-colors"
+                        className="p-1.5 hover:bg-red-50 rounded-lg transition-colors"
+                        title="Delete"
                       >
-                        <Trash2 size={18} className="text-red-500" />
+                        <Trash2 size={15} className="text-red-400" />
                       </button>
                     </div>
                   </td>
@@ -297,6 +393,34 @@ export default function MarketplacePage() {
               ))}
             </tbody>
           </table>
+
+          {/* Pagination */}
+          {totalPages > 1 && (
+            <div className="flex items-center justify-between px-4 py-3 border-t border-[#C35F33]/10 bg-[#406A56]/5">
+              <p className="text-sm text-[#2a1f1a]/60">
+                {(page - 1) * PAGE_SIZE + 1}–{Math.min(page * PAGE_SIZE, total)} of {total}
+              </p>
+              <div className="flex gap-2">
+                <button
+                  onClick={() => setPage(p => Math.max(1, p - 1))}
+                  disabled={page === 1}
+                  className="p-1.5 rounded-lg hover:bg-white/60 disabled:opacity-30 transition-colors"
+                >
+                  <ChevronLeft size={18} className="text-[#2a1f1a]" />
+                </button>
+                <span className="text-sm text-[#2a1f1a]/80 px-2 py-1">
+                  {page} / {totalPages}
+                </span>
+                <button
+                  onClick={() => setPage(p => Math.min(totalPages, p + 1))}
+                  disabled={page === totalPages}
+                  className="p-1.5 rounded-lg hover:bg-white/60 disabled:opacity-30 transition-colors"
+                >
+                  <ChevronRight size={18} className="text-[#2a1f1a]" />
+                </button>
+              </div>
+            </div>
+          )}
         </div>
       )}
 
@@ -304,22 +428,16 @@ export default function MarketplacePage() {
       {(showAddModal || editingProduct) && (
         <ProductModal
           product={editingProduct}
-          onClose={() => {
-            setShowAddModal(false)
-            setEditingProduct(null)
-          }}
-          onSave={() => {
-            fetchProducts()
-            setShowAddModal(false)
-            setEditingProduct(null)
-          }}
+          onClose={() => { setShowAddModal(false); setEditingProduct(null) }}
+          onSave={() => { fetchProducts(); setShowAddModal(false); setEditingProduct(null) }}
         />
       )}
     </div>
   )
 }
 
-// Product Add/Edit Modal
+// ── Product Add/Edit Modal ───────────────────────────────────────────────────
+
 function ProductModal({
   product,
   onClose,
@@ -333,13 +451,13 @@ function ProductModal({
     name: product?.name || '',
     description: product?.description || '',
     external_id: product?.external_id || '',
-    provider: product?.provider || 'internal',
+    provider: product?.provider || 'goody',
     base_price_cents: product?.base_price_cents ? product.base_price_cents / 100 : 0,
     sale_price_cents: product?.sale_price_cents ? product.sale_price_cents / 100 : '',
     images: product?.images?.join('\n') || '',
     in_stock: product?.in_stock ?? true,
-    is_curated: product?.is_curated ?? true,
-    curated_score: product?.curated_score || 80,
+    is_curated: product?.is_curated ?? false,
+    curated_score: product?.curated_score ?? 50,
     occasions: product?.occasions?.join(', ') || '',
     emotional_impact: product?.emotional_impact || 'medium',
     why_we_love_it: product?.why_we_love_it || '',
@@ -347,7 +465,6 @@ function ProductModal({
   })
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState('')
-
   const supabase = createClient()
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -372,240 +489,91 @@ function ProductModal({
       is_active: form.is_active,
     }
 
-    let result
-    if (product) {
-      result = await supabase
-        .from('marketplace_products')
-        .update(data)
-        .eq('id', product.id)
-    } else {
-      result = await supabase
-        .from('marketplace_products')
-        .insert(data)
-    }
+    const result = product
+      ? await supabase.from('marketplace_products').update(data).eq('id', product.id)
+      : await supabase.from('marketplace_products').insert(data)
 
     if (result.error) {
       setError(result.error.message)
       setSaving(false)
       return
     }
-
     onSave()
   }
 
+  const fields: { label: string; key: keyof typeof form; type?: string; span?: boolean; options?: string[]; placeholder?: string; textarea?: boolean }[] = [
+    { label: 'Product Name *', key: 'name', span: true },
+    { label: 'Description', key: 'description', span: true, textarea: true },
+    { label: 'Price ($) *', key: 'base_price_cents', type: 'number' },
+    { label: 'Sale Price ($)', key: 'sale_price_cents', type: 'number' },
+    { label: 'Provider / Brand', key: 'provider' },
+    { label: 'Goody Product ID', key: 'external_id' },
+    { label: 'Image URLs (one per line)', key: 'images', span: true, textarea: true, placeholder: 'https://...' },
+    { label: 'Occasions (comma-separated)', key: 'occasions', span: true, placeholder: 'birthday, anniversary, thank-you' },
+    { label: 'Curated Score (0–100)', key: 'curated_score', type: 'number' },
+  ]
+
   return (
     <div className="fixed inset-0 z-50 bg-black/60 flex items-center justify-center p-4" onClick={onClose}>
-      <div
-        className="bg-white rounded-2xl w-full max-w-2xl max-h-[90vh] overflow-auto"
-        onClick={(e) => e.stopPropagation()}
-      >
-        <div className="p-6 border-b border-gray-100">
-          <h2 className="text-xl font-semibold text-[#2a1f1a]">
-            {product ? 'Edit Product' : 'Add Product'}
-          </h2>
+      <div className="bg-white rounded-2xl w-full max-w-2xl max-h-[90vh] overflow-auto" onClick={e => e.stopPropagation()}>
+        <div className="p-6 border-b border-gray-100 flex items-center justify-between">
+          <h2 className="text-xl font-semibold text-[#2a1f1a]">{product ? 'Edit Product' : 'Add Product'}</h2>
         </div>
 
         <form onSubmit={handleSubmit} className="p-6 space-y-4">
-          {error && (
-            <div className="p-3 bg-red-50 text-red-600 rounded-lg text-sm">{error}</div>
-          )}
+          {error && <div className="p-3 bg-red-50 text-red-600 rounded-lg text-sm">{error}</div>}
 
           <div className="grid grid-cols-2 gap-4">
-            <div className="col-span-2">
-              <label className="block text-sm font-medium text-[#2a1f1a]/80 mb-1">
-                Product Name *
-              </label>
-              <input
-                type="text"
-                value={form.name}
-                onChange={(e) => setForm({ ...form, name: e.target.value })}
-                required
-                className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#406A56]/30"
-              />
-            </div>
+            {fields.map(f => (
+              <div key={f.key} className={f.span ? 'col-span-2' : ''}>
+                <label className="block text-sm font-medium text-[#2a1f1a]/80 mb-1">{f.label}</label>
+                {f.textarea ? (
+                  <textarea
+                    value={String(form[f.key])}
+                    onChange={e => setForm({ ...form, [f.key]: e.target.value })}
+                    rows={3}
+                    placeholder={f.placeholder}
+                    className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#406A56]/30 text-sm"
+                  />
+                ) : (
+                  <input
+                    type={f.type || 'text'}
+                    value={String(form[f.key])}
+                    onChange={e => setForm({ ...form, [f.key]: f.type === 'number' ? e.target.value : e.target.value })}
+                    placeholder={f.placeholder}
+                    className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#406A56]/30 text-sm"
+                  />
+                )}
+              </div>
+            ))}
 
-            <div className="col-span-2">
-              <label className="block text-sm font-medium text-[#2a1f1a]/80 mb-1">
-                Description
-              </label>
-              <textarea
-                value={form.description}
-                onChange={(e) => setForm({ ...form, description: e.target.value })}
-                rows={3}
-                className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#406A56]/30"
-              />
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-[#2a1f1a]/80 mb-1">
-                Price ($) *
-              </label>
-              <input
-                type="number"
-                step="0.01"
-                min="0"
-                value={form.base_price_cents}
-                onChange={(e) => setForm({ ...form, base_price_cents: Number(e.target.value) })}
-                required
-                className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#406A56]/30"
-              />
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-[#2a1f1a]/80 mb-1">
-                Sale Price ($)
-              </label>
-              <input
-                type="number"
-                step="0.01"
-                min="0"
-                value={form.sale_price_cents}
-                onChange={(e) => setForm({ ...form, sale_price_cents: e.target.value })}
-                className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#406A56]/30"
-              />
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-[#2a1f1a]/80 mb-1">
-                Provider
-              </label>
-              <select
-                value={form.provider}
-                onChange={(e) => setForm({ ...form, provider: e.target.value })}
-                className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#406A56]/30"
-              >
-                <option value="internal">Internal</option>
-                <option value="goody">Goody</option>
-                <option value="amazon">Amazon</option>
-              </select>
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-[#2a1f1a]/80 mb-1">
-                External ID
-              </label>
-              <input
-                type="text"
-                value={form.external_id}
-                onChange={(e) => setForm({ ...form, external_id: e.target.value })}
-                placeholder="Goody product ID, etc."
-                className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#406A56]/30"
-              />
-            </div>
-
-            <div className="col-span-2">
-              <label className="block text-sm font-medium text-[#2a1f1a]/80 mb-1">
-                Image URLs (one per line)
-              </label>
-              <textarea
-                value={form.images}
-                onChange={(e) => setForm({ ...form, images: e.target.value })}
-                rows={3}
-                placeholder="https://..."
-                className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#406A56]/30 font-mono text-sm"
-              />
-            </div>
-
-            <div className="col-span-2">
-              <label className="block text-sm font-medium text-[#2a1f1a]/80 mb-1">
-                Occasions (comma-separated)
-              </label>
-              <input
-                type="text"
-                value={form.occasions}
-                onChange={(e) => setForm({ ...form, occasions: e.target.value })}
-                placeholder="birthday, anniversary, sympathy, congratulations"
-                className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#406A56]/30"
-              />
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-[#2a1f1a]/80 mb-1">
-                Emotional Impact
-              </label>
-              <select
-                value={form.emotional_impact}
-                onChange={(e) => setForm({ ...form, emotional_impact: e.target.value })}
-                className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#406A56]/30"
-              >
-                <option value="high">High</option>
-                <option value="medium">Medium</option>
-                <option value="low">Low</option>
-              </select>
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-[#2a1f1a]/80 mb-1">
-                Curated Score (0-100)
-              </label>
-              <input
-                type="number"
-                min="0"
-                max="100"
-                value={form.curated_score}
-                onChange={(e) => setForm({ ...form, curated_score: Number(e.target.value) })}
-                className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#406A56]/30"
-              />
-            </div>
-
-            <div className="col-span-2">
-              <label className="block text-sm font-medium text-[#2a1f1a]/80 mb-1">
-                Why We Love It
-              </label>
-              <textarea
-                value={form.why_we_love_it}
-                onChange={(e) => setForm({ ...form, why_we_love_it: e.target.value })}
-                rows={2}
-                placeholder="A personal note about why this gift is special..."
-                className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#406A56]/30"
-              />
-            </div>
-
-            <div className="col-span-2 flex flex-wrap gap-6">
-              <label className="flex items-center gap-2 cursor-pointer">
-                <input
-                  type="checkbox"
-                  checked={form.in_stock}
-                  onChange={(e) => setForm({ ...form, in_stock: e.target.checked })}
-                  className="w-4 h-4 text-[#406A56] rounded"
-                />
-                <span className="text-sm text-[#2a1f1a]/80">In Stock</span>
-              </label>
-
-              <label className="flex items-center gap-2 cursor-pointer">
-                <input
-                  type="checkbox"
-                  checked={form.is_curated}
-                  onChange={(e) => setForm({ ...form, is_curated: e.target.checked })}
-                  className="w-4 h-4 text-[#406A56] rounded"
-                />
-                <span className="text-sm text-[#2a1f1a]/80">Curated Collection</span>
-              </label>
-
-              <label className="flex items-center gap-2 cursor-pointer">
-                <input
-                  type="checkbox"
-                  checked={form.is_active}
-                  onChange={(e) => setForm({ ...form, is_active: e.target.checked })}
-                  className="w-4 h-4 text-[#406A56] rounded"
-                />
-                <span className="text-sm text-[#2a1f1a]/80">Active</span>
-              </label>
+            <div className="col-span-2 flex flex-wrap gap-5 pt-2">
+              {([
+                ['in_stock', 'In Stock'],
+                ['is_curated', 'Curated Collection'],
+                ['is_active', 'Active (visible in storefront)'],
+              ] as const).map(([key, label]) => (
+                <label key={key} className="flex items-center gap-2 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={form[key] as boolean}
+                    onChange={e => setForm({ ...form, [key]: e.target.checked })}
+                    className="w-4 h-4 text-[#406A56] rounded"
+                  />
+                  <span className="text-sm text-[#2a1f1a]/80">{label}</span>
+                </label>
+              ))}
             </div>
           </div>
 
           <div className="flex justify-end gap-3 pt-4 border-t border-gray-100">
-            <button
-              type="button"
-              onClick={onClose}
-              className="px-4 py-2 text-[#2a1f1a]/60 hover:text-[#2a1f1a] transition-colors"
-            >
+            <button type="button" onClick={onClose} className="px-4 py-2 text-sm text-[#2a1f1a]/60 hover:text-[#2a1f1a]">
               Cancel
             </button>
             <button
               type="submit"
               disabled={saving}
-              className="px-6 py-2 bg-[#406A56] text-white rounded-lg hover:bg-[#355847] transition-colors disabled:opacity-50 flex items-center gap-2"
+              className="px-6 py-2 bg-[#406A56] text-white rounded-lg hover:bg-[#355847] text-sm disabled:opacity-50 flex items-center gap-2"
             >
               {saving && <Loader2 className="w-4 h-4 animate-spin" />}
               {product ? 'Save Changes' : 'Add Product'}

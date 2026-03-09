@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Heart, Send, Loader2, ChevronLeft, Sparkles, MessageCircle, Mic, Square, CheckCircle } from 'lucide-react';
+import { Heart, Send, Loader2, ChevronLeft, Sparkles, MessageCircle, Mic, Square, CheckCircle, Volume2, VolumeX } from 'lucide-react';
 
 interface Message {
   role: 'assistant' | 'user';
@@ -35,10 +35,25 @@ export function HeartfeltConversation({
   const [isRecording, setIsRecording] = useState(false);
   const [isTranscribing, setIsTranscribing] = useState(false);
   const [showSaveSuggestion, setShowSaveSuggestion] = useState(false);
+  const [isMuted, setIsMuted] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const audioChunksRef = useRef<Blob[]>([]);
+
+  // TODO: Replace browser SpeechSynthesis with PersonaPlex voice server (ws://personaplex:8000/api/chat)
+  const speakMessage = useCallback((text: string) => {
+    if ('speechSynthesis' in window) {
+      window.speechSynthesis.cancel();
+      const utterance = new SpeechSynthesisUtterance(text);
+      utterance.rate = 0.9;
+      utterance.pitch = 1.0;
+      const voices = window.speechSynthesis.getVoices();
+      const preferred = voices.find(v => v.name.includes('Samantha') || v.name.includes('Google') || v.name.includes('Natural'));
+      if (preferred) utterance.voice = preferred;
+      window.speechSynthesis.speak(utterance);
+    }
+  }, []);
 
   // Count user messages to track exchanges
   const userMessageCount = messages.filter(m => m.role === 'user').length;
@@ -54,6 +69,14 @@ export function HeartfeltConversation({
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
+
+  // Auto-speak new assistant messages
+  useEffect(() => {
+    const lastMessage = messages[messages.length - 1];
+    if (lastMessage?.role === 'assistant' && !isLoading && !isMuted) {
+      speakMessage(lastMessage.content);
+    }
+  }, [messages, isLoading, speakMessage, isMuted]);
 
   // Generate initial question based on whyHere and whatDrives
   useEffect(() => {
@@ -234,7 +257,20 @@ export function HeartfeltConversation({
   return (
     <div className="glass-card glass-card-strong p-6 max-w-2xl mx-auto">
       {/* Header */}
-      <div className="text-center mb-6">
+      <div className="text-center mb-6 relative">
+        {/* Mute toggle */}
+        <button
+          onClick={() => {
+            setIsMuted(!isMuted);
+            if (!isMuted && 'speechSynthesis' in window) {
+              window.speechSynthesis.cancel();
+            }
+          }}
+          className="absolute top-0 right-0 p-2 rounded-full hover:bg-gray-100 transition-colors text-gray-400 hover:text-gray-600"
+          title={isMuted ? 'Unmute voice' : 'Mute voice'}
+        >
+          {isMuted ? <VolumeX size={18} /> : <Volume2 size={18} />}
+        </button>
         <div className="inline-flex items-center justify-center w-14 h-14 rounded-full bg-gradient-to-br from-[#406A56] to-[#8DACAB] mb-3">
           <Heart size={24} className="text-white" />
         </div>

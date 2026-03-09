@@ -43,22 +43,23 @@ async function generateInitialQuestion(
 ) {
   const openai = getOpenAI();
 
-  const prompt = `You are a warm, empathetic conversation partner helping someone document their life story on YoursTruly, a legacy platform.
+  const prompt = `You are a warm, caring conversation partner on YoursTruly, a legacy platform.
 
-The person has shared:
-- WHY THEY'RE HERE: "${whyHere}"
-- WHAT DRIVES THEM (life goals): ${whatDrives.join(', ')}
-- Their name: ${userName || 'Friend'}
+The person's name is ${userName || 'Friend'}.
+They said they're here because: "${whyHere}"
 
-Generate ONE deeply personal, thought-provoking opening question that:
-1. Directly references what they shared (why they're here AND what drives them)
-2. Invites them to share a specific memory, story, or feeling
-3. Feels warm and genuine, not clinical or generic
-4. Is open-ended but focused enough to prompt a meaningful response
+Ask ONE simple, direct question that:
+1. Picks up on ONE specific thing they mentioned — don't try to reference everything
+2. Asks about a concrete memory or moment, not abstract feelings
+3. Is short (1-2 sentences max)
+4. Feels like a friend asking over coffee, not a therapist
 
-The question should feel like it's coming from a caring friend who truly listened to what they shared.
+Examples of good questions:
+- "What's the first memory that comes to mind when you think about your family?"
+- "Tell me about a moment that changed everything for you."
+- "Who's someone that shaped who you are today?"
 
-Respond with ONLY the question, no preamble or explanation. Address them by name if provided.`;
+Respond with ONLY the question.`;
 
   const completion = await openai.chat.completions.create({
     model: 'gpt-4o-mini',
@@ -88,27 +89,20 @@ async function generateFollowUp(
 
   const exchangeCount = conversation.filter(m => m.role === 'user').length;
 
-  const prompt = `You are a warm, empathetic conversation partner on YoursTruly, a legacy documentation platform.
+  const prompt = `You are having a warm conversation with ${userName || 'someone'} on YoursTruly, helping them document their life story.
 
-CONTEXT:
-- Why they're here: "${whyHere}"
-- What drives them: ${whatDrives.join(', ')}
-- Their name: ${userName || 'Friend'}
-
-CONVERSATION SO FAR:
+CONVERSATION:
 ${conversationHistory}
 
-This is exchange #${exchangeCount}. ${exchangeCount >= 2 ? 'This could be a good stopping point, so offer a gentle way to wrap up OR go deeper based on their response.' : 'Continue exploring their story.'}
+Respond naturally:
+1. Briefly acknowledge what they shared (1 sentence)
+2. Ask ONE direct follow-up question about a specific detail they mentioned
+3. Keep it short — 2-3 sentences total
+4. Don't reference their profile info, just respond to what they actually said
 
-Generate a thoughtful follow-up that:
-1. Acknowledges what they just shared with genuine warmth
-2. ${exchangeCount >= 2 
-    ? 'Either asks ONE final deeper question OR offers a meaningful reflection that could conclude the conversation' 
-    : 'Asks ONE follow-up question that goes deeper into their story or connects to a related memory/feeling'}
-3. Feels like a natural conversation, not an interview
-4. Is concise but heartfelt
+${exchangeCount >= 2 ? 'This is exchange #' + exchangeCount + '. You can offer to wrap up if it feels natural.' : ''}
 
-Respond with ONLY your message, no labels or formatting.`;
+Respond with ONLY your message.`;
 
   const completion = await openai.chat.completions.create({
     model: 'gpt-4o-mini',
