@@ -47,6 +47,7 @@ type QuickStep =
   | 'globe'
   | 'about-you'
   | 'religion'
+  | 'why-here'
   | 'heartfelt'
   | 'image-upload'
   | 'ready';
@@ -57,6 +58,7 @@ const ALL_STEPS: QuickStep[] = [
   'globe',
   'about-you',
   'religion',
+  'why-here',
   'heartfelt',
   'image-upload',
   'ready',
@@ -68,6 +70,7 @@ const PROGRESS_STEPS: QuickStep[] = [
   'location',
   'about-you',
   'religion',
+  'why-here',
   'heartfelt',
   'image-upload',
 ];
@@ -78,6 +81,7 @@ const TILE_KEY: Partial<Record<QuickStep, string>> = {
   location: 'location',
   'about-you': 'interests',
   religion: 'religion',
+  'why-here': 'background',
   heartfelt: 'heartfelt-question',
   'image-upload': 'image-upload',
   ready: 'celebration',
@@ -213,7 +217,7 @@ function MapboxGlobeReveal({
 
     const map = new mapboxgl.Map({
       container: mapContainer.current,
-      style: 'mapbox://styles/mapbox/streets-v12',
+      style: 'mapbox://styles/mapbox/light-v11',
       projection: 'globe',
       zoom: 1.8,
       center: [0, 20],
@@ -690,14 +694,11 @@ export function QuickOnboardingFlow({
   }, [step, data, onComplete]);
 
   const goBack = useCallback(() => {
+    setDirection(-1);
+    // Skip globe when going backwards from about-you
+    if (step === 'about-you') { setStep('location'); return; }
     const idx = ALL_STEPS.indexOf(step);
-    // Skip globe when going backwards
-    const targetIdx =
-      step === 'about-you' ? ALL_STEPS.indexOf('location') : idx - 1;
-    if (targetIdx >= 0) {
-      setDirection(-1);
-      setStep(ALL_STEPS[targetIdx]);
-    }
+    if (idx > 0) setStep(ALL_STEPS[idx - 1]);
   }, [step]);
 
   const commitPills = useCallback(() => {
@@ -713,7 +714,7 @@ export function QuickOnboardingFlow({
   const progressIdx = PROGRESS_STEPS.indexOf(step);
   const tileKey = TILE_KEY[step];
 
-  // Full-screen globe step — render outside normal layout
+  // Full-screen globe step
   if (step === 'globe') {
     return (
       <MapboxGlobeReveal
@@ -721,6 +722,57 @@ export function QuickOnboardingFlow({
         location={data.location || 'somewhere beautiful'}
         onDone={goNext}
       />
+    );
+  }
+
+  // Three-column About You step
+  if (step === 'about-you') {
+    return (
+      <div className="yt-onboard-root">
+        <div className="home-background" />
+        <div className="home-blob home-blob-1" />
+        <div className="home-blob home-blob-2" />
+        {/* Progress bar */}
+        <div className="progress-track">
+          <motion.div
+            className="progress-fill"
+            initial={{ width: 0 }}
+            animate={{ width: `${((PROGRESS_STEPS.indexOf('about-you') + 1) / PROGRESS_STEPS.length) * 100}%` }}
+            transition={{ duration: 0.4, ease: 'easeOut' }}
+          />
+        </div>
+        <ThreeColAboutYou
+          selected={selectedPills}
+          onToggle={(label) =>
+            setSelectedPills((prev) => {
+              const next = new Set(prev);
+              next.has(label) ? next.delete(label) : next.add(label);
+              return next;
+            })
+          }
+          onContinue={() => { commitPills(); goNext(); }}
+          onBack={goBack}
+          onSkip={goNext}
+        />
+        <style jsx>{`
+          .yt-onboard-root {
+            min-height: 100vh;
+            min-height: 100dvh;
+            background: linear-gradient(135deg, #fdf8f3 0%, #f5ede5 50%, #fdf8f3 100%);
+            position: relative;
+            overflow-x: hidden;
+          }
+          .progress-track {
+            position: fixed; top: 0; left: 0; right: 0;
+            height: 3px; background: rgba(64,106,86,0.12); z-index: 50;
+          }
+          .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #406a56, #8dacab);
+            border-radius: 0 2px 2px 0;
+          }
+        `}</style>
+      </div>
     );
   }
 
@@ -804,24 +856,7 @@ export function QuickOnboardingFlow({
                   />
                 )}
 
-                {step === 'about-you' && (
-                  <AboutYouStep
-                    selected={selectedPills}
-                    onToggle={(label) =>
-                      setSelectedPills((prev) => {
-                        const next = new Set(prev);
-                        next.has(label) ? next.delete(label) : next.add(label);
-                        return next;
-                      })
-                    }
-                    onContinue={() => {
-                      commitPills();
-                      goNext();
-                    }}
-                    onBack={goBack}
-                    onSkip={goNext}
-                  />
-                )}
+                {/* about-you is rendered separately as ThreeColAboutYou */}
 
                 {step === 'religion' && (
                   <ReligionStep
@@ -833,10 +868,20 @@ export function QuickOnboardingFlow({
                   />
                 )}
 
+                {step === 'why-here' && (
+                  <WhyHereStep
+                    value={data.background}
+                    onChange={(background) => updateData({ background })}
+                    onContinue={goNext}
+                    onBack={goBack}
+                    onSkip={goNext}
+                  />
+                )}
+
                 {step === 'heartfelt' && (
                   <div className="heartfelt-spacer">
                     <HeartfeltConversation
-                      whyHere="preserve my memories and life story"
+                      whyHere={data.background || 'preserve my memories and life story'}
                       whatDrives={
                         data.interests.length > 0
                           ? data.interests
@@ -1980,6 +2025,640 @@ function ReadyStep({
           transform: translateY(-3px);
           box-shadow: 0 20px 50px rgba(64, 106, 86, 0.45);
         }
+      `}</style>
+    </div>
+  );
+}
+
+// ============================================
+// THREE-COLUMN ABOUT YOU
+// ============================================
+
+function ThreeColAboutYou({
+  selected,
+  onToggle,
+  onContinue,
+  onBack,
+  onSkip,
+}: {
+  selected: Set<string>;
+  onToggle: (label: string) => void;
+  onContinue: () => void;
+  onBack: () => void;
+  onSkip: () => void;
+}) {
+  const [customInterestInput, setCustomInterestInput] = useState('');
+  const [customTraitInput, setCustomTraitInput] = useState('');
+  const [customInterests, setCustomInterests] = useState<string[]>([]);
+  const [customTraits, setCustomTraits] = useState<string[]>([]);
+
+  const addCustom = (
+    input: string,
+    setInput: (v: string) => void,
+    customs: string[],
+    setCustoms: (v: string[]) => void
+  ) => {
+    const val = input.trim();
+    if (!val) return;
+    const exists =
+      customs.includes(val) ||
+      ABOUT_YOU_PILLS.some((p) => p.label.toLowerCase() === val.toLowerCase());
+    if (!exists) setCustoms([...customs, val]);
+    onToggle(val);
+    setInput('');
+  };
+
+  const baseInterests = ABOUT_YOU_PILLS.filter((p) => p.category === 'interest');
+  const baseTraits = ABOUT_YOU_PILLS.filter((p) => p.category === 'trait');
+  const allInterests = [
+    ...baseInterests,
+    ...customInterests.map((l) => ({ label: l, emoji: '✏️', category: 'interest' as const })),
+  ];
+  const allTraits = [
+    ...baseTraits,
+    ...customTraits.map((l) => ({ label: l, emoji: '✏️', category: 'trait' as const })),
+  ];
+
+  const interestCount = allInterests.filter((p) => selected.has(p.label)).length;
+  const traitCount = allTraits.filter((p) => selected.has(p.label)).length;
+  const totalCount = interestCount + traitCount;
+
+  return (
+    <div className="three-col-root">
+      {/* Column 1 — Info tile */}
+      <div className="col-info">
+        <OnboardingStepExplanation step="interests" showForMobile={false} />
+      </div>
+
+      {/* Column 2 — Interests */}
+      <div className="col-panel">
+        <div className="col-header">
+          <span className="col-dot col-dot-green" />
+          <span className="col-title">Your Interests</span>
+          {interestCount > 0 && <span className="col-count">{interestCount} selected</span>}
+        </div>
+        <div className="pill-grid-3col">
+          {allInterests.map((p) => (
+            <button
+              key={p.label}
+              className={`pill3 ${selected.has(p.label) ? 'pill3-sel' : ''}`}
+              onClick={() => onToggle(p.label)}
+            >
+              <span className="pill3-emoji">{p.emoji}</span>
+              <span className="pill3-label">{p.label}</span>
+              {selected.has(p.label) && <Check size={10} strokeWidth={3} className="pill3-check" />}
+            </button>
+          ))}
+        </div>
+        <div className="custom-row">
+          <input
+            className="custom-inp"
+            type="text"
+            value={customInterestInput}
+            onChange={(e) => setCustomInterestInput(e.target.value)}
+            placeholder="Add your own…"
+            onKeyDown={(e) => {
+              if (e.key === 'Enter')
+                addCustom(customInterestInput, setCustomInterestInput, customInterests, setCustomInterests);
+            }}
+          />
+          <button
+            className="custom-btn custom-btn-green"
+            disabled={!customInterestInput.trim()}
+            onClick={() =>
+              addCustom(customInterestInput, setCustomInterestInput, customInterests, setCustomInterests)
+            }
+          >
+            + Add
+          </button>
+        </div>
+      </div>
+
+      {/* Column 3 — Personality + nav */}
+      <div className="col-panel">
+        <div className="col-header">
+          <span className="col-dot col-dot-rust" />
+          <span className="col-title">Who You Are</span>
+          {traitCount > 0 && <span className="col-count col-count-rust">{traitCount} selected</span>}
+        </div>
+        <div className="pill-grid-3col">
+          {allTraits.map((p) => (
+            <button
+              key={p.label}
+              className={`pill3 ${selected.has(p.label) ? 'pill3-sel pill3-sel-rust' : ''}`}
+              onClick={() => onToggle(p.label)}
+            >
+              <span className="pill3-emoji">{p.emoji}</span>
+              <span className="pill3-label">{p.label}</span>
+              {selected.has(p.label) && <Check size={10} strokeWidth={3} className="pill3-check" />}
+            </button>
+          ))}
+        </div>
+        <div className="custom-row">
+          <input
+            className="custom-inp"
+            type="text"
+            value={customTraitInput}
+            onChange={(e) => setCustomTraitInput(e.target.value)}
+            placeholder="Describe yourself…"
+            onKeyDown={(e) => {
+              if (e.key === 'Enter')
+                addCustom(customTraitInput, setCustomTraitInput, customTraits, setCustomTraits);
+            }}
+          />
+          <button
+            className="custom-btn custom-btn-rust"
+            disabled={!customTraitInput.trim()}
+            onClick={() =>
+              addCustom(customTraitInput, setCustomTraitInput, customTraits, setCustomTraits)
+            }
+          >
+            + Add
+          </button>
+        </div>
+
+        {/* Nav lives in col 3 */}
+        <div className="col3-nav">
+          <button className="col3-back" onClick={onBack} aria-label="Back">
+            <ChevronLeft size={18} />
+          </button>
+          <button className="col3-continue" onClick={onContinue}>
+            {totalCount > 0 ? `Continue  ·  ${totalCount} selected` : 'Continue'}
+            <ChevronRight size={18} />
+          </button>
+        </div>
+        <button className="col3-skip" onClick={onSkip}>Skip for now</button>
+      </div>
+
+      <style jsx>{`
+        .three-col-root {
+          display: grid;
+          grid-template-columns: 320px 1fr 1fr;
+          gap: 24px;
+          align-items: start;
+          width: 100%;
+          max-width: 1200px;
+          margin: 0 auto;
+          padding: 32px 24px 32px;
+          box-sizing: border-box;
+          min-height: calc(100vh - 3px);
+        }
+
+        @media (max-width: 1023px) {
+          .three-col-root {
+            grid-template-columns: 1fr;
+            max-width: 520px;
+          }
+          .col-info { display: none; }
+        }
+
+        .col-info {
+          position: sticky;
+          top: 24px;
+        }
+
+        .col-panel {
+          background: white;
+          border-radius: 20px;
+          padding: 22px 20px 18px;
+          box-shadow: 0 2px 12px rgba(64, 106, 86, 0.07);
+          border: 1px solid rgba(64, 106, 86, 0.08);
+          overflow-y: auto;
+          max-height: calc(100vh - 80px);
+        }
+
+        .col-header {
+          display: flex;
+          align-items: center;
+          gap: 8px;
+          margin-bottom: 14px;
+        }
+
+        .col-dot {
+          width: 8px;
+          height: 8px;
+          border-radius: 50%;
+          flex-shrink: 0;
+        }
+        .col-dot-green { background: #406A56; }
+        .col-dot-rust { background: #C35F33; }
+
+        .col-title {
+          font-size: 11px;
+          font-weight: 700;
+          letter-spacing: 1.2px;
+          text-transform: uppercase;
+          color: rgba(45, 45, 45, 0.45);
+          flex: 1;
+        }
+
+        .col-count {
+          font-size: 11px;
+          font-weight: 600;
+          color: #406A56;
+        }
+        .col-count-rust { color: #C35F33; }
+
+        .pill-grid-3col {
+          display: grid;
+          grid-template-columns: repeat(3, 1fr);
+          gap: 6px;
+          margin-bottom: 12px;
+        }
+
+        .pill3 {
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          justify-content: center;
+          gap: 3px;
+          padding: 10px 6px 8px;
+          background: rgba(64, 106, 86, 0.02);
+          border: 1.5px solid rgba(64, 106, 86, 0.13);
+          border-radius: 12px;
+          color: rgba(45, 45, 45, 0.6);
+          font-size: 11px;
+          font-weight: 500;
+          cursor: pointer;
+          transition: all 0.13s ease;
+          min-height: 56px;
+          position: relative;
+          text-align: center;
+        }
+
+        .pill3:hover {
+          border-color: #406A56;
+          color: #406A56;
+          background: rgba(64, 106, 86, 0.04);
+        }
+
+        .pill3-sel {
+          background: rgba(64, 106, 86, 0.09);
+          border-color: #406A56;
+          color: #406A56;
+          font-weight: 600;
+        }
+
+        .pill3-sel-rust {
+          background: rgba(195, 95, 51, 0.08);
+          border-color: #C35F33;
+          color: #C35F33;
+        }
+
+        .pill3-emoji { font-size: 18px; line-height: 1; }
+        .pill3-label { line-height: 1.2; }
+
+        :global(.pill3-check) {
+          position: absolute;
+          top: 4px;
+          right: 4px;
+          color: inherit;
+        }
+
+        /* Custom add */
+        .custom-row {
+          display: flex;
+          gap: 6px;
+          margin-bottom: 4px;
+        }
+
+        .custom-inp {
+          flex: 1;
+          padding: 9px 12px;
+          background: rgba(64, 106, 86, 0.02);
+          border: 1.5px solid rgba(64, 106, 86, 0.14);
+          border-radius: 100px;
+          color: #2d2d2d;
+          font-size: 12px;
+          min-width: 0;
+        }
+        .custom-inp::placeholder { color: rgba(45, 45, 45, 0.28); }
+        .custom-inp:focus {
+          outline: none;
+          border-color: #406A56;
+          box-shadow: 0 0 0 2px rgba(64, 106, 86, 0.09);
+        }
+
+        .custom-btn {
+          padding: 8px 13px;
+          border-radius: 100px;
+          font-size: 12px;
+          font-weight: 600;
+          cursor: pointer;
+          white-space: nowrap;
+          transition: all 0.13s;
+          flex-shrink: 0;
+        }
+        .custom-btn:disabled { opacity: 0.35; cursor: not-allowed; }
+
+        .custom-btn-green {
+          background: rgba(64, 106, 86, 0.08);
+          border: 1.5px solid rgba(64, 106, 86, 0.2);
+          color: #406A56;
+        }
+        .custom-btn-green:hover:not(:disabled) {
+          background: rgba(64, 106, 86, 0.14);
+        }
+
+        .custom-btn-rust {
+          background: rgba(195, 95, 51, 0.07);
+          border: 1.5px solid rgba(195, 95, 51, 0.2);
+          color: #C35F33;
+        }
+        .custom-btn-rust:hover:not(:disabled) {
+          background: rgba(195, 95, 51, 0.13);
+        }
+
+        /* Nav in col 3 */
+        .col3-nav {
+          display: flex;
+          gap: 8px;
+          margin-top: 16px;
+        }
+
+        .col3-back {
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          width: 46px;
+          height: 46px;
+          background: white;
+          border: 1.5px solid rgba(64, 106, 86, 0.18);
+          border-radius: 12px;
+          color: rgba(45, 45, 45, 0.5);
+          cursor: pointer;
+          flex-shrink: 0;
+          transition: border-color 0.15s, color 0.15s;
+        }
+        .col3-back:hover { border-color: #406A56; color: #406A56; }
+
+        .col3-continue {
+          flex: 1;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          gap: 6px;
+          padding: 13px 16px;
+          background: #406A56;
+          border: none;
+          border-radius: 12px;
+          color: white;
+          font-size: 14px;
+          font-weight: 600;
+          cursor: pointer;
+          box-shadow: 0 4px 14px rgba(64, 106, 86, 0.28);
+          transition: background 0.15s, transform 0.12s;
+        }
+        .col3-continue:hover { background: #355948; transform: translateY(-1px); }
+
+        .col3-skip {
+          display: block;
+          width: 100%;
+          text-align: center;
+          background: transparent;
+          border: none;
+          color: rgba(45, 45, 45, 0.28);
+          font-size: 12px;
+          cursor: pointer;
+          padding: 6px;
+          margin-top: 4px;
+          transition: color 0.15s;
+        }
+        .col3-skip:hover { color: rgba(45, 45, 45, 0.55); }
+      `}</style>
+    </div>
+  );
+}
+
+// ============================================
+// STEP: WHY ARE YOU HERE
+// ============================================
+
+const WHY_OPTIONS = [
+  { emoji: '👨‍👩‍👧', text: "I'm starting a family and want to capture these precious moments" },
+  { emoji: '💼', text: "I'm reflecting on my career and the lessons I've learned" },
+  { emoji: '❤️', text: "I want to preserve my parents' stories before they're lost" },
+  { emoji: '🔄', text: "I'm at a transitional moment and processing big changes" },
+  { emoji: '🌱', text: "I want to create something meaningful for my children" },
+  { emoji: '📖', text: "I want to document my life story for future generations" },
+];
+
+function WhyHereStep({
+  value,
+  onChange,
+  onContinue,
+  onBack,
+  onSkip,
+}: {
+  value: string;
+  onChange: (v: string) => void;
+  onContinue: () => void;
+  onBack: () => void;
+  onSkip: () => void;
+}) {
+  const [freeText, setFreeText] = useState('');
+  const isOptionSelected = WHY_OPTIONS.some((o) => o.text === value);
+
+  const handleFreeText = (text: string) => {
+    setFreeText(text);
+    if (text.trim()) onChange(text.trim());
+  };
+
+  return (
+    <div className="why-step">
+      <motion.div
+        className="why-icon"
+        initial={{ scale: 0 }}
+        animate={{ scale: 1 }}
+        transition={{ type: 'spring', delay: 0.1 }}
+      >
+        💭
+      </motion.div>
+
+      <motion.div
+        initial={{ opacity: 0, y: 10 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.2 }}
+      >
+        <h2>What brings you here?</h2>
+        <p className="subtitle">
+          This shapes the first question we ask you — so be as honest as you like.
+        </p>
+      </motion.div>
+
+      <motion.div
+        initial={{ opacity: 0, y: 10 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.35 }}
+      >
+        <div className="why-options">
+          {WHY_OPTIONS.map((opt) => (
+            <button
+              key={opt.text}
+              className={`why-option ${value === opt.text ? 'why-selected' : ''}`}
+              onClick={() => {
+                setFreeText('');
+                onChange(opt.text);
+              }}
+            >
+              <span className="why-emoji">{opt.emoji}</span>
+              <span className="why-text">{opt.text}</span>
+              {value === opt.text && <Check size={16} className="why-check" />}
+            </button>
+          ))}
+        </div>
+
+        <div className="why-or">
+          <div className="why-or-line" />
+          <span>or in your own words</span>
+          <div className="why-or-line" />
+        </div>
+
+        <textarea
+          className="why-textarea"
+          value={freeText}
+          onChange={(e) => handleFreeText(e.target.value)}
+          placeholder="Share what's on your heart…"
+          rows={3}
+        />
+      </motion.div>
+
+      <div className="why-nav">
+        <button className="nav-back-btn" onClick={onBack} aria-label="Back">
+          <ChevronLeft size={18} />
+        </button>
+        <div className="nav-right">
+          <button
+            className="nav-continue-btn"
+            onClick={value.trim() ? onContinue : onSkip}
+          >
+            {value.trim() ? 'Continue' : 'Skip for now'} <ChevronRight size={18} />
+          </button>
+        </div>
+      </div>
+
+      <style jsx>{`
+        ${SHARED}
+        .why-step {}
+        .why-icon { font-size: 40px; margin-bottom: 20px; display: block; }
+        .why-options {
+          display: flex;
+          flex-direction: column;
+          gap: 8px;
+          margin-bottom: 20px;
+        }
+        .why-option {
+          display: flex;
+          align-items: center;
+          gap: 12px;
+          padding: 13px 16px;
+          background: white;
+          border: 1.5px solid rgba(64, 106, 86, 0.16);
+          border-radius: 14px;
+          color: rgba(45, 45, 45, 0.7);
+          font-size: 14px;
+          text-align: left;
+          cursor: pointer;
+          transition: all 0.15s;
+          box-shadow: 0 1px 4px rgba(64, 106, 86, 0.05);
+          position: relative;
+        }
+        .why-option:hover {
+          border-color: #406A56;
+          color: #406A56;
+          background: rgba(64, 106, 86, 0.02);
+        }
+        .why-selected {
+          background: rgba(64, 106, 86, 0.07);
+          border-color: #406A56;
+          color: #406A56;
+          font-weight: 500;
+        }
+        .why-emoji { font-size: 18px; flex-shrink: 0; }
+        .why-text { flex: 1; line-height: 1.4; }
+        :global(.why-check) {
+          color: #406A56;
+          flex-shrink: 0;
+        }
+        .why-or {
+          display: flex;
+          align-items: center;
+          gap: 12px;
+          margin-bottom: 12px;
+          color: rgba(45, 45, 45, 0.35);
+          font-size: 12px;
+        }
+        .why-or-line {
+          flex: 1;
+          height: 1px;
+          background: rgba(64, 106, 86, 0.12);
+        }
+        .why-textarea {
+          width: 100%;
+          padding: 14px 16px;
+          background: white;
+          border: 1.5px solid rgba(64, 106, 86, 0.16);
+          border-radius: 14px;
+          color: #2d2d2d;
+          font-size: 14px;
+          resize: none;
+          margin-bottom: 4px;
+          box-sizing: border-box;
+          transition: border-color 0.2s;
+          font-family: inherit;
+        }
+        .why-textarea::placeholder { color: rgba(45, 45, 45, 0.28); }
+        .why-textarea:focus {
+          outline: none;
+          border-color: #406A56;
+          box-shadow: 0 0 0 3px rgba(64, 106, 86, 0.09);
+        }
+        /* Reuse nav styles */
+        .why-nav {
+          position: sticky;
+          bottom: 0;
+          background: linear-gradient(to bottom, transparent, #fdf8f3 30%);
+          padding-top: 16px;
+          padding-bottom: 4px;
+          display: flex;
+          gap: 10px;
+          align-items: flex-start;
+          margin-top: 12px;
+        }
+        .nav-back-btn {
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          width: 50px;
+          height: 50px;
+          background: white;
+          border: 1.5px solid rgba(64, 106, 86, 0.18);
+          border-radius: 14px;
+          color: rgba(45, 45, 45, 0.55);
+          cursor: pointer;
+          flex-shrink: 0;
+          transition: border-color 0.2s, color 0.2s;
+        }
+        .nav-back-btn:hover { border-color: #406A56; color: #406A56; }
+        .nav-right { flex: 1; }
+        .nav-continue-btn {
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          gap: 8px;
+          width: 100%;
+          padding: 15px 20px;
+          background: #406A56;
+          border: none;
+          border-radius: 14px;
+          color: white;
+          font-size: 15px;
+          font-weight: 600;
+          cursor: pointer;
+          box-shadow: 0 4px 16px rgba(64, 106, 86, 0.28);
+          transition: background 0.2s, transform 0.15s;
+        }
+        .nav-continue-btn:hover { background: #355948; transform: translateY(-1px); }
       `}</style>
     </div>
   );
