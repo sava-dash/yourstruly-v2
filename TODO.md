@@ -1,4 +1,14 @@
 
+## 🎨 Design System / Figma Integration (Pending)
+- [ ] Get Figma Design file URL from design team
+- [ ] Get Figma Design System file URL from design team
+- [ ] Run Claude Code with Figma MCP to generate `CLAUDE.md` (Figma MCP already configured ✅)
+- [ ] Commit `CLAUDE.md` to repo so whole team gets it
+
+> Note: Repo, Node, Claude Code CLI, and Figma MCP are all already set up. Just need the Figma URLs.
+
+---
+
 ## Future Migration: Supabase → AWS
 
 **Status:** Planned (after app changes complete)

@@ -2,13 +2,17 @@
 
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import mapboxgl from 'mapbox-gl';
+import 'mapbox-gl/dist/mapbox-gl.css';
 import {
   ChevronRight,
   ChevronLeft,
   MapPin,
   Sparkles,
   Check,
+  Shield,
 } from 'lucide-react';
+import { OnboardingStepExplanation } from './OnboardingStepExplanation';
 import { HeartfeltConversation } from './HeartfeltConversation';
 import { ImageUploadStep } from './ImageUploadStep';
 
@@ -47,18 +51,6 @@ type QuickStep =
   | 'image-upload'
   | 'ready';
 
-// Steps visible in progress bar (globe is a transition, not counted)
-const PROGRESS_STEPS: QuickStep[] = [
-  'name',
-  'location',
-  'about-you',
-  'religion',
-  'heartfelt',
-  'image-upload',
-  'ready',
-];
-
-// Full step order
 const ALL_STEPS: QuickStep[] = [
   'name',
   'location',
@@ -70,8 +62,29 @@ const ALL_STEPS: QuickStep[] = [
   'ready',
 ];
 
+// Steps that show the progress bar (no globe/ready)
+const PROGRESS_STEPS: QuickStep[] = [
+  'name',
+  'location',
+  'about-you',
+  'religion',
+  'heartfelt',
+  'image-upload',
+];
+
+// Map each step to the explanation tile key
+const TILE_KEY: Partial<Record<QuickStep, string>> = {
+  name: 'name',
+  location: 'location',
+  'about-you': 'interests',
+  religion: 'religion',
+  heartfelt: 'heartfelt-question',
+  'image-upload': 'image-upload',
+  ready: 'celebration',
+};
+
 // ============================================
-// PILL DATA
+// PILL DATA — expanded
 // ============================================
 
 interface Pill {
@@ -81,6 +94,7 @@ interface Pill {
 }
 
 const ABOUT_YOU_PILLS: Pill[] = [
+  // Interests
   { label: 'Family', emoji: '👨‍👩‍👧', category: 'interest' },
   { label: 'Travel', emoji: '✈️', category: 'interest' },
   { label: 'Music', emoji: '🎵', category: 'interest' },
@@ -93,6 +107,19 @@ const ABOUT_YOU_PILLS: Pill[] = [
   { label: 'Spirituality', emoji: '🙏', category: 'interest' },
   { label: 'Photography', emoji: '📷', category: 'interest' },
   { label: 'Gardening', emoji: '🌱', category: 'interest' },
+  { label: 'Sports', emoji: '⚽', category: 'interest' },
+  { label: 'Movies & TV', emoji: '🎬', category: 'interest' },
+  { label: 'Writing', emoji: '✍️', category: 'interest' },
+  { label: 'Fashion', emoji: '👗', category: 'interest' },
+  { label: 'DIY & Crafts', emoji: '🛠️', category: 'interest' },
+  { label: 'Animals & Pets', emoji: '🐾', category: 'interest' },
+  { label: 'Volunteering', emoji: '🤲', category: 'interest' },
+  { label: 'History', emoji: '📜', category: 'interest' },
+  { label: 'Science', emoji: '🔬', category: 'interest' },
+  { label: 'Gaming', emoji: '🎮', category: 'interest' },
+  { label: 'Dancing', emoji: '💃', category: 'interest' },
+  { label: 'Food & Wine', emoji: '🍷', category: 'interest' },
+  // Traits
   { label: 'Adventurous', emoji: '🏔️', category: 'trait' },
   { label: 'Creative', emoji: '✨', category: 'trait' },
   { label: 'Empathetic', emoji: '💛', category: 'trait' },
@@ -105,6 +132,16 @@ const ABOUT_YOU_PILLS: Pill[] = [
   { label: 'Nurturing', emoji: '🌸', category: 'trait' },
   { label: 'Independent', emoji: '🦅', category: 'trait' },
   { label: 'Reflective', emoji: '💭', category: 'trait' },
+  { label: 'Analytical', emoji: '🧩', category: 'trait' },
+  { label: 'Spontaneous', emoji: '⚡', category: 'trait' },
+  { label: 'Resilient', emoji: '🌳', category: 'trait' },
+  { label: 'Patient', emoji: '⏳', category: 'trait' },
+  { label: 'Ambitious', emoji: '🎯', category: 'trait' },
+  { label: 'Passionate', emoji: '🔥', category: 'trait' },
+  { label: 'Pragmatic', emoji: '🔧', category: 'trait' },
+  { label: 'Thoughtful', emoji: '🌙', category: 'trait' },
+  { label: 'Extroverted', emoji: '🎉', category: 'trait' },
+  { label: 'Introverted', emoji: '📖', category: 'trait' },
 ];
 
 const RELIGION_OPTIONS = [
@@ -122,12 +159,32 @@ const RELIGION_OPTIONS = [
 ];
 
 // ============================================
-// ANIMATED GLOBE
+// GEOCODING
 // ============================================
 
-type GlobePhase = 'idle' | 'spin' | 'zoom' | 'pin' | 'done';
+async function geocodeLocation(
+  location: string
+): Promise<{ lng: number; lat: number }> {
+  try {
+    const token = process.env.NEXT_PUBLIC_MAPBOX_TOKEN;
+    const url = `https://api.mapbox.com/geocoding/v5/mapbox.places/${encodeURIComponent(location)}.json?access_token=${token}&limit=1`;
+    const res = await fetch(url);
+    const data = await res.json();
+    if (data.features?.length > 0) {
+      const [lng, lat] = data.features[0].center;
+      return { lng, lat };
+    }
+  } catch (e) {
+    console.error('Geocode failed:', e);
+  }
+  return { lng: -74.006, lat: 40.7128 }; // NYC fallback
+}
 
-function GlobeReveal({
+// ============================================
+// MAPBOX GLOBE STEP
+// ============================================
+
+function MapboxGlobeReveal({
   name,
   location,
   onDone,
@@ -136,8 +193,11 @@ function GlobeReveal({
   location: string;
   onDone: () => void;
 }) {
-  const [phase, setPhase] = useState<GlobePhase>('idle');
+  const mapContainer = useRef<HTMLDivElement>(null);
+  const mapRef = useRef<mapboxgl.Map | null>(null);
+  const markerRef = useRef<mapboxgl.Marker | null>(null);
   const advancedRef = useRef(false);
+  const [phase, setPhase] = useState<'loading' | 'spinning' | 'flying' | 'pinned'>('loading');
 
   const advance = useCallback(() => {
     if (!advancedRef.current) {
@@ -147,315 +207,393 @@ function GlobeReveal({
   }, [onDone]);
 
   useEffect(() => {
-    const t0 = setTimeout(() => setPhase('spin'), 200);
-    const t1 = setTimeout(() => setPhase('zoom'), 2200);
-    const t2 = setTimeout(() => setPhase('pin'), 3600);
-    const t3 = setTimeout(() => setPhase('done'), 5000);
-    const t4 = setTimeout(() => advance(), 7000); // auto-advance if not clicked
-    return () => {
-      clearTimeout(t0);
-      clearTimeout(t1);
-      clearTimeout(t2);
-      clearTimeout(t3);
-      clearTimeout(t4);
-    };
-  }, [advance]);
+    if (!mapContainer.current || mapRef.current) return;
 
-  const isZoomed = phase === 'zoom' || phase === 'pin' || phase === 'done';
-  const showPin = phase === 'pin' || phase === 'done';
-  const showContinue = phase === 'done';
+    mapboxgl.accessToken = process.env.NEXT_PUBLIC_MAPBOX_TOKEN || '';
+
+    const map = new mapboxgl.Map({
+      container: mapContainer.current,
+      style: 'mapbox://styles/mapbox/satellite-streets-v12',
+      projection: 'globe',
+      zoom: 1.8,
+      center: [0, 20],
+      interactive: false,
+      attributionControl: false,
+      logoPosition: 'bottom-right',
+    });
+
+    mapRef.current = map;
+
+    // Slow auto-rotation before fly-in
+    let rotating = true;
+    let bearing = 0;
+    const rotate = () => {
+      if (!rotating) return;
+      bearing += 0.12;
+      map.setBearing(bearing % 360);
+      requestAnimationFrame(rotate);
+    };
+
+    map.on('style.load', async () => {
+      map.setFog({
+        color: 'rgb(15, 15, 25)',
+        'high-color': 'rgb(35, 40, 60)',
+        'horizon-blend': 0.08,
+        'space-color': 'rgb(8, 8, 18)',
+        'star-intensity': 0.8,
+      });
+
+      setPhase('spinning');
+      rotate();
+
+      // Pause on globe for 2.5s then fly in
+      await delay(2500);
+      rotating = false;
+
+      const coords = await geocodeLocation(location);
+      setPhase('flying');
+
+      map.flyTo({
+        center: [coords.lng, coords.lat],
+        zoom: 13,
+        pitch: 50,
+        bearing: -15,
+        duration: 5000,
+        essential: true,
+        curve: 1.6,
+        speed: 0.6,
+      });
+
+      map.once('moveend', () => {
+        // Drop custom marker
+        const el = document.createElement('div');
+        el.className = 'yt-map-marker';
+        el.innerHTML = `
+          <div class="marker-wrapper">
+            <div class="marker-pulse"></div>
+            <div class="marker-pulse marker-pulse-2"></div>
+            <div class="marker-pin">
+              <svg width="28" height="34" viewBox="0 0 28 34" fill="none">
+                <path d="M14 0C6.268 0 0 6.268 0 14c0 10.5 14 20 14 20S28 24.5 28 14C28 6.268 21.732 0 14 0z" fill="#406A56"/>
+                <circle cx="14" cy="13" r="5.5" fill="white"/>
+              </svg>
+            </div>
+            <div class="marker-card">
+              <p class="marker-name">${name}</p>
+              <p class="marker-loc">${location}</p>
+            </div>
+          </div>
+        `;
+
+        const marker = new mapboxgl.Marker({ element: el, anchor: 'bottom' })
+          .setLngLat([coords.lng, coords.lat])
+          .addTo(map);
+
+        markerRef.current = marker;
+        setPhase('pinned');
+
+        // Auto-advance after showing pin
+        setTimeout(advance, 6000);
+      });
+    });
+
+    return () => {
+      rotating = false;
+      markerRef.current?.remove();
+      map.remove();
+      mapRef.current = null;
+    };
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   return (
-    <div className="globe-scene">
-      {/* Deep space background */}
-      <div className="space-bg" />
+    <div className="globe-fullscreen">
+      <div ref={mapContainer} className="map-canvas" />
 
-      {/* Globe */}
-      <motion.div
-        className="globe-wrapper"
-        animate={{
-          scale: isZoomed ? 14 : phase === 'spin' ? 1 : 0.4,
-          opacity: phase === 'done' ? 0 : 1,
-        }}
-        transition={{
-          scale:
-            phase === 'zoom'
-              ? { duration: 2, ease: [0.12, 1, 0.3, 1] }
-              : { duration: 0.8, ease: 'easeOut' },
-          opacity: { duration: 0.6, delay: phase === 'done' ? 0 : 0 },
-        }}
-      >
-        <div className="globe">
-          {/* Lat/lon grid */}
-          <svg
-            className="globe-grid"
-            viewBox="0 0 200 200"
-            xmlns="http://www.w3.org/2000/svg"
-          >
-            {/* Latitude rings */}
-            <ellipse cx="100" cy="100" rx="90" ry="9" fill="none" stroke="rgba(255,255,255,0.3)" strokeWidth="0.7" />
-            <ellipse cx="100" cy="64" rx="79" ry="7" fill="none" stroke="rgba(255,255,255,0.2)" strokeWidth="0.7" />
-            <ellipse cx="100" cy="136" rx="79" ry="7" fill="none" stroke="rgba(255,255,255,0.2)" strokeWidth="0.7" />
-            <ellipse cx="100" cy="30" rx="45" ry="4" fill="none" stroke="rgba(255,255,255,0.12)" strokeWidth="0.7" />
-            <ellipse cx="100" cy="170" rx="45" ry="4" fill="none" stroke="rgba(255,255,255,0.12)" strokeWidth="0.7" />
-            {/* Longitude arcs */}
-            <ellipse cx="100" cy="100" rx="90" ry="90" fill="none" stroke="rgba(255,255,255,0.22)" strokeWidth="0.7" />
-            <ellipse cx="100" cy="100" rx="64" ry="90" fill="none" stroke="rgba(255,255,255,0.18)" strokeWidth="0.7" />
-            <ellipse cx="100" cy="100" rx="32" ry="90" fill="none" stroke="rgba(255,255,255,0.15)" strokeWidth="0.7" />
-            <ellipse cx="100" cy="100" rx="5" ry="90" fill="none" stroke="rgba(255,255,255,0.15)" strokeWidth="0.7" />
-          </svg>
-          {/* Specular highlight */}
-          <div className="globe-highlight" />
-          {/* Dark edge shadow */}
-          <div className="globe-edge" />
-        </div>
-      </motion.div>
-
-      {/* Pin — shows after zoom */}
+      {/* Loading state */}
       <AnimatePresence>
-        {showPin && (
+        {phase === 'loading' && (
           <motion.div
-            className="pin-container"
-            initial={{ opacity: 0, y: -60, scale: 0.5 }}
-            animate={{ opacity: 1, y: 0, scale: 1 }}
-            transition={{ type: 'spring', stiffness: 380, damping: 22, delay: 0.3 }}
+            className="globe-overlay-center"
+            exit={{ opacity: 0 }}
           >
-            {/* Pulse rings */}
-            <div className="pulse-ring" />
-            <div className="pulse-ring pulse-ring-2" />
-            {/* Pin icon */}
-            <motion.div
-              className="pin-icon"
-              animate={{ y: [0, -6, 0] }}
-              transition={{ repeat: Infinity, duration: 2, ease: 'easeInOut' }}
-            >
-              <MapPin size={40} fill="#ec4899" color="#be185d" strokeWidth={1.5} />
-            </motion.div>
-            {/* Name card */}
-            <motion.div
-              className="pin-card"
-              initial={{ opacity: 0, scale: 0.8, y: 10 }}
-              animate={{ opacity: 1, scale: 1, y: 0 }}
-              transition={{ delay: 0.8, type: 'spring', stiffness: 300, damping: 20 }}
-            >
-              <p className="pin-name">{name}</p>
-              <p className="pin-location">📍 {location}</p>
-            </motion.div>
+            <div className="loading-globe">
+              <div className="loading-dot" />
+            </div>
           </motion.div>
         )}
       </AnimatePresence>
 
-      {/* Continue button */}
+      {/* Flying indicator */}
       <AnimatePresence>
-        {showContinue && (
-          <motion.button
-            className="globe-btn"
-            initial={{ opacity: 0, y: 24 }}
+        {phase === 'flying' && (
+          <motion.div
+            className="globe-status-bar"
+            initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.4 }}
-            onClick={advance}
+            exit={{ opacity: 0 }}
           >
-            Continue <ChevronRight size={18} />
-          </motion.button>
+            <div className="status-chip">
+              <div className="status-dot" />
+              Finding {location}…
+            </div>
+          </motion.div>
         )}
       </AnimatePresence>
 
-      <style jsx>{`
-        .globe-scene {
-          position: relative;
-          min-height: 70vh;
-          display: flex;
-          flex-direction: column;
-          align-items: center;
-          justify-content: center;
-          overflow: hidden;
-        }
+      {/* Pinned — name card + continue */}
+      <AnimatePresence>
+        {phase === 'pinned' && (
+          <motion.div
+            className="globe-bottom-panel"
+            initial={{ opacity: 0, y: 40 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.6, type: 'spring', stiffness: 200, damping: 24 }}
+          >
+            <div className="globe-name-card">
+              <div className="globe-name-icon">
+                <MapPin size={18} color="#406A56" />
+              </div>
+              <div>
+                <p className="globe-name">{name}</p>
+                <p className="globe-loc">{location}</p>
+              </div>
+            </div>
+            <motion.button
+              className="globe-continue-btn"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ delay: 1.2 }}
+              onClick={advance}
+            >
+              Continue <ChevronRight size={18} />
+            </motion.button>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
-        .space-bg {
+      <style jsx global>{`
+        .globe-fullscreen {
           position: fixed;
           inset: 0;
-          background: radial-gradient(ellipse at 50% 40%, #0e1a3d 0%, #050912 100%);
-          z-index: -1;
+          z-index: 100;
+          background: #080812;
         }
 
-        /* Stars */
-        .space-bg::before {
-          content: '';
-          position: absolute;
-          inset: 0;
-          background-image:
-            radial-gradient(1.5px 1.5px at 12% 18%, white 0%, transparent 100%),
-            radial-gradient(1px 1px at 80% 8%, white 0%, transparent 100%),
-            radial-gradient(1px 1px at 55% 85%, rgba(255,255,255,0.8) 0%, transparent 100%),
-            radial-gradient(1.5px 1.5px at 8% 65%, rgba(255,255,255,0.6) 0%, transparent 100%),
-            radial-gradient(1px 1px at 92% 52%, white 0%, transparent 100%),
-            radial-gradient(1px 1px at 38% 12%, rgba(255,255,255,0.9) 0%, transparent 100%),
-            radial-gradient(1px 1px at 67% 42%, rgba(255,255,255,0.5) 0%, transparent 100%),
-            radial-gradient(1.5px 1.5px at 25% 90%, rgba(255,255,255,0.7) 0%, transparent 100%),
-            radial-gradient(1px 1px at 72% 73%, rgba(255,255,255,0.4) 0%, transparent 100%),
-            radial-gradient(1px 1px at 48% 55%, rgba(200,220,255,0.6) 0%, transparent 100%);
-        }
-
-        .globe-wrapper {
-          transform-origin: center center;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          position: relative;
-        }
-
-        .globe {
-          width: 260px;
-          height: 260px;
-          border-radius: 50%;
-          position: relative;
-          overflow: hidden;
-          background:
-            radial-gradient(circle at 32% 32%, #5ab4f5 0%, #1565c0 40%, #0b2a70 75%, #071640 100%);
-          box-shadow:
-            inset -28px -28px 55px rgba(0, 0, 0, 0.55),
-            inset 10px 10px 30px rgba(120, 180, 255, 0.18),
-            0 0 90px rgba(30, 90, 255, 0.45),
-            0 25px 70px rgba(0, 0, 0, 0.6);
-          animation: globePulse 6s ease-in-out infinite;
-        }
-
-        @keyframes globePulse {
-          0%, 100% {
-            box-shadow:
-              inset -28px -28px 55px rgba(0,0,0,0.55),
-              inset 10px 10px 30px rgba(120,180,255,0.18),
-              0 0 90px rgba(30,90,255,0.45),
-              0 25px 70px rgba(0,0,0,0.6);
-          }
-          50% {
-            box-shadow:
-              inset -22px -22px 55px rgba(0,0,0,0.45),
-              inset 16px 12px 30px rgba(120,180,255,0.15),
-              0 0 110px rgba(30,90,255,0.55),
-              0 25px 70px rgba(0,0,0,0.6);
-          }
-        }
-
-        .globe-grid {
-          position: absolute;
-          inset: 0;
+        .map-canvas {
           width: 100%;
           height: 100%;
         }
 
-        .globe-highlight {
-          position: absolute;
-          top: 6%;
-          left: 12%;
-          width: 42%;
-          height: 38%;
-          border-radius: 50%;
-          background: radial-gradient(
-            ellipse at center,
-            rgba(255, 255, 255, 0.28) 0%,
-            transparent 70%
-          );
-          pointer-events: none;
-        }
-
-        .globe-edge {
+        .globe-overlay-center {
           position: absolute;
           inset: 0;
-          border-radius: 50%;
-          background: radial-gradient(
-            circle at 70% 70%,
-            rgba(0, 0, 30, 0.5) 0%,
-            transparent 60%
-          );
-          pointer-events: none;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          background: rgba(8, 8, 18, 0.6);
         }
 
-        /* Pin */
-        .pin-container {
-          display: flex;
-          flex-direction: column;
-          align-items: center;
-          gap: 14px;
-          position: relative;
+        .loading-globe {
+          width: 48px;
+          height: 48px;
+          border-radius: 50%;
+          border: 3px solid rgba(64, 106, 86, 0.3);
+          border-top-color: #406A56;
+          animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+          to { transform: rotate(360deg); }
+        }
+
+        .globe-status-bar {
+          position: absolute;
+          top: 24px;
+          left: 50%;
+          transform: translateX(-50%);
           z-index: 10;
         }
 
-        .pulse-ring {
-          position: absolute;
-          top: 50%;
-          left: 50%;
-          transform: translate(-50%, -50%);
-          width: 60px;
-          height: 60px;
-          border-radius: 50%;
-          border: 2px solid rgba(236, 72, 153, 0.7);
-          animation: ringPulse 2.2s ease-out infinite;
-          pointer-events: none;
-        }
-
-        .pulse-ring-2 {
-          animation-delay: 0.8s;
-          border-color: rgba(236, 72, 153, 0.35);
-        }
-
-        @keyframes ringPulse {
-          0% { transform: translate(-50%, -50%) scale(1); opacity: 1; }
-          100% { transform: translate(-50%, -50%) scale(2.8); opacity: 0; }
-        }
-
-        .pin-icon {
-          position: relative;
-          z-index: 1;
-          filter: drop-shadow(0 8px 24px rgba(236, 72, 153, 0.6));
-        }
-
-        .pin-card {
-          background: rgba(255, 255, 255, 0.08);
-          backdrop-filter: blur(16px);
-          -webkit-backdrop-filter: blur(16px);
-          border: 1px solid rgba(255, 255, 255, 0.18);
-          border-radius: 20px;
-          padding: 16px 28px;
-          text-align: center;
-          box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
-        }
-
-        .pin-name {
-          font-size: 24px;
-          font-weight: 700;
+        .status-chip {
+          display: flex;
+          align-items: center;
+          gap: 8px;
+          padding: 10px 18px;
+          background: rgba(255, 255, 255, 0.12);
+          backdrop-filter: blur(12px);
+          border: 1px solid rgba(255, 255, 255, 0.2);
+          border-radius: 100px;
           color: white;
-          margin: 0 0 6px;
-          letter-spacing: -0.3px;
+          font-size: 14px;
+          font-weight: 500;
         }
 
-        .pin-location {
-          font-size: 14px;
-          color: rgba(255, 255, 255, 0.65);
+        .status-dot {
+          width: 8px;
+          height: 8px;
+          border-radius: 50%;
+          background: #D9C61A;
+          animation: statusPulse 1.2s ease-in-out infinite;
+        }
+
+        @keyframes statusPulse {
+          0%, 100% { opacity: 1; transform: scale(1); }
+          50% { opacity: 0.5; transform: scale(0.7); }
+        }
+
+        .globe-bottom-panel {
+          position: absolute;
+          bottom: 40px;
+          left: 50%;
+          transform: translateX(-50%);
+          z-index: 10;
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          gap: 16px;
+          width: calc(100% - 48px);
+          max-width: 420px;
+        }
+
+        .globe-name-card {
+          display: flex;
+          align-items: center;
+          gap: 14px;
+          padding: 18px 22px;
+          background: rgba(255, 255, 255, 0.95);
+          backdrop-filter: blur(16px);
+          border-radius: 20px;
+          box-shadow: 0 8px 40px rgba(0, 0, 0, 0.3);
+          width: 100%;
+        }
+
+        .globe-name-icon {
+          width: 40px;
+          height: 40px;
+          border-radius: 12px;
+          background: rgba(64, 106, 86, 0.1);
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          flex-shrink: 0;
+        }
+
+        .globe-name {
+          font-size: 18px;
+          font-weight: 700;
+          color: #2d2d2d;
+          margin: 0 0 2px;
+          font-family: var(--font-playfair), Georgia, serif;
+        }
+
+        .globe-loc {
+          font-size: 13px;
+          color: rgba(45, 45, 45, 0.55);
           margin: 0;
         }
 
-        .globe-btn {
-          margin-top: 40px;
+        .globe-continue-btn {
           display: inline-flex;
           align-items: center;
           gap: 8px;
-          padding: 15px 30px;
-          background: rgba(255, 255, 255, 0.12);
-          border: 1px solid rgba(255, 255, 255, 0.25);
-          border-radius: 14px;
+          padding: 15px 32px;
+          background: #406A56;
+          border: none;
+          border-radius: 16px;
           color: white;
           font-size: 16px;
           font-weight: 600;
           cursor: pointer;
-          backdrop-filter: blur(10px);
-          transition: background 0.2s;
-          position: relative;
-          z-index: 10;
+          box-shadow: 0 6px 24px rgba(64, 106, 86, 0.4);
+          transition: transform 0.2s, box-shadow 0.2s;
+          width: 100%;
+          justify-content: center;
         }
 
-        .globe-btn:hover {
-          background: rgba(255, 255, 255, 0.2);
+        .globe-continue-btn:hover {
+          transform: translateY(-2px);
+          box-shadow: 0 10px 32px rgba(64, 106, 86, 0.5);
+        }
+
+        /* Custom marker */
+        .yt-map-marker {
+          cursor: default;
+        }
+
+        .marker-wrapper {
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          position: relative;
+        }
+
+        .marker-pulse {
+          position: absolute;
+          top: 50%;
+          left: 50%;
+          transform: translate(-50%, -50%);
+          width: 50px;
+          height: 50px;
+          border-radius: 50%;
+          border: 2px solid rgba(64, 106, 86, 0.7);
+          animation: markerPulse 2.2s ease-out infinite;
+          pointer-events: none;
+        }
+
+        .marker-pulse-2 {
+          animation-delay: 0.9s;
+          border-color: rgba(64, 106, 86, 0.35);
+        }
+
+        @keyframes markerPulse {
+          0% { transform: translate(-50%, -50%) scale(0.8); opacity: 1; }
+          100% { transform: translate(-50%, -50%) scale(2.8); opacity: 0; }
+        }
+
+        .marker-pin {
+          position: relative;
+          z-index: 1;
+          filter: drop-shadow(0 4px 12px rgba(64, 106, 86, 0.5));
+          animation: pinBounce 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+
+        @keyframes pinBounce {
+          from { transform: translateY(-30px); opacity: 0; }
+          to { transform: translateY(0); opacity: 1; }
+        }
+
+        .marker-card {
+          margin-top: 6px;
+          background: white;
+          border-radius: 12px;
+          padding: 8px 14px;
+          box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+          text-align: center;
+          min-width: 120px;
+          animation: cardFadeIn 0.4s ease 0.3s both;
+        }
+
+        @keyframes cardFadeIn {
+          from { opacity: 0; transform: translateY(8px) scale(0.9); }
+          to { opacity: 1; transform: translateY(0) scale(1); }
+        }
+
+        .marker-name {
+          font-size: 14px;
+          font-weight: 700;
+          color: #2d2d2d;
+          margin: 0 0 2px;
+        }
+
+        .marker-loc {
+          font-size: 11px;
+          color: rgba(45, 45, 45, 0.55);
+          margin: 0;
+        }
+
+        /* Hide mapbox logo on this step */
+        .globe-fullscreen .mapboxgl-ctrl-logo {
+          opacity: 0.4;
         }
       `}</style>
     </div>
@@ -463,7 +601,15 @@ function GlobeReveal({
 }
 
 // ============================================
-// MAIN COMPONENT
+// HELPERS
+// ============================================
+
+function delay(ms: number) {
+  return new Promise((r) => setTimeout(r, ms));
+}
+
+// ============================================
+// MAIN FLOW
 // ============================================
 
 interface QuickOnboardingFlowProps {
@@ -509,30 +655,15 @@ export function QuickOnboardingFlow({
 
   const goBack = useCallback(() => {
     const idx = ALL_STEPS.indexOf(step);
-    // Skip globe going back
-    const prevIdx = step === 'about-you' ? ALL_STEPS.indexOf('location') : idx - 1;
-    if (prevIdx >= 0) {
+    // Skip globe when going backwards
+    const targetIdx =
+      step === 'about-you' ? ALL_STEPS.indexOf('location') : idx - 1;
+    if (targetIdx >= 0) {
       setDirection(-1);
-      setStep(ALL_STEPS[prevIdx]);
+      setStep(ALL_STEPS[targetIdx]);
     }
   }, [step]);
 
-  const progressIdx = PROGRESS_STEPS.indexOf(step);
-  const showProgress = step !== 'globe' && step !== 'ready';
-
-  const slideVariants = {
-    enter: (dir: number) => ({
-      x: dir > 0 ? 60 : -60,
-      opacity: 0,
-    }),
-    center: { x: 0, opacity: 1 },
-    exit: (dir: number) => ({
-      x: dir > 0 ? -60 : 60,
-      opacity: 0,
-    }),
-  };
-
-  // Build final data from pills when completing about-you
   const commitPills = useCallback(() => {
     const interests = ABOUT_YOU_PILLS.filter(
       (p) => p.category === 'interest' && selectedPills.has(p.label)
@@ -543,223 +674,286 @@ export function QuickOnboardingFlow({
     updateData({ interests, personalityTraits: traits });
   }, [selectedPills, updateData]);
 
+  const progressIdx = PROGRESS_STEPS.indexOf(step);
+  const tileKey = TILE_KEY[step];
+
+  // Full-screen globe step — render outside normal layout
+  if (step === 'globe') {
+    return (
+      <MapboxGlobeReveal
+        name={data.name}
+        location={data.location || 'somewhere beautiful'}
+        onDone={goNext}
+      />
+    );
+  }
+
+  const slideVariants = {
+    enter: (dir: number) => ({ x: dir > 0 ? 50 : -50, opacity: 0 }),
+    center: { x: 0, opacity: 1 },
+    exit: (dir: number) => ({ x: dir > 0 ? -50 : 50, opacity: 0 }),
+  };
+
+  const isFullWidthStep =
+    step === 'heartfelt' || step === 'image-upload' || step === 'ready';
+
   return (
-    <div className="quick-onboarding">
-      {/* Progress dots (hidden on globe + ready) */}
-      {showProgress && (
-        <motion.div
-          className="progress-dots"
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-        >
-          {PROGRESS_STEPS.filter((s) => s !== 'ready').map((s, i) => (
-            <div
-              key={s}
-              className={`dot ${i === progressIdx ? 'active' : ''} ${
-                i < progressIdx ? 'done' : ''
-              }`}
-            />
-          ))}
-        </motion.div>
+    <div className="yt-onboard-root">
+      {/* Decorative blobs (matching v1) */}
+      <div className="home-background" />
+      <div className="home-blob home-blob-1" />
+      <div className="home-blob home-blob-2" />
+
+      {/* Progress bar */}
+      {progressIdx >= 0 && (
+        <div className="progress-track">
+          <motion.div
+            className="progress-fill"
+            initial={{ width: 0 }}
+            animate={{
+              width: `${((progressIdx + 1) / PROGRESS_STEPS.length) * 100}%`,
+            }}
+            transition={{ duration: 0.4, ease: 'easeOut' }}
+          />
+        </div>
       )}
 
-      {/* Content */}
-      <div className="content-area">
-        <AnimatePresence mode="wait" custom={direction}>
-          <motion.div
-            key={step}
-            custom={direction}
-            variants={slideVariants}
-            initial="enter"
-            animate="center"
-            exit="exit"
-            transition={{ duration: 0.35, ease: [0.32, 0.72, 0, 1] }}
-            className="step-wrapper"
+      {/* Body */}
+      <div className="yt-onboard-body">
+        {/* Main content area */}
+        <div
+          className={`yt-onboard-inner ${
+            isFullWidthStep ? 'full-width' : ''
+          }`}
+        >
+          {/* Info tile — only for non-full-width steps */}
+          {!isFullWidthStep && tileKey && (
+            <>
+              {/* Mobile: above form */}
+              <OnboardingStepExplanation step={tileKey} showForMobile={true} />
+              {/* Desktop: left panel */}
+              <OnboardingStepExplanation step={tileKey} showForMobile={false} />
+            </>
+          )}
+
+          {/* Form panel */}
+          <div
+            className={`form-panel ${isFullWidthStep ? 'form-panel-full' : ''}`}
           >
-            {/* ── NAME ── */}
-            {step === 'name' && (
-              <NameStep
-                value={data.name}
-                onChange={(name) => updateData({ name })}
-                onContinue={goNext}
-              />
-            )}
+            <AnimatePresence mode="wait" custom={direction}>
+              <motion.div
+                key={step}
+                custom={direction}
+                variants={slideVariants}
+                initial="enter"
+                animate="center"
+                exit="exit"
+                transition={{ duration: 0.3, ease: [0.32, 0.72, 0, 1] }}
+              >
+                {step === 'name' && (
+                  <NameStep
+                    value={data.name}
+                    onChange={(name) => updateData({ name })}
+                    onContinue={goNext}
+                  />
+                )}
 
-            {/* ── LOCATION ── */}
-            {step === 'location' && (
-              <LocationStep
-                name={data.name}
-                value={data.location}
-                onChange={(location) => updateData({ location })}
-                onContinue={goNext}
-                onBack={goBack}
-              />
-            )}
+                {step === 'location' && (
+                  <LocationStep
+                    name={data.name}
+                    value={data.location}
+                    onChange={(location) => updateData({ location })}
+                    onContinue={goNext}
+                    onBack={goBack}
+                  />
+                )}
 
-            {/* ── GLOBE ── */}
-            {step === 'globe' && (
-              <GlobeReveal
-                name={data.name}
-                location={data.location || 'somewhere beautiful'}
-                onDone={goNext}
-              />
-            )}
+                {step === 'about-you' && (
+                  <AboutYouStep
+                    selected={selectedPills}
+                    onToggle={(label) =>
+                      setSelectedPills((prev) => {
+                        const next = new Set(prev);
+                        next.has(label) ? next.delete(label) : next.add(label);
+                        return next;
+                      })
+                    }
+                    onContinue={() => {
+                      commitPills();
+                      goNext();
+                    }}
+                    onBack={goBack}
+                    onSkip={goNext}
+                  />
+                )}
 
-            {/* ── ABOUT YOU ── */}
-            {step === 'about-you' && (
-              <AboutYouStep
-                selected={selectedPills}
-                onToggle={(label) => {
-                  setSelectedPills((prev) => {
-                    const next = new Set(prev);
-                    next.has(label) ? next.delete(label) : next.add(label);
-                    return next;
-                  });
-                }}
-                onContinue={() => {
-                  commitPills();
-                  goNext();
-                }}
-                onBack={goBack}
-                onSkip={goNext}
-              />
-            )}
+                {step === 'religion' && (
+                  <ReligionStep
+                    value={data.religion}
+                    onChange={(religion) => updateData({ religion })}
+                    onContinue={goNext}
+                    onBack={goBack}
+                    onSkip={goNext}
+                  />
+                )}
 
-            {/* ── RELIGION ── */}
-            {step === 'religion' && (
-              <ReligionStep
-                value={data.religion}
-                onChange={(religion) => updateData({ religion })}
-                onContinue={goNext}
-                onBack={goBack}
-                onSkip={goNext}
-              />
-            )}
+                {step === 'heartfelt' && (
+                  <HeartfeltConversation
+                    whyHere="preserve my memories and life story"
+                    whatDrives={
+                      data.interests.length > 0
+                        ? data.interests
+                        : ['living fully']
+                    }
+                    userName={data.name}
+                    onComplete={(conversation) => {
+                      const lastUser = [...conversation]
+                        .reverse()
+                        .find((m) => m.role === 'user');
+                      updateData({
+                        heartfeltConversation: conversation,
+                        heartfeltAnswer: lastUser?.content ?? '',
+                      });
+                      goNext();
+                    }}
+                    onSkip={goNext}
+                  />
+                )}
 
-            {/* ── HEARTFELT ── */}
-            {step === 'heartfelt' && (
-              <div className="heartfelt-wrapper">
-                <HeartfeltConversation
-                  whyHere="preserve my memories and life story"
-                  whatDrives={data.interests.length > 0 ? data.interests : ['living fully']}
-                  userName={data.name}
-                  onComplete={(conversation) => {
-                    const lastUser = [...conversation]
-                      .reverse()
-                      .find((m) => m.role === 'user');
-                    updateData({
-                      heartfeltConversation: conversation,
-                      heartfeltAnswer: lastUser?.content ?? '',
-                    });
-                    goNext();
-                  }}
-                  onSkip={goNext}
-                />
-              </div>
-            )}
+                {step === 'image-upload' && (
+                  <ImageUploadStep
+                    userId={userId}
+                    onBack={goBack}
+                    onContinue={(count) => {
+                      updateData({ uploadedImagesCount: count });
+                      goNext();
+                    }}
+                    onSkip={goNext}
+                  />
+                )}
 
-            {/* ── IMAGE UPLOAD ── */}
-            {step === 'image-upload' && (
-              <ImageUploadStep
-                userId={userId}
-                onBack={goBack}
-                onContinue={(count) => {
-                  updateData({ uploadedImagesCount: count });
-                  goNext();
-                }}
-                onSkip={goNext}
-              />
-            )}
+                {step === 'ready' && (
+                  <ReadyStep
+                    name={data.name}
+                    location={data.location}
+                    onContinue={() => onComplete(data)}
+                  />
+                )}
+              </motion.div>
+            </AnimatePresence>
+          </div>
+        </div>
 
-            {/* ── READY ── */}
-            {step === 'ready' && (
-              <ReadyStep
-                name={data.name}
-                location={data.location}
-                onContinue={() => onComplete(data)}
-              />
-            )}
-          </motion.div>
-        </AnimatePresence>
+        {/* Skip all */}
+        {step !== 'ready' &&
+          step !== 'heartfelt' &&
+          step !== 'image-upload' &&
+          onSkipAll && (
+            <button className="skip-all-btn" onClick={onSkipAll}>
+              Skip setup
+            </button>
+          )}
       </div>
 
-      {/* Skip all */}
-      {step !== 'globe' && step !== 'ready' && step !== 'heartfelt' && step !== 'image-upload' && onSkipAll && (
-        <button className="skip-all-btn" onClick={onSkipAll}>
-          Skip setup
-        </button>
-      )}
-
       <style jsx>{`
-        .quick-onboarding {
+        .yt-onboard-root {
           min-height: 100vh;
           min-height: 100dvh;
+          background: linear-gradient(
+            135deg,
+            #fdf8f3 0%,
+            #f5ede5 50%,
+            #fdf8f3 100%
+          );
+          position: relative;
+          overflow-x: hidden;
+        }
+
+        .progress-track {
+          position: fixed;
+          top: 0;
+          left: 0;
+          right: 0;
+          height: 3px;
+          background: rgba(64, 106, 86, 0.12);
+          z-index: 50;
+        }
+
+        .progress-fill {
+          height: 100%;
+          background: linear-gradient(90deg, #406a56, #8dacab);
+          border-radius: 0 2px 2px 0;
+        }
+
+        .yt-onboard-body {
           display: flex;
           flex-direction: column;
-          background: linear-gradient(145deg, #12122a 0%, #1a1a3e 50%, #0f1928 100%);
-          padding: 24px 20px;
-          padding-top: calc(24px + env(safe-area-inset-top));
+          align-items: center;
+          min-height: 100vh;
+          padding: 32px 20px 24px;
+          padding-top: calc(32px + env(safe-area-inset-top));
           padding-bottom: calc(24px + env(safe-area-inset-bottom));
         }
 
-        .progress-dots {
-          display: flex;
-          gap: 8px;
-          justify-content: center;
-          margin-bottom: 32px;
-        }
-
-        .dot {
-          width: 8px;
-          height: 8px;
-          border-radius: 50%;
-          background: rgba(255, 255, 255, 0.15);
-          transition: all 0.3s ease;
-        }
-
-        .dot.active {
-          background: #ec4899;
-          width: 24px;
-          border-radius: 4px;
-          box-shadow: 0 0 10px rgba(236, 72, 153, 0.5);
-        }
-
-        .dot.done {
-          background: rgba(236, 72, 153, 0.4);
-        }
-
-        .content-area {
-          flex: 1;
+        .yt-onboard-inner {
+          position: relative;
+          z-index: 10;
+          width: 100%;
+          max-width: 1100px;
           display: flex;
           flex-direction: column;
-          justify-content: center;
-          max-width: 520px;
+          align-items: flex-start;
+          gap: 24px;
+          flex: 1;
+        }
+
+        /* Tiles + form side by side on desktop */
+        @media (min-width: 1024px) {
+          .yt-onboard-inner:not(.full-width) {
+            flex-direction: row;
+            align-items: flex-start;
+            justify-content: center;
+          }
+        }
+
+        .yt-onboard-inner.full-width {
+          max-width: 100%;
+          padding: 0;
+          margin: -32px -20px;
+          width: calc(100% + 40px);
+        }
+
+        .form-panel {
+          width: 100%;
+          max-width: 480px;
           margin: 0 auto;
-          width: 100%;
         }
 
-        .step-wrapper {
-          width: 100%;
+        @media (min-width: 1024px) {
+          .form-panel {
+            flex: 1;
+            margin: 0;
+          }
         }
 
-        .heartfelt-wrapper {
-          margin: -24px -20px;
+        .form-panel-full {
+          max-width: 100%;
+          margin: 0;
         }
 
         .skip-all-btn {
-          display: block;
-          margin: 20px auto 0;
+          margin-top: 24px;
           padding: 10px 20px;
           background: transparent;
           border: none;
-          color: rgba(255, 255, 255, 0.3);
+          color: rgba(45, 45, 45, 0.35);
           font-size: 13px;
           cursor: pointer;
           transition: color 0.2s;
         }
 
         .skip-all-btn:hover {
-          color: rgba(255, 255, 255, 0.6);
+          color: rgba(45, 45, 45, 0.6);
         }
       `}</style>
     </div>
@@ -767,7 +961,110 @@ export function QuickOnboardingFlow({
 }
 
 // ============================================
-// STEP COMPONENTS
+// SHARED STYLES (as a constant for reuse)
+// ============================================
+
+const SHARED = `
+  h2 {
+    font-size: 28px;
+    font-weight: 700;
+    color: #2d2d2d;
+    margin: 0 0 8px;
+    font-family: var(--font-playfair), Georgia, serif;
+    letter-spacing: -0.3px;
+    line-height: 1.2;
+  }
+  .subtitle {
+    font-size: 15px;
+    color: rgba(45, 45, 45, 0.55);
+    margin: 0 0 28px;
+    line-height: 1.5;
+  }
+  .yt-input {
+    display: block;
+    width: 100%;
+    padding: 18px 20px;
+    background: white;
+    border: 1.5px solid rgba(64, 106, 86, 0.18);
+    border-radius: 16px;
+    color: #2d2d2d;
+    font-size: 20px;
+    text-align: center;
+    margin-bottom: 20px;
+    transition: border-color 0.2s, box-shadow 0.2s;
+    box-sizing: border-box;
+    box-shadow: 0 2px 8px rgba(64, 106, 86, 0.06);
+  }
+  .yt-input::placeholder { color: rgba(45,45,45,0.25); }
+  .yt-input:focus {
+    outline: none;
+    border-color: #406A56;
+    box-shadow: 0 0 0 3px rgba(64, 106, 86, 0.1);
+  }
+  .primary-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 16px 28px;
+    background: #406A56;
+    border: none;
+    border-radius: 16px;
+    color: white;
+    font-size: 16px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.2s, transform 0.15s, box-shadow 0.2s;
+    box-shadow: 0 4px 16px rgba(64, 106, 86, 0.28);
+    white-space: nowrap;
+  }
+  .primary-btn:hover:not(:disabled) {
+    background: #355948;
+    transform: translateY(-1px);
+    box-shadow: 0 8px 24px rgba(64, 106, 86, 0.36);
+  }
+  .primary-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+  .back-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 50px;
+    height: 50px;
+    background: white;
+    border: 1.5px solid rgba(64, 106, 86, 0.18);
+    border-radius: 14px;
+    color: rgba(45, 45, 45, 0.6);
+    cursor: pointer;
+    flex-shrink: 0;
+    transition: border-color 0.2s, color 0.2s;
+  }
+  .back-btn:hover {
+    border-color: #406A56;
+    color: #406A56;
+  }
+  .btn-row {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+  }
+  .btn-row .primary-btn { flex: 1; }
+  .skip-link {
+    display: block;
+    text-align: center;
+    margin-top: 14px;
+    color: rgba(45, 45, 45, 0.35);
+    font-size: 13px;
+    cursor: pointer;
+    background: transparent;
+    border: none;
+    padding: 6px;
+    transition: color 0.2s;
+  }
+  .skip-link:hover { color: rgba(45, 45, 45, 0.65); }
+`;
+
+// ============================================
+// STEP: NAME
 // ============================================
 
 function NameStep({
@@ -780,31 +1077,34 @@ function NameStep({
   onContinue: () => void;
 }) {
   return (
-    <div className="step name-step">
+    <div className="step-card">
       <motion.div
-        className="greeting"
-        initial={{ opacity: 0, y: 12 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.1 }}
+        className="step-icon"
+        initial={{ scale: 0 }}
+        animate={{ scale: 1 }}
+        transition={{ type: 'spring', delay: 0.1 }}
       >
-        <span className="greeting-emoji">👋</span>
-        <p className="greeting-text">Welcome. I'm YoursTruly.</p>
+        👋
       </motion.div>
 
-      <motion.h2
-        initial={{ opacity: 0, y: 12 }}
+      <motion.div
+        initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.25 }}
+        transition={{ delay: 0.2 }}
       >
-        What's your name?
-      </motion.h2>
+        <h2>What's your name?</h2>
+        <p className="subtitle">
+          Just your first name. It's how everyone will know you here.
+        </p>
+      </motion.div>
 
       <motion.div
-        initial={{ opacity: 0, y: 12 }}
+        initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.4 }}
+        transition={{ delay: 0.35 }}
       >
         <input
+          className="yt-input"
           type="text"
           value={value}
           onChange={(e) => onChange(e.target.value)}
@@ -814,99 +1114,27 @@ function NameStep({
           onKeyDown={(e) => e.key === 'Enter' && value.trim() && onContinue()}
         />
         <button
-          className="primary-btn"
+          className="primary-btn full-width"
           onClick={onContinue}
           disabled={!value.trim()}
         >
-          Nice to meet you <ChevronRight size={20} />
+          Nice to meet you <ChevronRight size={18} />
         </button>
       </motion.div>
 
       <style jsx>{`
-        .name-step {
-          text-align: center;
-        }
-
-        .greeting {
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          gap: 10px;
-          margin-bottom: 20px;
-        }
-
-        .greeting-emoji {
-          font-size: 28px;
-        }
-
-        .greeting-text {
-          font-size: 16px;
-          color: rgba(255, 255, 255, 0.5);
-          margin: 0;
-        }
-
-        h2 {
-          font-size: 34px;
-          font-weight: 700;
-          color: white;
-          margin: 0 0 32px;
-          letter-spacing: -0.5px;
-        }
-
-        input {
-          display: block;
-          width: 100%;
-          padding: 22px 20px;
-          background: rgba(255, 255, 255, 0.05);
-          border: 2px solid rgba(255, 255, 255, 0.12);
-          border-radius: 18px;
-          color: white;
-          font-size: 26px;
-          text-align: center;
-          margin-bottom: 20px;
-          transition: border-color 0.2s, background 0.2s;
-          box-sizing: border-box;
-        }
-
-        input::placeholder {
-          color: rgba(255, 255, 255, 0.25);
-        }
-
-        input:focus {
-          outline: none;
-          border-color: rgba(111, 111, 210, 0.7);
-          background: rgba(111, 111, 210, 0.06);
-        }
-
-        .primary-btn {
-          display: inline-flex;
-          align-items: center;
-          gap: 8px;
-          padding: 18px 36px;
-          background: linear-gradient(135deg, #6f6fd2, #ec4899);
-          border: none;
-          border-radius: 18px;
-          color: white;
-          font-size: 18px;
-          font-weight: 600;
-          cursor: pointer;
-          transition: transform 0.2s, box-shadow 0.2s, opacity 0.2s;
-          box-shadow: 0 8px 30px rgba(111, 111, 210, 0.35);
-        }
-
-        .primary-btn:hover:not(:disabled) {
-          transform: translateY(-2px);
-          box-shadow: 0 12px 40px rgba(111, 111, 210, 0.5);
-        }
-
-        .primary-btn:disabled {
-          opacity: 0.35;
-          cursor: not-allowed;
-        }
+        ${SHARED}
+        .step-card { text-align: center; }
+        .step-icon { font-size: 40px; margin-bottom: 20px; display: block; }
+        .full-width { width: 100%; }
       `}</style>
     </div>
   );
 }
+
+// ============================================
+// STEP: LOCATION
+// ============================================
 
 function LocationStep({
   name,
@@ -922,43 +1150,38 @@ function LocationStep({
   onBack: () => void;
 }) {
   return (
-    <div className="step location-step">
+    <div className="step-card">
       <motion.div
-        className="icon-circle"
+        className="step-icon"
         initial={{ scale: 0 }}
         animate={{ scale: 1 }}
         transition={{ type: 'spring', delay: 0.1 }}
       >
-        <MapPin size={32} color="#ec4899" />
+        📍
       </motion.div>
-
-      <motion.h2
-        initial={{ opacity: 0, y: 10 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.2 }}
-      >
-        Where are you from, {name}?
-      </motion.h2>
-
-      <motion.p
-        className="subtitle"
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ delay: 0.3 }}
-      >
-        City, state or country — however you'd describe home.
-      </motion.p>
 
       <motion.div
         initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.4 }}
+        transition={{ delay: 0.2 }}
+      >
+        <h2>Where are you from, {name}?</h2>
+        <p className="subtitle">
+          City, state or country — however you'd describe home.
+        </p>
+      </motion.div>
+
+      <motion.div
+        initial={{ opacity: 0, y: 10 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.35 }}
       >
         <input
+          className="yt-input"
           type="text"
           value={value}
           onChange={(e) => onChange(e.target.value)}
-          placeholder="Miami, FL"
+          placeholder="e.g. Miami, FL"
           autoFocus
           autoComplete="off"
           onKeyDown={(e) => e.key === 'Enter' && value.trim() && onContinue()}
@@ -972,119 +1195,23 @@ function LocationStep({
             onClick={onContinue}
             disabled={!value.trim()}
           >
-            Show me on the globe <Sparkles size={18} />
+            Show me on the map <Sparkles size={16} />
           </button>
         </div>
       </motion.div>
 
       <style jsx>{`
-        .location-step {
-          text-align: center;
-        }
-
-        .icon-circle {
-          display: inline-flex;
-          padding: 18px;
-          background: rgba(236, 72, 153, 0.12);
-          border-radius: 50%;
-          margin-bottom: 24px;
-          border: 1px solid rgba(236, 72, 153, 0.2);
-        }
-
-        h2 {
-          font-size: 30px;
-          font-weight: 700;
-          color: white;
-          margin: 0 0 10px;
-          letter-spacing: -0.3px;
-        }
-
-        .subtitle {
-          font-size: 16px;
-          color: rgba(255, 255, 255, 0.45);
-          margin: 0 0 32px;
-        }
-
-        input {
-          display: block;
-          width: 100%;
-          padding: 20px;
-          background: rgba(255, 255, 255, 0.05);
-          border: 2px solid rgba(255, 255, 255, 0.12);
-          border-radius: 16px;
-          color: white;
-          font-size: 20px;
-          text-align: center;
-          margin-bottom: 20px;
-          transition: border-color 0.2s;
-          box-sizing: border-box;
-        }
-
-        input::placeholder {
-          color: rgba(255, 255, 255, 0.22);
-        }
-
-        input:focus {
-          outline: none;
-          border-color: rgba(236, 72, 153, 0.6);
-          background: rgba(236, 72, 153, 0.04);
-        }
-
-        .btn-row {
-          display: flex;
-          gap: 12px;
-          align-items: center;
-        }
-
-        .back-btn {
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          width: 52px;
-          height: 52px;
-          background: rgba(255, 255, 255, 0.06);
-          border: 1px solid rgba(255, 255, 255, 0.1);
-          border-radius: 14px;
-          color: rgba(255, 255, 255, 0.7);
-          cursor: pointer;
-          flex-shrink: 0;
-          transition: background 0.2s;
-        }
-
-        .back-btn:hover {
-          background: rgba(255, 255, 255, 0.1);
-        }
-
-        .primary-btn {
-          flex: 1;
-          display: inline-flex;
-          align-items: center;
-          justify-content: center;
-          gap: 8px;
-          padding: 16px 24px;
-          background: linear-gradient(135deg, #6f6fd2, #ec4899);
-          border: none;
-          border-radius: 16px;
-          color: white;
-          font-size: 16px;
-          font-weight: 600;
-          cursor: pointer;
-          transition: opacity 0.2s, transform 0.2s;
-          box-shadow: 0 6px 24px rgba(111, 111, 210, 0.3);
-        }
-
-        .primary-btn:hover:not(:disabled) {
-          transform: translateY(-1px);
-        }
-
-        .primary-btn:disabled {
-          opacity: 0.35;
-          cursor: not-allowed;
-        }
+        ${SHARED}
+        .step-card { text-align: center; }
+        .step-icon { font-size: 40px; margin-bottom: 20px; display: block; }
       `}</style>
     </div>
   );
 }
+
+// ============================================
+// STEP: ABOUT YOU
+// ============================================
 
 function AboutYouStep({
   selected,
@@ -1103,175 +1230,112 @@ function AboutYouStep({
   const traits = ABOUT_YOU_PILLS.filter((p) => p.category === 'trait');
 
   return (
-    <div className="step about-step">
+    <div className="step-card">
       <h2>A little about you</h2>
-      <p className="subtitle">Pick anything that fits. This shapes your experience.</p>
+      <p className="subtitle">
+        Pick anything that fits — the more you choose, the more personalized your experience.
+      </p>
 
       <div className="pill-section">
-        <div className="section-label">Interests</div>
+        <div className="section-label">✦ Your Interests</div>
         <div className="pill-grid">
           {interests.map((p) => (
             <button
               key={p.label}
-              className={`pill ${selected.has(p.label) ? 'selected' : ''}`}
+              className={`pill ${selected.has(p.label) ? 'pill-selected' : ''}`}
               onClick={() => onToggle(p.label)}
             >
-              <span>{p.emoji}</span> {p.label}
+              <span>{p.emoji}</span>
+              {p.label}
+              {selected.has(p.label) && <Check size={12} />}
             </button>
           ))}
         </div>
       </div>
 
       <div className="pill-section">
-        <div className="section-label">Who you are</div>
+        <div className="section-label">✦ Who You Are</div>
         <div className="pill-grid">
           {traits.map((p) => (
             <button
               key={p.label}
-              className={`pill ${selected.has(p.label) ? 'selected' : ''}`}
+              className={`pill ${selected.has(p.label) ? 'pill-selected' : ''}`}
               onClick={() => onToggle(p.label)}
             >
-              <span>{p.emoji}</span> {p.label}
+              <span>{p.emoji}</span>
+              {p.label}
+              {selected.has(p.label) && <Check size={12} />}
             </button>
           ))}
         </div>
       </div>
 
-      <div className="btn-row">
+      <div className="btn-row action-row">
         <button className="back-btn" onClick={onBack}>
           <ChevronLeft size={18} />
         </button>
         <button className="primary-btn" onClick={onContinue}>
-          {selected.size > 0 ? `Looks good (${selected.size})` : 'Continue'}{' '}
+          {selected.size > 0
+            ? `Continue (${selected.size} selected)`
+            : 'Continue'}
           <ChevronRight size={18} />
         </button>
       </div>
-      <button className="skip-btn" onClick={onSkip}>
+      <button className="skip-link" onClick={onSkip}>
         Skip for now
       </button>
 
       <style jsx>{`
-        .about-step {
-          text-align: center;
-        }
-
-        h2 {
-          font-size: 28px;
-          font-weight: 700;
-          color: white;
-          margin: 0 0 8px;
-          letter-spacing: -0.3px;
-        }
-
-        .subtitle {
-          font-size: 15px;
-          color: rgba(255, 255, 255, 0.45);
-          margin: 0 0 28px;
-        }
-
-        .pill-section {
-          margin-bottom: 20px;
-          text-align: left;
-        }
-
+        ${SHARED}
+        .step-card {}
         .section-label {
-          font-size: 11px;
-          font-weight: 600;
-          letter-spacing: 1.2px;
+          font-size: 10px;
+          font-weight: 700;
+          letter-spacing: 1.4px;
           text-transform: uppercase;
-          color: rgba(255, 255, 255, 0.3);
+          color: #406A56;
           margin-bottom: 10px;
         }
-
+        .pill-section { margin-bottom: 24px; }
         .pill-grid {
           display: flex;
           flex-wrap: wrap;
           gap: 8px;
         }
-
         .pill {
           display: inline-flex;
           align-items: center;
           gap: 5px;
           padding: 8px 14px;
-          background: rgba(255, 255, 255, 0.05);
-          border: 1.5px solid rgba(255, 255, 255, 0.1);
+          background: white;
+          border: 1.5px solid rgba(64, 106, 86, 0.18);
           border-radius: 100px;
-          color: rgba(255, 255, 255, 0.7);
+          color: rgba(45, 45, 45, 0.7);
           font-size: 13px;
           font-weight: 500;
           cursor: pointer;
-          transition: all 0.18s ease;
+          transition: all 0.15s ease;
+          box-shadow: 0 1px 4px rgba(64, 106, 86, 0.06);
         }
-
         .pill:hover {
-          border-color: rgba(111, 111, 210, 0.5);
-          color: white;
+          border-color: #406A56;
+          color: #406A56;
         }
-
-        .pill.selected {
-          background: rgba(111, 111, 210, 0.18);
-          border-color: #6f6fd2;
-          color: white;
-          box-shadow: 0 0 12px rgba(111, 111, 210, 0.25);
-        }
-
-        .btn-row {
-          display: flex;
-          gap: 12px;
-          align-items: center;
-          margin-top: 28px;
-          margin-bottom: 12px;
-        }
-
-        .back-btn {
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          width: 52px;
-          height: 52px;
-          background: rgba(255, 255, 255, 0.06);
-          border: 1px solid rgba(255, 255, 255, 0.1);
-          border-radius: 14px;
-          color: rgba(255, 255, 255, 0.7);
-          cursor: pointer;
-          flex-shrink: 0;
-        }
-
-        .primary-btn {
-          flex: 1;
-          display: inline-flex;
-          align-items: center;
-          justify-content: center;
-          gap: 8px;
-          padding: 16px 24px;
-          background: linear-gradient(135deg, #6f6fd2, #ec4899);
-          border: none;
-          border-radius: 16px;
-          color: white;
-          font-size: 16px;
+        .pill-selected {
+          background: rgba(64, 106, 86, 0.08);
+          border-color: #406A56;
+          color: #406A56;
           font-weight: 600;
-          cursor: pointer;
-          box-shadow: 0 6px 24px rgba(111, 111, 210, 0.3);
         }
-
-        .skip-btn {
-          background: transparent;
-          border: none;
-          color: rgba(255, 255, 255, 0.3);
-          font-size: 13px;
-          cursor: pointer;
-          padding: 8px;
-          transition: color 0.2s;
-        }
-
-        .skip-btn:hover {
-          color: rgba(255, 255, 255, 0.6);
-        }
+        .action-row { margin-top: 24px; margin-bottom: 8px; }
       `}</style>
     </div>
   );
 }
+
+// ============================================
+// STEP: RELIGION
+// ============================================
 
 function ReligionStep({
   value,
@@ -1287,132 +1351,96 @@ function ReligionStep({
   onSkip: () => void;
 }) {
   return (
-    <div className="step religion-step">
-      <h2>Faith & belief</h2>
+    <div className="step-card">
+      <h2>Faith &amp; belief</h2>
       <p className="subtitle">
-        This helps personalize how we talk about life's deeper moments.
+        This helps us personalize how we explore life's deeper moments with you.
       </p>
 
       <div className="religion-grid">
         {RELIGION_OPTIONS.map((opt) => (
           <button
             key={opt}
-            className={`religion-btn ${value === opt ? 'selected' : ''}`}
+            className={`religion-btn ${value === opt ? 'religion-selected' : ''}`}
             onClick={() => onChange(opt)}
           >
-            {value === opt && <Check size={14} className="check-icon" />}
+            {value === opt && <Check size={14} />}
             {opt}
           </button>
         ))}
       </div>
 
-      <div className="btn-row">
+      {/* Trust badge */}
+      <div className="trust-badge">
+        <Shield size={14} color="#406A56" />
+        <span>Your beliefs are private and never shared.</span>
+      </div>
+
+      <div className="btn-row action-row">
         <button className="back-btn" onClick={onBack}>
           <ChevronLeft size={18} />
         </button>
-        <button
-          className="primary-btn"
-          onClick={value ? onContinue : onSkip}
-        >
+        <button className="primary-btn" onClick={value ? onContinue : onSkip}>
           {value ? 'Continue' : 'Skip'} <ChevronRight size={18} />
         </button>
       </div>
 
       <style jsx>{`
-        .religion-step {
-          text-align: center;
-        }
-
-        h2 {
-          font-size: 28px;
-          font-weight: 700;
-          color: white;
-          margin: 0 0 8px;
-        }
-
-        .subtitle {
-          font-size: 15px;
-          color: rgba(255, 255, 255, 0.45);
-          margin: 0 0 28px;
-        }
-
+        ${SHARED}
+        .step-card {}
         .religion-grid {
           display: flex;
           flex-wrap: wrap;
           gap: 10px;
-          justify-content: center;
-          margin-bottom: 28px;
+          margin-bottom: 20px;
         }
-
         .religion-btn {
           display: inline-flex;
           align-items: center;
           gap: 6px;
-          padding: 11px 18px;
-          background: rgba(255, 255, 255, 0.05);
-          border: 1.5px solid rgba(255, 255, 255, 0.1);
+          padding: 10px 18px;
+          background: white;
+          border: 1.5px solid rgba(64, 106, 86, 0.18);
           border-radius: 100px;
-          color: rgba(255, 255, 255, 0.7);
+          color: rgba(45, 45, 45, 0.7);
           font-size: 14px;
           cursor: pointer;
-          transition: all 0.18s;
+          transition: all 0.15s;
+          box-shadow: 0 1px 4px rgba(64, 106, 86, 0.06);
         }
-
         .religion-btn:hover {
-          border-color: rgba(111, 111, 210, 0.4);
-          color: white;
+          border-color: #406A56;
+          color: #406A56;
         }
-
-        .religion-btn.selected {
-          background: rgba(111, 111, 210, 0.18);
-          border-color: #6f6fd2;
-          color: white;
-        }
-
-        :global(.check-icon) {
-          color: #6f6fd2;
-        }
-
-        .btn-row {
-          display: flex;
-          gap: 12px;
-          align-items: center;
-        }
-
-        .back-btn {
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          width: 52px;
-          height: 52px;
-          background: rgba(255, 255, 255, 0.06);
-          border: 1px solid rgba(255, 255, 255, 0.1);
-          border-radius: 14px;
-          color: rgba(255, 255, 255, 0.7);
-          cursor: pointer;
-          flex-shrink: 0;
-        }
-
-        .primary-btn {
-          flex: 1;
-          display: inline-flex;
-          align-items: center;
-          justify-content: center;
-          gap: 8px;
-          padding: 16px 24px;
-          background: linear-gradient(135deg, #6f6fd2, #ec4899);
-          border: none;
-          border-radius: 16px;
-          color: white;
-          font-size: 16px;
+        .religion-selected {
+          background: rgba(64, 106, 86, 0.08);
+          border-color: #406A56;
+          color: #406A56;
           font-weight: 600;
-          cursor: pointer;
-          box-shadow: 0 6px 24px rgba(111, 111, 210, 0.3);
         }
+        .trust-badge {
+          display: flex;
+          align-items: center;
+          gap: 8px;
+          padding: 10px 14px;
+          background: rgba(64, 106, 86, 0.05);
+          border: 1px solid rgba(64, 106, 86, 0.1);
+          border-radius: 12px;
+          margin-bottom: 4px;
+        }
+        .trust-badge span {
+          font-size: 12px;
+          color: rgba(64, 106, 86, 0.8);
+        }
+        .action-row { margin-top: 20px; }
       `}</style>
     </div>
   );
 }
+
+// ============================================
+// STEP: READY
+// ============================================
 
 function ReadyStep({
   name,
@@ -1424,7 +1452,7 @@ function ReadyStep({
   onContinue: () => void;
 }) {
   return (
-    <div className="step ready-step">
+    <div className="ready-step">
       <motion.div
         className="check-ring"
         initial={{ scale: 0, rotate: -180 }}
@@ -1457,7 +1485,7 @@ function ReadyStep({
       </motion.p>
 
       <motion.button
-        className="primary-btn"
+        className="ready-btn"
         initial={{ opacity: 0, y: 16 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.8 }}
@@ -1469,48 +1497,48 @@ function ReadyStep({
       <style jsx>{`
         .ready-step {
           text-align: center;
+          padding: 40px 20px;
+          min-height: 60vh;
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          justify-content: center;
         }
-
-        .check-ring {
-          display: inline-flex;
-          margin-bottom: 32px;
-        }
-
+        .check-ring { display: inline-flex; margin-bottom: 32px; }
         .check-inner {
           width: 100px;
           height: 100px;
           border-radius: 50%;
-          background: linear-gradient(135deg, #6f6fd2, #ec4899);
+          background: linear-gradient(135deg, #406A56, #8DACAB);
           display: flex;
           align-items: center;
           justify-content: center;
           box-shadow:
-            0 0 0 16px rgba(111, 111, 210, 0.1),
-            0 0 0 32px rgba(111, 111, 210, 0.05),
-            0 20px 60px rgba(111, 111, 210, 0.4);
+            0 0 0 16px rgba(64, 106, 86, 0.08),
+            0 0 0 32px rgba(64, 106, 86, 0.04),
+            0 20px 60px rgba(64, 106, 86, 0.3);
         }
-
         h1 {
           font-size: 34px;
           font-weight: 700;
-          color: white;
+          color: #2d2d2d;
           margin: 0 0 16px;
+          font-family: var(--font-playfair), Georgia, serif;
           letter-spacing: -0.5px;
         }
-
         .subtitle {
           font-size: 18px;
-          color: rgba(255, 255, 255, 0.6);
+          color: rgba(45, 45, 45, 0.6);
           line-height: 1.6;
           margin: 0 0 40px;
+          max-width: 380px;
         }
-
-        .primary-btn {
+        .ready-btn {
           display: inline-flex;
           align-items: center;
           gap: 10px;
           padding: 20px 44px;
-          background: linear-gradient(135deg, #6f6fd2, #ec4899);
+          background: #406A56;
           border: none;
           border-radius: 20px;
           color: white;
@@ -1518,13 +1546,12 @@ function ReadyStep({
           font-weight: 700;
           cursor: pointer;
           transition: transform 0.2s, box-shadow 0.2s;
-          box-shadow: 0 12px 40px rgba(111, 111, 210, 0.45);
+          box-shadow: 0 12px 40px rgba(64, 106, 86, 0.35);
           letter-spacing: -0.2px;
         }
-
-        .primary-btn:hover {
+        .ready-btn:hover {
           transform: translateY(-3px);
-          box-shadow: 0 20px 50px rgba(111, 111, 210, 0.55);
+          box-shadow: 0 20px 50px rgba(64, 106, 86, 0.45);
         }
       `}</style>
     </div>
