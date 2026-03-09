@@ -123,7 +123,7 @@ export default function OnboardingV2Page() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-[#12122a] flex items-center justify-center">
+      <div className="min-h-screen bg-[#FDF8F3] flex items-center justify-center">
         <Loader2 className="w-8 h-8 animate-spin text-[#6f6fd2]" />
       </div>
     );
@@ -133,7 +133,7 @@ export default function OnboardingV2Page() {
     <OnboardingErrorBoundary>
       <Suspense
         fallback={
-          <div className="min-h-screen bg-[#12122a] flex items-center justify-center">
+          <div className="min-h-screen bg-[#FDF8F3] flex items-center justify-center">
             <Loader2 className="w-8 h-8 animate-spin text-[#6f6fd2]" />
           </div>
         }

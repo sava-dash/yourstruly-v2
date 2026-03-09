@@ -213,7 +213,7 @@ function MapboxGlobeReveal({
 
     const map = new mapboxgl.Map({
       container: mapContainer.current,
-      style: 'mapbox://styles/mapbox/satellite-streets-v12',
+      style: 'mapbox://styles/mapbox/streets-v12',
       projection: 'globe',
       zoom: 1.8,
       center: [0, 20],
@@ -834,26 +834,28 @@ export function QuickOnboardingFlow({
                 )}
 
                 {step === 'heartfelt' && (
-                  <HeartfeltConversation
-                    whyHere="preserve my memories and life story"
-                    whatDrives={
-                      data.interests.length > 0
-                        ? data.interests
-                        : ['living fully']
-                    }
-                    userName={data.name}
-                    onComplete={(conversation) => {
-                      const lastUser = [...conversation]
-                        .reverse()
-                        .find((m) => m.role === 'user');
-                      updateData({
-                        heartfeltConversation: conversation,
-                        heartfeltAnswer: lastUser?.content ?? '',
-                      });
-                      goNext();
-                    }}
-                    onSkip={goNext}
-                  />
+                  <div className="heartfelt-spacer">
+                    <HeartfeltConversation
+                      whyHere="preserve my memories and life story"
+                      whatDrives={
+                        data.interests.length > 0
+                          ? data.interests
+                          : ['living fully']
+                      }
+                      userName={data.name}
+                      onComplete={(conversation) => {
+                        const lastUser = [...conversation]
+                          .reverse()
+                          .find((m) => m.role === 'user');
+                        updateData({
+                          heartfeltConversation: conversation,
+                          heartfeltAnswer: lastUser?.content ?? '',
+                        });
+                        goNext();
+                      }}
+                      onSkip={goNext}
+                    />
+                  </div>
                 )}
 
                 {step === 'image-upload' && (
@@ -975,6 +977,16 @@ export function QuickOnboardingFlow({
         .form-panel-full {
           max-width: 100%;
           margin: 0;
+        }
+
+        .heartfelt-spacer {
+          padding-top: 32px;
+          padding-bottom: 24px;
+          max-width: 720px;
+          margin: 0 auto;
+          width: 100%;
+          padding-left: 20px;
+          padding-right: 20px;
         }
 
         .skip-all-btn {
@@ -1469,28 +1481,31 @@ function AboutYouStep({
           margin-bottom: 28px;
         }
         .pill-grid {
-          display: flex;
-          flex-wrap: wrap;
-          gap: 8px;
+          display: grid;
+          grid-template-columns: repeat(3, 1fr);
+          gap: 6px;
           margin-bottom: 12px;
         }
         .pill {
-          display: inline-flex;
+          display: flex;
           align-items: center;
-          gap: 5px;
-          padding: 8px 13px;
+          justify-content: center;
+          gap: 4px;
+          padding: 9px 8px;
           background: white;
           border: 1.5px solid rgba(64, 106, 86, 0.16);
-          border-radius: 100px;
+          border-radius: 12px;
           color: rgba(45, 45, 45, 0.65);
-          font-size: 13px;
+          font-size: 12px;
           font-weight: 500;
           cursor: pointer;
           transition: all 0.15s ease;
           box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
-          line-height: 1;
+          line-height: 1.2;
+          text-align: center;
+          min-height: 40px;
         }
-        .pill-emoji { font-size: 14px; line-height: 1; }
+        .pill-emoji { font-size: 14px; line-height: 1; flex-shrink: 0; }
         .pill:hover {
           border-color: #406A56;
           color: #406A56;
@@ -1652,6 +1667,21 @@ function ReligionStep({
   onBack: () => void;
   onSkip: () => void;
 }) {
+  const [otherText, setOtherText] = useState('');
+
+  // When "Other" is selected and they type, update the value with the custom text
+  const handleOtherChange = (text: string) => {
+    setOtherText(text);
+    if (text.trim()) {
+      onChange(`Other: ${text.trim()}`);
+    } else {
+      onChange('Other');
+    }
+  };
+
+  const isOtherSelected = value === 'Other' || value.startsWith('Other:');
+  const baseValue = isOtherSelected ? 'Other' : value;
+
   return (
     <div className="step-card">
       <h2>Faith &amp; belief</h2>
@@ -1663,14 +1693,40 @@ function ReligionStep({
         {RELIGION_OPTIONS.map((opt) => (
           <button
             key={opt}
-            className={`religion-btn ${value === opt ? 'religion-selected' : ''}`}
-            onClick={() => onChange(opt)}
+            className={`religion-btn ${baseValue === opt ? 'religion-selected' : ''}`}
+            onClick={() => {
+              if (opt === 'Other') {
+                onChange('Other');
+              } else {
+                setOtherText('');
+                onChange(opt);
+              }
+            }}
           >
-            {value === opt && <Check size={14} />}
+            {baseValue === opt && <Check size={14} />}
             {opt}
           </button>
         ))}
       </div>
+
+      {/* "Other" custom input */}
+      {isOtherSelected && (
+        <motion.div
+          className="other-input-wrap"
+          initial={{ opacity: 0, height: 0 }}
+          animate={{ opacity: 1, height: 'auto' }}
+          exit={{ opacity: 0, height: 0 }}
+        >
+          <input
+            className="other-input"
+            type="text"
+            value={otherText}
+            onChange={(e) => handleOtherChange(e.target.value)}
+            placeholder="Please describe your belief or tradition…"
+            autoFocus
+          />
+        </motion.div>
+      )}
 
       {/* Trust badge */}
       <div className="trust-badge">
@@ -1722,6 +1778,27 @@ function ReligionStep({
           border-color: #406A56;
           color: #406A56;
           font-weight: 600;
+        }
+        .other-input-wrap {
+          overflow: hidden;
+          margin-bottom: 16px;
+        }
+        .other-input {
+          width: 100%;
+          padding: 14px 16px;
+          background: white;
+          border: 1.5px solid #406A56;
+          border-radius: 14px;
+          color: #2d2d2d;
+          font-size: 15px;
+          box-shadow: 0 0 0 3px rgba(64, 106, 86, 0.08);
+          box-sizing: border-box;
+          transition: border-color 0.2s;
+        }
+        .other-input::placeholder { color: rgba(45, 45, 45, 0.35); }
+        .other-input:focus {
+          outline: none;
+          box-shadow: 0 0 0 4px rgba(64, 106, 86, 0.12);
         }
         .trust-badge {
           display: flex;
