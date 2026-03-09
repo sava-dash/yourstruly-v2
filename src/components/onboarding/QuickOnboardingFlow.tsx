@@ -1970,40 +1970,87 @@ function ReadyStep({
   onContinue: () => void;
 }) {
   return (
-    <div className="ready-step">
+    <div style={{
+      textAlign: 'center',
+      padding: '40px 20px',
+      minHeight: '60vh',
+      display: 'flex',
+      flexDirection: 'column',
+      alignItems: 'center',
+      justifyContent: 'center',
+    }}>
       <motion.div
-        className="check-ring"
+        style={{ display: 'inline-flex', marginBottom: 32 }}
         initial={{ scale: 0, rotate: -180 }}
         animate={{ scale: 1, rotate: 0 }}
         transition={{ type: 'spring', stiffness: 200, damping: 18, delay: 0.1 }}
       >
-        <div className="check-inner">
+        <div style={{
+          width: 100,
+          height: 100,
+          borderRadius: '50%',
+          background: 'linear-gradient(135deg, #406A56, #8DACAB)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          boxShadow: '0 0 0 16px rgba(64, 106, 86, 0.08), 0 0 0 32px rgba(64, 106, 86, 0.04), 0 20px 60px rgba(64, 106, 86, 0.3)',
+        }}>
           <Check size={48} color="white" strokeWidth={2.5} />
         </div>
       </motion.div>
 
       <motion.h1
+        style={{
+          fontSize: 34,
+          fontWeight: 700,
+          color: '#2d2d2d',
+          margin: '0 0 16px',
+          fontFamily: 'var(--font-playfair), Georgia, serif',
+          letterSpacing: '-0.5px',
+          lineHeight: 1.2,
+        }}
         initial={{ opacity: 0, y: 16 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.4 }}
       >
-        You're all set, {name}! 🎉
+        You&apos;re all set, {name}!
       </motion.h1>
 
       <motion.p
-        className="subtitle"
+        style={{
+          fontSize: 18,
+          color: 'rgba(45, 45, 45, 0.6)',
+          lineHeight: 1.6,
+          margin: '0 0 40px',
+          maxWidth: 380,
+        }}
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ delay: 0.6 }}
       >
         {location
-          ? `Your story from ${location} starts now.`
-          : 'Your story starts now.'}{' '}
-        We'll be with you every step of the way.
+          ? `Your story from ${location} is just beginning.`
+          : 'Your story is just beginning.'}{' '}
+        Let&apos;s make it unforgettable.
       </motion.p>
 
       <motion.button
-        className="ready-btn"
+        style={{
+          display: 'inline-flex',
+          alignItems: 'center',
+          gap: 10,
+          padding: '20px 44px',
+          background: '#406A56',
+          border: 'none',
+          borderRadius: 20,
+          color: 'white',
+          fontSize: 20,
+          fontWeight: 700,
+          cursor: 'pointer',
+          boxShadow: '0 12px 40px rgba(64, 106, 86, 0.35)',
+          letterSpacing: '-0.2px',
+        }}
+        whileHover={{ y: -3, boxShadow: '0 20px 50px rgba(64, 106, 86, 0.45)' }}
         initial={{ opacity: 0, y: 16 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.8 }}
@@ -2011,67 +2058,6 @@ function ReadyStep({
       >
         Enter YoursTruly <Sparkles size={20} />
       </motion.button>
-
-      <style jsx>{`
-        .ready-step {
-          text-align: center;
-          padding: 40px 20px;
-          min-height: 60vh;
-          display: flex;
-          flex-direction: column;
-          align-items: center;
-          justify-content: center;
-        }
-        .check-ring { display: inline-flex; margin-bottom: 32px; }
-        .check-inner {
-          width: 100px;
-          height: 100px;
-          border-radius: 50%;
-          background: linear-gradient(135deg, #406A56, #8DACAB);
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          box-shadow:
-            0 0 0 16px rgba(64, 106, 86, 0.08),
-            0 0 0 32px rgba(64, 106, 86, 0.04),
-            0 20px 60px rgba(64, 106, 86, 0.3);
-        }
-        h1 {
-          font-size: 34px;
-          font-weight: 700;
-          color: #2d2d2d;
-          margin: 0 0 16px;
-          font-family: var(--font-playfair), Georgia, serif;
-          letter-spacing: -0.5px;
-        }
-        .subtitle {
-          font-size: 18px;
-          color: rgba(45, 45, 45, 0.6);
-          line-height: 1.6;
-          margin: 0 0 40px;
-          max-width: 380px;
-        }
-        .ready-btn {
-          display: inline-flex;
-          align-items: center;
-          gap: 10px;
-          padding: 20px 44px;
-          background: #406A56;
-          border: none;
-          border-radius: 20px;
-          color: white;
-          font-size: 20px;
-          font-weight: 700;
-          cursor: pointer;
-          transition: transform 0.2s, box-shadow 0.2s;
-          box-shadow: 0 12px 40px rgba(64, 106, 86, 0.35);
-          letter-spacing: -0.2px;
-        }
-        .ready-btn:hover {
-          transform: translateY(-3px);
-          box-shadow: 0 20px 50px rgba(64, 106, 86, 0.45);
-        }
-      `}</style>
     </div>
   );
 }
