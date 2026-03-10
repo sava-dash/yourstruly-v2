@@ -729,15 +729,49 @@ export function QuickOnboardingFlow({
   if (step === 'globe') {
     return (
       <>
-        <div className="globe-progress-overlay">
-          <div className="progress-track">
-            <motion.div
-              className="progress-fill"
-              initial={{ width: 0 }}
-              animate={{ width: `${progressPercent}%` }}
-              transition={{ duration: 0.4, ease: 'easeOut' }}
-            />
-          </div>
+        <div style={{
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          right: 0,
+          zIndex: 200,
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          padding: '16px 24px 12px',
+          background: 'linear-gradient(to bottom, rgba(8, 8, 18, 0.7) 60%, transparent)',
+        }}>
+          {PROGRESS_STEPS.map((s, i) => {
+            const isCompleted = i < progressIdx;
+            const isCurrent = i === progressIdx;
+            return (
+              <div key={s} style={{ display: 'flex', alignItems: 'center' }}>
+                <div style={{
+                  width: 20,
+                  height: 20,
+                  borderRadius: '50%',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  fontSize: 9,
+                  fontWeight: 700,
+                  border: `2px solid ${isCompleted || isCurrent ? 'rgba(255,255,255,0.8)' : 'rgba(255,255,255,0.25)'}`,
+                  color: isCompleted ? '#080812' : isCurrent ? 'white' : 'rgba(255,255,255,0.3)',
+                  background: isCompleted ? 'rgba(255,255,255,0.85)' : isCurrent ? 'rgba(255,255,255,0.15)' : 'transparent',
+                  flexShrink: 0,
+                }}>
+                  {isCompleted ? <Check size={10} strokeWidth={3} /> : <span>{i + 1}</span>}
+                </div>
+                {i < PROGRESS_STEPS.length - 1 && (
+                  <div style={{
+                    width: 12,
+                    height: 2,
+                    background: isCompleted ? 'rgba(255,255,255,0.6)' : 'rgba(255,255,255,0.15)',
+                  }} />
+                )}
+              </div>
+            );
+          })}
         </div>
         <MapboxGlobeReveal
           name={data.name}
@@ -745,26 +779,6 @@ export function QuickOnboardingFlow({
           location={data.location || 'somewhere beautiful'}
           onDone={goNext}
         />
-        <style jsx>{`
-          .globe-progress-overlay {
-            position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            z-index: 200;
-            background: rgba(255, 255, 255, 0.5);
-            backdrop-filter: blur(4px);
-          }
-          .progress-track {
-            height: 3px;
-            background: rgba(64, 106, 86, 0.12);
-          }
-          .progress-fill {
-            height: 100%;
-            background: linear-gradient(90deg, #406a56, #8dacab);
-            border-radius: 0 2px 2px 0;
-          }
-        `}</style>
       </>
     );
   }
@@ -776,14 +790,51 @@ export function QuickOnboardingFlow({
         <div className="home-background" />
         <div className="home-blob home-blob-1" />
         <div className="home-blob home-blob-2" />
-        {/* Progress bar */}
-        <div className="progress-track">
-          <motion.div
-            className="progress-fill"
-            initial={{ width: 0 }}
-            animate={{ width: `${progressPercent}%` }}
-            transition={{ duration: 0.4, ease: 'easeOut' }}
-          />
+        {/* Stepwise Progress Bar */}
+        <div style={{
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          right: 0,
+          zIndex: 50,
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          padding: '16px 24px 12px',
+          background: 'linear-gradient(to bottom, rgba(253, 248, 243, 0.95) 60%, transparent)',
+        }}>
+          {PROGRESS_STEPS.map((s, i) => {
+            const isCompleted = i < progressIdx;
+            const isCurrent = i === progressIdx;
+            return (
+              <div key={s} style={{ display: 'flex', alignItems: 'center' }}>
+                <div style={{
+                  width: 22,
+                  height: 22,
+                  borderRadius: '50%',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  fontSize: 10,
+                  fontWeight: 700,
+                  border: `2px solid ${isCompleted ? '#406A56' : isCurrent ? '#406A56' : 'rgba(64,106,86,0.2)'}`,
+                  color: isCompleted ? 'white' : isCurrent ? '#406A56' : 'rgba(64,106,86,0.35)',
+                  background: isCompleted ? '#406A56' : isCurrent ? 'rgba(64,106,86,0.08)' : 'white',
+                  boxShadow: isCurrent ? '0 0 0 4px rgba(64,106,86,0.1)' : 'none',
+                  flexShrink: 0,
+                }}>
+                  {isCompleted ? <Check size={10} strokeWidth={3} /> : <span>{i + 1}</span>}
+                </div>
+                {i < PROGRESS_STEPS.length - 1 && (
+                  <div style={{
+                    width: 14,
+                    height: 2,
+                    background: isCompleted ? '#406A56' : 'rgba(64,106,86,0.15)',
+                  }} />
+                )}
+              </div>
+            );
+          })}
         </div>
         <ThreeColAboutYou
           selected={selectedPills}
@@ -806,15 +857,7 @@ export function QuickOnboardingFlow({
             position: relative;
             overflow-x: hidden;
           }
-          .progress-track {
-            position: fixed; top: 0; left: 0; right: 0;
-            height: 3px; background: rgba(64,106,86,0.12); z-index: 50;
-          }
-          .progress-fill {
-            height: 100%;
-            background: linear-gradient(90deg, #406a56, #8dacab);
-            border-radius: 0 2px 2px 0;
-          }
+          /* progress bar rendered inline above */
         `}</style>
       </div>
     );
@@ -836,16 +879,26 @@ export function QuickOnboardingFlow({
       <div className="home-blob home-blob-1" />
       <div className="home-blob home-blob-2" />
 
-      {/* Progress bar */}
-      <div className="progress-track">
-        <motion.div
-          className="progress-fill"
-          initial={{ width: 0 }}
-          animate={{
-            width: `${progressPercent}%`,
-          }}
-          transition={{ duration: 0.4, ease: 'easeOut' }}
-        />
+      {/* Stepwise Progress Bar */}
+      <div className="step-progress-bar">
+        {PROGRESS_STEPS.map((s, i) => {
+          const isCompleted = i < progressIdx;
+          const isCurrent = i === progressIdx;
+          return (
+            <div key={s} className="step-progress-item">
+              <div className={`step-dot ${isCompleted ? 'step-completed' : ''} ${isCurrent ? 'step-current' : ''}`}>
+                {isCompleted ? (
+                  <Check size={10} strokeWidth={3} />
+                ) : (
+                  <span className="step-num">{i + 1}</span>
+                )}
+              </div>
+              {i < PROGRESS_STEPS.length - 1 && (
+                <div className={`step-line ${isCompleted ? 'step-line-done' : ''}`} />
+              )}
+            </div>
+          );
+        })}
       </div>
 
       {/* Body */}
@@ -987,20 +1040,80 @@ export function QuickOnboardingFlow({
           overflow-x: hidden;
         }
 
-        .progress-track {
+        .step-progress-bar {
           position: fixed;
           top: 0;
           left: 0;
           right: 0;
-          height: 3px;
-          background: rgba(64, 106, 86, 0.12);
           z-index: 50;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          padding: 16px 24px 12px;
+          background: linear-gradient(to bottom, rgba(253, 248, 243, 0.95) 60%, transparent);
         }
 
-        .progress-fill {
-          height: 100%;
-          background: linear-gradient(90deg, #406a56, #8dacab);
-          border-radius: 0 2px 2px 0;
+        .step-progress-item {
+          display: flex;
+          align-items: center;
+        }
+
+        .step-dot {
+          width: 24px;
+          height: 24px;
+          border-radius: 50%;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          font-size: 11px;
+          font-weight: 700;
+          border: 2px solid rgba(64, 106, 86, 0.2);
+          color: rgba(64, 106, 86, 0.35);
+          background: white;
+          flex-shrink: 0;
+          transition: all 0.3s ease;
+        }
+
+        .step-dot.step-current {
+          border-color: #406A56;
+          color: #406A56;
+          background: rgba(64, 106, 86, 0.08);
+          box-shadow: 0 0 0 4px rgba(64, 106, 86, 0.1);
+        }
+
+        .step-dot.step-completed {
+          border-color: #406A56;
+          background: #406A56;
+          color: white;
+        }
+
+        .step-num {
+          line-height: 1;
+        }
+
+        .step-line {
+          width: 20px;
+          height: 2px;
+          background: rgba(64, 106, 86, 0.15);
+          transition: background 0.3s ease;
+        }
+
+        .step-line-done {
+          background: #406A56;
+        }
+
+        @media (max-width: 480px) {
+          .step-progress-bar {
+            padding: 12px 16px 10px;
+          }
+          .step-dot {
+            width: 20px;
+            height: 20px;
+            font-size: 9px;
+          }
+          .step-line {
+            width: 12px;
+          }
         }
 
         .yt-onboard-body {
@@ -1009,8 +1122,8 @@ export function QuickOnboardingFlow({
           align-items: center;
           justify-content: center;
           min-height: 100vh;
-          padding: 32px 20px 24px;
-          padding-top: calc(32px + env(safe-area-inset-top));
+          padding: 56px 20px 24px;
+          padding-top: calc(56px + env(safe-area-inset-top));
           padding-bottom: calc(24px + env(safe-area-inset-bottom));
         }
 

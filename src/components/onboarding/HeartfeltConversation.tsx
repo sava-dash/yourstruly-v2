@@ -169,11 +169,72 @@ export function HeartfeltConversation({
     return `${userName ? userName + ', w' : 'W'}hat's a moment in your life that shaped who you are today—something you'd want the people you love to understand about you?`;
   };
 
+  // Fallback: MediaRecorder + server-side Whisper transcription
+  const mediaRecorderRef = useRef<MediaRecorder | null>(null);
+  const audioChunksRef = useRef<Blob[]>([]);
+  const [useFallback, setUseFallback] = useState(false);
+  const [isTranscribing, setIsTranscribing] = useState(false);
+
+  const startFallbackRecording = async () => {
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      const mediaRecorder = new MediaRecorder(stream);
+      mediaRecorderRef.current = mediaRecorder;
+      audioChunksRef.current = [];
+
+      mediaRecorder.ondataavailable = (event) => {
+        if (event.data.size > 0) audioChunksRef.current.push(event.data);
+      };
+
+      mediaRecorder.onstop = async () => {
+        const audioBlob = new Blob(audioChunksRef.current, { type: 'audio/webm' });
+        stream.getTracks().forEach(track => track.stop());
+        setIsTranscribing(true);
+        try {
+          const formData = new FormData();
+          formData.append('audio', audioBlob, 'recording.webm');
+          const response = await fetch('/api/conversation/transcribe', { method: 'POST', body: formData });
+          if (response.ok) {
+            const data = await response.json();
+            const text = data.transcription || data.text || '';
+            if (text) setInput(prev => prev + (prev ? ' ' : '') + text);
+          }
+        } catch (e) {
+          console.error('Transcription error:', e);
+        } finally {
+          setIsTranscribing(false);
+        }
+      };
+
+      mediaRecorder.start();
+      setIsRecording(true);
+      setLiveTranscript('Recording... tap stop to transcribe');
+    } catch (error) {
+      console.error('Fallback recording failed:', error);
+      alert('Could not access microphone. Please check permissions.');
+    }
+  };
+
+  const stopFallbackRecording = () => {
+    if (mediaRecorderRef.current && isRecording) {
+      mediaRecorderRef.current.stop();
+      setIsRecording(false);
+      setLiveTranscript('');
+    }
+  };
+
   const startRecording = () => {
+    // If we already know Web Speech API doesn't work, go straight to fallback
+    if (useFallback) {
+      startFallbackRecording();
+      return;
+    }
+
     try {
       const SpeechRecognitionAPI = window.SpeechRecognition || window.webkitSpeechRecognition;
       if (!SpeechRecognitionAPI) {
-        alert('Speech recognition is not supported in this browser. Please type your response instead.');
+        setUseFallback(true);
+        startFallbackRecording();
         return;
       }
 
@@ -181,6 +242,8 @@ export function HeartfeltConversation({
       recognition.continuous = true;
       recognition.interimResults = true;
       recognition.lang = 'en-US';
+
+      let hasNetworkError = false;
 
       recognition.onresult = (event) => {
         let interim = '';
@@ -200,13 +263,26 @@ export function HeartfeltConversation({
 
       recognition.onerror = (event) => {
         console.error('Speech recognition error:', event.error);
-        setIsRecording(false);
-        setLiveTranscript('');
+        if (event.error === 'network' || event.error === 'service-not-allowed' || event.error === 'not-allowed') {
+          // Web Speech API unavailable — switch to fallback permanently
+          hasNetworkError = true;
+          setUseFallback(true);
+          recognition.stop();
+          setIsRecording(false);
+          setLiveTranscript('');
+          // Auto-start fallback recording
+          startFallbackRecording();
+        } else {
+          setIsRecording(false);
+          setLiveTranscript('');
+        }
       };
 
       recognition.onend = () => {
-        setIsRecording(false);
-        setLiveTranscript('');
+        if (!hasNetworkError) {
+          setIsRecording(false);
+          setLiveTranscript('');
+        }
       };
 
       recognitionRef.current = recognition;
@@ -214,11 +290,16 @@ export function HeartfeltConversation({
       setIsRecording(true);
     } catch (error) {
       console.error('Failed to start speech recognition:', error);
-      alert('Could not start speech recognition. Please type your response instead.');
+      setUseFallback(true);
+      startFallbackRecording();
     }
   };
 
   const stopRecording = () => {
+    if (useFallback) {
+      stopFallbackRecording();
+      return;
+    }
     if (recognitionRef.current && isRecording) {
       recognitionRef.current.stop();
       recognitionRef.current = null;
@@ -430,15 +511,17 @@ export function HeartfeltConversation({
             {/* Voice Recording Button */}
             <button
               onClick={isRecording ? stopRecording : startRecording}
-              disabled={isSending}
+              disabled={isSending || isTranscribing}
               className={`px-4 py-3 rounded-xl transition-all self-end ${
                 isRecording 
                   ? 'bg-red-500 text-white animate-pulse hover:bg-red-600' 
-                  : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                  : isTranscribing
+                    ? 'bg-gray-200 text-gray-400 cursor-not-allowed'
+                    : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
               }`}
-              title={isRecording ? 'Stop recording' : 'Record voice'}
+              title={isRecording ? 'Stop recording' : isTranscribing ? 'Transcribing...' : 'Record voice'}
             >
-              {isRecording ? <Square size={20} /> : <Mic size={20} />}
+              {isRecording ? <Square size={20} /> : isTranscribing ? <Loader2 size={20} className="animate-spin" /> : <Mic size={20} />}
             </button>
             
             <button
