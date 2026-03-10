@@ -268,8 +268,7 @@ export default function PhotoPreviewPanel({ media, allMedia, onClose, onNavigate
 
   if (!media) return null
 
-  const locationName = media.memory?.location_name || 
-    (media.exif_lat && media.exif_lng ? `${media.exif_lat.toFixed(2)}, ${media.exif_lng.toFixed(2)}` : null)
+  const locationName = media.memory?.location_name || null
 
   return (
     <AnimatePresence>

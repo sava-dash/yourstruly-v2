@@ -34,8 +34,8 @@ export default function GalleryUpload({ onUploadComplete }: GalleryUploadProps) 
     try {
       if (!file.type.startsWith('image/')) return {}
       const exif = await exifr.parse(file, {
+        // Don't use pick — it can exclude GPSLatitudeRef/GPSLongitudeRef needed for hemisphere
         gps: true,
-        pick: ['DateTimeOriginal', 'CreateDate', 'GPSLatitude', 'GPSLatitudeRef', 'GPSLongitude', 'GPSLongitudeRef']
       })
       if (!exif) return {}
       return {

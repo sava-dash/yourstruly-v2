@@ -11,8 +11,8 @@ import type { EngagementPrompt } from '@/types/engagement';
 import PhotoMetadataModal from '@/components/gallery/PhotoMetadataModal';
 import { createClient } from '@/lib/supabase/client';
 
-// Lazy load ConversationView for code splitting
-const ConversationView = lazy(() => import('@/components/conversation/ConversationView').then(mod => ({ default: mod.ConversationView })));
+// Lazy load EngagementConversationModal (ConversationEngine-based) for code splitting
+const EngagementConversationModal = lazy(() => import('./EngagementConversationModal').then(mod => ({ default: mod.EngagementConversationModal })));
 
 // Prompt types that should show the contact info modal (NOT conversation view)
 const MISSING_INFO_TYPES = ['missing_info', 'quick_question'];
@@ -443,7 +443,7 @@ export function EngagementBubbles({
         Shuffle
       </motion.button>
 
-      {/* Conversation View Modal */}
+      {/* Conversation Engine Modal */}
       <AnimatePresence>
         {activeConversationPrompt && (
           <Suspense fallback={
@@ -463,7 +463,7 @@ export function EngagementBubbles({
               </div>
             </motion.div>
           }>
-            <ConversationView
+            <EngagementConversationModal
               prompt={activeConversationPrompt}
               onComplete={handleConversationComplete}
               onClose={() => setActiveConversationPrompt(null)}

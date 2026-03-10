@@ -53,13 +53,16 @@ export async function POST(request: NextRequest) {
 
     try {
       const exif = await exifr.parse(buffer, {
-        pick: ['DateTimeOriginal', 'CreateDate', 'GPSLatitude', 'GPSLongitude'],
         gps: true,
+        // Don't use pick — it can exclude GPSLatitudeRef/GPSLongitudeRef needed for hemisphere
       });
       if (exif) {
-        if (exif.latitude && exif.longitude) {
+        if (exif.latitude != null && exif.longitude != null) {
           exifLat = exif.latitude;
           exifLng = exif.longitude;
+          // Sanity check: Las Vegas is ~36.17, -115.14
+          // If lat/lng seem swapped or wrong hemisphere, log for debugging
+          console.log(`EXIF GPS: lat=${exifLat}, lng=${exifLng}`);
         }
         const dateField = exif.DateTimeOriginal || exif.CreateDate;
         if (dateField) {

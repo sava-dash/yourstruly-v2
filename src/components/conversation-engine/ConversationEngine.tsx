@@ -1,5 +1,6 @@
 'use client';
 
+import './conversation-engine.css';
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
@@ -473,11 +474,21 @@ export function ConversationEngine({
         )}
       </AnimatePresence>
 
-      {/* Live transcript */}
-      {isRecording && liveTranscript && (
+      {/* Live transcript - shows during recording */}
+      {isRecording && (
         <div className="ce-live-transcript">
-          {liveTranscript}
-          {!useFallback && '...'}
+          {input && <span className="ce-live-final">{input}</span>}
+          {liveTranscript && (
+            <span className="ce-live-interim">
+              {input ? ' ' : ''}{liveTranscript}...
+            </span>
+          )}
+          {!input && !liveTranscript && !useFallback && (
+            <span className="ce-live-listening">🎤 Listening...</span>
+          )}
+          {!input && !liveTranscript && useFallback && (
+            <span className="ce-live-listening">🎤 Recording... tap stop to transcribe</span>
+          )}
         </div>
       )}
 
@@ -553,263 +564,6 @@ export function ConversationEngine({
         </div>
       )}
 
-      <style jsx>{`
-        .conversation-engine {
-          display: flex;
-          flex-direction: column;
-          gap: 0;
-        }
-        .ce-messages {
-          padding: 16px;
-          display: flex;
-          flex-direction: column;
-          gap: 12px;
-        }
-        .ce-msg {
-          display: flex;
-          flex-direction: column;
-          align-items: flex-start;
-        }
-        .ce-msg-user {
-          align-items: flex-end;
-        }
-        .ce-bubble {
-          max-width: 85%;
-          padding: 12px 16px;
-          border-radius: 18px;
-          font-size: 14px;
-          line-height: 1.5;
-        }
-        .ce-bubble p {
-          margin: 0;
-        }
-        .ce-bubble-user {
-          background: #406a56;
-          color: white;
-          border-bottom-right-radius: 6px;
-        }
-        .ce-bubble-ai {
-          background: white;
-          color: #2d2d2d;
-          border: 1px solid rgba(64, 106, 86, 0.12);
-          border-bottom-left-radius: 6px;
-          box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
-        }
-        .ce-badge {
-          font-size: 10px;
-          margin-top: 4px;
-          opacity: 0.5;
-        }
-        .ce-typing {
-          display: flex;
-          gap: 4px;
-          padding: 4px 0;
-        }
-        .ce-typing span {
-          width: 6px;
-          height: 6px;
-          border-radius: 50%;
-          background: rgba(64, 106, 86, 0.3);
-          animation: ce-bounce 1.2s infinite;
-        }
-        .ce-typing span:nth-child(2) {
-          animation-delay: 0.15s;
-        }
-        .ce-typing span:nth-child(3) {
-          animation-delay: 0.3s;
-        }
-        @keyframes ce-bounce {
-          0%,
-          60%,
-          100% {
-            transform: translateY(0);
-          }
-          30% {
-            transform: translateY(-4px);
-          }
-        }
-        .ce-save-banner {
-          display: flex;
-          align-items: center;
-          justify-content: space-between;
-          padding: 10px 16px;
-          margin: 0 16px;
-          background: linear-gradient(
-            135deg,
-            rgba(64, 106, 86, 0.08),
-            rgba(141, 172, 171, 0.08)
-          );
-          border: 1px solid rgba(64, 106, 86, 0.15);
-          border-radius: 12px;
-        }
-        .ce-save-content {
-          display: flex;
-          align-items: center;
-          gap: 8px;
-          color: #406a56;
-          font-size: 13px;
-          font-weight: 600;
-        }
-        .ce-save-btn {
-          display: flex;
-          align-items: center;
-          gap: 6px;
-          padding: 8px 16px;
-          background: #406a56;
-          color: white;
-          border: none;
-          border-radius: 10px;
-          font-size: 13px;
-          font-weight: 600;
-          cursor: pointer;
-          transition: background 0.2s;
-        }
-        .ce-save-btn:hover {
-          background: #355948;
-        }
-        .ce-save-btn:disabled {
-          opacity: 0.6;
-          cursor: not-allowed;
-        }
-        .ce-saved-toast {
-          text-align: center;
-          padding: 8px;
-          color: #406a56;
-          font-size: 13px;
-          font-weight: 600;
-        }
-        .ce-live-transcript {
-          padding: 4px 16px;
-          font-size: 12px;
-          color: rgba(45, 45, 45, 0.4);
-          font-style: italic;
-        }
-        .ce-input-area {
-          display: flex;
-          gap: 8px;
-          padding: 12px 16px;
-          border-top: 1px solid rgba(64, 106, 86, 0.08);
-          align-items: flex-end;
-        }
-        .ce-textarea {
-          flex: 1;
-          padding: 10px 14px;
-          border: 1.5px solid rgba(64, 106, 86, 0.15);
-          border-radius: 14px;
-          font-size: 14px;
-          resize: none;
-          color: #2d2d2d;
-          background: white;
-          font-family: inherit;
-          transition: border-color 0.2s;
-        }
-        .ce-textarea:focus {
-          outline: none;
-          border-color: #406a56;
-          box-shadow: 0 0 0 3px rgba(64, 106, 86, 0.08);
-        }
-        .ce-textarea::placeholder {
-          color: rgba(45, 45, 45, 0.3);
-        }
-        .ce-input-actions {
-          display: flex;
-          gap: 4px;
-          flex-shrink: 0;
-        }
-        .ce-icon-btn {
-          width: 40px;
-          height: 40px;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          border: none;
-          border-radius: 12px;
-          background: rgba(64, 106, 86, 0.06);
-          color: rgba(45, 45, 45, 0.5);
-          cursor: pointer;
-          transition: all 0.15s;
-        }
-        .ce-icon-btn:hover {
-          background: rgba(64, 106, 86, 0.12);
-          color: #406a56;
-        }
-        .ce-icon-btn:disabled {
-          opacity: 0.4;
-          cursor: not-allowed;
-        }
-        .ce-recording {
-          background: #ef4444 !important;
-          color: white !important;
-          animation: pulse 1.5s infinite;
-        }
-        @keyframes pulse {
-          0%,
-          100% {
-            opacity: 1;
-          }
-          50% {
-            opacity: 0.7;
-          }
-        }
-        .ce-mute-btn {
-          width: 32px;
-          height: 32px;
-        }
-        .ce-send-btn {
-          width: 40px;
-          height: 40px;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          border: none;
-          border-radius: 12px;
-          background: #406a56;
-          color: white;
-          cursor: pointer;
-          transition: all 0.15s;
-        }
-        .ce-send-btn:hover {
-          background: #355948;
-        }
-        .ce-send-btn:disabled {
-          opacity: 0.4;
-          cursor: not-allowed;
-        }
-        .ce-footer {
-          display: flex;
-          align-items: center;
-          justify-content: space-between;
-          padding: 8px 16px 12px;
-        }
-        .ce-skip-btn {
-          font-size: 12px;
-          color: rgba(45, 45, 45, 0.35);
-          background: none;
-          border: none;
-          cursor: pointer;
-          transition: color 0.2s;
-        }
-        .ce-skip-btn:hover {
-          color: rgba(45, 45, 45, 0.6);
-        }
-        .ce-complete-btn {
-          display: flex;
-          align-items: center;
-          gap: 6px;
-          padding: 8px 20px;
-          background: linear-gradient(135deg, #406a56, #8dacab);
-          color: white;
-          border: none;
-          border-radius: 12px;
-          font-size: 13px;
-          font-weight: 600;
-          cursor: pointer;
-          transition: all 0.15s;
-        }
-        .ce-complete-btn:hover {
-          box-shadow: 0 4px 12px rgba(64, 106, 86, 0.3);
-        }
-      `}</style>
     </div>
   );
 }

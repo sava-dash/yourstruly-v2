@@ -3,6 +3,23 @@ import { NextRequest, NextResponse } from 'next/server'
 import exifr from 'exifr'
 import { generateSmartTags } from '@/lib/ai/smartTags'
 
+// Reverse geocode GPS coordinates to a readable location name
+async function reverseGeocode(lat: number, lng: number): Promise<string | null> {
+  try {
+    const token = process.env.NEXT_PUBLIC_MAPBOX_TOKEN;
+    if (!token) return null;
+    const url = `https://api.mapbox.com/geocoding/v5/mapbox.places/${lng},${lat}.json?access_token=${token}&types=place,locality,neighborhood&limit=1`;
+    const res = await fetch(url);
+    const data = await res.json();
+    if (data.features?.length > 0) {
+      return data.features[0].place_name || data.features[0].text;
+    }
+  } catch (e) {
+    console.error('Reverse geocode failed:', e);
+  }
+  return null;
+}
+
 // Force dynamic to avoid build-time evaluation of canvas/face-api
 export const dynamic = 'force-dynamic'
 
@@ -66,7 +83,7 @@ export async function POST(
   if (fileType === 'image') {
     try {
       const exif = await exifr.parse(buffer, {
-        pick: ['DateTimeOriginal', 'CreateDate', 'GPSLatitude', 'GPSLatitudeRef', 'GPSLongitude', 'GPSLongitudeRef', 'Make', 'Model'],
+        // Don't use pick — it can exclude GPSLatitudeRef/GPSLongitudeRef needed for hemisphere
         gps: true,
       })
       if (exif) {
@@ -249,7 +266,7 @@ export async function POST(
   if (exifLat || exifLng || takenAt) {
     const { data: currentMemory } = await supabase
       .from('memories')
-      .select('memory_date, location_lat, location_lng')
+      .select('memory_date, location_lat, location_lng, location_name')
       .eq('id', memoryId)
       .single()
 
@@ -264,6 +281,14 @@ export async function POST(
     if (exifLat && exifLng && !currentMemory?.location_lat) {
       updates.location_lat = exifLat
       updates.location_lng = exifLng
+      
+      // Reverse geocode to get human-readable location name
+      if (!currentMemory?.location_name) {
+        const locationName = await reverseGeocode(exifLat, exifLng)
+        if (locationName) {
+          updates.location_name = locationName
+        }
+      }
     }
 
     if (Object.keys(updates).length > 0) {
