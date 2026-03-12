@@ -48,6 +48,7 @@ const primaryNav = [
 // My Story dropdown - content about you
 const myStoryItems = [
   { href: '/dashboard/life', label: 'Your Life', icon: UsersRound },
+  { href: '/dashboard/feed', label: 'Feed', icon: BookOpen },
   { href: '/dashboard/memories', label: 'Memories', icon: Camera },
   { href: '/dashboard/wisdom', label: 'Wisdom', icon: Lightbulb },
   { href: '/dashboard/gallery', label: 'Gallery', icon: FolderOpen },

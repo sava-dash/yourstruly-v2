@@ -13,7 +13,7 @@ import { VoiceVideoChat } from '@/components/voice'
 import '@/styles/home.css'
 import '@/styles/engagement.css'
 import '@/styles/conversation.css'
-import CommandBar from '@/components/dashboard/CommandBar'
+// import CommandBar from '@/components/dashboard/CommandBar' // RAG CLI - saved for future use
 import { AddContactModal } from '@/components/contacts/AddContactModal'
 import PhotoUploadModal from '@/components/dashboard/PhotoUploadModal'
 import ActivityFeed, { XPCompletion } from '@/components/dashboard/ActivityFeed'
@@ -327,15 +327,25 @@ export default function DashboardPage() {
     }
   }
 
-  // Handle tile click - open unified modal or inline input
-  const handleTileClick = useCallback((prompt: any) => {
-    if (CONVERSATION_TYPES.includes(prompt.type)) {
-      // Open unified engagement modal (text/voice/video)
-      setEngagementPrompt(prompt)
-    } else if (INLINE_INPUT_TYPES.includes(prompt.type)) {
-      // Use simple inline expansion
-      setExpandedId(prompt.id)
-    }
+  // Handle tile click - add bubble pop effect, then open modal
+  const handleTileClick = useCallback((prompt: any, event: React.MouseEvent) => {
+    const target = event.currentTarget as HTMLElement
+    
+    // Add popping class to trigger animation
+    target.classList.add('bubble-popping')
+    
+    // Wait for pop animation to complete before opening modal
+    setTimeout(() => {
+      target.classList.remove('bubble-popping')
+      
+      if (CONVERSATION_TYPES.includes(prompt.type)) {
+        // Open unified engagement modal (text/voice/video)
+        setEngagementPrompt(prompt)
+      } else if (INLINE_INPUT_TYPES.includes(prompt.type)) {
+        // Use simple inline expansion
+        setExpandedId(prompt.id)
+      }
+    }, 400) // Animation duration
   }, [])
 
   // Handle engagement completion (unified modal)
@@ -773,7 +783,7 @@ export default function DashboardPage() {
                           damping: 30,
                           delay: staggerDelay,
                         }}
-                        onClick={() => !isExpanded && handleTileClick(prompt)}
+                        onClick={(e) => !isExpanded && handleTileClick(prompt, e)}
                         className={`bubble-tile ${isTall ? 'tile-tall' : ''} ${isExpanded ? 'tile-expanded' : ''}`}
                         data-type={prompt.type}
                         style={{ cursor: isExpanded ? 'default' : 'pointer' }}
@@ -925,8 +935,8 @@ export default function DashboardPage() {
             </button>
           </div>
         
-          {/* Command Bar */}
-          <CommandBar />
+          {/* Command Bar - RAG CLI removed (saved for future use) */}
+          {/* <CommandBar /> */}
           </div>
         </main>
       </div> {/* End home-layout */}
