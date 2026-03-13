@@ -102,6 +102,7 @@ export function useEngagementPrompts(count: number = 5): UseEngagementPromptsRet
         userId: p.user_id,
         type: p.type,
         category: p.category,
+        lifeChapter: p.life_chapter,
         promptText: p.prompt_text,
         status: p.status,
         priority: p.priority,

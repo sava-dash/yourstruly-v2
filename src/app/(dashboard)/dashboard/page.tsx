@@ -69,6 +69,20 @@ const TILE_POSITIONS = [
   { col: 2, row: 0, tall: true },  // right side, spans full height
 ]
 
+// Life chapter categories
+const LIFE_CHAPTERS = [
+  { id: 'childhood', label: 'Childhood', icon: '🧸', color: '#8DACAB' },
+  { id: 'teenage', label: 'Teenage', icon: '🎸', color: '#D9C61A' },
+  { id: 'high_school', label: 'High School', icon: '🎓', color: '#406A56' },
+  { id: 'college', label: 'College', icon: '📚', color: '#C35F33' },
+  { id: 'jobs_career', label: 'Career', icon: '💼', color: '#8DACAB' },
+  { id: 'relationships', label: 'Relationships', icon: '❤️', color: '#D9C61A' },
+  { id: 'travel', label: 'Travel', icon: '✈️', color: '#406A56' },
+  { id: 'spirituality', label: 'Spirituality', icon: '🙏', color: '#C35F33' },
+  { id: 'wisdom_legacy', label: 'Wisdom', icon: '💡', color: '#8DACAB' },
+  { id: 'life_moments', label: 'Life Moments', icon: '⭐', color: '#D9C61A' },
+]
+
 export default function DashboardPage() {
   const [profile, setProfile] = useState<any>(null)
   const [stats, setStats] = useState({ memories: 0, contacts: 0, postscripts: 0 })
@@ -88,6 +102,9 @@ export default function DashboardPage() {
     value: number;
     message: string;
   } | null>(null)
+  
+  // Life chapter filter
+  const [selectedChapter, setSelectedChapter] = useState<string | null>(null)
   
   // Upcoming events (birthdays, etc.)
   const [upcomingEvents, setUpcomingEvents] = useState<Array<{
@@ -147,6 +164,8 @@ export default function DashboardPage() {
   const uniquePrompts = rawPrompts.filter(prompt => {
     // Skip if already answered locally
     if (answeredPromptIds.includes(prompt.id)) return false
+    // Filter by life chapter if one is selected
+    if (selectedChapter && prompt.lifeChapter !== selectedChapter) return false
     if (seenTexts.has(prompt.promptText)) return false
     seenTexts.add(prompt.promptText)
     if (contactTypes.includes(prompt.type)) {
@@ -158,7 +177,7 @@ export default function DashboardPage() {
 
   // Note: incompleteContactPrompts is computed below after incompleteContacts state is declared
 
-  const prompts = uniquePrompts.slice(0, 5)
+  const prompts = uniquePrompts.slice(0, 6)
   
   // Debug: Log filtered prompt count
   useEffect(() => {
@@ -327,25 +346,15 @@ export default function DashboardPage() {
     }
   }
 
-  // Handle tile click - add bubble pop effect, then open modal
+  // Handle tile click - open modal immediately
   const handleTileClick = useCallback((prompt: any, event: React.MouseEvent) => {
-    const target = event.currentTarget as HTMLElement
-    
-    // Add popping class to trigger animation
-    target.classList.add('bubble-popping')
-    
-    // Wait for pop animation to complete before opening modal
-    setTimeout(() => {
-      target.classList.remove('bubble-popping')
-      
-      if (CONVERSATION_TYPES.includes(prompt.type)) {
-        // Open unified engagement modal (text/voice/video)
-        setEngagementPrompt(prompt)
-      } else if (INLINE_INPUT_TYPES.includes(prompt.type)) {
-        // Use simple inline expansion
-        setExpandedId(prompt.id)
-      }
-    }, 400) // Animation duration
+    if (CONVERSATION_TYPES.includes(prompt.type)) {
+      // Open unified engagement modal (text/voice/video)
+      setEngagementPrompt(prompt)
+    } else if (INLINE_INPUT_TYPES.includes(prompt.type)) {
+      // Use simple inline expansion
+      setExpandedId(prompt.id)
+    }
   }, [])
 
   // Handle engagement completion (unified modal)
@@ -738,6 +747,44 @@ export default function DashboardPage() {
                 />
               )}
 
+              {/* Life Chapter Category Pills */}
+              <div className="w-full flex flex-wrap items-center justify-center gap-2 mb-6 px-4">
+                <button
+                  onClick={() => setSelectedChapter(null)}
+                  className={`
+                    flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium
+                    transition-all duration-200
+                    ${selectedChapter === null
+                      ? 'bg-gradient-to-r from-[#406A56] to-[#8DACAB] text-white shadow-lg scale-105'
+                      : 'bg-white/80 backdrop-blur-sm text-[#406A56] border border-[#406A56]/20 hover:bg-white hover:border-[#406A56]/40'
+                    }
+                  `}
+                >
+                  <span>✨</span>
+                  <span>All Chapters</span>
+                </button>
+                {LIFE_CHAPTERS.map((chapter) => (
+                  <button
+                    key={chapter.id}
+                    onClick={() => setSelectedChapter(chapter.id)}
+                    className={`
+                      flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium
+                      transition-all duration-200
+                      ${selectedChapter === chapter.id
+                        ? 'text-white shadow-lg scale-105'
+                        : 'bg-white/80 backdrop-blur-sm text-[#406A56] border border-[#406A56]/20 hover:bg-white hover:border-[#406A56]/40'
+                      }
+                    `}
+                    style={selectedChapter === chapter.id ? {
+                      background: `linear-gradient(135deg, ${chapter.color}, ${chapter.color}dd)`
+                    } : {}}
+                  >
+                    <span>{chapter.icon}</span>
+                    <span>{chapter.label}</span>
+                  </button>
+                ))}
+              </div>
+
               {/* Tile grid: CSS Grid - 3 columns, photo tile spans 2 rows */}
               <div className="tiles-grid">
                 <AnimatePresence mode="popLayout">
@@ -769,6 +816,7 @@ export default function DashboardPage() {
                     return (
                       <motion.div
                         key={`${tilesKey}-${prompt.id}`}
+                        layout
                         initial={{ opacity: 0, scale: 0.9, y: 20 }}
                         animate={{ 
                           opacity: 1, 
@@ -777,11 +825,20 @@ export default function DashboardPage() {
                           zIndex: isExpanded ? 50 : 1,
                         }}
                         exit={{ opacity: 0, scale: 0.9, y: -20 }}
-                        transition={{ 
-                          type: 'spring', 
-                          stiffness: 400, 
-                          damping: 30,
-                          delay: staggerDelay,
+                        transition={{
+                          layout: {
+                            type: 'spring',
+                            damping: 15,
+                            stiffness: 300,
+                            mass: 0.8,
+                          },
+                          opacity: { duration: 0.2 },
+                          scale: {
+                            type: 'spring', 
+                            stiffness: 400, 
+                            damping: 30,
+                            delay: staggerDelay,
+                          }
                         }}
                         onClick={(e) => !isExpanded && handleTileClick(prompt, e)}
                         className={`bubble-tile ${isTall ? 'tile-tall' : ''} ${isExpanded ? 'tile-expanded' : ''}`}

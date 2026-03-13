@@ -22,9 +22,11 @@
   /* Layout dimensions */
   --sidebar-width: 280px;
   --sidebar-gap: 48px;
-  --content-max-width: 920px;
-  --tile-size: 260px;
-  --tile-gap: 24px;
+  --content-max-width: 1000px;
+  --tile-width: 300px;
+  --tile-height-short: 240px;
+  --tile-height-tall: 275px;
+  --tile-gap: 20px;
   --nav-height: 56px;
   --page-padding: 24px;
   
@@ -344,19 +346,39 @@
   gap: var(--tile-gap);
 }
 
-/* Tile grid: 3 columns, photo tile spans 2 rows */
+/* Tile grid: Masonry-style with 2 height variants */
 .tiles-grid {
   display: grid;
-  grid-template-columns: repeat(3, var(--tile-size));
-  grid-template-rows: auto auto;
+  grid-template-columns: repeat(auto-fit, var(--tile-width));
   gap: var(--tile-gap);
-  width: fit-content;
+  justify-content: center;
+  max-width: var(--content-max-width);
+  grid-auto-flow: dense;
 }
 
-/* Responsive: 2 columns on smaller screens */
-@media (max-width: 800px) {
+/* Default bubble tile - short height */
+.bubble-tile {
+  width: var(--tile-width);
+  height: var(--tile-height-short);
+}
+
+/* Tall variants - 400px height */
+.bubble-tile:nth-child(3n+1) {
+  height: var(--tile-height-tall);
+}
+
+.bubble-tile:nth-child(5n+2) {
+  height: var(--tile-height-tall);
+}
+
+/* Responsive: adjust for smaller screens */
+@media (max-width: 900px) {
   .tiles-grid {
-    grid-template-columns: repeat(2, var(--tile-size));
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  }
+  
+  .bubble-tile {
+    width: 100%;
   }
 }
 
@@ -366,15 +388,17 @@
     grid-template-columns: 1fr;
   }
   
-  :root {
-    --tile-size: 100%;
+  .bubble-tile,
+  .bubble-tile:nth-child(3n+1),
+  .bubble-tile:nth-child(5n+2) {
+    width: 100%;
+    height: var(--tile-height-short);
   }
 }
 
-/* Tall tile (photo tile) - spans 2 rows */
+/* Legacy tall tile class */
 .tile-tall {
-  grid-column: 3;
-  grid-row: 1 / 3;
+  height: var(--tile-height-tall);
 }
 
 @media (max-width: 800px) {
@@ -493,12 +517,23 @@
 /* =============================================================================
    BUBBLE TILES - Engagement cards (bubble-like appearance)
    ============================================================================= */
+@keyframes bubble-bloom {
+  from {
+    opacity: 0;
+    transform: scale(0.85) rotate(5deg);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) rotate(0deg);
+  }
+}
+
 .bubble-tile {
   position: relative;
   background: linear-gradient(135deg, rgba(255, 255, 255, 0.9), rgba(255, 255, 255, 0.7));
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
-  border-radius: 32px;
+  border-radius: 24px;
   border: 2px solid transparent;
   background-clip: padding-box;
   overflow: visible;
@@ -507,95 +542,35 @@
     0 16px 48px rgba(0, 0, 0, 0.08),
     inset 0 1px 0 rgba(255, 255, 255, 0.8);
   transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+  transform-origin: center;
+  animation: bubble-bloom 0.6s cubic-bezier(0.25, 0.8, 0.25, 1) both;
 }
 
-/* Iridescent bubble border effect */
-.bubble-tile::before {
-  content: '';
-  position: absolute;
-  inset: 0;
-  border-radius: 32px;
-  padding: 2px;
-  background: linear-gradient(135deg, 
-    rgba(255, 182, 193, 0.4),
-    rgba(255, 218, 185, 0.3),
-    rgba(173, 216, 230, 0.4),
-    rgba(221, 160, 221, 0.3)
-  );
-  -webkit-mask: 
-    linear-gradient(#fff 0 0) content-box, 
-    linear-gradient(#fff 0 0);
-  -webkit-mask-composite: xor;
-  mask-composite: exclude;
-  pointer-events: none;
-  opacity: 0.5;
-  transition: opacity 0.3s ease;
-}
-
-.bubble-tile:hover::before {
-  opacity: 1;
-}
+/* Stagger animation for each tile */
+.bubble-tile:nth-child(1) { animation-delay: 0s; }
+.bubble-tile:nth-child(2) { animation-delay: 0.05s; }
+.bubble-tile:nth-child(3) { animation-delay: 0.1s; }
+.bubble-tile:nth-child(4) { animation-delay: 0.15s; }
+.bubble-tile:nth-child(5) { animation-delay: 0.2s; }
+.bubble-tile:nth-child(6) { animation-delay: 0.25s; }
+.bubble-tile:nth-child(7) { animation-delay: 0.3s; }
+.bubble-tile:nth-child(8) { animation-delay: 0.35s; }
 
 .bubble-tile:hover {
-  transform: translateY(-4px) scale(1.02);
+  transform: scale(1.05);
   box-shadow: 
     0 12px 32px rgba(195, 95, 51, 0.12),
     0 24px 64px rgba(0, 0, 0, 0.12),
     inset 0 1px 0 rgba(255, 255, 255, 1);
 }
 
-/* Gentle floating animation for bubble feel */
-.bubble-tile {
-  animation: bubble-float 4s ease-in-out infinite;
-}
-
-/* Stagger floating animation for natural bubble feel */
-.bubble-tile:nth-child(1) { animation-delay: 0s; }
-.bubble-tile:nth-child(2) { animation-delay: -0.8s; }
-.bubble-tile:nth-child(3) { animation-delay: -1.6s; }
-.bubble-tile:nth-child(4) { animation-delay: -2.4s; }
-.bubble-tile:nth-child(5) { animation-delay: -3.2s; }
-
-@keyframes bubble-float {
-  0%, 100% {
-    transform: translateY(0px);
-  }
-  50% {
-    transform: translateY(-6px);
-  }
-}
-
-.bubble-tile:hover {
-  animation: none; /* Stop floating on hover */
-}
-
-/* Pop animation on click */
-.bubble-tile.bubble-popping {
-  animation: bubble-pop 0.4s cubic-bezier(0.34, 1.56, 0.64, 1) forwards !important;
-  pointer-events: none;
-}
-
-@keyframes bubble-pop {
-  0% {
-    transform: scale(1);
-    opacity: 1;
-  }
-  30% {
-    transform: scale(1.2);
-    opacity: 1;
-  }
-  60% {
-    transform: scale(1.35);
-    opacity: 0.6;
-  }
-  100% {
-    transform: scale(1.5) rotate(3deg);
-    opacity: 0;
-  }
-}
+/* No floating animation - removed per user request */
 
 .bubble-content {
-  padding: 20px;
+  padding: 18px;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
 }
 
 .bubble-accent {
@@ -607,13 +582,13 @@
   position: absolute;
   top: 12px;
   right: 12px;
-  padding: 4px 10px;
-  border-radius: 12px;
-  font-size: 11px;
+  padding: 4px 9px;
+  border-radius: 10px;
+  font-size: 10px;
   font-weight: 600;
   display: flex;
   align-items: center;
-  gap: 4px;
+  gap: 3px;
 }
 
 .bubble-xp-yellow { background: rgba(217, 198, 26, 0.15); color: var(--yt-yellow-dark); }
@@ -626,11 +601,11 @@
 .bubble-type {
   position: relative;
   font-family: var(--font-inter-tight), 'Inter Tight', sans-serif;
-  font-size: 12px;
+  font-size: 11px;
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.08em;
-  padding: 6px 12px;
+  padding: 6px 11px;
   display: inline-block;
   color: #3d3d3d;
   margin-left: -4px;
@@ -654,31 +629,31 @@
 /* Photo preview */
 .bubble-photo {
   width: 100%;
-  height: 100px;
+  height: 90px;
   object-fit: cover;
-  border-radius: 20px;
+  border-radius: 16px;
   margin: 8px 0;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
 }
 
 .bubble-photo-tall {
-  height: 240px;
+  height: 160px;
 }
 
 /* Contact card inside bubble */
 .bubble-contact {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 10px;
   padding: 10px;
   background: rgba(64, 106, 86, 0.05);
-  border-radius: 12px;
+  border-radius: 10px;
   margin: 8px 0;
 }
 
 .bubble-contact-avatar {
-  width: 40px;
-  height: 40px;
+  width: 36px;
+  height: 36px;
   border-radius: 50%;
   background: linear-gradient(135deg, #D3E1DF, #406A5620);
   display: flex;
@@ -686,7 +661,7 @@
   justify-content: center;
   font-weight: 600;
   color: var(--yt-green);
-  font-size: 16px;
+  font-size: 14px;
   flex-shrink: 0;
 }
 
@@ -698,7 +673,7 @@
 }
 
 .bubble-contact-name {
-  font-size: 14px;
+  font-size: 13px;
   font-weight: 600;
   color: #2d2d2d;
   overflow: hidden;
@@ -714,7 +689,7 @@
 }
 
 .bubble-contact-sub {
-  font-size: 12px;
+  font-size: 11px;
   color: var(--yt-green);
 }
 
@@ -722,10 +697,11 @@
   font-size: 14px;
   line-height: 1.5;
   color: #3d3d3d;
+  flex: 1;
 }
 
 .bubble-hint {
-  font-size: 11px;
+  font-size: 10px;
   color: #999;
   text-align: right;
   margin-top: 8px;

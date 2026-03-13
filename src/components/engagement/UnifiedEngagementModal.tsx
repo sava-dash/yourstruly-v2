@@ -192,9 +192,15 @@ GOOD (concise): "I love that! Who taught you this recipe?"`
       onClick={onClose}
     >
       <motion.div
-        initial={{ scale: 0.95, opacity: 0, y: 20 }}
-        animate={{ scale: 1, opacity: 1, y: 0 }}
-        exit={{ scale: 0.95, opacity: 0, y: 20 }}
+        initial={{ scale: 0.3, opacity: 0 }}
+        animate={{ scale: 1, opacity: 1 }}
+        exit={{ scale: 0.9, opacity: 0 }}
+        transition={{
+          type: 'spring',
+          damping: 15,
+          stiffness: 300,
+          mass: 0.8,
+        }}
         className="w-full max-w-2xl bg-gradient-to-b from-white to-[#F9F7F3] rounded-3xl shadow-2xl overflow-hidden max-h-[80vh] overflow-y-auto my-auto"
         onClick={(e) => e.stopPropagation()}
       >

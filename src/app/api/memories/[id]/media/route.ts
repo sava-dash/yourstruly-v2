@@ -3,12 +3,10 @@ import { NextRequest, NextResponse } from 'next/server'
 import exifr from 'exifr'
 import { generateSmartTags } from '@/lib/ai/smartTags'
 import { reverseGeocode } from '@/lib/geo/reverseGeocode'
+import { detectFaces, getDominantEmotion, searchFaces } from '@/lib/aws/rekognition'
 
-// Force dynamic to avoid build-time evaluation of canvas/face-api
+// Force dynamic to avoid build-time evaluation
 export const dynamic = 'force-dynamic'
-
-// Lazy import to avoid build-time issues with native modules
-const getFaceDetection = () => import('@/lib/ai/faceDetection')
 
 // POST /api/memories/[id]/media - Upload media to memory
 export async function POST(
@@ -123,35 +121,71 @@ export async function POST(
     .from('memories')
     .getPublicUrl(fileName)
 
-  // Face detection disabled temporarily due to TextEncoder compatibility issues in container
-  // TODO: Fix canvas/face-api compatibility for Docker deployment
+  // Face detection using AWS Rekognition
   let detectedFaces: Array<{
     boundingBox: { x: number; y: number; width: number; height: number }
     confidence: number
-    embedding: number[]
-    age?: number
+    age?: { low: number; high: number }
     gender?: string
     expression?: string
+    suggestions?: Array<{ contactId: string; contactName: string; similarity: number }>
   }> = []
 
-  // Face detection disabled - uncomment when fixed:
-  // if (fileType === 'image') {
-  //   try {
-  //     const { detectFaces, getDominantExpression } = await getFaceDetection()
-  //     const faces = await detectFaces(buffer)
-  //     detectedFaces = faces.map(f => ({
-  //       boundingBox: f.boundingBox,
-  //       confidence: f.confidence,
-  //       embedding: f.embedding,
-  //       age: f.age,
-  //       gender: f.gender,
-  //       expression: f.expressions ? getDominantExpression(f.expressions) : undefined,
-  //     }))
-  //   } catch (e) {
-  //     console.error('Face detection failed:', e)
-  //     // Continue without face data
-  //   }
-  // }
+  if (fileType === 'image') {
+    try {
+      console.log('[Media Upload] Starting face detection with Rekognition...')
+      const faces = await detectFaces(buffer)
+      
+      // For each detected face, search for matches in user's collection
+      const facesWithSuggestions = await Promise.all(
+        faces.map(async (face) => {
+          let suggestions: Array<{ contactId: string; contactName: string; similarity: number }> = []
+          
+          try {
+            // Search for matching faces (70% similarity threshold)
+            const matches = await searchFaces(buffer, user.id, 70)
+            
+            if (matches.length > 0) {
+              // Get contact names for matches
+              const contactIds = matches.map(m => m.contactId)
+              const { data: contacts } = await supabase
+                .from('contacts')
+                .select('id, full_name')
+                .in('id', contactIds)
+              
+              suggestions = matches.map(match => {
+                const contact = contacts?.find(c => c.id === match.contactId)
+                return {
+                  contactId: match.contactId,
+                  contactName: contact?.full_name || 'Unknown',
+                  similarity: Math.round(match.similarity),
+                }
+              }).slice(0, 3) // Top 3 suggestions
+              
+              console.log(`[Media Upload] Found ${suggestions.length} face match suggestions`)
+            }
+          } catch (err) {
+            console.log('[Media Upload] Face search failed (no indexed faces yet):', err.message)
+          }
+          
+          return {
+            boundingBox: face.boundingBox,
+            confidence: face.confidence,
+            age: face.age,
+            gender: face.gender,
+            expression: face.emotions ? getDominantEmotion(face.emotions) : undefined,
+            suggestions,
+          }
+        })
+      )
+      
+      detectedFaces = facesWithSuggestions
+      console.log(`[Media Upload] ✅ Rekognition found ${detectedFaces.length} faces`)
+    } catch (e) {
+      console.error('[Media Upload] ❌ Face detection failed:', e)
+      // Continue without face data
+    }
+  }
 
   // No XP for photo upload - only backstory earns XP
 
@@ -225,7 +259,7 @@ export async function POST(
     fileSize: file.size,
   })
 
-  // Store face embeddings for recognition (if faces detected)
+  // Store detected faces for tagging (if faces detected)
   if (detectedFaces.length > 0) {
     const faceRecords = detectedFaces.map((face) => ({
       media_id: media.id,
@@ -234,16 +268,20 @@ export async function POST(
       box_top: face.boundingBox.y,
       box_width: face.boundingBox.width,
       box_height: face.boundingBox.height,
-      confidence: Math.round(face.confidence * 100),
-      face_embedding: face.embedding,
-      age: face.age,
+      confidence: Math.round(face.confidence),
+      age: face.age ? Math.round((face.age.low + face.age.high) / 2) : null,
       gender: face.gender,
       expression: face.expression,
       is_auto_detected: true,
       is_confirmed: false,
     }))
 
-    await supabase.from('memory_face_tags').insert(faceRecords)
+    const { error: faceError } = await supabase.from('memory_face_tags').insert(faceRecords)
+    if (faceError) {
+      console.error('[Media Upload] Failed to save face records:', faceError)
+    } else {
+      console.log(`[Media Upload] ✅ Saved ${faceRecords.length} face records`)
+    }
   }
 
   // Update parent memory with EXIF data if it doesn't have date/location yet
@@ -346,6 +384,7 @@ export async function POST(
       age: f.age,
       gender: f.gender,
       expression: f.expression,
+      suggestions: f.suggestions || [],
     })),
   })
 }

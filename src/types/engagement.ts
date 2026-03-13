@@ -4,6 +4,7 @@ export interface EngagementPrompt {
   userId: string;
   type: string;
   category?: string;
+  lifeChapter?: string;
   promptText: string;
   status: string;
   priority: number;

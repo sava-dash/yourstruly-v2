@@ -96,16 +96,15 @@ export function QuestionPromptBar({ onCreateWisdom, onVoiceCapture }: QuestionPr
       .in('category', WISDOM_CATEGORIES)
       .limit(50);
 
-    // Get user's existing wisdom entries to filter out answered questions
+    // Get user's existing wisdom entries from knowledge_entries table
     const { data: existingWisdom } = await supabase
-      .from('memories')
-      .select('title, metadata')
-      .eq('user_id', user.id)
-      .eq('memory_type', 'wisdom');
+      .from('knowledge_entries')
+      .select('prompt_text')
+      .eq('user_id', user.id);
 
     // Filter out questions that have already been answered
     const answeredQuestionTexts = new Set(
-      existingWisdom?.map(w => w.metadata?.question_text || w.title) || []
+      existingWisdom?.map(w => w.prompt_text) || []
     );
 
     const unanswered = (allQuestions || []).filter(

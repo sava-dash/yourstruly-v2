@@ -265,15 +265,15 @@ export default function OnThisDay() {
 
   return (
     <>
-      <div className="bg-[#FDF8F3] rounded-[20px] shadow-sm overflow-hidden border border-white/50">
+      <div className="bg-[#242424] rounded-xl shadow-md overflow-hidden border border-white/5 hover:border-[#34D7FF] transition-all">
         {/* Header */}
-        <div className="flex items-center justify-between px-4 py-3 border-b border-[#406A56]/10 bg-gradient-to-r from-[#C35F33]/5 to-[#D9C61A]/5">
+        <div className="flex items-center justify-between px-4 py-3 border-b border-white/5 bg-gradient-to-r from-[#FF5C34]/10 to-[#FFB020]/10">
           <div className="flex items-center gap-2">
-            <div className="w-6 h-6 rounded-full bg-[#C35F33]/10 flex items-center justify-center">
-              <Calendar size={12} className="text-[#C35F33]" />
+            <div className="w-6 h-6 rounded-full bg-[#FF5C34]/20 flex items-center justify-center">
+              <Calendar size={12} className="text-[#FF5C34]" />
             </div>
             <div>
-              <h3 className="text-sm font-semibold text-gray-800">On This Day</h3>
+              <h3 className="text-sm font-semibold text-white">On This Day</h3>
               {data?.date && (
                 <p className="text-[10px] text-gray-500">{data.date.formatted}</p>
               )}

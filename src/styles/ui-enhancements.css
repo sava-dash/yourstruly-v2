@@ -76,33 +76,37 @@
    ----------------------------------------------------------------------------- */
 
 .category-pill {
-  font-family: var(--font-handwritten), 'Caveat', cursive;
-  font-size: 1.1rem;
+  font-family: 'Inter', sans-serif;
+  font-size: 10px;
   font-weight: 600;
-  letter-spacing: 0.02em;
-  padding: 0.35rem 1rem;
-  border-radius: 9999px;
-  transition: all 0.2s ease;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  padding: 0;
+  margin-bottom: 4px;
 }
 
-.category-pill-contact {
-  background: rgba(64, 106, 86, 0.12);
-  color: var(--yt-green);
+.category-pill-contact,
+.category-pill-green {
+  color: #00B87C;
 }
 
-.category-pill-memory {
-  background: rgba(74, 53, 82, 0.12);
-  color: var(--yt-purple);
+.category-pill-memory,
+.category-pill-purple {
+  color: #34D7FF;
 }
 
-.category-pill-knowledge {
-  background: rgba(195, 95, 51, 0.12);
-  color: var(--yt-red);
+.category-pill-knowledge,
+.category-pill-red {
+  color: #FF5C34;
 }
 
-.category-pill-photo {
-  background: rgba(217, 198, 26, 0.15);
-  color: #a39507;
+.category-pill-photo,
+.category-pill-yellow {
+  color: #FFB020;
+}
+
+.category-pill-blue {
+  color: #3448FF;
 }
 
 /* Engagement bubble type labels with handwritten font */
