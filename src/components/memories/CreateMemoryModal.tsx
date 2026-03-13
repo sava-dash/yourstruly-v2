@@ -4,8 +4,6 @@ import { useState, useRef, useCallback, useEffect } from 'react'
 import { X, Upload, Calendar, MapPin, Sparkles, Loader2, Image as ImageIcon, Check, Users, ChevronRight, Scan } from 'lucide-react'
 import Modal from '@/components/ui/Modal'
 import { createClient } from '@/lib/supabase/client'
-import { useFaceDetection, type FaceDetectionResult } from '@/components/memories/FaceDetector'
-import { storeFaceDetections } from '@/lib/faces'
 
 interface CreateMemoryModalProps {
   isOpen: boolean
@@ -64,8 +62,7 @@ export default function CreateMemoryModal({ isOpen, onClose, onCreated }: Create
 
   const fileInputRef = useRef<HTMLInputElement>(null)
   const supabase = createClient()
-  const { isReady: faceDetectionReady, detectInImage } = useFaceDetection()
-  const [faceDetectionProgress, setFaceDetectionProgress] = useState<{ current: number; total: number } | null>(null)
+
 
   // Load contacts for sharing
   useEffect(() => {
@@ -215,50 +212,10 @@ export default function CreateMemoryModal({ isOpen, onClose, onCreated }: Create
         }
       }
 
-      // 3. Face detection on uploaded images (client-side)
-      const imageMedia = uploadedMedia.filter(m => m.isImage)
-      if (imageMedia.length > 0 && faceDetectionReady) {
-        setFaceDetectionProgress({ current: 0, total: imageMedia.length })
-        
-        for (let i = 0; i < imageMedia.length; i++) {
-          const { index, mediaId, mediaUrl } = imageMedia[i]
-          
-          setFiles(prev => {
-            const newFiles = [...prev]
-            newFiles[index].detectingFaces = true
-            return newFiles
-          })
+      // Face detection is now handled automatically server-side during upload
+      // via AWS Rekognition in /api/memories/[id]/media
 
-          try {
-            const result = await detectInImage(mediaUrl)
-            
-            if (result.faces.length > 0) {
-              // Store faces in database
-              await storeFaceDetections(mediaId, user.id, result.faces, mediaUrl)
-            }
-            
-            setFiles(prev => {
-              const newFiles = [...prev]
-              newFiles[index].detectingFaces = false
-              newFiles[index].facesDetected = result.faces.length
-              return newFiles
-            })
-          } catch (err) {
-            console.error('Face detection failed for image:', err)
-            setFiles(prev => {
-              const newFiles = [...prev]
-              newFiles[index].detectingFaces = false
-              return newFiles
-            })
-          }
-          
-          setFaceDetectionProgress({ current: i + 1, total: imageMedia.length })
-        }
-        
-        setFaceDetectionProgress(null)
-      }
-
-      // 4. Share with selected contacts
+      // 3. Share with selected contacts
       if (selectedContacts.size > 0) {
         await fetch(`/api/memories/${memory.id}/share`, {
           method: 'POST',
@@ -570,17 +527,10 @@ export default function CreateMemoryModal({ isOpen, onClose, onCreated }: Create
               className="flex-1 py-3 bg-[#406A56] hover:bg-[#355a48] disabled:opacity-50 text-white rounded-xl font-medium transition-all flex items-center justify-center gap-2"
             >
               {creating ? (
-                faceDetectionProgress ? (
-                  <>
-                    <Scan size={18} className="animate-pulse" />
-                    Finding faces ({faceDetectionProgress.current}/{faceDetectionProgress.total})...
-                  </>
-                ) : (
-                  <>
-                    <Loader2 size={18} className="animate-spin" />
-                    Creating...
-                  </>
-                )
+                <>
+                  <Loader2 size={18} className="animate-spin" />
+                  Creating...
+                </>
               ) : (
                 <>
                   <Sparkles size={18} />
