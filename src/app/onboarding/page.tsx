@@ -2,9 +2,10 @@
 
 import { useState, useEffect, useCallback, useMemo, Suspense } from 'react';
 import { createClient } from '@/lib/supabase/client';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { Loader2 } from 'lucide-react';
 import { QuickOnboardingFlow } from '@/components/onboarding/QuickOnboardingFlow';
+import { HeroUIOnboarding } from '@/components/onboarding/HeroUIOnboarding';
 import { OnboardingErrorBoundary } from '@/components/ui/OnboardingErrorBoundary';
 
 interface OnboardingData {
@@ -23,12 +24,30 @@ interface OnboardingData {
   uploadedImagesCount?: number;
 }
 
-export default function OnboardingPage() {
+function OnboardingPageContent() {
   const [loading, setLoading] = useState(true);
   const [user, setUser] = useState<any>(null);
   const [firstName, setFirstName] = useState('');
+  const [useHeroUI, setUseHeroUI] = useState(false);
   const router = useRouter();
+  const searchParams = useSearchParams();
   const supabase = useMemo(() => createClient(), []);
+
+  // Check for version parameter on mount
+  useEffect(() => {
+    const version = searchParams.get('v');
+    const storedVersion = localStorage.getItem('onboarding-version');
+    
+    if (version === 'hero') {
+      setUseHeroUI(true);
+      localStorage.setItem('onboarding-version', 'hero');
+    } else if (version === 'classic') {
+      setUseHeroUI(false);
+      localStorage.setItem('onboarding-version', 'classic');
+    } else if (storedVersion === 'hero') {
+      setUseHeroUI(true);
+    }
+  }, [searchParams]);
 
   useEffect(() => {
     let mounted = true;
@@ -137,8 +156,22 @@ export default function OnboardingPage() {
     );
   }
 
+  const toggleVersion = () => {
+    const newVersion = !useHeroUI;
+    setUseHeroUI(newVersion);
+    localStorage.setItem('onboarding-version', newVersion ? 'hero' : 'classic');
+  };
+
   return (
     <OnboardingErrorBoundary>
+      {/* Version toggle button */}
+      <button
+        onClick={toggleVersion}
+        className="fixed top-4 left-4 z-50 px-4 py-2 bg-white/90 backdrop-blur-sm rounded-full text-xs font-medium text-[#406A56] border border-[#406A56]/20 hover:bg-[#406A56]/10 transition-colors shadow-lg"
+      >
+        {useHeroUI ? '🎨 HeroUI' : '⚡ Classic'} • Click to switch
+      </button>
+
       <Suspense
         fallback={
           <div className="min-h-screen bg-[#FDF8F3] flex items-center justify-center">
@@ -146,13 +179,35 @@ export default function OnboardingPage() {
           </div>
         }
       >
-        <QuickOnboardingFlow
-          onComplete={handleOnboardingComplete}
-          onSkipAll={handleSkipOnboarding}
-          userId={user?.id}
-          initialName={firstName}
-        />
+        {useHeroUI ? (
+          <HeroUIOnboarding
+            onComplete={handleOnboardingComplete}
+            onSkip={handleSkipOnboarding}
+            firstName={firstName}
+          />
+        ) : (
+          <QuickOnboardingFlow
+            onComplete={handleOnboardingComplete}
+            onSkipAll={handleSkipOnboarding}
+            userId={user?.id}
+            initialName={firstName}
+          />
+        )}
       </Suspense>
     </OnboardingErrorBoundary>
+  );
+}
+
+export default function OnboardingPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="min-h-screen bg-[#FDF8F3] flex items-center justify-center">
+          <Loader2 className="w-8 h-8 animate-spin text-[#6f6fd2]" />
+        </div>
+      }
+    >
+      <OnboardingPageContent />
+    </Suspense>
   );
 }
