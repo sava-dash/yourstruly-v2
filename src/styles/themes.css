@@ -1,0 +1,213 @@
+/* ============================================
+   THEME SYSTEM - Based on HeroUI design-map.json
+   ============================================ */
+
+/* Classic Theme (Original YoursTruly) */
+.theme-classic {
+  /* Brand Colors */
+  --color-primary: #406A56;
+  --color-primary-light: #8DACAB;
+  --color-accent: #D9C61A;
+  --color-secondary: #C35F33;
+  
+  /* Background */
+  --color-background: #FDF8F3;
+  --color-surface: #FFFFFF;
+  --color-surface-secondary: #F9FAFB;
+  
+  /* Borders */
+  --color-border: #E5E7EB;
+  --color-border-light: #F3F4F6;
+  --color-border-dark: #D1D5DB;
+  
+  /* Text */
+  --color-text-primary: #2D2D2D;
+  --color-text-secondary: #6B7280;
+  --color-text-muted: #9CA3AF;
+  
+  /* Interactive States */
+  --color-hover: rgba(64, 106, 86, 0.1);
+  --color-active: rgba(64, 106, 86, 0.2);
+  --color-focus: rgba(64, 106, 86, 0.3);
+  
+  /* Shadows */
+  --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+  --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+  --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+  
+  /* Border Radius */
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 16px;
+  --radius-xl: 24px;
+  --radius-full: 9999px;
+}
+
+/* HeroUI Theme (Design System Standard) */
+.theme-heroui {
+  /* Primary - Purple from design-map.json */
+  --color-primary: #52325d;
+  --color-primary-light: #7828C8; /* purple.500 */
+  --color-primary-50: #F2EAFA;
+  --color-primary-100: #E4D4F4;
+  --color-primary-200: #C9A9E9;
+  --color-primary-300: #AE7EDE;
+  --color-primary-400: #9353D3;
+  --color-primary-500: #7828C8;
+  --color-primary-600: #6020A0;
+  --color-primary-700: #481878;
+  --color-primary-800: #301050;
+  --color-primary-900: #180828;
+  
+  /* Accent Colors */
+  --color-accent: #006FEE; /* blue.500 */
+  --color-secondary: #17C964; /* green.500 */
+  --color-warning: #F5A524; /* yellow.500 */
+  --color-danger: #F31260; /* red.500 */
+  
+  /* Background - White base */
+  --color-background: #FFFFFF;
+  --color-surface: #F4F4F5; /* zinc.100 */
+  --color-surface-secondary: #FAFAFA; /* zinc.50 */
+  
+  /* Borders - Zinc scale */
+  --color-border: #E4E4E7; /* zinc.200 */
+  --color-border-light: #F4F4F5; /* zinc.100 */
+  --color-border-dark: #D4D4D8; /* zinc.300 */
+  
+  /* Text - Zinc scale */
+  --color-text-primary: #2D2D2D;
+  --color-text-secondary: #71717A; /* zinc.500 */
+  --color-text-muted: #A1A1AA; /* zinc.400 */
+  
+  /* Interactive States */
+  --color-hover: rgba(82, 50, 93, 0.05);
+  --color-active: rgba(82, 50, 93, 0.1);
+  --color-focus: rgba(82, 50, 93, 0.15);
+  
+  /* Shadows - Purple tinted */
+  --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+  --shadow-md: 0 4px 12px rgba(82, 50, 93, 0.08);
+  --shadow-lg: 0 8px 40px rgba(82, 50, 93, 0.12);
+  --shadow-xl: 0 12px 48px rgba(82, 50, 93, 0.16);
+  
+  /* Border Radius - HeroUI scale */
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 14px;
+  --radius-xl: 20px;
+  --radius-full: 9999px;
+}
+
+/* ============================================
+   UTILITY CLASSES
+   ============================================ */
+
+.btn-primary {
+  background-color: var(--color-primary);
+  color: white;
+  border-radius: var(--radius-md);
+  padding: 0.625rem 1rem;
+  font-weight: 500;
+  transition: all 0.2s;
+  border: none;
+  cursor: pointer;
+}
+
+.btn-primary:hover {
+  box-shadow: var(--shadow-xl);
+  transform: scale(1.02);
+}
+
+.btn-secondary {
+  background-color: white;
+  color: var(--color-primary);
+  border: 2px solid var(--color-border);
+  border-radius: var(--radius-md);
+  padding: 0.625rem 1rem;
+  font-weight: 500;
+  transition: all 0.2s;
+  cursor: pointer;
+}
+
+.btn-secondary:hover {
+  background-color: var(--color-surface-secondary);
+}
+
+.card-glass {
+  background: linear-gradient(to bottom, rgba(255, 255, 255, 0.9), rgba(255, 255, 255, 0.5));
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border-radius: var(--radius-xl);
+  box-shadow: var(--shadow-lg);
+  padding: 2rem;
+}
+
+.card-elevated {
+  background: white;
+  border-radius: var(--radius-xl);
+  box-shadow: var(--shadow-lg);
+  padding: 2rem;
+}
+
+.input-field {
+  width: 100%;
+  border-radius: var(--radius-md);
+  border: 2px solid var(--color-border);
+  background-color: var(--color-surface);
+  padding: 0.625rem 1rem;
+  font-size: 0.875rem;
+  box-shadow: var(--shadow-sm);
+  transition: all 0.2s;
+}
+
+.input-field:focus {
+  outline: none;
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 3px var(--color-focus);
+}
+
+.toggle-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+  border: 2px solid var(--color-border-dark);
+  background-color: var(--color-surface);
+  color: var(--color-text-secondary);
+  border-radius: var(--radius-full);
+  padding: 0.375rem 0.75rem;
+  font-size: 0.875rem;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.toggle-chip:hover {
+  border-color: var(--color-primary);
+}
+
+.toggle-chip.selected {
+  border-color: var(--color-primary);
+  background-color: var(--color-hover);
+  color: var(--color-primary);
+  font-weight: 500;
+}
+
+/* ============================================
+   THEME TRANSITION
+   ============================================ */
+
+:root {
+  color-scheme: light;
+}
+
+* {
+  transition-property: background-color, border-color, color, box-shadow;
+  transition-duration: 200ms;
+  transition-timing-function: ease-in-out;
+}
+
+/* Disable transitions during theme switch for instant change */
+.theme-switching * {
+  transition: none !important;
+}
