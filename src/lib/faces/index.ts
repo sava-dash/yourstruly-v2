@@ -1,8 +1,25 @@
 import { createClient } from '@/lib/supabase/client'
-import type { DetectedFace, FaceDetectionResult } from '@/components/memories/FaceDetector'
 
 // ============================================
 // Types
+// ============================================
+
+// Local type definitions (face detection now handled server-side via AWS Rekognition)
+interface DetectedFace {
+  descriptor: Float32Array
+  box: { x: number; y: number; width: number; height: number }
+  confidence: number
+  age?: number
+  gender?: string
+  expression?: string
+}
+
+interface FaceDetectionResult {
+  faces: DetectedFace[]
+}
+
+// ============================================
+// Exported Types
 // ============================================
 export interface Face {
   id: string

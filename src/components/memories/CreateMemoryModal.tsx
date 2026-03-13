@@ -249,7 +249,6 @@ export default function CreateMemoryModal({ isOpen, onClose, onCreated }: Create
     setAiSuggestions(null)
     setSelectedContacts(new Set())
     setShowShareSection(false)
-    setFaceDetectionProgress(null)
   }
 
   const handleClose = () => {

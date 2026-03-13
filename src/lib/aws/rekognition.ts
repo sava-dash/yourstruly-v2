@@ -86,7 +86,7 @@ export async function detectFaces(imageBuffer: Buffer): Promise<DetectedFace[]> 
 
   try {
     const command = new DetectFacesCommand(params)
-    const response = await command.send(client)
+    const response = await client.send(command)
     
     const faces: DetectedFace[] = (response.FaceDetails || []).map((face) => {
       const box = face.BoundingBox!
@@ -160,7 +160,7 @@ export async function indexFace(
       DetectionAttributes: [Attribute.ALL],
     })
     
-    const response = await command.send(client)
+    const response = await client.send(command)
     
     if (response.FaceRecords && response.FaceRecords.length > 0) {
       const faceId = response.FaceRecords[0].Face?.FaceId
@@ -197,7 +197,7 @@ export async function searchFaces(
       MaxFaces: 5,
     })
     
-    const response = await command.send(client)
+    const response = await client.send(command)
     
     const matches: FaceMatch[] = (response.FaceMatches || []).map((match) => ({
       contactId: match.Face?.ExternalImageId || '',
@@ -237,7 +237,7 @@ export async function compareFaces(
       SimilarityThreshold: threshold,
     })
     
-    const response = await command.send(client)
+    const response = await client.send(command)
     
     if (response.FaceMatches && response.FaceMatches.length > 0) {
       const similarity = response.FaceMatches[0].Similarity || 0
