@@ -1,0 +1,3470 @@
+{
+  "meta": {
+    "figmaFileKey": "F9VrW5esdIH3eIPpfBp1Ru",
+    "figmaFileName": "[YT] HeroUI Figma Kit",
+    "figmaUrl": "https://www.figma.com/design/F9VrW5esdIH3eIPpfBp1Ru/-YT--HeroUI-Figma-Kit",
+    "description": "Maps Figma design tokens to HeroUI v3 CSS custom properties and source code",
+    "source": "Figma Desktop Bridge \u2014 live extraction",
+    "lastUpdated": "2026-03-11",
+    "demoThemeUpdated": "2026-03-11",
+    "versionNote": "The Figma Kit uses HeroUI v2 naming conventions (content1-4, primary/secondary as brand colors). HeroUI v3 code uses a redesigned token system (surface/overlay/accent with oklch colors). Mappings document conceptual equivalence; actual color values differ between Kit and v3.",
+    "figmaCollections": {
+      "Primitives": {
+        "id": "VariableCollectionId:245:16677",
+        "modes": {
+          "Mode 1": "245:0"
+        },
+        "variableCount": 138,
+        "description": "Raw color palette (blue/purple/green/red/yellow/cyan/pink/zinc scales + flat variants) and spacing unit scale. Single mode \u2014 not theme-aware."
+      },
+      "Tokens": {
+        "id": "VariableCollectionId:481:16201",
+        "modes": {
+          "light": "481:0",
+          "dark": "481:1"
+        },
+        "variableCount": 121,
+        "description": "Semantic tokens aliasing Primitives, with light and dark modes. Includes color tokens and layout constants (opacity, font sizes, line heights, radii, border widths)."
+      }
+    },
+    "figmaLastModified": "2026-03-11T11:32:13Z",
+    "figmaVersion": "2329655686589982933",
+    "figmaComponentCount": 21,
+    "figmaStyleCount": 209,
+    "figmaChangelog": [
+      {
+        "version": "2329655686589982933",
+        "date": "2026-03-11T11:32:13Z",
+        "changes": [
+          "Added 'Emotions' icon category to Icons canvas (6441:72852)",
+          "Added 'Yours Truly Logo' component to Brand canvas (6410:197243)",
+          "Screens canvas restructured into 'Molecules' (6441:61697) and 'basic flow' (6441:76012) sections",
+          "Component count: 20 \u2192 21",
+          "Style count: 204 \u2192 209",
+          "New text color reference '#4A3552' on Button canvas (6407:187866)"
+        ]
+      }
+    ]
+  },
+  "primitives": {
+    "description": "Primitives collection \u2014 raw values not affected by theme mode.",
+    "colors": {
+      "blue": {
+        "50": "#E6F1FE",
+        "100": "#CCE3FD",
+        "200": "#99C7FB",
+        "300": "#66AAF9",
+        "400": "#338EF7",
+        "500": "#006FEE",
+        "600": "#005BC4",
+        "700": "#004493",
+        "800": "#002E62",
+        "900": "#001731"
+      },
+      "purple": {
+        "50": "#F2EAFA",
+        "100": "#E4D4F4",
+        "200": "#C9A9E9",
+        "300": "#AE7EDE",
+        "400": "#9353D3",
+        "500": "#7828C8",
+        "600": "#6020A0",
+        "700": "#481878",
+        "800": "#301050",
+        "900": "#180828"
+      },
+      "green": {
+        "50": "#E8FAF0",
+        "100": "#D1F4E0",
+        "200": "#A2E9C1",
+        "300": "#74DFA2",
+        "400": "#45D483",
+        "500": "#17C964",
+        "600": "#12A150",
+        "700": "#0E793C",
+        "800": "#095028",
+        "900": "#052814"
+      },
+      "red": {
+        "50": "#FEE7EF",
+        "100": "#FDD0DF",
+        "200": "#FAA0BF",
+        "300": "#F871A0",
+        "400": "#F54180",
+        "500": "#F31260",
+        "600": "#C20E4D",
+        "700": "#920B3A",
+        "800": "#610726",
+        "900": "#310413"
+      },
+      "yellow": {
+        "50": "#FEFCE8",
+        "100": "#FDEDD3",
+        "200": "#FBDBA7",
+        "300": "#F9C97C",
+        "400": "#F7B750",
+        "500": "#F5A524",
+        "600": "#C4841D",
+        "700": "#936316",
+        "800": "#62420E",
+        "900": "#312107"
+      },
+      "cyan": {
+        "50": "#F0FCFF",
+        "100": "#E6FAFE",
+        "200": "#D7F8FE",
+        "300": "#C3F4FD",
+        "400": "#A5EEFD",
+        "500": "#7EE7FC",
+        "600": "#06B7DB",
+        "700": "#09AACD",
+        "800": "#0E8AAA",
+        "900": "#053B48"
+      },
+      "pink": {
+        "50": "#FFEDFA",
+        "100": "#FFDCF5",
+        "200": "#FFB8EB",
+        "300": "#FF95E1",
+        "400": "#FF71D7",
+        "500": "#FF4ECD",
+        "600": "#CC3EA4",
+        "700": "#992F7B",
+        "800": "#661F52",
+        "900": "#331029"
+      },
+      "zinc": {
+        "50": "#FAFAFA",
+        "100": "#F4F4F5",
+        "200": "#E4E4E7",
+        "300": "#D4D4D8",
+        "400": "#A1A1AA",
+        "500": "#71717A",
+        "600": "#52525B",
+        "700": "#3F3F46",
+        "800": "#27272A",
+        "900": "#18181B"
+      },
+      "white": "#FFFFFF",
+      "black": "#000000",
+      "flat": {
+        "default-300": "#D4D4D866",
+        "default-700": "#3F3F4666",
+        "primary-500": "#006FEE33",
+        "secondary-400": "#9353D333",
+        "secondary-500": "#7828C833",
+        "success-500": "#17C96433",
+        "warning-500": "#F5A52433",
+        "danger-500": "#F3126033"
+      }
+    },
+    "spacing": {
+      "baseUnit": {
+        "value": 4,
+        "px": "4px",
+        "rem": "0.25rem",
+        "tailwind": "--spacing: 0.25rem"
+      },
+      "numericScale": {
+        "1": {
+          "px": 4,
+          "rem": "0.25rem",
+          "tailwind": "space-1",
+          "note": "base unit"
+        },
+        "0": {
+          "px": 0,
+          "rem": "0rem",
+          "tailwind": "space-0"
+        },
+        "2": {
+          "px": 8,
+          "rem": "0.5rem",
+          "tailwind": "space-2"
+        },
+        "3": {
+          "px": 12,
+          "rem": "0.75rem",
+          "tailwind": "space-3"
+        },
+        "4": {
+          "px": 16,
+          "rem": "1rem",
+          "tailwind": "space-4"
+        },
+        "5": {
+          "px": 20,
+          "rem": "1.25rem",
+          "tailwind": "space-5"
+        },
+        "6": {
+          "px": 24,
+          "rem": "1.5rem",
+          "tailwind": "space-6"
+        },
+        "7": {
+          "px": 28,
+          "rem": "1.75rem",
+          "tailwind": "space-7"
+        },
+        "8": {
+          "px": 32,
+          "rem": "2rem",
+          "tailwind": "space-8"
+        },
+        "9": {
+          "px": 36,
+          "rem": "2.25rem",
+          "tailwind": "space-9"
+        },
+        "10": {
+          "px": 40,
+          "rem": "2.5rem",
+          "tailwind": "space-10"
+        },
+        "11": {
+          "px": 44,
+          "rem": "2.75rem",
+          "tailwind": "space-11"
+        },
+        "12": {
+          "px": 48,
+          "rem": "3rem",
+          "tailwind": "space-12"
+        },
+        "13": {
+          "px": 52,
+          "rem": "3.25rem",
+          "tailwind": "space-13"
+        },
+        "14": {
+          "px": 56,
+          "rem": "3.5rem",
+          "tailwind": "space-14"
+        },
+        "15": {
+          "px": 60,
+          "rem": "3.75rem",
+          "tailwind": "space-15"
+        },
+        "16": {
+          "px": 64,
+          "rem": "4rem",
+          "tailwind": "space-16"
+        },
+        "17": {
+          "px": 68,
+          "rem": "4.25rem",
+          "tailwind": "space-17"
+        },
+        "18": {
+          "px": 72,
+          "rem": "4.5rem",
+          "tailwind": "space-18"
+        },
+        "20": {
+          "px": 80,
+          "rem": "5rem",
+          "tailwind": "space-20"
+        },
+        "24": {
+          "px": 96,
+          "rem": "6rem",
+          "tailwind": "space-24"
+        },
+        "28": {
+          "px": 112,
+          "rem": "7rem",
+          "tailwind": "space-28"
+        },
+        "32": {
+          "px": 128,
+          "rem": "8rem",
+          "tailwind": "space-32"
+        },
+        "36": {
+          "px": 144,
+          "rem": "9rem",
+          "tailwind": "space-36"
+        },
+        "40": {
+          "px": 160,
+          "rem": "10rem",
+          "tailwind": "space-40"
+        },
+        "44": {
+          "px": 176,
+          "rem": "11rem",
+          "tailwind": "space-44"
+        },
+        "48": {
+          "px": 192,
+          "rem": "12rem",
+          "tailwind": "space-48"
+        },
+        "52": {
+          "px": 208,
+          "rem": "13rem",
+          "tailwind": "space-52"
+        },
+        "56": {
+          "px": 224,
+          "rem": "14rem",
+          "tailwind": "space-56"
+        },
+        "60": {
+          "px": 240,
+          "rem": "15rem",
+          "tailwind": "space-60"
+        },
+        "64": {
+          "px": 256,
+          "rem": "16rem",
+          "tailwind": "space-64"
+        },
+        "72": {
+          "px": 288,
+          "rem": "18rem",
+          "tailwind": "space-72"
+        },
+        "80": {
+          "px": 320,
+          "rem": "20rem",
+          "tailwind": "space-80"
+        },
+        "96": {
+          "px": 384,
+          "rem": "24rem",
+          "tailwind": "space-96"
+        }
+      },
+      "namedSizes": {
+        "xs": {
+          "px": 8,
+          "rem": "0.5rem"
+        },
+        "sm": {
+          "px": 12,
+          "rem": "0.75rem"
+        },
+        "md": {
+          "px": 16,
+          "rem": "1rem"
+        },
+        "lg": {
+          "px": 22,
+          "rem": "1.375rem"
+        },
+        "xl": {
+          "px": 36,
+          "rem": "2.25rem"
+        },
+        "2xl": {
+          "px": 48,
+          "rem": "3rem"
+        },
+        "3xl": {
+          "px": 80,
+          "rem": "5rem"
+        },
+        "4xl": {
+          "px": 120,
+          "rem": "7.5rem"
+        },
+        "5xl": {
+          "px": 224,
+          "rem": "14rem"
+        },
+        "6xl": {
+          "px": 288,
+          "rem": "18rem"
+        },
+        "7xl": {
+          "px": 384,
+          "rem": "24rem"
+        },
+        "8xl": {
+          "px": 512,
+          "rem": "32rem"
+        },
+        "9xl": {
+          "px": 640,
+          "rem": "40rem"
+        },
+        "3_5": {
+          "px": 14,
+          "rem": "0.875rem"
+        }
+      }
+    }
+  },
+  "tokens": {
+    "description": "Tokens collection \u2014 semantic, theme-aware. All color values resolved to hex.",
+    "colors": {
+      "layout": {
+        "description": "Global layout colors.",
+        "background": {
+          "id": "VariableID:481:16202",
+          "light": {
+            "alias": "colors/common/white",
+            "hex": "#FFFFFF"
+          },
+          "dark": {
+            "alias": "colors/common/black",
+            "hex": "#000000"
+          }
+        },
+        "foreground": {
+          "id": "VariableID:481:16203",
+          "light": {
+            "alias": null,
+            "hex": "#11181C"
+          },
+          "dark": {
+            "alias": null,
+            "hex": "#ECEDEE"
+          }
+        },
+        "divider": {
+          "id": "VariableID:481:16204",
+          "light": {
+            "alias": null,
+            "hex": "#11111126"
+          },
+          "dark": {
+            "alias": null,
+            "hex": "#FFFFFF26"
+          }
+        },
+        "focus": {
+          "id": "VariableID:481:16205",
+          "light": {
+            "alias": "colors/common/blue/500",
+            "hex": "#006FEE"
+          },
+          "dark": {
+            "alias": "colors/common/blue/500",
+            "hex": "#006FEE"
+          }
+        },
+        "focusOp20": {
+          "id": "VariableID:1660:4146",
+          "light": {
+            "alias": null,
+            "hex": "#006FEE33"
+          },
+          "dark": {
+            "alias": null,
+            "hex": "#006FEE33"
+          }
+        },
+        "overlay": {
+          "id": "VariableID:481:16250",
+          "light": {
+            "alias": null,
+            "hex": "#0000004D"
+          },
+          "dark": {
+            "alias": null,
+            "hex": "#0000004D"
+          }
+        },
+        "foregroundScale": {
+          "50": {
+            "id": "VariableID:481:16216",
+            "light": {
+              "alias": "colors/common/zinc/50",
+              "hex": "#FAFAFA"
+            },
+            "dark": {
+              "alias": "colors/common/zinc/900",
+              "hex": "#18181B"
+            }
+          },
+          "100": {
+            "id": "VariableID:481:16217",
+            "light": {
+              "alias": "colors/common/zinc/100",
+              "hex": "#F4F4F5"
+            },
+            "dark": {
+              "alias": "colors/common/zinc/800",
+              "hex": "#27272A"
+            }
+          },
+          "200": {
+            "id": "VariableID:481:16218",
+            "light": {
+              "alias": "colors/common/zinc/200",
+              "hex": "#E4E4E7"
+            },
+            "dark": {
+              "alias": "colors/common/zinc/700",
+              "hex": "#3F3F46"
+            }
+          },
+          "300": {
+            "id": "VariableID:481:16219",
+            "light": {
+              "alias": "colors/common/zinc/300",
+              "hex": "#D4D4D8"
+            },
+            "dark": {
+              "alias": "colors/common/zinc/600",
+              "hex": "#52525B"
+            }
+          },
+          "400": {
+            "id": "VariableID:481:16220",
+            "light": {
+              "alias": "colors/common/zinc/400",
+              "hex": "#A1A1AA"
+            },
+            "dark": {
+              "alias": "colors/common/zinc/500",
+              "hex": "#71717A"
+            }
+          },
+          "500": {
+            "id": "VariableID:481:16221",
+            "light": {
+              "alias": "colors/common/zinc/500",
+              "hex": "#71717A"
+            },
+            "dark": {
+              "alias": "colors/common/zinc/400",
+              "hex": "#A1A1AA"
+            }
+          },
+          "600": {
+            "id": "VariableID:481:16222",
+            "light": {
+              "alias": "colors/common/zinc/600",
+              "hex": "#52525B"
+            },
+            "dark": {
+              "alias": "colors/common/zinc/300",
+              "hex": "#D4D4D8"
+            }
+          },
+          "700": {
+            "id": "VariableID:481:16223",
+            "light": {
+              "alias": "colors/common/zinc/700",
+              "hex": "#3F3F46"
+            },
+            "dark": {
+              "alias": "colors/common/zinc/200",
+              "hex": "#E4E4E7"
+            }
+          },
+          "800": {
+            "id": "VariableID:481:16224",
+            "light": {
+              "alias": "colors/common/zinc/800",
+              "hex": "#27272A"
+            },
+            "dark": {
+              "alias": "colors/common/zinc/100",
+              "hex": "#F4F4F5"
+            }
+          },
+          "900": {
+            "id": "VariableID:481:16225",
+            "light": {
+              "alias": "colors/common/zinc/900",
+              "hex": "#18181B"
+            },
+            "dark": {
+              "alias": "colors/common/zinc/50",
+              "hex": "#FAFAFA"
+            }
+          }
+        }
+      },
+      "content": {
+        "description": "Surface hierarchy (v2 terminology). content1=primary surface, content2=secondary, content3=tertiary, content4=quaternary.",
+        "content1": {
+          "id": "VariableID:481:16206",
+          "light": {
+            "alias": "colors/common/white",
+            "hex": "#FFFFFF"
+          },
+          "dark": {
+            "alias": "colors/common/zinc/900",
+            "hex": "#18181B"
+          }
+        },
+        "content1Foreground": {
+          "id": "VariableID:481:16246",
+          "light": {
+            "alias": null,
+            "hex": "#11181C"
+          },
+          "dark": {
+            "alias": "colors/common/zinc/50",
+            "hex": "#FAFAFA"
+          }
+        },
+        "content2": {
+          "id": "VariableID:481:16207",
+          "light": {
+            "alias": "colors/common/zinc/100",
+            "hex": "#F4F4F5"
+          },
+          "dark": {
+            "alias": "colors/common/zinc/800",
+            "hex": "#27272A"
+          }
+        },
+        "content2Foreground": {
+          "id": "VariableID:481:16247",
+          "light": {
+            "alias": "colors/common/zinc/800",
+            "hex": "#27272A"
+          },
+          "dark": {
+            "alias": "colors/common/zinc/100",
+            "hex": "#F4F4F5"
+          }
+        },
+        "content3": {
+          "id": "VariableID:481:16208",
+          "light": {
+            "alias": "colors/common/zinc/300",
+            "hex": "#D4D4D8"
+          },
+          "dark": {
+            "alias": "colors/common/zinc/700",
+            "hex": "#3F3F46"
+          }
+        },
+        "content3Foreground": {
+          "id": "VariableID:481:16248",
+          "light": {
+            "alias": "colors/common/zinc/700",
+            "hex": "#3F3F46"
+          },
+          "dark": {
+            "alias": "colors/common/zinc/200",
+            "hex": "#E4E4E7"
+          }
+        },
+        "content4": {
+          "id": "VariableID:481:16209",
+          "light": {
+            "alias": "colors/common/zinc/300",
+            "hex": "#D4D4D8"
+          },
+          "dark": {
+            "alias": "colors/common/zinc/600",
+            "hex": "#52525B"
+          }
+        },
+        "content4Foreground": {
+          "id": "VariableID:481:16249",
+          "light": {
+            "alias": "colors/common/zinc/600",
+            "hex": "#52525B"
+          },
+          "dark": {
+            "alias": "colors/common/zinc/300",
+            "hex": "#D4D4D8"
+          }
+        }
+      },
+      "base": {
+        "description": "Status/brand colors and their full shade scales.",
+        "default": {
+          "id": "VariableID:481:16210",
+          "light": {
+            "alias": "colors/common/zinc/300",
+            "hex": "#D4D4D8"
+          },
+          "dark": {
+            "alias": "colors/common/zinc/700",
+            "hex": "#3F3F46"
+          }
+        },
+        "defaultForeground": {
+          "id": "VariableID:481:16251",
+          "light": {
+            "alias": "colors/common/black",
+            "hex": "#000000"
+          },
+          "dark": {
+            "alias": "colors/common/white",
+            "hex": "#FFFFFF"
+          }
+        },
+        "primary": {
+          "id": "VariableID:481:16211",
+          "light": {
+            "alias": "colors/common/blue/500",
+            "hex": "#006FEE"
+          },
+          "dark": {
+            "alias": "colors/common/blue/500",
+            "hex": "#006FEE"
+          }
+        },
+        "primaryForeground": {
+          "id": "VariableID:481:16252",
+          "light": {
+            "alias": "colors/common/white",
+            "hex": "#FFFFFF"
+          },
+          "dark": {
+            "alias": "colors/common/white",
+            "hex": "#FFFFFF"
+          }
+        },
+        "secondary": {
+          "id": "VariableID:481:16212",
+          "light": {
+            "alias": "colors/common/purple/500",
+            "hex": "#7828C8"
+          },
+          "dark": {
+            "alias": "colors/common/purple/400",
+            "hex": "#9353D3"
+          }
+        },
+        "secondaryForeground": {
+          "id": "VariableID:481:16253",
+          "light": {
+            "alias": "colors/common/white",
+            "hex": "#FFFFFF"
+          },
+          "dark": {
+            "alias": "colors/common/white",
+            "hex": "#FFFFFF"
+          }
+        },
+        "success": {
+          "id": "VariableID:481:16213",
+          "light": {
+            "alias": "colors/common/green/500",
+            "hex": "#17C964"
+          },
+          "dark": {
+            "alias": "colors/common/green/500",
+            "hex": "#17C964"
+          }
+        },
+        "successForeground": {
+          "id": "VariableID:481:16254",
+          "light": {
+            "alias": "colors/common/black",
+            "hex": "#000000"
+          },
+          "dark": {
+            "alias": "colors/common/black",
+            "hex": "#000000"
+          }
+        },
+        "warning": {
+          "id": "VariableID:481:16214",
+          "light": {
+            "alias": "colors/common/yellow/500",
+            "hex": "#F5A524"
+          },
+          "dark": {
+            "alias": "colors/common/yellow/500",
+            "hex": "#F5A524"
+          }
+        },
+        "warningForeground": {
+          "id": "VariableID:481:16255",
+          "light": {
+            "alias": "colors/common/black",
+            "hex": "#000000"
+          },
+          "dark": {
+            "alias": "colors/common/black",
+            "hex": "#000000"
+          }
+        },
+        "danger": {
+          "id": "VariableID:481:16215",
+          "light": {
+            "alias": "colors/common/red/500",
+            "hex": "#F31260"
+          },
+          "dark": {
+            "alias": "colors/common/red/500",
+            "hex": "#F31260"
+          }
+        },
+        "dangerForeground": {
+          "id": "VariableID:481:16256",
+          "light": {
+            "alias": "colors/common/white",
+            "hex": "#FFFFFF"
+          },
+          "dark": {
+            "alias": "colors/common/white",
+            "hex": "#FFFFFF"
+          }
+        },
+        "forceDark": {
+          "id": "VariableID:2023:16551",
+          "light": {
+            "alias": "colors/layout/background",
+            "hex": "#FFFFFF"
+          },
+          "dark": {
+            "alias": "colors/base/default",
+            "hex": "#3F3F46"
+          }
+        },
+        "defaultScale": {
+          "50": {
+            "id": "VariableID:481:16257",
+            "light": {
+              "alias": "colors/common/zinc/50",
+              "hex": "#FAFAFA"
+            },
+            "dark": {
+              "alias": "colors/common/zinc/900",
+              "hex": "#18181B"
+            }
+          },
+          "100": {
+            "id": "VariableID:481:16258",
+            "light": {
+              "alias": "colors/common/zinc/100",
+              "hex": "#F4F4F5"
+            },
+            "dark": {
+              "alias": "colors/common/zinc/800",
+              "hex": "#27272A"
+            }
+          },
+          "200": {
+            "id": "VariableID:481:16259",
+            "light": {
+              "alias": "colors/common/zinc/200",
+              "hex": "#E4E4E7"
+            },
+            "dark": {
+              "alias": "colors/common/zinc/700",
+              "hex": "#3F3F46"
+            }
+          },
+          "300": {
+            "id": "VariableID:481:16260",
+            "light": {
+              "alias": "colors/common/zinc/300",
+              "hex": "#D4D4D8"
+            },
+            "dark": {
+              "alias": "colors/common/zinc/600",
+              "hex": "#52525B"
+            }
+          },
+          "400": {
+            "id": "VariableID:481:16261",
+            "light": {
+              "alias": "colors/common/zinc/400",
+              "hex": "#A1A1AA"
+            },
+            "dark": {
+              "alias": "colors/common/zinc/500",
+              "hex": "#71717A"
+            }
+          },
+          "500": {
+            "id": "VariableID:481:16262",
+            "light": {
+              "alias": "colors/common/zinc/500",
+              "hex": "#71717A"
+            },
+            "dark": {
+              "alias": "colors/common/zinc/400",
+              "hex": "#A1A1AA"
+            }
+          },
+          "600": {
+            "id": "VariableID:481:16263",
+            "light": {
+              "alias": "colors/common/zinc/600",
+              "hex": "#52525B"
+            },
+            "dark": {
+              "alias": "colors/common/zinc/300",
+              "hex": "#D4D4D8"
+            }
+          },
+          "700": {
+            "id": "VariableID:481:16264",
+            "light": {
+              "alias": "colors/common/zinc/700",
+              "hex": "#3F3F46"
+            },
+            "dark": {
+              "alias": "colors/common/zinc/200",
+              "hex": "#E4E4E7"
+            }
+          },
+          "800": {
+            "id": "VariableID:481:16265",
+            "light": {
+              "alias": "colors/common/zinc/800",
+              "hex": "#27272A"
+            },
+            "dark": {
+              "alias": "colors/common/zinc/100",
+              "hex": "#F4F4F5"
+            }
+          },
+          "900": {
+            "id": "VariableID:481:16266",
+            "light": {
+              "alias": "colors/common/zinc/900",
+              "hex": "#18181B"
+            },
+            "dark": {
+              "alias": "colors/common/zinc/50",
+              "hex": "#FAFAFA"
+            }
+          }
+        },
+        "primaryScale": {
+          "50": {
+            "id": "VariableID:481:16267",
+            "light": {
+              "alias": "colors/common/blue/50",
+              "hex": "#E6F1FE"
+            },
+            "dark": {
+              "alias": "colors/common/blue/900",
+              "hex": "#001731"
+            }
+          },
+          "100": {
+            "id": "VariableID:481:16268",
+            "light": {
+              "alias": "colors/common/blue/100",
+              "hex": "#CCE3FD"
+            },
+            "dark": {
+              "alias": "colors/common/blue/800",
+              "hex": "#002E62"
+            }
+          },
+          "200": {
+            "id": "VariableID:481:16269",
+            "light": {
+              "alias": "colors/common/blue/200",
+              "hex": "#99C7FB"
+            },
+            "dark": {
+              "alias": "colors/common/blue/700",
+              "hex": "#004493"
+            }
+          },
+          "300": {
+            "id": "VariableID:481:16270",
+            "light": {
+              "alias": "colors/common/blue/300",
+              "hex": "#66AAF9"
+            },
+            "dark": {
+              "alias": "colors/common/blue/600",
+              "hex": "#005BC4"
+            }
+          },
+          "400": {
+            "id": "VariableID:481:16271",
+            "light": {
+              "alias": "colors/common/blue/400",
+              "hex": "#338EF7"
+            },
+            "dark": {
+              "alias": "colors/common/blue/500",
+              "hex": "#006FEE"
+            }
+          },
+          "500": {
+            "id": "VariableID:481:16272",
+            "light": {
+              "alias": "colors/common/blue/500",
+              "hex": "#006FEE"
+            },
+            "dark": {
+              "alias": "colors/common/blue/400",
+              "hex": "#338EF7"
+            }
+          },
+          "600": {
+            "id": "VariableID:481:16273",
+            "light": {
+              "alias": "colors/common/blue/600",
+              "hex": "#005BC4"
+            },
+            "dark": {
+              "alias": "colors/common/blue/300",
+              "hex": "#66AAF9"
+            }
+          },
+          "700": {
+            "id": "VariableID:481:16274",
+            "light": {
+              "alias": "colors/common/blue/700",
+              "hex": "#004493"
+            },
+            "dark": {
+              "alias": "colors/common/blue/200",
+              "hex": "#99C7FB"
+            }
+          },
+          "800": {
+            "id": "VariableID:481:16275",
+            "light": {
+              "alias": "colors/common/blue/800",
+              "hex": "#002E62"
+            },
+            "dark": {
+              "alias": "colors/common/blue/100",
+              "hex": "#CCE3FD"
+            }
+          },
+          "900": {
+            "id": "VariableID:481:16276",
+            "light": {
+              "alias": "colors/common/blue/900",
+              "hex": "#001731"
+            },
+            "dark": {
+              "alias": "colors/common/blue/50",
+              "hex": "#E6F1FE"
+            }
+          }
+        },
+        "secondaryScale": {
+          "50": {
+            "id": "VariableID:481:16277",
+            "light": {
+              "alias": "colors/common/purple/50",
+              "hex": "#F2EAFA"
+            },
+            "dark": {
+              "alias": "colors/common/purple/900",
+              "hex": "#180828"
+            }
+          },
+          "100": {
+            "id": "VariableID:481:16278",
+            "light": {
+              "alias": "colors/common/purple/100",
+              "hex": "#E4D4F4"
+            },
+            "dark": {
+              "alias": "colors/common/purple/800",
+              "hex": "#301050"
+            }
+          },
+          "200": {
+            "id": "VariableID:481:16279",
+            "light": {
+              "alias": "colors/common/purple/200",
+              "hex": "#C9A9E9"
+            },
+            "dark": {
+              "alias": "colors/common/purple/700",
+              "hex": "#481878"
+            }
+          },
+          "300": {
+            "id": "VariableID:481:16280",
+            "light": {
+              "alias": "colors/common/purple/300",
+              "hex": "#AE7EDE"
+            },
+            "dark": {
+              "alias": "colors/common/purple/600",
+              "hex": "#6020A0"
+            }
+          },
+          "400": {
+            "id": "VariableID:481:16281",
+            "light": {
+              "alias": "colors/common/purple/400",
+              "hex": "#9353D3"
+            },
+            "dark": {
+              "alias": "colors/common/purple/500",
+              "hex": "#7828C8"
+            }
+          },
+          "500": {
+            "id": "VariableID:481:16282",
+            "light": {
+              "alias": "colors/common/purple/500",
+              "hex": "#7828C8"
+            },
+            "dark": {
+              "alias": "colors/common/purple/400",
+              "hex": "#9353D3"
+            }
+          },
+          "600": {
+            "id": "VariableID:481:16283",
+            "light": {
+              "alias": "colors/common/purple/600",
+              "hex": "#6020A0"
+            },
+            "dark": {
+              "alias": "colors/common/purple/300",
+              "hex": "#AE7EDE"
+            }
+          },
+          "700": {
+            "id": "VariableID:481:16284",
+            "light": {
+              "alias": "colors/common/purple/700",
+              "hex": "#481878"
+            },
+            "dark": {
+              "alias": "colors/common/purple/200",
+              "hex": "#C9A9E9"
+            }
+          },
+          "800": {
+            "id": "VariableID:481:16285",
+            "light": {
+              "alias": "colors/common/purple/800",
+              "hex": "#301050"
+            },
+            "dark": {
+              "alias": "colors/common/purple/100",
+              "hex": "#E4D4F4"
+            }
+          },
+          "900": {
+            "id": "VariableID:481:16286",
+            "light": {
+              "alias": "colors/common/purple/900",
+              "hex": "#180828"
+            },
+            "dark": {
+              "alias": "colors/common/purple/50",
+              "hex": "#F2EAFA"
+            }
+          }
+        },
+        "successScale": {
+          "50": {
+            "id": "VariableID:481:16287",
+            "light": {
+              "alias": "colors/common/green/50",
+              "hex": "#E8FAF0"
+            },
+            "dark": {
+              "alias": "colors/common/green/900",
+              "hex": "#052814"
+            }
+          },
+          "100": {
+            "id": "VariableID:481:16288",
+            "light": {
+              "alias": "colors/common/green/100",
+              "hex": "#D1F4E0"
+            },
+            "dark": {
+              "alias": "colors/common/green/800",
+              "hex": "#095028"
+            }
+          },
+          "200": {
+            "id": "VariableID:481:16289",
+            "light": {
+              "alias": "colors/common/green/200",
+              "hex": "#A2E9C1"
+            },
+            "dark": {
+              "alias": "colors/common/green/700",
+              "hex": "#0E793C"
+            }
+          },
+          "300": {
+            "id": "VariableID:481:16290",
+            "light": {
+              "alias": "colors/common/green/300",
+              "hex": "#74DFA2"
+            },
+            "dark": {
+              "alias": "colors/common/green/600",
+              "hex": "#12A150"
+            }
+          },
+          "400": {
+            "id": "VariableID:481:16291",
+            "light": {
+              "alias": "colors/common/green/400",
+              "hex": "#45D483"
+            },
+            "dark": {
+              "alias": "colors/common/green/500",
+              "hex": "#17C964"
+            }
+          },
+          "500": {
+            "id": "VariableID:481:16292",
+            "light": {
+              "alias": "colors/common/green/500",
+              "hex": "#17C964"
+            },
+            "dark": {
+              "alias": "colors/common/green/400",
+              "hex": "#45D483"
+            }
+          },
+          "600": {
+            "id": "VariableID:481:16293",
+            "light": {
+              "alias": "colors/common/green/600",
+              "hex": "#12A150"
+            },
+            "dark": {
+              "alias": "colors/common/green/300",
+              "hex": "#74DFA2"
+            }
+          },
+          "700": {
+            "id": "VariableID:481:16294",
+            "light": {
+              "alias": "colors/common/green/700",
+              "hex": "#0E793C"
+            },
+            "dark": {
+              "alias": "colors/common/green/200",
+              "hex": "#A2E9C1"
+            }
+          },
+          "800": {
+            "id": "VariableID:481:16295",
+            "light": {
+              "alias": "colors/common/green/800",
+              "hex": "#095028"
+            },
+            "dark": {
+              "alias": "colors/common/green/100",
+              "hex": "#D1F4E0"
+            }
+          },
+          "900": {
+            "id": "VariableID:481:16296",
+            "light": {
+              "alias": "colors/common/green/800",
+              "hex": "#095028"
+            },
+            "dark": {
+              "alias": "colors/common/green/50",
+              "hex": "#E8FAF0"
+            }
+          }
+        },
+        "warningScale": {
+          "50": {
+            "id": "VariableID:481:16297",
+            "light": {
+              "alias": "colors/common/yellow/50",
+              "hex": "#FEFCE8"
+            },
+            "dark": {
+              "alias": "colors/common/yellow/900",
+              "hex": "#312107"
+            }
+          },
+          "100": {
+            "id": "VariableID:481:16298",
+            "light": {
+              "alias": "colors/common/yellow/100",
+              "hex": "#FDEDD3"
+            },
+            "dark": {
+              "alias": "colors/common/yellow/800",
+              "hex": "#62420E"
+            }
+          },
+          "200": {
+            "id": "VariableID:481:16299",
+            "light": {
+              "alias": "colors/common/yellow/200",
+              "hex": "#FBDBA7"
+            },
+            "dark": {
+              "alias": "colors/common/yellow/700",
+              "hex": "#936316"
+            }
+          },
+          "300": {
+            "id": "VariableID:481:16300",
+            "light": {
+              "alias": "colors/common/yellow/300",
+              "hex": "#F9C97C"
+            },
+            "dark": {
+              "alias": "colors/common/yellow/600",
+              "hex": "#C4841D"
+            }
+          },
+          "400": {
+            "id": "VariableID:481:16301",
+            "light": {
+              "alias": "colors/common/yellow/400",
+              "hex": "#F7B750"
+            },
+            "dark": {
+              "alias": "colors/common/yellow/500",
+              "hex": "#F5A524"
+            }
+          },
+          "500": {
+            "id": "VariableID:481:16302",
+            "light": {
+              "alias": "colors/common/yellow/500",
+              "hex": "#F5A524"
+            },
+            "dark": {
+              "alias": "colors/common/yellow/400",
+              "hex": "#F7B750"
+            }
+          },
+          "600": {
+            "id": "VariableID:481:16303",
+            "light": {
+              "alias": "colors/common/yellow/600",
+              "hex": "#C4841D"
+            },
+            "dark": {
+              "alias": "colors/common/yellow/300",
+              "hex": "#F9C97C"
+            }
+          },
+          "700": {
+            "id": "VariableID:481:16304",
+            "light": {
+              "alias": "colors/common/yellow/700",
+              "hex": "#936316"
+            },
+            "dark": {
+              "alias": "colors/common/yellow/200",
+              "hex": "#FBDBA7"
+            }
+          },
+          "800": {
+            "id": "VariableID:481:16305",
+            "light": {
+              "alias": "colors/common/yellow/800",
+              "hex": "#62420E"
+            },
+            "dark": {
+              "alias": "colors/common/yellow/100",
+              "hex": "#FDEDD3"
+            }
+          },
+          "900": {
+            "id": "VariableID:481:16307",
+            "light": {
+              "alias": "colors/common/yellow/900",
+              "hex": "#312107"
+            },
+            "dark": {
+              "alias": "colors/common/yellow/50",
+              "hex": "#FEFCE8"
+            }
+          }
+        },
+        "dangerScale": {
+          "50": {
+            "id": "VariableID:481:16308",
+            "light": {
+              "alias": "colors/common/red/50",
+              "hex": "#FEE7EF"
+            },
+            "dark": {
+              "alias": "colors/common/red/900",
+              "hex": "#310413"
+            }
+          },
+          "100": {
+            "id": "VariableID:481:16309",
+            "light": {
+              "alias": "colors/common/red/100",
+              "hex": "#FDD0DF"
+            },
+            "dark": {
+              "alias": "colors/common/red/800",
+              "hex": "#610726"
+            }
+          },
+          "200": {
+            "id": "VariableID:481:16310",
+            "light": {
+              "alias": "colors/common/red/200",
+              "hex": "#FAA0BF"
+            },
+            "dark": {
+              "alias": "colors/common/red/700",
+              "hex": "#920B3A"
+            }
+          },
+          "300": {
+            "id": "VariableID:481:16311",
+            "light": {
+              "alias": "colors/common/red/300",
+              "hex": "#F871A0"
+            },
+            "dark": {
+              "alias": "colors/common/red/600",
+              "hex": "#C20E4D"
+            }
+          },
+          "400": {
+            "id": "VariableID:481:16312",
+            "light": {
+              "alias": "colors/common/red/400",
+              "hex": "#F54180"
+            },
+            "dark": {
+              "alias": "colors/common/red/500",
+              "hex": "#F31260"
+            }
+          },
+          "500": {
+            "id": "VariableID:481:16313",
+            "light": {
+              "alias": "colors/common/red/500",
+              "hex": "#F31260"
+            },
+            "dark": {
+              "alias": "colors/common/red/400",
+              "hex": "#F54180"
+            }
+          },
+          "600": {
+            "id": "VariableID:481:16314",
+            "light": {
+              "alias": "colors/common/red/600",
+              "hex": "#C20E4D"
+            },
+            "dark": {
+              "alias": "colors/common/red/300",
+              "hex": "#F871A0"
+            }
+          },
+          "700": {
+            "id": "VariableID:481:16315",
+            "light": {
+              "alias": "colors/common/red/700",
+              "hex": "#920B3A"
+            },
+            "dark": {
+              "alias": "colors/common/red/200",
+              "hex": "#FAA0BF"
+            }
+          },
+          "800": {
+            "id": "VariableID:481:16316",
+            "light": {
+              "alias": "colors/common/red/800",
+              "hex": "#610726"
+            },
+            "dark": {
+              "alias": "colors/common/red/100",
+              "hex": "#FDD0DF"
+            }
+          },
+          "900": {
+            "id": "VariableID:481:16317",
+            "light": {
+              "alias": "colors/common/red/900",
+              "hex": "#310413"
+            },
+            "dark": {
+              "alias": "colors/common/red/50",
+              "hex": "#FEE7EF"
+            }
+          }
+        }
+      },
+      "flat": {
+        "description": "Semi-transparent flat/soft variants for components with soft variant.",
+        "primaryFlat": {
+          "id": "VariableID:2290:9696",
+          "light": {
+            "alias": "colors/common/flat/primary-500-flat",
+            "hex": "#006FEE33"
+          },
+          "dark": {
+            "alias": "colors/common/flat/primary-500-flat",
+            "hex": "#006FEE33"
+          }
+        },
+        "secondaryFlat": {
+          "id": "VariableID:2290:9697",
+          "light": {
+            "alias": "colors/common/flat/secondary-500-flat",
+            "hex": "#7828C833"
+          },
+          "dark": {
+            "alias": "colors/common/flat/secondary-400-flat",
+            "hex": "#9353D333"
+          }
+        },
+        "successFlat": {
+          "id": "VariableID:2290:9698",
+          "light": {
+            "alias": "colors/common/flat/success-500-flat",
+            "hex": "#17C96433"
+          },
+          "dark": {
+            "alias": "colors/common/flat/success-500-flat",
+            "hex": "#17C96433"
+          }
+        },
+        "warningFlat": {
+          "id": "VariableID:2290:9699",
+          "light": {
+            "alias": "colors/common/flat/warning-500-flat",
+            "hex": "#F5A52433"
+          },
+          "dark": {
+            "alias": "colors/common/flat/warning-500-flat",
+            "hex": "#F5A52433"
+          }
+        },
+        "dangerFlat": {
+          "id": "VariableID:2290:9700",
+          "light": {
+            "alias": "colors/common/flat/danger-500-flat",
+            "hex": "#F3126033"
+          },
+          "dark": {
+            "alias": "colors/common/flat/danger-500-flat",
+            "hex": "#F3126033"
+          }
+        },
+        "defaultFlat": {
+          "id": "VariableID:2290:9766",
+          "light": {
+            "alias": "colors/common/flat/default-300-flat",
+            "hex": "#D4D4D866"
+          },
+          "dark": {
+            "alias": "colors/common/flat/default-700-flat",
+            "hex": "#3F3F4666"
+          }
+        }
+      }
+    },
+    "layout": {
+      "description": "Non-color layout constants.",
+      "disabledOpacity": {
+        "id": "VariableID:482:17691",
+        "value": 0.5,
+        "px": "0px"
+      },
+      "dividerWeight": {
+        "id": "VariableID:482:17692",
+        "value": 1,
+        "px": "1px"
+      },
+      "fontSize": {
+        "tiny": {
+          "id": "VariableID:482:17693",
+          "value": 12,
+          "px": "12px"
+        },
+        "small": {
+          "id": "VariableID:482:17694",
+          "value": 14,
+          "px": "14px"
+        },
+        "medium": {
+          "id": "VariableID:482:17695",
+          "value": 16,
+          "px": "16px"
+        },
+        "large": {
+          "id": "VariableID:482:17696",
+          "value": 18,
+          "px": "18px"
+        }
+      },
+      "lineHeight": {
+        "tiny": {
+          "id": "VariableID:482:17697",
+          "value": 16,
+          "px": "16px"
+        },
+        "small": {
+          "id": "VariableID:482:17698",
+          "value": 20,
+          "px": "20px"
+        },
+        "medium": {
+          "id": "VariableID:482:17699",
+          "value": 24,
+          "px": "24px"
+        },
+        "large": {
+          "id": "VariableID:482:17700",
+          "value": 28,
+          "px": "28px"
+        }
+      },
+      "radius": {
+        "none": {
+          "id": "VariableID:3308:1785",
+          "value": 0,
+          "px": "0px"
+        },
+        "small": {
+          "id": "VariableID:482:17701",
+          "value": 8,
+          "px": "8px"
+        },
+        "medium": {
+          "id": "VariableID:482:17702",
+          "value": 12,
+          "px": "12px"
+        },
+        "large": {
+          "id": "VariableID:482:17703",
+          "value": 14,
+          "px": "14px"
+        },
+        "full": {
+          "id": "VariableID:2703:1591",
+          "value": 9999,
+          "px": "9999px"
+        }
+      },
+      "borderWidth": {
+        "small": {
+          "id": "VariableID:482:17705",
+          "value": 1,
+          "px": "1px"
+        },
+        "medium": {
+          "id": "VariableID:482:17706",
+          "value": 2,
+          "px": "2px"
+        },
+        "large": {
+          "id": "VariableID:482:17707",
+          "value": 3,
+          "px": "3px"
+        }
+      }
+    }
+  },
+  "tokenMappings": {
+    "description": "Figma token (v2 Kit) \u2192 HeroUI v3 CSS variable mappings. 'match' field: exact=same value, approx=similar value, conceptual=same concept with different value, N/A=no v3 equivalent.",
+    "colors": [
+      {
+        "figmaVariable": "colors/layout/background",
+        "figmaId": "VariableID:481:16202",
+        "figmaLight": "#FFFFFF",
+        "figmaDark": "#000000",
+        "v3CssVar": "--background",
+        "v3TailwindColor": "background",
+        "v3Light": "oklch(0.9702 0 0) \u2248 #F7F7F7",
+        "v3Dark": "oklch(12% 0.005 285.823) \u2248 #181820",
+        "match": "conceptual",
+        "note": "v3 uses off-white bg in light mode"
+      },
+      {
+        "figmaVariable": "colors/layout/foreground",
+        "figmaId": "VariableID:481:16203",
+        "figmaLight": "#11181C",
+        "figmaDark": "#ECEDEE",
+        "v3CssVar": "--foreground",
+        "v3TailwindColor": "foreground",
+        "v3Light": "var(--eclipse) \u2248 #2D2D35",
+        "v3Dark": "var(--snow) \u2248 #FAFAFA",
+        "match": "conceptual",
+        "note": "v3 uses purple-tinted dark for eclipse"
+      },
+      {
+        "figmaVariable": "colors/layout/divider",
+        "figmaId": "VariableID:481:16204",
+        "figmaLight": "rgba(17,17,17,0.15)",
+        "figmaDark": "rgba(255,255,255,0.15)",
+        "v3CssVar": "--border",
+        "v3TailwindColor": "border",
+        "v3Light": "oklch(90% 0.004 286.32)",
+        "v3Dark": "oklch(28% 0.006 286.033)",
+        "match": "conceptual",
+        "note": "v3 uses opaque oklch; Figma uses alpha"
+      },
+      {
+        "figmaVariable": "colors/layout/focus",
+        "figmaId": "VariableID:481:16205",
+        "figmaLight": "#006FEE",
+        "figmaDark": "#006FEE",
+        "v3CssVar": "--focus",
+        "v3TailwindColor": "focus",
+        "v3Value": "var(--accent)",
+        "match": "approx",
+        "note": "Both blue-500 but different shades"
+      },
+      {
+        "figmaVariable": "colors/layout/overlay",
+        "figmaId": "VariableID:481:16250",
+        "figmaLight": "rgba(0,0,0,0.30)",
+        "figmaDark": "rgba(0,0,0,0.30)",
+        "v3CssVar": "N/A (modal backdrop scrim)",
+        "match": "N/A",
+        "note": "Figma overlay = modal scrim. v3 --overlay is popup background color, not scrim."
+      },
+      {
+        "figmaVariable": "colors/content/content1",
+        "figmaId": "VariableID:481:16206",
+        "figmaLight": "#FFFFFF",
+        "figmaDark": "#18181B",
+        "v3CssVar": "--surface",
+        "v3TailwindColor": "surface",
+        "v3Light": "var(--white) = #FFFFFF",
+        "v3Dark": "oklch(0.2103 0.0059 285.89) \u2248 #2D2D35",
+        "match": "conceptual",
+        "note": "NAMING: content1 \u2192 surface. Dark values differ (zinc vs purple-tinted)."
+      },
+      {
+        "figmaVariable": "colors/content/content2",
+        "figmaId": "VariableID:481:16207",
+        "figmaLight": "#F4F4F5",
+        "figmaDark": "#27272A",
+        "v3CssVar": "--surface-secondary",
+        "v3TailwindColor": "surface-secondary",
+        "match": "conceptual"
+      },
+      {
+        "figmaVariable": "colors/content/content3",
+        "figmaId": "VariableID:481:16208",
+        "figmaLight": "#D4D4D8",
+        "figmaDark": "#3F3F46",
+        "v3CssVar": "--surface-tertiary",
+        "v3TailwindColor": "surface-tertiary",
+        "match": "conceptual"
+      },
+      {
+        "figmaVariable": "colors/content/content4",
+        "figmaId": "VariableID:481:16209",
+        "figmaLight": "#D4D4D8",
+        "figmaDark": "#52525B",
+        "v3CssVar": "N/A",
+        "match": "N/A",
+        "note": "v3 has no content4 layer"
+      },
+      {
+        "figmaVariable": "colors/content/content1-foreground",
+        "figmaId": "VariableID:481:16246",
+        "figmaLight": "#11181C",
+        "figmaDark": "#FAFAFA",
+        "v3CssVar": "--surface-foreground",
+        "match": "conceptual"
+      },
+      {
+        "figmaVariable": "colors/content/content2-foreground",
+        "figmaId": "VariableID:481:16247",
+        "v3CssVar": "--surface-secondary-foreground",
+        "match": "conceptual"
+      },
+      {
+        "figmaVariable": "colors/content/content3-foreground",
+        "figmaId": "VariableID:481:16248",
+        "v3CssVar": "--surface-tertiary-foreground",
+        "match": "conceptual"
+      },
+      {
+        "figmaVariable": "colors/base/default",
+        "figmaId": "VariableID:481:16210",
+        "figmaLight": "#D4D4D8",
+        "figmaDark": "#3F3F46",
+        "v3CssVar": "--default",
+        "v3TailwindColor": "default",
+        "v3Light": "oklch(94% 0.001 286.375) \u2248 #EFEFEF",
+        "v3Dark": "oklch(27.4% 0.006 286.033) \u2248 #3A3A42",
+        "match": "conceptual",
+        "note": "Figma = zinc/300; v3 is much lighter"
+      },
+      {
+        "figmaVariable": "colors/base/default-foreground",
+        "figmaId": "VariableID:481:16251",
+        "figmaLight": "#000000",
+        "figmaDark": "#FFFFFF",
+        "v3CssVar": "--default-foreground",
+        "match": "conceptual"
+      },
+      {
+        "figmaVariable": "colors/base/primary",
+        "figmaId": "VariableID:481:16211",
+        "figmaLight": "#006FEE",
+        "figmaDark": "#006FEE",
+        "v3CssVar": "--accent",
+        "v3TailwindColor": "accent",
+        "v3Value": "oklch(0.6204 0.195 253.83) \u2248 #3B82F6",
+        "match": "conceptual",
+        "note": "NAMING CHANGE: 'primary' \u2192 'accent'. v3 uses a lighter blue."
+      },
+      {
+        "figmaVariable": "colors/base/primary-foreground",
+        "figmaId": "VariableID:481:16252",
+        "figmaLight": "#FFFFFF",
+        "v3CssVar": "--accent-foreground",
+        "match": "exact"
+      },
+      {
+        "figmaVariable": "colors/base/secondary",
+        "figmaId": "VariableID:481:16212",
+        "figmaLight": "#7828C8",
+        "figmaDark": "#9353D3",
+        "v3CssVar": "N/A",
+        "match": "N/A",
+        "note": "REMOVED IN v3: purple secondary brand color dropped entirely"
+      },
+      {
+        "figmaVariable": "colors/base/secondary-foreground",
+        "figmaId": "VariableID:481:16253",
+        "v3CssVar": "N/A",
+        "match": "N/A"
+      },
+      {
+        "figmaVariable": "colors/base/success",
+        "figmaId": "VariableID:481:16213",
+        "figmaLight": "#17C964",
+        "figmaDark": "#17C964",
+        "v3CssVar": "--success",
+        "v3Value": "oklch(0.7329 0.1935 150.81)",
+        "match": "approx"
+      },
+      {
+        "figmaVariable": "colors/base/success-foreground",
+        "figmaId": "VariableID:481:16254",
+        "figmaLight": "#000000",
+        "v3CssVar": "--success-foreground",
+        "v3Value": "var(--eclipse)",
+        "match": "conceptual"
+      },
+      {
+        "figmaVariable": "colors/base/warning",
+        "figmaId": "VariableID:481:16214",
+        "figmaLight": "#F5A524",
+        "figmaDark": "#F5A524",
+        "v3CssVar": "--warning",
+        "v3Value": "oklch(0.7819 0.1585 72.33)",
+        "match": "approx"
+      },
+      {
+        "figmaVariable": "colors/base/warning-foreground",
+        "figmaId": "VariableID:481:16255",
+        "figmaLight": "#000000",
+        "v3CssVar": "--warning-foreground",
+        "v3Value": "var(--eclipse)",
+        "match": "conceptual"
+      },
+      {
+        "figmaVariable": "colors/base/danger",
+        "figmaId": "VariableID:481:16215",
+        "figmaLight": "#F31260",
+        "figmaDark": "#F31260",
+        "v3CssVar": "--danger",
+        "v3Value": "oklch(0.6532 0.2328 25.74)",
+        "match": "approx",
+        "note": "Figma = hot pink-red; v3 = orange-red"
+      },
+      {
+        "figmaVariable": "colors/base/danger-foreground",
+        "figmaId": "VariableID:481:16256",
+        "figmaLight": "#FFFFFF",
+        "v3CssVar": "--danger-foreground",
+        "v3Value": "var(--snow)",
+        "match": "exact"
+      },
+      {
+        "figmaVariable": "colors/flat/primary-flat",
+        "figmaId": "VariableID:2290:9696",
+        "figmaLight": "#006FEE33",
+        "v3CssVar": "--color-accent-soft",
+        "v3Value": "color-mix(in oklab, var(--accent) 15%, transparent)",
+        "match": "conceptual"
+      },
+      {
+        "figmaVariable": "colors/flat/secondary-flat",
+        "figmaId": "VariableID:2290:9697",
+        "figmaLight": "#7828C833",
+        "v3CssVar": "N/A",
+        "match": "N/A"
+      },
+      {
+        "figmaVariable": "colors/flat/success-flat",
+        "figmaId": "VariableID:2290:9698",
+        "figmaLight": "#17C96433",
+        "v3CssVar": "--color-success-soft",
+        "match": "conceptual"
+      },
+      {
+        "figmaVariable": "colors/flat/warning-flat",
+        "figmaId": "VariableID:2290:9699",
+        "figmaLight": "#F5A52433",
+        "v3CssVar": "--color-warning-soft",
+        "match": "conceptual"
+      },
+      {
+        "figmaVariable": "colors/flat/danger-flat",
+        "figmaId": "VariableID:2290:9700",
+        "figmaLight": "#F3126033",
+        "v3CssVar": "--color-danger-soft",
+        "match": "conceptual"
+      },
+      {
+        "figmaVariable": "colors/flat/default-flat",
+        "figmaId": "VariableID:2290:9766",
+        "figmaLight": "#D4D4D866",
+        "figmaDark": "#3F3F4666",
+        "v3CssVar": "N/A",
+        "match": "N/A",
+        "note": "No exact v3 equivalent for default-soft"
+      },
+      {
+        "figmaVariable": "colors/layout/focus-op-20",
+        "figmaId": "VariableID:1660:4146",
+        "figmaValue": "rgba(0,111,238,0.20)",
+        "v3CssVar": "N/A",
+        "note": "Used as focus ring at 20% opacity; v3 uses solid accent color for focus rings"
+      }
+    ],
+    "layout": [
+      {
+        "figmaVariable": "layout/disabled-opacity",
+        "figmaId": "VariableID:482:17691",
+        "figmaValue": 0.5,
+        "v3CssVar": "--disabled-opacity",
+        "v3Value": "0.5",
+        "match": "exact"
+      },
+      {
+        "figmaVariable": "layout/divider-weight",
+        "figmaId": "VariableID:482:17692",
+        "figmaValue": "1px",
+        "v3CssVar": "--border-width",
+        "v3Value": "1px",
+        "match": "exact"
+      },
+      {
+        "figmaVariable": "layout/font-size/text-tiny",
+        "figmaId": "VariableID:482:17693",
+        "figmaValue": "12px",
+        "v3TailwindClass": "text-xs",
+        "match": "exact"
+      },
+      {
+        "figmaVariable": "layout/font-size/text-small",
+        "figmaId": "VariableID:482:17694",
+        "figmaValue": "14px",
+        "v3TailwindClass": "text-sm",
+        "match": "exact"
+      },
+      {
+        "figmaVariable": "layout/font-size/text-medium",
+        "figmaId": "VariableID:482:17695",
+        "figmaValue": "16px",
+        "v3TailwindClass": "text-base",
+        "match": "exact"
+      },
+      {
+        "figmaVariable": "layout/font-size/text-large",
+        "figmaId": "VariableID:482:17696",
+        "figmaValue": "18px",
+        "v3TailwindClass": "text-lg",
+        "match": "exact"
+      },
+      {
+        "figmaVariable": "layout/line-height/leading-tiny",
+        "figmaId": "VariableID:482:17697",
+        "figmaValue": "16px",
+        "v3TailwindClass": "leading-4",
+        "match": "exact"
+      },
+      {
+        "figmaVariable": "layout/line-height/leading-small",
+        "figmaId": "VariableID:482:17698",
+        "figmaValue": "20px",
+        "v3TailwindClass": "leading-5",
+        "match": "exact"
+      },
+      {
+        "figmaVariable": "layout/line-height/leading-medium",
+        "figmaId": "VariableID:482:17699",
+        "figmaValue": "24px",
+        "v3TailwindClass": "leading-6",
+        "match": "exact"
+      },
+      {
+        "figmaVariable": "layout/line-height/leading-large",
+        "figmaId": "VariableID:482:17700",
+        "figmaValue": "28px",
+        "v3TailwindClass": "leading-7",
+        "match": "exact"
+      },
+      {
+        "figmaVariable": "layout/radius/rounded-none",
+        "figmaId": "VariableID:3308:1785",
+        "figmaValue": "0px",
+        "v3TailwindClass": "rounded-none",
+        "match": "exact"
+      },
+      {
+        "figmaVariable": "layout/radius/rounded-small",
+        "figmaId": "VariableID:482:17701",
+        "figmaValue": "8px",
+        "v3CssVar": "--radius-lg",
+        "v3Value": "calc(var(--radius) * 1.0) = 0.5rem (8px at default --radius)",
+        "match": "exact"
+      },
+      {
+        "figmaVariable": "layout/radius/rounded-medium",
+        "figmaId": "VariableID:482:17702",
+        "figmaValue": "12px",
+        "v3CssVar": "--radius-xl",
+        "v3Value": "calc(var(--radius) * 1.5) = 0.75rem (12px at default --radius)",
+        "match": "exact"
+      },
+      {
+        "figmaVariable": "layout/radius/rounded-large",
+        "figmaId": "VariableID:482:17703",
+        "figmaValue": "14px",
+        "v3CssVar": "between --radius-xl and --radius-2xl",
+        "v3Value": "~0.875rem",
+        "match": "approx"
+      },
+      {
+        "figmaVariable": "layout/radius/rounded-full",
+        "figmaId": "VariableID:2703:1591",
+        "figmaValue": "9999px",
+        "v3TailwindClass": "rounded-full",
+        "match": "exact"
+      },
+      {
+        "figmaVariable": "layout/border-width/border-small",
+        "figmaId": "VariableID:482:17705",
+        "figmaValue": "1px",
+        "v3TailwindClass": "border",
+        "match": "exact"
+      },
+      {
+        "figmaVariable": "layout/border-width/border-medium",
+        "figmaId": "VariableID:482:17706",
+        "figmaValue": "2px",
+        "v3TailwindClass": "border-2",
+        "match": "exact"
+      },
+      {
+        "figmaVariable": "layout/border-width/border-large",
+        "figmaId": "VariableID:482:17707",
+        "figmaValue": "3px",
+        "v3TailwindClass": "border-4 (closest)",
+        "match": "closest"
+      }
+    ]
+  },
+  "components": {
+    "description": "Mapping between Figma component pages and HeroUI v3 source code. Figma pages: 31 | Repo-only (no Figma page yet): 54.",
+    "codeStructure": {
+      "cssFile": "packages/styles/components/<name>.css",
+      "stylesTs": "packages/styles/src/components/<name>/<name>.styles.ts",
+      "reactDir": "packages/react/src/components/<name>/",
+      "stories": "packages/react/src/components/<name>/<name>.stories.tsx"
+    },
+    "map": [
+      {
+        "figmaPage": "Accordion",
+        "figmaPageId": "992:4194",
+        "cssFile": "packages/styles/components/accordion.css",
+        "reactDir": "packages/react/src/components/accordion/"
+      },
+      {
+        "figmaPage": "Alert",
+        "figmaPageId": "3125:210",
+        "cssFile": "packages/styles/components/alert.css",
+        "reactDir": "packages/react/src/components/alert/"
+      },
+      {
+        "figmaPage": "Avatar",
+        "figmaPageId": "489:17650",
+        "cssFile": "packages/styles/components/avatar.css",
+        "reactDir": "packages/react/src/components/avatar/"
+      },
+      {
+        "figmaPage": "Avatar Group",
+        "figmaPageId": "2545:33395",
+        "cssFile": "packages/styles/components/avatar.css",
+        "note": "Composed from Avatar components"
+      },
+      {
+        "figmaPage": "Badge",
+        "figmaPageId": "696:52331",
+        "cssFile": "packages/styles/components/badge.css",
+        "reactDir": "packages/react/src/components/badge/"
+      },
+      {
+        "figmaPage": "Button",
+        "figmaPageId": "3:14",
+        "cssFile": "packages/styles/components/button.css",
+        "reactDir": "packages/react/src/components/button/"
+      },
+      {
+        "figmaPage": "ButtonGroup",
+        "figmaPageId": "22:6236",
+        "cssFile": "packages/styles/components/button-group.css",
+        "reactDir": "packages/react/src/components/button-group/"
+      },
+      {
+        "figmaPage": "Calendar",
+        "figmaPageId": "4208:222",
+        "cssFile": "packages/styles/components/calendar.css",
+        "reactDir": "packages/react/src/components/calendar/"
+      },
+      {
+        "figmaPage": "Card",
+        "figmaPageId": "3333:1640",
+        "cssFile": "packages/styles/components/card.css",
+        "reactDir": "packages/react/src/components/card/"
+      },
+      {
+        "figmaPage": "Carousel",
+        "figmaPageId": "3568:423",
+        "figmaPreviewUrl": "https://figma-alpha-api.s3.us-west-2.amazonaws.com/images/d561df5a-5d92-4055-8ab0-a114e1da1d3a",
+        "cssFile": null,
+        "reactDir": null,
+        "note": "Figma design exists \u2014 no code implementation yet in HeroUI v3"
+      },
+      {
+        "figmaPage": "Checkbox",
+        "figmaPageId": "636:299",
+        "cssFile": "packages/styles/components/checkbox.css",
+        "reactDir": "packages/react/src/components/checkbox/"
+      },
+      {
+        "figmaPage": "Checkbox Group",
+        "figmaPageId": "673:6159",
+        "cssFile": "packages/styles/components/checkbox-group.css",
+        "reactDir": "packages/react/src/components/checkbox-group/"
+      },
+      {
+        "figmaPage": "Chip",
+        "figmaPageId": "3:24",
+        "cssFile": "packages/styles/components/chip.css",
+        "reactDir": "packages/react/src/components/chip/"
+      },
+      {
+        "figmaPage": "Code",
+        "figmaPageId": "3:31",
+        "cssFile": "packages/styles/components/kbd.css",
+        "reactDir": "packages/react/src/components/kbd/",
+        "note": "Code maps to Kbd component"
+      },
+      {
+        "figmaPage": "Divider",
+        "figmaPageId": "2584:48",
+        "cssFile": "packages/styles/components/separator.css",
+        "reactDir": "packages/react/src/components/separator/",
+        "note": "Figma 'Divider' \u2192 code 'separator'"
+      },
+      {
+        "figmaPage": "Input",
+        "figmaPageId": "3:34",
+        "cssFile": "packages/styles/components/input.css",
+        "reactDir": "packages/react/src/components/input/"
+      },
+      {
+        "figmaPage": "Input OTP",
+        "figmaPageId": "3369:214",
+        "cssFile": "packages/styles/components/input-otp.css",
+        "reactDir": "packages/react/src/components/input-otp/"
+      },
+      {
+        "figmaPage": "Kbd",
+        "figmaPageId": "519:25377",
+        "cssFile": "packages/styles/components/kbd.css",
+        "reactDir": "packages/react/src/components/kbd/"
+      },
+      {
+        "figmaPage": "Link",
+        "figmaPageId": "3:36",
+        "cssFile": "packages/styles/components/link.css",
+        "reactDir": "packages/react/src/components/link/"
+      },
+      {
+        "figmaPage": "Number Input",
+        "figmaPageId": "3606:776",
+        "cssFile": "packages/styles/components/number-field.css",
+        "reactDir": "packages/react/src/components/number-field/",
+        "note": "Figma 'Number Input' \u2192 code 'number-field'"
+      },
+      {
+        "figmaPage": "Progress",
+        "figmaPageId": "1573:1538",
+        "cssFile": "packages/styles/components/slider.css"
+      },
+      {
+        "figmaPage": "Radio",
+        "figmaPageId": "3:23",
+        "cssFile": "packages/styles/components/radio.css",
+        "reactDir": "packages/react/src/components/radio/"
+      },
+      {
+        "figmaPage": "Select",
+        "figmaPageId": "1364:174",
+        "cssFile": "packages/styles/components/select.css",
+        "reactDir": "packages/react/src/components/select/"
+      },
+      {
+        "figmaPage": "Slider",
+        "figmaPageId": "1118:8",
+        "cssFile": "packages/styles/components/slider.css",
+        "reactDir": "packages/react/src/components/slider/"
+      },
+      {
+        "figmaPage": "Spinner",
+        "figmaPageId": "2411:8712",
+        "cssFile": "packages/styles/components/spinner.css",
+        "reactDir": "packages/react/src/components/spinner/"
+      },
+      {
+        "figmaPage": "Switch",
+        "figmaPageId": "3:33",
+        "cssFile": "packages/styles/components/switch.css",
+        "reactDir": "packages/react/src/components/switch/"
+      },
+      {
+        "figmaPage": "Table",
+        "figmaPageId": "515:15",
+        "cssFile": "packages/styles/components/table.css",
+        "reactDir": "packages/react/src/components/table/"
+      },
+      {
+        "figmaPage": "Tabs",
+        "figmaPageId": "1356:1128",
+        "cssFile": "packages/styles/components/tabs.css",
+        "reactDir": "packages/react/src/components/tabs/"
+      },
+      {
+        "figmaPage": "Toast",
+        "figmaPageId": "3592:214",
+        "cssFile": "packages/styles/components/toast.css",
+        "reactDir": "packages/react/src/components/toast/"
+      },
+      {
+        "figmaPage": "Tooltip",
+        "figmaPageId": "740:18259",
+        "cssFile": "packages/styles/components/tooltip.css",
+        "reactDir": "packages/react/src/components/tooltip/"
+      },
+      {
+        "figmaPage": "User",
+        "figmaPageId": "691:4394",
+        "note": "Composed from Avatar + text layout, no dedicated CSS"
+      },
+      {
+        "figmaPage": null,
+        "figmaPageId": null,
+        "cssFile": "packages/styles/src/components/alert-dialog",
+        "reactDir": "packages/react/src/components/alert-dialog/",
+        "repoOnly": true,
+        "note": "Accessible alert dialog"
+      },
+      {
+        "figmaPage": null,
+        "figmaPageId": null,
+        "cssFile": "packages/styles/src/components/autocomplete",
+        "reactDir": "packages/react/src/components/autocomplete/",
+        "repoOnly": true,
+        "note": "Autocomplete/combobox input"
+      },
+      {
+        "figmaPage": null,
+        "figmaPageId": null,
+        "cssFile": "packages/styles/src/components/breadcrumbs",
+        "reactDir": "packages/react/src/components/breadcrumbs/",
+        "repoOnly": true,
+        "note": "Breadcrumb navigation"
+      },
+      {
+        "figmaPage": null,
+        "figmaPageId": null,
+        "cssFile": "packages/styles/src/components/calendar-year-picker",
+        "reactDir": "packages/react/src/components/calendar-year-picker/",
+        "repoOnly": true,
+        "note": "Year picker for calendar"
+      },
+      {
+        "figmaPage": null,
+        "figmaPageId": null,
+        "cssFile": "packages/styles/src/components/close-button",
+        "reactDir": "packages/react/src/components/close-button/",
+        "repoOnly": true,
+        "note": "Icon-only close/dismiss button"
+      },
+      {
+        "figmaPage": null,
+        "figmaPageId": null,
+        "cssFile": "packages/styles/src/components/color-area",
+        "reactDir": "packages/react/src/components/color-area/",
+        "repoOnly": true,
+        "note": "2D color area gradient"
+      },
+      {
+        "figmaPage": null,
+        "figmaPageId": null,
+        "cssFile": "packages/styles/src/components/color-field",
+        "reactDir": "packages/react/src/components/color-field/",
+        "repoOnly": true,
+        "note": "Color hex input"
+      },
+      {
+        "figmaPage": null,
+        "figmaPageId": null,
+        "cssFile": "packages/styles/src/components/color-input-group",
+        "reactDir": "packages/react/src/components/color-input-group/",
+        "repoOnly": true,
+        "note": "Color input group"
+      },
+      {
+        "figmaPage": null,
+        "figmaPageId": null,
+        "cssFile": "packages/styles/src/components/color-picker",
+        "reactDir": "packages/react/src/components/color-picker/",
+        "repoOnly": true,
+        "note": "Full color picker"
+      },
+      {
+        "figmaPage": null,
+        "figmaPageId": null,
+        "cssFile": "packages/styles/src/components/color-slider",
+        "reactDir": "packages/react/src/components/color-slider/",
+        "repoOnly": true,
+        "note": "Color channel slider"
+      },
+      {
+        "figmaPage": null,
+        "figmaPageId": null,
+        "cssFile": "packages/styles/src/components/color-swatch-picker",
+        "reactDir": "packages/react/src/components/color-swatch-picker/",
+        "repoOnly": true,
+        "note": "Color swatch palette picker"
+      },
+      {
+        "figmaPage": null,
+        "figmaPageId": null,
+        "cssFile": "packages/styles/src/components/color-swatch",
+        "reactDir": "packages/react/src/components/color-swatch/",
+        "repoOnly": true,
+        "note": "Color swatch preview"
+      },
+      {
+        "figmaPage": null,
+        "figmaPageId": null,
+        "cssFile": "packages/styles/src/components/combo-box",
+        "reactDir": "packages/react/src/components/combo-box/",
+        "repoOnly": true,
+        "note": "Combo box primitive"
+      },
+      {
+        "figmaPage": null,
+        "figmaPageId": null,
+        "cssFile": "packages/styles/src/components/date-field",
+        "reactDir": "packages/react/src/components/date-field/",
+        "repoOnly": true,
+        "note": "Date input segments"
+      },
+      {
+        "figmaPage": null,
+        "figmaPageId": null,
+        "cssFile": "packages/styles/src/components/date-input-group",
+        "reactDir": "packages/react/src/components/date-input-group/",
+        "repoOnly": true,
+        "note": "Date input group wrapper"
+      },
+      {
+        "figmaPage": null,
+        "figmaPageId": null,
+        "cssFile": "packages/styles/src/components/date-picker",
+        "reactDir": "packages/react/src/components/date-picker/",
+        "repoOnly": true,
+        "note": "Date picker with calendar popover"
+      },
+      {
+        "figmaPage": null,
+        "figmaPageId": null,
+        "cssFile": "packages/styles/src/components/date-range-picker",
+        "reactDir": "packages/react/src/components/date-range-picker/",
+        "repoOnly": true,
+        "note": "Date range picker"
+      },
+      {
+        "figmaPage": null,
+        "figmaPageId": null,
+        "cssFile": "packages/styles/src/components/description",
+        "reactDir": "packages/react/src/components/description/",
+        "repoOnly": true,
+        "note": "Form field description text"
+      },
+      {
+        "figmaPage": null,
+        "figmaPageId": null,
+        "cssFile": "packages/styles/src/components/disclosure-group",
+        "reactDir": "packages/react/src/components/disclosure-group/",
+        "repoOnly": true,
+        "note": "Group of disclosure panels"
+      },
+      {
+        "figmaPage": null,
+        "figmaPageId": null,
+        "cssFile": "packages/styles/src/components/disclosure",
+        "reactDir": "packages/react/src/components/disclosure/",
+        "repoOnly": true,
+        "note": "Single disclosure/collapsible panel"
+      },
+      {
+        "figmaPage": null,
+        "figmaPageId": null,
+        "cssFile": "packages/styles/src/components/dropdown",
+        "reactDir": "packages/react/src/components/dropdown/",
+        "repoOnly": true,
+        "note": "Dropdown menu trigger+panel"
+      },
+      {
+        "figmaPage": null,
+        "figmaPageId": null,
+        "cssFile": "packages/styles/src/components/empty-state",
+        "reactDir": "packages/react/src/components/empty-state/",
+        "repoOnly": true,
+        "note": "Empty state illustration+text"
+      },
+      {
+        "figmaPage": null,
+        "figmaPageId": null,
+        "cssFile": "packages/styles/src/components/error-message",
+        "reactDir": "packages/react/src/components/error-message/",
+        "repoOnly": true,
+        "note": "Alias/variant of field-error"
+      },
+      {
+        "figmaPage": null,
+        "figmaPageId": null,
+        "cssFile": "packages/styles/src/components/field-error",
+        "reactDir": "packages/react/src/components/field-error/",
+        "repoOnly": true,
+        "note": "Form field error message"
+      },
+      {
+        "figmaPage": null,
+        "figmaPageId": null,
+        "cssFile": "packages/styles/src/components/fieldset",
+        "reactDir": "packages/react/src/components/fieldset/",
+        "repoOnly": true,
+        "note": "Form fieldset group"
+      },
+      {
+        "figmaPage": null,
+        "figmaPageId": null,
+        "cssFile": null,
+        "reactDir": "packages/react/src/components/form/",
+        "repoOnly": true,
+        "note": "HTML form wrapper with React Aria Forms integration"
+      },
+      {
+        "figmaPage": null,
+        "figmaPageId": null,
+        "cssFile": "packages/styles/src/components/header",
+        "reactDir": "packages/react/src/components/header/",
+        "repoOnly": true,
+        "note": "Page/section header"
+      },
+      {
+        "figmaPage": null,
+        "figmaPageId": null,
+        "cssFile": "packages/styles/src/components/input-group",
+        "reactDir": "packages/react/src/components/input-group/",
+        "repoOnly": true,
+        "note": "Input addons wrapper"
+      },
+      {
+        "figmaPage": null,
+        "figmaPageId": null,
+        "cssFile": "packages/styles/src/components/label",
+        "reactDir": "packages/react/src/components/label/",
+        "repoOnly": true,
+        "note": "Form field label"
+      },
+      {
+        "figmaPage": null,
+        "figmaPageId": null,
+        "cssFile": "packages/styles/src/components/list-box-item",
+        "reactDir": "packages/react/src/components/list-box-item/",
+        "repoOnly": true,
+        "note": "Listbox option item"
+      },
+      {
+        "figmaPage": null,
+        "figmaPageId": null,
+        "cssFile": "packages/styles/src/components/list-box-section",
+        "reactDir": "packages/react/src/components/list-box-section/",
+        "repoOnly": true,
+        "note": "Listbox option group"
+      },
+      {
+        "figmaPage": null,
+        "figmaPageId": null,
+        "cssFile": "packages/styles/src/components/list-box",
+        "reactDir": "packages/react/src/components/list-box/",
+        "repoOnly": true,
+        "note": "Listbox container"
+      },
+      {
+        "figmaPage": null,
+        "figmaPageId": null,
+        "cssFile": "packages/styles/src/components/menu-item",
+        "reactDir": "packages/react/src/components/menu-item/",
+        "repoOnly": true,
+        "note": "Menu item"
+      },
+      {
+        "figmaPage": null,
+        "figmaPageId": null,
+        "cssFile": "packages/styles/src/components/menu-section",
+        "reactDir": "packages/react/src/components/menu-section/",
+        "repoOnly": true,
+        "note": "Menu section/group"
+      },
+      {
+        "figmaPage": null,
+        "figmaPageId": null,
+        "cssFile": "packages/styles/src/components/menu",
+        "reactDir": "packages/react/src/components/menu/",
+        "repoOnly": true,
+        "note": "Menu list"
+      },
+      {
+        "figmaPage": null,
+        "figmaPageId": null,
+        "cssFile": "packages/styles/src/components/modal",
+        "reactDir": "packages/react/src/components/modal/",
+        "repoOnly": true,
+        "note": "Modal dialog overlay"
+      },
+      {
+        "figmaPage": null,
+        "figmaPageId": null,
+        "cssFile": "packages/styles/src/components/number-field",
+        "reactDir": "packages/react/src/components/number-field/",
+        "repoOnly": true,
+        "note": "Numeric stepper input \u2014 different from Number Input in Figma which is older v2"
+      },
+      {
+        "figmaPage": null,
+        "figmaPageId": null,
+        "cssFile": "packages/styles/src/components/pagination",
+        "reactDir": "packages/react/src/components/pagination/",
+        "repoOnly": true,
+        "note": "Pagination controls"
+      },
+      {
+        "figmaPage": null,
+        "figmaPageId": null,
+        "cssFile": "packages/styles/src/components/popover",
+        "reactDir": "packages/react/src/components/popover/",
+        "repoOnly": true,
+        "note": "Popover floating panel"
+      },
+      {
+        "figmaPage": null,
+        "figmaPageId": null,
+        "cssFile": "packages/styles/src/components/radio-group",
+        "reactDir": "packages/react/src/components/radio-group/",
+        "repoOnly": true,
+        "note": "Radio group container"
+      },
+      {
+        "figmaPage": null,
+        "figmaPageId": null,
+        "cssFile": "packages/styles/src/components/range-calendar",
+        "reactDir": "packages/react/src/components/range-calendar/",
+        "repoOnly": true,
+        "note": "Multi-month range calendar"
+      },
+      {
+        "figmaPage": null,
+        "figmaPageId": null,
+        "cssFile": "packages/styles/src/components/scroll-shadow",
+        "reactDir": "packages/react/src/components/scroll-shadow/",
+        "repoOnly": true,
+        "note": "Scroll container with fade shadows"
+      },
+      {
+        "figmaPage": null,
+        "figmaPageId": null,
+        "cssFile": "packages/styles/src/components/search-field",
+        "reactDir": "packages/react/src/components/search-field/",
+        "repoOnly": true,
+        "note": "Search input field"
+      },
+      {
+        "figmaPage": null,
+        "figmaPageId": null,
+        "cssFile": "packages/styles/src/components/select",
+        "reactDir": "packages/react/src/components/select/",
+        "repoOnly": true,
+        "note": "Select dropdown (wraps ListBox)"
+      },
+      {
+        "figmaPage": null,
+        "figmaPageId": null,
+        "cssFile": "packages/styles/src/components/separator",
+        "reactDir": "packages/react/src/components/separator/",
+        "repoOnly": true,
+        "note": "Horizontal/vertical divider"
+      },
+      {
+        "figmaPage": null,
+        "figmaPageId": null,
+        "cssFile": "packages/styles/src/components/skeleton",
+        "reactDir": "packages/react/src/components/skeleton/",
+        "repoOnly": true,
+        "note": "Loading skeleton placeholder"
+      },
+      {
+        "figmaPage": null,
+        "figmaPageId": null,
+        "cssFile": "packages/styles/src/components/surface",
+        "reactDir": "packages/react/src/components/surface/",
+        "repoOnly": true,
+        "note": "Generic surface/panel container"
+      },
+      {
+        "figmaPage": null,
+        "figmaPageId": null,
+        "cssFile": "packages/styles/src/components/switch-group",
+        "reactDir": "packages/react/src/components/switch-group/",
+        "repoOnly": true,
+        "note": "Group of Switch controls"
+      },
+      {
+        "figmaPage": null,
+        "figmaPageId": null,
+        "cssFile": "packages/styles/src/components/tag-group",
+        "reactDir": "packages/react/src/components/tag-group/",
+        "repoOnly": true,
+        "note": "Tag group container"
+      },
+      {
+        "figmaPage": null,
+        "figmaPageId": null,
+        "cssFile": "packages/styles/src/components/tag",
+        "reactDir": "packages/react/src/components/tag/",
+        "repoOnly": true,
+        "note": "Removable tag item"
+      },
+      {
+        "figmaPage": null,
+        "figmaPageId": null,
+        "cssFile": "packages/styles/src/components/text",
+        "reactDir": "packages/react/src/components/text/",
+        "repoOnly": true,
+        "note": "Paragraph / general text"
+      },
+      {
+        "figmaPage": null,
+        "figmaPageId": null,
+        "cssFile": "packages/styles/src/components/textarea",
+        "reactDir": "packages/react/src/components/textarea/",
+        "repoOnly": true,
+        "note": "Multi-line text input"
+      },
+      {
+        "figmaPage": null,
+        "figmaPageId": null,
+        "cssFile": "packages/styles/src/components/textfield",
+        "reactDir": "packages/react/src/components/textfield/",
+        "repoOnly": true,
+        "note": "Single-line text field compound"
+      },
+      {
+        "figmaPage": null,
+        "figmaPageId": null,
+        "cssFile": "packages/styles/src/components/time-field",
+        "reactDir": "packages/react/src/components/time-field/",
+        "repoOnly": true,
+        "note": "Time input segments"
+      },
+      {
+        "figmaPage": "CommandBar",
+        "figmaNodeId": "6463:228806",
+        "figmaSection": "New components > CLI components",
+        "reactDir": "packages/react/src/components/command-bar/",
+        "notes": "AI command bar with collapsed/expanded states. Contains PromptChip children when expanded."
+      },
+      {
+        "figmaPage": "MemoryCard",
+        "figmaNodeId": "6462:218791",
+        "figmaSection": "New components > Cards",
+        "reactDir": "packages/react/src/components/memory-card/",
+        "notes": "Memory prompt card with type (memory|photo-story) and hover variants."
+      },
+      {
+        "figmaPage": "PromptChip",
+        "figmaNodeId": "6463:228932",
+        "figmaSection": "New components > CLI components",
+        "reactDir": "packages/react/src/components/prompt-chip/",
+        "notes": "AI prompt suggestion chip used inside CommandBar.Panel."
+      },
+      {
+        "figmaPage": "QuickAction",
+        "figmaNodeId": "6462:219709",
+        "figmaSection": "New components > CLI components",
+        "reactDir": "packages/react/src/components/quick-action/",
+        "notes": "Quick action button with default and active variants. Used in dashboard quick actions row."
+      }
+    ]
+  },
+  "v3CssTokens": {
+    "description": "CSS custom properties defined in packages/styles/themes/default/variables.css. These are the canonical HeroUI v3 design tokens used throughout the component CSS files. Total: 49 tokens from 49 light-mode vars and 27 dark-mode overrides.",
+    "primitives": {
+      "--white": "oklch(100% 0 0)",
+      "--black": "oklch(0% 0 0)",
+      "--snow": "oklch(0.9911 0 0)",
+      "--eclipse": "oklch(0.2103 0.0059 285.89)"
+    },
+    "semantic": {
+      "--accent": {
+        "value": "oklch(0.6204 0.195 253.83)",
+        "note": "common (no dark override)"
+      },
+      "--accent-foreground": {
+        "value": "var(--snow)",
+        "note": "common (no dark override)"
+      },
+      "--background": {
+        "light": "oklch(0.9702 0 0)",
+        "dark": "oklch(12% 0.005 285.823)"
+      },
+      "--black": {
+        "value": "oklch(0% 0 0)",
+        "note": "common (no dark override)"
+      },
+      "--border": {
+        "light": "oklch(90% 0.004 286.32)",
+        "dark": "oklch(28% 0.006 286.033)"
+      },
+      "--border-width": {
+        "value": "1px",
+        "note": "common (no dark override)"
+      },
+      "--cursor-disabled": {
+        "value": "not-allowed",
+        "note": "common (no dark override)"
+      },
+      "--cursor-interactive": {
+        "value": "pointer",
+        "note": "common (no dark override)"
+      },
+      "--danger": {
+        "light": "oklch(0.6532 0.2328 25.74)",
+        "dark": "oklch(0.594 0.1967 24.63)"
+      },
+      "--danger-foreground": {
+        "value": "var(--snow)",
+        "note": "same in both themes"
+      },
+      "--default": {
+        "light": "oklch(94% 0.001 286.375)",
+        "dark": "oklch(27.4% 0.006 286.033)"
+      },
+      "--default-foreground": {
+        "light": "var(--eclipse)",
+        "dark": "var(--snow)"
+      },
+      "--disabled-opacity": {
+        "value": "0.5",
+        "note": "common (no dark override)"
+      },
+      "--eclipse": {
+        "value": "oklch(0.2103 0.0059 285.89)",
+        "note": "common (no dark override)"
+      },
+      "--field-background": {
+        "light": "var(--white)",
+        "dark": "oklch(0.2103 0.0059 285.89)"
+      },
+      "--field-border": {
+        "value": "transparent",
+        "note": "common (no dark override)"
+      },
+      "--field-border-width": {
+        "value": "0px",
+        "note": "common (no dark override)"
+      },
+      "--field-foreground": {
+        "light": "oklch(0.2103 0.0059 285.89)",
+        "dark": "var(--foreground)"
+      },
+      "--field-placeholder": {
+        "value": "var(--muted)",
+        "note": "common (no dark override)"
+      },
+      "--field-radius": {
+        "value": "calc(var(--radius) * 1.5)",
+        "note": "common (no dark override)"
+      },
+      "--field-shadow": {
+        "light": "0 2px 4px 0 rgba(0, 0, 0, 0.04), 0 1px 2px 0 rgba(0, 0, 0, 0.06),\n      0 0 1px 0 rgba(0, 0, 0, 0.06)",
+        "dark": "0 0 0 0 transparent inset"
+      },
+      "--focus": {
+        "value": "var(--accent)",
+        "note": "same in both themes"
+      },
+      "--foreground": {
+        "light": "var(--eclipse)",
+        "dark": "var(--snow)"
+      },
+      "--link": {
+        "value": "var(--foreground)",
+        "note": "same in both themes"
+      },
+      "--muted": {
+        "light": "oklch(0.5517 0.0138 285.94)",
+        "dark": "oklch(70.5% 0.015 286.067)"
+      },
+      "--overlay": {
+        "light": "var(--white)",
+        "dark": "oklch(0.2103 0.0059 285.89)"
+      },
+      "--overlay-foreground": {
+        "value": "var(--foreground)",
+        "note": "same in both themes"
+      },
+      "--overlay-shadow": {
+        "light": "0 2px 8px 0 rgba(0, 0, 0, 0.06), 0 -6px 12px 0 rgba(0, 0, 0, 0.03),\n      0 14px 28px 0 rgba(0, 0, 0, 0.08)",
+        "dark": "0 0 1px 0 rgba(255, 255, 255, 0.3) inset"
+      },
+      "--radius": {
+        "value": "0.5rem",
+        "note": "common (no dark override)"
+      },
+      "--ring-offset-width": {
+        "value": "2px",
+        "note": "common (no dark override)"
+      },
+      "--scrollbar": {
+        "light": "oklch(87.1% 0.006 286.286)",
+        "dark": "oklch(70.5% 0.015 286.067)"
+      },
+      "--segment": {
+        "light": "var(--white)",
+        "dark": "oklch(0.3964 0.01 285.93)"
+      },
+      "--segment-foreground": {
+        "light": "var(--eclipse)",
+        "dark": "var(--foreground)"
+      },
+      "--separator": {
+        "light": "oklch(92% 0.004 286.32)",
+        "dark": "oklch(25% 0.006 286.033)"
+      },
+      "--skeleton-animation": {
+        "value": "shimmer",
+        "note": "common (no dark override)"
+      },
+      "--snow": {
+        "value": "oklch(0.9911 0 0)",
+        "note": "common (no dark override)"
+      },
+      "--spacing": {
+        "value": "0.25rem",
+        "note": "common (no dark override)"
+      },
+      "--success": {
+        "value": "oklch(0.7329 0.1935 150.81)",
+        "note": "common (no dark override)"
+      },
+      "--success-foreground": {
+        "value": "var(--eclipse)",
+        "note": "common (no dark override)"
+      },
+      "--surface": {
+        "light": "var(--white)",
+        "dark": "oklch(0.2103 0.0059 285.89)"
+      },
+      "--surface-foreground": {
+        "value": "var(--foreground)",
+        "note": "same in both themes"
+      },
+      "--surface-secondary": {
+        "light": "oklch(0.9524 0.0013 286.37)",
+        "dark": "oklch(0.257 0.0037 286.14)"
+      },
+      "--surface-secondary-foreground": {
+        "value": "var(--foreground)",
+        "note": "common (no dark override)"
+      },
+      "--surface-shadow": {
+        "light": "0 2px 4px 0 rgba(0, 0, 0, 0.04), 0 1px 2px 0 rgba(0, 0, 0, 0.06),\n      0 0 1px 0 rgba(0, 0, 0, 0.06)",
+        "dark": "0 0 0 0 transparent inset"
+      },
+      "--surface-tertiary": {
+        "light": "oklch(0.9373 0.0013 286.37)",
+        "dark": "oklch(0.2721 0.0024 247.91)"
+      },
+      "--surface-tertiary-foreground": {
+        "value": "var(--foreground)",
+        "note": "common (no dark override)"
+      },
+      "--warning": {
+        "light": "oklch(0.7819 0.1585 72.33)",
+        "dark": "oklch(0.8203 0.1388 76.34)"
+      },
+      "--warning-foreground": {
+        "value": "var(--eclipse)",
+        "note": "same in both themes"
+      },
+      "--white": {
+        "value": "oklch(100% 0 0)",
+        "note": "common (no dark override)"
+      }
+    },
+    "radius": {
+      "--radius": "0.5rem (base, configurable)",
+      "--radius-xs": "calc(var(--radius) * 0.25) = 0.125rem / 2px",
+      "--radius-sm": "calc(var(--radius) * 0.5)  = 0.25rem  / 4px",
+      "--radius-md": "calc(var(--radius) * 0.75) = 0.375rem / 6px",
+      "--radius-lg": "calc(var(--radius) * 1.0)  = 0.5rem   / 8px",
+      "--radius-xl": "calc(var(--radius) * 1.5)  = 0.75rem  / 12px",
+      "--radius-2xl": "calc(var(--radius) * 2.0) = 1rem     / 16px",
+      "--radius-3xl": "calc(var(--radius) * 3.0) = 1.5rem   / 24px",
+      "--radius-4xl": "calc(var(--radius) * 4.0) = 2rem     / 32px"
+    },
+    "shadows": {
+      "--surface-shadow": {
+        "light": "0 2px 4px 0 rgba(0,0,0,0.04), 0 1px 2px 0 rgba(0,0,0,0.06), 0 0 1px 0 rgba(0,0,0,0.06)",
+        "dark": "0 0 0 0 transparent inset"
+      },
+      "--overlay-shadow": {
+        "light": "0 2px 8px 0 rgba(0,0,0,0.06), 0 -6px 12px 0 rgba(0,0,0,0.03), 0 14px 28px 0 rgba(0,0,0,0.08)",
+        "dark": "0 0 1px 0 rgba(255,255,255,0.3) inset"
+      },
+      "--field-shadow": {
+        "light": "same as --surface-shadow",
+        "dark": "0 0 0 0 transparent inset"
+      }
+    },
+    "other": {
+      "--disabled-opacity": "0.5",
+      "--border-width": "1px",
+      "--field-border-width": "0px",
+      "--ring-offset-width": "2px",
+      "--cursor-interactive": "pointer",
+      "--cursor-disabled": "not-allowed"
+    }
+  },
+  "demoTheme": {
+    "description": "YoursTruly demo app design tokens \u2014 extracted directly from Figma node 6408:187914 (Screens canvas) via get_variable_defs. These override HeroUI v3 defaults to create the YoursTruly brand identity. Implemented in packages/storybook/styles/globals.css.",
+    "figmaNodeId": "6408:187914",
+    "extractedAt": "2026-03-11",
+    "cssFile": "packages/storybook/styles/globals.css",
+    "colors": {
+      "primary": {
+        "figmaKey": "colors/base/primary",
+        "value": "#52325d",
+        "cssVar": "--accent",
+        "description": "Deep purple \u2014 brand primary. Used for buttons, focus rings, nav active states."
+      },
+      "primaryForeground": {
+        "figmaKey": "colors/base/primary-foreground",
+        "value": "#ffffff",
+        "cssVar": "--accent-foreground"
+      },
+      "pageBackground": {
+        "figmaKey": "Page Bg",
+        "value": "#FEFCE8",
+        "cssVar": "--background",
+        "description": "Cream/yellow-50 \u2014 the distinctive YoursTruly page background."
+      },
+      "surfaceBackground": {
+        "figmaKey": "colors/layout/background",
+        "value": "#ffffff",
+        "cssVar": "--surface",
+        "description": "White \u2014 card and panel backgrounds."
+      },
+      "foreground": {
+        "figmaKey": "colors/layout/foreground",
+        "value": "#11181c",
+        "cssVar": "--foreground"
+      },
+      "divider": {
+        "figmaKey": "colors/layout/divider",
+        "value": "#11111126",
+        "cssVar": "--border",
+        "description": "Semi-transparent dark \u2014 borders and separators."
+      },
+      "default": {
+        "figmaKey": "colors/base/default",
+        "value": "#d4d4d8",
+        "cssVar": "--default"
+      },
+      "default100": {
+        "figmaKey": "colors/base/default-100",
+        "value": "#f4f4f5",
+        "cssVar": "--surface-secondary"
+      },
+      "default200": {
+        "figmaKey": "colors/base/default-200",
+        "value": "#e4e4e7",
+        "cssVar": "--surface-tertiary"
+      },
+      "default400": {
+        "figmaKey": "colors/base/default-400",
+        "value": "#a1a1aa",
+        "cssVar": "--muted (dark mode)"
+      },
+      "default500": {
+        "figmaKey": "colors/base/default-500",
+        "value": "#71717a",
+        "cssVar": "--muted",
+        "description": "Muted text \u2014 placeholders, secondary labels."
+      },
+      "default600": {
+        "figmaKey": "colors/base/default-600",
+        "value": "#52525b"
+      },
+      "default700": {
+        "figmaKey": "colors/base/default-700",
+        "value": "#3f3f46",
+        "cssVar": "--default-foreground"
+      },
+      "yellow500": {
+        "figmaKey": "colors/common/yellow/500",
+        "value": "#f5a524",
+        "cssVar": "--warning",
+        "description": "Amber \u2014 warning states and accent highlights."
+      },
+      "yellow50": {
+        "figmaKey": "colors/common/yellow/50",
+        "value": "#fefce8",
+        "tailwindToken": "--color-cream",
+        "description": "Cream \u2014 same as Page Bg."
+      },
+      "purple300": {
+        "figmaKey": "colors/common/purple/300",
+        "value": "#ad8fb9",
+        "cssVar": "--focus (dark mode)",
+        "tailwindToken": "--color-purple-300",
+        "description": "Lighter purple \u2014 used for focus rings in dark mode."
+      },
+      "pink": {
+        "figmaKey": "Secondary/Pastel hard/Pink",
+        "value": "#ee688e",
+        "cssVar": "--danger",
+        "tailwindToken": "--color-pink",
+        "description": "Pastel pink \u2014 danger/error states."
+      },
+      "secondary50": {
+        "figmaKey": "colors/base/secondary-50",
+        "value": "#f3eff5",
+        "description": "Very light purple tint \u2014 secondary surface."
+      }
+    },
+    "shadows": {
+      "card": {
+        "figmaKey": "Card",
+        "figmaValue": "DROP_SHADOW: color=#181B2F0A, offset=(0,4), radius=16, spread=0",
+        "cssVar": "--surface-shadow",
+        "cssValue": "0 4px 16px 0 rgba(24, 27, 47, 0.04)"
+      },
+      "neutralSm": {
+        "figmaKey": "shadow/neutral/sm",
+        "figmaValue": "DROP_SHADOW: color=#0000000D, offset=(0,1), radius=2, spread=0",
+        "cssVar": "--field-shadow",
+        "cssValue": "0 1px 2px 0 rgba(0, 0, 0, 0.05)"
+      }
+    },
+    "layout": {
+      "radiusSmall": {
+        "figmaKey": "layout/radius/rounded-small",
+        "value": "8",
+        "unit": "px",
+        "cssVar": "--radius",
+        "cssValue": "0.75rem",
+        "description": "12px radius used as base. Component-level sizes are derived via calc(var(--radius) * multiplier)."
+      }
+    },
+    "typography": {
+      "fontFamily": {
+        "value": "Inter",
+        "cssVar": "--font-sans"
+      },
+      "textTiny": {
+        "figmaKey": "text-tiny",
+        "figmaValue": "Font(Inter, Regular, 12px)",
+        "size": "12px",
+        "tailwindEquiv": "text-xs"
+      },
+      "textSmall": {
+        "figmaKey": "text-small",
+        "figmaValue": "Font(Inter, Regular, 14px)",
+        "size": "14px",
+        "tailwindEquiv": "text-sm"
+      },
+      "textMedium": {
+        "figmaKey": "text-medium",
+        "figmaValue": "Font(Inter, Regular, 16px)",
+        "size": "16px",
+        "tailwindEquiv": "text-base"
+      }
+    },
+    "spacing": {
+      "description": "4px base unit scale. Matches HeroUI v3 default --spacing: 0.25rem.",
+      "unit": {
+        "figmaKey": "units/unit",
+        "value": 4,
+        "px": "4px"
+      },
+      "unit2": {
+        "figmaKey": "units/unit-2",
+        "value": 8,
+        "px": "8px"
+      },
+      "unit3": {
+        "figmaKey": "units/unit-3",
+        "value": 12,
+        "px": "12px"
+      },
+      "unit4": {
+        "figmaKey": "units/unit-4",
+        "value": 16,
+        "px": "16px"
+      },
+      "unit5": {
+        "figmaKey": "units/unit-5",
+        "value": 20,
+        "px": "20px"
+      },
+      "unit6": {
+        "figmaKey": "units/unit-6",
+        "value": 24,
+        "px": "24px"
+      },
+      "unit10": {
+        "figmaKey": "units/unit-10",
+        "value": 40,
+        "px": "40px"
+      },
+      "unit11": {
+        "figmaKey": "units/unit-11",
+        "value": 44,
+        "px": "44px"
+      },
+      "unit16": {
+        "figmaKey": "units/unit-16",
+        "value": 64,
+        "px": "64px"
+      }
+    },
+    "cssOverrides": {
+      "description": "Summary of how YoursTruly theme overrides HeroUI v3 defaults in globals.css.",
+      "overrides": [
+        {
+          "var": "--background",
+          "heroUiDefault": "oklch(0.9702 0 0) (light gray)",
+          "yoursTruly": "#fefce8 (cream)"
+        },
+        {
+          "var": "--accent",
+          "heroUiDefault": "oklch(0.6204 0.195 253.83) (blue)",
+          "yoursTruly": "#52325d (deep purple)"
+        },
+        {
+          "var": "--danger",
+          "heroUiDefault": "#f31260 (red)",
+          "yoursTruly": "#ee688e (pink)"
+        },
+        {
+          "var": "--warning",
+          "heroUiDefault": "#f5a524 (amber)",
+          "yoursTruly": "#f5a524 (same)"
+        },
+        {
+          "var": "--surface-shadow",
+          "heroUiDefault": "multi-layer shadow",
+          "yoursTruly": "0 4px 16px 0 rgba(24,27,47,0.04)"
+        },
+        {
+          "var": "--radius",
+          "heroUiDefault": "0.5rem (8px)",
+          "yoursTruly": "0.75rem (12px)"
+        }
+      ]
+    }
+  },
+  "figmaStyles": {
+    "description": "Figma named styles extracted via REST API. 204 total (201 returned). Includes shadow effects and typography. No color styles \u2014 colors are in Variables/Tokens collection.",
+    "totalCount": 204,
+    "shadowStyles": {
+      "description": "Named shadow/effect styles. Format: shadow/{color}/{size}. Sizes: base, sm, md, lg, xl, 2xl, inner. Colors: primary, secondary, success(green), warning(yellow), danger(red), neutral(zinc).",
+      "colors": ["primary", "secondary", "success", "warning", "danger", "neutral"],
+      "sizes": ["base", "sm", "md", "lg", "xl", "2xl", "inner"],
+      "codeMapping": "packages/styles/themes/shared/theme.css \u2014 --shadow-* CSS custom properties"
+    },
+    "textStyles": {
+      "description": "Named text styles. Format: text-{size}/{leading}/{weight} and special names. Named sizes: text-tiny, text-small, text-medium, text-large.",
+      "namedStyles": {
+        "text-tiny": {
+          "figmaKey": "470365b5241f0aba831dcdcb21a3ddd963ebd477",
+          "v3Token": "--font-size-tiny",
+          "value": "12px"
+        },
+        "text-small": {
+          "figmaKey": "9537c19152bc763c149e5b8bafbdc0a2556eae2e",
+          "v3Token": "--font-size-small",
+          "value": "14px"
+        },
+        "text-medium": {
+          "figmaKey": "119776447a606b535fed6d98cb8f59879fbd0d48",
+          "v3Token": "--font-size-medium",
+          "value": "16px"
+        },
+        "text-large": {
+          "figmaKey": "c3c7cc020a356e26f1ce6b91b795e919705db567",
+          "v3Token": "--font-size-large",
+          "value": "18px"
+        }
+      },
+      "sizesInFile": [
+        "xs",
+        "sm",
+        "base",
+        "lg",
+        "xl",
+        "2xl",
+        "3xl",
+        "4xl",
+        "5xl",
+        "6xl",
+        "7xl",
+        "8xl",
+        "9xl"
+      ],
+      "leadingVariants": [
+        "leading-4",
+        "leading-5",
+        "leading-6",
+        "leading-7",
+        "leading-8",
+        "leading-9",
+        "leading-10",
+        "leading-none"
+      ],
+      "weightVariants": [
+        "font-thin",
+        "font-extralight",
+        "font-light",
+        "font-normal",
+        "font-medium",
+        "font-semibold",
+        "font-bold",
+        "font-extrabold",
+        "font-black"
+      ],
+      "specialVariants": ["underline", "mono"],
+      "codeMapping": "packages/styles/themes/default/variables.css \u2014 --font-size-* CSS custom properties"
+    }
+  },
+  "screens": {
+    "description": "Screens canvas (6408:187914) \u2014 example application screens and molecules built with HeroUI components. Serves as visual reference for real-world component compositions. Added 2026-03-11, updated 2026-03-11.",
+    "figmaPageId": "6408:187914",
+    "figmaPageName": "Screens",
+    "sections": {
+      "Molecules": {
+        "id": "6441:61697",
+        "description": "Reusable molecule-level components: navigation sidebar, card hover states, and app logo variants.",
+        "items": [
+          {
+            "id": "6410:196664",
+            "name": "Navigation/Default",
+            "type": "FRAME",
+            "size": "256x1061",
+            "description": "Sidebar navigation component: logo, grouped nav links (Account/Chat/Shop), support link, upgrade CTA, user avatar. Used as main app nav in all full-screen examples."
+          },
+          {
+            "id": "6441:62152",
+            "name": "card 1",
+            "type": "FRAME",
+            "size": "367x292",
+            "description": "Knowledge card molecule with hover state: image, category chip, title, description, stats row (documents/images/files), avatar group."
+          },
+          {
+            "id": "6441:62153",
+            "name": "card 2",
+            "type": "FRAME",
+            "size": "363x600",
+            "description": "Taller knowledge card molecule with hover state: image, category chip, title, multi-line description, stats row, avatar group."
+          },
+          {
+            "id": "6441:63302",
+            "name": "custom",
+            "type": "COMPONENT_SET",
+            "size": "78x56",
+            "description": "App logo component set with variants: google, AI, tokens, facebook. Used in navigation sidebar as branding element."
+          }
+        ]
+      },
+      "basic flow": {
+        "id": "6441:76012",
+        "description": "Full 1440x1024 application screens showing complete UI flows for the 'Yours Truly' example app.",
+        "items": [
+          {
+            "id": "6408:189555",
+            "name": "create account_login",
+            "type": "FRAME",
+            "size": "1440x1024",
+            "description": "Two-panel authentication screen. Left: brand panel with orange gradient, tagline 'Life Is Short / Make It Sweet', photo collage, social proof (70,000+ users + avatar group). Right: form with Google/Facebook OAuth buttons, Full Name/Email/Password inputs, privacy policy Checkbox, 'Sign Up' Button. Components: Button (primary + tertiary), Input, Label, Checkbox, Separator, Avatar."
+          },
+          {
+            "id": "6408:189673",
+            "name": "Loading",
+            "type": "FRAME",
+            "size": "1440x1024",
+            "description": "Loading state screen with gradient background and Spinner."
+          },
+          {
+            "id": "6408:189715",
+            "name": "Loading",
+            "type": "FRAME",
+            "size": "1440x1024",
+            "description": "Loading state screen with image background and Spinner."
+          },
+          {
+            "id": "6408:189720",
+            "name": "new onboarding",
+            "type": "FRAME",
+            "size": "1440x1024",
+            "description": "Onboarding flow screen: welcome step with progress indicators and action buttons."
+          },
+          {
+            "id": "6440:18958",
+            "name": "V2_gradient",
+            "type": "FRAME",
+            "size": "1440x1024",
+            "description": "Main application dashboard (gradient theme). Layout: sidebar Navigation (256px) + main content area. Top bar: Search Input + mood Badge ('Happy') + XP Badge ('100 XP'). Content: page title 'Myself', 'Add new' Button, Popular Recommendation section (horizontal Card scroll with carousel nav), Tabs ('My knowledge' / 'Shared with me') + Sort Dropdown + Search, Chip filters (All/Fishing/Military/Education/Parenting/Finance), knowledge Card grid with images. Right panel: AI writing prompt Card + Recommended tag Chips list. Components: Navigation sidebar, Input (search), Button, Tabs, Chip, Card, Avatar, Badge/Chip, Separator."
+          },
+          {
+            "id": "6410:195556",
+            "name": "V2_gradient",
+            "type": "FRAME",
+            "size": "1440x1024",
+            "description": "Dashboard variant 2 \u2014 alternate gradient/content state."
+          },
+          {
+            "id": "6412:5968",
+            "name": "V2_gradient",
+            "type": "FRAME",
+            "size": "1440x1024",
+            "description": "Dashboard variant 3 \u2014 alternate gradient/content state."
+          }
+        ]
+      }
+    }
+  },
+  "icons": {
+    "description": "Icon library documentation for HeroUI. The Figma Kit references gravity-ui icons via Iconify. Internally, packages/react/src/components/icons.tsx contains built-in SVG icons used by components. Updated 2026-03-11: added Emotions category (6441:72852).",
+    "figmaPageId": "10:1849",
+    "figmaPageName": "Icons",
+    "figmaIconCount": 246,
+    "recommendedLibrary": {
+      "name": "gravity-ui",
+      "provider": "Iconify",
+      "usage": "@iconify/react or CSS mask-image with Iconify CDN",
+      "figmaCategories": 46
+    },
+    "figmaCategories": [
+      "Arrow",
+      "Arrows (x6)",
+      "Arrows Action (x6)",
+      "Astronomy (x6)",
+      "Bold Duotone / Notes",
+      "Bold Duotone / Notifications",
+      "Building, Infrastructure (x6)",
+      "Business, Statistic (x6)",
+      "Call (x6)",
+      "Content",
+      "Design, Tools (x6)",
+      "Electronic, Devices (x6)",
+      "Emails, Messages",
+      "Essential",
+      "Essentional, UI (x6)",
+      "Faces, Emotions, Stickers (x6)",
+      "Files (x6)",
+      "Folders (x6)",
+      "Food, Kitchen (x6)",
+      "Github",
+      "Google",
+      "Hands (x6)",
+      "Home, Furniture (x6)",
+      "Info Banner",
+      "Like (x6)",
+      "List (x6)",
+      "Map & Location (x6)",
+      "Medicine (x6)",
+      "Messages, Conversation (x6)",
+      "Money (x6)",
+      "Nature, Travel (x6)",
+      "Network, Connection (x6)",
+      "Notes (x6)",
+      "Notifications (x6)",
+      "School (x6)",
+      "Search (x6)",
+      "Security (x6)",
+      "Settings, Fine Tuning (x6)",
+      "Shopping, Ecommerce (x6)",
+      "Sports (x6)",
+      "Text Formatting (x6)",
+      "Time (x6)",
+      "Transport, Parts, Service (x6)",
+      "Users (x6)",
+      "Video, Audio, Sound (x6)",
+      "Weather (x7)",
+      {
+        "id": "6441:72852",
+        "name": "Emotions",
+        "description": "Emotional expression and mood icons (emoji-style): happy, sad, angry, surprised, etc. Added 2026-03-11.",
+        "addedVersion": "2329655686589982933"
+      }
+    ],
+    "internalIcons": {
+      "file": "packages/react/src/components/icons.tsx",
+      "description": "Internal SVG React components used by HeroUI components themselves (not for user consumption as a public icon library).",
+      "icons": [
+        "IconChevronDown",
+        "IconChevronLeft",
+        "IconChevronRight",
+        "ExternalLinkIcon",
+        "CircleDashedIcon",
+        "CloseIcon",
+        "InfoIcon",
+        "WarningIcon",
+        "DangerIcon",
+        "SuccessIcon",
+        "IconMinus",
+        "IconPlus",
+        "IconSearch",
+        "IconCalendar"
+      ]
+    }
+  }
+}
