@@ -286,6 +286,8 @@ export default function FeedMap({ activities }: FeedMapProps) {
     if (!features.length) return
 
     const props = features[0].properties
+    if (!props) return
+    
     const coordinates = (features[0].geometry as any).coordinates.slice()
 
     const popup = new mapboxgl.Popup({ offset: 25, closeButton: false })
