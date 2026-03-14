@@ -16,7 +16,7 @@ interface UseEngagementPromptsReturn {
   refetch: () => Promise<void>;
 }
 
-export function useEngagementPrompts(count: number = 5): UseEngagementPromptsReturn {
+export function useEngagementPrompts(count: number = 5, lifeChapter: string | null = null): UseEngagementPromptsReturn {
   const [prompts, setPrompts] = useState<EngagementPrompt[]>([]);
   const [stats, setStats] = useState<EngagementStats | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -47,6 +47,7 @@ export function useEngagementPrompts(count: number = 5): UseEngagementPromptsRet
           p_user_id: user.id,
           p_count: count,
           p_regenerate: regenerate,
+          p_life_chapter: lifeChapter,
         });
 
       if (fetchError) throw fetchError;
@@ -128,7 +129,7 @@ export function useEngagementPrompts(count: number = 5): UseEngagementPromptsRet
       setIsLoading(false);
       isFetching.current = false;
     }
-  }, [count, supabase]);
+  }, [count, lifeChapter, supabase]);
 
   // Fetch engagement stats
   const fetchStats = async () => {

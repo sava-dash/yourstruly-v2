@@ -145,7 +145,7 @@ export default function DashboardPage() {
   
   const supabase = createClient()
   const { subscription } = useSubscription()
-  const { prompts: rawPrompts, isLoading, shuffle, answerPrompt, skipPrompt, stats: engagementStats } = useEngagementPrompts(40)
+  const { prompts: rawPrompts, isLoading, shuffle, answerPrompt, skipPrompt, stats: engagementStats } = useEngagementPrompts(6, selectedChapter)
   
   // Debug: Log prompt counts
   useEffect(() => {
@@ -165,8 +165,7 @@ export default function DashboardPage() {
   const uniquePrompts = rawPrompts.filter(prompt => {
     // Skip if already answered locally
     if (answeredPromptIds.includes(prompt.id)) return false
-    // Filter by life chapter if one is selected
-    if (selectedChapter && prompt.lifeChapter !== selectedChapter) return false
+    // No need to filter by life_chapter - hook already does it!
     if (seenTexts.has(prompt.promptText)) return false
     seenTexts.add(prompt.promptText)
     if (contactTypes.includes(prompt.type)) {
@@ -178,7 +177,7 @@ export default function DashboardPage() {
 
   // Note: incompleteContactPrompts is computed below after incompleteContacts state is declared
 
-  const prompts = uniquePrompts.slice(0, 6)
+  const prompts = uniquePrompts
   
   // Debug: Log filtered prompt count
   useEffect(() => {
@@ -787,24 +786,32 @@ export default function DashboardPage() {
 
               {/* Tile grid: CSS Grid - 3 columns, photo tile spans 2 rows */}
               <div className="tiles-grid">
-                <AnimatePresence mode="popLayout">
-                  {(() => {
-                    // Reorder prompts: photo tasks go to position 4 (tall tile)
-                    const sortedPrompts = [...prompts.slice(0, 5)]
-                    const photoIndex = sortedPrompts.findIndex(p => 
-                      p.photoUrl && (p.type === 'photo_backstory' || p.type === 'tag_person')
-                    )
-                    if (photoIndex !== -1 && photoIndex !== 4) {
-                      // Move photo task to position 4
-                      const [photoPrompt] = sortedPrompts.splice(photoIndex, 1)
-                      if (sortedPrompts.length >= 4) {
-                        sortedPrompts.splice(4, 0, photoPrompt)
-                      } else {
-                        sortedPrompts.push(photoPrompt)
+                <AnimatePresence mode="wait">
+                  <motion.div
+                    key={selectedChapter || 'all'}
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    exit={{ opacity: 0 }}
+                    transition={{ duration: 0.15 }}
+                    style={{ display: 'contents' }}
+                  >
+                    {(() => {
+                      // Reorder prompts: photo tasks go to position 4 (tall tile)
+                      const sortedPrompts = [...prompts.slice(0, 5)]
+                      const photoIndex = sortedPrompts.findIndex(p => 
+                        p.photoUrl && (p.type === 'photo_backstory' || p.type === 'tag_person')
+                      )
+                      if (photoIndex !== -1 && photoIndex !== 4) {
+                        // Move photo task to position 4
+                        const [photoPrompt] = sortedPrompts.splice(photoIndex, 1)
+                        if (sortedPrompts.length >= 4) {
+                          sortedPrompts.splice(4, 0, photoPrompt)
+                        } else {
+                          sortedPrompts.push(photoPrompt)
+                        }
                       }
-                    }
-                    return sortedPrompts
-                  })().map((prompt, i) => {
+                      return sortedPrompts
+                    })().map((prompt, i) => {
                     const config = TYPE_CONFIG[prompt.type] || TYPE_CONFIG.memory_prompt
                     const isExpanded = expandedId === prompt.id
                     const hasPhoto = prompt.photoUrl && (prompt.type === 'photo_backstory' || prompt.type === 'tag_person')
@@ -816,17 +823,17 @@ export default function DashboardPage() {
                     return (
                       <motion.div
                         key={prompt.id}
-                        initial={{ opacity: 0, y: 10 }}
+                        initial={{ opacity: 0, y: 20 }}
                         animate={{ 
                           opacity: 1, 
                           y: 0,
                           zIndex: isExpanded ? 50 : 1,
                         }}
-                        exit={{ opacity: 0, y: -10 }}
+                        exit={{ opacity: 0, y: -20 }}
                         transition={{
-                          duration: 0.2,
-                          delay: staggerDelay,
-                          ease: 'easeOut'
+                          duration: 0.3,
+                          delay: i * 0.05,  // Stagger enter only
+                          ease: [0.4, 0, 0.2, 1]  // Smoother easing
                         }}
                         onClick={(e) => !isExpanded && handleTileClick(prompt, e)}
                         className={`bubble-tile ${isTall ? 'tile-tall' : ''} ${isExpanded ? 'tile-expanded' : ''}`}
@@ -949,6 +956,7 @@ export default function DashboardPage() {
                       </motion.div>
                     )
                   })}
+                  </motion.div>
                 </AnimatePresence>
               </div>
 
