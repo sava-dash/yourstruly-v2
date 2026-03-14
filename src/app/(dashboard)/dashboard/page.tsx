@@ -145,7 +145,7 @@ export default function DashboardPage() {
   
   const supabase = createClient()
   const { subscription } = useSubscription()
-  const { prompts: rawPrompts, isLoading, shuffle, answerPrompt, skipPrompt, stats: engagementStats } = useEngagementPrompts(8)
+  const { prompts: rawPrompts, isLoading, shuffle, answerPrompt, skipPrompt, stats: engagementStats } = useEngagementPrompts(40)
   
   // Debug: Log prompt counts
   useEffect(() => {
@@ -815,30 +815,18 @@ export default function DashboardPage() {
 
                     return (
                       <motion.div
-                        key={`${tilesKey}-${prompt.id}`}
-                        layout
-                        initial={{ opacity: 0, scale: 0.9, y: 20 }}
+                        key={prompt.id}
+                        initial={{ opacity: 0, y: 10 }}
                         animate={{ 
                           opacity: 1, 
-                          scale: 1,
                           y: 0,
                           zIndex: isExpanded ? 50 : 1,
                         }}
-                        exit={{ opacity: 0, scale: 0.9, y: -20 }}
+                        exit={{ opacity: 0, y: -10 }}
                         transition={{
-                          layout: {
-                            type: 'spring',
-                            damping: 15,
-                            stiffness: 300,
-                            mass: 0.8,
-                          },
-                          opacity: { duration: 0.2 },
-                          scale: {
-                            type: 'spring', 
-                            stiffness: 400, 
-                            damping: 30,
-                            delay: staggerDelay,
-                          }
+                          duration: 0.2,
+                          delay: staggerDelay,
+                          ease: 'easeOut'
                         }}
                         onClick={(e) => !isExpanded && handleTileClick(prompt, e)}
                         className={`bubble-tile ${isTall ? 'tile-tall' : ''} ${isExpanded ? 'tile-expanded' : ''}`}
