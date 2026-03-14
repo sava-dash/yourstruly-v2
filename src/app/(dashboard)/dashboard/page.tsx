@@ -697,17 +697,53 @@ export default function DashboardPage() {
         <main className="home-main">
           <div className="engagement-column">
           <div className="home-bubbles">
+            {/* Life Chapter Category Pills - Always Visible */}
+            <div className="w-full flex flex-wrap items-center justify-center gap-2 mb-6 px-4">
+              <button
+                onClick={() => setSelectedChapter(null)}
+                className={`
+                  px-4 py-2 rounded-full text-sm font-medium
+                  transition-all duration-200
+                  ${selectedChapter === null
+                    ? 'bg-gradient-to-r from-[#7828C8] to-[#9353D3] text-white shadow-lg scale-105'
+                    : 'bg-white/80 backdrop-blur-sm text-[#7828C8] border border-[#7828C8]/20 hover:bg-white hover:border-[#7828C8]/40'
+                  }
+                `}
+              >
+                All Chapters
+              </button>
+              {LIFE_CHAPTERS.map((chapter) => (
+                <button
+                  key={chapter.id}
+                  onClick={() => setSelectedChapter(chapter.id)}
+                  className={`
+                    px-4 py-2 rounded-full text-sm font-medium
+                    transition-all duration-200
+                    ${selectedChapter === chapter.id
+                      ? 'text-white shadow-lg scale-105'
+                      : 'bg-white/80 backdrop-blur-sm text-gray-700 border border-gray-300 hover:bg-white hover:border-gray-400'
+                    }
+                  `}
+                  style={selectedChapter === chapter.id ? {
+                    background: `linear-gradient(135deg, ${chapter.color}, ${chapter.color}dd)`
+                  } : {}}
+                >
+                  {chapter.label}
+                </button>
+              ))}
+            </div>
+
             {isLoading ? (
             <div className="flex flex-col items-center gap-4">
               <motion.div animate={{ rotate: 360 }} transition={{ duration: 2, repeat: Infinity, ease: 'linear' }}>
-                <Sparkles size={28} className="text-[#D9C61A]" />
+                <Sparkles size={28} className="text-[#F5A524]" />
               </motion.div>
-              <span className="text-[#406A56]/60">Loading prompts...</span>
+              <span className="text-gray-500">Loading prompts...</span>
             </div>
           ) : prompts.length === 0 ? (
             <div className="home-empty">
               <div className="home-empty-icon">
-                <Sparkles size={32} className="text-[#D9C61A]" />
+                <Sparkles size={32} className="text-[#F5A524]" />
               </div>
               <h3>{selectedChapter ? 'No prompts for this chapter yet' : 'All caught up!'}</h3>
               <p>
@@ -750,42 +786,6 @@ export default function DashboardPage() {
                   onClick={() => { setExpandedId(null); setTextValue(''); }}
                 />
               )}
-
-              {/* Life Chapter Category Pills */}
-              <div className="w-full flex flex-wrap items-center justify-center gap-2 mb-6 px-4">
-                <button
-                  onClick={() => setSelectedChapter(null)}
-                  className={`
-                    px-4 py-2 rounded-full text-sm font-medium
-                    transition-all duration-200
-                    ${selectedChapter === null
-                      ? 'bg-gradient-to-r from-[#406A56] to-[#8DACAB] text-white shadow-lg scale-105'
-                      : 'bg-white/80 backdrop-blur-sm text-[#406A56] border border-[#406A56]/20 hover:bg-white hover:border-[#406A56]/40'
-                    }
-                  `}
-                >
-                  All Chapters
-                </button>
-                {LIFE_CHAPTERS.map((chapter) => (
-                  <button
-                    key={chapter.id}
-                    onClick={() => setSelectedChapter(chapter.id)}
-                    className={`
-                      px-4 py-2 rounded-full text-sm font-medium
-                      transition-all duration-200
-                      ${selectedChapter === chapter.id
-                        ? 'text-white shadow-lg scale-105'
-                        : 'bg-white/80 backdrop-blur-sm text-[#406A56] border border-[#406A56]/20 hover:bg-white hover:border-[#406A56]/40'
-                      }
-                    `}
-                    style={selectedChapter === chapter.id ? {
-                      background: `linear-gradient(135deg, ${chapter.color}, ${chapter.color}dd)`
-                    } : {}}
-                  >
-                    {chapter.label}
-                  </button>
-                ))}
-              </div>
 
               {/* Tile grid: CSS Grid - 3 columns, photo tile spans 2 rows */}
               <div className="tiles-grid">
