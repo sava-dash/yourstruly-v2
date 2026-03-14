@@ -463,10 +463,8 @@ export default function DashboardPage() {
     setIsSubmitting(false)
   }, [prompts, textValue, answerPrompt])
 
-  // Handle shuffle
+  // Handle shuffle - keeps current chapter selected
   const handleShuffle = () => {
-    // Clear category filter when regenerating to get fresh prompts
-    setSelectedChapter(null)
     setTilesKey(prev => prev + 1)
     shuffle()
   }
