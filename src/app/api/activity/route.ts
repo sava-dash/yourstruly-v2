@@ -27,6 +27,7 @@ export interface ActivityItem {
     avatar_url?: string
   }
   thumbnail?: string
+  audio_url?: string
   link: string
   metadata?: Record<string, any>
 }
@@ -384,7 +385,7 @@ export async function GET(request: NextRequest) {
   // 7. User's own wisdom (recently captured)
   const { data: myWisdom } = await supabase
     .from('knowledge_entries')
-    .select('id, prompt_text, category, created_at')
+    .select('id, prompt_text, category, audio_url, created_at')
     .eq('user_id', user.id)
     .order('created_at', { ascending: false })
     .limit(limit)
@@ -397,6 +398,7 @@ export async function GET(request: NextRequest) {
         title: wisdom.prompt_text?.slice(0, 60) || 'Wisdom',
         description: 'You captured new wisdom',
         timestamp: wisdom.created_at,
+        audio_url: wisdom.audio_url,
         link: `/dashboard/wisdom/${wisdom.id}`,
         metadata: { wisdomId: wisdom.id, category: wisdom.category }
       })

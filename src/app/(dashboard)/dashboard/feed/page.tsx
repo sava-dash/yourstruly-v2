@@ -8,6 +8,7 @@ import { format } from 'date-fns'
 import { motion, AnimatePresence } from 'framer-motion'
 import dynamic from 'next/dynamic'
 import { UnifiedEngagementModal } from '@/components/engagement/UnifiedEngagementModal'
+import { InlineAudioPlayer } from '@/components/feed/InlineAudioPlayer'
 
 const FeedMap = dynamic(() => import('@/components/feed/FeedMap'), { ssr: false })
 
@@ -18,6 +19,7 @@ interface ActivityItem {
   description: string
   timestamp: string
   thumbnail?: string
+  audio_url?: string
   link: string
   metadata?: {
     location?: string
@@ -64,19 +66,42 @@ const QUICK_ACTIONS: Record<string, Array<{ label: string; icon: any; action: st
   ],
 }
 
-const TYPE_CONFIG: Record<string, { label: string; color: string }> = {
-  memory_created: { label: 'Memory', color: '#FF5C34' },
-  memory_shared: { label: 'Shared Memory', color: '#FF5C34' },
-  wisdom_created: { label: 'Wisdom', color: '#3448FF' },
-  wisdom_shared: { label: 'Shared Wisdom', color: '#3448FF' },
-  interview_response: { label: 'Interview', color: '#34D7FF' },
-  photos_uploaded: { label: 'Media', color: '#FFB020' },
-  postscript_created: { label: 'PostScript', color: '#A855F7' },
-  contact_added: { label: 'Contact', color: '#00B87C' },
-  circle_content: { label: 'Circle', color: '#34D7FF' },
+// Brand gradients for cards without images
+const TYPE_GRADIENTS: Record<string, string> = {
+  memory: 'linear-gradient(135deg, #FF5C34 0%, #FF8A65 100%)',
+  wisdom: 'linear-gradient(135deg, #3448FF 0%, #5C7CFF 100%)',
+  interview: 'linear-gradient(135deg, #34D7FF 0%, #6BE7FF 100%)',
+  media: 'linear-gradient(135deg, #FFB020 0%, #FFC857 100%)',
+  postscript: 'linear-gradient(135deg, #A855F7 0%, #C084FC 100%)',
+  contact: 'linear-gradient(135deg, #00B87C 0%, #34D399 100%)',
+  circle: 'linear-gradient(135deg, #34D7FF 0%, #6BE7FF 100%)',
 }
 
-function MasonryTile({ activity, index, isDarkMode }: { activity: ActivityItem; index: number; isDarkMode: boolean }) {
+const TYPE_CONFIG: Record<string, { label: string; color: string; gradient: string }> = {
+  memory_created: { label: 'Memory', color: '#FF5C34', gradient: TYPE_GRADIENTS.memory },
+  memory_shared: { label: 'Shared Memory', color: '#FF5C34', gradient: TYPE_GRADIENTS.memory },
+  wisdom_created: { label: 'Wisdom', color: '#3448FF', gradient: TYPE_GRADIENTS.wisdom },
+  wisdom_shared: { label: 'Shared Wisdom', color: '#3448FF', gradient: TYPE_GRADIENTS.wisdom },
+  interview_response: { label: 'Interview', color: '#34D7FF', gradient: TYPE_GRADIENTS.interview },
+  photos_uploaded: { label: 'Media', color: '#FFB020', gradient: TYPE_GRADIENTS.media },
+  postscript_created: { label: 'PostScript', color: '#A855F7', gradient: TYPE_GRADIENTS.postscript },
+  contact_added: { label: 'Contact', color: '#00B87C', gradient: TYPE_GRADIENTS.contact },
+  circle_content: { label: 'Circle', color: '#34D7FF', gradient: TYPE_GRADIENTS.circle },
+}
+
+function MasonryTile({ 
+  activity, 
+  index, 
+  isDarkMode,
+  playingAudio,
+  onAudioToggle
+}: { 
+  activity: ActivityItem
+  index: number
+  isDarkMode: boolean
+  playingAudio: string | null
+  onAudioToggle: (id: string) => void
+}) {
   const tileRef = useRef<HTMLAnchorElement>(null)
   const [isHovered, setIsHovered] = useState(false)
 
@@ -84,8 +109,9 @@ function MasonryTile({ activity, index, isDarkMode }: { activity: ActivityItem; 
     setIsHovered(true)
     if (tileRef.current) {
       gsap.to(tileRef.current, {
-        y: -4,
-        duration: 0.3,
+        y: -8,
+        boxShadow: '0 20px 40px rgba(0,0,0,0.15)',
+        duration: 0.4,
         ease: 'cubic-bezier(0.25, 0.8, 0.25, 1)'
       })
     }
@@ -96,31 +122,17 @@ function MasonryTile({ activity, index, isDarkMode }: { activity: ActivityItem; 
     if (tileRef.current) {
       gsap.to(tileRef.current, {
         y: 0,
-        duration: 0.3,
+        boxShadow: '0 8px 20px rgba(0,0,0,0.08)',
+        duration: 0.4,
         ease: 'cubic-bezier(0.25, 0.8, 0.25, 1)'
       })
     }
   }
 
   const getCardClass = () => {
-    // Balanced pattern to minimize gaps: mostly regular with strategic large/wide/medium
     const patterns = [
-      'large',    // 0: 2x2
-      '',         // 1: regular
-      '',         // 2: regular  
-      'medium',   // 3: 1x2
-      '',         // 4: regular
-      '',         // 5: regular
-      'wide',     // 6: 2x1
-      '',         // 7: regular
-      '',         // 8: regular
-      '',         // 9: regular
-      '',         // 10: regular
-      'medium',   // 11: 1x2
-      '',         // 12: regular
-      'wide',     // 13: 2x1
-      '',         // 14: regular
-      '',         // 15: regular
+      'large', '', '', 'medium', '', '', 'wide', '', '', '', '', 
+      'medium', '', 'wide', '', ''
     ]
     return patterns[index % patterns.length]
   }
@@ -134,84 +146,170 @@ function MasonryTile({ activity, index, isDarkMode }: { activity: ActivityItem; 
         ref={tileRef}
         onMouseEnter={handleMouseEnter}
         onMouseLeave={handleMouseLeave}
-        className="card block relative overflow-hidden rounded-xl"
+        className="card block relative overflow-hidden"
         style={{ 
-          backgroundColor: isDarkMode ? '#242424' : '#FFFFFF',
-          border: isHovered ? '1px solid #34D7FF' : isDarkMode ? '1px solid rgba(255,255,255,0.05)' : '1px solid rgba(0,0,0,0.08)',
-          transition: 'border 0.3s ease',
-          boxShadow: isDarkMode ? 'none' : '0 2px 8px rgba(0,0,0,0.06)'
+          borderRadius: '16px',
+          background: activity.thumbnail ? '#000' : config.gradient,
+          border: 'none',
+          boxShadow: '0 8px 20px rgba(0,0,0,0.08)',
+          transition: 'all 0.4s cubic-bezier(0.25, 0.8, 0.25, 1)',
+          display: 'flex',
+          flexDirection: 'column',
+          height: '100%',
         }}
       >
-      {/* Card Image */}
-      {activity.thumbnail && (
-        <div 
-          className="card-image"
-          style={{
-            backgroundImage: `url(${activity.thumbnail})`,
-            backgroundSize: 'cover',
-            backgroundPosition: 'center',
-            position: 'relative'
-          }}
-        >
-          <div style={{
-            position: 'absolute',
-            inset: 0,
-            background: 'linear-gradient(to bottom, transparent 60%, rgba(0,0,0,0.8))'
-          }} />
-        </div>
-      )}
-
-      {/* Card Content */}
-      <div className="card-content">
-        {/* Category Meta */}
-        <div 
-          className="card-meta"
-          style={{ color: config.color }}
-        >
-          {config.label}
-        </div>
-
-        {/* Title */}
-        <h3 className="card-title">
-          {activity.title || 'Untitled'}
-        </h3>
-
-        {/* Description if no image */}
-        {!activity.thumbnail && activity.description && (
-          <p className="card-description">
-            {activity.description}
-          </p>
+        {/* Card Image (60% height when present) */}
+        {activity.thumbnail && (
+          <div 
+            style={{
+              height: '60%',
+              backgroundImage: `url(${activity.thumbnail})`,
+              backgroundSize: 'cover',
+              backgroundPosition: 'center',
+              position: 'relative',
+              flexShrink: 0,
+            }}
+          >
+            {/* Gradient overlay for text readability */}
+            <div style={{
+              position: 'absolute',
+              inset: 0,
+              background: 'linear-gradient(to bottom, transparent 40%, rgba(0,0,0,0.7))'
+            }} />
+          </div>
         )}
 
-        {/* Postscript meta */}
-        {activity.type === 'postscript_created' && activity.metadata?.recipient_name && (
-          <div style={{ fontSize: '11px', color: '#888', marginTop: '4px' }}>
-            To: {activity.metadata.recipient_name}
-            {activity.metadata.delivery_date && (
-              <> • {format(new Date(activity.metadata.delivery_date), 'MMM d, yyyy')}</>
+        {/* Card Content (40% height with image, 100% without) */}
+        <div style={{
+          padding: activity.thumbnail ? '20px' : '24px',
+          display: 'flex',
+          flexDirection: 'column',
+          justifyContent: 'space-between',
+          flex: 1,
+          gap: '12px',
+          color: activity.thumbnail ? '#fff' : '#fff',
+        }}>
+          {/* Top Section: Category + Title + Description */}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+            {/* Category Badge */}
+            <div style={{
+              fontSize: '11px',
+              fontWeight: '700',
+              textTransform: 'uppercase',
+              letterSpacing: '0.5px',
+              color: activity.thumbnail ? '#fff' : 'rgba(255,255,255,0.9)',
+              opacity: 0.8,
+            }}>
+              {config.label}
+            </div>
+
+            {/* Title */}
+            <h3 style={{
+              fontSize: '18px',
+              fontWeight: '700',
+              lineHeight: '1.3',
+              margin: 0,
+              color: '#fff',
+            }}>
+              {activity.title || 'Untitled'}
+            </h3>
+
+            {/* Description (only show for non-image cards or when large) */}
+            {!activity.thumbnail && activity.description && (
+              <p style={{
+                fontSize: '14px',
+                lineHeight: '1.5',
+                color: 'rgba(255,255,255,0.85)',
+                margin: 0,
+                display: '-webkit-box',
+                WebkitLineClamp: 3,
+                WebkitBoxOrient: 'vertical',
+                overflow: 'hidden',
+              }}>
+                {activity.description}
+              </p>
+            )}
+
+            {/* PostScript metadata */}
+            {activity.type === 'postscript_created' && activity.metadata?.recipient_name && (
+              <div style={{ 
+                fontSize: '12px', 
+                color: 'rgba(255,255,255,0.7)',
+                fontWeight: '500',
+              }}>
+                To: {activity.metadata.recipient_name}
+                {activity.metadata.delivery_date && (
+                  <> • {format(new Date(activity.metadata.delivery_date), 'MMM d, yyyy')}</>
+                )}
+              </div>
             )}
           </div>
-        )}
 
-        {/* Card Details */}
-        <div className="card-details">
-          <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-            <Calendar size={10} />
-            <span className="card-date">{format(new Date(activity.timestamp), 'MMM d, yyyy')}</span>
-          </div>
-          {activity.metadata?.location && (
-            <div style={{ display: 'flex', alignItems: 'center', gap: '4px', flex: '0 1 auto', minWidth: 0 }}>
-              <MapPin size={10} style={{ flexShrink: 0 }} />
-              <span className="card-location" style={{ 
-                fontSize: '10px',
-                whiteSpace: 'nowrap',
-                overflow: 'hidden',
-                textOverflow: 'ellipsis'
-              }}>{activity.metadata.location}</span>
-            </div>
+          {/* Audio Player (if audio exists) */}
+          {activity.audio_url && (
+            <InlineAudioPlayer
+              audioUrl={activity.audio_url}
+              isPlaying={playingAudio === activity.id}
+              onToggle={() => onAudioToggle(activity.id)}
+              accentColor={config.color}
+            />
           )}
+
+          {/* Bottom Section: Metadata + CTA */}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginTop: 'auto' }}>
+            {/* Date & Location */}
+            <div style={{ 
+              display: 'flex', 
+              alignItems: 'center', 
+              gap: '12px',
+              fontSize: '12px',
+              color: 'rgba(255,255,255,0.7)',
+              fontWeight: '500',
+            }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                <Calendar size={12} />
+                {format(new Date(activity.timestamp), 'MMM d, yyyy')}
+              </div>
+              {activity.metadata?.location && (
+                <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                  <MapPin size={12} />
+                  <span style={{ 
+                    whiteSpace: 'nowrap',
+                    overflow: 'hidden',
+                    textOverflow: 'ellipsis',
+                    maxWidth: '150px'
+                  }}>
+                    {activity.metadata.location}
+                  </span>
+                </div>
+              )}
+            </div>
+
+            {/* CTA Button */}
+            <button
+              onClick={(e) => {
+                e.preventDefault()
+                window.location.href = activity.link
+              }}
+              style={{
+                background: '#fff',
+                color: '#000',
+                border: 'none',
+                borderRadius: '12px',
+                padding: '12px 20px',
+                fontSize: '14px',
+                fontWeight: '600',
+                cursor: 'pointer',
+                transition: 'all 0.2s',
+                opacity: isHovered ? 1 : 0.9,
+                transform: isHovered ? 'scale(1.02)' : 'scale(1)',
+                boxShadow: isHovered ? '0 4px 12px rgba(0,0,0,0.2)' : 'none',
+              }}
+            >
+              View Details
+            </button>
+          </div>
         </div>
-      </div>
       </Link>
     </div>
   )
@@ -246,6 +344,11 @@ export default function FeedPage() {
   const gridRef = useRef<HTMLDivElement>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
   const cameraInputRef = useRef<HTMLInputElement>(null)
+  const [playingAudio, setPlayingAudio] = useState<string | null>(null)
+
+  const handleAudioToggle = (activityId: string) => {
+    setPlayingAudio(prev => prev === activityId ? null : activityId)
+  }
 
   useEffect(() => {
     fetchUserName()
@@ -1114,7 +1217,14 @@ export default function FeedPage() {
         ) : (
           <div ref={gridRef} className="masonry-grid">
             {filteredActivities.map((activity, index) => (
-              <MasonryTile key={activity.id} activity={activity} index={index} isDarkMode={isDarkMode} />
+              <MasonryTile 
+                key={activity.id} 
+                activity={activity} 
+                index={index} 
+                isDarkMode={isDarkMode}
+                playingAudio={playingAudio}
+                onAudioToggle={handleAudioToggle}
+              />
             ))}
           </div>
         )}
