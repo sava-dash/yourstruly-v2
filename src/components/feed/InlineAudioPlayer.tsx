@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useRef, useEffect } from 'react'
+import { useState, useRef, useEffect, useCallback } from 'react'
 import { Play, Pause } from 'lucide-react'
 
 interface InlineAudioPlayerProps {
@@ -19,22 +19,27 @@ export function InlineAudioPlayer({
   const audioRef = useRef<HTMLAudioElement | null>(null)
   const [duration, setDuration] = useState(0)
   const [currentTime, setCurrentTime] = useState(0)
-
-  // Initialize audio element
+  const [isReady, setIsReady] = useState(false)
+  const onToggleRef = useRef(onToggle)
+  
+  // Keep onToggle ref up to date
   useEffect(() => {
-    console.log('[InlineAudioPlayer] Initializing audio:', audioUrl)
-    
+    onToggleRef.current = onToggle
+  }, [onToggle])
+
+  // Initialize audio element - only depends on audioUrl
+  useEffect(() => {
     if (!audioUrl) {
-      console.warn('[InlineAudioPlayer] No audio URL provided')
       return
     }
 
-    const audio = new Audio(audioUrl)
+    const audio = new Audio()
+    audio.preload = 'metadata'
     audioRef.current = audio
     
     const handleLoadedMetadata = () => {
-      console.log('[InlineAudioPlayer] Metadata loaded, duration:', audio.duration)
       setDuration(audio.duration || 0)
+      setIsReady(true)
     }
     
     const handleTimeUpdate = () => {
@@ -42,30 +47,32 @@ export function InlineAudioPlayer({
     }
     
     const handleEnded = () => {
-      console.log('[InlineAudioPlayer] Audio ended')
-      onToggle()
+      onToggleRef.current()
       setCurrentTime(0)
     }
 
-    const handleError = (e: ErrorEvent) => {
-      console.error('[InlineAudioPlayer] Audio error:', e)
+    const handleError = () => {
+      console.error('[InlineAudioPlayer] Failed to load audio:', audioUrl)
+      setIsReady(false)
     }
 
     audio.addEventListener('loadedmetadata', handleLoadedMetadata)
     audio.addEventListener('timeupdate', handleTimeUpdate)
     audio.addEventListener('ended', handleEnded)
-    audio.addEventListener('error', handleError as any)
+    audio.addEventListener('error', handleError)
+    
+    // Set src after adding listeners
+    audio.src = audioUrl
 
     return () => {
-      console.log('[InlineAudioPlayer] Cleanup')
       audio.pause()
       audio.removeEventListener('loadedmetadata', handleLoadedMetadata)
       audio.removeEventListener('timeupdate', handleTimeUpdate)
       audio.removeEventListener('ended', handleEnded)
-      audio.removeEventListener('error', handleError as any)
+      audio.removeEventListener('error', handleError)
       audioRef.current = null
     }
-  }, [audioUrl, onToggle])
+  }, [audioUrl])
 
   // Handle play/pause
   useEffect(() => {

@@ -105,26 +105,7 @@ const TYPE_CONFIG: Record<string, { label: string; color: string; gradient: stri
   circle_content: { label: 'Circle', color: BRAND_COLORS.blue, gradient: TYPE_GRADIENTS.circle },
 }
 
-// Generate varied heights for cards (min 200px, max 400px)
-function getCardHeight(activity: ActivityItem, index: number): number {
-  // Base height depends on content
-  let height = 200 // minimum
-  
-  // Add height for longer descriptions
-  const descLength = activity.description?.length || 0
-  if (descLength > 100) height += 40
-  if (descLength > 200) height += 40
-  
-  // Add height for images
-  if (activity.thumbnail) height += 80
-  
-  // Add some randomization based on index
-  const variation = (index % 5) * 20
-  height += variation
-  
-  // Cap at max height
-  return Math.min(height, 400)
-}
+// Card heights are now determined by content (images use aspect ratio, text cards flex)
 
 function MasonryTile({ 
   activity, 
@@ -140,7 +121,15 @@ function MasonryTile({
   onAudioToggle: (id: string) => void
 }) {
   const config = TYPE_CONFIG[activity.type] || TYPE_CONFIG.memory_created
-  const cardHeight = getCardHeight(activity, index)
+  
+  // Get a meaningful summary - use description if it's not a generic "you created..." message
+  const getSummary = () => {
+    const desc = activity.description || ''
+    // If description is generic ("You created...", "You added..."), return empty
+    if (desc.toLowerCase().startsWith('you ')) return ''
+    return desc
+  }
+  const summary = getSummary()
 
   return (
     <div className="card-wrapper">
@@ -154,21 +143,18 @@ function MasonryTile({
           boxShadow: '0 8px 24px rgba(0,0,0,0.12)',
           display: 'flex',
           flexDirection: 'column',
-          minHeight: `${cardHeight}px`,
-          height: 'auto',
+          minHeight: '200px',
         }}
       >
-        {/* Card Image (65% height when present) */}
+        {/* Card Image - flexible height based on image */}
         {activity.thumbnail && (
           <div 
             style={{
-              height: '65%',
-              minHeight: '140px',
+              paddingTop: '75%', // 4:3 aspect ratio, can be taller
               backgroundImage: `url(${activity.thumbnail})`,
               backgroundSize: 'cover',
               backgroundPosition: 'center',
               position: 'relative',
-              flexShrink: 0,
               borderRadius: '20px 20px 0 0',
             }}
           >
@@ -176,7 +162,7 @@ function MasonryTile({
             <div style={{
               position: 'absolute',
               inset: 0,
-              background: 'linear-gradient(to bottom, transparent 50%, rgba(0,0,0,0.85))'
+              background: 'linear-gradient(to bottom, transparent 60%, rgba(0,0,0,0.9))'
             }} />
           </div>
         )}
@@ -185,141 +171,117 @@ function MasonryTile({
         <div 
           className="feed-card-content"
           style={{
-            padding: '20px',
+            padding: '16px 20px 20px',
             display: 'flex',
             flexDirection: 'column',
-            justifyContent: 'space-between',
-            flex: 1,
-            gap: '12px',
+            gap: '10px',
             color: '#fff',
+            flex: 1,
           }}
         >
-          {/* Top Section: Category + Title + Description */}
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-            {/* Category Badge */}
-            <div style={{
-              fontSize: '11px',
-              fontWeight: '700',
-              textTransform: 'uppercase',
-              letterSpacing: '0.5px',
-              color: activity.thumbnail ? '#fff' : 'rgba(255,255,255,0.9)',
-              opacity: 0.8,
-            }}>
-              {config.label}
-            </div>
-
-            {/* Title */}
-            <h3 
-              className="feed-card-title"
-              style={{
-                fontSize: '18px',
-                fontWeight: '700',
-                lineHeight: '1.3',
-                margin: 0,
-                color: '#fff',
-              }}
-            >
-              {activity.title || 'Untitled'}
-            </h3>
-
-            {/* Description (only show for non-image cards or when large) */}
-            {!activity.thumbnail && activity.description && (
-              <p 
-                className="feed-card-description"
-                style={{
-                  fontSize: '14px',
-                  lineHeight: '1.5',
-                  color: 'rgba(255,255,255,0.85)',
-                  margin: 0,
-                  display: '-webkit-box',
-                  WebkitLineClamp: 3,
-                  WebkitBoxOrient: 'vertical',
-                  overflow: 'hidden',
-                }}
-              >
-                {activity.description}
-              </p>
-            )}
-
-            {/* PostScript metadata */}
-            {activity.type === 'postscript_created' && activity.metadata?.recipient_name && (
-              <div style={{ 
-                fontSize: '12px', 
-                color: 'rgba(255,255,255,0.7)',
-                fontWeight: '500',
-              }}>
-                To: {activity.metadata.recipient_name}
-                {activity.metadata.delivery_date && (
-                  <> • {format(new Date(activity.metadata.delivery_date), 'MMM d, yyyy')}</>
-                )}
-              </div>
-            )}
+          {/* Category Badge */}
+          <div style={{
+            fontSize: '10px',
+            fontWeight: '700',
+            textTransform: 'uppercase',
+            letterSpacing: '0.5px',
+            color: 'rgba(255,255,255,0.7)',
+          }}>
+            {config.label}
           </div>
 
-          {/* Audio Player (if audio exists) */}
-          {activity.audio_url && (
-            <>
-              {console.log('[FeedCard] Rendering audio player for:', activity.id, 'URL:', activity.audio_url)}
-              <InlineAudioPlayer
-                audioUrl={activity.audio_url}
-                isPlaying={playingAudio === activity.id}
-                onToggle={() => {
-                  console.log('[FeedCard] Audio toggle clicked:', activity.id)
-                  onAudioToggle(activity.id)
-                }}
-                accentColor={config.color}
-              />
-            </>
+          {/* Title */}
+          <h3 style={{
+            fontSize: '16px',
+            fontWeight: '700',
+            lineHeight: '1.3',
+            margin: 0,
+            color: '#fff',
+            display: '-webkit-box',
+            WebkitLineClamp: 2,
+            WebkitBoxOrient: 'vertical',
+            overflow: 'hidden',
+          }}>
+            {activity.title || 'Untitled'}
+          </h3>
+
+          {/* 2-line Summary */}
+          {summary && (
+            <p style={{
+              fontSize: '13px',
+              lineHeight: '1.4',
+              color: 'rgba(255,255,255,0.8)',
+              margin: 0,
+              display: '-webkit-box',
+              WebkitLineClamp: 2,
+              WebkitBoxOrient: 'vertical',
+              overflow: 'hidden',
+            }}>
+              {summary}
+            </p>
           )}
 
-          {/* Bottom Section: Metadata + CTA */}
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginTop: 'auto' }}>
-            {/* Date & Location */}
+          {/* PostScript metadata */}
+          {activity.type === 'postscript_created' && activity.metadata?.recipient_name && (
             <div style={{ 
-              display: 'flex', 
-              alignItems: 'center', 
-              gap: '12px',
-              fontSize: '12px',
+              fontSize: '12px', 
               color: 'rgba(255,255,255,0.7)',
               fontWeight: '500',
             }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                <Calendar size={12} />
-                {format(new Date(activity.timestamp), 'MMM d, yyyy')}
-              </div>
-              {activity.metadata?.location && (
-                <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                  <MapPin size={12} />
-                  <span style={{ 
-                    whiteSpace: 'nowrap',
-                    overflow: 'hidden',
-                    textOverflow: 'ellipsis',
-                    maxWidth: '150px'
-                  }}>
-                    {activity.metadata.location}
-                  </span>
-                </div>
+              To: {activity.metadata.recipient_name}
+              {activity.metadata.delivery_date && (
+                <> • {format(new Date(activity.metadata.delivery_date), 'MMM d, yyyy')}</>
               )}
             </div>
+          )}
 
-            {/* See More Button */}
-            <div
-              className="feed-card-cta"
-              style={{
-                background: 'transparent',
-                color: '#fff',
-                border: '1px solid rgba(255,255,255,0.4)',
-                borderRadius: '10px',
-                padding: '10px 16px',
-                fontSize: '13px',
-                fontWeight: '600',
-                cursor: 'pointer',
-                textAlign: 'center',
-                transition: 'all 0.2s',
+          {/* Audio Player (if audio exists) */}
+          {activity.audio_url && (
+            <div 
+              onClick={(e) => {
+                e.preventDefault()
+                e.stopPropagation()
+                onAudioToggle(activity.id)
               }}
+              style={{ marginTop: '4px' }}
             >
-              See More
+              <InlineAudioPlayer
+                audioUrl={activity.audio_url}
+                isPlaying={playingAudio === activity.id}
+                onToggle={() => onAudioToggle(activity.id)}
+                accentColor={config.color}
+              />
             </div>
+          )}
+
+          {/* Date & Location - at bottom */}
+          <div style={{ 
+            display: 'flex', 
+            alignItems: 'center', 
+            gap: '12px',
+            fontSize: '11px',
+            color: 'rgba(255,255,255,0.6)',
+            fontWeight: '500',
+            marginTop: 'auto',
+            paddingTop: '8px',
+          }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+              <Calendar size={11} />
+              {format(new Date(activity.timestamp), 'MMM d, yyyy')}
+            </div>
+            {activity.metadata?.location && (
+              <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                <MapPin size={11} />
+                <span style={{ 
+                  whiteSpace: 'nowrap',
+                  overflow: 'hidden',
+                  textOverflow: 'ellipsis',
+                  maxWidth: '120px'
+                }}>
+                  {activity.metadata.location}
+                </span>
+              </div>
+            )}
           </div>
         </div>
       </Link>
