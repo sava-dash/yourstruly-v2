@@ -292,7 +292,7 @@ export function FeedDetailModal({ activity, isOpen, onClose, onUpdate }: FeedDet
             <button
               onClick={onClose}
               style={{
-                background: '#f5f5f5',
+                background: '#333',
                 border: 'none',
                 borderRadius: '50%',
                 width: '36px',
@@ -301,6 +301,7 @@ export function FeedDetailModal({ activity, isOpen, onClose, onUpdate }: FeedDet
                 alignItems: 'center',
                 justifyContent: 'center',
                 cursor: 'pointer',
+                color: '#fff',
               }}
             >
               <X size={18} />
@@ -709,96 +710,116 @@ export function FeedDetailModal({ activity, isOpen, onClose, onUpdate }: FeedDet
                   <Camera size={14} />
                   Photo
                 </button>
-                <div style={{ position: 'relative', flex: 1 }}>
-                  <button
-                    onClick={() => setShowTagDropdown(!showTagDropdown)}
-                    style={{
-                      width: '100%',
-                      padding: '10px',
-                      background: showTagDropdown ? accentColor : '#f5f5f5',
-                      color: showTagDropdown ? '#fff' : '#555',
-                      border: 'none',
-                      borderRadius: '10px',
-                      fontSize: '12px',
-                      fontWeight: '600',
-                      cursor: 'pointer',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      gap: '6px',
-                    }}
-                  >
-                    <Tag size={14} />
-                    Tag
-                  </button>
-                  
-                  {/* Tag Dropdown */}
-                  {showTagDropdown && (
-                    <div style={{
-                      position: 'absolute',
-                      bottom: '100%',
-                      left: 0,
-                      right: 0,
-                      marginBottom: '8px',
-                      background: '#fff',
-                      borderRadius: '12px',
-                      boxShadow: '0 8px 24px rgba(0,0,0,0.15)',
-                      border: '1px solid #eee',
-                      maxHeight: '200px',
-                      overflowY: 'auto',
-                      zIndex: 10,
-                    }}>
-                      <div style={{
-                        padding: '8px 12px',
-                        fontSize: '11px',
+                {/* Only show Tag button for memories and photos, not postscripts */}
+                {activity.type !== 'postscript_created' && (
+                  <div style={{ position: 'relative', flex: 1 }}>
+                    <button
+                      onClick={() => setShowTagDropdown(!showTagDropdown)}
+                      style={{
+                        width: '100%',
+                        padding: '10px',
+                        background: showTagDropdown ? accentColor : '#f5f5f5',
+                        color: showTagDropdown ? '#fff' : '#555',
+                        border: 'none',
+                        borderRadius: '10px',
+                        fontSize: '12px',
                         fontWeight: '600',
-                        color: '#888',
-                        textTransform: 'uppercase',
-                        borderBottom: '1px solid #eee',
+                        cursor: 'pointer',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        gap: '6px',
+                      }}
+                    >
+                      <Tag size={14} />
+                      Tag
+                    </button>
+                    
+                    {/* Tag Dropdown */}
+                    {showTagDropdown && (
+                      <div style={{
+                        position: 'absolute',
+                        bottom: '100%',
+                        left: 0,
+                        right: 0,
+                        marginBottom: '8px',
+                        background: '#fff',
+                        borderRadius: '12px',
+                        boxShadow: '0 8px 24px rgba(0,0,0,0.15)',
+                        border: '1px solid #eee',
+                        maxHeight: '250px',
+                        overflowY: 'auto',
+                        zIndex: 10,
                       }}>
-                        Tag a person
-                      </div>
-                      {contacts.length === 0 ? (
-                        <div style={{ padding: '12px', fontSize: '13px', color: '#888' }}>
-                          No contacts found
+                        <div style={{
+                          padding: '10px 14px',
+                          fontSize: '11px',
+                          fontWeight: '700',
+                          color: '#666',
+                          textTransform: 'uppercase',
+                          letterSpacing: '0.5px',
+                          borderBottom: '1px solid #eee',
+                          background: '#fafafa',
+                        }}>
+                          Tag a person
                         </div>
-                      ) : (
-                        contacts.map((contact) => {
-                          const isTagged = taggedPeople.some(p => p.id === contact.id)
-                          return (
-                            <button
-                              key={contact.id}
-                              onClick={() => {
-                                if (!isTagged) {
-                                  handleTagPerson(contact.id)
-                                }
-                                setShowTagDropdown(false)
-                              }}
-                              style={{
-                                width: '100%',
-                                padding: '10px 12px',
-                                display: 'flex',
-                                alignItems: 'center',
-                                gap: '8px',
-                                border: 'none',
-                                background: isTagged ? '#f0f0f0' : 'transparent',
-                                cursor: isTagged ? 'default' : 'pointer',
-                                fontSize: '13px',
-                                color: isTagged ? '#888' : '#333',
-                                textAlign: 'left',
-                              }}
-                              disabled={isTagged}
-                            >
-                              <Users size={14} color={isTagged ? '#888' : accentColor} />
-                              {contact.full_name}
-                              {isTagged && <Check size={14} color="#888" style={{ marginLeft: 'auto' }} />}
-                            </button>
-                          )
-                        })
-                      )}
-                    </div>
-                  )}
-                </div>
+                        {contacts.length === 0 ? (
+                          <div style={{ padding: '16px', fontSize: '13px', color: '#888', textAlign: 'center' }}>
+                            No contacts found
+                          </div>
+                        ) : (
+                          contacts.map((contact) => {
+                            const isTagged = taggedPeople.some(p => p.id === contact.id)
+                            return (
+                              <button
+                                key={contact.id}
+                                onClick={() => {
+                                  if (!isTagged) {
+                                    handleTagPerson(contact.id)
+                                  }
+                                  setShowTagDropdown(false)
+                                }}
+                                style={{
+                                  width: '100%',
+                                  padding: '12px 14px',
+                                  display: 'flex',
+                                  alignItems: 'center',
+                                  gap: '10px',
+                                  border: 'none',
+                                  borderBottom: '1px solid #f5f5f5',
+                                  background: isTagged ? '#f8f8f8' : '#fff',
+                                  cursor: isTagged ? 'default' : 'pointer',
+                                  fontSize: '14px',
+                                  fontWeight: '500',
+                                  color: isTagged ? '#999' : '#333',
+                                  textAlign: 'left',
+                                }}
+                                disabled={isTagged}
+                              >
+                                <div style={{
+                                  width: '32px',
+                                  height: '32px',
+                                  borderRadius: '50%',
+                                  background: isTagged ? '#e0e0e0' : accentColor,
+                                  display: 'flex',
+                                  alignItems: 'center',
+                                  justifyContent: 'center',
+                                  color: '#fff',
+                                  fontSize: '12px',
+                                  fontWeight: '700',
+                                }}>
+                                  {contact.full_name?.charAt(0)?.toUpperCase() || '?'}
+                                </div>
+                                <span style={{ flex: 1 }}>{contact.full_name || 'Unknown'}</span>
+                                {isTagged && <Check size={16} color="#888" />}
+                              </button>
+                            )
+                          })
+                        )}
+                      </div>
+                    )}
+                  </div>
+                )}
                 <button
                   onClick={() => setIsEditing(true)}
                   style={{
