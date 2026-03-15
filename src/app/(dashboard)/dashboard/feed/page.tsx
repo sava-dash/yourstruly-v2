@@ -254,21 +254,22 @@ function MasonryTile({
             </div>
           )}
           
-          {/* Wisdom category badge */}
-          {(activity.type === 'wisdom_created' || activity.type === 'wisdom_shared') && activity.metadata?.category && (
+          {/* Smart category badge - shown for all types with categories */}
+          {activity.metadata?.category && activity.type !== 'interview_response' && activity.type !== 'postscript_created' && (
             <div style={{ 
               display: 'inline-flex',
               alignItems: 'center',
               gap: '6px',
               fontSize: '11px', 
-              color: 'rgba(255,255,255,0.9)',
+              color: 'rgba(255,255,255,0.95)',
               fontWeight: '600',
               background: 'rgba(255,255,255,0.15)',
               padding: '6px 10px',
               borderRadius: '6px',
               width: 'fit-content',
+              textTransform: 'capitalize',
             }}>
-              {activity.metadata.category}
+              {activity.metadata.category.replace(/_/g, ' ')}
             </div>
           )}
           

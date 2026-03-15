@@ -373,6 +373,7 @@ export async function GET(request: NextRequest) {
       location_lat,
       location_lng,
       audio_url,
+      category,
       media:memory_media(file_url, file_type)
     `)
     .eq('user_id', user.id)
@@ -388,7 +389,7 @@ export async function GET(request: NextRequest) {
         id: `memory_created_${memory.id}`,
         type: 'memory_created',
         title: memory.title || 'Untitled Memory',
-        description: 'You created a new memory',
+        description: memory.description || '',
         timestamp: memory.created_at,
         link: `/dashboard/memories/${memory.id}`,
         thumbnail: firstImage?.file_url,
@@ -397,7 +398,8 @@ export async function GET(request: NextRequest) {
           memoryId: memory.id,
           location: memory.location_name,
           lat: memory.location_lat,
-          lng: memory.location_lng
+          lng: memory.location_lng,
+          category: memory.category
         }
       })
     }
