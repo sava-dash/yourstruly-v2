@@ -1,6 +1,25 @@
 import { createClient } from '@/lib/supabase/server'
 import { NextRequest, NextResponse } from 'next/server'
 
+// Validate audio URL - must be http/https URL or start with expected S3 patterns
+function isValidAudioUrl(url: string | null | undefined): string | undefined {
+  if (!url) return undefined
+  if (typeof url !== 'string') return undefined
+  
+  // Must be a proper URL
+  if (url.startsWith('http://') || url.startsWith('https://')) {
+    return url
+  }
+  
+  // S3 signed URLs or CDN URLs
+  if (url.startsWith('s3://') || url.includes('.s3.') || url.includes('cloudfront')) {
+    return url
+  }
+  
+  // Not a valid URL (e.g., "conversation", "voice", etc.)
+  return undefined
+}
+
 export type ActivityType = 
   | 'memory_shared' 
   | 'wisdom_shared' 
@@ -27,7 +46,7 @@ export interface ActivityItem {
     avatar_url?: string
   }
   thumbnail?: string
-  audio_url?: string
+  audio_url?: string  // Must be a valid URL (http/https or S3)
   link: string
   metadata?: Record<string, any>
 }
@@ -373,7 +392,7 @@ export async function GET(request: NextRequest) {
         timestamp: memory.created_at,
         link: `/dashboard/memories/${memory.id}`,
         thumbnail: firstImage?.file_url,
-        audio_url: memory.audio_url,
+        audio_url: isValidAudioUrl(memory.audio_url),
         metadata: { 
           memoryId: memory.id,
           location: memory.location_name,
@@ -400,7 +419,7 @@ export async function GET(request: NextRequest) {
         title: wisdom.prompt_text?.slice(0, 60) || 'Wisdom',
         description: 'You captured new wisdom',
         timestamp: wisdom.created_at,
-        audio_url: wisdom.audio_url,
+        audio_url: isValidAudioUrl(wisdom.audio_url),
         link: `/dashboard/wisdom/${wisdom.id}`,
         metadata: { wisdomId: wisdom.id, category: wisdom.category }
       })
@@ -517,7 +536,7 @@ export async function GET(request: NextRequest) {
         timestamp: response.created_at,
         link: `/dashboard/interviews/${response.session_id}`,
         thumbnail: response.thumbnail_url || response.video_url,
-        audio_url: response.audio_url || response.video_url,
+        audio_url: isValidAudioUrl(response.audio_url) || isValidAudioUrl(response.video_url),
         metadata: { 
           responseId: response.id,
           sessionId: response.session_id,

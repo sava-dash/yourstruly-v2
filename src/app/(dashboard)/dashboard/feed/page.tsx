@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef } from 'react'
 // gsap removed - animations simplified
-import { MapPin, Users, Calendar, Search, Map as MapIcon, Grid, Plus, Mic, Video, Upload, Image as ImageIcon, MessageSquare, Gift, Sparkles } from 'lucide-react'
+import { MapPin, Users, Calendar, Search, Map as MapIcon, Grid, Plus, Mic, Video, Upload, Image as ImageIcon, MessageSquare, Gift, Sparkles, BookOpen, Brain, Heart, Camera, Clock, Play } from 'lucide-react'
 import Link from 'next/link'
 import { format } from 'date-fns'
 import { motion, AnimatePresence } from 'framer-motion'
@@ -93,16 +93,16 @@ const TYPE_GRADIENTS: Record<string, string> = {
   circle: `linear-gradient(135deg, ${BRAND_COLORS.blue} 0%, #A8C4C3 100%)`,
 }
 
-const TYPE_CONFIG: Record<string, { label: string; color: string; gradient: string }> = {
-  memory_created: { label: 'Memory', color: BRAND_COLORS.red, gradient: TYPE_GRADIENTS.memory },
-  memory_shared: { label: 'Shared Memory', color: BRAND_COLORS.red, gradient: TYPE_GRADIENTS.memory },
-  wisdom_created: { label: 'Wisdom', color: BRAND_COLORS.purple, gradient: TYPE_GRADIENTS.wisdom },
-  wisdom_shared: { label: 'Shared Wisdom', color: BRAND_COLORS.purple, gradient: TYPE_GRADIENTS.wisdom },
-  interview_response: { label: 'Interview', color: BRAND_COLORS.blue, gradient: TYPE_GRADIENTS.interview },
-  photos_uploaded: { label: 'Media', color: BRAND_COLORS.yellow, gradient: TYPE_GRADIENTS.media },
-  postscript_created: { label: 'PostScript', color: BRAND_COLORS.green, gradient: TYPE_GRADIENTS.postscript },
-  contact_added: { label: 'Contact', color: BRAND_COLORS.green, gradient: TYPE_GRADIENTS.contact },
-  circle_content: { label: 'Circle', color: BRAND_COLORS.blue, gradient: TYPE_GRADIENTS.circle },
+const TYPE_CONFIG: Record<string, { label: string; color: string; gradient: string; icon: any }> = {
+  memory_created: { label: 'Memory', color: BRAND_COLORS.red, gradient: TYPE_GRADIENTS.memory, icon: BookOpen },
+  memory_shared: { label: 'Shared Memory', color: BRAND_COLORS.red, gradient: TYPE_GRADIENTS.memory, icon: Heart },
+  wisdom_created: { label: 'Wisdom', color: BRAND_COLORS.purple, gradient: TYPE_GRADIENTS.wisdom, icon: Brain },
+  wisdom_shared: { label: 'Shared Wisdom', color: BRAND_COLORS.purple, gradient: TYPE_GRADIENTS.wisdom, icon: Brain },
+  interview_response: { label: 'Interview', color: BRAND_COLORS.blue, gradient: TYPE_GRADIENTS.interview, icon: MessageSquare },
+  photos_uploaded: { label: 'Photos', color: BRAND_COLORS.yellow, gradient: TYPE_GRADIENTS.media, icon: Camera },
+  postscript_created: { label: 'PostScript', color: BRAND_COLORS.green, gradient: TYPE_GRADIENTS.postscript, icon: Gift },
+  contact_added: { label: 'Contact', color: BRAND_COLORS.green, gradient: TYPE_GRADIENTS.contact, icon: Users },
+  circle_content: { label: 'Circle', color: BRAND_COLORS.blue, gradient: TYPE_GRADIENTS.circle, icon: Users },
 }
 
 // Card heights are now determined by content (images use aspect ratio, text cards flex)
@@ -179,15 +179,20 @@ function MasonryTile({
             flex: 1,
           }}
         >
-          {/* Category Badge */}
+          {/* Category Badge with Icon */}
           <div style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: '6px',
             fontSize: '10px',
             fontWeight: '700',
             textTransform: 'uppercase',
             letterSpacing: '0.5px',
             color: 'rgba(255,255,255,0.7)',
           }}>
+            <config.icon size={12} />
             {config.label}
+            {activity.audio_url && <Play size={10} style={{ marginLeft: '4px', opacity: 0.8 }} />}
           </div>
 
           {/* Title */}
@@ -221,17 +226,59 @@ function MasonryTile({
             </p>
           )}
 
-          {/* PostScript metadata */}
+          {/* Type-specific quick info */}
           {activity.type === 'postscript_created' && activity.metadata?.recipient_name && (
             <div style={{ 
+              display: 'flex',
+              alignItems: 'center',
+              gap: '8px',
               fontSize: '12px', 
-              color: 'rgba(255,255,255,0.7)',
+              color: 'rgba(255,255,255,0.8)',
+              fontWeight: '600',
+              background: 'rgba(255,255,255,0.1)',
+              padding: '8px 12px',
+              borderRadius: '8px',
+            }}>
+              <Gift size={14} />
+              <span>To {activity.metadata.recipient_name}</span>
+              {activity.metadata.delivery_date && (
+                <span style={{ opacity: 0.7, marginLeft: 'auto' }}>
+                  {format(new Date(activity.metadata.delivery_date), 'MMM d')}
+                </span>
+              )}
+            </div>
+          )}
+          
+          {/* Wisdom category badge */}
+          {(activity.type === 'wisdom_created' || activity.type === 'wisdom_shared') && activity.metadata?.category && (
+            <div style={{ 
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: '6px',
+              fontSize: '11px', 
+              color: 'rgba(255,255,255,0.9)',
+              fontWeight: '600',
+              background: 'rgba(255,255,255,0.15)',
+              padding: '6px 10px',
+              borderRadius: '6px',
+              width: 'fit-content',
+            }}>
+              {activity.metadata.category}
+            </div>
+          )}
+          
+          {/* Interview - show contact name */}
+          {activity.type === 'interview_response' && activity.metadata?.contactName && (
+            <div style={{ 
+              display: 'flex',
+              alignItems: 'center',
+              gap: '8px',
+              fontSize: '12px', 
+              color: 'rgba(255,255,255,0.8)',
               fontWeight: '500',
             }}>
-              To: {activity.metadata.recipient_name}
-              {activity.metadata.delivery_date && (
-                <> • {format(new Date(activity.metadata.delivery_date), 'MMM d, yyyy')}</>
-              )}
+              <Users size={14} />
+              <span>with {activity.metadata.contactName}</span>
             </div>
           )}
 
