@@ -80,10 +80,10 @@ function LocationAutocomplete({ value, onChange, placeholder }: {
       {showSuggestions && suggestions.length > 0 && (
         <div style={{
           position: 'absolute',
-          top: '100%',
+          bottom: '100%',
           left: 0,
           right: 0,
-          marginTop: '4px',
+          marginBottom: '4px',
           background: '#fff',
           borderRadius: '8px',
           boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
@@ -305,8 +305,24 @@ export function FeedDetailModal({ activity, isOpen, onClose, onUpdate }: FeedDet
   const handleTagFace = async (contactId: string) => {
     if (selectedFaceIndex === null) return
     
-    const face = detectedFaces[selectedFaceIndex]
     const media = mediaItems[currentMediaIndex]
+    const contact = contacts.find(c => c.id === contactId)
+    
+    // If no specific face selected (-1), just tag the memory/photo with this contact
+    if (selectedFaceIndex === -1) {
+      if (activity?.metadata?.memoryId) {
+        try {
+          await handleTagPerson(contactId)
+          setSelectedFaceIndex(null)
+          setFaceDropdownPosition(null)
+        } catch (err) {
+          console.error('Error tagging person:', err)
+        }
+      }
+      return
+    }
+    
+    const face = detectedFaces[selectedFaceIndex]
     if (!face || !media) return
     
     try {
@@ -316,13 +332,12 @@ export function FeedDetailModal({ activity, isOpen, onClose, onUpdate }: FeedDet
         body: JSON.stringify({
           faceIndex: selectedFaceIndex,
           contactId,
-          boundingBox: face.boundingBox
+          boundingBox: face.boundingBox || face.bounding_box
         })
       })
       
       if (res.ok) {
         // Update local state
-        const contact = contacts.find(c => c.id === contactId)
         setDetectedFaces(prev => prev.map((f, i) => 
           i === selectedFaceIndex ? { ...f, contact_id: contactId, contact_name: contact?.full_name } : f
         ))
@@ -527,6 +542,19 @@ export function FeedDetailModal({ activity, isOpen, onClose, onUpdate }: FeedDet
               <div style={{ position: 'relative', marginBottom: '20px' }}>
                 <div 
                   ref={imageContainerRef}
+                  onClick={(e) => {
+                    // If in tagging mode and no faces detected, show contacts on click anywhere
+                    if (isTaggingMode && detectedFaces.length === 0 && !faceDropdownPosition) {
+                      const rect = imageContainerRef.current?.getBoundingClientRect()
+                      if (rect) {
+                        setSelectedFaceIndex(-1) // -1 means "no specific face"
+                        setFaceDropdownPosition({
+                          x: e.clientX - rect.left,
+                          y: e.clientY - rect.top
+                        })
+                      }
+                    }
+                  }}
                   style={{
                     borderRadius: '16px',
                     overflow: 'hidden',
@@ -549,42 +577,74 @@ export function FeedDetailModal({ activity, isOpen, onClose, onUpdate }: FeedDet
                   />
                   
                   {/* Face Bounding Boxes - Show in tagging mode */}
-                  {isTaggingMode && detectedFaces.map((face, idx) => (
-                    <div
-                      key={idx}
-                      onClick={(e) => handleFaceClick(idx, e)}
-                      style={{
-                        position: 'absolute',
-                        left: `${(face.boundingBox?.Left || 0) * 100}%`,
-                        top: `${(face.boundingBox?.Top || 0) * 100}%`,
-                        width: `${(face.boundingBox?.Width || 0) * 100}%`,
-                        height: `${(face.boundingBox?.Height || 0) * 100}%`,
-                        border: face.contact_id ? '3px solid #22c55e' : '3px solid #3b82f6',
-                        borderRadius: '8px',
-                        cursor: 'pointer',
-                        background: 'rgba(59, 130, 246, 0.1)',
-                        transition: 'all 0.2s',
-                      }}
-                    >
-                      {face.contact_name && (
-                        <div style={{
+                  {isTaggingMode && detectedFaces.length > 0 && detectedFaces.map((face, idx) => {
+                    // Handle both AWS Rekognition format and stored format
+                    const bbox = face.boundingBox || face.bounding_box || {}
+                    const left = bbox.Left ?? bbox.left ?? 0
+                    const top = bbox.Top ?? bbox.top ?? 0
+                    const width = bbox.Width ?? bbox.width ?? 0.15
+                    const height = bbox.Height ?? bbox.height ?? 0.15
+                    
+                    return (
+                      <div
+                        key={idx}
+                        onClick={(e) => {
+                          e.stopPropagation()
+                          handleFaceClick(idx, e)
+                        }}
+                        style={{
                           position: 'absolute',
-                          bottom: '-24px',
-                          left: '50%',
-                          transform: 'translateX(-50%)',
-                          background: '#22c55e',
-                          color: '#fff',
-                          padding: '2px 8px',
-                          borderRadius: '4px',
-                          fontSize: '11px',
-                          fontWeight: '600',
-                          whiteSpace: 'nowrap',
-                        }}>
-                          {face.contact_name}
-                        </div>
-                      )}
+                          left: `${left * 100}%`,
+                          top: `${top * 100}%`,
+                          width: `${width * 100}%`,
+                          height: `${height * 100}%`,
+                          border: face.contact_id ? '3px solid #22c55e' : '3px solid #3b82f6',
+                          borderRadius: '8px',
+                          cursor: 'pointer',
+                          background: face.contact_id ? 'rgba(34, 197, 94, 0.2)' : 'rgba(59, 130, 246, 0.2)',
+                          transition: 'all 0.2s',
+                          zIndex: 5,
+                        }}
+                      >
+                        {face.contact_name && (
+                          <div style={{
+                            position: 'absolute',
+                            bottom: '-24px',
+                            left: '50%',
+                            transform: 'translateX(-50%)',
+                            background: '#22c55e',
+                            color: '#fff',
+                            padding: '2px 8px',
+                            borderRadius: '4px',
+                            fontSize: '11px',
+                            fontWeight: '600',
+                            whiteSpace: 'nowrap',
+                          }}>
+                            {face.contact_name}
+                          </div>
+                        )}
+                      </div>
+                    )
+                  })}
+                  
+                  {/* No faces detected message */}
+                  {isTaggingMode && detectedFaces.length === 0 && (
+                    <div style={{
+                      position: 'absolute',
+                      top: '50%',
+                      left: '50%',
+                      transform: 'translate(-50%, -50%)',
+                      background: 'rgba(0,0,0,0.7)',
+                      color: '#fff',
+                      padding: '12px 20px',
+                      borderRadius: '8px',
+                      fontSize: '13px',
+                      textAlign: 'center',
+                    }}>
+                      <Loader2 size={20} className="animate-spin" style={{ margin: '0 auto 8px' }} />
+                      Detecting faces...
                     </div>
-                  ))}
+                  )}
                   
                   {/* Contact picker dropdown at face position */}
                   {faceDropdownPosition && (
