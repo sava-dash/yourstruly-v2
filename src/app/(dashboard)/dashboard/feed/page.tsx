@@ -28,6 +28,11 @@ interface ActivityItem {
     tagged_people?: string[]
     recipient_name?: string
     delivery_date?: string
+    category?: string
+    contactName?: string
+    wisdomId?: string
+    memoryId?: string
+    contactId?: string
   }
 }
 
