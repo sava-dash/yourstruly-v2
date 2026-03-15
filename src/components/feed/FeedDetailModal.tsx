@@ -71,6 +71,7 @@ export function FeedDetailModal({ activity, isOpen, onClose, onUpdate }: FeedDet
   const [isPlaying, setIsPlaying] = useState(false)
   const [contacts, setContacts] = useState<any[]>([])
   const [taggedPeople, setTaggedPeople] = useState<any[]>([])
+  const [showTagDropdown, setShowTagDropdown] = useState(false)
   const audioRef = useRef<HTMLAudioElement | null>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
 
@@ -314,15 +315,18 @@ export function FeedDetailModal({ activity, isOpen, onClose, onUpdate }: FeedDet
                 <div style={{
                   borderRadius: '16px',
                   overflow: 'hidden',
-                  background: '#000',
+                  background: '#f5f5f5',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
                 }}>
                   <img
                     src={mediaItems[currentMediaIndex]?.file_url || activity.thumbnail}
                     alt={activity.title}
                     style={{
                       width: '100%',
-                      height: '300px',
-                      objectFit: 'cover',
+                      maxHeight: '400px',
+                      objectFit: 'contain',
                     }}
                   />
                 </div>
@@ -404,10 +408,13 @@ export function FeedDetailModal({ activity, isOpen, onClose, onUpdate }: FeedDet
                       width: '100%',
                       fontSize: '20px',
                       fontWeight: '700',
-                      border: '2px solid #eee',
+                      border: '2px solid #ddd',
                       borderRadius: '8px',
-                      padding: '8px 12px',
+                      padding: '12px 14px',
                       marginBottom: '12px',
+                      color: '#1a1a1a',
+                      background: '#fff',
+                      outline: 'none',
                     }}
                     placeholder="Title"
                   />
@@ -417,11 +424,15 @@ export function FeedDetailModal({ activity, isOpen, onClose, onUpdate }: FeedDet
                     style={{
                       width: '100%',
                       fontSize: '14px',
-                      border: '2px solid #eee',
+                      border: '2px solid #ddd',
                       borderRadius: '8px',
-                      padding: '8px 12px',
-                      minHeight: '80px',
+                      padding: '12px 14px',
+                      minHeight: '100px',
                       resize: 'vertical',
+                      color: '#1a1a1a',
+                      background: '#fff',
+                      outline: 'none',
+                      lineHeight: '1.5',
                     }}
                     placeholder="Description"
                   />
@@ -525,10 +536,13 @@ export function FeedDetailModal({ activity, isOpen, onClose, onUpdate }: FeedDet
                     value={editedDate}
                     onChange={(e) => setEditedDate(e.target.value)}
                     style={{
-                      border: '2px solid #eee',
-                      borderRadius: '6px',
-                      padding: '6px 10px',
-                      fontSize: '13px',
+                      border: '2px solid #ddd',
+                      borderRadius: '8px',
+                      padding: '10px 14px',
+                      fontSize: '14px',
+                      color: '#1a1a1a',
+                      background: '#fff',
+                      outline: 'none',
                     }}
                   />
                 ) : (
@@ -542,21 +556,24 @@ export function FeedDetailModal({ activity, isOpen, onClose, onUpdate }: FeedDet
               {(activity.metadata?.location || isEditing) && (
                 <div style={{
                   display: 'flex',
-                  alignItems: 'flex-start',
+                  alignItems: 'center',
                   gap: '10px',
                 }}>
-                  <MapPin size={16} color="#888" style={{ marginTop: '2px' }} />
+                  <MapPin size={16} color="#888" />
                   {isEditing ? (
                     <input
                       value={editedLocation}
                       onChange={(e) => setEditedLocation(e.target.value)}
-                      placeholder="Location"
+                      placeholder="Enter location"
                       style={{
                         flex: 1,
-                        border: '2px solid #eee',
-                        borderRadius: '6px',
-                        padding: '6px 10px',
-                        fontSize: '13px',
+                        border: '2px solid #ddd',
+                        borderRadius: '8px',
+                        padding: '10px 14px',
+                        fontSize: '14px',
+                        color: '#1a1a1a',
+                        background: '#fff',
+                        outline: 'none',
                       }}
                     />
                   ) : (
@@ -692,27 +709,96 @@ export function FeedDetailModal({ activity, isOpen, onClose, onUpdate }: FeedDet
                   <Camera size={14} />
                   Photo
                 </button>
-                <button
-                  onClick={() => {/* Open tag modal */}}
-                  style={{
-                    flex: 1,
-                    padding: '10px',
-                    background: '#f5f5f5',
-                    border: 'none',
-                    borderRadius: '10px',
-                    fontSize: '12px',
-                    fontWeight: '600',
-                    cursor: 'pointer',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    gap: '6px',
-                    color: '#555',
-                  }}
-                >
-                  <Tag size={14} />
-                  Tag
-                </button>
+                <div style={{ position: 'relative', flex: 1 }}>
+                  <button
+                    onClick={() => setShowTagDropdown(!showTagDropdown)}
+                    style={{
+                      width: '100%',
+                      padding: '10px',
+                      background: showTagDropdown ? accentColor : '#f5f5f5',
+                      color: showTagDropdown ? '#fff' : '#555',
+                      border: 'none',
+                      borderRadius: '10px',
+                      fontSize: '12px',
+                      fontWeight: '600',
+                      cursor: 'pointer',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      gap: '6px',
+                    }}
+                  >
+                    <Tag size={14} />
+                    Tag
+                  </button>
+                  
+                  {/* Tag Dropdown */}
+                  {showTagDropdown && (
+                    <div style={{
+                      position: 'absolute',
+                      bottom: '100%',
+                      left: 0,
+                      right: 0,
+                      marginBottom: '8px',
+                      background: '#fff',
+                      borderRadius: '12px',
+                      boxShadow: '0 8px 24px rgba(0,0,0,0.15)',
+                      border: '1px solid #eee',
+                      maxHeight: '200px',
+                      overflowY: 'auto',
+                      zIndex: 10,
+                    }}>
+                      <div style={{
+                        padding: '8px 12px',
+                        fontSize: '11px',
+                        fontWeight: '600',
+                        color: '#888',
+                        textTransform: 'uppercase',
+                        borderBottom: '1px solid #eee',
+                      }}>
+                        Tag a person
+                      </div>
+                      {contacts.length === 0 ? (
+                        <div style={{ padding: '12px', fontSize: '13px', color: '#888' }}>
+                          No contacts found
+                        </div>
+                      ) : (
+                        contacts.map((contact) => {
+                          const isTagged = taggedPeople.some(p => p.id === contact.id)
+                          return (
+                            <button
+                              key={contact.id}
+                              onClick={() => {
+                                if (!isTagged) {
+                                  handleTagPerson(contact.id)
+                                }
+                                setShowTagDropdown(false)
+                              }}
+                              style={{
+                                width: '100%',
+                                padding: '10px 12px',
+                                display: 'flex',
+                                alignItems: 'center',
+                                gap: '8px',
+                                border: 'none',
+                                background: isTagged ? '#f0f0f0' : 'transparent',
+                                cursor: isTagged ? 'default' : 'pointer',
+                                fontSize: '13px',
+                                color: isTagged ? '#888' : '#333',
+                                textAlign: 'left',
+                              }}
+                              disabled={isTagged}
+                            >
+                              <Users size={14} color={isTagged ? '#888' : accentColor} />
+                              {contact.full_name}
+                              {isTagged && <Check size={14} color="#888" style={{ marginLeft: 'auto' }} />}
+                            </button>
+                          )
+                        })
+                      )}
+                    </div>
+                  )}
+                </div>
                 <button
                   onClick={() => setIsEditing(true)}
                   style={{
