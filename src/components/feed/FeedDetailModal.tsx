@@ -9,6 +9,122 @@ import dynamic from 'next/dynamic'
 // Lazy load map to avoid SSR issues
 const MiniMap = dynamic(() => import('./MiniMap'), { ssr: false })
 
+// Location Autocomplete Component
+function LocationAutocomplete({ value, onChange, placeholder }: { 
+  value: string
+  onChange: (value: string) => void
+  placeholder?: string 
+}) {
+  const [suggestions, setSuggestions] = useState<any[]>([])
+  const [showSuggestions, setShowSuggestions] = useState(false)
+  const [isLoading, setIsLoading] = useState(false)
+  const debounceRef = useRef<NodeJS.Timeout | null>(null)
+
+  const searchPlaces = async (query: string) => {
+    if (query.length < 3) {
+      setSuggestions([])
+      return
+    }
+    
+    setIsLoading(true)
+    try {
+      // Use Mapbox Geocoding API
+      const token = process.env.NEXT_PUBLIC_MAPBOX_TOKEN
+      const res = await fetch(
+        `https://api.mapbox.com/geocoding/v5/mapbox.places/${encodeURIComponent(query)}.json?access_token=${token}&types=place,locality,neighborhood,address&limit=5`
+      )
+      const data = await res.json()
+      setSuggestions(data.features || [])
+    } catch (err) {
+      console.error('Location search error:', err)
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const newValue = e.target.value
+    onChange(newValue)
+    
+    // Debounce search
+    if (debounceRef.current) clearTimeout(debounceRef.current)
+    debounceRef.current = setTimeout(() => searchPlaces(newValue), 300)
+    setShowSuggestions(true)
+  }
+
+  const selectSuggestion = (suggestion: any) => {
+    onChange(suggestion.place_name)
+    setSuggestions([])
+    setShowSuggestions(false)
+  }
+
+  return (
+    <div style={{ position: 'relative', flex: 1 }}>
+      <input
+        value={value}
+        onChange={handleInputChange}
+        onFocus={() => suggestions.length > 0 && setShowSuggestions(true)}
+        onBlur={() => setTimeout(() => setShowSuggestions(false), 200)}
+        placeholder={placeholder}
+        style={{
+          width: '100%',
+          border: '2px solid #ddd',
+          borderRadius: '8px',
+          padding: '10px 14px',
+          fontSize: '14px',
+          color: '#1a1a1a',
+          background: '#fff',
+          outline: 'none',
+        }}
+      />
+      {showSuggestions && suggestions.length > 0 && (
+        <div style={{
+          position: 'absolute',
+          top: '100%',
+          left: 0,
+          right: 0,
+          marginTop: '4px',
+          background: '#fff',
+          borderRadius: '8px',
+          boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
+          border: '1px solid #eee',
+          zIndex: 100,
+          maxHeight: '200px',
+          overflowY: 'auto',
+        }}>
+          {suggestions.map((s, i) => (
+            <button
+              key={i}
+              onClick={() => selectSuggestion(s)}
+              style={{
+                width: '100%',
+                padding: '10px 12px',
+                border: 'none',
+                background: 'transparent',
+                textAlign: 'left',
+                cursor: 'pointer',
+                fontSize: '13px',
+                color: '#333',
+                borderBottom: i < suggestions.length - 1 ? '1px solid #f5f5f5' : 'none',
+              }}
+            >
+              <div style={{ fontWeight: '500' }}>{s.text}</div>
+              <div style={{ fontSize: '11px', color: '#888', marginTop: '2px' }}>
+                {s.place_name}
+              </div>
+            </button>
+          ))}
+        </div>
+      )}
+      {isLoading && (
+        <div style={{ position: 'absolute', right: '12px', top: '50%', transform: 'translateY(-50%)' }}>
+          <Loader2 size={14} className="animate-spin" color="#888" />
+        </div>
+      )}
+    </div>
+  )
+}
+
 interface ActivityItem {
   id: string
   type: string
@@ -72,6 +188,11 @@ export function FeedDetailModal({ activity, isOpen, onClose, onUpdate }: FeedDet
   const [contacts, setContacts] = useState<any[]>([])
   const [taggedPeople, setTaggedPeople] = useState<any[]>([])
   const [showTagDropdown, setShowTagDropdown] = useState(false)
+  const [isTaggingMode, setIsTaggingMode] = useState(false)
+  const [detectedFaces, setDetectedFaces] = useState<any[]>([])
+  const [selectedFaceIndex, setSelectedFaceIndex] = useState<number | null>(null)
+  const [faceDropdownPosition, setFaceDropdownPosition] = useState<{x: number, y: number} | null>(null)
+  const imageContainerRef = useRef<HTMLDivElement>(null)
   const audioRef = useRef<HTMLAudioElement | null>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
 
@@ -119,6 +240,97 @@ export function FeedDetailModal({ activity, isOpen, onClose, onUpdate }: FeedDet
       } catch (err) {
         console.error('Error loading memory details:', err)
       }
+    }
+    
+    // Load photos and their face data for photo uploads
+    if (activity.type === 'photos_uploaded' && activity.metadata?.memoryId) {
+      try {
+        const res = await fetch(`/api/memories/${activity.metadata.memoryId}`)
+        if (res.ok) {
+          const data = await res.json()
+          setMediaItems(data.media || [])
+          setTaggedPeople(data.tagged_contacts || [])
+          
+          // Load faces for first media item
+          if (data.media?.[0]?.id) {
+            loadFacesForMedia(data.media[0].id)
+          }
+        }
+      } catch (err) {
+        console.error('Error loading photo details:', err)
+      }
+    }
+  }
+  
+  const loadFacesForMedia = async (mediaId: string) => {
+    try {
+      const res = await fetch(`/api/media/${mediaId}/faces`)
+      if (res.ok) {
+        const data = await res.json()
+        setDetectedFaces(data.faces || [])
+      }
+    } catch (err) {
+      console.error('Error loading faces:', err)
+    }
+  }
+  
+  const detectFaces = async () => {
+    const media = mediaItems[currentMediaIndex]
+    if (!media?.id) return
+    
+    try {
+      const res = await fetch(`/api/media/${media.id}/detect-faces`, { method: 'POST' })
+      if (res.ok) {
+        const data = await res.json()
+        setDetectedFaces(data.faces || [])
+      }
+    } catch (err) {
+      console.error('Error detecting faces:', err)
+    }
+  }
+  
+  const handleFaceClick = (faceIndex: number, event: React.MouseEvent) => {
+    if (!isTaggingMode) return
+    
+    const rect = imageContainerRef.current?.getBoundingClientRect()
+    if (!rect) return
+    
+    setSelectedFaceIndex(faceIndex)
+    setFaceDropdownPosition({
+      x: event.clientX - rect.left,
+      y: event.clientY - rect.top
+    })
+  }
+  
+  const handleTagFace = async (contactId: string) => {
+    if (selectedFaceIndex === null) return
+    
+    const face = detectedFaces[selectedFaceIndex]
+    const media = mediaItems[currentMediaIndex]
+    if (!face || !media) return
+    
+    try {
+      const res = await fetch(`/api/media/${media.id}/faces`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          faceIndex: selectedFaceIndex,
+          contactId,
+          boundingBox: face.boundingBox
+        })
+      })
+      
+      if (res.ok) {
+        // Update local state
+        const contact = contacts.find(c => c.id === contactId)
+        setDetectedFaces(prev => prev.map((f, i) => 
+          i === selectedFaceIndex ? { ...f, contact_id: contactId, contact_name: contact?.full_name } : f
+        ))
+        setSelectedFaceIndex(null)
+        setFaceDropdownPosition(null)
+      }
+    } catch (err) {
+      console.error('Error tagging face:', err)
     }
   }
 
@@ -310,17 +522,22 @@ export function FeedDetailModal({ activity, isOpen, onClose, onUpdate }: FeedDet
 
           {/* Content - Scrollable */}
           <div style={{ flex: 1, overflowY: 'auto', padding: '20px' }}>
-            {/* Image Gallery */}
+            {/* Image Gallery with Face Tagging */}
             {(activity.thumbnail || mediaItems.length > 0) && (
               <div style={{ position: 'relative', marginBottom: '20px' }}>
-                <div style={{
-                  borderRadius: '16px',
-                  overflow: 'hidden',
-                  background: '#f5f5f5',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                }}>
+                <div 
+                  ref={imageContainerRef}
+                  style={{
+                    borderRadius: '16px',
+                    overflow: 'hidden',
+                    background: '#f5f5f5',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    position: 'relative',
+                    cursor: isTaggingMode ? 'crosshair' : 'default',
+                  }}
+                >
                   <img
                     src={mediaItems[currentMediaIndex]?.file_url || activity.thumbnail}
                     alt={activity.title}
@@ -330,7 +547,148 @@ export function FeedDetailModal({ activity, isOpen, onClose, onUpdate }: FeedDet
                       objectFit: 'contain',
                     }}
                   />
+                  
+                  {/* Face Bounding Boxes - Show in tagging mode */}
+                  {isTaggingMode && detectedFaces.map((face, idx) => (
+                    <div
+                      key={idx}
+                      onClick={(e) => handleFaceClick(idx, e)}
+                      style={{
+                        position: 'absolute',
+                        left: `${(face.boundingBox?.Left || 0) * 100}%`,
+                        top: `${(face.boundingBox?.Top || 0) * 100}%`,
+                        width: `${(face.boundingBox?.Width || 0) * 100}%`,
+                        height: `${(face.boundingBox?.Height || 0) * 100}%`,
+                        border: face.contact_id ? '3px solid #22c55e' : '3px solid #3b82f6',
+                        borderRadius: '8px',
+                        cursor: 'pointer',
+                        background: 'rgba(59, 130, 246, 0.1)',
+                        transition: 'all 0.2s',
+                      }}
+                    >
+                      {face.contact_name && (
+                        <div style={{
+                          position: 'absolute',
+                          bottom: '-24px',
+                          left: '50%',
+                          transform: 'translateX(-50%)',
+                          background: '#22c55e',
+                          color: '#fff',
+                          padding: '2px 8px',
+                          borderRadius: '4px',
+                          fontSize: '11px',
+                          fontWeight: '600',
+                          whiteSpace: 'nowrap',
+                        }}>
+                          {face.contact_name}
+                        </div>
+                      )}
+                    </div>
+                  ))}
+                  
+                  {/* Contact picker dropdown at face position */}
+                  {faceDropdownPosition && (
+                    <div style={{
+                      position: 'absolute',
+                      left: faceDropdownPosition.x,
+                      top: faceDropdownPosition.y + 10,
+                      background: '#fff',
+                      borderRadius: '12px',
+                      boxShadow: '0 8px 24px rgba(0,0,0,0.2)',
+                      border: '1px solid #eee',
+                      maxHeight: '200px',
+                      overflowY: 'auto',
+                      zIndex: 100,
+                      minWidth: '180px',
+                    }}>
+                      <div style={{
+                        padding: '8px 12px',
+                        fontSize: '11px',
+                        fontWeight: '700',
+                        color: '#666',
+                        borderBottom: '1px solid #eee',
+                        background: '#fafafa',
+                      }}>
+                        Who is this?
+                      </div>
+                      {contacts.map((contact) => (
+                        <button
+                          key={contact.id}
+                          onClick={() => handleTagFace(contact.id)}
+                          style={{
+                            width: '100%',
+                            padding: '10px 12px',
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '8px',
+                            border: 'none',
+                            background: '#fff',
+                            cursor: 'pointer',
+                            fontSize: '13px',
+                            fontWeight: '500',
+                            color: '#333',
+                            textAlign: 'left',
+                            borderBottom: '1px solid #f5f5f5',
+                          }}
+                        >
+                          <div style={{
+                            width: '28px',
+                            height: '28px',
+                            borderRadius: '50%',
+                            background: accentColor,
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            color: '#fff',
+                            fontSize: '11px',
+                            fontWeight: '700',
+                          }}>
+                            {contact.full_name?.charAt(0)?.toUpperCase() || '?'}
+                          </div>
+                          {contact.full_name || 'Unknown'}
+                        </button>
+                      ))}
+                      <button
+                        onClick={() => {
+                          setSelectedFaceIndex(null)
+                          setFaceDropdownPosition(null)
+                        }}
+                        style={{
+                          width: '100%',
+                          padding: '8px 12px',
+                          border: 'none',
+                          background: '#f5f5f5',
+                          cursor: 'pointer',
+                          fontSize: '12px',
+                          color: '#888',
+                        }}
+                      >
+                        Cancel
+                      </button>
+                    </div>
+                  )}
                 </div>
+                
+                {/* Tagging mode indicator */}
+                {isTaggingMode && (
+                  <div style={{
+                    position: 'absolute',
+                    top: '10px',
+                    left: '10px',
+                    background: '#3b82f6',
+                    color: '#fff',
+                    padding: '6px 12px',
+                    borderRadius: '8px',
+                    fontSize: '12px',
+                    fontWeight: '600',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '6px',
+                  }}>
+                    <Tag size={14} />
+                    Click a face to tag
+                  </div>
+                )}
                 
                 {/* Gallery Navigation */}
                 {mediaItems.length > 1 && (
@@ -517,18 +875,20 @@ export function FeedDetailModal({ activity, isOpen, onClose, onUpdate }: FeedDet
               </div>
             )}
 
-            {/* Date & Location */}
+            {/* Date & Location - Same row in edit mode */}
             <div style={{
               display: 'flex',
-              flexDirection: 'column',
+              flexDirection: isEditing ? 'row' : 'column',
               gap: '12px',
               marginBottom: '16px',
+              flexWrap: 'wrap',
             }}>
               {/* Date */}
               <div style={{
                 display: 'flex',
                 alignItems: 'center',
                 gap: '10px',
+                flex: isEditing ? '0 0 auto' : undefined,
               }}>
                 <Calendar size={16} color="#888" />
                 {isEditing ? (
@@ -553,29 +913,21 @@ export function FeedDetailModal({ activity, isOpen, onClose, onUpdate }: FeedDet
                 )}
               </div>
 
-              {/* Location */}
+              {/* Location with autocomplete */}
               {(activity.metadata?.location || isEditing) && (
                 <div style={{
                   display: 'flex',
                   alignItems: 'center',
                   gap: '10px',
+                  flex: isEditing ? 1 : undefined,
+                  position: 'relative',
                 }}>
                   <MapPin size={16} color="#888" />
                   {isEditing ? (
-                    <input
+                    <LocationAutocomplete
                       value={editedLocation}
-                      onChange={(e) => setEditedLocation(e.target.value)}
+                      onChange={setEditedLocation}
                       placeholder="Enter location"
-                      style={{
-                        flex: 1,
-                        border: '2px solid #ddd',
-                        borderRadius: '8px',
-                        padding: '10px 14px',
-                        fontSize: '14px',
-                        color: '#1a1a1a',
-                        background: '#fff',
-                        outline: 'none',
-                      }}
                     />
                   ) : (
                     <span style={{ fontSize: '13px', color: '#666' }}>
@@ -711,114 +1063,41 @@ export function FeedDetailModal({ activity, isOpen, onClose, onUpdate }: FeedDet
                   Photo
                 </button>
                 {/* Only show Tag button for memories and photos, not postscripts */}
-                {activity.type !== 'postscript_created' && (
-                  <div style={{ position: 'relative', flex: 1 }}>
-                    <button
-                      onClick={() => setShowTagDropdown(!showTagDropdown)}
-                      style={{
-                        width: '100%',
-                        padding: '10px',
-                        background: showTagDropdown ? accentColor : '#f5f5f5',
-                        color: showTagDropdown ? '#fff' : '#555',
-                        border: 'none',
-                        borderRadius: '10px',
-                        fontSize: '12px',
-                        fontWeight: '600',
-                        cursor: 'pointer',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        gap: '6px',
-                      }}
-                    >
-                      <Tag size={14} />
-                      Tag
-                    </button>
-                    
-                    {/* Tag Dropdown */}
-                    {showTagDropdown && (
-                      <div style={{
-                        position: 'absolute',
-                        bottom: '100%',
-                        left: 0,
-                        right: 0,
-                        marginBottom: '8px',
-                        background: '#fff',
-                        borderRadius: '12px',
-                        boxShadow: '0 8px 24px rgba(0,0,0,0.15)',
-                        border: '1px solid #eee',
-                        maxHeight: '250px',
-                        overflowY: 'auto',
-                        zIndex: 10,
-                      }}>
-                        <div style={{
-                          padding: '10px 14px',
-                          fontSize: '11px',
-                          fontWeight: '700',
-                          color: '#666',
-                          textTransform: 'uppercase',
-                          letterSpacing: '0.5px',
-                          borderBottom: '1px solid #eee',
-                          background: '#fafafa',
-                        }}>
-                          Tag a person
-                        </div>
-                        {contacts.length === 0 ? (
-                          <div style={{ padding: '16px', fontSize: '13px', color: '#888', textAlign: 'center' }}>
-                            No contacts found
-                          </div>
-                        ) : (
-                          contacts.map((contact) => {
-                            const isTagged = taggedPeople.some(p => p.id === contact.id)
-                            return (
-                              <button
-                                key={contact.id}
-                                onClick={() => {
-                                  if (!isTagged) {
-                                    handleTagPerson(contact.id)
-                                  }
-                                  setShowTagDropdown(false)
-                                }}
-                                style={{
-                                  width: '100%',
-                                  padding: '12px 14px',
-                                  display: 'flex',
-                                  alignItems: 'center',
-                                  gap: '10px',
-                                  border: 'none',
-                                  borderBottom: '1px solid #f5f5f5',
-                                  background: isTagged ? '#f8f8f8' : '#fff',
-                                  cursor: isTagged ? 'default' : 'pointer',
-                                  fontSize: '14px',
-                                  fontWeight: '500',
-                                  color: isTagged ? '#999' : '#333',
-                                  textAlign: 'left',
-                                }}
-                                disabled={isTagged}
-                              >
-                                <div style={{
-                                  width: '32px',
-                                  height: '32px',
-                                  borderRadius: '50%',
-                                  background: isTagged ? '#e0e0e0' : accentColor,
-                                  display: 'flex',
-                                  alignItems: 'center',
-                                  justifyContent: 'center',
-                                  color: '#fff',
-                                  fontSize: '12px',
-                                  fontWeight: '700',
-                                }}>
-                                  {contact.full_name?.charAt(0)?.toUpperCase() || '?'}
-                                </div>
-                                <span style={{ flex: 1 }}>{contact.full_name || 'Unknown'}</span>
-                                {isTagged && <Check size={16} color="#888" />}
-                              </button>
-                            )
-                          })
-                        )}
-                      </div>
-                    )}
-                  </div>
+                {activity.type !== 'postscript_created' && (activity.thumbnail || mediaItems.length > 0) && (
+                  <button
+                    onClick={async () => {
+                      if (!isTaggingMode) {
+                        // Enter tagging mode and detect faces
+                        setIsTaggingMode(true)
+                        if (detectedFaces.length === 0) {
+                          await detectFaces()
+                        }
+                      } else {
+                        // Exit tagging mode
+                        setIsTaggingMode(false)
+                        setSelectedFaceIndex(null)
+                        setFaceDropdownPosition(null)
+                      }
+                    }}
+                    style={{
+                      flex: 1,
+                      padding: '10px',
+                      background: isTaggingMode ? '#3b82f6' : '#f5f5f5',
+                      color: isTaggingMode ? '#fff' : '#555',
+                      border: 'none',
+                      borderRadius: '10px',
+                      fontSize: '12px',
+                      fontWeight: '600',
+                      cursor: 'pointer',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      gap: '6px',
+                    }}
+                  >
+                    <Tag size={14} />
+                    {isTaggingMode ? 'Done' : 'Tag'}
+                  </button>
                 )}
                 <button
                   onClick={() => setIsEditing(true)}
