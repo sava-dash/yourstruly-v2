@@ -1,0 +1,51 @@
+'use client'
+
+import { useEffect, useRef } from 'react'
+import mapboxgl from 'mapbox-gl'
+import 'mapbox-gl/dist/mapbox-gl.css'
+
+interface MiniMapProps {
+  lat: number
+  lng: number
+  location: string
+}
+
+export default function MiniMap({ lat, lng, location }: MiniMapProps) {
+  const mapContainer = useRef<HTMLDivElement>(null)
+  const map = useRef<mapboxgl.Map | null>(null)
+
+  useEffect(() => {
+    if (!mapContainer.current || map.current) return
+
+    mapboxgl.accessToken = process.env.NEXT_PUBLIC_MAPBOX_TOKEN || ''
+
+    map.current = new mapboxgl.Map({
+      container: mapContainer.current,
+      style: 'mapbox://styles/mapbox/light-v11',
+      center: [lng, lat],
+      zoom: 12,
+      interactive: false, // Static map
+    })
+
+    // Add marker
+    new mapboxgl.Marker({ color: '#C35F33' })
+      .setLngLat([lng, lat])
+      .addTo(map.current)
+
+    return () => {
+      map.current?.remove()
+      map.current = null
+    }
+  }, [lat, lng])
+
+  return (
+    <div 
+      ref={mapContainer} 
+      style={{ 
+        width: '100%', 
+        height: '100%',
+        background: '#f5f5f5',
+      }} 
+    />
+  )
+}

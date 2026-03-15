@@ -9,6 +9,7 @@ import { motion, AnimatePresence } from 'framer-motion'
 import dynamic from 'next/dynamic'
 import { UnifiedEngagementModal } from '@/components/engagement/UnifiedEngagementModal'
 import { InlineAudioPlayer } from '@/components/feed/InlineAudioPlayer'
+import { FeedDetailModal } from '@/components/feed/FeedDetailModal'
 
 const FeedMap = dynamic(() => import('@/components/feed/FeedMap'), { ssr: false })
 
@@ -117,13 +118,15 @@ function MasonryTile({
   index, 
   isDarkMode,
   playingAudio,
-  onAudioToggle
+  onAudioToggle,
+  onCardClick
 }: { 
   activity: ActivityItem
   index: number
   isDarkMode: boolean
   playingAudio: string | null
   onAudioToggle: (id: string) => void
+  onCardClick: (activity: ActivityItem) => void
 }) {
   const config = TYPE_CONFIG[activity.type] || TYPE_CONFIG.memory_created
   
@@ -138,14 +141,15 @@ function MasonryTile({
 
   return (
     <div className="card-wrapper">
-      <Link
-        href={activity.link}
+      <div
+        onClick={() => onCardClick(activity)}
         className="card block relative overflow-hidden"
         style={{ 
+          cursor: 'pointer',
           borderRadius: '20px',
           background: activity.thumbnail ? '#000' : config.gradient,
-          border: 'none',
-          boxShadow: '0 8px 24px rgba(0,0,0,0.12)',
+          border: '4px solid #fff',
+          boxShadow: '0 8px 24px rgba(0,0,0,0.15)',
           display: 'flex',
           flexDirection: 'column',
           minHeight: '200px',
@@ -337,7 +341,7 @@ function MasonryTile({
             )}
           </div>
         </div>
-      </Link>
+      </div>
     </div>
   )
 }
@@ -372,6 +376,8 @@ export default function FeedPage() {
   const fileInputRef = useRef<HTMLInputElement>(null)
   const cameraInputRef = useRef<HTMLInputElement>(null)
   const [playingAudio, setPlayingAudio] = useState<string | null>(null)
+  const [selectedActivity, setSelectedActivity] = useState<ActivityItem | null>(null)
+  const [showDetailModal, setShowDetailModal] = useState(false)
 
   const handleAudioToggle = (activityId: string) => {
     setPlayingAudio(prev => prev === activityId ? null : activityId)
@@ -1201,6 +1207,10 @@ export default function FeedPage() {
                 isDarkMode={isDarkMode}
                 playingAudio={playingAudio}
                 onAudioToggle={handleAudioToggle}
+                onCardClick={(a) => {
+                  setSelectedActivity(a)
+                  setShowDetailModal(true)
+                }}
               />
             ))}
           </div>
@@ -1246,6 +1256,22 @@ export default function FeedPage() {
           />
         )}
       </AnimatePresence>
+
+      {/* Feed Detail Modal */}
+      <FeedDetailModal
+        activity={selectedActivity}
+        isOpen={showDetailModal}
+        onClose={() => {
+          setShowDetailModal(false)
+          setSelectedActivity(null)
+        }}
+        onUpdate={(updatedActivity) => {
+          // Update the activity in the list
+          setActivities(prev => 
+            prev.map(a => a.id === updatedActivity.id ? updatedActivity : a)
+          )
+        }}
+      />
 
       {/* Interview Modal */}
       <AnimatePresence>
