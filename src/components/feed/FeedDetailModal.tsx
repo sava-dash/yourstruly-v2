@@ -283,16 +283,33 @@ export function FeedDetailModal({ activity, isOpen, onClose, onUpdate }: FeedDet
   
   const detectFaces = async () => {
     const media = mediaItems[currentMediaIndex]
-    if (!media?.id) return
+    if (!media?.id) {
+      // No media loaded yet - just show empty state for click anywhere
+      setDetectedFaces([])
+      return
+    }
     
     try {
-      const res = await fetch(`/api/media/${media.id}/detect-faces`, { method: 'POST' })
+      const controller = new AbortController()
+      const timeoutId = setTimeout(() => controller.abort(), 10000) // 10s timeout
+      
+      const res = await fetch(`/api/media/${media.id}/detect-faces`, { 
+        method: 'POST',
+        signal: controller.signal
+      })
+      clearTimeout(timeoutId)
+      
       if (res.ok) {
         const data = await res.json()
         setDetectedFaces(data.faces || [])
+      } else {
+        // API failed - allow click anywhere
+        setDetectedFaces([])
       }
     } catch (err) {
       console.error('Error detecting faces:', err)
+      // On error, set empty faces so user can click anywhere
+      setDetectedFaces([])
     }
   }
   
@@ -634,22 +651,22 @@ export function FeedDetailModal({ activity, isOpen, onClose, onUpdate }: FeedDet
                     )
                   })}
                   
-                  {/* No faces detected message */}
-                  {isTaggingMode && detectedFaces.length === 0 && (
+                  {/* Tagging mode hint - click anywhere */}
+                  {isTaggingMode && detectedFaces.length === 0 && !faceDropdownPosition && (
                     <div style={{
                       position: 'absolute',
-                      top: '50%',
+                      bottom: '10px',
                       left: '50%',
-                      transform: 'translate(-50%, -50%)',
-                      background: 'rgba(0,0,0,0.7)',
+                      transform: 'translateX(-50%)',
+                      background: 'rgba(0,0,0,0.8)',
                       color: '#fff',
-                      padding: '12px 20px',
-                      borderRadius: '8px',
-                      fontSize: '13px',
-                      textAlign: 'center',
+                      padding: '8px 16px',
+                      borderRadius: '20px',
+                      fontSize: '12px',
+                      fontWeight: '500',
+                      whiteSpace: 'nowrap',
                     }}>
-                      <Loader2 size={20} className="animate-spin" style={{ margin: '0 auto 8px' }} />
-                      Detecting faces...
+                      👆 Click anywhere on the photo to tag someone
                     </div>
                   )}
                   
@@ -1132,13 +1149,12 @@ export function FeedDetailModal({ activity, isOpen, onClose, onUpdate }: FeedDet
                 {/* Only show Tag button for memories and photos, not postscripts */}
                 {activity.type !== 'postscript_created' && (activity.thumbnail || mediaItems.length > 0) && (
                   <button
-                    onClick={async () => {
+                    onClick={() => {
                       if (!isTaggingMode) {
-                        // Enter tagging mode and detect faces
+                        // Enter tagging mode immediately
                         setIsTaggingMode(true)
-                        if (detectedFaces.length === 0) {
-                          await detectFaces()
-                        }
+                        // Try to detect faces in background (non-blocking)
+                        detectFaces()
                       } else {
                         // Exit tagging mode
                         setIsTaggingMode(false)
