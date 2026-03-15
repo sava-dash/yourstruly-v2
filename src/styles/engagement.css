@@ -730,69 +730,62 @@
    BUBBLE TILE (Used in dashboard)
    ============================================================================= */
 
-/* Engagement tile - matches profile-card style */
+/* Engagement tile - Feed card style with gradients */
 .bubble-tile {
-  position: relative; /* Required for XP badge positioning */
-  background: rgba(255, 255, 255, 0.8);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
-  border-radius: 20px;
-  border: 1px solid rgba(255, 255, 255, 0.5);
-  overflow: visible;
-  box-shadow: 
-    0 4px 16px rgba(195, 95, 51, 0.06),
-    0 12px 32px rgba(0, 0, 0, 0.06);
+  position: relative;
+  border-radius: 16px;
+  overflow: hidden;
+  border: none;
+  box-shadow: 0 8px 20px rgba(0,0,0,0.08);
+  transition: all 0.4s cubic-bezier(0.25, 0.8, 0.25, 1);
+  display: flex;
+  flex-direction: column;
+  height: 100%;
   -webkit-user-drag: none;
-  transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
-/* Type-specific - all use profile-card shadow */
-.bubble-tile[data-type="photo_backstory"],
-.bubble-tile[data-type="highlight"],
-.bubble-tile[data-type="recipes_wisdom"],
-.bubble-tile[data-type="tag_person"],
-.bubble-tile[data-type="connect_dots"],
-.bubble-tile[data-type="missing_info"],
-.bubble-tile[data-type="quick_question"],
-.bubble-tile[data-type="contact_info"],
+/* Type-specific gradient backgrounds - Feed card style */
 .bubble-tile[data-type="memory_prompt"],
-.bubble-tile[data-type="postscript"],
+.bubble-tile[data-type="postscript"] {
+  background: linear-gradient(135deg, #A855F7 0%, #C084FC 100%);
+}
+
 .bubble-tile[data-type="knowledge"],
 .bubble-tile[data-type="favorites_firsts"] {
-  box-shadow: 
-    0 4px 16px rgba(195, 95, 51, 0.06),
-    0 12px 32px rgba(0, 0, 0, 0.06);
+  background: linear-gradient(135deg, #3448FF 0%, #5C7CFF 100%);
 }
 
-/* Hover - matches profile-card style */
+.bubble-tile[data-type="photo_backstory"],
+.bubble-tile[data-type="highlight"],
+.bubble-tile[data-type="recipes_wisdom"] {
+  background: linear-gradient(135deg, #FFB020 0%, #FFC857 100%);
+}
+
+.bubble-tile[data-type="tag_person"],
+.bubble-tile[data-type="connect_dots"] {
+  background: linear-gradient(135deg, #34D7FF 0%, #6BE7FF 100%);
+}
+
+.bubble-tile[data-type="missing_info"],
+.bubble-tile[data-type="quick_question"],
+.bubble-tile[data-type="contact_info"] {
+  background: linear-gradient(135deg, #00B87C 0%, #34D399 100%);
+}
+
+/* Hover - Feed card style */
 .bubble-tile:hover {
-  transform: translateY(-2px);
-  background: rgba(255, 255, 255, 0.85);
-  box-shadow: 
-    0 6px 20px rgba(195, 95, 51, 0.08),
-    0 16px 40px rgba(0, 0, 0, 0.08);
-}
-
-/* Type-specific hover - matches profile-card hover */
-.bubble-tile[data-type="photo_backstory"]:hover,
-.bubble-tile[data-type="highlight"]:hover,
-.bubble-tile[data-type="recipes_wisdom"]:hover,
-.bubble-tile[data-type="tag_person"]:hover,
-.bubble-tile[data-type="connect_dots"]:hover,
-.bubble-tile[data-type="missing_info"]:hover,
-.bubble-tile[data-type="quick_question"]:hover,
-.bubble-tile[data-type="contact_info"]:hover,
-.bubble-tile[data-type="memory_prompt"]:hover,
-.bubble-tile[data-type="postscript"]:hover,
-.bubble-tile[data-type="knowledge"]:hover,
-.bubble-tile[data-type="favorites_firsts"]:hover {
-  box-shadow: 
-    0 6px 20px rgba(195, 95, 51, 0.08),
-    0 16px 40px rgba(0, 0, 0, 0.08);
+  transform: translateY(-8px);
+  box-shadow: 0 20px 40px rgba(0,0,0,0.15);
 }
 
 .bubble-content {
-  padding: 16px;
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  flex: 1;
+  gap: 12px;
+  color: #fff;
 }
 
 /* Accent bar hidden - replaced with glow effect */
@@ -808,79 +801,71 @@
   display: none;
 }
 
-.bubble-xp {
+.bubble-tile .bubble-xp {
   position: absolute;
   top: 12px;
   right: 12px;
   display: flex;
   align-items: center;
   gap: 4px;
-  padding: 4px 10px;
+  padding: 6px 12px;
   border-radius: 20px;
-  font-size: 11px;
-  font-weight: 600;
-}
-
-.bubble-xp-yellow { background: rgba(217, 198, 26, 0.15); color: var(--yt-yellow-dark); }
-.bubble-xp-green { background: rgba(64, 106, 86, 0.12); color: var(--yt-green); }
-.bubble-xp-blue { background: rgba(141, 172, 171, 0.2); color: var(--yt-blue-dark); }
-.bubble-xp-red { background: rgba(195, 95, 51, 0.12); color: var(--yt-red); }
-.bubble-xp-purple { background: linear-gradient(135deg, var(--yt-purple), var(--yt-purple-mid)); color: white; }
-
-/* Tile category label - torn edge SVG background, larger font */
-.bubble-type {
-  position: relative;
-  font-family: var(--font-inter-tight), 'Inter Tight', sans-serif;
   font-size: 12px;
   font-weight: 700;
+  background: rgba(255,255,255,0.95);
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+
+/* Feed-style XP badges - white background, colored text */
+.bubble-tile .bubble-xp-yellow { color: #CC8800; }
+.bubble-tile .bubble-xp-green { color: #00875A; }
+.bubble-tile .bubble-xp-blue { color: #0065FF; }
+.bubble-tile .bubble-xp-red { color: #C73622; }
+.bubble-tile .bubble-xp-purple { color: #8B5CF6; }
+
+/* Tile category label - Feed card style */
+.bubble-tile .bubble-type {
+  font-size: 11px;
+  font-weight: 700;
   text-transform: uppercase;
-  letter-spacing: 0.08em;
-  padding: 6px 12px;
+  letter-spacing: 0.5px;
+  color: rgba(255,255,255,0.9);
+  opacity: 0.8;
   display: inline-block;
-  color: #3d3d3d; /* Consistent dark color for all titles */
-  margin-left: -4px; /* Align torn edge flush with content edge */
+  margin: 0;
+  padding: 0;
 }
 
-/* Torn edge background for category pill - different SVG per color */
-.bubble-type::before {
-  content: '';
-  position: absolute;
-  inset: -2px -2px;
-  background-size: 100% 100%;
-  background-repeat: no-repeat;
-  z-index: -1;
+/* Remove torn edge backgrounds for feed-style cards */
+.bubble-tile .bubble-type::before {
+  display: none;
 }
 
-/* Different colored SVG for each category */
-.bubble-type-yellow::before { background-image: url('/images/torn-edge-yellow.svg'); }
-.bubble-type-green::before { background-image: url('/images/torn-edge-green.svg'); }
-.bubble-type-blue::before { background-image: url('/images/torn-edge-blue.svg'); }
-.bubble-type-red::before { background-image: url('/images/torn-edge-red.svg'); }
-.bubble-type-purple::before { background-image: url('/images/torn-edge-purple.svg'); }
+/* All labels use white for feed-style cards */
+.bubble-tile .bubble-type-yellow,
+.bubble-tile .bubble-type-green,
+.bubble-tile .bubble-type-blue,
+.bubble-tile .bubble-type-red,
+.bubble-tile .bubble-type-purple { 
+  color: rgba(255,255,255,0.9);
+}
 
-/* All titles use same dark color for consistency */
-.bubble-type-yellow,
-.bubble-type-green,
-.bubble-type-blue,
-.bubble-type-red,
-.bubble-type-purple { color: #3d3d3d; }
-
-.bubble-contact {
+.bubble-tile .bubble-contact {
   display: flex;
   align-items: center;
   gap: 10px;
-  padding: 10px;
-  background: rgba(64, 106, 86, 0.05);
-  border-radius: 10px;
-  margin: 8px 0;
+  padding: 0;
+  background: transparent;
+  border-radius: 0;
+  margin: 0;
 }
 
-.bubble-contact-avatar {
+.bubble-tile .bubble-contact-avatar {
   width: 40px;
   height: 40px;
   border-radius: 50%;
-  background: var(--yt-green-light);
-  color: var(--yt-green);
+  background: rgba(255,255,255,0.2);
+  color: #fff;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -890,48 +875,51 @@
   overflow: hidden;
 }
 
-.bubble-contact-avatar img {
+.bubble-tile .bubble-contact-avatar img {
   width: 100%;
   height: 100%;
   object-fit: cover;
 }
 
-.bubble-contact-name {
+.bubble-tile .bubble-contact-name {
   font-size: 13px;
   font-weight: 600;
-  color: #2d2d2d;
+  color: #fff;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
   max-width: 150px;
 }
 
-.bubble-contact-sub {
+.bubble-tile .bubble-contact-sub {
   font-size: 11px;
-  color: var(--yt-green);
+  color: rgba(255,255,255,0.85);
 }
 
-.bubble-photo {
+.bubble-tile .bubble-photo {
   width: 100%;
-  height: 100px;
+  height: 120px;
   object-fit: cover;
   border-radius: 8px;
-  margin: 8px 0;
+  margin: 0;
+  flex-shrink: 0;
 }
 
-.bubble-text {
-  font-size: 14px;
-  font-weight: 500;
-  line-height: 1.4;
-  color: #2d2d2d;
+.bubble-tile .bubble-text {
+  font-size: 18px;
+  font-weight: 700;
+  line-height: 1.3;
+  color: #fff;
   margin: 0;
 }
 
-.bubble-hint {
-  font-size: 11px;
-  color: #999;
-  text-align: right;
-  margin-top: 12px;
+.bubble-tile .bubble-hint {
+  font-size: 12px;
+  color: rgba(255,255,255,0.7);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: auto;
 }
 
 /* =============================================================================
