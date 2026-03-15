@@ -100,8 +100,8 @@ export function InlineAudioPlayer({
       style={{
         display: 'flex',
         alignItems: 'center',
-        gap: '12px',
-        padding: '12px',
+        gap: '8px',
+        padding: '10px',
         background: 'rgba(0,0,0,0.3)',
         backdropFilter: 'blur(12px)',
         borderRadius: '12px',
@@ -139,7 +139,17 @@ export function InlineAudioPlayer({
       </button>
 
       {/* Animated Waveform */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: '3px', flex: 1, height: '36px' }}>
+      <div 
+        className="waveform-container"
+        style={{ 
+          display: 'flex', 
+          alignItems: 'center', 
+          gap: '3px', 
+          flex: 1, 
+          height: '36px',
+          overflow: 'hidden',
+        }}
+      >
         {[...Array(20)].map((_, i) => {
           const baseHeight = 8 + (Math.sin(i * 0.5) * 12)
           
@@ -183,6 +193,37 @@ export function InlineAudioPlayer({
           50% { 
             transform: scaleY(1.3); 
             opacity: 1;
+          }
+        }
+
+        @media (max-width: 640px) {
+          .inline-audio-player {
+            gap: 6px !important;
+            padding: 8px !important;
+          }
+          
+          .inline-audio-player button {
+            width: 32px !important;
+            height: 32px !important;
+          }
+          
+          .inline-audio-player button svg {
+            width: 14px !important;
+            height: 14px !important;
+          }
+          
+          .waveform-container {
+            gap: 2px !important;
+          }
+          
+          .waveform-container div {
+            width: 2px !important;
+          }
+        }
+
+        @media (max-width: 480px) {
+          .inline-audio-player {
+            font-size: 10px;
           }
         }
       `}</style>

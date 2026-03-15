@@ -180,15 +180,18 @@ function MasonryTile({
         )}
 
         {/* Card Content (40% height with image, 100% without) */}
-        <div style={{
-          padding: activity.thumbnail ? '20px' : '24px',
-          display: 'flex',
-          flexDirection: 'column',
-          justifyContent: 'space-between',
-          flex: 1,
-          gap: '12px',
-          color: activity.thumbnail ? '#fff' : '#fff',
-        }}>
+        <div 
+          className="feed-card-content"
+          style={{
+            padding: activity.thumbnail ? '20px' : '24px',
+            display: 'flex',
+            flexDirection: 'column',
+            justifyContent: 'space-between',
+            flex: 1,
+            gap: '12px',
+            color: activity.thumbnail ? '#fff' : '#fff',
+          }}
+        >
           {/* Top Section: Category + Title + Description */}
           <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
             {/* Category Badge */}
@@ -204,28 +207,34 @@ function MasonryTile({
             </div>
 
             {/* Title */}
-            <h3 style={{
-              fontSize: '18px',
-              fontWeight: '700',
-              lineHeight: '1.3',
-              margin: 0,
-              color: '#fff',
-            }}>
+            <h3 
+              className="feed-card-title"
+              style={{
+                fontSize: '18px',
+                fontWeight: '700',
+                lineHeight: '1.3',
+                margin: 0,
+                color: '#fff',
+              }}
+            >
               {activity.title || 'Untitled'}
             </h3>
 
             {/* Description (only show for non-image cards or when large) */}
             {!activity.thumbnail && activity.description && (
-              <p style={{
-                fontSize: '14px',
-                lineHeight: '1.5',
-                color: 'rgba(255,255,255,0.85)',
-                margin: 0,
-                display: '-webkit-box',
-                WebkitLineClamp: 3,
-                WebkitBoxOrient: 'vertical',
-                overflow: 'hidden',
-              }}>
+              <p 
+                className="feed-card-description"
+                style={{
+                  fontSize: '14px',
+                  lineHeight: '1.5',
+                  color: 'rgba(255,255,255,0.85)',
+                  margin: 0,
+                  display: '-webkit-box',
+                  WebkitLineClamp: 3,
+                  WebkitBoxOrient: 'vertical',
+                  overflow: 'hidden',
+                }}
+              >
                 {activity.description}
               </p>
             )}
@@ -293,6 +302,7 @@ function MasonryTile({
 
             {/* CTA Button */}
             <button
+              className="feed-card-cta"
               onClick={(e) => {
                 e.preventDefault()
                 window.location.href = activity.link
@@ -2105,38 +2115,164 @@ export default function FeedPage() {
           color: #888;
         }
 
+        /* Responsive Grid Breakpoints */
         @media (max-width: 1400px) {
           .masonry-grid {
             grid-template-columns: repeat(4, 1fr);
+            gap: 14px;
           }
         }
 
         @media (max-width: 1100px) {
           .masonry-grid {
             grid-template-columns: repeat(3, 1fr);
+            gap: 12px;
           }
         }
 
-        @media (max-width: 600px) {
+        @media (max-width: 768px) {
           .masonry-grid {
             grid-template-columns: repeat(2, 1fr);
+            gap: 12px;
           }
-          .card-animation-layer.wide,
-          .card-animation-layer.large {
-            grid-column: span 1;
+          
+          /* Simplify card layout on tablet */
+          .card-animation-layer.wide {
+            grid-column: span 2;
           }
           .card-animation-layer.large,
           .card-animation-layer.medium {
+            grid-column: span 1;
             grid-row: span 1;
           }
-          .card-animation-layer.large .card-image,
-          .card-animation-layer.medium .card-image {
-            height: 180px;
+        }
+
+        @media (max-width: 640px) {
+          .masonry-grid {
+            grid-template-columns: 1fr;
+            gap: 16px;
           }
+          
+          /* All cards single column on mobile */
+          .card-animation-layer,
+          .card-animation-layer.wide,
+          .card-animation-layer.large,
+          .card-animation-layer.medium {
+            grid-column: span 1;
+            grid-row: span 1;
+          }
+          
+          /* Adjust card content for mobile */
+          .card {
+            min-height: auto !important;
+          }
+          
+          /* Card content responsive */
+          .feed-card-content {
+            padding: 16px !important;
+            gap: 10px !important;
+          }
+          
+          .feed-card-title {
+            font-size: 16px !important;
+          }
+          
+          .feed-card-description {
+            font-size: 13px !important;
+            line-height: 1.4 !important;
+          }
+          
+          .feed-card-cta {
+            padding: 10px 16px !important;
+            font-size: 13px !important;
+          }
+          
+          /* Filter tags responsive */
+          .filter-tags {
+            overflow-x: auto;
+            overflow-y: hidden;
+            -webkit-overflow-scrolling: touch;
+            scrollbar-width: none;
+            -ms-overflow-style: none;
+            padding-bottom: 8px;
+          }
+          
+          .filter-tags::-webkit-scrollbar {
+            display: none;
+          }
+          
+          .category-tag {
+            font-size: 13px !important;
+            padding: 8px 16px !important;
+            white-space: nowrap;
+          }
+          
+          /* Search box responsive */
+          .search-box {
+            flex: 1 1 100%;
+            max-width: 100%;
+          }
+          
+          /* View toggle */
+          .view-toggle {
+            display: none !important;
+          }
+          
+          /* Header controls */
+          .header-controls > div:first-child {
+            flex-direction: column;
+            align-items: stretch !important;
+            gap: 16px !important;
+          }
+          
           .feed-header,
           .feed-content {
             padding-left: 20px;
             padding-right: 20px;
+          }
+        }
+
+        /* Extra small devices */
+        @media (max-width: 480px) {
+          .welcome-heading {
+            font-size: 2.5rem !important;
+          }
+          
+          .feed-card-content {
+            padding: 14px !important;
+          }
+          
+          .feed-card-title {
+            font-size: 15px !important;
+          }
+          
+          .feed-card-description {
+            font-size: 12px !important;
+          }
+          
+          .category-tag {
+            font-size: 12px !important;
+            padding: 6px 12px !important;
+          }
+          
+          .masonry-grid {
+            gap: 12px;
+          }
+        }
+
+        /* iPhone SE and similar */
+        @media (max-width: 375px) {
+          .welcome-heading {
+            font-size: 2rem !important;
+          }
+          
+          .feed-card-title {
+            font-size: 14px !important;
+          }
+          
+          .feed-card-cta {
+            padding: 8px 14px !important;
+            font-size: 12px !important;
           }
         }
       `}</style>
