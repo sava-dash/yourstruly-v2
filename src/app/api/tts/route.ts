@@ -1,12 +1,27 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { createClient } from '@/lib/supabase/server';
 
 // TTS using Deepgram Aura with Delia voice
+// Requires authentication to prevent API cost abuse
 export async function GET(request: NextRequest) {
+  // Verify authentication
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  
+  if (!user) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  }
+
   const { searchParams } = new URL(request.url);
   const text = searchParams.get('text');
   
   if (!text) {
     return NextResponse.json({ error: 'Text required' }, { status: 400 });
+  }
+  
+  // Rate limit: max 1000 chars per request
+  if (text.length > 1000) {
+    return NextResponse.json({ error: 'Text too long (max 1000 chars)' }, { status: 400 });
   }
 
   const DEEPGRAM_API_KEY = process.env.DEEPGRAM_API_KEY;

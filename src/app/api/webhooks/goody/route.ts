@@ -23,6 +23,58 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
+import crypto from 'crypto';
+
+// Verify Svix webhook signature
+function verifySvixSignature(
+  payload: string,
+  headers: {
+    svixId: string | null;
+    svixTimestamp: string | null;
+    svixSignature: string | null;
+  },
+  secret: string
+): boolean {
+  const { svixId, svixTimestamp, svixSignature } = headers;
+  
+  if (!svixId || !svixTimestamp || !svixSignature) {
+    return false;
+  }
+
+  // Check timestamp (prevent replay attacks - 5 minute tolerance)
+  const timestamp = parseInt(svixTimestamp, 10);
+  const now = Math.floor(Date.now() / 1000);
+  if (Math.abs(now - timestamp) > 300) {
+    console.error('Svix webhook timestamp too old');
+    return false;
+  }
+
+  // Svix signs: {id}.{timestamp}.{payload}
+  const signedPayload = `${svixId}.${svixTimestamp}.${payload}`;
+  
+  // The secret may have a prefix like "whsec_" that needs to be removed
+  const secretKey = secret.startsWith('whsec_') 
+    ? secret.substring(6) 
+    : secret;
+  
+  // Decode base64 secret and compute HMAC
+  const secretBytes = Buffer.from(secretKey, 'base64');
+  const expectedSignature = crypto
+    .createHmac('sha256', secretBytes)
+    .update(signedPayload)
+    .digest('base64');
+
+  // Svix signature format: "v1,{base64_signature}" (may have multiple)
+  const signatures = svixSignature.split(' ');
+  for (const sig of signatures) {
+    const [version, sigValue] = sig.split(',');
+    if (version === 'v1' && sigValue === expectedSignature) {
+      return true;
+    }
+  }
+
+  return false;
+}
 
 // Lazy-init Supabase admin client
 let _supabaseAdmin: ReturnType<typeof createClient> | null = null;
@@ -61,30 +113,42 @@ interface GoodyWebhookEvent {
  */
 export async function POST(request: NextRequest) {
   try {
-    const payload = await request.json();
+    // Get raw body for signature verification
+    const rawBody = await request.text();
+    const payload = JSON.parse(rawBody);
     
     // Get Svix headers for signature verification
     const svixId = request.headers.get('svix-id');
     const svixTimestamp = request.headers.get('svix-timestamp');
     const svixSignature = request.headers.get('svix-signature');
 
-    // Log webhook receipt for debugging
-    console.log('Goody webhook received:', {
-      type: payload.type,
-      id: svixId,
-      timestamp: svixTimestamp,
-    });
+    // Log webhook receipt for debugging (don't log in production)
+    if (process.env.NODE_ENV !== 'production') {
+      console.log('Goody webhook received:', {
+        type: payload.type,
+        id: svixId,
+        timestamp: svixTimestamp,
+      });
+    }
 
-    // Verify webhook signature if secret is configured
+    // Verify webhook signature (required in production)
     const webhookSecret = process.env.GOODY_WEBHOOK_SECRET;
-    if (webhookSecret && svixId && svixTimestamp && svixSignature) {
-      // Note: In production, you should verify the signature using Svix library
-      // import { Webhook } from 'svix';
-      // const wh = new Webhook(webhookSecret);
-      // wh.verify(JSON.stringify(payload), { 'svix-id': svixId, ... });
+    if (process.env.NODE_ENV === 'production') {
+      if (!webhookSecret) {
+        console.error('GOODY_WEBHOOK_SECRET not configured');
+        return NextResponse.json({ error: 'Webhook not configured' }, { status: 500 });
+      }
       
-      // For now, we'll just check that headers exist
-      // TODO: Implement full signature verification when Svix library is added
+      const isValid = verifySvixSignature(rawBody, {
+        svixId,
+        svixTimestamp,
+        svixSignature,
+      }, webhookSecret);
+      
+      if (!isValid) {
+        console.error('Invalid Goody webhook signature');
+        return NextResponse.json({ error: 'Invalid signature' }, { status: 401 });
+      }
     }
 
     // Process the webhook event
