@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect, useRef } from 'react'
-import { gsap } from 'gsap'
+// gsap removed - animations simplified
 import { MapPin, Users, Calendar, Search, Map as MapIcon, Grid, Plus, Mic, Video, Upload, Image as ImageIcon, MessageSquare, Gift, Sparkles } from 'lucide-react'
 import Link from 'next/link'
 import { format } from 'date-fns'
@@ -66,27 +66,64 @@ const QUICK_ACTIONS: Record<string, Array<{ label: string; icon: any; action: st
   ],
 }
 
-// Brand gradients for cards without images
+// Brand colors from YoursTruly brand kit
+const BRAND_COLORS = {
+  green: '#406A56',
+  greenLight: '#D3E1DF',
+  yellow: '#D9C61A',
+  yellowLight: '#F2F1E5',
+  blue: '#8DACAB',
+  blueLight: '#C5CDD6',
+  red: '#C35F33',
+  redLight: '#EBD4CA',
+  purple: '#4A3552',
+  purpleLight: '#D8D3DA',
+  offWhite: '#F2F1E5',
+  black: '#000000',
+}
+
+// Brand gradients for cards without images (using brand colors)
 const TYPE_GRADIENTS: Record<string, string> = {
-  memory: 'linear-gradient(135deg, #FF5C34 0%, #FF8A65 100%)',
-  wisdom: 'linear-gradient(135deg, #3448FF 0%, #5C7CFF 100%)',
-  interview: 'linear-gradient(135deg, #34D7FF 0%, #6BE7FF 100%)',
-  media: 'linear-gradient(135deg, #FFB020 0%, #FFC857 100%)',
-  postscript: 'linear-gradient(135deg, #A855F7 0%, #C084FC 100%)',
-  contact: 'linear-gradient(135deg, #00B87C 0%, #34D399 100%)',
-  circle: 'linear-gradient(135deg, #34D7FF 0%, #6BE7FF 100%)',
+  memory: `linear-gradient(135deg, ${BRAND_COLORS.red} 0%, #E07A52 100%)`,
+  wisdom: `linear-gradient(135deg, ${BRAND_COLORS.purple} 0%, #6B4A7A 100%)`,
+  interview: `linear-gradient(135deg, ${BRAND_COLORS.blue} 0%, #A8C4C3 100%)`,
+  media: `linear-gradient(135deg, ${BRAND_COLORS.yellow} 0%, #E8D84A 100%)`,
+  postscript: `linear-gradient(135deg, ${BRAND_COLORS.green} 0%, #5A8A72 100%)`,
+  contact: `linear-gradient(135deg, ${BRAND_COLORS.green} 0%, #5A8A72 100%)`,
+  circle: `linear-gradient(135deg, ${BRAND_COLORS.blue} 0%, #A8C4C3 100%)`,
 }
 
 const TYPE_CONFIG: Record<string, { label: string; color: string; gradient: string }> = {
-  memory_created: { label: 'Memory', color: '#FF5C34', gradient: TYPE_GRADIENTS.memory },
-  memory_shared: { label: 'Shared Memory', color: '#FF5C34', gradient: TYPE_GRADIENTS.memory },
-  wisdom_created: { label: 'Wisdom', color: '#3448FF', gradient: TYPE_GRADIENTS.wisdom },
-  wisdom_shared: { label: 'Shared Wisdom', color: '#3448FF', gradient: TYPE_GRADIENTS.wisdom },
-  interview_response: { label: 'Interview', color: '#34D7FF', gradient: TYPE_GRADIENTS.interview },
-  photos_uploaded: { label: 'Media', color: '#FFB020', gradient: TYPE_GRADIENTS.media },
-  postscript_created: { label: 'PostScript', color: '#A855F7', gradient: TYPE_GRADIENTS.postscript },
-  contact_added: { label: 'Contact', color: '#00B87C', gradient: TYPE_GRADIENTS.contact },
-  circle_content: { label: 'Circle', color: '#34D7FF', gradient: TYPE_GRADIENTS.circle },
+  memory_created: { label: 'Memory', color: BRAND_COLORS.red, gradient: TYPE_GRADIENTS.memory },
+  memory_shared: { label: 'Shared Memory', color: BRAND_COLORS.red, gradient: TYPE_GRADIENTS.memory },
+  wisdom_created: { label: 'Wisdom', color: BRAND_COLORS.purple, gradient: TYPE_GRADIENTS.wisdom },
+  wisdom_shared: { label: 'Shared Wisdom', color: BRAND_COLORS.purple, gradient: TYPE_GRADIENTS.wisdom },
+  interview_response: { label: 'Interview', color: BRAND_COLORS.blue, gradient: TYPE_GRADIENTS.interview },
+  photos_uploaded: { label: 'Media', color: BRAND_COLORS.yellow, gradient: TYPE_GRADIENTS.media },
+  postscript_created: { label: 'PostScript', color: BRAND_COLORS.green, gradient: TYPE_GRADIENTS.postscript },
+  contact_added: { label: 'Contact', color: BRAND_COLORS.green, gradient: TYPE_GRADIENTS.contact },
+  circle_content: { label: 'Circle', color: BRAND_COLORS.blue, gradient: TYPE_GRADIENTS.circle },
+}
+
+// Generate varied heights for cards (min 200px, max 400px)
+function getCardHeight(activity: ActivityItem, index: number): number {
+  // Base height depends on content
+  let height = 200 // minimum
+  
+  // Add height for longer descriptions
+  const descLength = activity.description?.length || 0
+  if (descLength > 100) height += 40
+  if (descLength > 200) height += 40
+  
+  // Add height for images
+  if (activity.thumbnail) height += 80
+  
+  // Add some randomization based on index
+  const variation = (index % 5) * 20
+  height += variation
+  
+  // Cap at max height
+  return Math.min(height, 400)
 }
 
 function MasonryTile({ 
@@ -102,94 +139,59 @@ function MasonryTile({
   playingAudio: string | null
   onAudioToggle: (id: string) => void
 }) {
-  const tileRef = useRef<HTMLAnchorElement>(null)
-  const [isHovered, setIsHovered] = useState(false)
-
-  const handleMouseEnter = () => {
-    setIsHovered(true)
-    if (tileRef.current) {
-      gsap.to(tileRef.current, {
-        y: -8,
-        boxShadow: '0 20px 40px rgba(0,0,0,0.15)',
-        duration: 0.4,
-        ease: 'cubic-bezier(0.25, 0.8, 0.25, 1)'
-      })
-    }
-  }
-
-  const handleMouseLeave = () => {
-    setIsHovered(false)
-    if (tileRef.current) {
-      gsap.to(tileRef.current, {
-        y: 0,
-        boxShadow: '0 8px 20px rgba(0,0,0,0.08)',
-        duration: 0.4,
-        ease: 'cubic-bezier(0.25, 0.8, 0.25, 1)'
-      })
-    }
-  }
-
-  const getCardClass = () => {
-    const patterns = [
-      'large', '', '', 'medium', '', '', 'wide', '', '', '', '', 
-      'medium', '', 'wide', '', ''
-    ]
-    return patterns[index % patterns.length]
-  }
-
   const config = TYPE_CONFIG[activity.type] || TYPE_CONFIG.memory_created
+  const cardHeight = getCardHeight(activity, index)
 
   return (
-    <div className={`card-animation-layer ${getCardClass()}`}>
+    <div className="card-wrapper">
       <Link
         href={activity.link}
-        ref={tileRef}
-        onMouseEnter={handleMouseEnter}
-        onMouseLeave={handleMouseLeave}
         className="card block relative overflow-hidden"
         style={{ 
-          borderRadius: '16px',
+          borderRadius: '20px',
           background: activity.thumbnail ? '#000' : config.gradient,
           border: 'none',
-          boxShadow: '0 8px 20px rgba(0,0,0,0.08)',
-          transition: 'all 0.4s cubic-bezier(0.25, 0.8, 0.25, 1)',
+          boxShadow: '0 8px 24px rgba(0,0,0,0.12)',
           display: 'flex',
           flexDirection: 'column',
-          height: '100%',
+          minHeight: `${cardHeight}px`,
+          height: 'auto',
         }}
       >
-        {/* Card Image (60% height when present) */}
+        {/* Card Image (65% height when present) */}
         {activity.thumbnail && (
           <div 
             style={{
-              height: '60%',
+              height: '65%',
+              minHeight: '140px',
               backgroundImage: `url(${activity.thumbnail})`,
               backgroundSize: 'cover',
               backgroundPosition: 'center',
               position: 'relative',
               flexShrink: 0,
+              borderRadius: '20px 20px 0 0',
             }}
           >
             {/* Gradient overlay for text readability */}
             <div style={{
               position: 'absolute',
               inset: 0,
-              background: 'linear-gradient(to bottom, transparent 40%, rgba(0,0,0,0.7))'
+              background: 'linear-gradient(to bottom, transparent 50%, rgba(0,0,0,0.85))'
             }} />
           </div>
         )}
 
-        {/* Card Content (40% height with image, 100% without) */}
+        {/* Card Content */}
         <div 
           className="feed-card-content"
           style={{
-            padding: activity.thumbnail ? '20px' : '24px',
+            padding: '20px',
             display: 'flex',
             flexDirection: 'column',
             justifyContent: 'space-between',
             flex: 1,
             gap: '12px',
-            color: activity.thumbnail ? '#fff' : '#fff',
+            color: '#fff',
           }}
         >
           {/* Top Section: Category + Title + Description */}
@@ -300,30 +302,24 @@ function MasonryTile({
               )}
             </div>
 
-            {/* CTA Button */}
-            <button
+            {/* See More Button */}
+            <div
               className="feed-card-cta"
-              onClick={(e) => {
-                e.preventDefault()
-                window.location.href = activity.link
-              }}
               style={{
-                background: '#fff',
-                color: '#000',
-                border: 'none',
-                borderRadius: '12px',
-                padding: '12px 20px',
-                fontSize: '14px',
+                background: 'transparent',
+                color: '#fff',
+                border: '1px solid rgba(255,255,255,0.4)',
+                borderRadius: '10px',
+                padding: '10px 16px',
+                fontSize: '13px',
                 fontWeight: '600',
                 cursor: 'pointer',
+                textAlign: 'center',
                 transition: 'all 0.2s',
-                opacity: isHovered ? 1 : 0.9,
-                transform: isHovered ? 'scale(1.02)' : 'scale(1)',
-                boxShadow: isHovered ? '0 4px 12px rgba(0,0,0,0.2)' : 'none',
               }}
             >
-              View Details
-            </button>
+              See More
+            </div>
           </div>
         </div>
       </Link>
@@ -530,17 +526,7 @@ export default function FeedPage() {
   }
 
   const animateIn = () => {
-    // Scroll-driven animation handles the entrance effect now
-    // This is just for filter transitions
-    if (!gridRef.current) return
-    const layers = Array.from(gridRef.current.querySelectorAll('.card-animation-layer'))
-    
-    layers.forEach((layer) => {
-      gsap.fromTo(layer, 
-        { opacity: 0 },
-        { opacity: 1, duration: 0.3 }
-      )
-    })
+    // Animation removed for cleaner UX
   }
 
   const handleCategoryClick = (categoryId: CategoryFilter) => {
@@ -1029,16 +1015,7 @@ export default function FeedPage() {
       )
     }
 
-    if (gridRef.current && filteredActivities.length > 0) {
-      const layers = Array.from(gridRef.current.querySelectorAll('.card-animation-layer'))
-      gsap.to(layers, {
-        opacity: 0,
-        duration: 0.2,
-        onComplete: () => setFilteredActivities(filtered)
-      })
-    } else {
-      setFilteredActivities(filtered)
-    }
+    setFilteredActivities(filtered)
   }
 
   useEffect(() => {
@@ -1056,38 +1033,7 @@ export default function FeedPage() {
   }, [filteredActivities, viewMode])
 
   const setupScrollAnimation = () => {
-    if (!gridRef.current) return
-    
-    const layers = Array.from(gridRef.current.querySelectorAll('.card-animation-layer'))
-    
-    const observer = new IntersectionObserver((entries) => {
-      entries.forEach((entry) => {
-        if (entry.isIntersecting) {
-          gsap.fromTo(entry.target,
-            {
-              scale: 0.85,
-              rotate: 5,
-              opacity: 0.3
-            },
-            {
-              scale: 1,
-              rotate: 0,
-              opacity: 1,
-              duration: 0.6,
-              ease: 'cubic-bezier(0.25, 0.8, 0.25, 1)'
-            }
-          )
-          observer.unobserve(entry.target)
-        }
-      })
-    }, {
-      threshold: 0.1,
-      rootMargin: '0px 0px -10% 0px'
-    })
-    
-    layers.forEach((layer) => observer.observe(layer))
-    
-    return () => observer.disconnect()
+    // Scroll animations removed for cleaner UX
   }
 
   return (
@@ -1923,68 +1869,30 @@ export default function FeedPage() {
         .masonry-grid {
           display: grid;
           grid-template-columns: repeat(5, 1fr);
-          gap: 16px;
+          gap: 20px;
           width: 100%;
-          grid-auto-flow: dense;
         }
 
-        .card-animation-layer {
+        .card-wrapper {
           display: block;
-          transform-origin: center;
-          transform: scale(0.85) rotate(5deg);
-          opacity: 0.3;
-        }
-
-        .card-animation-layer.large {
-          grid-column: span 2;
-          grid-row: span 2;
-        }
-
-        .card-animation-layer.medium {
-          grid-column: span 1;
-          grid-row: span 2;
-        }
-
-        .card-animation-layer.wide {
-          grid-column: span 2;
         }
 
         .card {
-          transition: transform 0.3s cubic-bezier(0.25, 0.8, 0.25, 1), box-shadow 0.3s ease;
+          transition: transform 0.3s ease, box-shadow 0.3s ease;
           display: flex;
           flex-direction: column;
           width: 100%;
-          height: 100%;
         }
 
         .card:hover {
           z-index: 2;
+          transform: translateY(-8px);
+          box-shadow: 0 20px 40px rgba(0,0,0,0.2) !important;
         }
 
-        .card-image {
-          width: 100%;
-          height: 180px;
-          background-size: cover;
-          background-position: center;
-          position: relative;
-        }
-
-        .card-image::after {
-          content: '';
-          position: absolute;
-          top: 0;
-          left: 0;
-          right: 0;
-          bottom: 0;
-          background: linear-gradient(to bottom, transparent 60%, rgba(0,0,0,0.8));
-        }
-
-        .card-animation-layer.large .card-image {
-          height: 420px;
-        }
-
-        .card-animation-layer.medium .card-image {
-          height: 400px;
+        .card:hover .feed-card-cta {
+          background: rgba(255,255,255,0.15);
+          border-color: rgba(255,255,255,0.6);
         }
 
         .card-content {
@@ -2119,31 +2027,21 @@ export default function FeedPage() {
         @media (max-width: 1400px) {
           .masonry-grid {
             grid-template-columns: repeat(4, 1fr);
-            gap: 14px;
+            gap: 18px;
           }
         }
 
         @media (max-width: 1100px) {
           .masonry-grid {
             grid-template-columns: repeat(3, 1fr);
-            gap: 12px;
+            gap: 16px;
           }
         }
 
         @media (max-width: 768px) {
           .masonry-grid {
             grid-template-columns: repeat(2, 1fr);
-            gap: 12px;
-          }
-          
-          /* Simplify card layout on tablet */
-          .card-animation-layer.wide {
-            grid-column: span 2;
-          }
-          .card-animation-layer.large,
-          .card-animation-layer.medium {
-            grid-column: span 1;
-            grid-row: span 1;
+            gap: 14px;
           }
         }
 
