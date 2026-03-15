@@ -31,30 +31,14 @@ export async function POST(
       return NextResponse.json({ success: true, message: 'Not an image', faces: 0 })
     }
 
-    // Check if AWS Rekognition is configured
-    const hasRekognition = process.env.AWS_ACCESS_KEY_ID && 
-                           process.env.AWS_SECRET_ACCESS_KEY &&
-                           process.env.AWS_REGION
-
-    if (!hasRekognition) {
-      // Return success but no faces detected (feature not configured)
-      return NextResponse.json({ 
-        success: true, 
-        message: 'Face detection not configured',
-        faces: 0 
-      })
-    }
-
     // Use AWS Rekognition to detect faces
+    // Uses ECS task IAM role for credentials (default credential chain)
     try {
       const { RekognitionClient, DetectFacesCommand } = await import('@aws-sdk/client-rekognition')
       
       const rekognition = new RekognitionClient({
-        region: process.env.AWS_REGION,
-        credentials: {
-          accessKeyId: process.env.AWS_ACCESS_KEY_ID!,
-          secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY!,
-        },
+        region: process.env.AWS_REGION || 'us-east-2',
+        // Uses default credential provider chain (ECS task role, env vars, etc.)
       })
 
       // Fetch the image
