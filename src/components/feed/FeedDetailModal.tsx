@@ -201,6 +201,13 @@ export function FeedDetailModal({ activity, isOpen, onClose, onUpdate }: FeedDet
   // Load full details when modal opens
   useEffect(() => {
     if (isOpen && activity) {
+      // Reset to view mode when opening
+      setIsEditing(false)
+      setIsTaggingMode(false)
+      setSelectedFaceIndex(null)
+      setFaceDropdownPosition(null)
+      
+      // Set initial values for edit form
       setEditedTitle(activity.title || '')
       setEditedDescription(activity.description || '')
       setEditedDate(activity.timestamp?.split('T')[0] || '')
