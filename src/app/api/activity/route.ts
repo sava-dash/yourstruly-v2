@@ -353,6 +353,7 @@ export async function GET(request: NextRequest) {
       location_name,
       location_lat,
       location_lng,
+      audio_url,
       media:memory_media(file_url, file_type)
     `)
     .eq('user_id', user.id)
@@ -372,6 +373,7 @@ export async function GET(request: NextRequest) {
         timestamp: memory.created_at,
         link: `/dashboard/memories/${memory.id}`,
         thumbnail: firstImage?.file_url,
+        audio_url: memory.audio_url,
         metadata: { 
           memoryId: memory.id,
           location: memory.location_name,
@@ -472,6 +474,7 @@ export async function GET(request: NextRequest) {
       id,
       created_at,
       video_url,
+      audio_url,
       thumbnail_url,
       session_id,
       session_question:session_questions!video_responses_session_question_id_fkey (
@@ -514,6 +517,7 @@ export async function GET(request: NextRequest) {
         timestamp: response.created_at,
         link: `/dashboard/interviews/${response.session_id}`,
         thumbnail: response.thumbnail_url || response.video_url,
+        audio_url: response.audio_url || response.video_url,
         metadata: { 
           responseId: response.id,
           sessionId: response.session_id,
