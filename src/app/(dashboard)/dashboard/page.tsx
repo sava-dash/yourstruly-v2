@@ -43,6 +43,7 @@ const TYPE_CONFIG: Record<string, { type: PromptType; label: string; xp: number;
 // Prompt types that should use ConversationView (multi-turn voice/text)
 const CONVERSATION_TYPES = [
   'photo_backstory',
+  'tag_person',  // Show photo + ask about people in conversation
   'memory_prompt', 
   'knowledge',
   'favorites_firsts',
@@ -56,7 +57,6 @@ const CONVERSATION_TYPES = [
 const INLINE_INPUT_TYPES = [
   'quick_question',
   'missing_info',
-  'tag_person',
   'contact_info',
 ]
 
