@@ -9,6 +9,7 @@ import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { ConversationView } from '@/components/conversation'
 import { UnifiedEngagementModal } from '@/components/engagement/UnifiedEngagementModal'
+import { PhotoTaggingModal } from '@/components/engagement/PhotoTaggingModal'
 import { VoiceVideoChat } from '@/components/voice'
 import '@/styles/home.css'
 import '@/styles/engagement.css'
@@ -43,7 +44,6 @@ const TYPE_CONFIG: Record<string, { type: PromptType; label: string; xp: number;
 // Prompt types that should use ConversationView (multi-turn voice/text)
 const CONVERSATION_TYPES = [
   'photo_backstory',
-  'tag_person',  // Show photo + ask about people in conversation
   'memory_prompt', 
   'knowledge',
   'favorites_firsts',
@@ -52,6 +52,9 @@ const CONVERSATION_TYPES = [
   'connect_dots',
   'highlight',
 ]
+
+// Prompt types that use face tagging modal
+const PHOTO_TAGGING_TYPES = ['tag_person']
 
 // Prompt types that should use simple inline input
 const INLINE_INPUT_TYPES = [
@@ -92,6 +95,9 @@ export default function DashboardPage() {
   
   // Unified engagement modal state
   const [engagementPrompt, setEngagementPrompt] = useState<any | null>(null)
+  
+  // Photo tagging modal state
+  const [photoTaggingPrompt, setPhotoTaggingPrompt] = useState<any | null>(null)
   
   // Inline input state - for quick contact updates
   const [expandedId, setExpandedId] = useState<string | null>(null)
@@ -348,7 +354,10 @@ export default function DashboardPage() {
 
   // Handle tile click - open modal immediately
   const handleTileClick = useCallback((prompt: any, event: React.MouseEvent) => {
-    if (CONVERSATION_TYPES.includes(prompt.type)) {
+    if (PHOTO_TAGGING_TYPES.includes(prompt.type)) {
+      // Open photo tagging modal (click face → select contact)
+      setPhotoTaggingPrompt(prompt)
+    } else if (CONVERSATION_TYPES.includes(prompt.type)) {
       // Open unified engagement modal (text/voice/video)
       setEngagementPrompt(prompt)
     } else if (INLINE_INPUT_TYPES.includes(prompt.type)) {
@@ -560,6 +569,36 @@ export default function DashboardPage() {
             expectedXp={TYPE_CONFIG[engagementPrompt.type]?.xp || 15}
             onComplete={handleEngagementComplete}
             onClose={() => setEngagementPrompt(null)}
+          />
+        )}
+      </AnimatePresence>
+
+      {/* Photo Tagging Modal */}
+      <AnimatePresence>
+        {photoTaggingPrompt && photoTaggingPrompt.photoId && (
+          <PhotoTaggingModal
+            photoId={photoTaggingPrompt.photoId}
+            photoUrl={photoTaggingPrompt.photoUrl}
+            promptId={photoTaggingPrompt.id}
+            onComplete={async (result) => {
+              // Mark prompt as answered
+              try {
+                await answerPrompt(photoTaggingPrompt.id, { type: 'selection', data: { action: 'photo_tagged' } })
+              } catch (err) {
+                console.error('Failed to mark prompt answered:', err)
+              }
+              // Add to completed tiles
+              setCompletedTiles(prev => [{
+                id: photoTaggingPrompt.id,
+                type: photoTaggingPrompt.type,
+                title: 'Tagged photo',
+                xp: result.xpAwarded,
+                photoUrl: photoTaggingPrompt.photoUrl,
+                answeredAt: new Date().toISOString(),
+              }, ...prev])
+              setPhotoTaggingPrompt(null)
+            }}
+            onClose={() => setPhotoTaggingPrompt(null)}
           />
         )}
       </AnimatePresence>
