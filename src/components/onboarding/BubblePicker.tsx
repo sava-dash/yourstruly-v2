@@ -8,12 +8,6 @@ import { Check, ChevronRight, ChevronLeft } from 'lucide-react';
 // DATA
 // ============================================
 
-interface BubbleItem {
-  label: string;
-  emoji: string;
-  category: string;
-}
-
 const INTEREST_DATA: { name: string; emoji: string; items: { label: string; emoji: string }[] }[] = [
   {
     name: 'Creative Arts',
@@ -33,11 +27,11 @@ const INTEREST_DATA: { name: string; emoji: string; items: { label: string; emoj
       { label: 'Film Analysis', emoji: '🎬' },
       { label: 'Theater', emoji: '🎭' },
       { label: 'Comedy', emoji: '😂' },
-      { label: 'Playing Instruments', emoji: '🎸' },
+      { label: 'Instruments', emoji: '🎸' },
       { label: 'Singing', emoji: '🎤' },
       { label: 'Dancing', emoji: '💃' },
       { label: 'Fashion', emoji: '👗' },
-      { label: 'Makeup Artistry', emoji: '💄' },
+      { label: 'Makeup', emoji: '💄' },
       { label: 'Hair Styling', emoji: '💇' },
       { label: 'Interior Design', emoji: '🏠' },
       { label: 'DIY Crafts', emoji: '🛠️' },
@@ -57,7 +51,7 @@ const INTEREST_DATA: { name: string; emoji: string; items: { label: string; emoj
       { label: 'Swimming', emoji: '🏊' },
       { label: 'Martial Arts', emoji: '🥋' },
       { label: 'Boxing', emoji: '🥊' },
-      { label: 'Holistic Wellness', emoji: '🌿' },
+      { label: 'Wellness', emoji: '🌿' },
       { label: 'Nutrition', emoji: '🥗' },
       { label: 'Mindfulness', emoji: '🧠' },
     ],
@@ -73,7 +67,7 @@ const INTEREST_DATA: { name: string; emoji: string; items: { label: string; emoj
       { label: 'Climbing', emoji: '🧗' },
       { label: 'Fishing', emoji: '🎣' },
       { label: 'Boating', emoji: '⛵' },
-      { label: 'Paddleboarding', emoji: '🏄‍♀️' },
+      { label: 'Paddleboard', emoji: '🏄‍♀️' },
       { label: 'Scuba Diving', emoji: '🤿' },
       { label: 'Snowboarding', emoji: '🏂' },
       { label: 'Skiing', emoji: '⛷️' },
@@ -88,9 +82,9 @@ const INTEREST_DATA: { name: string; emoji: string; items: { label: string; emoj
       { label: 'Cooking', emoji: '👨‍🍳' },
       { label: 'Baking', emoji: '🧁' },
       { label: 'Food Tasting', emoji: '🍽️' },
-      { label: 'Wine Tasting', emoji: '🍷' },
-      { label: 'Coffee Culture', emoji: '☕' },
-      { label: 'Tea Culture', emoji: '🍵' },
+      { label: 'Wine', emoji: '🍷' },
+      { label: 'Coffee', emoji: '☕' },
+      { label: 'Tea', emoji: '🍵' },
       { label: 'Mixology', emoji: '🍸' },
     ],
   },
@@ -101,15 +95,15 @@ const INTEREST_DATA: { name: string; emoji: string; items: { label: string; emoj
       { label: 'Technology', emoji: '💻' },
       { label: 'Gadgets', emoji: '📱' },
       { label: 'Coding', emoji: '👨‍💻' },
-      { label: 'Virtual Reality', emoji: '🥽' },
+      { label: 'VR', emoji: '🥽' },
       { label: 'Science', emoji: '🔬' },
       { label: 'Astronomy', emoji: '🔭' },
       { label: 'History', emoji: '📜' },
       { label: 'Philosophy', emoji: '🤔' },
       { label: 'Psychology', emoji: '🧠' },
       { label: 'Astrology', emoji: '♈' },
-      { label: 'Foreign Languages', emoji: '🌍' },
-      { label: 'Cultural Studies', emoji: '🏛️' },
+      { label: 'Languages', emoji: '🌍' },
+      { label: 'Culture', emoji: '🏛️' },
     ],
   },
   {
@@ -133,38 +127,40 @@ const INTEREST_DATA: { name: string; emoji: string; items: { label: string; emoj
     items: [
       { label: 'Thrifting', emoji: '🛍️' },
       { label: 'Minimalism', emoji: '✨' },
-      { label: 'Home Organization', emoji: '🗂️' },
+      { label: 'Organizing', emoji: '🗂️' },
       { label: 'Home Improvement', emoji: '🔨' },
       { label: 'Collecting', emoji: '🎴' },
-      { label: 'Travel Blogging', emoji: '📸' },
-      { label: 'Car Restoration', emoji: '🚗' },
+      { label: 'Blogging', emoji: '📸' },
+      { label: 'Cars', emoji: '🚗' },
       { label: 'Motorcycling', emoji: '🏍️' },
-      { label: 'DIY Home Projects', emoji: '🏡' },
+      { label: 'DIY Projects', emoji: '🏡' },
       { label: 'Parenting', emoji: '👶' },
     ],
   },
   {
-    name: 'Community & Service',
+    name: 'Community',
     emoji: '🤝',
     items: [
       { label: 'Volunteering', emoji: '🤲' },
-      { label: 'Community Service', emoji: '🏘️' },
+      { label: 'Community', emoji: '🏘️' },
       { label: 'Animal Care', emoji: '🐾' },
       { label: 'Sustainability', emoji: '♻️' },
     ],
   },
   {
-    name: 'Business & Growth',
+    name: 'Business',
     emoji: '💼',
     items: [
       { label: 'Entrepreneurship', emoji: '🚀' },
       { label: 'Investing', emoji: '📈' },
       { label: 'Real Estate', emoji: '🏢' },
-      { label: 'Personal Finance', emoji: '💰' },
+      { label: 'Finance', emoji: '💰' },
       { label: 'Public Speaking', emoji: '🎙️' },
     ],
   },
 ];
+
+interface BubbleItem { label: string; emoji: string; category: string; }
 
 const ALL_INTERESTS: BubbleItem[] = INTEREST_DATA.flatMap(cat =>
   cat.items.map(item => ({ ...item, category: cat.name }))
@@ -229,7 +225,7 @@ const TRAIT_ITEMS: { label: string; emoji: string }[] = [
   { label: 'Resourceful', emoji: '🧰' },
   { label: 'Responsible', emoji: '✅' },
   { label: 'Self-aware', emoji: '🪞' },
-  { label: 'Self-disciplined', emoji: '🏅' },
+  { label: 'Disciplined', emoji: '🏅' },
   { label: 'Self-reliant', emoji: '🗻' },
   { label: 'Sincere', emoji: '❤️' },
   { label: 'Social', emoji: '👥' },
@@ -247,105 +243,35 @@ const TRAIT_ITEMS: { label: string; emoji: string }[] = [
   { label: 'Adaptable', emoji: '🦎' },
   { label: 'Balanced', emoji: '⚖️' },
   { label: 'Bold', emoji: '🔥' },
-  { label: 'Compassion-driven', emoji: '💗' },
   { label: 'Detail-oriented', emoji: '🔬' },
   { label: 'Deep Thinker', emoji: '🤔' },
-  { label: 'Empathic Listener', emoji: '👂' },
+  { label: 'Good Listener', emoji: '👂' },
   { label: 'Fast-paced', emoji: '💨' },
   { label: 'Future-focused', emoji: '🔭' },
   { label: 'Gentle', emoji: '🌷' },
   { label: 'High-energy', emoji: '⚡' },
   { label: 'Idealistic', emoji: '🌟' },
   { label: 'Introspective', emoji: '🧘' },
-  { label: 'People-oriented', emoji: '🫂' },
+  { label: 'People-person', emoji: '🫂' },
   { label: 'Purpose-driven', emoji: '🧭' },
   { label: 'Realistic', emoji: '🏔️' },
-  { label: 'Risk-taking', emoji: '🎪' },
-  { label: 'Slow-paced', emoji: '🐢' },
+  { label: 'Risk-taker', emoji: '🎪' },
   { label: 'Soft-spoken', emoji: '🌾' },
-  { label: 'Straightforward', emoji: '➡️' },
+  { label: 'Direct', emoji: '➡️' },
   { label: 'Structured', emoji: '🏛️' },
-  { label: 'Team-oriented', emoji: '🏉' },
+  { label: 'Team Player', emoji: '🏉' },
   { label: 'Visionary', emoji: '🔮' },
-  { label: 'Calm under Pressure', emoji: '🧊' },
-  { label: 'Emotionally Intelligent', emoji: '💜' },
+  { label: 'Cool-headed', emoji: '🧊' },
+  { label: 'EQ', emoji: '💜' },
   { label: 'Values-driven', emoji: '⭐' },
 ];
 
 // ============================================
-// BUBBLE PACKING - circle packing algorithm
+// BUBBLE CLUSTER COMPONENT
 // ============================================
 
 const SELECTED_COLOR = '#406A56';
 const SELECTED_COLOR_TRAIT = '#4A3552';
-
-// Deterministic seeded random for consistent layouts
-function seededRandom(seed: number) {
-  let s = seed;
-  return () => {
-    s = (s * 16807 + 0) % 2147483647;
-    return (s - 1) / 2147483646;
-  };
-}
-
-// Size pattern for visual variety
-function getBubbleRadius(index: number, total: number): number {
-  // Mix of sizes: ~20% large, ~50% medium, ~30% small
-  const sizes = [42, 36, 38, 44, 34, 46, 36, 32, 40, 34, 38, 30, 44, 36, 34, 40, 32, 38, 42, 30];
-  return sizes[index % sizes.length];
-}
-
-interface PackedCircle {
-  x: number;
-  y: number;
-  r: number;
-  index: number;
-}
-
-// Simple greedy circle packing
-function packCircles(count: number, containerWidth: number, seed: number = 42): PackedCircle[] {
-  const rng = seededRandom(seed);
-  const circles: PackedCircle[] = [];
-  const padding = 4;
-
-  for (let i = 0; i < count; i++) {
-    const r = getBubbleRadius(i, count);
-    let bestX = 0, bestY = 0;
-    let placed = false;
-
-    // Try to place in rows, packing tightly
-    const cols = Math.floor(containerWidth / ((r + padding) * 2));
-    const row = Math.floor(i / Math.max(cols, 1));
-    const col = i % Math.max(cols, 1);
-
-    // Offset every other row for hex packing
-    const xOffset = row % 2 === 1 ? r + padding : 0;
-    bestX = col * (r * 2 + padding) + r + padding + xOffset;
-    bestY = row * (r * 1.85 + padding) + r + padding;
-
-    // Add slight randomness for organic feel
-    bestX += (rng() - 0.5) * 6;
-    bestY += (rng() - 0.5) * 4;
-
-    circles.push({ x: bestX, y: bestY, r, index: i });
-  }
-
-  return circles;
-}
-
-// ============================================
-// COMPONENTS
-// ============================================
-
-interface BubblePickerProps {
-  mode: 'interests' | 'traits';
-  selected: Set<string>;
-  onToggle: (label: string) => void;
-  onContinue: () => void;
-  onBack: () => void;
-  onSkip: () => void;
-  totalSelected: number;
-}
 
 function ClusteredBubbles({
   items,
@@ -358,84 +284,83 @@ function ClusteredBubbles({
   onToggle: (label: string) => void;
   accentColor: string;
 }) {
-  const containerRef = useRef<HTMLDivElement>(null);
-  const [containerWidth, setContainerWidth] = useState(360);
+  // Assign sizes - create a repeating pattern of S/M/L
+  // that fills the space nicely
+  const getSizeForIndex = (i: number): number => {
+    // Pattern: L M S M L S M L M S ...
+    const sizes = [88, 76, 64, 78, 70, 90, 66, 82, 72, 62, 86, 68, 74, 92, 60, 80, 70, 84, 66, 76];
+    return sizes[i % sizes.length];
+  };
 
-  useEffect(() => {
-    if (containerRef.current) {
-      setContainerWidth(containerRef.current.offsetWidth);
-    }
-    const handleResize = () => {
-      if (containerRef.current) setContainerWidth(containerRef.current.offsetWidth);
-    };
-    window.addEventListener('resize', handleResize);
-    return () => window.removeEventListener('resize', handleResize);
-  }, []);
-
-  const packed = useMemo(() => packCircles(items.length, containerWidth, 42), [items.length, containerWidth]);
-
-  // Calculate total height needed
-  const maxY = packed.reduce((max, c) => Math.max(max, c.y + c.r), 0) + 16;
-
-  const UNSELECTED_COLORS = [
-    'rgba(255,255,255,0.07)',
-    'rgba(255,255,255,0.05)',
-    'rgba(255,255,255,0.09)',
+  const UNSELECTED_BG = [
     'rgba(255,255,255,0.06)',
+    'rgba(255,255,255,0.04)',
     'rgba(255,255,255,0.08)',
+    'rgba(255,255,255,0.05)',
+    'rgba(255,255,255,0.07)',
+    'rgba(255,255,255,0.03)',
+    'rgba(255,255,255,0.06)',
   ];
 
   return (
-    <div ref={containerRef} style={{ position: 'relative', width: '100%', height: maxY, minHeight: 200 }}>
-      {packed.map((circle, i) => {
-        if (i >= items.length) return null;
-        const item = items[i];
+    <div style={{
+      display: 'flex',
+      flexWrap: 'wrap',
+      justifyContent: 'center',
+      alignContent: 'flex-start',
+      gap: 6,
+      padding: '0 4px',
+    }}>
+      {items.map((item, i) => {
+        const size = getSizeForIndex(i);
         const isSelected = selected.has(item.label);
-        const size = circle.r * 2;
+        const emojiSize = size >= 84 ? 28 : size >= 72 ? 24 : 20;
+        const labelSize = size >= 84 ? 10 : size >= 72 ? 9 : 7.5;
 
         return (
           <motion.button
             key={item.label}
             onClick={() => onToggle(item.label)}
             whileTap={{ scale: 0.88 }}
+            initial={false}
             animate={{
-              scale: isSelected ? 1.08 : 1,
+              scale: isSelected ? 1.05 : 1,
+              backgroundColor: isSelected ? accentColor : (UNSELECTED_BG[i % UNSELECTED_BG.length]),
             }}
-            transition={{ type: 'spring', stiffness: 500, damping: 25 }}
+            transition={{ type: 'spring', stiffness: 500, damping: 28 }}
             style={{
-              position: 'absolute',
-              left: circle.x - circle.r,
-              top: circle.y - circle.r,
               width: size,
               height: size,
               borderRadius: '50%',
-              border: isSelected ? '2.5px solid rgba(255,255,255,0.9)' : '1.5px solid rgba(255,255,255,0.08)',
-              background: isSelected ? accentColor : UNSELECTED_COLORS[i % UNSELECTED_COLORS.length],
+              border: isSelected
+                ? '2.5px solid rgba(255,255,255,0.85)'
+                : '1px solid rgba(255,255,255,0.08)',
               display: 'flex',
               flexDirection: 'column',
               alignItems: 'center',
               justifyContent: 'center',
               cursor: 'pointer',
+              position: 'relative',
               padding: 0,
               overflow: 'hidden',
-              boxShadow: isSelected ? `0 0 20px ${accentColor}40` : 'none',
-              zIndex: isSelected ? 2 : 1,
+              flexShrink: 0,
+              boxShadow: isSelected
+                ? `0 0 24px ${accentColor}50, inset 0 0 20px ${accentColor}30`
+                : 'none',
             }}
           >
-            <span style={{ fontSize: size > 72 ? 24 : size > 60 ? 20 : 16, lineHeight: 1 }}>
-              {item.emoji}
-            </span>
+            <span style={{ fontSize: emojiSize, lineHeight: 1 }}>{item.emoji}</span>
             <span style={{
-              fontSize: size > 72 ? 10 : size > 60 ? 9 : 7.5,
+              fontSize: labelSize,
               fontWeight: isSelected ? 700 : 500,
-              color: isSelected ? 'white' : 'rgba(255,255,255,0.6)',
-              lineHeight: 1.1,
+              color: isSelected ? 'white' : 'rgba(255,255,255,0.55)',
+              lineHeight: 1.15,
               textAlign: 'center',
-              maxWidth: size - 10,
+              maxWidth: size - 14,
               overflow: 'hidden',
               textOverflow: 'ellipsis',
               whiteSpace: 'nowrap',
-              marginTop: 1,
+              marginTop: 2,
             }}>
               {item.label}
             </span>
@@ -445,10 +370,10 @@ function ClusteredBubbles({
                 animate={{ scale: 1 }}
                 style={{
                   position: 'absolute',
-                  top: 3,
-                  right: 3,
-                  width: 16,
-                  height: 16,
+                  top: 4,
+                  right: 4,
+                  width: 18,
+                  height: 18,
                   borderRadius: '50%',
                   background: 'white',
                   display: 'flex',
@@ -456,7 +381,7 @@ function ClusteredBubbles({
                   justifyContent: 'center',
                 }}
               >
-                <Check size={10} strokeWidth={3} color={accentColor} />
+                <Check size={11} strokeWidth={3} color={accentColor} />
               </motion.div>
             )}
           </motion.button>
@@ -464,6 +389,20 @@ function ClusteredBubbles({
       })}
     </div>
   );
+}
+
+// ============================================
+// INTERESTS PICKER
+// ============================================
+
+interface BubblePickerProps {
+  mode: 'interests' | 'traits';
+  selected: Set<string>;
+  onToggle: (label: string) => void;
+  onContinue: () => void;
+  onBack: () => void;
+  onSkip: () => void;
+  totalSelected: number;
 }
 
 export function BubblePickerInterests({
@@ -475,8 +414,6 @@ export function BubblePickerInterests({
   totalSelected,
 }: BubblePickerProps) {
   const [activeCategory, setActiveCategory] = useState(0);
-  const tabsRef = useRef<HTMLDivElement>(null);
-
   const currentCat = INTEREST_DATA[activeCategory];
 
   return (
@@ -488,61 +425,49 @@ export function BubblePickerInterests({
       position: 'relative',
       overflow: 'hidden',
     }}>
-      {/* Ambient glow */}
-      <div style={{
-        position: 'absolute', top: '10%', left: '-20%', width: '60%', height: '60%',
-        background: 'radial-gradient(circle, rgba(64,106,86,0.15) 0%, transparent 70%)',
-        pointerEvents: 'none',
-      }} />
-      <div style={{
-        position: 'absolute', bottom: '10%', right: '-20%', width: '50%', height: '50%',
-        background: 'radial-gradient(circle, rgba(141,172,171,0.1) 0%, transparent 70%)',
-        pointerEvents: 'none',
-      }} />
+      {/* Ambient glows */}
+      <div style={{ position: 'absolute', top: '5%', left: '-15%', width: '50%', height: '50%', background: 'radial-gradient(circle, rgba(64,106,86,0.18) 0%, transparent 70%)', pointerEvents: 'none' }} />
+      <div style={{ position: 'absolute', bottom: '15%', right: '-10%', width: '40%', height: '40%', background: 'radial-gradient(circle, rgba(141,172,171,0.12) 0%, transparent 70%)', pointerEvents: 'none' }} />
 
       {/* Header */}
-      <div style={{ padding: '60px 24px 12px', textAlign: 'center', position: 'relative', zIndex: 10 }}>
-        <h2 style={{ fontSize: 28, fontWeight: 700, color: 'white', margin: '0 0 6px', letterSpacing: '-0.5px' }}>
+      <div style={{ padding: '48px 24px 8px', textAlign: 'center', position: 'relative', zIndex: 10, flexShrink: 0 }}>
+        <h2 style={{ fontSize: 26, fontWeight: 700, color: 'white', margin: '0 0 4px' }}>
           Pick your interests
         </h2>
-        <p style={{ fontSize: 15, color: 'rgba(255,255,255,0.5)', margin: 0 }}>
+        <p style={{ fontSize: 14, color: 'rgba(255,255,255,0.45)', margin: 0 }}>
           Select everything that speaks to you
         </p>
       </div>
 
-      {/* Category tabs - horizontal scroll */}
-      <div
-        ref={tabsRef}
-        style={{
-          display: 'flex',
-          gap: 8,
-          padding: '8px 24px 12px',
-          overflowX: 'auto',
-          WebkitOverflowScrolling: 'touch',
-          msOverflowStyle: 'none',
-          scrollbarWidth: 'none',
-          position: 'relative',
-          zIndex: 10,
-          flexShrink: 0,
-        }}
-        className="hide-scrollbar"
-      >
+      {/* Category tabs */}
+      <div style={{
+        display: 'flex',
+        gap: 6,
+        padding: '10px 20px',
+        overflowX: 'auto',
+        WebkitOverflowScrolling: 'touch',
+        msOverflowStyle: 'none',
+        scrollbarWidth: 'none',
+        flexShrink: 0,
+        position: 'relative',
+        zIndex: 10,
+      }} className="no-scrollbar">
         {INTEREST_DATA.map((cat, i) => (
           <button
             key={cat.name}
             onClick={() => setActiveCategory(i)}
             style={{
-              padding: '8px 16px',
+              padding: '7px 14px',
               borderRadius: 100,
-              border: activeCategory === i ? '1.5px solid rgba(255,255,255,0.4)' : '1.5px solid rgba(255,255,255,0.1)',
-              background: activeCategory === i ? 'rgba(64,106,86,0.4)' : 'rgba(255,255,255,0.06)',
-              color: activeCategory === i ? 'white' : 'rgba(255,255,255,0.5)',
-              fontSize: 13,
+              border: activeCategory === i ? '1.5px solid rgba(255,255,255,0.35)' : '1px solid rgba(255,255,255,0.1)',
+              background: activeCategory === i ? 'rgba(64,106,86,0.45)' : 'rgba(255,255,255,0.05)',
+              color: activeCategory === i ? 'white' : 'rgba(255,255,255,0.45)',
+              fontSize: 12,
               fontWeight: activeCategory === i ? 600 : 500,
               cursor: 'pointer',
               whiteSpace: 'nowrap',
               flexShrink: 0,
-              transition: 'all 0.2s',
+              transition: 'all 0.15s',
             }}
           >
             {cat.emoji} {cat.name}
@@ -550,21 +475,24 @@ export function BubblePickerInterests({
         ))}
       </div>
 
-      {/* Bubble cluster area */}
+      {/* Bubble area */}
       <div style={{
         flex: 1,
         overflowY: 'auto',
-        padding: '12px 12px',
+        padding: '16px 8px 8px',
         position: 'relative',
         zIndex: 10,
+        display: 'flex',
+        alignItems: 'flex-start',
       }}>
         <AnimatePresence mode="wait">
           <motion.div
             key={currentCat.name}
-            initial={{ opacity: 0, scale: 0.95 }}
-            animate={{ opacity: 1, scale: 1 }}
-            exit={{ opacity: 0, scale: 0.95 }}
-            transition={{ duration: 0.25 }}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.2 }}
+            style={{ width: '100%' }}
           >
             <ClusteredBubbles
               items={currentCat.items}
@@ -576,20 +504,15 @@ export function BubblePickerInterests({
         </AnimatePresence>
       </div>
 
-      {/* Bottom nav */}
-      <BottomNav
-        totalSelected={totalSelected}
-        onBack={onBack}
-        onContinue={onContinue}
-        onSkip={onSkip}
-        accentColor={SELECTED_COLOR}
-        gradientFrom="rgba(13,26,20,0.95)"
-      />
-
-      <style>{`.hide-scrollbar::-webkit-scrollbar { display: none; }`}</style>
+      <BottomNav totalSelected={totalSelected} onBack={onBack} onContinue={onContinue} onSkip={onSkip} accentColor={SELECTED_COLOR} gradientFrom="rgba(13,26,20,0.98)" />
+      <style>{`.no-scrollbar::-webkit-scrollbar{display:none}`}</style>
     </div>
   );
 }
+
+// ============================================
+// TRAITS PICKER
+// ============================================
 
 export function BubblePickerTraits({
   selected,
@@ -608,28 +531,21 @@ export function BubblePickerTraits({
       position: 'relative',
       overflow: 'hidden',
     }}>
-      {/* Ambient glow */}
-      <div style={{
-        position: 'absolute', top: '15%', right: '-15%', width: '50%', height: '50%',
-        background: 'radial-gradient(circle, rgba(74,53,82,0.2) 0%, transparent 70%)',
-        pointerEvents: 'none',
-      }} />
+      <div style={{ position: 'absolute', top: '10%', right: '-10%', width: '45%', height: '45%', background: 'radial-gradient(circle, rgba(74,53,82,0.2) 0%, transparent 70%)', pointerEvents: 'none' }} />
 
-      {/* Header */}
-      <div style={{ padding: '60px 24px 16px', textAlign: 'center', position: 'relative', zIndex: 10 }}>
-        <h2 style={{ fontSize: 28, fontWeight: 700, color: 'white', margin: '0 0 6px', letterSpacing: '-0.5px' }}>
+      <div style={{ padding: '48px 24px 12px', textAlign: 'center', position: 'relative', zIndex: 10, flexShrink: 0 }}>
+        <h2 style={{ fontSize: 26, fontWeight: 700, color: 'white', margin: '0 0 4px' }}>
           Who are you?
         </h2>
-        <p style={{ fontSize: 15, color: 'rgba(255,255,255,0.5)', margin: 0 }}>
+        <p style={{ fontSize: 14, color: 'rgba(255,255,255,0.45)', margin: 0 }}>
           Pick the traits that describe you
         </p>
       </div>
 
-      {/* Bubble cluster - all traits */}
       <div style={{
         flex: 1,
         overflowY: 'auto',
-        padding: '12px 12px',
+        padding: '16px 8px 8px',
         position: 'relative',
         zIndex: 10,
       }}>
@@ -641,85 +557,56 @@ export function BubblePickerTraits({
         />
       </div>
 
-      {/* Bottom nav */}
-      <BottomNav
-        totalSelected={totalSelected}
-        onBack={onBack}
-        onContinue={onContinue}
-        onSkip={onSkip}
-        accentColor={SELECTED_COLOR_TRAIT}
-        gradientFrom="rgba(26,13,30,0.95)"
-      />
+      <BottomNav totalSelected={totalSelected} onBack={onBack} onContinue={onContinue} onSkip={onSkip} accentColor={SELECTED_COLOR_TRAIT} gradientFrom="rgba(26,13,30,0.98)" />
     </div>
   );
 }
 
+// ============================================
+// BOTTOM NAV
+// ============================================
+
 function BottomNav({
-  totalSelected,
-  onBack,
-  onContinue,
-  onSkip,
-  accentColor,
-  gradientFrom,
+  totalSelected, onBack, onContinue, onSkip, accentColor, gradientFrom,
 }: {
-  totalSelected: number;
-  onBack: () => void;
-  onContinue: () => void;
-  onSkip: () => void;
-  accentColor: string;
-  gradientFrom: string;
+  totalSelected: number; onBack: () => void; onContinue: () => void; onSkip: () => void;
+  accentColor: string; gradientFrom: string;
 }) {
   return (
     <div style={{
-      padding: '16px 24px 32px',
-      display: 'flex',
-      flexDirection: 'column',
-      gap: 12,
-      position: 'relative',
-      zIndex: 10,
-      background: `linear-gradient(to top, ${gradientFrom} 60%, transparent 100%)`,
+      padding: '20px 24px calc(env(safe-area-inset-bottom, 16px) + 16px)',
+      display: 'flex', flexDirection: 'column', gap: 10,
+      position: 'relative', zIndex: 10,
+      background: `linear-gradient(to top, ${gradientFrom} 70%, transparent 100%)`,
+      flexShrink: 0,
     }}>
       {totalSelected > 0 && (
-        <div style={{ textAlign: 'center', fontSize: 13, color: 'rgba(255,255,255,0.5)' }}>
+        <div style={{ textAlign: 'center', fontSize: 13, color: 'rgba(255,255,255,0.45)', fontWeight: 500 }}>
           {totalSelected} selected
         </div>
       )}
       <div style={{ display: 'flex', gap: 12 }}>
-        <button
-          onClick={onBack}
-          style={{
-            width: 52, height: 52, borderRadius: 16,
-            border: '1.5px solid rgba(255,255,255,0.15)',
-            background: 'rgba(255,255,255,0.06)',
-            color: 'rgba(255,255,255,0.6)',
-            display: 'flex', alignItems: 'center', justifyContent: 'center',
-            cursor: 'pointer', flexShrink: 0,
-          }}
-        >
+        <button onClick={onBack} style={{
+          width: 52, height: 52, borderRadius: 16,
+          border: '1.5px solid rgba(255,255,255,0.12)', background: 'rgba(255,255,255,0.05)',
+          color: 'rgba(255,255,255,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center',
+          cursor: 'pointer', flexShrink: 0,
+        }}>
           <ChevronLeft size={20} />
         </button>
-        <button
-          onClick={onContinue}
-          style={{
-            flex: 1, height: 52, borderRadius: 16,
-            border: 'none', background: accentColor,
-            color: 'white', fontSize: 16, fontWeight: 600,
-            cursor: 'pointer',
-            display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
-            boxShadow: `0 4px 20px ${accentColor}66`,
-          }}
-        >
+        <button onClick={onContinue} style={{
+          flex: 1, height: 52, borderRadius: 16, border: 'none', background: accentColor,
+          color: 'white', fontSize: 16, fontWeight: 600, cursor: 'pointer',
+          display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
+          boxShadow: `0 4px 24px ${accentColor}55`,
+        }}>
           Continue <ChevronRight size={18} />
         </button>
       </div>
-      <button
-        onClick={onSkip}
-        style={{
-          background: 'none', border: 'none',
-          color: 'rgba(255,255,255,0.3)', fontSize: 13,
-          cursor: 'pointer', textAlign: 'center', padding: 4,
-        }}
-      >
+      <button onClick={onSkip} style={{
+        background: 'none', border: 'none', color: 'rgba(255,255,255,0.25)',
+        fontSize: 13, cursor: 'pointer', textAlign: 'center', padding: 4,
+      }}>
         Skip for now
       </button>
     </div>
