@@ -2,14 +2,18 @@
 
 import { useState, useCallback, useEffect, useRef } from 'react'
 import { motion, AnimatePresence, useMotionValue, useTransform, PanInfo } from 'framer-motion'
-import { X, Sparkles, Mic, Send, RotateCcw } from 'lucide-react'
-import { TYPE_CONFIG, isContactPrompt } from '../constants'
+import { X, Sparkles, Mic, Send, RotateCcw, UserPlus } from 'lucide-react'
+import { TYPE_CONFIG, isContactPrompt, PHOTO_TAGGING_TYPES } from '../constants'
+import dynamic from 'next/dynamic'
+
+const FaceTagger = dynamic(() => import('@/components/media/FaceTagger'), { ssr: false })
 
 interface Prompt {
   id: string
   type: string
   promptText: string
   photoUrl?: string
+  photoId?: string
   contactName?: string
   contactId?: string
   missingField?: string
@@ -340,62 +344,84 @@ function FlippableCard({
             <RotateCcw size={18} />
           </button>
 
-          <div className="h-full flex flex-col p-6 pt-16">
-            {/* Question recap */}
-            <div className="mb-4">
-              <span className={`px-3 py-1 rounded-full text-xs font-medium inline-block mb-2 ${
-                config.color === 'yellow' ? 'bg-amber-100 text-amber-700' :
-                config.color === 'green' ? 'bg-emerald-100 text-emerald-700' :
-                config.color === 'red' ? 'bg-rose-100 text-rose-700' :
-                config.color === 'blue' ? 'bg-blue-100 text-blue-700' :
-                'bg-purple-100 text-purple-700'
-              }`}>
-                {config.label}
-              </span>
-              <p className="text-gray-800 font-medium">{getPromptText(prompt)}</p>
-            </div>
-
-            {/* Photo thumbnail if exists */}
-            {hasPhoto && (
-              <div className="w-20 h-20 rounded-xl overflow-hidden mb-4">
-                <img src={prompt.photoUrl} alt="" className="w-full h-full object-cover" />
+          {/* Tag Person: show large photo + FaceTagger */}
+          {PHOTO_TAGGING_TYPES.includes(prompt.type) && prompt.photoUrl && prompt.photoId ? (
+            <div className="h-full flex flex-col">
+              <div className="flex-1 overflow-hidden relative">
+                <FaceTagger
+                  mediaId={prompt.photoId}
+                  imageUrl={prompt.photoUrl}
+                  onXPEarned={(amount, action) => {
+                    // Tag completed — dismiss card
+                    onDismiss()
+                  }}
+                />
               </div>
-            )}
+              <div className="p-4 text-center border-t border-gray-100">
+                <span className="text-xs text-amber-600 font-medium">
+                  <Sparkles size={12} className="inline mr-1" />
+                  Earn +{config.xp} XP per tag
+                </span>
+              </div>
+            </div>
+          ) : (
+            <div className="h-full flex flex-col p-6 pt-16">
+              {/* Question recap */}
+              <div className="mb-4">
+                <span className={`px-3 py-1 rounded-full text-xs font-medium inline-block mb-2 ${
+                  config.color === 'yellow' ? 'bg-amber-100 text-amber-700' :
+                  config.color === 'green' ? 'bg-emerald-100 text-emerald-700' :
+                  config.color === 'red' ? 'bg-rose-100 text-rose-700' :
+                  config.color === 'blue' ? 'bg-blue-100 text-blue-700' :
+                  'bg-purple-100 text-purple-700'
+                }`}>
+                  {config.label}
+                </span>
+                <p className="text-gray-800 font-medium">{getPromptText(prompt)}</p>
+              </div>
 
-            {/* Response input */}
-            <div className="flex-1 flex flex-col">
-              <textarea
-                value={responseText}
-                onChange={(e) => setResponseText(e.target.value)}
-                placeholder="Share your thoughts..."
-                className="flex-1 w-full p-4 bg-gray-50 rounded-2xl border-0 resize-none focus:outline-none focus:ring-2 focus:ring-[#406A56]/30 text-gray-800 placeholder-gray-400"
-                autoFocus={isFlipped}
-              />
-              
-              <div className="flex items-center justify-between mt-4">
-                <button className="w-12 h-12 rounded-full bg-gray-100 flex items-center justify-center text-gray-500 hover:bg-gray-200 transition-colors">
-                  <Mic size={20} />
-                </button>
+              {/* Photo thumbnail if exists */}
+              {hasPhoto && (
+                <div className="w-20 h-20 rounded-xl overflow-hidden mb-4">
+                  <img src={prompt.photoUrl} alt="" className="w-full h-full object-cover" />
+                </div>
+              )}
+
+              {/* Response input */}
+              <div className="flex-1 flex flex-col">
+                <textarea
+                  value={responseText}
+                  onChange={(e) => setResponseText(e.target.value)}
+                  placeholder="Share your thoughts..."
+                  className="flex-1 w-full p-4 bg-gray-50 rounded-2xl border-0 resize-none focus:outline-none focus:ring-2 focus:ring-[#406A56]/30 text-gray-800 placeholder-gray-400"
+                  autoFocus={isFlipped}
+                />
                 
-                <button
-                  onClick={handleSubmit}
-                  disabled={!responseText.trim() || isSubmitting}
-                  className="flex items-center gap-2 px-6 py-3 bg-[#406A56] text-white rounded-full hover:bg-[#4a7a64] transition-colors font-medium disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  <Send size={18} />
-                  {isSubmitting ? 'Saving...' : 'Save Memory'}
-                </button>
+                <div className="flex items-center justify-between mt-4">
+                  <button className="w-12 h-12 rounded-full bg-gray-100 flex items-center justify-center text-gray-500 hover:bg-gray-200 transition-colors">
+                    <Mic size={20} />
+                  </button>
+                  
+                  <button
+                    onClick={handleSubmit}
+                    disabled={!responseText.trim() || isSubmitting}
+                    className="flex items-center gap-2 px-6 py-3 bg-[#406A56] text-white rounded-full hover:bg-[#4a7a64] transition-colors font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    <Send size={18} />
+                    {isSubmitting ? 'Saving...' : 'Save Memory'}
+                  </button>
+                </div>
+              </div>
+
+              {/* XP indicator */}
+              <div className="text-center mt-4">
+                <span className="text-xs text-amber-600 font-medium">
+                  <Sparkles size={12} className="inline mr-1" />
+                  Earn +{config.xp} XP
+                </span>
               </div>
             </div>
-
-            {/* XP indicator */}
-            <div className="text-center mt-4">
-              <span className="text-xs text-amber-600 font-medium">
-                <Sparkles size={12} className="inline mr-1" />
-                Earn +{config.xp} XP
-              </span>
-            </div>
-          </div>
+          )}
         </div>
       </motion.div>
     </motion.div>
