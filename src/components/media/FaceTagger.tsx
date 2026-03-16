@@ -319,13 +319,13 @@ export default function FaceTagger({ mediaId, imageUrl, onXPEarned }: FaceTagger
                   </div>
 
                   {/* Suggestions */}
-                  {face.suggestions.length > 0 && !showAllContacts && (
+                  {(face.suggestions?.length ?? 0) > 0 && !showAllContacts && (
                     <div className="space-y-2">
                       <p className="text-xs text-amber-500 flex items-center gap-1">
                         <Sparkles size={12} />
                         Suggested matches
                       </p>
-                      {face.suggestions.map(s => (
+                      {(face.suggestions ?? []).map(s => (
                         <button
                           key={s.contact.id}
                           onClick={() => tagFace(face.id, s.contact.id)}
@@ -356,7 +356,7 @@ export default function FaceTagger({ mediaId, imageUrl, onXPEarned }: FaceTagger
                   )}
 
                   {/* All contacts search */}
-                  {(face.suggestions.length === 0 || showAllContacts) && (
+                  {((face.suggestions?.length ?? 0) === 0 || showAllContacts) && (
                     <div className="space-y-2">
                       <input
                         type="text"

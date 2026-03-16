@@ -43,15 +43,19 @@ export async function GET(
       return {
         id: tag.id,
         boundingBox: {
-          Left: Number(tag.box_left) || 0,
-          Top: Number(tag.box_top) || 0,
-          Width: Number(tag.box_width) || 0,
-          Height: Number(tag.box_height) || 0,
+          x: Number(tag.box_left) || 0,
+          y: Number(tag.box_top) || 0,
+          width: Number(tag.box_width) || 0,
+          height: Number(tag.box_height) || 0,
         },
         confidence: tag.confidence,
-        contact_id: tag.contact_id,
-        contact_name: contact?.full_name || null,
-        contact_avatar: contact?.avatar_url || null,
+        tagged: !!tag.contact_id,
+        contact: contact ? {
+          id: contact.id,
+          full_name: contact.full_name,
+          avatar_url: contact.avatar_url,
+        } : undefined,
+        suggestions: [], // Face recognition suggestions would go here when implemented
       }
     })
 
