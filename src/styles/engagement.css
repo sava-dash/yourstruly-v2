@@ -399,10 +399,20 @@
   line-height: 1.5;
   color: #3d3d3d;
   margin: 8px 0;
+  /* Limit to 4 lines in collapsed state */
+  display: -webkit-box;
+  -webkit-line-clamp: 4;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
 }
 
 .bubble-card.expanded .bubble-prompt-text {
   font-size: 15px;
+  /* Show full text when expanded */
+  -webkit-line-clamp: unset;
+  display: block;
 }
 
 /* Hint text */
