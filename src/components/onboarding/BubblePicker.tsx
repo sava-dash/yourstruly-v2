@@ -1,6 +1,6 @@
 'use client';
 
-import { useRef, useEffect, useMemo } from 'react';
+import { useState, useRef, useEffect, useMemo } from 'react';
 import { motion } from 'framer-motion';
 import { Check, ChevronRight, ChevronLeft } from 'lucide-react';
 
@@ -284,134 +284,168 @@ function ClusteredBubbles({
   onToggle: (label: string) => void;
   accentColor: string;
 }) {
-  // Seeded pseudo-random for consistent but organic sizing
-  const seededSizes = useMemo(() => {
-    let seed = 7919; // prime
-    return items.map((_, i) => {
-      seed = (seed * 16807 + i * 31) % 2147483647;
-      const t = (seed % 1000) / 1000; // 0-1
-      // Range: 100 to 134px — big enough to read
-      return Math.round(100 + t * 34);
-    });
-  }, [items.length]);
+  const containerRef = useRef<HTMLDivElement>(null);
+  const [containerHeight, setContainerHeight] = useState(400);
 
-  // Seeded random margins for organic feel
-  const seededOffsets = useMemo(() => {
-    let seed = 1337;
-    return items.map((_, i) => {
-      seed = (seed * 48271 + i * 13) % 2147483647;
-      const mt = ((seed % 1000) / 1000) * 10 - 5; // -5 to +5
-      seed = (seed * 48271 + i * 7) % 2147483647;
-      const ml = ((seed % 1000) / 1000) * 8 - 4; // -4 to +4
-      return { marginTop: mt, marginLeft: ml };
+  useEffect(() => {
+    if (containerRef.current) {
+      setContainerHeight(containerRef.current.offsetHeight);
+    }
+    const onResize = () => {
+      if (containerRef.current) setContainerHeight(containerRef.current.offsetHeight);
+    };
+    window.addEventListener('resize', onResize);
+    return () => window.removeEventListener('resize', onResize);
+  }, []);
+
+  // Greedy circle packing: place circles left-to-right, filling height first
+  const packed = useMemo(() => {
+    let seed = 7919;
+    const rng = () => {
+      seed = (seed * 16807 + 0) % 2147483647;
+      return (seed - 1) / 2147483646;
+    };
+
+    // Generate radii with variation
+    const radii = items.map((_, i) => {
+      const baseSizes = [52, 46, 50, 56, 44, 54, 48, 42, 58, 46, 52, 40, 56, 44, 50, 54, 42, 48, 58, 46];
+      return baseSizes[i % baseSizes.length];
     });
-  }, [items.length]);
+
+    const padding = 5;
+    const placed: { x: number; y: number; r: number }[] = [];
+
+    for (let i = 0; i < items.length; i++) {
+      const r = radii[i];
+      let bestX = r + padding;
+      let bestY = r + padding;
+      let minX = Infinity;
+
+      // Try many candidate positions, pick the leftmost one that fits
+      // Scan columns from left to right
+      for (let tryX = r + padding; tryX < 8000; tryX += 12) {
+        let foundY = false;
+        // Try positions top to bottom within container height
+        for (let tryY = r + padding; tryY <= containerHeight - r - padding; tryY += 10) {
+          // Check collision with all placed circles
+          let collides = false;
+          for (const p of placed) {
+            const dx = tryX - p.x;
+            const dy = tryY - p.y;
+            const minDist = r + p.r + padding;
+            if (dx * dx + dy * dy < minDist * minDist) {
+              collides = true;
+              break;
+            }
+          }
+          if (!collides) {
+            if (tryX < minX) {
+              minX = tryX;
+              bestX = tryX + (rng() - 0.5) * 4;
+              bestY = tryY + (rng() - 0.5) * 4;
+            }
+            foundY = true;
+            break;
+          }
+        }
+        if (foundY && tryX <= minX) break;
+      }
+
+      placed.push({ x: bestX, y: bestY, r });
+    }
+
+    return placed;
+  }, [items.length, containerHeight]);
+
+  const totalWidth = packed.reduce((max, c) => Math.max(max, c.x + c.r + 10), 0);
 
   const UNSELECTED_BG = [
     'rgba(255,255,255,0.06)',
-    'rgba(255,255,255,0.04)',
+    'rgba(255,255,255,0.05)',
     'rgba(255,255,255,0.08)',
     'rgba(255,255,255,0.05)',
     'rgba(255,255,255,0.07)',
-    'rgba(255,255,255,0.04)',
-    'rgba(255,255,255,0.06)',
   ];
 
   return (
-    <div style={{
-      display: 'flex',
-      flexWrap: 'wrap',
-      flexDirection: 'column',
-      alignItems: 'flex-start',
-      alignContent: 'flex-start',
-      gap: 4,
-      padding: '0 8px',
-      height: '100%',
-      overflowX: 'auto',
-      overflowY: 'hidden',
-      WebkitOverflowScrolling: 'touch',
-      msOverflowStyle: 'none',
-      scrollbarWidth: 'none',
-    }} className="no-scrollbar">
-      {items.map((item, i) => {
-        const size = seededSizes[i];
-        const offset = seededOffsets[i];
-        const isSelected = selected.has(item.label);
-        const emojiSize = 24;
-        const labelSize = size >= 120 ? 13 : 12;
+    <div
+      ref={containerRef}
+      style={{
+        position: 'relative',
+        width: '100%',
+        height: '100%',
+        overflowX: 'auto',
+        overflowY: 'hidden',
+        WebkitOverflowScrolling: 'touch',
+        msOverflowStyle: 'none',
+        scrollbarWidth: 'none',
+      }}
+      className="no-scrollbar"
+    >
+      <div style={{ position: 'relative', width: totalWidth, height: '100%' }}>
+        {packed.map((circle, i) => {
+          if (i >= items.length) return null;
+          const item = items[i];
+          const size = circle.r * 2;
+          const isSelected = selected.has(item.label);
 
-        return (
-          <motion.button
-            key={item.label}
-            onClick={() => onToggle(item.label)}
-            whileTap={{ scale: 0.88 }}
-            initial={false}
-            animate={{
-              scale: isSelected ? 1.05 : 1,
-              backgroundColor: isSelected ? accentColor : (UNSELECTED_BG[i % UNSELECTED_BG.length]),
-            }}
-            transition={{ type: 'spring', stiffness: 500, damping: 28 }}
-            style={{
-              width: size,
-              height: size,
-              borderRadius: '50%',
-              border: isSelected
-                ? '2.5px solid rgba(255,255,255,0.85)'
-                : '1px solid rgba(255,255,255,0.08)',
-              display: 'flex',
-              flexDirection: 'column',
-              alignItems: 'center',
-              justifyContent: 'center',
-              cursor: 'pointer',
-              position: 'relative',
-              padding: 0,
-              overflow: 'hidden',
-              flexShrink: 0,
-              marginTop: offset.marginTop,
-              marginLeft: offset.marginLeft,
-              boxShadow: isSelected
-                ? `0 0 24px ${accentColor}50, inset 0 0 20px ${accentColor}30`
-                : 'none',
-            }}
-          >
-            <span style={{ fontSize: emojiSize, lineHeight: 1 }}>{item.emoji}</span>
-            <span style={{
-              fontSize: labelSize,
-              fontWeight: isSelected ? 700 : 600,
-              color: isSelected ? 'white' : 'rgba(255,255,255,0.65)',
-              lineHeight: 1.15,
-              textAlign: 'center',
-              maxWidth: size - 16,
-              overflow: 'hidden',
-              textOverflow: 'ellipsis',
-              whiteSpace: 'nowrap',
-              marginTop: 3,
-            }}>
-              {item.label}
-            </span>
-            {isSelected && (
-              <motion.div
-                initial={{ scale: 0 }}
-                animate={{ scale: 1 }}
-                style={{
-                  position: 'absolute',
-                  top: 4,
-                  right: 4,
-                  width: 18,
-                  height: 18,
-                  borderRadius: '50%',
-                  background: 'white',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                }}
-              >
-                <Check size={11} strokeWidth={3} color={accentColor} />
-              </motion.div>
-            )}
-          </motion.button>
-        );
-      })}
+          return (
+            <motion.button
+              key={item.label}
+              onClick={() => onToggle(item.label)}
+              whileTap={{ scale: 0.9 }}
+              whileHover={{
+                scale: 1.08,
+                boxShadow: `0 0 20px ${accentColor}40`,
+              }}
+              initial={false}
+              animate={{
+                scale: isSelected ? 1.06 : 1,
+              }}
+              transition={{ type: 'spring', stiffness: 500, damping: 28 }}
+              style={{
+                position: 'absolute',
+                left: circle.x - circle.r,
+                top: circle.y - circle.r,
+                width: size,
+                height: size,
+                borderRadius: '50%',
+                border: isSelected
+                  ? '3px solid rgba(255,255,255,0.9)'
+                  : '1px solid rgba(255,255,255,0.08)',
+                background: isSelected ? accentColor : UNSELECTED_BG[i % UNSELECTED_BG.length],
+                display: 'flex',
+                flexDirection: 'column',
+                alignItems: 'center',
+                justifyContent: 'center',
+                cursor: 'pointer',
+                padding: 0,
+                overflow: 'hidden',
+                boxShadow: isSelected
+                  ? `0 0 28px ${accentColor}55, inset 0 0 16px ${accentColor}25`
+                  : '0 0 0 transparent',
+                transition: 'box-shadow 0.2s, border 0.2s',
+              }}
+            >
+              <span style={{ fontSize: 24, lineHeight: 1 }}>{item.emoji}</span>
+              <span style={{
+                fontSize: size >= 100 ? 12 : 11,
+                fontWeight: isSelected ? 700 : 600,
+                color: isSelected ? 'white' : 'rgba(255,255,255,0.65)',
+                lineHeight: 1.15,
+                textAlign: 'center',
+                maxWidth: size - 16,
+                overflow: 'hidden',
+                textOverflow: 'ellipsis',
+                whiteSpace: 'nowrap',
+                marginTop: 3,
+              }}>
+                {item.label}
+              </span>
+            </motion.button>
+          );
+        })}
+      </div>
     </div>
   );
 }
