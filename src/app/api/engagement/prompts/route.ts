@@ -21,7 +21,7 @@ export async function GET(request: NextRequest) {
 
     // Call the shuffle function
     const { data: prompts, error: promptsError } = await supabase
-      .rpc('shuffle_engagement_prompts', {
+      .rpc('get_engagement_prompts_v2', {
         p_user_id: user.id,
         p_count: count,
         p_regenerate: regenerate,
@@ -141,7 +141,7 @@ export async function POST(request: NextRequest) {
 
     // Fetch shuffled prompts
     const { data: prompts, error: fetchError } = await supabase
-      .rpc('shuffle_engagement_prompts', {
+      .rpc('get_engagement_prompts_v2', {
         p_user_id: user.id,
         p_count: count,
         p_regenerate: true,

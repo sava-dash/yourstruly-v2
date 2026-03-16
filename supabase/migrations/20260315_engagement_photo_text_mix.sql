@@ -8,7 +8,7 @@
 -- ============================================
 -- DROP existing versions to avoid conflicts
 -- ============================================
-DROP FUNCTION IF EXISTS shuffle_engagement_prompts(UUID, INTEGER, BOOLEAN);
+DROP FUNCTION IF EXISTS get_engagement_prompts_v2(UUID, INTEGER, BOOLEAN);
 DROP FUNCTION IF EXISTS ensure_category_photo_prompts(UUID);
 DROP FUNCTION IF EXISTS generate_engagement_prompts_with_photos(UUID, INTEGER);
 
@@ -73,7 +73,7 @@ GROUP BY ep.user_id, ep.category, ep.life_chapter;
 -- STEP 2: Update shuffle function with new slot rules
 -- ============================================
 
-CREATE OR REPLACE FUNCTION shuffle_engagement_prompts(
+CREATE OR REPLACE FUNCTION get_engagement_prompts_v2(
   p_user_id UUID,
   p_count INTEGER DEFAULT 5,
   p_regenerate BOOLEAN DEFAULT FALSE
@@ -278,7 +278,7 @@ END;
 $$ LANGUAGE plpgsql;
 
 -- Grant permissions
-GRANT EXECUTE ON FUNCTION shuffle_engagement_prompts(UUID, INTEGER, BOOLEAN) TO authenticated;
+GRANT EXECUTE ON FUNCTION get_engagement_prompts_v2(UUID, INTEGER, BOOLEAN) TO authenticated;
 GRANT EXECUTE ON FUNCTION ensure_category_photo_prompts(UUID) TO authenticated;
 GRANT EXECUTE ON FUNCTION generate_engagement_prompts_with_photos(UUID, INTEGER) TO authenticated;
 
@@ -297,7 +297,7 @@ BEGIN
   RAISE NOTICE 'Created % category photo prompts for existing users', v_total;
 END $$;
 
-COMMENT ON FUNCTION shuffle_engagement_prompts IS 
+COMMENT ON FUNCTION get_engagement_prompts_v2 IS 
 'Get 5 prompts with guaranteed mix:
 - Slot 1: Recent photo (< 7 days) if available
 - Slot 2: Text-based personalized prompt  

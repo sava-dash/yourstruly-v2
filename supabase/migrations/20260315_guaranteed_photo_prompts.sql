@@ -15,10 +15,10 @@ DROP TRIGGER IF EXISTS auto_photo_prompts ON memory_media;
 DROP FUNCTION IF EXISTS trigger_photo_prompts();
 DROP FUNCTION IF EXISTS generate_photo_prompts_on_upload();
 
--- Drop ALL versions of shuffle_engagement_prompts (different signatures exist)
-DROP FUNCTION IF EXISTS shuffle_engagement_prompts(UUID);
-DROP FUNCTION IF EXISTS shuffle_engagement_prompts(UUID, INTEGER);
-DROP FUNCTION IF EXISTS shuffle_engagement_prompts(UUID, INTEGER, BOOLEAN);
+-- Drop ALL versions of get_engagement_prompts_v2 (different signatures exist)
+DROP FUNCTION IF EXISTS get_engagement_prompts_v2(UUID);
+DROP FUNCTION IF EXISTS get_engagement_prompts_v2(UUID, INTEGER);
+DROP FUNCTION IF EXISTS get_engagement_prompts_v2(UUID, INTEGER, BOOLEAN);
 
 -- ===========================================
 -- FUNCTION: Generate prompts for a single photo
@@ -140,9 +140,9 @@ BEGIN
 END $$;
 
 -- ===========================================
--- UPDATE shuffle_engagement_prompts to PRIORITIZE recent photo uploads
+-- UPDATE get_engagement_prompts_v2 to PRIORITIZE recent photo uploads
 -- ===========================================
-CREATE OR REPLACE FUNCTION shuffle_engagement_prompts(
+CREATE OR REPLACE FUNCTION get_engagement_prompts_v2(
   p_user_id UUID,
   p_count INTEGER DEFAULT 5,
   p_regenerate BOOLEAN DEFAULT FALSE
@@ -262,7 +262,7 @@ $$ LANGUAGE plpgsql;
 
 -- Grant permissions
 GRANT EXECUTE ON FUNCTION generate_photo_prompts(UUID, UUID) TO authenticated;
-GRANT EXECUTE ON FUNCTION shuffle_engagement_prompts(UUID, INTEGER, BOOLEAN) TO authenticated;
+GRANT EXECUTE ON FUNCTION get_engagement_prompts_v2(UUID, INTEGER, BOOLEAN) TO authenticated;
 
 COMMENT ON FUNCTION generate_photo_prompts(UUID, UUID) IS 'Generate engagement prompts for a photo: location, people, and backstory';
-COMMENT ON FUNCTION shuffle_engagement_prompts IS 'Get prompts with priority for recent photo uploads (2 guaranteed slots)';
+COMMENT ON FUNCTION get_engagement_prompts_v2 IS 'Get prompts with priority for recent photo uploads (2 guaranteed slots)';
