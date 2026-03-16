@@ -153,8 +153,9 @@
     0 4px 16px rgba(195, 95, 51, 0.06),
     0 12px 32px rgba(0, 0, 0, 0.06);
   transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
-  /* Fixed width - 24px wider for better content fit */
-  width: 244px;
+  /* Wider tiles to fit more text */
+  width: 280px;
+  min-height: 180px;
   flex-shrink: 0;
 }
 
@@ -395,24 +396,16 @@
 
 /* Prompt text */
 .bubble-prompt-text {
-  font-size: 14px;
-  line-height: 1.5;
+  font-size: 15px;
+  line-height: 1.6;
   color: #3d3d3d;
   margin: 8px 0;
-  /* Limit to 4 lines in collapsed state */
-  display: -webkit-box;
-  -webkit-line-clamp: 4;
-  -webkit-box-orient: vertical;
-  overflow: hidden;
   word-wrap: break-word;
   overflow-wrap: break-word;
 }
 
 .bubble-card.expanded .bubble-prompt-text {
   font-size: 15px;
-  /* Show full text when expanded */
-  -webkit-line-clamp: unset;
-  display: block;
 }
 
 /* Hint text */
