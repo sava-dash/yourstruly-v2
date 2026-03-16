@@ -57,6 +57,7 @@ const TYPE_ICONS: Record<string, string> = {
 // Prompt types that benefit from conversation view
 const CONVERSATION_TYPES = [
   'photo_backstory',
+  'tag_person',  // Include tag_person - shows photo + conversation
   'memory_prompt', 
   'knowledge',
   'favorites_firsts',
@@ -120,12 +121,6 @@ export function EngagementBubbles({
     // Check if this is a missing info prompt - show modal instead of conversation
     if (MISSING_INFO_TYPES.includes(prompt.type)) {
       setActiveMissingInfoPrompt(prompt);
-      return;
-    }
-    
-    // Check if this is a tag_person prompt - navigate to gallery for face tagging
-    if (prompt.type === 'tag_person' && prompt.photoId) {
-      router.push(`/dashboard/gallery?photo=${prompt.photoId}&tag=true`);
       return;
     }
     
