@@ -308,10 +308,14 @@ export default function DashboardPage() {
         <main className="home-main">
           <div className="engagement-column">
             <div className="home-bubbles">
-              <LifeChapterFilter
-                selectedChapter={selectedChapter}
-                onSelectChapter={setSelectedChapter}
-              />
+              {/* Header row: title + filter dropdown */}
+              <div className="flex items-center justify-between w-full px-2 mb-2">
+                <h2 className="text-lg font-semibold text-[#406A56]">Your Prompts</h2>
+                <LifeChapterFilter
+                  selectedChapter={selectedChapter}
+                  onSelectChapter={setSelectedChapter}
+                />
+              </div>
 
               {isLoading ? (
                 <div className="flex flex-col items-center justify-center h-[500px] gap-4">
@@ -321,7 +325,7 @@ export default function DashboardPage() {
                   <span className="text-gray-500">Loading prompts...</span>
                 </div>
               ) : (
-                <div className="py-8 w-full">
+                <div className="w-full">
                   <XpFloatingCounter show={xpAnimating} amount={lastXpGain} />
                   <SwipeableCardStack
                     prompts={prompts}
