@@ -15,6 +15,11 @@ DROP TRIGGER IF EXISTS auto_photo_prompts ON memory_media;
 DROP FUNCTION IF EXISTS trigger_photo_prompts();
 DROP FUNCTION IF EXISTS generate_photo_prompts_on_upload();
 
+-- Drop ALL versions of shuffle_engagement_prompts (different signatures exist)
+DROP FUNCTION IF EXISTS shuffle_engagement_prompts(UUID);
+DROP FUNCTION IF EXISTS shuffle_engagement_prompts(UUID, INTEGER);
+DROP FUNCTION IF EXISTS shuffle_engagement_prompts(UUID, INTEGER, BOOLEAN);
+
 -- ===========================================
 -- FUNCTION: Generate prompts for a single photo
 -- ===========================================
