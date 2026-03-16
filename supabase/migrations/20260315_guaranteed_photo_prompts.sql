@@ -38,7 +38,7 @@ BEGIN
     ) VALUES (
       p_user_id, 'photo_backstory'::prompt_type, 'photos',
       COALESCE(v_template.prompt_text, 'Where was this photo taken and what was happening?'),
-      v_template.id, p_media_id, 'pending', 85, 'photo_upload'
+      v_template.id, p_media_id, 'pending'::prompt_status, 85, 'photo_upload'
     ) ON CONFLICT DO NOTHING;
   ELSE
     -- Fallback if no template exists
@@ -48,7 +48,7 @@ BEGIN
     ) VALUES (
       p_user_id, 'photo_backstory'::prompt_type, 'photos',
       'Where was this photo taken and what was happening?',
-      p_media_id, 'pending', 85, 'photo_upload'
+      p_media_id, 'pending'::prompt_status, 85, 'photo_upload'
     ) ON CONFLICT DO NOTHING;
   END IF;
 
@@ -59,7 +59,7 @@ BEGIN
   ) VALUES (
     p_user_id, 'tag_person'::prompt_type, 'photos',
     'Who is in this photo? Tag the people you recognize.',
-    p_media_id, 'pending', 80, 'photo_upload'
+    p_media_id, 'pending'::prompt_status, 80, 'photo_upload'
   ) ON CONFLICT DO NOTHING;
 
   -- 3. Create backstory/memory prompt
@@ -69,7 +69,7 @@ BEGIN
   ) VALUES (
     p_user_id, 'photo_backstory'::prompt_type, 'photos',
     'What''s the story behind this moment? What were you feeling?',
-    p_media_id, 'pending', 75, 'photo_upload'
+    p_media_id, 'pending'::prompt_status, 75, 'photo_upload'
   ) ON CONFLICT DO NOTHING;
 
 END;

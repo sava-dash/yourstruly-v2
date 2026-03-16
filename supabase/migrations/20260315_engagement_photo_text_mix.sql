@@ -48,7 +48,7 @@ SELECT DISTINCT
     WHEN 'values' THEN 'Share a photo that represents your values.'
     ELSE 'Share a photo and tell us the story behind it.'
   END,
-  'pending',
+  'pending'::prompt_status,
   70,  -- Medium-high priority
   'category_photo'
 FROM engagement_prompts ep
@@ -239,7 +239,7 @@ BEGIN
         v_cat,
         v_chapter,
         'Share a photo related to ' || REPLACE(v_cat, '_', ' ') || '. What''s the story?',
-        'pending',
+        'pending'::prompt_status,
         70,
         'category_photo'
       );
