@@ -330,8 +330,8 @@ export default function PhotoPreviewPanel({ media, allMedia, onClose, onNavigate
                 }`}
               />
               
-              {/* Existing face tags */}
-              {faces.filter(f => f.box_left !== undefined).map(face => (
+              {/* Only show face tags for confirmed/named people (not Unknown) */}
+              {faces.filter(f => f.box_left !== undefined && f.contact_name && f.contact_name !== 'Unknown').map(face => (
                 <div
                   key={face.id}
                   className="absolute border-2 border-[#406A56] rounded-lg pointer-events-none"
@@ -343,7 +343,7 @@ export default function PhotoPreviewPanel({ media, allMedia, onClose, onNavigate
                   }}
                 >
                   <span className="absolute -bottom-6 left-1/2 -translate-x-1/2 bg-[#406A56] text-white text-xs px-2 py-0.5 rounded whitespace-nowrap">
-                    {face.contact_name || 'Unknown'}
+                    {face.contact_name}
                   </span>
                 </div>
               ))}
@@ -494,24 +494,23 @@ export default function PhotoPreviewPanel({ media, allMedia, onClose, onNavigate
                     {taggingMode ? 'Cancel' : 'Tag'}
                   </button>
                 </div>
-                {faces.length > 0 ? (
-                  <div className="flex flex-wrap gap-2 ml-5">
-                    {faces.map(face => (
-                      <span
-                        key={face.id}
-                        className={`px-2.5 py-1 rounded-full text-xs font-medium ${
-                          face.is_confirmed 
-                            ? 'bg-[#406A56]/10 text-[#406A56]' 
-                            : 'bg-gray-100 text-gray-600'
-                        }`}
-                      >
-                        {face.contact_name || 'Unknown'}
-                      </span>
-                    ))}
-                  </div>
-                ) : (
-                  <p className="text-[#888] ml-5 italic text-sm">No people tagged</p>
-                )}
+                {(() => {
+                  const namedFaces = faces.filter(f => f.contact_name && f.contact_name !== 'Unknown');
+                  return namedFaces.length > 0 ? (
+                    <div className="flex flex-wrap gap-2 ml-5">
+                      {namedFaces.map(face => (
+                        <span
+                          key={face.id}
+                          className="px-2.5 py-1 rounded-full text-xs font-medium bg-[#406A56]/10 text-[#406A56]"
+                        >
+                          {face.contact_name}
+                        </span>
+                      ))}
+                    </div>
+                  ) : (
+                    <p className="text-[#888] ml-5 italic text-sm">No people tagged — click Tag to add</p>
+                  );
+                })()}
               </div>
 
               {/* Divider */}
