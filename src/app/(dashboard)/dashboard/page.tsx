@@ -77,7 +77,7 @@ export default function DashboardPage() {
     shuffle, 
     answerPrompt, 
     stats: engagementStats 
-  } = useEngagementPrompts(20, selectedChapter)
+  } = useEngagementPrompts(50, selectedChapter)
   
   // Track locally answered prompts
   const [answeredPromptIds, setAnsweredPromptIds] = useState<string[]>([])
@@ -107,13 +107,40 @@ export default function DashboardPage() {
   const [showContactModal, setShowContactModal] = useState(false)
   const [showQuickMemoryModal, setShowQuickMemoryModal] = useState(false)
   
-  // Handle card click - open appropriate modal
-  const handleTileClick = useCallback((prompt: any) => {
+  // Handle card answer (from flipped card)
+  const handleCardAnswer = useCallback(async (promptId: string, response: { type: string; text?: string }) => {
+    const prompt = prompts.find(p => p.id === promptId)
+    if (!prompt) return
+    
+    try {
+      const result = await answerPrompt(promptId, response) as any
+      const config = TYPE_CONFIG[prompt.type] || TYPE_CONFIG.memory_prompt
+      
+      addCompletedTile({
+        id: promptId,
+        type: prompt.type,
+        title: prompt.promptText?.substring(0, 40) || config.label,
+        xp: config.xp,
+        contactName: prompt.contactName,
+        contactId: prompt.contactId || result?.contactId,
+      })
+
+      if (config.xp > 0) {
+        addXp(config.xp)
+      }
+      
+      setAnsweredPromptIds(prev => [...prev, promptId])
+      refreshStats()
+    } catch (err) {
+      console.error('Error answering prompt:', err)
+      throw err
+    }
+  }, [prompts, answerPrompt, addCompletedTile, addXp, refreshStats])
+
+  // Handle photo tagging (still uses modal for face selection)
+  const handlePhotoTagClick = useCallback((prompt: any) => {
     if (PHOTO_TAGGING_TYPES.includes(prompt.type)) {
       setPhotoTaggingPrompt(prompt)
-    } else {
-      // All other types use the unified engagement modal
-      setEngagementPrompt(prompt)
     }
   }, [])
 
@@ -298,12 +325,11 @@ export default function DashboardPage() {
                   <XpFloatingCounter show={xpAnimating} amount={lastXpGain} />
                   <SwipeableCardStack
                     prompts={prompts}
-                    onCardClick={handleTileClick}
                     onCardDismiss={(id) => {
-                      // Move to end of queue by marking as answered locally
                       setAnsweredPromptIds(prev => [...prev, id])
                     }}
-                    onShuffle={handleShuffle}
+                    onCardAnswer={handleCardAnswer}
+                    onNeedMorePrompts={handleShuffle}
                     getPromptText={getPromptText}
                   />
                 </div>

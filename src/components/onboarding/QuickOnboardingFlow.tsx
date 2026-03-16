@@ -770,9 +770,20 @@ export function QuickOnboardingFlow({
   userId,
   initialName,
 }: QuickOnboardingFlowProps) {
-  const [step, setStep] = useState<QuickStep>('birth-info');
+  // Restore saved progress from localStorage
+  const getSavedProgress = () => {
+    if (typeof window === 'undefined') return null;
+    try {
+      const saved = localStorage.getItem(`onboarding_progress_${userId}`);
+      return saved ? JSON.parse(saved) : null;
+    } catch { return null; }
+  };
+
+  const savedProgress = getSavedProgress();
+  
+  const [step, setStep] = useState<QuickStep>(savedProgress?.step || 'birth-info');
   const [direction, setDirection] = useState<1 | -1>(1);
-  const [data, setData] = useState<OnboardingData>({
+  const [data, setData] = useState<OnboardingData>(savedProgress?.data || {
     name: initialName || '',
     birthday: '',
     interests: [],
@@ -785,7 +796,21 @@ export function QuickOnboardingFlow({
     favoriteQuote: '',
     background: '',
   });
-  const [selectedPills, setSelectedPills] = useState<Set<string>>(new Set());
+  const [selectedPills, setSelectedPills] = useState<Set<string>>(
+    new Set(savedProgress?.selectedPills || [])
+  );
+
+  // Save progress to localStorage whenever step or data changes
+  useEffect(() => {
+    if (typeof window === 'undefined' || !userId) return;
+    const progress = {
+      step,
+      data,
+      selectedPills: Array.from(selectedPills),
+      savedAt: Date.now(),
+    };
+    localStorage.setItem(`onboarding_progress_${userId}`, JSON.stringify(progress));
+  }, [step, data, selectedPills, userId]);
 
   const updateData = useCallback((updates: Partial<OnboardingData>) => {
     setData((prev) => ({ ...prev, ...updates }));
@@ -797,9 +822,13 @@ export function QuickOnboardingFlow({
       setDirection(1);
       setStep(ALL_STEPS[idx + 1]);
     } else {
+      // Clear saved progress on completion
+      if (userId) {
+        localStorage.removeItem(`onboarding_progress_${userId}`);
+      }
       onComplete(data);
     }
-  }, [step, data, onComplete]);
+  }, [step, data, onComplete, userId]);
 
   const goBack = useCallback(() => {
     setDirection(-1);
@@ -1115,7 +1144,12 @@ export function QuickOnboardingFlow({
                   <ReadyStep
                     name={data.name}
                     location={data.location}
-                    onContinue={() => onComplete(data)}
+                    onContinue={() => {
+                      if (userId) {
+                        localStorage.removeItem(`onboarding_progress_${userId}`);
+                      }
+                      onComplete(data);
+                    }}
                   />
                 )}
               </motion.div>
