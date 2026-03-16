@@ -434,8 +434,9 @@ function FlippableCard({
         try {
           const res = await fetch('/api/transcribe', { method: 'POST', body: formData })
           const data = await res.json()
-          if (data.text) {
-            setResponseText(prev => prev ? `${prev} ${data.text}` : data.text)
+          const transcribedText = data.transcription || data.text || ''
+          if (transcribedText) {
+            setResponseText(prev => prev ? `${prev} ${transcribedText}` : transcribedText)
           }
         } catch (err) {
           console.error('Transcription failed:', err)
@@ -450,6 +451,35 @@ function FlippableCard({
     }
   }
   
+  // "Keep Going" - fetch a follow-up question to continue the conversation
+  const handleKeepGoing = async () => {
+    // If there's text in the input, submit it first
+    if (responseText.trim()) {
+      await handleSubmit()
+      return
+    }
+    // Otherwise just fetch a new follow-up based on current exchanges
+    setIsLoadingFollowUp(true)
+    try {
+      const res = await fetch('/api/conversation/follow-up', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          exchanges: exchanges.length > 0 ? exchanges : [{ question: getPromptText(prompt), response: '(thinking...)' }],
+          promptType: prompt.type,
+          originalPrompt: getPromptText(prompt),
+        }),
+      })
+      const data = await res.json()
+      if (data.followUpQuestion) {
+        setCurrentQuestion(data.followUpQuestion)
+      }
+    } catch (err) {
+      console.error('Keep going failed:', err)
+    }
+    setIsLoadingFollowUp(false)
+  }
+
   const stopRecording = () => {
     if (mediaRecorder && mediaRecorder.state !== 'inactive') {
       mediaRecorder.stop()
@@ -842,41 +872,47 @@ function FlippableCard({
 
               {/* Input area (hidden when showing save prompt) */}
               {!showSavePrompt && (
-                <div className="px-4 pb-4 pt-2 border-t border-gray-100">
-                  <div className="flex items-end gap-2">
-                    <textarea
-                      value={responseText}
-                      onChange={(e) => setResponseText(e.target.value)}
-                      onKeyDown={(e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleSubmit() } }}
-                      placeholder="Share your thoughts..."
-                      rows={2}
-                      className="flex-1 p-3 bg-gray-50 rounded-2xl border-0 resize-none focus:outline-none focus:ring-2 focus:ring-[#406A56]/30 text-gray-800 text-sm placeholder-gray-400"
-                      autoFocus={isFlipped}
-                    />
-                    <div className="flex flex-col gap-1.5">
-                      <button
-                        onClick={isRecording ? stopRecording : startRecording}
-                        className={`w-10 h-10 rounded-full flex items-center justify-center transition-colors ${
-                          isRecording 
-                            ? 'bg-red-500 text-white animate-pulse' 
-                            : 'bg-gray-100 text-gray-500 hover:bg-gray-200'
-                        }`}
-                      >
-                        {isRecording ? <Square size={16} /> : <Mic size={18} />}
-                      </button>
-                      <button
-                        onClick={handleSubmit}
-                        disabled={!responseText.trim() || isSubmitting}
-                        className="w-10 h-10 rounded-full bg-[#406A56] text-white flex items-center justify-center disabled:opacity-40 hover:bg-[#4a7a64] transition-colors"
-                      >
-                        <Send size={16} />
-                      </button>
-                    </div>
-                  </div>
-                  <div className="text-center mt-2">
-                    <span className="text-[10px] text-amber-600 font-medium">
-                      <Sparkles size={10} className="inline mr-0.5" />+{config.xp} XP
-                    </span>
+                <div className="px-3 pb-3 pt-2 border-t border-gray-100">
+                  {/* Textarea row */}
+                  <textarea
+                    value={responseText}
+                    onChange={(e) => setResponseText(e.target.value)}
+                    onKeyDown={(e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleSubmit() } }}
+                    placeholder="Share your thoughts..."
+                    rows={2}
+                    className="w-full p-3 bg-gray-50 rounded-2xl border-0 resize-none focus:outline-none focus:ring-2 focus:ring-[#406A56]/30 text-gray-800 text-sm placeholder-gray-400 mb-2"
+                    autoFocus={isFlipped}
+                  />
+                  {/* Button row: Mic | Keep Going | Send */}
+                  <div className="flex items-center gap-2">
+                    <button
+                      onClick={isRecording ? stopRecording : startRecording}
+                      className={`w-11 h-11 rounded-full flex items-center justify-center transition-colors flex-shrink-0 ${
+                        isRecording 
+                          ? 'bg-red-500 text-white animate-pulse' 
+                          : 'bg-gray-100 text-gray-500 hover:bg-gray-200'
+                      }`}
+                    >
+                      {isRecording ? <Square size={16} /> : <Mic size={18} />}
+                    </button>
+                    <button
+                      onClick={handleKeepGoing}
+                      disabled={isLoadingFollowUp}
+                      className="flex-1 h-11 rounded-full bg-amber-50 border border-amber-200 text-amber-700 text-sm font-medium hover:bg-amber-100 transition-colors disabled:opacity-50 flex items-center justify-center gap-1.5"
+                    >
+                      {isLoadingFollowUp ? (
+                        <><Loader2 size={14} className="animate-spin" /> Thinking...</>
+                      ) : (
+                        <><Sparkles size={14} /> Keep Going</>
+                      )}
+                    </button>
+                    <button
+                      onClick={handleSubmit}
+                      disabled={!responseText.trim() || isSubmitting}
+                      className="w-11 h-11 rounded-full bg-[#406A56] text-white flex items-center justify-center disabled:opacity-40 hover:bg-[#4a7a64] transition-colors flex-shrink-0"
+                    >
+                      <Send size={16} />
+                    </button>
                   </div>
                 </div>
               )}
