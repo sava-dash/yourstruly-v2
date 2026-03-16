@@ -335,38 +335,17 @@ function FlippableCard({
     setResponseText('')
     setIsSubmitting(true)
     
-    // After MAX_FOLLOW_UPS exchanges, show save prompt
+    setIsSubmitting(false)
+    
+    // After 3+ exchanges, show save prompt instead of auto follow-up
     if (updatedExchanges.length >= MAX_FOLLOW_UPS) {
       setShowSavePrompt(true)
-      setIsSubmitting(false)
       return
     }
     
-    // Get follow-up question
-    setIsLoadingFollowUp(true)
-    try {
-      const res = await fetch('/api/conversation/follow-up', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          exchanges: updatedExchanges,
-          promptType: prompt.type,
-          originalPrompt: getPromptText(prompt),
-        }),
-      })
-      const data = await res.json()
-      
-      if (data.shouldEnd || !data.followUpQuestion) {
-        setShowSavePrompt(true)
-      } else {
-        setCurrentQuestion(data.followUpQuestion)
-      }
-    } catch (err) {
-      console.error('Follow-up failed:', err)
-      setShowSavePrompt(true)
-    }
-    setIsLoadingFollowUp(false)
-    setIsSubmitting(false)
+    // For first 2 exchanges, don't auto-fetch follow-up — user types freely
+    // Follow-ups only appear when user clicks "Keep Going" (available after 2 exchanges)
+    setCurrentQuestion('')
     
     setTimeout(() => chatEndRef.current?.scrollIntoView({ behavior: 'smooth' }), 100)
   }
@@ -895,17 +874,19 @@ function FlippableCard({
                     >
                       {isRecording ? <Square size={16} /> : <Mic size={18} />}
                     </button>
-                    <button
-                      onClick={handleKeepGoing}
-                      disabled={isLoadingFollowUp}
-                      className="flex-1 h-11 rounded-full bg-amber-50 border border-amber-200 text-amber-700 text-sm font-medium hover:bg-amber-100 transition-colors disabled:opacity-50 flex items-center justify-center gap-1.5"
-                    >
-                      {isLoadingFollowUp ? (
-                        <><Loader2 size={14} className="animate-spin" /> Thinking...</>
-                      ) : (
-                        <><Sparkles size={14} /> Keep Going</>
-                      )}
-                    </button>
+                    {exchanges.length >= 2 && (
+                      <button
+                        onClick={handleKeepGoing}
+                        disabled={isLoadingFollowUp}
+                        className="flex-1 h-11 rounded-full bg-amber-50 border border-amber-200 text-amber-700 text-sm font-medium hover:bg-amber-100 transition-colors disabled:opacity-50 flex items-center justify-center gap-1.5"
+                      >
+                        {isLoadingFollowUp ? (
+                          <><Loader2 size={14} className="animate-spin" /> Thinking...</>
+                        ) : (
+                          <><Sparkles size={14} /> Keep Going</>
+                        )}
+                      </button>
+                    )}
                     <button
                       onClick={handleSubmit}
                       disabled={!responseText.trim() || isSubmitting}
