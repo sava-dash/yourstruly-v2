@@ -6,6 +6,13 @@
 -- 3. Slot allocation: guaranteed mix of photo + text
 
 -- ============================================
+-- DROP existing versions to avoid conflicts
+-- ============================================
+DROP FUNCTION IF EXISTS shuffle_engagement_prompts(UUID, INTEGER, BOOLEAN);
+DROP FUNCTION IF EXISTS ensure_category_photo_prompts(UUID);
+DROP FUNCTION IF EXISTS generate_engagement_prompts_with_photos(UUID, INTEGER);
+
+-- ============================================
 -- STEP 1: Add photo prompt templates for EVERY category
 -- ============================================
 

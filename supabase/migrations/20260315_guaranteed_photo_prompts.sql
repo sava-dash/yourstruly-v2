@@ -5,6 +5,17 @@
 -- 3. What's the backstory? (photo_backstory)
 
 -- ===========================================
+-- DROP existing versions to avoid conflicts
+-- ===========================================
+DROP FUNCTION IF EXISTS generate_photo_prompts(UUID, UUID);
+DROP FUNCTION IF EXISTS generate_photo_prompts(UUID);
+DROP FUNCTION IF EXISTS generate_photo_prompts();
+DROP TRIGGER IF EXISTS on_photo_upload ON memory_media;
+DROP TRIGGER IF EXISTS auto_photo_prompts ON memory_media;
+DROP FUNCTION IF EXISTS trigger_photo_prompts();
+DROP FUNCTION IF EXISTS generate_photo_prompts_on_upload();
+
+-- ===========================================
 -- FUNCTION: Generate prompts for a single photo
 -- ===========================================
 CREATE OR REPLACE FUNCTION generate_photo_prompts(
@@ -248,5 +259,5 @@ $$ LANGUAGE plpgsql;
 GRANT EXECUTE ON FUNCTION generate_photo_prompts(UUID, UUID) TO authenticated;
 GRANT EXECUTE ON FUNCTION shuffle_engagement_prompts(UUID, INTEGER, BOOLEAN) TO authenticated;
 
-COMMENT ON FUNCTION generate_photo_prompts IS 'Generate engagement prompts for a photo: location, people, and backstory';
+COMMENT ON FUNCTION generate_photo_prompts(UUID, UUID) IS 'Generate engagement prompts for a photo: location, people, and backstory';
 COMMENT ON FUNCTION shuffle_engagement_prompts IS 'Get prompts with priority for recent photo uploads (2 guaranteed slots)';
