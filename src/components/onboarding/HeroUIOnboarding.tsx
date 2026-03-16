@@ -98,19 +98,32 @@ const TRAITS = [
   { emoji: '📚', label: 'Introverted' },
 ];
 
-const BELIEFS = [
-  'Christianity',
-  'Islam',
-  'Judaism',
-  'Hinduism',
-  'Buddhism',
-  'Sikhism',
-  'Spiritual but not religious',
-  'Agnostic',
-  'Atheist',
-  'Other',
-  'Prefer not to say',
+// Categorized beliefs/religions
+const BELIEF_CATEGORIES = [
+  {
+    category: 'Major World Religions',
+    options: ['Christianity', 'Islam', 'Judaism', 'Hinduism', 'Buddhism', 'Sikhism'],
+  },
+  {
+    category: 'Eastern Traditions',
+    options: ['Taoism', 'Confucianism', 'Shinto', 'Jainism'],
+  },
+  {
+    category: 'Modern Spirituality',
+    options: ['New Age spirituality', 'Meditation traditions', 'Yoga philosophy', 'Stoicism'],
+  },
+  {
+    category: 'Philosophical',
+    options: ['Humanism', 'Agnostic', 'Atheist', 'Spiritual but not religious'],
+  },
+  {
+    category: 'Other',
+    options: ['Other', 'Prefer not to say'],
+  },
 ];
+
+// Flat list for simple selection
+const BELIEFS = BELIEF_CATEGORIES.flatMap(c => c.options);
 
 const JOURNEY_OPTIONS = [
   { emoji: '🧠', label: "I want to reflect on my life experiences and personal growth" },
@@ -150,11 +163,11 @@ function StepIndicator({ current, total }: { current: number; total: number }) {
                 done
                   ? 'bg-[#52325d] text-white'
                   : active
-                  ? 'text-[#52325d] ring-2 ring-[#52325d]'
-                  : 'text-[#a1a1aa] ring-1 ring-[#d4d4d8]'
+                  ? 'bg-[#52325d]/10 ring-2 ring-[#52325d]'
+                  : 'bg-[#f4f4f5] ring-1 ring-[#d4d4d8]'
               }`}
             >
-              {done ? <CheckIcon /> : n}
+              {done && <CheckIcon />}
             </div>
             {n < total && (
               <div className={`h-px w-5 ${n < current ? 'bg-[#52325d]/40' : 'bg-[#d4d4d8]'}`} />
@@ -428,8 +441,8 @@ function StepYourRoots({
 
         <div className="flex flex-1 flex-col gap-8 rounded-[20px] bg-gradient-to-b from-white/90 to-white/50 p-8 shadow-[0_8px_40px_rgba(64,106,86,0.12)] backdrop-blur-sm">
           <div className="flex flex-col gap-2">
-            <span aria-label="Location pin" className="text-2xl" role="img">📍</span>
-            <h1 className="text-[28px] leading-tight font-medium text-[#2D2D2D]">
+            <h1 className="flex items-center gap-3 text-[28px] leading-tight font-medium text-[#2D2D2D]">
+              <span aria-label="Location pin" className="text-2xl" role="img">📍</span>
               Where did your story begin, {firstName}?
             </h1>
             <p className="text-sm text-[#71717a]">Your birthday and birthplace help us personalize your journey.</p>

@@ -87,7 +87,7 @@ const LIFE_CHAPTERS = [
 
 export default function DashboardPage() {
   const [profile, setProfile] = useState<any>(null)
-  const [stats, setStats] = useState({ memories: 0, contacts: 0, postscripts: 0 })
+  const [stats, setStats] = useState({ memories: 0, contacts: 0, photos: 0 })
   const [userContacts, setUserContacts] = useState<Array<{id: string; full_name: string; avatar_url?: string}>>([])
   
   // Unified engagement modal state
@@ -269,12 +269,12 @@ export default function DashboardPage() {
   const loadStats = async () => {
     const { data: { user } } = await supabase.auth.getUser()
     if (!user) return
-    const [mem, con, ps] = await Promise.all([
+    const [mem, con, photos] = await Promise.all([
       supabase.from('memories').select('id', { count: 'exact', head: true }).eq('user_id', user.id),
       supabase.from('contacts').select('id', { count: 'exact', head: true }).eq('user_id', user.id),
-      supabase.from('postscripts').select('id', { count: 'exact', head: true }).eq('user_id', user.id),
+      supabase.from('memory_media').select('id', { count: 'exact', head: true }).eq('user_id', user.id).eq('file_type', 'image'),
     ])
-    setStats({ memories: mem.count || 0, contacts: con.count || 0, postscripts: ps.count || 0 })
+    setStats({ memories: mem.count || 0, contacts: con.count || 0, photos: photos.count || 0 })
   }
 
   const [incompleteContacts, setIncompleteContacts] = useState<Array<{
@@ -628,9 +628,9 @@ export default function DashboardPage() {
                 <div className="text-2xl font-bold text-[#406A56]">{stats.contacts}</div>
                 <div className="text-[10px] text-[#406A56]/60 uppercase tracking-wide">People</div>
               </Link>
-              <Link href="/dashboard/postscripts" className="flex-1 hover:opacity-70 transition-opacity border-r border-[#406A56]/10">
-                <div className="text-2xl font-bold text-[#406A56]">{stats.postscripts}</div>
-                <div className="text-[10px] text-[#406A56]/60 uppercase tracking-wide">Messages</div>
+              <Link href="/dashboard/gallery" className="flex-1 hover:opacity-70 transition-opacity border-r border-[#406A56]/10">
+                <div className="text-2xl font-bold text-[#406A56]">{stats.photos}</div>
+                <div className="text-[10px] text-[#406A56]/60 uppercase tracking-wide">Photos</div>
               </Link>
               <div className="flex-1">
                 <div className={`text-2xl font-bold text-[#D9C61A] ${xpAnimating ? 'animate-pulse' : ''}`}>

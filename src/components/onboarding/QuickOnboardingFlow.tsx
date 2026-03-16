@@ -97,8 +97,77 @@ interface Pill {
   category: 'interest' | 'trait';
 }
 
+// Categorized interests
+interface InterestCategory {
+  name: string;
+  emoji: string;
+  items: string[];
+}
+
+const INTEREST_CATEGORIES: InterestCategory[] = [
+  {
+    name: 'Creative Arts',
+    emoji: '🎨',
+    items: ['Drawing', 'Painting', 'Photography', 'Writing', 'Music', 'Dancing', 'Theater', 'Film', 'Graphic Design', 'Fashion', 'Interior Design', 'DIY Crafts'],
+  },
+  {
+    name: 'Health & Wellness',
+    emoji: '💪',
+    items: ['Fitness', 'Yoga', 'Meditation', 'Running', 'Cycling', 'Swimming', 'Martial Arts', 'Nutrition', 'Mindfulness'],
+  },
+  {
+    name: 'Nature & Adventure',
+    emoji: '🏔️',
+    items: ['Hiking', 'Camping', 'Travel', 'Gardening', 'Fishing', 'Surfing', 'Climbing', 'Snowboarding', 'Birdwatching'],
+  },
+  {
+    name: 'Food & Drink',
+    emoji: '🍳',
+    items: ['Cooking', 'Baking', 'Food Tasting', 'Wine', 'Coffee', 'Tea', 'Mixology'],
+  },
+  {
+    name: 'Learning & Tech',
+    emoji: '💻',
+    items: ['Technology', 'Coding', 'Science', 'History', 'Philosophy', 'Psychology', 'Languages', 'Astronomy'],
+  },
+  {
+    name: 'Sports & Games',
+    emoji: '⚽',
+    items: ['Gaming', 'Soccer', 'Basketball', 'Football', 'Tennis', 'Golf', 'Baseball', 'Pickleball'],
+  },
+  {
+    name: 'Lifestyle',
+    emoji: '🏠',
+    items: ['Family', 'Parenting', 'Home Improvement', 'Minimalism', 'Collecting', 'Travel Blogging', 'Animals & Pets'],
+  },
+  {
+    name: 'Community',
+    emoji: '🤝',
+    items: ['Volunteering', 'Community Service', 'Sustainability', 'Animal Care'],
+  },
+  {
+    name: 'Business',
+    emoji: '💼',
+    items: ['Entrepreneurship', 'Investing', 'Real Estate', 'Personal Finance', 'Public Speaking'],
+  },
+];
+
+// Flat list of all interests for backward compatibility
+const ALL_INTERESTS = INTEREST_CATEGORIES.flatMap(c => c.items);
+
+// Personality traits
+const PERSONALITY_TRAITS = [
+  'Adventurous', 'Ambitious', 'Analytical', 'Authentic', 'Calm', 'Caring', 'Charismatic', 
+  'Compassionate', 'Confident', 'Creative', 'Curious', 'Determined', 'Empathetic', 
+  'Energetic', 'Extroverted', 'Flexible', 'Friendly', 'Generous', 'Hardworking', 
+  'Honest', 'Humble', 'Independent', 'Innovative', 'Introverted', 'Kind', 'Logical', 
+  'Loyal', 'Optimistic', 'Organized', 'Patient', 'Persistent', 'Practical', 'Reflective', 
+  'Reliable', 'Resilient', 'Resourceful', 'Self-aware', 'Sincere', 'Spontaneous', 
+  'Supportive', 'Thoughtful', 'Trustworthy', 'Warm', 'Wise', 'Witty'
+];
+
 const ABOUT_YOU_PILLS: Pill[] = [
-  // Interests
+  // Popular interests (shown first)
   { label: 'Family', emoji: '👨‍👩‍👧', category: 'interest' },
   { label: 'Travel', emoji: '✈️', category: 'interest' },
   { label: 'Music', emoji: '🎵', category: 'interest' },
@@ -123,7 +192,7 @@ const ABOUT_YOU_PILLS: Pill[] = [
   { label: 'Gaming', emoji: '🎮', category: 'interest' },
   { label: 'Dancing', emoji: '💃', category: 'interest' },
   { label: 'Food & Wine', emoji: '🍷', category: 'interest' },
-  // Traits
+  // Popular traits
   { label: 'Adventurous', emoji: '🏔️', category: 'trait' },
   { label: 'Creative', emoji: '✨', category: 'trait' },
   { label: 'Empathetic', emoji: '💛', category: 'trait' },
@@ -148,19 +217,49 @@ const ABOUT_YOU_PILLS: Pill[] = [
   { label: 'Introverted', emoji: '📖', category: 'trait' },
 ];
 
-const RELIGION_OPTIONS = [
-  'Christianity',
-  'Islam',
-  'Judaism',
-  'Hinduism',
-  'Buddhism',
-  'Sikhism',
-  'Spiritual but not religious',
-  'Agnostic',
-  'Atheist',
-  'Other',
-  'Prefer not to say',
+// Categorized religion/spiritual options
+interface ReligionCategory {
+  category: string;
+  options: string[];
+}
+
+const RELIGION_CATEGORIES: ReligionCategory[] = [
+  {
+    category: 'Major World Religions',
+    options: ['Christianity', 'Islam', 'Judaism', 'Hinduism', 'Buddhism', 'Sikhism', 'Baháʼí Faith'],
+  },
+  {
+    category: 'Christian Traditions',
+    options: ['Catholicism', 'Protestant Christianity', 'Eastern Orthodoxy', 'Non-denominational Christianity'],
+  },
+  {
+    category: 'Eastern & Dharmic',
+    options: ['Taoism', 'Confucianism', 'Shinto', 'Jainism'],
+  },
+  {
+    category: 'Indigenous & Ancestral',
+    options: ['Native American spirituality', 'African traditional religions', 'Aboriginal Australian beliefs'],
+  },
+  {
+    category: 'New Thought & Modern',
+    options: ['New Age spirituality', 'Meditation traditions', 'Yoga philosophy', 'Stoicism'],
+  },
+  {
+    category: 'Nature-Based',
+    options: ['Paganism', 'Wicca', 'Druidry', 'Animism'],
+  },
+  {
+    category: 'Philosophical',
+    options: ['Humanism', 'Secular spirituality', 'Agnosticism', 'Atheism', 'Spiritual but not religious'],
+  },
+  {
+    category: 'Other',
+    options: ['Other', 'Prefer not to say'],
+  },
 ];
+
+// Flat list for backward compatibility
+const RELIGION_OPTIONS = RELIGION_CATEGORIES.flatMap(c => c.options);
 
 // ============================================
 // GEOCODING
@@ -225,7 +324,7 @@ function MapboxGlobeReveal({
 
     const map = new mapboxgl.Map({
       container: mapContainer.current,
-      style: 'mapbox://styles/mapbox/light-v11',
+      style: 'mapbox://styles/mapbox/satellite-streets-v12',
       projection: 'globe',
       zoom: 1.8,
       center: [0, 20],
@@ -303,9 +402,7 @@ function MapboxGlobeReveal({
 
         markerRef.current = marker;
         setPhase('pinned');
-
-        // Auto-advance after showing pin
-        setTimeout(advance, 6000);
+        // User must click Continue to advance (no auto-advance)
       });
     });
 
@@ -888,11 +985,7 @@ export function QuickOnboardingFlow({
           return (
             <div key={s} className="step-progress-item">
               <div className={`step-dot ${isCompleted ? 'step-completed' : ''} ${isCurrent ? 'step-current' : ''}`}>
-                {isCompleted ? (
-                  <Check size={10} strokeWidth={3} />
-                ) : (
-                  <span className="step-num">{i + 1}</span>
-                )}
+                {isCompleted && <Check size={10} strokeWidth={3} />}
               </div>
               {i < PROGRESS_STEPS.length - 1 && (
                 <div className={`step-line ${isCompleted ? 'step-line-done' : ''}`} />
