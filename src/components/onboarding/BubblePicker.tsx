@@ -321,11 +321,18 @@ function ClusteredBubbles({
     <div style={{
       display: 'flex',
       flexWrap: 'wrap',
-      justifyContent: 'center',
-      alignItems: 'center',
+      flexDirection: 'column',
+      alignItems: 'flex-start',
+      alignContent: 'flex-start',
       gap: 4,
-      padding: '0 4px',
-    }}>
+      padding: '0 8px',
+      height: '100%',
+      overflowX: 'auto',
+      overflowY: 'hidden',
+      WebkitOverflowScrolling: 'touch',
+      msOverflowStyle: 'none',
+      scrollbarWidth: 'none',
+    }} className="no-scrollbar">
       {items.map((item, i) => {
         const size = seededSizes[i];
         const offset = seededOffsets[i];
@@ -457,11 +464,11 @@ export function BubblePickerInterests({
         </p>
       </div>
 
-      {/* All bubbles — single scrollable area */}
+      {/* All bubbles — horizontal scroll */}
       <div style={{
         flex: 1,
-        overflowY: 'auto',
-        padding: '16px 8px 8px',
+        overflow: 'hidden',
+        padding: '8px 0',
         position: 'relative',
         zIndex: 10,
       }}>
@@ -474,6 +481,7 @@ export function BubblePickerInterests({
       </div>
 
       <BottomNav totalSelected={totalSelected} onBack={onBack} onContinue={onContinue} onSkip={onSkip} accentColor={SELECTED_COLOR} gradientFrom="rgba(13,26,20,0.98)" />
+      <style>{`.no-scrollbar::-webkit-scrollbar{display:none}`}</style>
     </div>
   );
 }
@@ -512,8 +520,8 @@ export function BubblePickerTraits({
 
       <div style={{
         flex: 1,
-        overflowY: 'auto',
-        padding: '16px 8px 8px',
+        overflow: 'hidden',
+        padding: '8px 0',
         position: 'relative',
         zIndex: 10,
       }}>
@@ -526,6 +534,7 @@ export function BubblePickerTraits({
       </div>
 
       <BottomNav totalSelected={totalSelected} onBack={onBack} onContinue={onContinue} onSkip={onSkip} accentColor={SELECTED_COLOR_TRAIT} gradientFrom="rgba(26,13,30,0.98)" />
+      <style>{`.no-scrollbar::-webkit-scrollbar{display:none}`}</style>
     </div>
   );
 }
