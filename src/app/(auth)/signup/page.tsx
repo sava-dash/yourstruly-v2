@@ -44,7 +44,7 @@ export default function SignupPage() {
       password,
       options: {
         data: {
-          full_name: fullName,
+          full_name: fullName.trim().replace(/\b\w/g, c => c.toUpperCase()),
         },
         emailRedirectTo: `${window.location.origin}/auth/callback`,
       },

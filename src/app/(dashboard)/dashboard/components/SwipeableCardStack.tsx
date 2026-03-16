@@ -436,7 +436,7 @@ function FlippableCard({
                 </div>
               )}
 
-              <p className="text-xl font-semibold text-[#406A56] leading-snug flex-1 flex items-center">
+              <p className="text-2xl font-bold text-[#406A56] leading-snug flex-1 flex items-center">
                 {getPromptText(prompt)}
               </p>
 

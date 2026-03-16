@@ -110,7 +110,7 @@ function OnboardingPageContent() {
                              (data.birthplace ? [data.birthplace] : []);
 
         const updates: any = {
-          full_name: data.name,
+          full_name: (data.name || '').trim().replace(/\b\w/g, (c: string) => c.toUpperCase()),
           onboarding_completed: true,
           onboarding_step: 8,
         };
