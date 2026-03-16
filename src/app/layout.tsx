@@ -6,7 +6,7 @@ import 'mapbox-gl/dist/mapbox-gl.css';
 import 'leaflet/dist/leaflet.css';
 import { SkipToMain } from "@/components/ui/AccessibleIcon";
 import { CookiebotScript } from "@/components/ui/CookiebotScript";
-import { ThemeProvider } from "@/contexts/ThemeContext";
+import { Providers } from "@/providers";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -91,7 +91,9 @@ export default function RootLayout({
       >
         <CookiebotScript />
         <SkipToMain />
-        {children}
+        <Providers>
+          {children}
+        </Providers>
       </body>
     </html>
   );

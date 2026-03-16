@@ -277,7 +277,7 @@ export default function FaceTagger({ mediaId, imageUrl, onXPEarned }: FaceTagger
             )}
             
             {/* Untagged indicator */}
-            {!face.tagged && face.suggestions.length > 0 && (
+            {!face.tagged && face.suggestions?.length > 0 && (
               <div className="absolute -top-2 -right-2">
                 <div className="w-4 h-4 bg-amber-500 rounded-full flex items-center justify-center">
                   <Sparkles size={10} className="text-white" />
