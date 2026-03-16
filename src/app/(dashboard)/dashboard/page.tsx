@@ -294,7 +294,7 @@ export default function DashboardPage() {
                   <span className="text-gray-500">Loading prompts...</span>
                 </div>
               ) : (
-                <div className="py-8">
+                <div className="py-8 w-full">
                   <XpFloatingCounter show={xpAnimating} amount={lastXpGain} />
                   <SwipeableCardStack
                     prompts={prompts}
