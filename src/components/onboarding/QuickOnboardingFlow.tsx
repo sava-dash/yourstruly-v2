@@ -16,6 +16,7 @@ import {
 import { OnboardingStepExplanation } from './OnboardingStepExplanation';
 import { ConversationEngine } from '@/components/conversation-engine';
 import { ImageUploadStep } from './ImageUploadStep';
+import { BubblePickerInterests, BubblePickerTraits, ALL_INTERESTS as BUBBLE_INTERESTS, TRAIT_ITEMS as BUBBLE_TRAITS } from './BubblePicker';
 
 // ============================================
 // TYPES
@@ -46,7 +47,8 @@ interface OnboardingData {
 type QuickStep =
   | 'birth-info'
   | 'globe'
-  | 'about-you'
+  | 'interests'
+  | 'traits'
   | 'religion'
   | 'why-here'
   | 'heartfelt'
@@ -56,7 +58,8 @@ type QuickStep =
 const ALL_STEPS: QuickStep[] = [
   'birth-info',
   'globe',
-  'about-you',
+  'interests',
+  'traits',
   'religion',
   'why-here',
   'heartfelt',
@@ -68,7 +71,8 @@ const ALL_STEPS: QuickStep[] = [
 const PROGRESS_STEPS: QuickStep[] = [
   'birth-info',
   'globe',
-  'about-you',
+  'interests',
+  'traits',
   'religion',
   'why-here',
   'heartfelt',
@@ -79,7 +83,8 @@ const PROGRESS_STEPS: QuickStep[] = [
 // Map each step to the explanation tile key
 const TILE_KEY: Partial<Record<QuickStep, string>> = {
   'birth-info': 'location',
-  'about-you': 'interests',
+  interests: 'interests',
+  traits: 'interests',
   religion: 'religion',
   'why-here': 'background',
   heartfelt: 'heartfelt-question',
@@ -775,7 +780,11 @@ export function QuickOnboardingFlow({
     if (typeof window === 'undefined') return null;
     try {
       const saved = localStorage.getItem(`onboarding_progress_${userId}`);
-      return saved ? JSON.parse(saved) : null;
+      if (!saved) return null;
+      const parsed = JSON.parse(saved);
+      // Migrate old 'about-you' step to new 'interests' step
+      if (parsed.step === 'about-you') parsed.step = 'interests';
+      return parsed;
     } catch { return null; }
   };
 
@@ -832,21 +841,31 @@ export function QuickOnboardingFlow({
 
   const goBack = useCallback(() => {
     setDirection(-1);
-    // Skip globe when going backwards from about-you
-    if (step === 'about-you') { setStep('birth-info'); return; }
+    // Skip globe when going backwards from interests
+    if (step === 'interests') { setStep('birth-info'); return; }
     const idx = ALL_STEPS.indexOf(step);
     if (idx > 0) setStep(ALL_STEPS[idx - 1]);
   }, [step]);
 
   const commitPills = useCallback(() => {
-    const interests = ABOUT_YOU_PILLS.filter(
-      (p) => p.category === 'interest' && selectedPills.has(p.label)
-    ).map((p) => p.label);
-    const traits = ABOUT_YOU_PILLS.filter(
-      (p) => p.category === 'trait' && selectedPills.has(p.label)
-    ).map((p) => p.label);
+    const allInterestLabels = BUBBLE_INTERESTS.map(i => i.label);
+    const allTraitLabels = BUBBLE_TRAITS.map(t => t.label);
+    const interests = Array.from(selectedPills).filter(l => allInterestLabels.includes(l));
+    const traits = Array.from(selectedPills).filter(l => allTraitLabels.includes(l));
     updateData({ interests, personalityTraits: traits });
   }, [selectedPills, updateData]);
+
+  // Bubble picker toggle handler (must be before any early returns)
+  const handleBubbleToggle = useCallback((label: string) => {
+    setSelectedPills((prev) => {
+      const next = new Set(prev);
+      next.has(label) ? next.delete(label) : next.add(label);
+      return next;
+    });
+  }, []);
+
+  const interestCount = Array.from(selectedPills).filter(l => BUBBLE_INTERESTS.some(i => i.label === l)).length;
+  const traitCount = Array.from(selectedPills).filter(l => BUBBLE_TRAITS.some(t => t.label === l)).length;
 
   const progressIdx = PROGRESS_STEPS.indexOf(step);
   const progressPercent = step === 'ready' ? 100 : ((progressIdx + 1) / PROGRESS_STEPS.length) * 100;
@@ -911,82 +930,31 @@ export function QuickOnboardingFlow({
   }
 
   // Three-column About You step
-  if (step === 'about-you') {
+  if (step === 'interests') {
     return (
-      <div className="yt-onboard-root">
-        <div className="home-background" />
-        <div className="home-blob home-blob-1" />
-        <div className="home-blob home-blob-2" />
-        {/* Stepwise Progress Bar */}
-        <div style={{
-          position: 'fixed',
-          top: 0,
-          left: 0,
-          right: 0,
-          zIndex: 50,
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          padding: '16px 24px 12px',
-          background: 'linear-gradient(to bottom, rgba(253, 248, 243, 0.95) 60%, transparent)',
-        }}>
-          {PROGRESS_STEPS.map((s, i) => {
-            const isCompleted = i < progressIdx;
-            const isCurrent = i === progressIdx;
-            return (
-              <div key={s} style={{ display: 'flex', alignItems: 'center' }}>
-                <div style={{
-                  width: 22,
-                  height: 22,
-                  borderRadius: '50%',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  fontSize: 10,
-                  fontWeight: 700,
-                  border: `2px solid ${isCompleted ? '#406A56' : isCurrent ? '#406A56' : 'rgba(64,106,86,0.2)'}`,
-                  color: isCompleted ? 'white' : isCurrent ? '#406A56' : 'rgba(64,106,86,0.35)',
-                  background: isCompleted ? '#406A56' : isCurrent ? 'rgba(64,106,86,0.08)' : 'white',
-                  boxShadow: isCurrent ? '0 0 0 4px rgba(64,106,86,0.1)' : 'none',
-                  flexShrink: 0,
-                }}>
-                  {isCompleted && <Check size={10} strokeWidth={3} />}
-                </div>
-                {i < PROGRESS_STEPS.length - 1 && (
-                  <div style={{
-                    width: 14,
-                    height: 2,
-                    background: isCompleted ? '#406A56' : 'rgba(64,106,86,0.15)',
-                  }} />
-                )}
-              </div>
-            );
-          })}
-        </div>
-        <ThreeColAboutYou
-          selected={selectedPills}
-          onToggle={(label) =>
-            setSelectedPills((prev) => {
-              const next = new Set(prev);
-              next.has(label) ? next.delete(label) : next.add(label);
-              return next;
-            })
-          }
-          onContinue={() => { commitPills(); goNext(); }}
-          onBack={goBack}
-          onSkip={goNext}
-        />
-        <style jsx>{`
-          .yt-onboard-root {
-            min-height: 100vh;
-            min-height: 100dvh;
-            background: linear-gradient(135deg, #fdf8f3 0%, #f5ede5 50%, #fdf8f3 100%);
-            position: relative;
-            overflow-x: hidden;
-          }
-          /* progress bar rendered inline above */
-        `}</style>
-      </div>
+      <BubblePickerInterests
+        mode="interests"
+        selected={selectedPills}
+        onToggle={handleBubbleToggle}
+        onContinue={goNext}
+        onBack={goBack}
+        onSkip={goNext}
+        totalSelected={interestCount}
+      />
+    );
+  }
+
+  if (step === 'traits') {
+    return (
+      <BubblePickerTraits
+        mode="traits"
+        selected={selectedPills}
+        onToggle={handleBubbleToggle}
+        onContinue={() => { commitPills(); goNext(); }}
+        onBack={goBack}
+        onSkip={() => { commitPills(); goNext(); }}
+        totalSelected={traitCount}
+      />
     );
   }
 

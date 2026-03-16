@@ -19,7 +19,7 @@ interface Prompt {
 interface SwipeableCardStackProps {
   prompts: Prompt[]
   onCardDismiss: (promptId: string) => void
-  onCardAnswer: (promptId: string, response: { type: string; text?: string }) => Promise<void>
+  onCardAnswer: (promptId: string, response: { type: 'text' | 'voice' | 'selection'; text?: string }) => Promise<void>
   onNeedMorePrompts: () => void
   getPromptText: (prompt: Prompt) => string
 }
@@ -118,7 +118,7 @@ interface FlippableCardProps {
   index: number
   totalVisible: number
   onDismiss: () => void
-  onAnswer: (promptId: string, response: { type: string; text?: string }) => Promise<void>
+  onAnswer: (promptId: string, response: { type: 'text' | 'voice' | 'selection'; text?: string }) => Promise<void>
   getPromptText: (prompt: Prompt) => string
 }
 
