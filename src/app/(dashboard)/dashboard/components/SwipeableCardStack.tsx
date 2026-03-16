@@ -389,14 +389,14 @@ function FlippableCard({
           )}
 
           <div className="h-full flex flex-col">
-            {/* Photo or gradient header */}
+            {/* Photo or gradient header — 60% of card */}
             {hasPhoto ? (
               <div className="relative h-[60%] bg-gray-100">
                 <img src={prompt.photoUrl} alt="" className="w-full h-full object-cover" draggable={false} />
                 <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
               </div>
             ) : (
-              <div className={`relative h-[40%] bg-gradient-to-br ${
+              <div className={`relative h-[60%] bg-gradient-to-br ${
                 config.color === 'yellow' ? 'from-amber-400 to-orange-500' :
                 config.color === 'green' ? 'from-emerald-400 to-teal-500' :
                 config.color === 'red' ? 'from-rose-400 to-red-500' :
@@ -406,28 +406,22 @@ function FlippableCard({
                 <div className="absolute inset-0 flex items-center justify-center">
                   <Sparkles size={64} className="text-white/30" />
                 </div>
+                {/* Category badge on gradient */}
+                <div className="absolute bottom-4 left-5 flex items-center gap-2">
+                  <span className="px-3 py-1 rounded-full text-xs font-medium bg-white/20 backdrop-blur-sm text-white">
+                    {config.label}
+                  </span>
+                  {config.xp > 0 && (
+                    <span className="flex items-center gap-1 text-xs text-white/80 font-medium">
+                      <Sparkles size={12} />+{config.xp} XP
+                    </span>
+                  )}
+                </div>
               </div>
             )}
 
-            {/* Content */}
-            <div className="flex-1 p-6 flex flex-col">
-              <div className="flex items-center gap-2 mb-3">
-                <span className={`px-3 py-1 rounded-full text-xs font-medium ${
-                  config.color === 'yellow' ? 'bg-amber-100 text-amber-700' :
-                  config.color === 'green' ? 'bg-emerald-100 text-emerald-700' :
-                  config.color === 'red' ? 'bg-rose-100 text-rose-700' :
-                  config.color === 'blue' ? 'bg-blue-100 text-blue-700' :
-                  'bg-purple-100 text-purple-700'
-                }`}>
-                  {config.label}
-                </span>
-                {config.xp > 0 && (
-                  <span className="flex items-center gap-1 text-xs text-amber-600 font-medium">
-                    <Sparkles size={12} />+{config.xp} XP
-                  </span>
-                )}
-              </div>
-
+            {/* Content — 40% of card */}
+            <div className="flex-1 p-5 flex flex-col justify-center">
               {isContact && prompt.contactName && (
                 <div className="flex items-center gap-3 mb-3">
                   <div className="w-10 h-10 rounded-full bg-gradient-to-br from-[#406A56] to-[#8DACAB] flex items-center justify-center text-white font-medium">
@@ -442,11 +436,11 @@ function FlippableCard({
                 </div>
               )}
 
-              <p className="text-lg text-gray-800 font-medium leading-relaxed flex-1">
+              <p className="text-xl font-semibold text-[#406A56] leading-snug flex-1 flex items-center">
                 {getPromptText(prompt)}
               </p>
 
-              <p className="text-xs text-gray-400 text-center mt-4">
+              <p className="text-xs text-gray-400 text-center mt-3">
                 Tap to answer • Swipe or ← → to skip
               </p>
             </div>
