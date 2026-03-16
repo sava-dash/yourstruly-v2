@@ -284,84 +284,23 @@ function ClusteredBubbles({
   onToggle: (label: string) => void;
   accentColor: string;
 }) {
-  const containerRef = useRef<HTMLDivElement>(null);
-  const [containerHeight, setContainerHeight] = useState(400);
-
-  useEffect(() => {
-    if (containerRef.current) {
-      setContainerHeight(containerRef.current.offsetHeight);
-    }
-    const onResize = () => {
-      if (containerRef.current) setContainerHeight(containerRef.current.offsetHeight);
-    };
-    window.addEventListener('resize', onResize);
-    return () => window.removeEventListener('resize', onResize);
-  }, []);
-
-  // Greedy circle packing: place circles left-to-right, filling height first
-  const packed = useMemo(() => {
+  // Seeded random for consistent variation
+  const variations = useMemo(() => {
     let seed = 7919;
-    const rng = () => {
+    return items.map(() => {
       seed = (seed * 16807 + 0) % 2147483647;
-      return (seed - 1) / 2147483646;
-    };
-
-    // Generate radii with variation
-    const radii = items.map((_, i) => {
-      const baseSizes = [52, 46, 50, 56, 44, 54, 48, 42, 58, 46, 52, 40, 56, 44, 50, 54, 42, 48, 58, 46];
-      return baseSizes[i % baseSizes.length];
+      const sizeVar = (seed % 1000) / 1000; // 0-1
+      seed = (seed * 16807 + 0) % 2147483647;
+      const offsetY = ((seed % 1000) / 1000) * 14 - 7; // -7 to +7
+      seed = (seed * 16807 + 0) % 2147483647;
+      const bgIdx = seed % 5;
+      return { size: Math.round(96 + sizeVar * 30), offsetY, bgIdx }; // 96-126px
     });
-
-    const padding = 5;
-    const placed: { x: number; y: number; r: number }[] = [];
-
-    for (let i = 0; i < items.length; i++) {
-      const r = radii[i];
-      let bestX = r + padding;
-      let bestY = r + padding;
-      let minX = Infinity;
-
-      // Try many candidate positions, pick the leftmost one that fits
-      // Scan columns from left to right
-      for (let tryX = r + padding; tryX < 8000; tryX += 12) {
-        let foundY = false;
-        // Try positions top to bottom within container height
-        for (let tryY = r + padding; tryY <= containerHeight - r - padding; tryY += 10) {
-          // Check collision with all placed circles
-          let collides = false;
-          for (const p of placed) {
-            const dx = tryX - p.x;
-            const dy = tryY - p.y;
-            const minDist = r + p.r + padding;
-            if (dx * dx + dy * dy < minDist * minDist) {
-              collides = true;
-              break;
-            }
-          }
-          if (!collides) {
-            if (tryX < minX) {
-              minX = tryX;
-              bestX = tryX + (rng() - 0.5) * 4;
-              bestY = tryY + (rng() - 0.5) * 4;
-            }
-            foundY = true;
-            break;
-          }
-        }
-        if (foundY && tryX <= minX) break;
-      }
-
-      placed.push({ x: bestX, y: bestY, r });
-    }
-
-    return placed;
-  }, [items.length, containerHeight]);
-
-  const totalWidth = packed.reduce((max, c) => Math.max(max, c.x + c.r + 10), 0);
+  }, [items.length]);
 
   const UNSELECTED_BG = [
     'rgba(255,255,255,0.06)',
-    'rgba(255,255,255,0.05)',
+    'rgba(255,255,255,0.04)',
     'rgba(255,255,255,0.08)',
     'rgba(255,255,255,0.05)',
     'rgba(255,255,255,0.07)',
@@ -369,10 +308,12 @@ function ClusteredBubbles({
 
   return (
     <div
-      ref={containerRef}
       style={{
-        position: 'relative',
-        width: '100%',
+        display: 'flex',
+        flexWrap: 'nowrap',
+        alignItems: 'center',
+        gap: 6,
+        padding: '0 16px',
         height: '100%',
         overflowX: 'auto',
         overflowY: 'hidden',
@@ -382,70 +323,102 @@ function ClusteredBubbles({
       }}
       className="no-scrollbar"
     >
-      <div style={{ position: 'relative', width: totalWidth, height: '100%' }}>
-        {packed.map((circle, i) => {
-          if (i >= items.length) return null;
-          const item = items[i];
-          const size = circle.r * 2;
-          const isSelected = selected.has(item.label);
+      {/* Build columns of 3-4 circles each to fill height */}
+      {(() => {
+        const columns: { label: string; emoji: string; vi: number }[][] = [];
+        let col: { label: string; emoji: string; vi: number }[] = [];
+        let colHeight = 0;
+        // Target: fill ~420px of height per column
+        const maxColHeight = 440;
 
-          return (
-            <motion.button
-              key={item.label}
-              onClick={() => onToggle(item.label)}
-              whileTap={{ scale: 0.9 }}
-              whileHover={{
-                scale: 1.08,
-                boxShadow: `0 0 20px ${accentColor}40`,
-              }}
-              initial={false}
-              animate={{
-                scale: isSelected ? 1.06 : 1,
-              }}
-              transition={{ type: 'spring', stiffness: 500, damping: 28 }}
-              style={{
-                position: 'absolute',
-                left: circle.x - circle.r,
-                top: circle.y - circle.r,
-                width: size,
-                height: size,
-                borderRadius: '50%',
-                border: isSelected
-                  ? '3px solid rgba(255,255,255,0.9)'
-                  : '1px solid rgba(255,255,255,0.08)',
-                background: isSelected ? accentColor : UNSELECTED_BG[i % UNSELECTED_BG.length],
-                display: 'flex',
-                flexDirection: 'column',
-                alignItems: 'center',
-                justifyContent: 'center',
-                cursor: 'pointer',
-                padding: 0,
-                overflow: 'hidden',
-                boxShadow: isSelected
-                  ? `0 0 28px ${accentColor}55, inset 0 0 16px ${accentColor}25`
-                  : '0 0 0 transparent',
-                transition: 'box-shadow 0.2s, border 0.2s',
-              }}
-            >
-              <span style={{ fontSize: 24, lineHeight: 1 }}>{item.emoji}</span>
-              <span style={{
-                fontSize: size >= 100 ? 12 : 11,
-                fontWeight: isSelected ? 700 : 600,
-                color: isSelected ? 'white' : 'rgba(255,255,255,0.65)',
-                lineHeight: 1.15,
-                textAlign: 'center',
-                maxWidth: size - 16,
-                overflow: 'hidden',
-                textOverflow: 'ellipsis',
-                whiteSpace: 'nowrap',
-                marginTop: 3,
-              }}>
-                {item.label}
-              </span>
-            </motion.button>
-          );
-        })}
-      </div>
+        items.forEach((item, i) => {
+          const v = variations[i];
+          const needed = v.size + 6; // size + gap
+          if (colHeight + needed > maxColHeight && col.length > 0) {
+            columns.push(col);
+            col = [];
+            colHeight = 0;
+          }
+          col.push({ ...item, vi: i });
+          colHeight += needed;
+        });
+        if (col.length > 0) columns.push(col);
+
+        return columns.map((column, ci) => (
+          <div
+            key={ci}
+            style={{
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'center',
+              gap: 6,
+              flexShrink: 0,
+              marginTop: ci % 2 === 1 ? 20 : 0, // stagger columns
+            }}
+          >
+            {column.map(({ label, emoji, vi }) => {
+              const v = variations[vi];
+              const size = v.size;
+              const isSelected = selected.has(label);
+
+              return (
+                <motion.button
+                  key={label}
+                  onClick={() => onToggle(label)}
+                  whileTap={{ scale: 0.9 }}
+                  whileHover={{
+                    boxShadow: `0 0 22px ${accentColor}50`,
+                    borderColor: 'rgba(255,255,255,0.35)',
+                  }}
+                  initial={false}
+                  animate={{
+                    scale: isSelected ? 1.06 : 1,
+                  }}
+                  transition={{ type: 'spring', stiffness: 500, damping: 28 }}
+                  style={{
+                    width: size,
+                    height: size,
+                    borderRadius: '50%',
+                    border: isSelected
+                      ? '3px solid rgba(255,255,255,0.9)'
+                      : '1.5px solid rgba(255,255,255,0.08)',
+                    background: isSelected ? accentColor : UNSELECTED_BG[v.bgIdx],
+                    display: 'flex',
+                    flexDirection: 'column',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    cursor: 'pointer',
+                    padding: 0,
+                    overflow: 'hidden',
+                    flexShrink: 0,
+                    marginTop: v.offsetY,
+                    boxShadow: isSelected
+                      ? `0 0 28px ${accentColor}55, inset 0 0 16px ${accentColor}25`
+                      : 'none',
+                    transition: 'box-shadow 0.2s, border-color 0.2s',
+                  }}
+                >
+                  <span style={{ fontSize: 22, lineHeight: 1 }}>{emoji}</span>
+                  <span style={{
+                    fontSize: 12,
+                    fontWeight: isSelected ? 700 : 600,
+                    color: isSelected ? 'white' : 'rgba(255,255,255,0.65)',
+                    lineHeight: 1.15,
+                    textAlign: 'center',
+                    maxWidth: size - 16,
+                    overflow: 'hidden',
+                    textOverflow: 'ellipsis',
+                    whiteSpace: 'nowrap',
+                    marginTop: 3,
+                  }}>
+                    {label}
+                  </span>
+                </motion.button>
+              );
+            })}
+          </div>
+        ));
+      })()}
     </div>
   );
 }
