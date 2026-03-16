@@ -858,7 +858,7 @@ export function QuickOnboardingFlow({
                   background: isCompleted ? 'rgba(255,255,255,0.85)' : isCurrent ? 'rgba(255,255,255,0.15)' : 'transparent',
                   flexShrink: 0,
                 }}>
-                  {isCompleted ? <Check size={10} strokeWidth={3} /> : <span>{i + 1}</span>}
+                  {isCompleted && <Check size={10} strokeWidth={3} />}
                 </div>
                 {i < PROGRESS_STEPS.length - 1 && (
                   <div style={{
@@ -921,7 +921,7 @@ export function QuickOnboardingFlow({
                   boxShadow: isCurrent ? '0 0 0 4px rgba(64,106,86,0.1)' : 'none',
                   flexShrink: 0,
                 }}>
-                  {isCompleted ? <Check size={10} strokeWidth={3} /> : <span>{i + 1}</span>}
+                  {isCompleted && <Check size={10} strokeWidth={3} />}
                 </div>
                 {i < PROGRESS_STEPS.length - 1 && (
                   <div style={{
@@ -1521,20 +1521,14 @@ function BirthInfoStep({
   return (
     <div className="step-card">
       <motion.div
-        className="step-icon"
-        initial={{ scale: 0 }}
-        animate={{ scale: 1 }}
-        transition={{ type: 'spring', delay: 0.1 }}
-      >
-        📍
-      </motion.div>
-
-      <motion.div
         initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.2 }}
       >
-        <h2>Where did your story begin{name ? `, ${name}` : ''}?</h2>
+        <h2 style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+          <span style={{ fontSize: '28px' }}>📍</span>
+          Where did your story begin{name ? `, ${name}` : ''}?
+        </h2>
         <p className="subtitle">Your birthday and birthplace help us personalize your journey.</p>
       </motion.div>
 
@@ -1646,9 +1640,11 @@ function BirthInfoStep({
           display: flex;
           gap: 8px;
           margin-bottom: 20px;
+          max-width: 100%;
         }
         .bday-select {
-          flex: 2;
+          flex: 1.5;
+          min-width: 0;
           padding: 14px 12px;
           background: white;
           border: 1.5px solid rgba(64, 106, 86, 0.18);
@@ -1659,7 +1655,7 @@ function BirthInfoStep({
           -webkit-appearance: none;
           background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%23999' stroke-width='2'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E");
           background-repeat: no-repeat;
-          background-position: right 12px center;
+          background-position: right 8px center;
           cursor: pointer;
           transition: border-color 0.2s;
         }
@@ -1669,7 +1665,9 @@ function BirthInfoStep({
           box-shadow: 0 0 0 3px rgba(64, 106, 86, 0.1);
         }
         .bday-input {
-          padding: 14px 12px;
+          flex: 1;
+          min-width: 0;
+          padding: 14px 8px;
           background: white;
           border: 1.5px solid rgba(64, 106, 86, 0.18);
           border-radius: 12px;
@@ -1684,8 +1682,8 @@ function BirthInfoStep({
           border-color: #406A56;
           box-shadow: 0 0 0 3px rgba(64, 106, 86, 0.1);
         }
-        .bday-day { flex: 1; }
-        .bday-year { flex: 1.2; }
+        .bday-day { width: 70px; flex: none; }
+        .bday-year { width: 80px; flex: none; }
         .location-section { margin-bottom: 20px; }
         .location-wrap { position: relative; }
         .location-input { margin-bottom: 0; }
