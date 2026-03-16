@@ -52,6 +52,8 @@ export default function FaceTagger({ mediaId, imageUrl, onXPEarned }: FaceTagger
   const [selectedFace, setSelectedFace] = useState<string | null>(null)
   const [searchQuery, setSearchQuery] = useState('')
   const [showAllContacts, setShowAllContacts] = useState(false)
+  const [manualTagMode, setManualTagMode] = useState(false)
+  const [manualTagPosition, setManualTagPosition] = useState<{x: number, y: number} | null>(null)
   
   const supabase = createClient()
 
@@ -164,6 +166,53 @@ export default function FaceTagger({ mediaId, imageUrl, onXPEarned }: FaceTagger
     }
   }
 
+  // Handle manual tagging by clicking on the photo
+  const handleImageClick = (e: React.MouseEvent<HTMLDivElement>) => {
+    // Don't trigger if clicking on a face box
+    if ((e.target as HTMLElement).closest('.face-box')) return
+    
+    const rect = e.currentTarget.getBoundingClientRect()
+    const x = (e.clientX - rect.left) / rect.width
+    const y = (e.clientY - rect.top) / rect.height
+    
+    setManualTagPosition({ x, y })
+    setSelectedFace(null)
+    setManualTagMode(true)
+  }
+
+  // Create a manual tag at the clicked position
+  const createManualTag = async (contactId: string) => {
+    if (!manualTagPosition) return
+    
+    try {
+      const res = await fetch(`/api/media/${mediaId}/faces`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          box_left: Math.max(0, manualTagPosition.x - 0.05),
+          box_top: Math.max(0, manualTagPosition.y - 0.05),
+          box_width: 0.1,
+          box_height: 0.1,
+          contact_id: contactId,
+          is_manual: true,
+        }),
+      })
+      
+      if (res.ok) {
+        if (onXPEarned) {
+          onXPEarned(5, 'Tagged a person')
+        }
+        await loadFaces()
+      }
+    } catch (err) {
+      console.error('Error creating manual tag:', err)
+    }
+    
+    setManualTagMode(false)
+    setManualTagPosition(null)
+    setSearchQuery('')
+  }
+
   const filteredContacts = contacts.filter(c =>
     c.full_name.toLowerCase().includes(searchQuery.toLowerCase())
   )
@@ -182,15 +231,28 @@ export default function FaceTagger({ mediaId, imageUrl, onXPEarned }: FaceTagger
   return (
     <div className="space-y-4">
       {/* Photo with face boxes */}
-      <div className="relative rounded-xl overflow-hidden bg-black">
+      <div 
+        className="relative rounded-xl overflow-hidden bg-black cursor-crosshair"
+        onClick={handleImageClick}
+      >
+        <img src={imageUrl} alt="" className="w-full" />
         
-<img src={imageUrl} alt="" className="w-full" />
+        {/* Manual tag marker */}
+        {manualTagPosition && (
+          <div
+            className="absolute w-8 h-8 border-2 border-amber-500 rounded-full bg-amber-500/30 -translate-x-1/2 -translate-y-1/2 animate-pulse"
+            style={{
+              left: `${manualTagPosition.x * 100}%`,
+              top: `${manualTagPosition.y * 100}%`,
+            }}
+          />
+        )}
         
         {/* Face bounding boxes */}
         {faces.map(face => (
           <div
             key={face.id}
-            className={`absolute border-2 rounded cursor-pointer transition-all ${
+            className={`face-box absolute border-2 rounded cursor-pointer transition-all ${
               face.tagged 
                 ? 'border-green-500 bg-green-500/10' 
                 : selectedFace === face.id
@@ -381,95 +443,145 @@ export default function FaceTagger({ mediaId, imageUrl, onXPEarned }: FaceTagger
         </div>
       )}
 
+      {/* Manual tag contact picker (when clicking on photo) */}
+      {manualTagMode && manualTagPosition && (
+        <div className="bg-white rounded-xl p-4 border border-gray-200 shadow-lg">
+          <div className="flex items-center justify-between mb-3">
+            <span className="text-sm font-medium text-gray-700">Who is this?</span>
+            <button
+              onClick={() => {
+                setManualTagMode(false)
+                setManualTagPosition(null)
+                setSearchQuery('')
+              }}
+              className="p-1 text-gray-400 hover:text-gray-600"
+            >
+              <X size={16} />
+            </button>
+          </div>
+          <input
+            type="text"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            placeholder="Search contacts..."
+            className="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg text-gray-800 text-sm focus:outline-none focus:ring-2 focus:ring-[#406A56]/30 focus:border-[#406A56] mb-2"
+            autoFocus
+          />
+          <div className="max-h-48 overflow-y-auto space-y-1">
+            {filteredContacts.map(contact => (
+              <button
+                key={contact.id}
+                onClick={() => createManualTag(contact.id)}
+                className="w-full flex items-center gap-3 p-2 hover:bg-gray-50 rounded-lg transition-colors text-left"
+              >
+                <div className="w-8 h-8 rounded-full bg-[#406A56]/20 flex items-center justify-center">
+                  {contact.avatar_url ? (
+                    <img src={contact.avatar_url} alt="" className="w-full h-full rounded-full object-cover" />
+                  ) : (
+                    <span className="text-[#406A56] font-medium text-sm">
+                      {contact.full_name.charAt(0).toUpperCase()}
+                    </span>
+                  )}
+                </div>
+                <span className="text-gray-800 text-sm">{contact.full_name}</span>
+              </button>
+            ))}
+            {filteredContacts.length === 0 && (
+              <p className="text-gray-400 text-sm text-center py-2">No contacts found</p>
+            )}
+          </div>
+        </div>
+      )}
+
       {/* No faces detected - allow manual tagging */}
-      {faces.length === 0 && (
+      {faces.length === 0 && !manualTagMode && (
         <div className="text-center py-6">
           <User size={32} className="mx-auto mb-2 text-gray-400" />
-          <p className="text-gray-500 mb-4">No faces detected in this photo</p>
-          
-          {/* Manual tag button */}
-          {!showAllContacts ? (
+          <p className="text-gray-500 mb-2">No faces detected in this photo</p>
+          <p className="text-gray-400 text-sm mb-4">Click anywhere on the photo to tag someone</p>
+        </div>
+      )}
+
+      {/* Tag someone anyway when no faces */}
+      {faces.length === 0 && !manualTagMode && !showAllContacts && (
+        <div className="text-center">
+          <button
+            onClick={() => setShowAllContacts(true)}
+            className="inline-flex items-center gap-2 px-4 py-2 bg-[#406A56] hover:bg-[#4a7a64] text-white rounded-xl text-sm font-medium transition-colors"
+          >
+            <Plus size={16} />
+            Tag someone
+          </button>
+        </div>
+      )}
+      
+      {faces.length === 0 && showAllContacts && !manualTagMode && (
+        <div className="bg-white rounded-xl p-4 border border-gray-200 shadow-sm max-w-sm mx-auto">
+          <div className="flex items-center justify-between mb-3">
+            <span className="text-sm font-medium text-gray-700">Tag a person</span>
             <button
-              onClick={() => setShowAllContacts(true)}
-              className="inline-flex items-center gap-2 px-4 py-2 bg-[#406A56] hover:bg-[#4a7a64] text-white rounded-xl text-sm font-medium transition-colors"
+              onClick={() => {
+                setShowAllContacts(false)
+                setSearchQuery('')
+              }}
+              className="p-1 text-gray-400 hover:text-gray-600"
             >
-              <Plus size={16} />
-              Tag someone anyway
+              <X size={16} />
             </button>
-          ) : (
-            <div className="bg-white rounded-xl p-4 border border-gray-200 shadow-sm max-w-sm mx-auto">
-              <div className="flex items-center justify-between mb-3">
-                <span className="text-sm font-medium text-gray-700">Tag a person</span>
-                <button
-                  onClick={() => {
+          </div>
+          <input
+            type="text"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            placeholder="Search contacts..."
+            className="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg text-gray-800 text-sm focus:outline-none focus:ring-2 focus:ring-[#406A56]/30 focus:border-[#406A56] mb-2"
+            autoFocus
+          />
+          <div className="max-h-48 overflow-y-auto space-y-1">
+            {filteredContacts.map(contact => (
+              <button
+                key={contact.id}
+                onClick={async () => {
+                  const res = await fetch(`/api/media/${mediaId}/tag`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ contactId: contact.id, manual: true }),
+                  })
+                  if (res.ok) {
+                    const data = await res.json()
+                    if (data.xpAwarded && onXPEarned) {
+                      onXPEarned(data.xpAwarded, 'Tagged a person')
+                    }
+                    setFaces(prev => [...prev, {
+                      id: `manual-${contact.id}`,
+                      boundingBox: { x: 0, y: 0, width: 0, height: 0 },
+                      confidence: 1,
+                      tagged: true,
+                      contact: { id: contact.id, full_name: contact.full_name, avatar_url: contact.avatar_url },
+                      suggestions: []
+                    }])
                     setShowAllContacts(false)
                     setSearchQuery('')
-                  }}
-                  className="p-1 text-gray-400 hover:text-gray-600"
-                >
-                  <X size={16} />
-                </button>
-              </div>
-              <input
-                type="text"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                aria-label="Search" placeholder="Search contacts..."
-                className="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg text-gray-800 text-sm focus:outline-none focus:ring-2 focus:ring-[#406A56]/30 focus:border-[#406A56] mb-2"
-                autoFocus
-              />
-              <div className="max-h-48 overflow-y-auto space-y-1">
-                {filteredContacts.map(contact => (
-                  <button
-                    key={contact.id}
-                    onClick={async () => {
-                      // Create a manual tag (without face detection)
-                      const res = await fetch(`/api/media/${mediaId}/tag`, {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ contactId: contact.id, manual: true }),
-                      })
-                      if (res.ok) {
-                        const data = await res.json()
-                        if (data.xpAwarded && onXPEarned) {
-                          onXPEarned(data.xpAwarded, 'Tagged a person')
-                        }
-                        // Add to tagged list
-                        setFaces(prev => [...prev, {
-                          id: `manual-${contact.id}`,
-                          boundingBox: { x: 0, y: 0, width: 0, height: 0 },
-                          confidence: 1,
-                          tagged: true,
-                          contact: { id: contact.id, full_name: contact.full_name, avatar_url: contact.avatar_url },
-                          suggestions: []
-                        }])
-                        setShowAllContacts(false)
-                        setSearchQuery('')
-                      }
-                    }}
-                    className="w-full flex items-center gap-3 p-2 bg-gray-50 hover:bg-[#406A56]/10 rounded-lg transition-colors"
-                  >
-                    <div className="w-8 h-8 rounded-full bg-[#406A56]/20 flex items-center justify-center overflow-hidden">
-                      {contact.avatar_url ? (
-                        
-<img src={contact.avatar_url} alt="" className="w-full h-full object-cover" />
-                      ) : (
-                        <span className="text-[#406A56] text-sm font-medium">
-                          {contact.full_name.charAt(0)}
-                        </span>
-                      )}
-                    </div>
-                    <span className="text-gray-800 text-sm">{contact.full_name}</span>
-                  </button>
-                ))}
-                {filteredContacts.length === 0 && (
-                  <p className="text-center text-gray-400 text-sm py-4">
-                    No contacts found
-                  </p>
-                )}
-              </div>
-            </div>
-          )}
+                  }
+                }}
+                className="w-full flex items-center gap-3 p-2 bg-gray-50 hover:bg-[#406A56]/10 rounded-lg transition-colors"
+              >
+                <div className="w-8 h-8 rounded-full bg-[#406A56]/20 flex items-center justify-center overflow-hidden">
+                  {contact.avatar_url ? (
+                    <img src={contact.avatar_url} alt="" className="w-full h-full object-cover" />
+                  ) : (
+                    <span className="text-[#406A56] text-sm font-medium">
+                      {contact.full_name.charAt(0)}
+                    </span>
+                  )}
+                </div>
+                <span className="text-gray-800 text-sm">{contact.full_name}</span>
+              </button>
+            ))}
+            {filteredContacts.length === 0 && (
+              <p className="text-center text-gray-400 text-sm py-4">No contacts found</p>
+            )}
+          </div>
         </div>
       )}
     </div>
