@@ -54,7 +54,7 @@ export const PERSONAPLEX_VOICES: Record<PersonaPlexVoice, VoiceInfo> = {
   'NATF0': { id: 'NATF0', name: 'Natural Female 0', description: 'Neutral, clear female voice', gender: 'female', tone: 'neutral' },
   'NATF1': { id: 'NATF1', name: 'Natural Female 1', description: 'Warm, friendly female voice (default)', gender: 'female', tone: 'warm' },
   'NATF2': { id: 'NATF2', name: 'Natural Female 2', description: 'Bright, energetic female voice', gender: 'female', tone: 'bright' },
-  'NATF3': { id: 'NATF3', name: 'Natural Female 3', description: 'Calm, soothing female voice', gender: 'female', tone: 'neutral' },
+  'NATF3': { id: 'NATF3', name: 'Natural Female 4', description: 'Calm, soothing female voice (default)', gender: 'female', tone: 'neutral' },
   
   // Natural Male voices
   'NATM0': { id: 'NATM0', name: 'Natural Male 0', description: 'Neutral, clear male voice', gender: 'male', tone: 'neutral' },

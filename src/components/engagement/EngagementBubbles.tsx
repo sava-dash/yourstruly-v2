@@ -123,6 +123,12 @@ export function EngagementBubbles({
       return;
     }
     
+    // Check if this is a tag_person prompt - navigate to gallery for face tagging
+    if (prompt.type === 'tag_person' && prompt.photoId) {
+      router.push(`/dashboard/gallery?photo=${prompt.photoId}&tag=true`);
+      return;
+    }
+    
     // Check if this is a photo metadata prompt - load photo and show modal
     if (PHOTO_METADATA_TYPES.includes(prompt.type)) {
       setActivePhotoMetadataPrompt(prompt);
