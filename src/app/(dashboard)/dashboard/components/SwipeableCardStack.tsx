@@ -135,8 +135,11 @@ function FlippableCard({
   getPromptText,
 }: FlippableCardProps) {
   const [isFlipped, setIsFlipped] = useState(false)
+  const [showTagOverlay, setShowTagOverlay] = useState(false)
   const [responseText, setResponseText] = useState('')
   const [isSubmitting, setIsSubmitting] = useState(false)
+  
+  const isTagType = PHOTO_TAGGING_TYPES.includes(prompt.type)
   
   const x = useMotionValue(0)
   const rotate = useTransform(x, [-200, 200], [-12, 12])
@@ -171,15 +174,21 @@ function FlippableCard({
   }
 
   const handleClick = () => {
-    if (isFlipped) return
+    if (isFlipped || showTagOverlay) return
     if (!isDragging.current && Math.abs(x.get() - dragStartX.current) < 10) {
-      setIsFlipped(true)
+      if (isTagType && prompt.photoUrl && prompt.photoId) {
+        setShowTagOverlay(true)
+      } else {
+        setIsFlipped(true)
+      }
     }
   }
 
   const handleClose = (e: React.MouseEvent) => {
     e.stopPropagation()
-    if (isFlipped) {
+    if (showTagOverlay) {
+      setShowTagOverlay(false)
+    } else if (isFlipped) {
       setIsFlipped(false)
       setResponseText('')
     } else {
@@ -424,6 +433,76 @@ function FlippableCard({
           )}
         </div>
       </motion.div>
+
+      {/* Full-screen tag overlay for tag_person */}
+      <AnimatePresence>
+        {showTagOverlay && prompt.photoUrl && prompt.photoId && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            style={{
+              position: 'fixed',
+              inset: 0,
+              zIndex: 100,
+              background: 'rgba(0,0,0,0.92)',
+              display: 'flex',
+              flexDirection: 'column',
+            }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Header */}
+            <div style={{
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              padding: '16px 20px',
+              flexShrink: 0,
+            }}>
+              <button
+                onClick={() => setShowTagOverlay(false)}
+                style={{
+                  width: 40, height: 40, borderRadius: '50%',
+                  background: 'rgba(255,255,255,0.1)',
+                  border: 'none', color: 'white',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  cursor: 'pointer',
+                }}
+              >
+                <X size={20} />
+              </button>
+              <span style={{ color: 'white', fontSize: 16, fontWeight: 600 }}>
+                Tag People
+              </span>
+              <button
+                onClick={() => {
+                  setShowTagOverlay(false)
+                  onDismiss()
+                }}
+                style={{
+                  padding: '8px 16px', borderRadius: 20,
+                  background: '#406A56', border: 'none',
+                  color: 'white', fontSize: 14, fontWeight: 600,
+                  cursor: 'pointer',
+                }}
+              >
+                Done
+              </button>
+            </div>
+
+            {/* FaceTagger — fills remaining space */}
+            <div style={{ flex: 1, overflow: 'auto', position: 'relative' }}>
+              <FaceTagger
+                mediaId={prompt.photoId}
+                imageUrl={prompt.photoUrl}
+                onXPEarned={(amount, action) => {
+                  // Could trigger XP animation here
+                }}
+              />
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </motion.div>
   )
 }
