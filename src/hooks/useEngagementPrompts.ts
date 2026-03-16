@@ -43,7 +43,7 @@ export function useEngagementPrompts(count: number = 5, lifeChapter: string | nu
 
       // Call the shuffle function to get/generate prompts
       const { data: rawPrompts, error: fetchError } = await supabase
-        .rpc('get_engagement_prompts_v2', {
+        .rpc('shuffle_engagement_prompts', {
           p_user_id: user.id,
           p_count: count,
           p_regenerate: regenerate,
