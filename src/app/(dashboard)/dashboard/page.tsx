@@ -306,17 +306,15 @@ export default function DashboardPage() {
         />
 
         <main className="home-main">
+          {/* Chapter filter - top right */}
+          <div className="flex justify-end mb-2 px-2">
+            <LifeChapterFilter
+              selectedChapter={selectedChapter}
+              onSelectChapter={setSelectedChapter}
+            />
+          </div>
           <div className="engagement-column">
             <div className="home-bubbles">
-              {/* Header row: title + filter dropdown */}
-              <div className="flex items-center justify-between w-full px-2 mb-2">
-                <h2 className="text-lg font-semibold text-[#406A56]">Your Prompts</h2>
-                <LifeChapterFilter
-                  selectedChapter={selectedChapter}
-                  onSelectChapter={setSelectedChapter}
-                />
-              </div>
-
               {isLoading ? (
                 <div className="flex flex-col items-center justify-center h-[500px] gap-4">
                   <motion.div animate={{ rotate: 360 }} transition={{ duration: 2, repeat: Infinity, ease: 'linear' }}>
