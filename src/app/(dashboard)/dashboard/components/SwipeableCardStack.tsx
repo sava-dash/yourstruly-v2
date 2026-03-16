@@ -2,11 +2,9 @@
 
 import { useState, useCallback, useEffect, useRef } from 'react'
 import { motion, AnimatePresence, useMotionValue, useTransform, PanInfo } from 'framer-motion'
-import { X, Sparkles, Mic, Send, RotateCcw, UserPlus } from 'lucide-react'
+import { X, Sparkles, Mic, Send, RotateCcw, UserPlus, Search } from 'lucide-react'
 import { TYPE_CONFIG, isContactPrompt, PHOTO_TAGGING_TYPES } from '../constants'
-import dynamic from 'next/dynamic'
-
-const FaceTagger = dynamic(() => import('@/components/media/FaceTagger'), { ssr: false })
+import { createClient } from '@/lib/supabase/client'
 
 interface Prompt {
   id: string
@@ -135,11 +133,17 @@ function FlippableCard({
   getPromptText,
 }: FlippableCardProps) {
   const [isFlipped, setIsFlipped] = useState(false)
-  const [showTagOverlay, setShowTagOverlay] = useState(false)
   const [responseText, setResponseText] = useState('')
   const [isSubmitting, setIsSubmitting] = useState(false)
   
+  // Tag person state
   const isTagType = PHOTO_TAGGING_TYPES.includes(prompt.type)
+  const [tagPosition, setTagPosition] = useState<{ x: number; y: number } | null>(null)
+  const [showContactPicker, setShowContactPicker] = useState(false)
+  const [contactSearch, setContactSearch] = useState('')
+  const [contacts, setContacts] = useState<{ id: string; full_name: string }[]>([])
+  const [taggedFaces, setTaggedFaces] = useState<{ id: string; name: string; x: number; y: number }[]>([])
+  const imageRef = useRef<HTMLImageElement>(null)
   
   const x = useMotionValue(0)
   const rotate = useTransform(x, [-200, 200], [-12, 12])
@@ -174,23 +178,83 @@ function FlippableCard({
   }
 
   const handleClick = () => {
-    if (isFlipped || showTagOverlay) return
+    if (isFlipped) return
     if (!isDragging.current && Math.abs(x.get() - dragStartX.current) < 10) {
-      if (isTagType && prompt.photoUrl && prompt.photoId) {
-        setShowTagOverlay(true)
-      } else {
-        setIsFlipped(true)
+      setIsFlipped(true)
+      // Load contacts when flipping a tag card
+      if (isTagType) {
+        loadContacts()
       }
     }
   }
 
+  const loadContacts = async () => {
+    const supabase = createClient()
+    const { data: { user } } = await supabase.auth.getUser()
+    if (!user) return
+    const { data } = await supabase
+      .from('contacts')
+      .select('id, full_name')
+      .eq('user_id', user.id)
+      .order('full_name')
+    if (data) setContacts(data)
+  }
+
+  const handlePhotoClick = (e: React.MouseEvent<HTMLImageElement>) => {
+    if (!imageRef.current) return
+    const rect = imageRef.current.getBoundingClientRect()
+    const x = ((e.clientX - rect.left) / rect.width) * 100
+    const y = ((e.clientY - rect.top) / rect.height) * 100
+    setTagPosition({ x, y })
+    setShowContactPicker(true)
+    setContactSearch('')
+  }
+
+  const handleSelectContact = async (contact: { id: string; full_name: string }) => {
+    if (!prompt.photoId || !tagPosition) return
+    const supabase = createClient()
+    const { data: { user } } = await supabase.auth.getUser()
+    if (!user) return
+
+    const { data: newTag } = await supabase
+      .from('memory_face_tags')
+      .insert({
+        media_id: prompt.photoId,
+        user_id: user.id,
+        contact_id: contact.id,
+        box_left: (tagPosition.x - 5) / 100,
+        box_top: (tagPosition.y - 5) / 100,
+        box_width: 0.1,
+        box_height: 0.1,
+        is_confirmed: true,
+        is_auto_detected: false,
+      })
+      .select()
+      .single()
+
+    if (newTag) {
+      setTaggedFaces(prev => [...prev, {
+        id: newTag.id,
+        name: contact.full_name,
+        x: tagPosition.x,
+        y: tagPosition.y,
+      }])
+    }
+
+    setShowContactPicker(false)
+    setTagPosition(null)
+  }
+
   const handleClose = (e: React.MouseEvent) => {
     e.stopPropagation()
-    if (showTagOverlay) {
-      setShowTagOverlay(false)
+    if (showContactPicker) {
+      setShowContactPicker(false)
+      setTagPosition(null)
     } else if (isFlipped) {
       setIsFlipped(false)
       setResponseText('')
+      setTagPosition(null)
+      setShowContactPicker(false)
     } else {
       onDismiss()
     }
@@ -353,24 +417,102 @@ function FlippableCard({
             <RotateCcw size={18} />
           </button>
 
-          {/* Tag Person: show large photo + FaceTagger */}
-          {PHOTO_TAGGING_TYPES.includes(prompt.type) && prompt.photoUrl && prompt.photoId ? (
-            <div className="h-full flex flex-col">
-              <div className="flex-1 overflow-hidden relative">
-                <FaceTagger
-                  mediaId={prompt.photoId}
-                  imageUrl={prompt.photoUrl}
-                  onXPEarned={(amount, action) => {
-                    // Tag completed — dismiss card
-                    onDismiss()
-                  }}
+          {/* Tag Person: photo fills card, tap to place tag */}
+          {isTagType && prompt.photoUrl ? (
+            <div className="h-full flex flex-col relative">
+              {/* Photo fills the card */}
+              <div className="flex-1 relative overflow-hidden bg-black flex items-center justify-center" style={{ marginTop: 56 }}>
+                <img
+                  ref={imageRef}
+                  src={prompt.photoUrl}
+                  alt=""
+                  onClick={handlePhotoClick}
+                  className="w-full h-full object-contain cursor-crosshair"
+                  draggable={false}
                 />
+
+                {/* Tagged faces */}
+                {taggedFaces.map(face => (
+                  <div
+                    key={face.id}
+                    className="absolute pointer-events-none"
+                    style={{ left: `${face.x}%`, top: `${face.y}%`, transform: 'translate(-50%, -50%)' }}
+                  >
+                    <div className="w-10 h-10 rounded-full border-2 border-[#406A56] bg-[#406A56]/20" />
+                    <span className="absolute top-full left-1/2 -translate-x-1/2 mt-1 bg-[#406A56] text-white text-[10px] px-2 py-0.5 rounded-full whitespace-nowrap font-medium">
+                      {face.name}
+                    </span>
+                  </div>
+                ))}
+
+                {/* Current tap pin */}
+                {tagPosition && (
+                  <div
+                    className="absolute animate-pulse"
+                    style={{ left: `${tagPosition.x}%`, top: `${tagPosition.y}%`, transform: 'translate(-50%, -50%)' }}
+                  >
+                    <div className="w-8 h-8 rounded-full border-2 border-amber-400 bg-amber-400/20" />
+                  </div>
+                )}
+
+                {/* Contact picker popup ON the photo */}
+                {showContactPicker && tagPosition && (
+                  <div
+                    className="absolute z-30 bg-white rounded-xl shadow-2xl overflow-hidden"
+                    style={{
+                      width: 220,
+                      maxHeight: 260,
+                      left: `${Math.min(Math.max(tagPosition.x, 30), 70)}%`,
+                      top: `${Math.min(tagPosition.y + 8, 65)}%`,
+                      transform: 'translateX(-50%)',
+                    }}
+                    onClick={(e) => e.stopPropagation()}
+                  >
+                    <div className="p-2 border-b border-gray-100">
+                      <div className="relative">
+                        <Search size={14} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-gray-400" />
+                        <input
+                          type="text"
+                          placeholder="Search contacts..."
+                          value={contactSearch}
+                          onChange={(e) => setContactSearch(e.target.value)}
+                          className="w-full pl-8 pr-2 py-1.5 rounded-lg border border-gray-200 text-sm focus:outline-none focus:border-[#406A56] text-gray-800"
+                          autoFocus
+                        />
+                      </div>
+                    </div>
+                    <div className="max-h-[180px] overflow-y-auto">
+                      {contacts
+                        .filter(c => c.full_name.toLowerCase().includes(contactSearch.toLowerCase()))
+                        .map(contact => (
+                          <button
+                            key={contact.id}
+                            onClick={() => handleSelectContact(contact)}
+                            className="w-full px-3 py-2 text-left hover:bg-[#406A56]/10 flex items-center gap-2"
+                          >
+                            <div className="w-7 h-7 rounded-full bg-gray-200 flex items-center justify-center text-gray-600 text-xs font-medium flex-shrink-0">
+                              {contact.full_name.charAt(0)}
+                            </div>
+                            <span className="text-sm text-gray-800 truncate">{contact.full_name}</span>
+                          </button>
+                        ))}
+                      {contacts.filter(c => c.full_name.toLowerCase().includes(contactSearch.toLowerCase())).length === 0 && (
+                        <p className="px-3 py-2 text-xs text-gray-500">No contacts found</p>
+                      )}
+                    </div>
+                  </div>
+                )}
               </div>
-              <div className="p-4 text-center border-t border-gray-100">
-                <span className="text-xs text-amber-600 font-medium">
-                  <Sparkles size={12} className="inline mr-1" />
-                  Earn +{config.xp} XP per tag
-                </span>
+
+              {/* Bottom bar */}
+              <div className="p-3 text-center bg-white flex items-center justify-between">
+                <span className="text-xs text-gray-500">Tap on faces to tag</span>
+                <button
+                  onClick={(e) => { e.stopPropagation(); onDismiss() }}
+                  className="px-4 py-1.5 bg-[#406A56] text-white rounded-full text-sm font-medium"
+                >
+                  {taggedFaces.length > 0 ? `Done · ${taggedFaces.length} tagged` : 'Skip'}
+                </button>
               </div>
             </div>
           ) : (
@@ -434,75 +576,7 @@ function FlippableCard({
         </div>
       </motion.div>
 
-      {/* Full-screen tag overlay for tag_person */}
-      <AnimatePresence>
-        {showTagOverlay && prompt.photoUrl && prompt.photoId && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            style={{
-              position: 'fixed',
-              inset: 0,
-              zIndex: 100,
-              background: 'rgba(0,0,0,0.92)',
-              display: 'flex',
-              flexDirection: 'column',
-            }}
-            onClick={(e) => e.stopPropagation()}
-          >
-            {/* Header */}
-            <div style={{
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'space-between',
-              padding: '16px 20px',
-              flexShrink: 0,
-            }}>
-              <button
-                onClick={() => setShowTagOverlay(false)}
-                style={{
-                  width: 40, height: 40, borderRadius: '50%',
-                  background: 'rgba(255,255,255,0.1)',
-                  border: 'none', color: 'white',
-                  display: 'flex', alignItems: 'center', justifyContent: 'center',
-                  cursor: 'pointer',
-                }}
-              >
-                <X size={20} />
-              </button>
-              <span style={{ color: 'white', fontSize: 16, fontWeight: 600 }}>
-                Tag People
-              </span>
-              <button
-                onClick={() => {
-                  setShowTagOverlay(false)
-                  onDismiss()
-                }}
-                style={{
-                  padding: '8px 16px', borderRadius: 20,
-                  background: '#406A56', border: 'none',
-                  color: 'white', fontSize: 14, fontWeight: 600,
-                  cursor: 'pointer',
-                }}
-              >
-                Done
-              </button>
-            </div>
 
-            {/* FaceTagger — fills remaining space */}
-            <div style={{ flex: 1, overflow: 'auto', position: 'relative' }}>
-              <FaceTagger
-                mediaId={prompt.photoId}
-                imageUrl={prompt.photoUrl}
-                onXPEarned={(amount, action) => {
-                  // Could trigger XP animation here
-                }}
-              />
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
     </motion.div>
   )
 }
