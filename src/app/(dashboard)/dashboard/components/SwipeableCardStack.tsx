@@ -1,8 +1,8 @@
 'use client'
 
-import { useState, useCallback } from 'react'
+import { useState, useCallback, useEffect, useRef } from 'react'
 import { motion, AnimatePresence, useMotionValue, useTransform, PanInfo } from 'framer-motion'
-import { X, Sparkles, RotateCcw } from 'lucide-react'
+import { X, Sparkles } from 'lucide-react'
 import { TYPE_CONFIG, isContactPrompt } from '../constants'
 
 interface Prompt {
@@ -31,63 +31,60 @@ export function SwipeableCardStack({
   onShuffle,
   getPromptText,
 }: SwipeableCardStackProps) {
-  const [exitDirection, setExitDirection] = useState<'left' | 'right' | null>(null)
   const [dismissedIds, setDismissedIds] = useState<Set<string>>(new Set())
+  const containerRef = useRef<HTMLDivElement>(null)
 
   // Filter out dismissed cards
   const visiblePrompts = prompts.filter(p => !dismissedIds.has(p.id))
 
-  const handleDismiss = useCallback((id: string, direction: 'left' | 'right') => {
-    setExitDirection(direction)
+  const handleDismiss = useCallback((id: string) => {
     setDismissedIds(prev => new Set([...prev, id]))
     onCardDismiss(id)
   }, [onCardDismiss])
 
-  const handleUndo = useCallback(() => {
-    const lastDismissed = Array.from(dismissedIds).pop()
-    if (lastDismissed) {
-      setDismissedIds(prev => {
-        const next = new Set(prev)
-        next.delete(lastDismissed)
-        return next
-      })
+  // Keyboard navigation
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (visiblePrompts.length === 0) return
+      
+      const currentPrompt = visiblePrompts[0]
+      
+      if (e.key === 'ArrowLeft' || e.key === 'ArrowRight') {
+        e.preventDefault()
+        handleDismiss(currentPrompt.id)
+      } else if (e.key === 'Enter' || e.key === ' ') {
+        e.preventDefault()
+        onCardClick(currentPrompt)
+      }
     }
-  }, [dismissedIds])
+
+    window.addEventListener('keydown', handleKeyDown)
+    return () => window.removeEventListener('keydown', handleKeyDown)
+  }, [visiblePrompts, handleDismiss, onCardClick])
 
   if (visiblePrompts.length === 0) {
     return (
-      <div className="flex flex-col items-center justify-center h-[500px] text-center">
+      <div className="flex flex-col items-center justify-center h-[520px] text-center">
         <div className="w-20 h-20 bg-gradient-to-br from-amber-400 to-orange-500 rounded-full flex items-center justify-center mb-6">
           <Sparkles size={40} className="text-white" />
         </div>
         <h3 className="text-2xl font-semibold text-[#406A56] mb-2">All caught up!</h3>
         <p className="text-[#406A56]/60 mb-6 max-w-sm">
-          You've gone through all your prompts. Shuffle to get more or come back later.
+          You've gone through all your prompts. Shuffle to get more.
         </p>
-        <div className="flex gap-3">
-          {dismissedIds.size > 0 && (
-            <button
-              onClick={handleUndo}
-              className="flex items-center gap-2 px-4 py-2 bg-gray-100 text-gray-700 rounded-full hover:bg-gray-200 transition-colors"
-            >
-              <RotateCcw size={18} />
-              Undo
-            </button>
-          )}
-          <button
-            onClick={onShuffle}
-            className="flex items-center gap-2 px-6 py-3 bg-[#406A56] text-white rounded-full hover:bg-[#4a7a64] transition-colors font-medium"
-          >
-            <Sparkles size={18} />
-            Get More Prompts
-          </button>
-        </div>
+        <button
+          onClick={onShuffle}
+          className="flex items-center gap-2 px-6 py-3 bg-[#406A56] text-white rounded-full hover:bg-[#4a7a64] transition-colors font-medium"
+        >
+          <Sparkles size={18} />
+          Get More Prompts
+        </button>
       </div>
     )
   }
 
   return (
-    <div className="relative h-[520px] w-full max-w-md mx-auto">
+    <div ref={containerRef} className="relative h-[520px] w-full max-w-md mx-auto" tabIndex={0}>
       {/* Card stack */}
       <div className="relative h-full">
         <AnimatePresence mode="popLayout">
@@ -97,41 +94,12 @@ export function SwipeableCardStack({
               prompt={prompt}
               index={index}
               totalVisible={Math.min(visiblePrompts.length, 3)}
-              onDismiss={handleDismiss}
+              onDismiss={() => handleDismiss(prompt.id)}
               onClick={() => onCardClick(prompt)}
               getPromptText={getPromptText}
             />
           ))}
         </AnimatePresence>
-      </div>
-
-      {/* Action buttons */}
-      <div className="absolute -bottom-16 left-1/2 -translate-x-1/2 flex items-center gap-4">
-        <button
-          onClick={() => visiblePrompts[0] && handleDismiss(visiblePrompts[0].id, 'left')}
-          className="w-14 h-14 rounded-full bg-white shadow-lg border-2 border-gray-200 flex items-center justify-center text-gray-400 hover:text-red-500 hover:border-red-200 transition-all hover:scale-110"
-          title="Skip"
-        >
-          <X size={28} />
-        </button>
-        
-        <button
-          onClick={() => visiblePrompts[0] && onCardClick(visiblePrompts[0])}
-          className="w-16 h-16 rounded-full bg-gradient-to-br from-[#406A56] to-[#5a8a76] shadow-lg flex items-center justify-center text-white hover:scale-110 transition-transform"
-          title="Answer"
-        >
-          <Sparkles size={28} />
-        </button>
-
-        {dismissedIds.size > 0 && (
-          <button
-            onClick={handleUndo}
-            className="w-14 h-14 rounded-full bg-white shadow-lg border-2 border-gray-200 flex items-center justify-center text-gray-400 hover:text-amber-500 hover:border-amber-200 transition-all hover:scale-110"
-            title="Undo"
-          >
-            <RotateCcw size={24} />
-          </button>
-        )}
       </div>
     </div>
   )
@@ -141,7 +109,7 @@ interface SwipeableCardProps {
   prompt: Prompt
   index: number
   totalVisible: number
-  onDismiss: (id: string, direction: 'left' | 'right') => void
+  onDismiss: () => void
   onClick: () => void
   getPromptText: (prompt: Prompt) => string
 }
@@ -155,80 +123,99 @@ function SwipeableCard({
   getPromptText,
 }: SwipeableCardProps) {
   const x = useMotionValue(0)
-  const rotate = useTransform(x, [-200, 200], [-15, 15])
+  const rotate = useTransform(x, [-200, 200], [-12, 12])
   const opacity = useTransform(x, [-200, -100, 0, 100, 200], [0.5, 1, 1, 1, 0.5])
   
-  // Swipe indicators
-  const skipOpacity = useTransform(x, [-100, -50, 0], [1, 0.5, 0])
-  const answerOpacity = useTransform(x, [0, 50, 100], [0, 0.5, 1])
+  // Track if user is dragging to prevent click on swipe
+  const isDragging = useRef(false)
+  const dragStartX = useRef(0)
 
   const config = TYPE_CONFIG[prompt.type] || TYPE_CONFIG.memory_prompt
   const isContact = isContactPrompt(prompt.type)
   const hasPhoto = prompt.photoUrl && (prompt.type === 'photo_backstory' || prompt.type === 'tag_person')
 
+  const handleDragStart = () => {
+    isDragging.current = true
+    dragStartX.current = x.get()
+  }
+
   const handleDragEnd = (_: any, info: PanInfo) => {
-    const threshold = 100
-    if (info.offset.x > threshold) {
-      onDismiss(prompt.id, 'right')
-    } else if (info.offset.x < -threshold) {
-      onDismiss(prompt.id, 'left')
+    const threshold = 80
+    const velocity = Math.abs(info.velocity.x)
+    const offset = Math.abs(info.offset.x)
+    
+    // Dismiss if dragged far enough or with enough velocity
+    if (offset > threshold || (velocity > 500 && offset > 30)) {
+      onDismiss()
+    }
+    
+    // Reset dragging flag after a short delay to prevent click
+    setTimeout(() => {
+      isDragging.current = false
+    }, 50)
+  }
+
+  const handleClick = () => {
+    // Only trigger click if not dragging
+    if (!isDragging.current && Math.abs(x.get() - dragStartX.current) < 10) {
+      onClick()
     }
   }
 
+  const handleClose = (e: React.MouseEvent) => {
+    e.stopPropagation()
+    onDismiss()
+  }
+
   // Stack positioning
-  const stackOffset = index * 8
-  const stackScale = 1 - index * 0.05
+  const stackOffset = index * 6
+  const stackScale = 1 - index * 0.04
 
   return (
     <motion.div
       className="absolute inset-0"
-      style={{
-        zIndex: totalVisible - index,
-      }}
-      initial={{ scale: 0.95, opacity: 0, y: 20 }}
+      style={{ zIndex: totalVisible - index }}
+      initial={{ scale: 0.9, opacity: 0, y: 30 }}
       animate={{
         scale: stackScale,
         opacity: 1,
         y: stackOffset,
-        transition: { type: 'spring', stiffness: 300, damping: 25 }
       }}
       exit={{
-        x: x.get() > 0 ? 300 : -300,
+        x: x.get() >= 0 ? 400 : -400,
         opacity: 0,
-        rotate: x.get() > 0 ? 20 : -20,
-        transition: { duration: 0.3 }
+        rotate: x.get() >= 0 ? 15 : -15,
+      }}
+      transition={{
+        type: 'spring',
+        stiffness: 400,
+        damping: 30,
+        mass: 0.8,
       }}
     >
       <motion.div
         className={`
-          h-full w-full rounded-3xl overflow-hidden cursor-grab active:cursor-grabbing
+          h-full w-full rounded-3xl overflow-hidden
           bg-white shadow-2xl border border-gray-100
-          ${index === 0 ? '' : 'pointer-events-none'}
+          ${index === 0 ? 'cursor-grab active:cursor-grabbing' : 'pointer-events-none'}
         `}
         style={{ x, rotate, opacity }}
         drag={index === 0 ? 'x' : false}
         dragConstraints={{ left: 0, right: 0 }}
-        dragElastic={0.7}
+        dragElastic={0.9}
+        onDragStart={handleDragStart}
         onDragEnd={handleDragEnd}
-        onClick={index === 0 ? onClick : undefined}
-        whileTap={index === 0 ? { scale: 0.98 } : undefined}
+        onClick={index === 0 ? handleClick : undefined}
+        whileDrag={{ scale: 1.02 }}
       >
-        {/* Swipe indicators */}
+        {/* Close button - top right */}
         {index === 0 && (
-          <>
-            <motion.div
-              className="absolute top-6 left-6 px-4 py-2 bg-red-500 text-white font-bold rounded-lg z-10 rotate-[-15deg]"
-              style={{ opacity: skipOpacity }}
-            >
-              SKIP
-            </motion.div>
-            <motion.div
-              className="absolute top-6 right-6 px-4 py-2 bg-green-500 text-white font-bold rounded-lg z-10 rotate-[15deg]"
-              style={{ opacity: answerOpacity }}
-            >
-              ANSWER
-            </motion.div>
-          </>
+          <button
+            onClick={handleClose}
+            className="absolute top-4 right-4 z-20 w-10 h-10 rounded-full bg-black/20 backdrop-blur-sm flex items-center justify-center text-white hover:bg-black/40 transition-colors"
+          >
+            <X size={20} />
+          </button>
         )}
 
         {/* Card content */}
@@ -240,6 +227,7 @@ function SwipeableCard({
                 src={prompt.photoUrl}
                 alt=""
                 className="w-full h-full object-cover"
+                draggable={false}
               />
               <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
             </div>
@@ -301,9 +289,9 @@ function SwipeableCard({
               {getPromptText(prompt)}
             </p>
 
-            {/* Tap hint */}
+            {/* Hint */}
             <p className="text-xs text-gray-400 text-center mt-4">
-              Tap to answer • Swipe to skip
+              Tap to answer • Swipe or press ← → to skip
             </p>
           </div>
         </div>

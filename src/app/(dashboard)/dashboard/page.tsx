@@ -77,7 +77,7 @@ export default function DashboardPage() {
     shuffle, 
     answerPrompt, 
     stats: engagementStats 
-  } = useEngagementPrompts(6, selectedChapter)
+  } = useEngagementPrompts(20, selectedChapter)
   
   // Track locally answered prompts
   const [answeredPromptIds, setAnsweredPromptIds] = useState<string[]>([])
