@@ -42,6 +42,11 @@ export function SwipeableCardStack({
     onCardDismiss(id)
   }, [onCardDismiss])
 
+  // Auto-focus on mount for keyboard navigation
+  useEffect(() => {
+    containerRef.current?.focus()
+  }, [])
+
   // Keyboard navigation
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -84,7 +89,7 @@ export function SwipeableCardStack({
   }
 
   return (
-    <div ref={containerRef} className="relative h-[520px] w-full max-w-md mx-auto" tabIndex={0}>
+    <div ref={containerRef} className="relative h-[520px] w-full max-w-md mx-auto outline-none" tabIndex={0}>
       {/* Card stack */}
       <div className="relative h-full">
         <AnimatePresence mode="popLayout">
