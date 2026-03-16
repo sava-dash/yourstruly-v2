@@ -2,7 +2,7 @@
 
 import { useState, useCallback, useEffect, useRef } from 'react'
 import { motion, AnimatePresence, useMotionValue, useTransform, PanInfo } from 'framer-motion'
-import { X, Sparkles, Mic, Send, RotateCcw, UserPlus, Search } from 'lucide-react'
+import { X, Sparkles, Mic, Send, RotateCcw, UserPlus, Search, Square, Loader2, Bookmark } from 'lucide-react'
 import { TYPE_CONFIG, isContactPrompt, PHOTO_TAGGING_TYPES } from '../constants'
 import { createClient } from '@/lib/supabase/client'
 
@@ -135,6 +135,20 @@ function FlippableCard({
   const [isFlipped, setIsFlipped] = useState(false)
   const [responseText, setResponseText] = useState('')
   const [isSubmitting, setIsSubmitting] = useState(false)
+  
+  // Conversation follow-up state
+  const [exchanges, setExchanges] = useState<{ question: string; response: string }[]>([])
+  const [currentQuestion, setCurrentQuestion] = useState('')
+  const [isLoadingFollowUp, setIsLoadingFollowUp] = useState(false)
+  const [showSavePrompt, setShowSavePrompt] = useState(false)
+  const chatEndRef = useRef<HTMLDivElement>(null)
+  
+  // Voice recording state
+  const [isRecording, setIsRecording] = useState(false)
+  const [mediaRecorder, setMediaRecorder] = useState<MediaRecorder | null>(null)
+  const audioChunksRef = useRef<Blob[]>([])
+  
+  const MAX_FOLLOW_UPS = 3
   
   // Tag person state
   const isTagType = PHOTO_TAGGING_TYPES.includes(prompt.type)
@@ -309,19 +323,138 @@ function FlippableCard({
     }
   }
 
+  // Submit response and get follow-up
   const handleSubmit = async () => {
     if (!responseText.trim() || isSubmitting) return
     
+    const currentQ = currentQuestion || getPromptText(prompt)
+    const newExchange = { question: currentQ, response: responseText.trim() }
+    const updatedExchanges = [...exchanges, newExchange]
+    
+    setExchanges(updatedExchanges)
+    setResponseText('')
+    setIsSubmitting(true)
+    
+    // After MAX_FOLLOW_UPS exchanges, show save prompt
+    if (updatedExchanges.length >= MAX_FOLLOW_UPS) {
+      setShowSavePrompt(true)
+      setIsSubmitting(false)
+      return
+    }
+    
+    // Get follow-up question
+    setIsLoadingFollowUp(true)
+    try {
+      const res = await fetch('/api/conversation/follow-up', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          exchanges: updatedExchanges,
+          promptType: prompt.type,
+          originalPrompt: getPromptText(prompt),
+        }),
+      })
+      const data = await res.json()
+      
+      if (data.shouldEnd || !data.followUpQuestion) {
+        setShowSavePrompt(true)
+      } else {
+        setCurrentQuestion(data.followUpQuestion)
+      }
+    } catch (err) {
+      console.error('Follow-up failed:', err)
+      setShowSavePrompt(true)
+    }
+    setIsLoadingFollowUp(false)
+    setIsSubmitting(false)
+    
+    setTimeout(() => chatEndRef.current?.scrollIntoView({ behavior: 'smooth' }), 100)
+  }
+  
+  // Save the full conversation as a memory
+  const handleSaveMemory = async () => {
     setIsSubmitting(true)
     try {
-      await onAnswer(prompt.id, { type: 'text', text: responseText })
+      const fullText = exchanges.map(e => `Q: ${e.question}\nA: ${e.response}`).join('\n\n')
+      await onAnswer(prompt.id, { type: 'text', text: fullText })
       setIsFlipped(false)
       setResponseText('')
+      setExchanges([])
+      setCurrentQuestion('')
+      setShowSavePrompt(false)
       onDismiss()
     } catch (err) {
-      console.error('Failed to submit:', err)
+      console.error('Failed to save:', err)
     }
     setIsSubmitting(false)
+  }
+  
+  // Continue adding more after save prompt
+  const handleAddMore = () => {
+    setShowSavePrompt(false)
+    setCurrentQuestion('')
+    // Fetch another follow-up
+    setIsLoadingFollowUp(true)
+    fetch('/api/conversation/follow-up', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        exchanges,
+        promptType: prompt.type,
+        originalPrompt: getPromptText(prompt),
+      }),
+    })
+      .then(r => r.json())
+      .then(data => {
+        setCurrentQuestion(data.followUpQuestion || 'Tell me more about this memory.')
+      })
+      .catch(() => setCurrentQuestion('Tell me more about this memory.'))
+      .finally(() => setIsLoadingFollowUp(false))
+  }
+  
+  // Voice recording
+  const startRecording = async () => {
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true })
+      const recorder = new MediaRecorder(stream)
+      audioChunksRef.current = []
+      
+      recorder.ondataavailable = (e) => {
+        if (e.data.size > 0) audioChunksRef.current.push(e.data)
+      }
+      
+      recorder.onstop = async () => {
+        stream.getTracks().forEach(t => t.stop())
+        const audioBlob = new Blob(audioChunksRef.current, { type: 'audio/webm' })
+        
+        // Transcribe
+        const formData = new FormData()
+        formData.append('audio', audioBlob, 'recording.webm')
+        
+        try {
+          const res = await fetch('/api/transcribe', { method: 'POST', body: formData })
+          const data = await res.json()
+          if (data.text) {
+            setResponseText(prev => prev ? `${prev} ${data.text}` : data.text)
+          }
+        } catch (err) {
+          console.error('Transcription failed:', err)
+        }
+      }
+      
+      recorder.start()
+      setMediaRecorder(recorder)
+      setIsRecording(true)
+    } catch (err) {
+      console.error('Mic access failed:', err)
+    }
+  }
+  
+  const stopRecording = () => {
+    if (mediaRecorder && mediaRecorder.state !== 'inactive') {
+      mediaRecorder.stop()
+    }
+    setIsRecording(false)
   }
 
   const stackOffset = index * 6
@@ -633,61 +766,120 @@ function FlippableCard({
               </div>
             </div>
           ) : (
-            <div className="h-full flex flex-col p-6 pt-16">
-              {/* Question recap */}
-              <div className="mb-4">
-                <span className={`px-3 py-1 rounded-full text-xs font-medium inline-block mb-2 ${
-                  config.color === 'yellow' ? 'bg-amber-100 text-amber-700' :
-                  config.color === 'green' ? 'bg-emerald-100 text-emerald-700' :
-                  config.color === 'red' ? 'bg-rose-100 text-rose-700' :
-                  config.color === 'blue' ? 'bg-blue-100 text-blue-700' :
-                  'bg-purple-100 text-purple-700'
-                }`}>
-                  {config.label}
-                </span>
-                <p className="text-gray-800 font-medium">{getPromptText(prompt)}</p>
+            <div className="h-full flex flex-col pt-14">
+              {/* Conversation thread */}
+              <div className="flex-1 overflow-y-auto px-5 pb-2">
+                {/* Original question (if no exchanges yet) */}
+                {exchanges.length === 0 && !showSavePrompt && (
+                  <div className="mb-3">
+                    <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-medium inline-block mb-1.5 ${
+                      config.color === 'yellow' ? 'bg-amber-100 text-amber-700' :
+                      config.color === 'green' ? 'bg-emerald-100 text-emerald-700' :
+                      config.color === 'red' ? 'bg-rose-100 text-rose-700' :
+                      config.color === 'blue' ? 'bg-blue-100 text-blue-700' :
+                      'bg-purple-100 text-purple-700'
+                    }`}>
+                      {config.label}
+                    </span>
+                    <p className="text-[#406A56] font-semibold text-base">{getPromptText(prompt)}</p>
+                  </div>
+                )}
+
+                {/* Past exchanges */}
+                {exchanges.map((ex, i) => (
+                  <div key={i} className="mb-3">
+                    <div className="bg-[#406A56]/5 rounded-2xl rounded-bl-sm px-3.5 py-2.5 mb-1.5">
+                      <p className="text-sm text-[#406A56] font-medium">{ex.question}</p>
+                    </div>
+                    <div className="bg-gray-100 rounded-2xl rounded-br-sm px-3.5 py-2.5 ml-6">
+                      <p className="text-sm text-gray-800">{ex.response}</p>
+                    </div>
+                  </div>
+                ))}
+
+                {/* Current follow-up question */}
+                {currentQuestion && !showSavePrompt && (
+                  <div className="bg-[#406A56]/5 rounded-2xl rounded-bl-sm px-3.5 py-2.5 mb-2">
+                    <p className="text-sm text-[#406A56] font-medium">{currentQuestion}</p>
+                  </div>
+                )}
+
+                {/* Loading follow-up */}
+                {isLoadingFollowUp && (
+                  <div className="flex items-center gap-2 text-gray-400 text-sm px-2 py-2">
+                    <Loader2 size={14} className="animate-spin" />
+                    Thinking...
+                  </div>
+                )}
+
+                {/* Save prompt after 3 exchanges */}
+                {showSavePrompt && (
+                  <div className="bg-amber-50 rounded-2xl p-4 text-center">
+                    <Bookmark size={24} className="mx-auto text-amber-500 mb-2" />
+                    <p className="text-sm font-medium text-gray-800 mb-3">
+                      Would you like to save this memory or add more?
+                    </p>
+                    <div className="flex gap-2">
+                      <button
+                        onClick={handleAddMore}
+                        className="flex-1 py-2 px-3 rounded-xl border border-gray-200 text-sm font-medium text-gray-600 hover:bg-gray-50"
+                      >
+                        Add More
+                      </button>
+                      <button
+                        onClick={handleSaveMemory}
+                        disabled={isSubmitting}
+                        className="flex-1 py-2 px-3 rounded-xl bg-[#406A56] text-white text-sm font-medium hover:bg-[#4a7a64] disabled:opacity-50"
+                      >
+                        {isSubmitting ? 'Saving...' : '✨ Save Memory'}
+                      </button>
+                    </div>
+                  </div>
+                )}
+                
+                <div ref={chatEndRef} />
               </div>
 
-              {/* Photo thumbnail if exists */}
-              {hasPhoto && (
-                <div className="w-20 h-20 rounded-xl overflow-hidden mb-4">
-                  <img src={prompt.photoUrl} alt="" className="w-full h-full object-cover" />
+              {/* Input area (hidden when showing save prompt) */}
+              {!showSavePrompt && (
+                <div className="px-4 pb-4 pt-2 border-t border-gray-100">
+                  <div className="flex items-end gap-2">
+                    <textarea
+                      value={responseText}
+                      onChange={(e) => setResponseText(e.target.value)}
+                      onKeyDown={(e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleSubmit() } }}
+                      placeholder="Share your thoughts..."
+                      rows={2}
+                      className="flex-1 p-3 bg-gray-50 rounded-2xl border-0 resize-none focus:outline-none focus:ring-2 focus:ring-[#406A56]/30 text-gray-800 text-sm placeholder-gray-400"
+                      autoFocus={isFlipped}
+                    />
+                    <div className="flex flex-col gap-1.5">
+                      <button
+                        onClick={isRecording ? stopRecording : startRecording}
+                        className={`w-10 h-10 rounded-full flex items-center justify-center transition-colors ${
+                          isRecording 
+                            ? 'bg-red-500 text-white animate-pulse' 
+                            : 'bg-gray-100 text-gray-500 hover:bg-gray-200'
+                        }`}
+                      >
+                        {isRecording ? <Square size={16} /> : <Mic size={18} />}
+                      </button>
+                      <button
+                        onClick={handleSubmit}
+                        disabled={!responseText.trim() || isSubmitting}
+                        className="w-10 h-10 rounded-full bg-[#406A56] text-white flex items-center justify-center disabled:opacity-40 hover:bg-[#4a7a64] transition-colors"
+                      >
+                        <Send size={16} />
+                      </button>
+                    </div>
+                  </div>
+                  <div className="text-center mt-2">
+                    <span className="text-[10px] text-amber-600 font-medium">
+                      <Sparkles size={10} className="inline mr-0.5" />+{config.xp} XP
+                    </span>
+                  </div>
                 </div>
               )}
-
-              {/* Response input */}
-              <div className="flex-1 flex flex-col">
-                <textarea
-                  value={responseText}
-                  onChange={(e) => setResponseText(e.target.value)}
-                  placeholder="Share your thoughts..."
-                  className="flex-1 w-full p-4 bg-gray-50 rounded-2xl border-0 resize-none focus:outline-none focus:ring-2 focus:ring-[#406A56]/30 text-gray-800 placeholder-gray-400"
-                  autoFocus={isFlipped}
-                />
-                
-                <div className="flex items-center justify-between mt-4">
-                  <button className="w-12 h-12 rounded-full bg-gray-100 flex items-center justify-center text-gray-500 hover:bg-gray-200 transition-colors">
-                    <Mic size={20} />
-                  </button>
-                  
-                  <button
-                    onClick={handleSubmit}
-                    disabled={!responseText.trim() || isSubmitting}
-                    className="flex items-center gap-2 px-6 py-3 bg-[#406A56] text-white rounded-full hover:bg-[#4a7a64] transition-colors font-medium disabled:opacity-50 disabled:cursor-not-allowed"
-                  >
-                    <Send size={18} />
-                    {isSubmitting ? 'Saving...' : 'Save Memory'}
-                  </button>
-                </div>
-              </div>
-
-              {/* XP indicator */}
-              <div className="text-center mt-4">
-                <span className="text-xs text-amber-600 font-medium">
-                  <Sparkles size={12} className="inline mr-1" />
-                  Earn +{config.xp} XP
-                </span>
-              </div>
             </div>
           )}
         </div>
