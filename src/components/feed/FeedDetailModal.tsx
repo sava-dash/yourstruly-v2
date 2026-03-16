@@ -235,63 +235,71 @@ export function FeedDetailModal({ activity, isOpen, onClose, onUpdate }: FeedDet
   const loadFullDetails = async () => {
     if (!activity) return
     
-    // Load media for memories
-    if (activity.type === 'memory_created' && activity.metadata?.memoryId) {
+    const memoryId = activity.metadata?.memoryId
+    if (!memoryId) {
+      console.log('No memoryId in activity metadata')
+      return
+    }
+    
+    // Load media for all memory-related types
+    if (activity.type === 'memory_created' || activity.type === 'photos_uploaded' || activity.type === 'memory_shared') {
       try {
-        const res = await fetch(`/api/memories/${activity.metadata.memoryId}`)
+        console.log('Loading memory details for:', memoryId)
+        const res = await fetch(`/api/memories/${memoryId}`)
+        
         if (res.ok) {
           const data = await res.json()
+          console.log('Memory data loaded:', {
+            mediaCount: data.media?.length || 0,
+            taggedCount: data.tagged_contacts?.length || 0
+          })
+          
           setMediaItems(data.media || [])
           setTaggedPeople(data.tagged_contacts || [])
+          
+          // Pre-load faces for first media item (for when user clicks Tag)
+          if (data.media?.[0]?.id) {
+            loadFacesForMedia(data.media[0].id)
+          }
+        } else {
+          console.error('Failed to load memory:', res.status, await res.text())
         }
       } catch (err) {
         console.error('Error loading memory details:', err)
       }
     }
-    
-    // Load photos and their face data for photo uploads
-    if (activity.type === 'photos_uploaded' && activity.metadata?.memoryId) {
-      try {
-        const res = await fetch(`/api/memories/${activity.metadata.memoryId}`)
-        if (res.ok) {
-          const data = await res.json()
-          setMediaItems(data.media || [])
-          setTaggedPeople(data.tagged_contacts || [])
-          
-          // Load faces for first media item
-          if (data.media?.[0]?.id) {
-            loadFacesForMedia(data.media[0].id)
-          }
-        }
-      } catch (err) {
-        console.error('Error loading photo details:', err)
-      }
-    }
   }
   
   const loadFacesForMedia = async (mediaId: string) => {
+    if (!mediaId) return
     try {
       const res = await fetch(`/api/media/${mediaId}/faces`)
       if (res.ok) {
         const data = await res.json()
+        console.log('Loaded faces for media:', mediaId, data.faces?.length || 0)
         setDetectedFaces(data.faces || [])
       }
     } catch (err) {
       console.error('Error loading faces:', err)
+      setDetectedFaces([])
     }
   }
   
   const detectFaces = async () => {
     const media = mediaItems[currentMediaIndex]
+    
+    // If no media items loaded yet but we have a thumbnail, we can't detect faces
     if (!media?.id) {
-      // No media loaded yet - just show empty state for click anywhere
+      console.log('No media ID available for face detection')
       setDetectedFaces([])
       return
     }
     
+    console.log('Detecting faces for media:', media.id)
+    
     try {
       const controller = new AbortController()
-      const timeoutId = setTimeout(() => controller.abort(), 10000) // 10s timeout
+      const timeoutId = setTimeout(() => controller.abort(), 15000) // 15s timeout
       
       const res = await fetch(`/api/media/${media.id}/detect-faces`, { 
         method: 'POST',
@@ -299,16 +307,16 @@ export function FeedDetailModal({ activity, isOpen, onClose, onUpdate }: FeedDet
       })
       clearTimeout(timeoutId)
       
-      if (res.ok) {
-        const data = await res.json()
-        setDetectedFaces(data.faces || [])
+      const data = await res.json()
+      console.log('Face detection result:', data)
+      
+      if (data.faces && Array.isArray(data.faces)) {
+        setDetectedFaces(data.faces)
       } else {
-        // API failed - allow click anywhere
         setDetectedFaces([])
       }
-    } catch (err) {
-      console.error('Error detecting faces:', err)
-      // On error, set empty faces so user can click anywhere
+    } catch (err: any) {
+      console.error('Error detecting faces:', err?.message || err)
       setDetectedFaces([])
     }
   }
@@ -332,17 +340,33 @@ export function FeedDetailModal({ activity, isOpen, onClose, onUpdate }: FeedDet
     const media = mediaItems[currentMediaIndex]
     const contact = contacts.find(c => c.id === contactId)
     
-    // If no specific face selected (-1), just tag the memory/photo with this contact
+    // If no specific face selected (-1), create a manual tag or tag the memory
     if (selectedFaceIndex === -1) {
-      if (activity?.metadata?.memoryId) {
+      if (media?.id) {
+        // Create manual face tag at click position
         try {
-          await handleTagPerson(contactId)
-          setSelectedFaceIndex(null)
-          setFaceDropdownPosition(null)
+          const clickX = faceDropdownPosition ? faceDropdownPosition.x / (imageContainerRef.current?.clientWidth || 400) : 0.5
+          const clickY = faceDropdownPosition ? faceDropdownPosition.y / (imageContainerRef.current?.clientHeight || 300) : 0.5
+          
+          const res = await fetch(`/api/media/${media.id}/faces`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ contactId, x: clickX, y: clickY })
+          })
+          
+          if (res.ok) {
+            // Reload faces to show the new tag
+            loadFacesForMedia(media.id)
+          }
         } catch (err) {
-          console.error('Error tagging person:', err)
+          console.error('Error creating face tag:', err)
         }
+      } else if (activity?.metadata?.memoryId) {
+        // Fall back to tagging the memory itself
+        await handleTagPerson(contactId)
       }
+      setSelectedFaceIndex(null)
+      setFaceDropdownPosition(null)
       return
     }
     
@@ -350,13 +374,15 @@ export function FeedDetailModal({ activity, isOpen, onClose, onUpdate }: FeedDet
     if (!face || !media) return
     
     try {
+      // Use faceId if available, otherwise use faceIndex
       const res = await fetch(`/api/media/${media.id}/faces`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
+          faceId: face.id,
           faceIndex: selectedFaceIndex,
           contactId,
-          boundingBox: face.boundingBox || face.bounding_box
+          boundingBox: face.boundingBox
         })
       })
       
