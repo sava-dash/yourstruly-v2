@@ -1,6 +1,6 @@
 'use client';
 
-import { useRef, useEffect } from 'react';
+import { useRef, useEffect, useMemo } from 'react';
 import { motion } from 'framer-motion';
 import { Check, ChevronRight, ChevronLeft } from 'lucide-react';
 
@@ -284,13 +284,28 @@ function ClusteredBubbles({
   onToggle: (label: string) => void;
   accentColor: string;
 }) {
-  // Assign sizes - create a repeating pattern of S/M/L
-  // that fills the space nicely
-  const getSizeForIndex = (i: number): number => {
-    // Pattern: L M S M L S M L M S ...
-    const sizes = [88, 76, 64, 78, 70, 90, 66, 82, 72, 62, 86, 68, 74, 92, 60, 80, 70, 84, 66, 76];
-    return sizes[i % sizes.length];
-  };
+  // Seeded pseudo-random for consistent but organic sizing
+  const seededSizes = useMemo(() => {
+    let seed = 7919; // prime
+    return items.map((_, i) => {
+      seed = (seed * 16807 + i * 31) % 2147483647;
+      const t = (seed % 1000) / 1000; // 0-1
+      // Range: 100 to 134px — big enough to read
+      return Math.round(100 + t * 34);
+    });
+  }, [items.length]);
+
+  // Seeded random margins for organic feel
+  const seededOffsets = useMemo(() => {
+    let seed = 1337;
+    return items.map((_, i) => {
+      seed = (seed * 48271 + i * 13) % 2147483647;
+      const mt = ((seed % 1000) / 1000) * 10 - 5; // -5 to +5
+      seed = (seed * 48271 + i * 7) % 2147483647;
+      const ml = ((seed % 1000) / 1000) * 8 - 4; // -4 to +4
+      return { marginTop: mt, marginLeft: ml };
+    });
+  }, [items.length]);
 
   const UNSELECTED_BG = [
     'rgba(255,255,255,0.06)',
@@ -298,7 +313,7 @@ function ClusteredBubbles({
     'rgba(255,255,255,0.08)',
     'rgba(255,255,255,0.05)',
     'rgba(255,255,255,0.07)',
-    'rgba(255,255,255,0.03)',
+    'rgba(255,255,255,0.04)',
     'rgba(255,255,255,0.06)',
   ];
 
@@ -307,15 +322,16 @@ function ClusteredBubbles({
       display: 'flex',
       flexWrap: 'wrap',
       justifyContent: 'center',
-      alignContent: 'flex-start',
-      gap: 6,
+      alignItems: 'center',
+      gap: 4,
       padding: '0 4px',
     }}>
       {items.map((item, i) => {
-        const size = getSizeForIndex(i);
+        const size = seededSizes[i];
+        const offset = seededOffsets[i];
         const isSelected = selected.has(item.label);
-        const emojiSize = size >= 84 ? 28 : size >= 72 ? 24 : 20;
-        const labelSize = size >= 84 ? 10 : size >= 72 ? 9 : 7.5;
+        const emojiSize = 24;
+        const labelSize = size >= 120 ? 13 : 12;
 
         return (
           <motion.button
@@ -344,6 +360,8 @@ function ClusteredBubbles({
               padding: 0,
               overflow: 'hidden',
               flexShrink: 0,
+              marginTop: offset.marginTop,
+              marginLeft: offset.marginLeft,
               boxShadow: isSelected
                 ? `0 0 24px ${accentColor}50, inset 0 0 20px ${accentColor}30`
                 : 'none',
@@ -352,15 +370,15 @@ function ClusteredBubbles({
             <span style={{ fontSize: emojiSize, lineHeight: 1 }}>{item.emoji}</span>
             <span style={{
               fontSize: labelSize,
-              fontWeight: isSelected ? 700 : 500,
-              color: isSelected ? 'white' : 'rgba(255,255,255,0.55)',
+              fontWeight: isSelected ? 700 : 600,
+              color: isSelected ? 'white' : 'rgba(255,255,255,0.65)',
               lineHeight: 1.15,
               textAlign: 'center',
-              maxWidth: size - 14,
+              maxWidth: size - 16,
               overflow: 'hidden',
               textOverflow: 'ellipsis',
               whiteSpace: 'nowrap',
-              marginTop: 2,
+              marginTop: 3,
             }}>
               {item.label}
             </span>
