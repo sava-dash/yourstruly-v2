@@ -1,7 +1,7 @@
 'use client';
 
-import { useState, useRef, useEffect, useMemo } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { useRef, useEffect } from 'react';
+import { motion } from 'framer-motion';
 import { Check, ChevronRight, ChevronLeft } from 'lucide-react';
 
 // ============================================
@@ -405,6 +405,9 @@ interface BubblePickerProps {
   totalSelected: number;
 }
 
+// Flat list of all interest items for the single-screen view
+const ALL_INTEREST_ITEMS = INTEREST_DATA.flatMap(cat => cat.items);
+
 export function BubblePickerInterests({
   selected,
   onToggle,
@@ -413,9 +416,6 @@ export function BubblePickerInterests({
   onSkip,
   totalSelected,
 }: BubblePickerProps) {
-  const [activeCategory, setActiveCategory] = useState(0);
-  const currentCat = INTEREST_DATA[activeCategory];
-
   return (
     <div style={{
       minHeight: '100dvh',
@@ -439,73 +439,23 @@ export function BubblePickerInterests({
         </p>
       </div>
 
-      {/* Category tabs */}
-      <div style={{
-        display: 'flex',
-        gap: 6,
-        padding: '10px 20px',
-        overflowX: 'auto',
-        WebkitOverflowScrolling: 'touch',
-        msOverflowStyle: 'none',
-        scrollbarWidth: 'none',
-        flexShrink: 0,
-        position: 'relative',
-        zIndex: 10,
-      }} className="no-scrollbar">
-        {INTEREST_DATA.map((cat, i) => (
-          <button
-            key={cat.name}
-            onClick={() => setActiveCategory(i)}
-            style={{
-              padding: '7px 14px',
-              borderRadius: 100,
-              border: activeCategory === i ? '1.5px solid rgba(255,255,255,0.35)' : '1px solid rgba(255,255,255,0.1)',
-              background: activeCategory === i ? 'rgba(64,106,86,0.45)' : 'rgba(255,255,255,0.05)',
-              color: activeCategory === i ? 'white' : 'rgba(255,255,255,0.45)',
-              fontSize: 12,
-              fontWeight: activeCategory === i ? 600 : 500,
-              cursor: 'pointer',
-              whiteSpace: 'nowrap',
-              flexShrink: 0,
-              transition: 'all 0.15s',
-            }}
-          >
-            {cat.emoji} {cat.name}
-          </button>
-        ))}
-      </div>
-
-      {/* Bubble area */}
+      {/* All bubbles — single scrollable area */}
       <div style={{
         flex: 1,
         overflowY: 'auto',
         padding: '16px 8px 8px',
         position: 'relative',
         zIndex: 10,
-        display: 'flex',
-        alignItems: 'flex-start',
       }}>
-        <AnimatePresence mode="wait">
-          <motion.div
-            key={currentCat.name}
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: 0.2 }}
-            style={{ width: '100%' }}
-          >
-            <ClusteredBubbles
-              items={currentCat.items}
-              selected={selected}
-              onToggle={onToggle}
-              accentColor={SELECTED_COLOR}
-            />
-          </motion.div>
-        </AnimatePresence>
+        <ClusteredBubbles
+          items={ALL_INTEREST_ITEMS}
+          selected={selected}
+          onToggle={onToggle}
+          accentColor={SELECTED_COLOR}
+        />
       </div>
 
       <BottomNav totalSelected={totalSelected} onBack={onBack} onContinue={onContinue} onSkip={onSkip} accentColor={SELECTED_COLOR} gradientFrom="rgba(13,26,20,0.98)" />
-      <style>{`.no-scrollbar::-webkit-scrollbar{display:none}`}</style>
     </div>
   );
 }
