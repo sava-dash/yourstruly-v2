@@ -145,6 +145,55 @@ function FlippableCard({
   const [taggedFaces, setTaggedFaces] = useState<{ id: string; name: string; x: number; y: number }[]>([])
   const imageRef = useRef<HTMLImageElement>(null)
   
+  // Photo backstory state (location + date)
+  const isBackstoryType = prompt.type === 'photo_backstory'
+  const [locationInput, setLocationInput] = useState('')
+  const [locationSuggestions, setLocationSuggestions] = useState<{ place_name: string; id: string }[]>([])
+  const [dateInput, setDateInput] = useState('')
+  const [isSavingBackstory, setIsSavingBackstory] = useState(false)
+  const locationDebounce = useRef<ReturnType<typeof setTimeout> | null>(null)
+
+  const fetchLocationSuggestions = useCallback(async (query: string) => {
+    if (query.length < 2) { setLocationSuggestions([]); return }
+    try {
+      const token = process.env.NEXT_PUBLIC_MAPBOX_TOKEN
+      const res = await fetch(
+        `https://api.mapbox.com/geocoding/v5/mapbox.places/${encodeURIComponent(query)}.json?access_token=${token}&limit=5&types=place,locality,neighborhood,address`
+      )
+      const data = await res.json()
+      setLocationSuggestions(data.features?.map((f: any) => ({ place_name: f.place_name, id: f.id })) || [])
+    } catch { setLocationSuggestions([]) }
+  }, [])
+
+  const handleLocationChange = (val: string) => {
+    setLocationInput(val)
+    if (locationDebounce.current) clearTimeout(locationDebounce.current)
+    locationDebounce.current = setTimeout(() => fetchLocationSuggestions(val), 300)
+  }
+
+  const handleSaveBackstory = async () => {
+    if (!prompt.photoId || (!locationInput.trim() && !dateInput.trim())) return
+    setIsSavingBackstory(true)
+    try {
+      const supabase = createClient()
+      const updates: Record<string, any> = {}
+      if (locationInput.trim()) updates.location_name = locationInput.trim()
+      if (dateInput.trim()) updates.taken_at = dateInput.trim()
+      
+      await supabase
+        .from('memory_media')
+        .update(updates)
+        .eq('id', prompt.photoId)
+      
+      // Also answer the prompt
+      await onAnswer(prompt.id, { type: 'text', text: `Location: ${locationInput}, Date: ${dateInput}` })
+      onDismiss()
+    } catch (err) {
+      console.error('Failed to save backstory:', err)
+    }
+    setIsSavingBackstory(false)
+  }
+  
   const x = useMotionValue(0)
   const rotate = useTransform(x, [-200, 200], [-12, 12])
   const opacity = useTransform(x, [-200, -100, 0, 100, 200], [0.5, 1, 1, 1, 0.5])
@@ -513,6 +562,80 @@ function FlippableCard({
                 >
                   {taggedFaces.length > 0 ? `Done · ${taggedFaces.length} tagged` : 'Skip'}
                 </button>
+              </div>
+            </div>
+          ) : isBackstoryType && prompt.photoUrl ? (
+            /* Photo Backstory: photo + location & date fields */
+            <div className="h-full flex flex-col">
+              {/* Photo at top */}
+              <div className="h-[45%] bg-black flex items-center justify-center overflow-hidden" style={{ marginTop: 56 }}>
+                <img src={prompt.photoUrl} alt="" className="w-full h-full object-contain" draggable={false} />
+              </div>
+
+              {/* Location + Date fields */}
+              <div className="flex-1 p-5 flex flex-col gap-4">
+                {/* Location with autocomplete */}
+                <div className="relative">
+                  <label className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1.5 block">
+                    📍 Where was this?
+                  </label>
+                  <input
+                    type="text"
+                    value={locationInput}
+                    onChange={(e) => handleLocationChange(e.target.value)}
+                    placeholder="City, place, or address..."
+                    className="w-full px-4 py-3 bg-gray-50 rounded-xl border border-gray-200 text-gray-800 text-sm focus:outline-none focus:ring-2 focus:ring-[#406A56]/30 focus:border-[#406A56]"
+                    autoFocus={isFlipped && isBackstoryType}
+                  />
+                  {locationSuggestions.length > 0 && (
+                    <div className="absolute top-full left-0 right-0 mt-1 bg-white rounded-xl shadow-lg border border-gray-100 z-20 overflow-hidden">
+                      {locationSuggestions.map(s => (
+                        <button
+                          key={s.id}
+                          onClick={() => {
+                            setLocationInput(s.place_name)
+                            setLocationSuggestions([])
+                          }}
+                          className="w-full px-4 py-2.5 text-left text-sm text-gray-700 hover:bg-[#406A56]/10 flex items-center gap-2"
+                        >
+                          <span className="text-gray-400">📍</span>
+                          {s.place_name}
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </div>
+
+                {/* Date field */}
+                <div>
+                  <label className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1.5 block">
+                    📅 When was this taken?
+                  </label>
+                  <input
+                    type="text"
+                    value={dateInput}
+                    onChange={(e) => setDateInput(e.target.value)}
+                    placeholder="e.g. Summer 2019, March 2020, Dec 25 2015..."
+                    className="w-full px-4 py-3 bg-gray-50 rounded-xl border border-gray-200 text-gray-800 text-sm focus:outline-none focus:ring-2 focus:ring-[#406A56]/30 focus:border-[#406A56]"
+                  />
+                </div>
+
+                {/* Save button */}
+                <button
+                  onClick={handleSaveBackstory}
+                  disabled={(!locationInput.trim() && !dateInput.trim()) || isSavingBackstory}
+                  className="mt-auto flex items-center justify-center gap-2 w-full py-3 bg-[#406A56] text-white rounded-xl font-medium disabled:opacity-50 disabled:cursor-not-allowed hover:bg-[#4a7a64] transition-colors"
+                >
+                  <Send size={16} />
+                  {isSavingBackstory ? 'Saving...' : 'Save Details'}
+                </button>
+
+                <div className="text-center">
+                  <span className="text-xs text-amber-600 font-medium">
+                    <Sparkles size={12} className="inline mr-1" />
+                    Earn +{config.xp} XP
+                  </span>
+                </div>
               </div>
             </div>
           ) : (
