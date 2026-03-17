@@ -305,14 +305,8 @@ export default function DashboardPage() {
           subscription={subscription}
         />
 
-        <main className="home-main">
-          {/* Chapter filter - top right */}
-          <div className="flex justify-end mb-2 px-2">
-            <LifeChapterFilter
-              selectedChapter={selectedChapter}
-              onSelectChapter={setSelectedChapter}
-            />
-          </div>
+        <main className="home-main home-main-row">
+          {/* Card stack — aligned to top like profile tile */}
           <div className="engagement-column">
             <div className="home-bubbles">
               {isLoading ? (
@@ -338,14 +332,21 @@ export default function DashboardPage() {
               )}
             </div>
           </div>
-          
-          <QuickActions
-            onShuffle={handleShuffle}
-            onPhotoUpload={() => setShowPhotoUpload(true)}
-            onPostscript={() => setShowPostscriptModal(true)}
-            onAddContact={() => setShowContactModal(true)}
-            onQuickMemory={() => setShowQuickMemoryModal(true)}
-          />
+
+          {/* Right column: Chapter filter + Quick actions */}
+          <div className="home-right-col">
+            <LifeChapterFilter
+              selectedChapter={selectedChapter}
+              onSelectChapter={setSelectedChapter}
+            />
+            <QuickActions
+              onShuffle={handleShuffle}
+              onPhotoUpload={() => setShowPhotoUpload(true)}
+              onPostscript={() => setShowPostscriptModal(true)}
+              onAddContact={() => setShowContactModal(true)}
+              onQuickMemory={() => setShowQuickMemoryModal(true)}
+            />
+          </div>
         </main>
       </div>
     </div>
