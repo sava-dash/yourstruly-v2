@@ -254,6 +254,14 @@ function FlippableCard({
   const hasPhoto = prompt.photoUrl && (prompt.type === 'photo_backstory' || prompt.type === 'tag_person')
   const photoIsVideo = isVideoUrl(prompt.photoUrl)
 
+  // Connect video stream to preview element when both are ready
+  useEffect(() => {
+    if (videoStream && videoPreviewRef.current) {
+      videoPreviewRef.current.srcObject = videoStream
+      videoPreviewRef.current.play().catch(() => {})
+    }
+  }, [videoStream, isVideoRecording])
+
   const handleDragStart = () => {
     isDragging.current = true
     dragStartX.current = x.get()
@@ -548,12 +556,6 @@ function FlippableCard({
       })
       setVideoStream(stream)
       
-      // Show preview
-      if (videoPreviewRef.current) {
-        videoPreviewRef.current.srcObject = stream
-        videoPreviewRef.current.play()
-      }
-      
       const recorder = new MediaRecorder(stream, { mimeType: 'video/webm;codecs=vp8,opus' })
       videoChunksRef.current = []
       
@@ -575,14 +577,14 @@ function FlippableCard({
           
           const fileName = `video-responses/${user.id}/${Date.now()}.webm`
           const { data: uploadData, error: uploadError } = await supabase.storage
-            .from('memory-media')
+            .from('memories')
             .upload(fileName, videoBlob, { contentType: 'video/webm' })
           
           if (uploadError) {
             console.error('Video upload failed:', uploadError)
           } else {
             const { data: urlData } = supabase.storage
-              .from('memory-media')
+              .from('memories')
               .getPublicUrl(fileName)
             setVideoUrl(urlData.publicUrl)
           }
