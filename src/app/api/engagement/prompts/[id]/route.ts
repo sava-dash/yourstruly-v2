@@ -107,6 +107,7 @@ export async function POST(
     console.log('prompt.type:', prompt.type);
     console.log('body.responseText length:', body.responseText?.length || 0);
     console.log('body.responseAudioUrl:', body.responseAudioUrl || 'none');
+    console.log('body.responseVideoUrl:', body.responseVideoUrl || 'none');
     
     // These prompt types create MEMORY records (not wisdom)
     const MEMORY_CREATING_TYPES = [
@@ -221,6 +222,7 @@ export async function POST(
           title: prompt.prompt_text?.substring(0, 100) || 'Memory',
           description: memoryDescription || '🎤 Voice memory recorded',
           audio_url: body.responseAudioUrl || null,
+          video_url: body.responseVideoUrl || null,
           memory_date: new Date().toISOString(),
           tags,
         })

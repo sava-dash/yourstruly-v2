@@ -43,6 +43,7 @@ export interface PromptResponse {
   type: 'text' | 'voice' | 'selection';
   text?: string;
   audioUrl?: string;
+  videoUrl?: string;
   data?: {
     value?: string;
     contactId?: string;
@@ -96,6 +97,7 @@ export interface AnswerPromptRequest {
   responseType: 'text' | 'voice' | 'selection';
   responseText?: string;
   responseAudioUrl?: string;
+  responseVideoUrl?: string;
   responseData?: Record<string, any>;
 }
 

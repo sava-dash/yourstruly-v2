@@ -108,7 +108,7 @@ export default function DashboardPage() {
   const [showQuickMemoryModal, setShowQuickMemoryModal] = useState(false)
   
   // Handle card answer (from flipped card)
-  const handleCardAnswer = useCallback(async (promptId: string, response: { type: 'text' | 'voice' | 'selection'; text?: string }) => {
+  const handleCardAnswer = useCallback(async (promptId: string, response: { type: 'text' | 'voice' | 'selection'; text?: string; videoUrl?: string }) => {
     const prompt = prompts.find(p => p.id === promptId)
     if (!prompt) return
     

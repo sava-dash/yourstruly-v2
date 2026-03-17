@@ -187,6 +187,7 @@ export function useEngagementPrompts(count: number = 5, lifeChapter: string | nu
           responseType: response.type,
           responseText: response.text,
           responseAudioUrl: response.audioUrl,
+          responseVideoUrl: response.videoUrl,
           responseData: response.data,
         }),
       });
