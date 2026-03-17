@@ -1,8 +1,8 @@
 'use client'
 
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect, useRef, useCallback } from 'react'
 // gsap removed - animations simplified
-import { MapPin, Users, Calendar, Search, Map as MapIcon, Plus, Mic, Video, Upload, Image as ImageIcon, MessageSquare, Gift, Sparkles, BookOpen, Brain, Heart, Camera, Clock, Play, ChevronDown, X } from 'lucide-react'
+import { MapPin, Users, Calendar, Search, Map as MapIcon, Plus, Mic, Video, Upload, Image as ImageIcon, MessageSquare, Gift, Sparkles, BookOpen, Brain, Heart, Camera, Clock, Play, ChevronDown, X, ArrowLeft } from 'lucide-react'
 import Link from 'next/link'
 import { format } from 'date-fns'
 import { motion, AnimatePresence } from 'framer-motion'
@@ -169,7 +169,7 @@ function MasonryTile({
   const summary = getSummary()
 
   return (
-    <div className="card-wrapper">
+    <div className="card-wrapper" data-year={new Date(activity.timestamp).getFullYear()}>
       <div
         onClick={() => onCardClick(activity)}
         className="card block relative overflow-hidden"
@@ -417,15 +417,44 @@ export default function FeedPage() {
   const [selectedPlace, setSelectedPlace] = useState<string | null>(null)
   const [selectedMood, setSelectedMood] = useState<string | null>(null)
   const [selectedReminisceCategory, setSelectedReminisceCategory] = useState<string | null>(null)
+  
+  // People/Places browse mode state
+  const [browsedPersonId, setBrowsedPersonId] = useState<string | null>(null)
+  const [browsedPlace, setBrowsedPlace] = useState<string | null>(null)
+  
+  // Timeline state
+  const [birthYear, setBirthYear] = useState<number | null>(null)
+  const [activeTimelineYear, setActiveTimelineYear] = useState<number>(new Date().getFullYear())
+  const timelineRef = useRef<HTMLDivElement>(null)
 
   const handleAudioToggle = (activityId: string) => {
     setPlayingAudio(prev => prev === activityId ? null : activityId)
+  }
+
+  const fetchBirthYear = async () => {
+    try {
+      const { createClient } = await import('@/lib/supabase/client')
+      const supabase = createClient()
+      const { data: { user } } = await supabase.auth.getUser()
+      if (!user) return
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('date_of_birth')
+        .eq('id', user.id)
+        .single()
+      if (profile?.date_of_birth) {
+        setBirthYear(new Date(profile.date_of_birth).getFullYear())
+      }
+    } catch (err) {
+      console.error('Error fetching birth year:', err)
+    }
   }
 
   useEffect(() => {
     fetchUserName()
     fetchActivities()
     fetchContacts()
+    fetchBirthYear()
   }, [])
 
   const fetchContacts = async () => {
@@ -438,7 +467,7 @@ export default function FeedPage() {
 
       const { data, error } = await supabase
         .from('contacts')
-        .select('id, full_name')
+        .select('id, full_name, profile_photo_url, avatar_url, relationship_type')
         .eq('user_id', user.id)
         .order('full_name')
       
@@ -592,6 +621,15 @@ export default function FeedPage() {
   }
 
   const handleCategoryClick = (categoryId: CategoryFilter) => {
+    // Reset browse modes when clicking any main category
+    setReminisceMode(null)
+    setBrowsedPersonId(null)
+    setBrowsedPlace(null)
+    setSelectedPerson(null)
+    setSelectedPlace(null)
+    setSelectedMood(null)
+    setSelectedReminisceCategory(null)
+    
     if (activeCategory === categoryId && openSubmenu === categoryId) {
       setOpenSubmenu(null)
     } else {
@@ -1140,6 +1178,131 @@ export default function FeedPage() {
     }).filter(n => n && n.trim() !== '')
   )].sort()
 
+  // Compute people browse data: contacts with entry counts
+  const peopleData = contacts.map(contact => {
+    const count = activities.filter(a => {
+      const meta = a.metadata
+      if (!meta) return false
+      const tagged = meta.tagged_people || []
+      const nameMatch = (name: string) => name.toLowerCase().includes(contact.full_name.toLowerCase()) || contact.full_name.toLowerCase().includes(name.toLowerCase())
+      return (
+        tagged.some((p: string) => nameMatch(p)) ||
+        (meta.contactName && nameMatch(meta.contactName)) ||
+        (meta.recipient_name && nameMatch(meta.recipient_name)) ||
+        meta.contactId === contact.id
+      )
+    }).length
+    return { ...contact, entryCount: count }
+  }).filter(p => p.entryCount > 0).sort((a, b) => b.entryCount - a.entryCount)
+
+  // Compute places browse data: unique locations with thumbnails and counts
+  const placesData = (() => {
+    const locationMap = new Map<string, { name: string; count: number; thumbnail: string | null; activities: ActivityItem[] }>()
+    activities.forEach(a => {
+      const loc = a.metadata?.location?.trim()
+      if (!loc) return
+      const existing = locationMap.get(loc)
+      if (existing) {
+        existing.count++
+        existing.activities.push(a)
+        if (!existing.thumbnail && a.thumbnail) {
+          existing.thumbnail = a.thumbnail
+        }
+      } else {
+        locationMap.set(loc, {
+          name: loc,
+          count: 1,
+          thumbnail: a.thumbnail || null,
+          activities: [a]
+        })
+      }
+    })
+    return Array.from(locationMap.values()).sort((a, b) => b.count - a.count)
+  })()
+
+  // Get activities for a specific person (by contact id)
+  const getActivitiesForPerson = (contactId: string) => {
+    const contact = contacts.find(c => c.id === contactId)
+    if (!contact) return []
+    return activities.filter(a => {
+      const meta = a.metadata
+      if (!meta) return false
+      const tagged = meta.tagged_people || []
+      const nameMatch = (name: string) => name.toLowerCase().includes(contact.full_name.toLowerCase()) || contact.full_name.toLowerCase().includes(name.toLowerCase())
+      return (
+        tagged.some((p: string) => nameMatch(p)) ||
+        (meta.contactName && nameMatch(meta.contactName)) ||
+        (meta.recipient_name && nameMatch(meta.recipient_name)) ||
+        meta.contactId === contact.id
+      )
+    })
+  }
+
+  // Get activities for a specific place
+  const getActivitiesForPlace = (location: string) => {
+    return activities.filter(a => a.metadata?.location?.trim() === location)
+  }
+
+  // Timeline years
+  const timelineYears = (() => {
+    const latestYear = uniqueYears.length > 0 ? uniqueYears[0] : new Date().getFullYear()
+    const startYear = birthYear || (latestYear - 30)
+    const years: number[] = []
+    for (let y = latestYear; y >= startYear; y--) {
+      years.push(y)
+    }
+    return years
+  })()
+
+  // Scroll detection for timeline
+  useEffect(() => {
+    if (viewMode !== 'card' || reminisceMode === 'people' || reminisceMode === 'places') return
+    
+    const handleScroll = () => {
+      if (!gridRef.current) return
+      const cards = Array.from(gridRef.current.querySelectorAll('.card-wrapper[data-year]'))
+      let visibleYear = activeTimelineYear
+      
+      for (let i = 0; i < cards.length; i++) {
+        const rect = cards[i].getBoundingClientRect()
+        if (rect.top >= 0 && rect.top < window.innerHeight / 2) {
+          const year = parseInt(cards[i].getAttribute('data-year') || '0')
+          if (year) { visibleYear = year; break }
+        }
+      }
+      
+      if (visibleYear !== activeTimelineYear) {
+        setActiveTimelineYear(visibleYear)
+      }
+    }
+    
+    window.addEventListener('scroll', handleScroll, { passive: true })
+    return () => window.removeEventListener('scroll', handleScroll)
+  }, [viewMode, activeTimelineYear, reminisceMode])
+
+  const handleTimelineYearClick = (year: number) => {
+    setActiveTimelineYear(year)
+    if (gridRef.current) {
+      const card = gridRef.current.querySelector(`.card-wrapper[data-year="${year}"]`)
+      if (card) {
+        card.scrollIntoView({ behavior: 'smooth', block: 'start' })
+      }
+    }
+  }
+
+  // Check if we're in a browse mode (people/places tiles shown)
+  const isInBrowseMode = (reminisceMode === 'people' && !browsedPersonId) || (reminisceMode === 'places' && !browsedPlace)
+  const isInBrowseDetail = (reminisceMode === 'people' && !!browsedPersonId) || (reminisceMode === 'places' && !!browsedPlace)
+  
+  // Get browsed activities
+  const browsedActivities = browsedPersonId 
+    ? getActivitiesForPerson(browsedPersonId) 
+    : browsedPlace 
+    ? getActivitiesForPlace(browsedPlace) 
+    : []
+
+  const browsedPersonName = browsedPersonId ? contacts.find(c => c.id === browsedPersonId)?.full_name : null
+
   useEffect(() => {
     filterActivities(activeCategory)
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -1171,8 +1334,8 @@ export default function FeedPage() {
 
   // Compute reminisce dropdown button display
   const getReminisceButtonDisplay = (): { icon: any; label: string } => {
-    if (selectedPerson) return { icon: Users, label: selectedPerson }
-    if (selectedPlace) return { icon: MapPin, label: selectedPlace }
+    if (reminisceMode === 'people') return { icon: Users, label: 'People' }
+    if (reminisceMode === 'places') return { icon: MapPin, label: 'Places' }
     if (selectedMood) {
       const mood = MOOD_DISPLAY.find(m => m.value === selectedMood)
       return { icon: Heart, label: mood ? `${mood.emoji} ${mood.label}` : selectedMood }
@@ -1185,7 +1348,7 @@ export default function FeedPage() {
   }
 
   const reminisceDisplay = getReminisceButtonDisplay()
-  const hasActiveReminisceFilter = !!(selectedPerson || selectedPlace || selectedMood || selectedReminisceCategory)
+  const hasActiveReminisceFilter = !!(reminisceMode === 'people' || reminisceMode === 'places' || selectedMood || selectedReminisceCategory)
 
   return (
     <div className="feed-page" data-theme={isDarkMode ? 'dark' : 'light'}>
@@ -1271,7 +1434,7 @@ export default function FeedPage() {
                   <button
                     key={cat.id}
                     onClick={() => handleCategoryClick(cat.id as CategoryFilter)}
-                    className={`category-tag ${activeCategory === cat.id ? 'active' : ''}`}
+                    className={`category-tag ${activeCategory === cat.id && !isInBrowseMode && !isInBrowseDetail ? 'active' : ''} ${isInBrowseMode || isInBrowseDetail ? 'dimmed' : ''}`}
                   >
                     <span className="category-text-wrapper">
                       <span className="category-text category-text-top">{cat.label}</span>
@@ -1327,6 +1490,8 @@ export default function FeedPage() {
                       setSelectedMood(null)
                       setSelectedReminisceCategory(null)
                       setReminisceMode(null)
+                      setBrowsedPersonId(null)
+                      setBrowsedPlace(null)
                       setReminisceDropdownOpen(false)
                     }}
                     className="reminisce-clear-inline"
@@ -1354,14 +1519,31 @@ export default function FeedPage() {
                             <button
                               className={`reminisce-dropdown-item ${isActive ? 'active' : ''}`}
                               onClick={() => {
-                                if (isActive) {
-                                  setReminisceMode(null)
-                                  if (option.mode === 'people') setSelectedPerson(null)
-                                  if (option.mode === 'places') setSelectedPlace(null)
-                                  if (option.mode === 'moods') setSelectedMood(null)
-                                  if (option.mode === 'categories') setSelectedReminisceCategory(null)
+                                if (option.mode === 'people' || option.mode === 'places') {
+                                  // People/Places: toggle browse mode and close dropdown
+                                  if (isActive) {
+                                    setReminisceMode(null)
+                                    setBrowsedPersonId(null)
+                                    setBrowsedPlace(null)
+                                  } else {
+                                    setReminisceMode(option.mode)
+                                    setBrowsedPersonId(null)
+                                    setBrowsedPlace(null)
+                                    setSelectedPerson(null)
+                                    setSelectedPlace(null)
+                                    setSelectedMood(null)
+                                    setSelectedReminisceCategory(null)
+                                  }
+                                  setReminisceDropdownOpen(false)
                                 } else {
-                                  setReminisceMode(option.mode)
+                                  // Moods/Categories: toggle submenu
+                                  if (isActive) {
+                                    setReminisceMode(null)
+                                    if (option.mode === 'moods') setSelectedMood(null)
+                                    if (option.mode === 'categories') setSelectedReminisceCategory(null)
+                                  } else {
+                                    setReminisceMode(option.mode)
+                                  }
                                 }
                               }}
                             >
@@ -1375,9 +1557,9 @@ export default function FeedPage() {
                               }} />
                             </button>
 
-                            {/* Submenu pills for active mode */}
+                            {/* Submenu pills for active mode (moods/categories only - people/places use browse mode) */}
                             <AnimatePresence>
-                              {isActive && (
+                              {isActive && (option.mode === 'moods' || option.mode === 'categories') && (
                                 <motion.div
                                   initial={{ opacity: 0, height: 0 }}
                                   animate={{ opacity: 1, height: 'auto' }}
@@ -1385,42 +1567,6 @@ export default function FeedPage() {
                                   transition={{ duration: 0.15 }}
                                   className="reminisce-submenu-pills"
                                 >
-                                  {option.mode === 'people' && (
-                                    uniquePeople.length > 0 ? uniquePeople.map((person) => (
-                                      <button
-                                        key={person}
-                                        onClick={() => {
-                                          setSelectedPerson(selectedPerson === person ? null : person)
-                                          if (selectedPerson !== person) setReminisceDropdownOpen(false)
-                                        }}
-                                        className={`reminisce-pill ${selectedPerson === person ? 'active' : ''}`}
-                                      >
-                                        <Users size={12} />
-                                        {person}
-                                      </button>
-                                    )) : (
-                                      <span className="reminisce-empty">No people found</span>
-                                    )
-                                  )}
-
-                                  {option.mode === 'places' && (
-                                    uniquePlaces.length > 0 ? uniquePlaces.map((place) => (
-                                      <button
-                                        key={place}
-                                        onClick={() => {
-                                          setSelectedPlace(selectedPlace === place ? null : place)
-                                          if (selectedPlace !== place) setReminisceDropdownOpen(false)
-                                        }}
-                                        className={`reminisce-pill ${selectedPlace === place ? 'active' : ''}`}
-                                      >
-                                        <MapPin size={12} />
-                                        {place}
-                                      </button>
-                                    )) : (
-                                      <span className="reminisce-empty">No places found</span>
-                                    )
-                                  )}
-
                                   {option.mode === 'moods' && MOOD_DISPLAY.map(({ value, emoji, label }) => (
                                     <button
                                       key={value}
@@ -1463,34 +1609,252 @@ export default function FeedPage() {
         </div>
       </div>
 
-      <div className="feed-content">
-        {isLoading ? (
-          <div className="loading-state">
-            <div className="spinner"></div>
-          </div>
-        ) : filteredActivities.length === 0 ? (
-          <div className="empty-state">
-            <p>No items found</p>
-          </div>
-        ) : viewMode === 'map' ? (
-          <div className="map-container">
-            <FeedMap activities={filteredActivities.filter(a => a.metadata?.lat && a.metadata?.lng)} />
-          </div>
-        ) : (
-          <div ref={gridRef} className="masonry-grid">
-            {filteredActivities.map((activity, index) => (
-              <MasonryTile 
-                key={activity.id} 
-                activity={activity} 
-                index={index} 
-                isDarkMode={isDarkMode}
-                playingAudio={playingAudio}
-                onAudioToggle={handleAudioToggle}
-                onCardClick={(a) => {
-                  setSelectedActivity(a)
-                  setShowDetailModal(true)
+      <div className="feed-content-wrapper">
+        <div className="feed-content">
+          {isLoading ? (
+            <div className="loading-state">
+              <div className="spinner"></div>
+            </div>
+          ) : viewMode === 'map' ? (
+            <div className="map-container">
+              <FeedMap activities={filteredActivities.filter(a => a.metadata?.lat && a.metadata?.lng)} />
+            </div>
+          ) : isInBrowseMode ? (
+            /* ── People / Places Browse Grid ── */
+            <div className="browse-grid-container">
+              {reminisceMode === 'people' && (
+                <>
+                  <h2 className="browse-heading">People in Your Memories</h2>
+                  {peopleData.length === 0 ? (
+                    <div className="empty-state"><p>No people found in your entries</p></div>
+                  ) : (
+                    <div className="masonry-grid">
+                      {peopleData.map((person) => {
+                        const initials = person.full_name.split(' ').map((n: string) => n[0]).join('').toUpperCase().slice(0, 2)
+                        const avatarUrl = person.profile_photo_url || person.avatar_url
+                        return (
+                          <div key={person.id} className="card-wrapper">
+                            <div
+                              className="card person-tile"
+                              onClick={() => setBrowsedPersonId(person.id)}
+                              style={{
+                                cursor: 'pointer',
+                                borderRadius: '20px',
+                                border: '4px solid #fff',
+                                boxShadow: '0 8px 24px rgba(0,0,0,0.15)',
+                                overflow: 'hidden',
+                                display: 'flex',
+                                flexDirection: 'column',
+                                alignItems: 'center',
+                                padding: '32px 20px 24px',
+                                background: avatarUrl ? '#000' : TYPE_GRADIENTS.contact,
+                              }}
+                            >
+                              {avatarUrl ? (
+                                <div style={{
+                                  width: 80, height: 80, borderRadius: '50%',
+                                  backgroundImage: `url(${avatarUrl})`,
+                                  backgroundSize: 'cover', backgroundPosition: 'center',
+                                  border: '3px solid rgba(255,255,255,0.3)',
+                                  marginBottom: 16
+                                }} />
+                              ) : (
+                                <div style={{
+                                  width: 80, height: 80, borderRadius: '50%',
+                                  background: 'rgba(255,255,255,0.15)',
+                                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                  fontSize: 28, fontWeight: 700, color: '#fff',
+                                  border: '3px solid rgba(255,255,255,0.3)',
+                                  marginBottom: 16
+                                }}>
+                                  {initials}
+                                </div>
+                              )}
+                              <h3 style={{
+                                fontSize: 16, fontWeight: 700, color: '#fff',
+                                margin: 0, textAlign: 'center', lineHeight: 1.3,
+                                marginBottom: 6
+                              }}>
+                                {person.full_name}
+                              </h3>
+                              {person.relationship_type && (
+                                <span style={{
+                                  fontSize: 11, color: 'rgba(255,255,255,0.6)',
+                                  textTransform: 'capitalize', marginBottom: 8
+                                }}>
+                                  {person.relationship_type}
+                                </span>
+                              )}
+                              <span style={{
+                                fontSize: 13, color: 'rgba(255,255,255,0.8)',
+                                fontWeight: 600,
+                                background: 'rgba(255,255,255,0.12)',
+                                padding: '4px 14px', borderRadius: 12
+                              }}>
+                                {person.entryCount} {person.entryCount === 1 ? 'entry' : 'entries'}
+                              </span>
+                            </div>
+                          </div>
+                        )
+                      })}
+                    </div>
+                  )}
+                </>
+              )}
+
+              {reminisceMode === 'places' && (
+                <>
+                  <h2 className="browse-heading">Places in Your Memories</h2>
+                  {placesData.length === 0 ? (
+                    <div className="empty-state"><p>No places found in your entries</p></div>
+                  ) : (
+                    <div className="masonry-grid">
+                      {placesData.map((place) => (
+                        <div key={place.name} className="card-wrapper">
+                          <div
+                            className="card place-tile"
+                            onClick={() => setBrowsedPlace(place.name)}
+                            style={{
+                              cursor: 'pointer',
+                              borderRadius: '20px',
+                              border: '4px solid #fff',
+                              boxShadow: '0 8px 24px rgba(0,0,0,0.15)',
+                              overflow: 'hidden',
+                              display: 'flex',
+                              flexDirection: 'column',
+                              minHeight: place.thumbnail ? 220 : 160,
+                              position: 'relative',
+                              background: place.thumbnail ? '#000' : TYPE_GRADIENTS.memory,
+                            }}
+                          >
+                            {place.thumbnail && (
+                              <div style={{
+                                position: 'absolute', inset: 0,
+                                backgroundImage: `url(${place.thumbnail})`,
+                                backgroundSize: 'cover', backgroundPosition: 'center',
+                              }}>
+                                <div style={{
+                                  position: 'absolute', inset: 0,
+                                  background: 'linear-gradient(to bottom, rgba(0,0,0,0.1) 0%, rgba(0,0,0,0.75) 100%)'
+                                }} />
+                              </div>
+                            )}
+                            <div style={{
+                              position: 'relative', zIndex: 1,
+                              padding: '20px', display: 'flex',
+                              flexDirection: 'column', justifyContent: 'flex-end',
+                              flex: 1, gap: 8
+                            }}>
+                              <div style={{ display: 'flex', alignItems: 'center', gap: 6, color: 'rgba(255,255,255,0.7)', fontSize: 11 }}>
+                                <MapPin size={12} />
+                                <span style={{ fontWeight: 600, textTransform: 'uppercase', letterSpacing: 0.5 }}>Location</span>
+                              </div>
+                              <h3 style={{
+                                fontSize: 18, fontWeight: 700, color: '#fff',
+                                margin: 0, lineHeight: 1.3,
+                              }}>
+                                {place.name}
+                              </h3>
+                              <span style={{
+                                fontSize: 13, color: 'rgba(255,255,255,0.8)',
+                                fontWeight: 600,
+                                background: 'rgba(255,255,255,0.12)',
+                                padding: '4px 14px', borderRadius: 12,
+                                width: 'fit-content'
+                              }}>
+                                {place.count} {place.count === 1 ? 'entry' : 'entries'}
+                              </span>
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </>
+              )}
+            </div>
+          ) : isInBrowseDetail ? (
+            /* ── Filtered activities for a person/place ── */
+            <div>
+              <button
+                className="browse-back-btn"
+                onClick={() => {
+                  if (browsedPersonId) setBrowsedPersonId(null)
+                  if (browsedPlace) setBrowsedPlace(null)
                 }}
-              />
+              >
+                <ArrowLeft size={16} />
+                <span>Back to {reminisceMode === 'people' ? 'People' : 'Places'}</span>
+              </button>
+              <h2 className="browse-detail-heading">
+                {browsedPersonName || browsedPlace}
+              </h2>
+              {browsedActivities.length === 0 ? (
+                <div className="empty-state"><p>No entries found</p></div>
+              ) : (
+                <div ref={gridRef} className="masonry-grid">
+                  {browsedActivities.map((activity, index) => (
+                    <MasonryTile
+                      key={activity.id}
+                      activity={activity}
+                      index={index}
+                      isDarkMode={isDarkMode}
+                      playingAudio={playingAudio}
+                      onAudioToggle={handleAudioToggle}
+                      onCardClick={(a) => {
+                        setSelectedActivity(a)
+                        setShowDetailModal(true)
+                      }}
+                    />
+                  ))}
+                </div>
+              )}
+            </div>
+          ) : filteredActivities.length === 0 ? (
+            <div className="empty-state">
+              <p>No items found</p>
+            </div>
+          ) : (
+            <div ref={gridRef} className="masonry-grid">
+              {filteredActivities.map((activity, index) => (
+                <MasonryTile 
+                  key={activity.id} 
+                  activity={activity} 
+                  index={index} 
+                  isDarkMode={isDarkMode}
+                  playingAudio={playingAudio}
+                  onAudioToggle={handleAudioToggle}
+                  onCardClick={(a) => {
+                    setSelectedActivity(a)
+                    setShowDetailModal(true)
+                  }}
+                />
+              ))}
+            </div>
+          )}
+        </div>
+
+        {/* ── Vertical Timeline Scrubber ── */}
+        {viewMode === 'card' && !isInBrowseMode && timelineYears.length > 1 && (
+          <div className="timeline-scrubber" ref={timelineRef}>
+            {timelineYears.map((year, idx) => (
+              <div key={year} className="timeline-year-group">
+                <button
+                  className={`timeline-year-btn ${activeTimelineYear === year ? 'active' : ''}`}
+                  onClick={() => handleTimelineYearClick(year)}
+                  title={`Jump to ${year}`}
+                >
+                  {year}
+                </button>
+                {/* Month tick marks between years */}
+                {idx < timelineYears.length - 1 && (
+                  <div className="timeline-ticks">
+                    {Array.from({ length: 11 }, (_, i) => (
+                      <div key={i} className="timeline-tick" />
+                    ))}
+                  </div>
+                )}
+              </div>
             ))}
           </div>
         )}
@@ -2346,10 +2710,18 @@ export default function FeedPage() {
 
         /* search-box replaced by search-box-compact */
 
-        .feed-content {
+        .feed-content-wrapper {
+          display: flex;
           max-width: 1920px;
           margin: 0 auto;
+          position: relative;
+        }
+
+        .feed-content {
+          flex: 1;
           padding: 40px 60px;
+          padding-right: 80px;
+          min-width: 0;
         }
 
         .map-container {
@@ -2742,6 +3114,208 @@ export default function FeedPage() {
         }
 
         /* Old reminisce-tabs mobile styles removed - using dropdown now */
+
+        /* ── People / Places Browse Mode ── */
+
+        .browse-grid-container {
+          width: 100%;
+        }
+
+        .browse-heading {
+          font-family: 'Inter', sans-serif;
+          font-size: 24px;
+          font-weight: 700;
+          margin: 0 0 24px 0;
+          letter-spacing: -0.3px;
+        }
+
+        .feed-page[data-theme="dark"] .browse-heading {
+          color: #fff;
+        }
+
+        .feed-page[data-theme="light"] .browse-heading {
+          color: #1A1A1A;
+        }
+
+        .browse-back-btn {
+          display: inline-flex;
+          align-items: center;
+          gap: 8px;
+          padding: 8px 16px;
+          border-radius: 12px;
+          border: 1px solid transparent;
+          font-size: 14px;
+          font-weight: 500;
+          cursor: pointer;
+          font-family: 'Inter', sans-serif;
+          transition: all 0.2s ease;
+          margin-bottom: 16px;
+        }
+
+        .feed-page[data-theme="dark"] .browse-back-btn {
+          background: rgba(255, 255, 255, 0.06);
+          color: rgba(255, 255, 255, 0.7);
+          border-color: rgba(255, 255, 255, 0.1);
+        }
+
+        .feed-page[data-theme="light"] .browse-back-btn {
+          background: rgba(0, 0, 0, 0.04);
+          color: rgba(0, 0, 0, 0.6);
+          border-color: rgba(0, 0, 0, 0.08);
+        }
+
+        .browse-back-btn:hover {
+          color: #C35F33;
+          border-color: #C35F33;
+          background: rgba(195, 95, 51, 0.08);
+        }
+
+        .browse-detail-heading {
+          font-family: 'Inter', sans-serif;
+          font-size: 28px;
+          font-weight: 700;
+          margin: 0 0 24px 0;
+          letter-spacing: -0.3px;
+        }
+
+        .feed-page[data-theme="dark"] .browse-detail-heading {
+          color: #fff;
+        }
+
+        .feed-page[data-theme="light"] .browse-detail-heading {
+          color: #1A1A1A;
+        }
+
+        .person-tile:hover,
+        .place-tile:hover {
+          transform: translateY(-8px);
+          box-shadow: 0 20px 40px rgba(0,0,0,0.2) !important;
+        }
+
+        /* Dim category pills when in browse mode */
+        .feed-page .category-tag.dimmed .category-text-top {
+          opacity: 0.4;
+        }
+
+        /* ── Vertical Timeline Scrubber ── */
+
+        .timeline-scrubber {
+          position: sticky;
+          top: 200px;
+          right: 0;
+          width: 45px;
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          padding: 16px 0;
+          margin-right: 8px;
+          border-radius: 16px 0 0 16px;
+          backdrop-filter: blur(12px);
+          z-index: 15;
+          align-self: flex-start;
+          max-height: calc(100vh - 240px);
+          overflow-y: auto;
+          scrollbar-width: none;
+          -ms-overflow-style: none;
+        }
+
+        .timeline-scrubber::-webkit-scrollbar {
+          display: none;
+        }
+
+        .feed-page[data-theme="dark"] .timeline-scrubber {
+          background: rgba(40, 40, 40, 0.8);
+          border: 1px solid rgba(255, 255, 255, 0.06);
+        }
+
+        .feed-page[data-theme="light"] .timeline-scrubber {
+          background: rgba(255, 255, 255, 0.85);
+          border: 1px solid rgba(0, 0, 0, 0.06);
+          box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+        }
+
+        .timeline-year-group {
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          width: 100%;
+        }
+
+        .timeline-year-btn {
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          width: 100%;
+          padding: 6px 4px;
+          border: none;
+          background: transparent;
+          font-family: 'Inter', sans-serif;
+          font-size: 10px;
+          font-weight: 500;
+          cursor: pointer;
+          transition: all 0.2s ease;
+          border-radius: 6px;
+          white-space: nowrap;
+        }
+
+        .feed-page[data-theme="dark"] .timeline-year-btn {
+          color: rgba(255, 255, 255, 0.35);
+        }
+
+        .feed-page[data-theme="light"] .timeline-year-btn {
+          color: rgba(0, 0, 0, 0.3);
+        }
+
+        .timeline-year-btn:hover {
+          color: #C35F33;
+          background: rgba(195, 95, 51, 0.08);
+        }
+
+        .timeline-year-btn.active {
+          font-size: 12px;
+          font-weight: 700;
+          color: #C35F33;
+          background: rgba(195, 95, 51, 0.1);
+        }
+
+        .timeline-ticks {
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          gap: 2px;
+          padding: 3px 0;
+        }
+
+        .timeline-tick {
+          width: 8px;
+          height: 1px;
+          border-radius: 1px;
+        }
+
+        .feed-page[data-theme="dark"] .timeline-tick {
+          background: rgba(255, 255, 255, 0.1);
+        }
+
+        .feed-page[data-theme="light"] .timeline-tick {
+          background: rgba(0, 0, 0, 0.08);
+        }
+
+        /* Timeline responsive */
+        @media (max-width: 768px) {
+          .timeline-scrubber {
+            display: none;
+          }
+
+          .feed-content {
+            padding-right: 20px !important;
+          }
+        }
+
+        @media (max-width: 640px) {
+          .feed-content {
+            padding-right: 20px !important;
+          }
+        }
       `}</style>
     </div>
   )
