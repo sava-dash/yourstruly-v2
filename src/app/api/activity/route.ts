@@ -369,6 +369,7 @@ export async function GET(request: NextRequest) {
       title, 
       description, 
       created_at,
+      memory_date,
       location_name,
       location_lat,
       location_lng,
@@ -390,7 +391,7 @@ export async function GET(request: NextRequest) {
         type: 'memory_created',
         title: memory.title || 'Untitled Memory',
         description: memory.description || '',
-        timestamp: memory.created_at,
+        timestamp: memory.memory_date || memory.created_at,
         link: `/dashboard/memories/${memory.id}`,
         thumbnail: firstImage?.file_url,
         audio_url: isValidAudioUrl(memory.audio_url),
@@ -459,9 +460,11 @@ export async function GET(request: NextRequest) {
       file_url,
       file_type,
       created_at,
+      taken_at,
       memory:memories!memory_media_memory_id_fkey (
         id,
-        title
+        title,
+        memory_date
       )
     `)
     .eq('user_id', user.id)
@@ -475,12 +478,15 @@ export async function GET(request: NextRequest) {
       const memoryId = memory?.id || photo.memory_id
       if (!memoryId) continue
 
+      // Use taken_at (EXIF date) > memory_date > created_at
+      const photoDate = photo.taken_at || memory?.memory_date || photo.created_at
+
       activities.push({
         id: `photo_uploaded_${photo.id}`,
         type: 'photos_uploaded',
         title: 'Image uploaded',
         description: memory?.title ? `Added to "${memory.title}"` : 'You uploaded an image',
-        timestamp: photo.created_at,
+        timestamp: photoDate,
         link: `/dashboard/memories/${memoryId}`,
         thumbnail: photo.file_url,
         metadata: { photoId: photo.id, memoryId }
