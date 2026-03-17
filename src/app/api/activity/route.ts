@@ -61,7 +61,7 @@ export async function GET(request: NextRequest) {
   }
 
   const searchParams = request.nextUrl.searchParams
-  const limit = Math.min(parseInt(searchParams.get('limit') || '20'), 50)
+  const limit = Math.min(parseInt(searchParams.get('limit') || '20'), 500)
 
   const activities: ActivityItem[] = []
 
