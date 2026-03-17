@@ -422,6 +422,10 @@ export default function FeedPage() {
   const [browsedPersonId, setBrowsedPersonId] = useState<string | null>(null)
   const [browsedPlace, setBrowsedPlace] = useState<string | null>(null)
   
+  // People data from face tags (Fix 1)
+  const [peopleData, setPeopleData] = useState<any[]>([])
+  const [faceTagMemoryMap, setFaceTagMemoryMap] = useState<Record<string, string[]>>({})
+  
   // Timeline state
   const [birthYear, setBirthYear] = useState<number | null>(null)
   const [activeTimelineYear, setActiveTimelineYear] = useState<number>(new Date().getFullYear())
@@ -449,6 +453,82 @@ export default function FeedPage() {
       console.error('Error fetching birth year:', err)
     }
   }
+
+  const fetchPeopleData = useCallback(async (contactsList: any[], activitiesList: ActivityItem[]) => {
+    try {
+      const { createClient } = await import('@/lib/supabase/client')
+      const supabase = createClient()
+      const { data: { user } } = await supabase.auth.getUser()
+      if (!user) return
+
+      // Fetch face tags from memory_face_tags (same approach as PeopleBrowse)
+      const { data: faceTags } = await supabase
+        .from('memory_face_tags')
+        .select('contact_id, memory_media!inner(memory_id)')
+        .eq('user_id', user.id)
+        .not('contact_id', 'is', null)
+
+      // Count unique memory_id per contact_id
+      const memoryCountMap: Record<string, Set<string>> = {}
+      faceTags?.forEach((tag: any) => {
+        const contactId = tag.contact_id
+        const memoryId = tag.memory_media?.memory_id
+        if (contactId && memoryId) {
+          if (!memoryCountMap[contactId]) {
+            memoryCountMap[contactId] = new Set()
+          }
+          memoryCountMap[contactId].add(memoryId)
+        }
+      })
+
+      // Store face tag memory map for later use (person click -> activities)
+      const faceTagMap: Record<string, string[]> = {}
+      Object.entries(memoryCountMap).forEach(([contactId, memoryIds]) => {
+        faceTagMap[contactId] = Array.from(memoryIds)
+      })
+      setFaceTagMemoryMap(faceTagMap)
+
+      // SECONDARY: count activity metadata matches
+      const activityCountMap: Record<string, number> = {}
+      contactsList.forEach(contact => {
+        const count = activitiesList.filter(a => {
+          const meta = a.metadata
+          if (!meta) return false
+          const tagged = meta.tagged_people || []
+          const nameMatch = (name: string) => name.toLowerCase().includes(contact.full_name.toLowerCase()) || contact.full_name.toLowerCase().includes(name.toLowerCase())
+          return (
+            tagged.some((p: string) => nameMatch(p)) ||
+            (meta.contactName && nameMatch(meta.contactName)) ||
+            (meta.recipient_name && nameMatch(meta.recipient_name)) ||
+            meta.contactId === contact.id
+          )
+        }).length
+        activityCountMap[contact.id] = count
+      })
+
+      // Merge: ALL contacts, face tag count + activity count
+      const merged = contactsList.map(contact => {
+        const faceTagCount = memoryCountMap[contact.id]?.size || 0
+        const activityCount = activityCountMap[contact.id] || 0
+        return {
+          ...contact,
+          entryCount: faceTagCount + activityCount,
+          faceTagCount,
+          activityCount,
+        }
+      })
+
+      // Sort: by count descending, then alphabetically
+      merged.sort((a, b) => {
+        if (b.entryCount !== a.entryCount) return b.entryCount - a.entryCount
+        return a.full_name.localeCompare(b.full_name)
+      })
+
+      setPeopleData(merged)
+    } catch (err) {
+      console.error('Error fetching people data:', err)
+    }
+  }, [])
 
   useEffect(() => {
     fetchUserName()
@@ -619,6 +699,13 @@ export default function FeedPage() {
   const animateIn = () => {
     // Animation removed for cleaner UX
   }
+
+  // Fetch people data when both contacts and activities are loaded
+  useEffect(() => {
+    if (contacts.length > 0 && activities.length > 0) {
+      fetchPeopleData(contacts, activities)
+    }
+  }, [contacts, activities, fetchPeopleData])
 
   const handleCategoryClick = (categoryId: CategoryFilter) => {
     // Reset browse modes when clicking any main category
@@ -1178,22 +1265,7 @@ export default function FeedPage() {
     }).filter(n => n && n.trim() !== '')
   )].sort()
 
-  // Compute people browse data: contacts with entry counts
-  const peopleData = contacts.map(contact => {
-    const count = activities.filter(a => {
-      const meta = a.metadata
-      if (!meta) return false
-      const tagged = meta.tagged_people || []
-      const nameMatch = (name: string) => name.toLowerCase().includes(contact.full_name.toLowerCase()) || contact.full_name.toLowerCase().includes(name.toLowerCase())
-      return (
-        tagged.some((p: string) => nameMatch(p)) ||
-        (meta.contactName && nameMatch(meta.contactName)) ||
-        (meta.recipient_name && nameMatch(meta.recipient_name)) ||
-        meta.contactId === contact.id
-      )
-    }).length
-    return { ...contact, entryCount: count }
-  }).filter(p => p.entryCount > 0).sort((a, b) => b.entryCount - a.entryCount)
+  // peopleData is now a state variable populated by fetchPeopleData()
 
   // Compute places browse data: unique locations with thumbnails and counts
   const placesData = (() => {
@@ -1221,10 +1293,21 @@ export default function FeedPage() {
   })()
 
   // Get activities for a specific person (by contact id)
+  // Includes both metadata matches AND face-tag-based memory matches
   const getActivitiesForPerson = (contactId: string) => {
     const contact = contacts.find(c => c.id === contactId)
     if (!contact) return []
+    
+    // Get memory IDs from face tags for this contact
+    const faceTagMemoryIds = new Set(faceTagMemoryMap[contactId] || [])
+    
     return activities.filter(a => {
+      // Match via face tags: activity has a memoryId that's in the face tag set
+      if (a.metadata?.memoryId && faceTagMemoryIds.has(a.metadata.memoryId)) {
+        return true
+      }
+      
+      // Match via activity metadata (secondary)
       const meta = a.metadata
       if (!meta) return false
       const tagged = meta.tagged_people || []
@@ -1836,7 +1919,16 @@ export default function FeedPage() {
 
         {/* ── Vertical Timeline Scrubber ── */}
         {viewMode === 'card' && !isInBrowseMode && timelineYears.length > 1 && (
-          <div className="timeline-scrubber" ref={timelineRef}>
+          <div 
+            className="timeline-scrubber" 
+            ref={timelineRef}
+            onWheel={(e) => {
+              e.stopPropagation()
+              if (timelineRef.current) {
+                timelineRef.current.scrollTop += e.deltaY
+              }
+            }}
+          >
             {timelineYears.map((year, idx) => (
               <div key={year} className="timeline-year-group">
                 <button
@@ -3200,21 +3292,22 @@ export default function FeedPage() {
         /* ── Vertical Timeline Scrubber ── */
 
         .timeline-scrubber {
-          position: sticky;
-          top: 200px;
-          right: 0;
+          position: fixed;
+          right: 16px;
+          top: 50%;
+          transform: translateY(-50%);
           width: 45px;
           display: flex;
           flex-direction: column;
           align-items: center;
           padding: 16px 0;
-          margin-right: 8px;
-          border-radius: 16px 0 0 16px;
+          border-radius: 16px;
           backdrop-filter: blur(12px);
           z-index: 15;
-          align-self: flex-start;
-          max-height: calc(100vh - 240px);
+          max-height: 60vh;
           overflow-y: auto;
+          scroll-behavior: smooth;
+          -webkit-overflow-scrolling: touch;
           scrollbar-width: none;
           -ms-overflow-style: none;
         }
@@ -3246,14 +3339,14 @@ export default function FeedPage() {
           align-items: center;
           justify-content: center;
           width: 100%;
-          padding: 6px 4px;
+          padding: 10px 4px;
           border: none;
           background: transparent;
           font-family: 'Inter', sans-serif;
           font-size: 10px;
           font-weight: 500;
           cursor: pointer;
-          transition: all 0.2s ease;
+          transition: all 0.25s ease;
           border-radius: 6px;
           white-space: nowrap;
         }
@@ -3276,19 +3369,21 @@ export default function FeedPage() {
           font-weight: 700;
           color: #C35F33;
           background: rgba(195, 95, 51, 0.1);
+          transform: scale(1.05);
+          transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
         }
 
         .timeline-ticks {
           display: flex;
           flex-direction: column;
           align-items: center;
-          gap: 2px;
-          padding: 3px 0;
+          gap: 4px;
+          padding: 4px 0;
         }
 
         .timeline-tick {
-          width: 8px;
-          height: 1px;
+          width: 12px;
+          height: 1.5px;
           border-radius: 1px;
         }
 
@@ -3304,16 +3399,6 @@ export default function FeedPage() {
         @media (max-width: 768px) {
           .timeline-scrubber {
             display: none;
-          }
-
-          .feed-content {
-            padding-right: 20px !important;
-          }
-        }
-
-        @media (max-width: 640px) {
-          .feed-content {
-            padding-right: 20px !important;
           }
         }
       `}</style>
