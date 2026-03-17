@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef } from 'react'
 // gsap removed - animations simplified
-import { MapPin, Users, Calendar, Search, Map as MapIcon, Grid, Plus, Mic, Video, Upload, Image as ImageIcon, MessageSquare, Gift, Sparkles, BookOpen, Brain, Heart, Camera, Clock, Play } from 'lucide-react'
+import { MapPin, Users, Calendar, Search, Map as MapIcon, Grid, Plus, Mic, Video, Upload, Image as ImageIcon, MessageSquare, Gift, Sparkles, BookOpen, Brain, Heart, Camera, Clock, Play, ChevronDown, X } from 'lucide-react'
 import Link from 'next/link'
 import { format } from 'date-fns'
 import { motion, AnimatePresence } from 'framer-motion'
@@ -37,7 +37,7 @@ interface ActivityItem {
   }
 }
 
-type CategoryFilter = 'all' | 'memories' | 'wisdom' | 'media' | 'interviews' | 'postscripts' | 'shared'
+type CategoryFilter = 'all' | 'memories' | 'wisdom' | 'media' | 'interviews' | 'postscripts'
 type ViewMode = 'card' | 'map'
 
 const CATEGORIES = [
@@ -47,8 +47,39 @@ const CATEGORIES = [
   { id: 'media', label: 'Media' },
   { id: 'interviews', label: 'Interviews' },
   { id: 'postscripts', label: 'PostScripts' },
-  { id: 'shared', label: 'Shared with me' },
 ] as const
+
+type ReminisceMode = 'timeline' | 'people' | 'places' | 'moods' | 'categories' | null
+
+const REMINISCE_TABS: { mode: Exclude<ReminisceMode, null>; label: string; icon: any }[] = [
+  { mode: 'timeline',   label: 'Timeline',    icon: Clock },
+  { mode: 'people',     label: 'People',      icon: Users },
+  { mode: 'places',     label: 'Places',      icon: MapPin },
+  { mode: 'moods',      label: 'Moods',       icon: Heart },
+  { mode: 'categories', label: 'Categories',  icon: BookOpen },
+]
+
+const MOOD_DISPLAY = [
+  { value: 'joyful',      emoji: '😊', label: 'Happy' },
+  { value: 'loving',      emoji: '❤️', label: 'Love' },
+  { value: 'grateful',    emoji: '🙏', label: 'Grateful' },
+  { value: 'nostalgic',   emoji: '🌅', label: 'Nostalgic' },
+  { value: 'proud',       emoji: '🏆', label: 'Proud' },
+  { value: 'peaceful',    emoji: '🌿', label: 'Peaceful' },
+  { value: 'reflective',  emoji: '🤔', label: 'Reflective' },
+  { value: 'bittersweet', emoji: '😢', label: 'Bittersweet' },
+]
+
+const REMINISCE_CATEGORIES = [
+  { value: 'family',      label: 'Family',       emoji: '👨‍👩‍👧' },
+  { value: 'travel',      label: 'Travel',        emoji: '✈️' },
+  { value: 'celebration', label: 'Celebrations',  emoji: '🎉' },
+  { value: 'career',      label: 'Career',        emoji: '💼' },
+  { value: 'nature',      label: 'Nature',        emoji: '🌲' },
+  { value: 'food',        label: 'Food',          emoji: '🍽️' },
+  { value: 'friends',     label: 'Friends',       emoji: '🤝' },
+  { value: 'everyday',    label: 'Everyday',      emoji: '☕' },
+]
 
 const QUICK_ACTIONS: Record<string, Array<{ label: string; icon: any; action: string }>> = {
   memories: [
@@ -378,6 +409,14 @@ export default function FeedPage() {
   const [playingAudio, setPlayingAudio] = useState<string | null>(null)
   const [selectedActivity, setSelectedActivity] = useState<ActivityItem | null>(null)
   const [showDetailModal, setShowDetailModal] = useState(false)
+  
+  // Reminisce by state
+  const [reminisceMode, setReminisceMode] = useState<ReminisceMode>(null)
+  const [selectedYear, setSelectedYear] = useState<number | null>(null)
+  const [selectedPerson, setSelectedPerson] = useState<string | null>(null)
+  const [selectedPlace, setSelectedPlace] = useState<string | null>(null)
+  const [selectedMood, setSelectedMood] = useState<string | null>(null)
+  const [selectedReminisceCategory, setSelectedReminisceCategory] = useState<string | null>(null)
 
   const handleAudioToggle = (activityId: string) => {
     setPlayingAudio(prev => prev === activityId ? null : activityId)
@@ -536,7 +575,9 @@ export default function FeedPage() {
       const res = await fetch('/api/activity?limit=200&includePostscripts=true')
       if (res.ok) {
         const data = await res.json()
-        const filtered = (data.activities || []).filter((a: ActivityItem) => a.type !== 'xp_earned')
+        const filtered = (data.activities || []).filter((a: ActivityItem) => 
+          a.type !== 'xp_earned' && !a.type.includes('_shared')
+        )
         setActivities(filtered)
       }
     } catch (err) {
@@ -1016,15 +1057,56 @@ export default function FeedPage() {
     if (category === 'interviews') {
       filtered = activities.filter(a => a.type === 'interview_response')
     } else if (category === 'memories') {
-      filtered = activities.filter(a => a.type === 'memory_created' || a.type === 'memory_shared')
+      filtered = activities.filter(a => a.type === 'memory_created')
     } else if (category === 'wisdom') {
-      filtered = activities.filter(a => a.type === 'wisdom_created' || a.type === 'wisdom_shared')
+      filtered = activities.filter(a => a.type === 'wisdom_created')
     } else if (category === 'media') {
       filtered = activities.filter(a => a.type === 'photos_uploaded')
     } else if (category === 'postscripts') {
       filtered = activities.filter(a => a.type === 'postscript_created')
-    } else if (category === 'shared') {
-      filtered = activities.filter(a => a.type.includes('_shared'))
+    }
+
+    // Apply Reminisce filters on top
+    if (selectedYear) {
+      filtered = filtered.filter(a => {
+        const year = new Date(a.timestamp).getFullYear()
+        return year === selectedYear
+      })
+    }
+
+    if (selectedPerson) {
+      filtered = filtered.filter(a => {
+        const meta = a.metadata
+        if (!meta) return false
+        const tagged = meta.tagged_people || []
+        const personLower = selectedPerson.toLowerCase()
+        return (
+          tagged.some((p: string) => p.toLowerCase().includes(personLower)) ||
+          meta.contactName?.toLowerCase().includes(personLower) ||
+          meta.recipient_name?.toLowerCase().includes(personLower)
+        )
+      })
+    }
+
+    if (selectedPlace) {
+      filtered = filtered.filter(a => {
+        const loc = a.metadata?.location?.toLowerCase() || ''
+        return loc.includes(selectedPlace.toLowerCase())
+      })
+    }
+
+    if (selectedMood) {
+      filtered = filtered.filter(a => {
+        const meta = a.metadata as any
+        return meta?.mood === selectedMood || meta?.ai_mood === selectedMood
+      })
+    }
+
+    if (selectedReminisceCategory) {
+      filtered = filtered.filter(a => {
+        const cat = a.metadata?.category?.toLowerCase() || ''
+        return cat === selectedReminisceCategory.toLowerCase()
+      })
     }
 
     if (searchQuery.trim()) {
@@ -1039,10 +1121,29 @@ export default function FeedPage() {
     setFilteredActivities(filtered)
   }
 
+  // Extract unique values from activities for Reminisce submenus
+  const uniqueYears = [...new Set(activities.map(a => new Date(a.timestamp).getFullYear()))].sort((a, b) => b - a)
+  
+  const uniquePlaces = [...new Set(
+    activities
+      .map(a => a.metadata?.location)
+      .filter((loc): loc is string => !!loc && loc.trim() !== '')
+  )].sort()
+
+  const uniquePeople = [...new Set(
+    activities.flatMap(a => {
+      const names: string[] = []
+      if (a.metadata?.tagged_people) names.push(...a.metadata.tagged_people)
+      if (a.metadata?.contactName) names.push(a.metadata.contactName)
+      if (a.metadata?.recipient_name) names.push(a.metadata.recipient_name)
+      return names
+    }).filter(n => n && n.trim() !== '')
+  )].sort()
+
   useEffect(() => {
     filterActivities(activeCategory)
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [activities, activeCategory, searchQuery])
+  }, [activities, activeCategory, searchQuery, selectedYear, selectedPerson, selectedPlace, selectedMood, selectedReminisceCategory])
 
   useEffect(() => {
     if (filteredActivities.length > 0 && viewMode === 'card') {
@@ -1170,6 +1271,138 @@ export default function FeedPage() {
                 </button>
               </div>
             </div>
+
+            {/* Reminisce By Row */}
+            <div className="reminisce-row">
+              <span className="reminisce-label">Reminisce by</span>
+              <div className="reminisce-tabs">
+                {REMINISCE_TABS.map((tab) => {
+                  const Icon = tab.icon
+                  const isActive = reminisceMode === tab.mode
+                  return (
+                    <button
+                      key={tab.mode}
+                      onClick={() => {
+                        if (isActive) {
+                          setReminisceMode(null)
+                          // Clear the filter for this mode
+                          if (tab.mode === 'timeline') setSelectedYear(null)
+                          if (tab.mode === 'people') setSelectedPerson(null)
+                          if (tab.mode === 'places') setSelectedPlace(null)
+                          if (tab.mode === 'moods') setSelectedMood(null)
+                          if (tab.mode === 'categories') setSelectedReminisceCategory(null)
+                        } else {
+                          setReminisceMode(tab.mode)
+                        }
+                      }}
+                      className={`reminisce-tab ${isActive ? 'active' : ''}`}
+                    >
+                      <Icon size={14} />
+                      <span>{tab.label}</span>
+                      <ChevronDown size={12} style={{ 
+                        transform: isActive ? 'rotate(180deg)' : 'rotate(0deg)',
+                        transition: 'transform 0.2s ease'
+                      }} />
+                    </button>
+                  )
+                })}
+
+                {/* Active filter indicator / clear button */}
+                {(selectedYear || selectedPerson || selectedPlace || selectedMood || selectedReminisceCategory) && (
+                  <button
+                    onClick={() => {
+                      setSelectedYear(null)
+                      setSelectedPerson(null)
+                      setSelectedPlace(null)
+                      setSelectedMood(null)
+                      setSelectedReminisceCategory(null)
+                      setReminisceMode(null)
+                    }}
+                    className="reminisce-clear"
+                  >
+                    <X size={12} />
+                    <span>Clear filters</span>
+                  </button>
+                )}
+              </div>
+            </div>
+
+            {/* Reminisce Submenu */}
+            <AnimatePresence>
+              {reminisceMode && (
+                <motion.div
+                  initial={{ opacity: 0, height: 0 }}
+                  animate={{ opacity: 1, height: 'auto' }}
+                  exit={{ opacity: 0, height: 0 }}
+                  transition={{ type: 'spring', damping: 25, stiffness: 300 }}
+                  className="reminisce-submenu"
+                >
+                  <div className="reminisce-pills">
+                    {reminisceMode === 'timeline' && uniqueYears.map((year) => (
+                      <button
+                        key={year}
+                        onClick={() => setSelectedYear(selectedYear === year ? null : year)}
+                        className={`reminisce-pill ${selectedYear === year ? 'active' : ''}`}
+                      >
+                        {year}
+                      </button>
+                    ))}
+
+                    {reminisceMode === 'people' && (
+                      uniquePeople.length > 0 ? uniquePeople.map((person) => (
+                        <button
+                          key={person}
+                          onClick={() => setSelectedPerson(selectedPerson === person ? null : person)}
+                          className={`reminisce-pill ${selectedPerson === person ? 'active' : ''}`}
+                        >
+                          <Users size={12} />
+                          {person}
+                        </button>
+                      )) : (
+                        <span className="reminisce-empty">No people found in your activities</span>
+                      )
+                    )}
+
+                    {reminisceMode === 'places' && (
+                      uniquePlaces.length > 0 ? uniquePlaces.map((place) => (
+                        <button
+                          key={place}
+                          onClick={() => setSelectedPlace(selectedPlace === place ? null : place)}
+                          className={`reminisce-pill ${selectedPlace === place ? 'active' : ''}`}
+                        >
+                          <MapPin size={12} />
+                          {place}
+                        </button>
+                      )) : (
+                        <span className="reminisce-empty">No places found in your activities</span>
+                      )
+                    )}
+
+                    {reminisceMode === 'moods' && MOOD_DISPLAY.map(({ value, emoji, label }) => (
+                      <button
+                        key={value}
+                        onClick={() => setSelectedMood(selectedMood === value ? null : value)}
+                        className={`reminisce-pill ${selectedMood === value ? 'active' : ''}`}
+                      >
+                        <span>{emoji}</span>
+                        {label}
+                      </button>
+                    ))}
+
+                    {reminisceMode === 'categories' && REMINISCE_CATEGORIES.map(({ value, emoji, label }) => (
+                      <button
+                        key={value}
+                        onClick={() => setSelectedReminisceCategory(selectedReminisceCategory === value ? null : value)}
+                        className={`reminisce-pill ${selectedReminisceCategory === value ? 'active' : ''}`}
+                      >
+                        <span>{emoji}</span>
+                        {label}
+                      </button>
+                    ))}
+                  </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
 
             <div className="search-box">
               <Search size={18} />
@@ -2222,6 +2455,196 @@ export default function FeedPage() {
           .feed-card-cta {
             padding: 8px 14px !important;
             font-size: 12px !important;
+          }
+        }
+
+        /* ── Reminisce By Styles ── */
+        .reminisce-row {
+          display: flex;
+          align-items: center;
+          gap: 12px;
+          flex-wrap: wrap;
+        }
+
+        .reminisce-label {
+          font-size: 11px;
+          font-weight: 600;
+          text-transform: uppercase;
+          letter-spacing: 0.8px;
+          white-space: nowrap;
+          flex-shrink: 0;
+        }
+
+        .feed-page[data-theme="dark"] .reminisce-label {
+          color: rgba(255, 255, 255, 0.4);
+        }
+
+        .feed-page[data-theme="light"] .reminisce-label {
+          color: rgba(0, 0, 0, 0.35);
+        }
+
+        .reminisce-tabs {
+          display: flex;
+          gap: 8px;
+          flex-wrap: wrap;
+          align-items: center;
+        }
+
+        .reminisce-tab {
+          display: flex;
+          align-items: center;
+          gap: 6px;
+          padding: 6px 14px;
+          border-radius: 20px;
+          border: 1px solid transparent;
+          font-size: 12px;
+          font-weight: 500;
+          cursor: pointer;
+          transition: all 0.2s ease;
+          font-family: 'Inter', sans-serif;
+          white-space: nowrap;
+        }
+
+        .feed-page[data-theme="dark"] .reminisce-tab {
+          background: rgba(255, 255, 255, 0.05);
+          color: rgba(255, 255, 255, 0.6);
+          border-color: rgba(255, 255, 255, 0.08);
+        }
+
+        .feed-page[data-theme="light"] .reminisce-tab {
+          background: rgba(0, 0, 0, 0.03);
+          color: rgba(0, 0, 0, 0.5);
+          border-color: rgba(0, 0, 0, 0.08);
+        }
+
+        .reminisce-tab:hover {
+          border-color: #C35F33;
+          color: #C35F33;
+        }
+
+        .reminisce-tab.active {
+          background: rgba(195, 95, 51, 0.12);
+          color: #C35F33;
+          border-color: rgba(195, 95, 51, 0.4);
+          font-weight: 600;
+        }
+
+        .reminisce-clear {
+          display: flex;
+          align-items: center;
+          gap: 4px;
+          padding: 5px 12px;
+          border-radius: 20px;
+          border: 1px solid rgba(195, 95, 51, 0.3);
+          background: rgba(195, 95, 51, 0.08);
+          color: #C35F33;
+          font-size: 11px;
+          font-weight: 500;
+          cursor: pointer;
+          transition: all 0.2s ease;
+          font-family: 'Inter', sans-serif;
+        }
+
+        .reminisce-clear:hover {
+          background: #C35F33;
+          color: #fff;
+          border-color: #C35F33;
+        }
+
+        .reminisce-submenu {
+          overflow: hidden;
+        }
+
+        .reminisce-pills {
+          display: flex;
+          gap: 8px;
+          flex-wrap: wrap;
+          padding: 4px 0;
+        }
+
+        .reminisce-pill {
+          display: flex;
+          align-items: center;
+          gap: 5px;
+          padding: 5px 12px;
+          border-radius: 16px;
+          border: 1px solid transparent;
+          font-size: 12px;
+          font-weight: 500;
+          cursor: pointer;
+          transition: all 0.2s ease;
+          font-family: 'Inter', sans-serif;
+          white-space: nowrap;
+        }
+
+        .feed-page[data-theme="dark"] .reminisce-pill {
+          background: rgba(255, 255, 255, 0.06);
+          color: rgba(255, 255, 255, 0.65);
+          border-color: rgba(255, 255, 255, 0.08);
+        }
+
+        .feed-page[data-theme="light"] .reminisce-pill {
+          background: rgba(0, 0, 0, 0.03);
+          color: rgba(0, 0, 0, 0.55);
+          border-color: rgba(0, 0, 0, 0.08);
+        }
+
+        .reminisce-pill:hover {
+          border-color: #C35F33;
+          color: #C35F33;
+        }
+
+        .reminisce-pill.active {
+          background: #C35F33;
+          color: #fff;
+          border-color: #C35F33;
+          font-weight: 600;
+        }
+
+        .reminisce-empty {
+          font-size: 12px;
+          font-style: italic;
+          padding: 4px 0;
+        }
+
+        .feed-page[data-theme="dark"] .reminisce-empty {
+          color: rgba(255, 255, 255, 0.3);
+        }
+
+        .feed-page[data-theme="light"] .reminisce-empty {
+          color: rgba(0, 0, 0, 0.3);
+        }
+
+        @media (max-width: 640px) {
+          .reminisce-row {
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 8px;
+          }
+
+          .reminisce-tabs {
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+            scrollbar-width: none;
+            width: 100%;
+            flex-wrap: nowrap;
+            padding-bottom: 4px;
+          }
+
+          .reminisce-tabs::-webkit-scrollbar {
+            display: none;
+          }
+
+          .reminisce-pills {
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+            scrollbar-width: none;
+            flex-wrap: nowrap;
+            padding-bottom: 4px;
+          }
+
+          .reminisce-pills::-webkit-scrollbar {
+            display: none;
           }
         }
       `}</style>
