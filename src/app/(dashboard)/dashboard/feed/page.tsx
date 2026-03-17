@@ -461,12 +461,19 @@ export default function FeedPage() {
       const { data: { user } } = await supabase.auth.getUser()
       if (!user) return
 
-      // Fetch face tags from memory_face_tags (same approach as PeopleBrowse)
-      const { data: faceTags } = await supabase
+      console.log('[PeopleData] Starting fetch. contacts:', contactsList.length, 'activities:', activitiesList.length)
+
+      // Fetch face tags (same approach as PeopleBrowse component)
+      const { data: faceTags, error: ftError } = await supabase
         .from('memory_face_tags')
-        .select('contact_id, memory_media!inner(memory_id)')
+        .select(`
+          contact_id,
+          memory_media!inner(memory_id)
+        `)
         .eq('user_id', user.id)
         .not('contact_id', 'is', null)
+
+      console.log('[PeopleData] Face tags:', faceTags?.length || 0, 'error:', ftError?.message || 'none')
 
       // Count unique memory_id per contact_id
       const memoryCountMap: Record<string, Set<string>> = {}
@@ -474,21 +481,19 @@ export default function FeedPage() {
         const contactId = tag.contact_id
         const memoryId = tag.memory_media?.memory_id
         if (contactId && memoryId) {
-          if (!memoryCountMap[contactId]) {
-            memoryCountMap[contactId] = new Set()
-          }
+          if (!memoryCountMap[contactId]) memoryCountMap[contactId] = new Set()
           memoryCountMap[contactId].add(memoryId)
         }
       })
 
-      // Store face tag memory map for later use (person click -> activities)
+      // Store for later use
       const faceTagMap: Record<string, string[]> = {}
-      Object.entries(memoryCountMap).forEach(([contactId, memoryIds]) => {
-        faceTagMap[contactId] = Array.from(memoryIds)
+      Object.entries(memoryCountMap).forEach(([cid, mids]) => {
+        faceTagMap[cid] = Array.from(mids)
       })
       setFaceTagMemoryMap(faceTagMap)
 
-      // SECONDARY: count activity metadata matches
+      // SECONDARY: activity metadata matches
       const activityCountMap: Record<string, number> = {}
       contactsList.forEach(contact => {
         const count = activitiesList.filter(a => {
@@ -506,24 +511,45 @@ export default function FeedPage() {
         activityCountMap[contact.id] = count
       })
 
-      // Merge: ALL contacts, face tag count + activity count
-      const merged = contactsList.map(contact => {
-        const faceTagCount = memoryCountMap[contact.id]?.size || 0
-        const activityCount = activityCountMap[contact.id] || 0
+      // Build contact map for quick lookup
+      const contactMap = new Map(contactsList.map(c => [c.id, c]))
+
+      // Find contacts from face tags that might not be in contactsList
+      const allContactIds = new Set([
+        ...contactsList.map(c => c.id),
+        ...Object.keys(memoryCountMap)
+      ])
+
+      // Fetch any missing contacts from face tags
+      const missingIds = Object.keys(memoryCountMap).filter(id => !contactMap.has(id))
+      if (missingIds.length > 0) {
+        const { data: extraContacts } = await supabase
+          .from('contacts')
+          .select('id, full_name, avatar_url, relationship_type')
+          .in('id', missingIds)
+        extraContacts?.forEach(c => contactMap.set(c.id, c))
+      }
+
+      // Merge ALL unique contacts
+      const merged = Array.from(allContactIds).map(id => {
+        const contact = contactMap.get(id)
+        if (!contact) return null
+        const faceTagCount = memoryCountMap[id]?.size || 0
+        const activityCount = activityCountMap[id] || 0
         return {
           ...contact,
           entryCount: faceTagCount + activityCount,
           faceTagCount,
           activityCount,
         }
-      })
+      }).filter(Boolean)
 
-      // Sort: by count descending, then alphabetically
-      merged.sort((a, b) => {
+      merged.sort((a: any, b: any) => {
         if (b.entryCount !== a.entryCount) return b.entryCount - a.entryCount
         return a.full_name.localeCompare(b.full_name)
       })
 
+      console.log('[PeopleData] Result:', merged.length, 'people')
       setPeopleData(merged)
     } catch (err) {
       console.error('Error fetching people data:', err)
@@ -547,7 +573,7 @@ export default function FeedPage() {
 
       const { data, error } = await supabase
         .from('contacts')
-        .select('id, full_name, profile_photo_url, avatar_url, relationship_type')
+        .select('id, full_name, avatar_url, relationship_type')
         .eq('user_id', user.id)
         .order('full_name')
       
@@ -700,9 +726,9 @@ export default function FeedPage() {
     // Animation removed for cleaner UX
   }
 
-  // Fetch people data when both contacts and activities are loaded
+  // Fetch people data when activities are loaded (contacts may be empty)
   useEffect(() => {
-    if (contacts.length > 0 && activities.length > 0) {
+    if (activities.length > 0) {
       fetchPeopleData(contacts, activities)
     }
   }, [contacts, activities, fetchPeopleData])
@@ -1714,7 +1740,7 @@ export default function FeedPage() {
                     <div className="masonry-grid">
                       {peopleData.map((person) => {
                         const initials = person.full_name.split(' ').map((n: string) => n[0]).join('').toUpperCase().slice(0, 2)
-                        const avatarUrl = person.profile_photo_url || person.avatar_url
+                        const avatarUrl = person.avatar_url
                         return (
                           <div key={person.id} className="card-wrapper">
                             <div
@@ -1927,6 +1953,39 @@ export default function FeedPage() {
               if (timelineRef.current) {
                 timelineRef.current.scrollTop += e.deltaY
               }
+            }}
+            onMouseDown={(e) => {
+              const el = timelineRef.current
+              if (!el) return
+              el.style.cursor = 'grabbing'
+              const startY = e.clientY
+              const startScroll = el.scrollTop
+              const onMove = (ev: MouseEvent) => {
+                el.scrollTop = startScroll - (ev.clientY - startY)
+              }
+              const onUp = () => {
+                el.style.cursor = 'grab'
+                window.removeEventListener('mousemove', onMove)
+                window.removeEventListener('mouseup', onUp)
+              }
+              window.addEventListener('mousemove', onMove)
+              window.addEventListener('mouseup', onUp)
+            }}
+            onTouchStart={(e) => {
+              const el = timelineRef.current
+              if (!el) return
+              const startY = e.touches[0].clientY
+              const startScroll = el.scrollTop
+              const onMove = (ev: TouchEvent) => {
+                ev.preventDefault()
+                el.scrollTop = startScroll - (ev.touches[0].clientY - startY)
+              }
+              const onEnd = () => {
+                el.removeEventListener('touchmove', onMove)
+                el.removeEventListener('touchend', onEnd)
+              }
+              el.addEventListener('touchmove', onMove, { passive: false })
+              el.addEventListener('touchend', onEnd)
             }}
           >
             {timelineYears.map((year, idx) => (
@@ -3293,23 +3352,27 @@ export default function FeedPage() {
 
         .timeline-scrubber {
           position: fixed;
-          right: 16px;
+          right: 12px;
           top: 50%;
           transform: translateY(-50%);
           width: 45px;
+          height: 55vh;
           display: flex;
           flex-direction: column;
           align-items: center;
-          padding: 16px 0;
+          justify-content: center;
+          padding: 12px 0;
           border-radius: 16px;
           backdrop-filter: blur(12px);
-          z-index: 15;
-          max-height: 60vh;
+          z-index: 25;
           overflow-y: auto;
+          overflow-x: hidden;
           scroll-behavior: smooth;
           -webkit-overflow-scrolling: touch;
           scrollbar-width: none;
           -ms-overflow-style: none;
+          cursor: grab;
+          user-select: none;
         }
 
         .timeline-scrubber::-webkit-scrollbar {
