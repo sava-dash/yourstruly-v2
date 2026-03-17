@@ -883,6 +883,7 @@
   flex-direction: column;
   align-items: center;
   gap: var(--tile-gap);
+  width: 100%;
 }
 
 .engagement-column {
