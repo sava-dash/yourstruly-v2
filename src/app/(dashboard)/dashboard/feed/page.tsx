@@ -2884,15 +2884,14 @@ export default function FeedPage() {
         }
 
         .masonry-grid {
-          column-count: 5;
-          column-gap: 20px;
+          display: grid;
+          grid-template-columns: repeat(5, 1fr);
+          gap: 20px;
           width: 100%;
         }
 
         .card-wrapper {
           display: block;
-          break-inside: avoid;
-          margin-bottom: 20px;
         }
 
         .card {
@@ -3044,38 +3043,29 @@ export default function FeedPage() {
         /* Responsive Masonry Breakpoints */
         @media (max-width: 1400px) {
           .masonry-grid {
-            column-count: 4;
-            column-gap: 18px;
-          }
-          .card-wrapper {
-            margin-bottom: 18px;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 18px;
           }
         }
 
         @media (max-width: 1100px) {
           .masonry-grid {
-            column-count: 3;
-            column-gap: 16px;
-          }
-          .card-wrapper {
-            margin-bottom: 16px;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 16px;
           }
         }
 
         @media (max-width: 768px) {
           .masonry-grid {
-            column-count: 2;
-            column-gap: 14px;
-          }
-          .card-wrapper {
-            margin-bottom: 14px;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 14px;
           }
         }
 
         @media (max-width: 640px) {
           .masonry-grid {
-            column-count: 1;
-            column-gap: 0;
+            grid-template-columns: 1fr;
+            gap: 12px;
           }
           
           /* All cards single column on mobile */
