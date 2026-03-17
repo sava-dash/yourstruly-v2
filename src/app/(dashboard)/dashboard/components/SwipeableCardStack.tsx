@@ -2,9 +2,19 @@
 
 import { useState, useCallback, useEffect, useRef } from 'react'
 import { motion, AnimatePresence, useMotionValue, useTransform, PanInfo } from 'framer-motion'
-import { X, Sparkles, Mic, Send, RotateCcw, UserPlus, Search, Square, Loader2, Bookmark } from 'lucide-react'
+import { X, Sparkles, Mic, Send, RotateCcw, UserPlus, Search, Square, Loader2, Bookmark, Video, Play } from 'lucide-react'
 import { TYPE_CONFIG, isContactPrompt, PHOTO_TAGGING_TYPES } from '../constants'
 import { createClient } from '@/lib/supabase/client'
+
+// Helper to detect video URLs
+function isVideoUrl(url?: string): boolean {
+  if (!url) return false
+  const lower = url.toLowerCase()
+  return /\.(mp4|mov|webm|avi|mkv)(\?|$)/.test(lower) || lower.includes('video/')
+}
+
+// Types that should NOT get AI follow-ups
+const NO_FOLLOWUP_TYPES = ['postscript']
 
 interface Prompt {
   id: string
@@ -21,7 +31,7 @@ interface Prompt {
 interface SwipeableCardStackProps {
   prompts: Prompt[]
   onCardDismiss: (promptId: string) => void
-  onCardAnswer: (promptId: string, response: { type: 'text' | 'voice' | 'selection'; text?: string }) => Promise<void>
+  onCardAnswer: (promptId: string, response: { type: 'text' | 'voice' | 'selection'; text?: string; videoUrl?: string }) => Promise<void>
   onNeedMorePrompts: () => void
   getPromptText: (prompt: Prompt) => string
 }
@@ -120,7 +130,7 @@ interface FlippableCardProps {
   index: number
   totalVisible: number
   onDismiss: () => void
-  onAnswer: (promptId: string, response: { type: 'text' | 'voice' | 'selection'; text?: string }) => Promise<void>
+  onAnswer: (promptId: string, response: { type: 'text' | 'voice' | 'selection'; text?: string; videoUrl?: string }) => Promise<void>
   getPromptText: (prompt: Prompt) => string
 }
 
@@ -148,7 +158,25 @@ function FlippableCard({
   const [mediaRecorder, setMediaRecorder] = useState<MediaRecorder | null>(null)
   const audioChunksRef = useRef<Blob[]>([])
   
+  // Live transcription state (Web Speech API)
+  const [interimText, setInterimText] = useState('')
+  const speechRecRef = useRef<any>(null)
+  
+  // Video recording state
+  const [isVideoRecording, setIsVideoRecording] = useState(false)
+  const [videoStream, setVideoStream] = useState<MediaStream | null>(null)
+  const videoPreviewRef = useRef<HTMLVideoElement>(null)
+  const videoRecorderRef = useRef<MediaRecorder | null>(null)
+  const videoChunksRef = useRef<Blob[]>([])
+  const [videoUrl, setVideoUrl] = useState<string | null>(null)
+  
+  // Video playback state (for photo cards)
+  const [showVideoPlayer, setShowVideoPlayer] = useState(false)
+  
   const MAX_FOLLOW_UPS = 3
+  
+  // Whether this type gets AI follow-ups
+  const hasAiFollowUp = !NO_FOLLOWUP_TYPES.includes(prompt.type)
   
   // Tag person state
   const isTagType = PHOTO_TAGGING_TYPES.includes(prompt.type)
@@ -164,6 +192,7 @@ function FlippableCard({
   const [locationInput, setLocationInput] = useState('')
   const [locationSuggestions, setLocationSuggestions] = useState<{ place_name: string; id: string }[]>([])
   const [dateInput, setDateInput] = useState('')
+  const [backstoryText, setBackstoryText] = useState('')
   const [isSavingBackstory, setIsSavingBackstory] = useState(false)
   const locationDebounce = useRef<ReturnType<typeof setTimeout> | null>(null)
 
@@ -186,7 +215,7 @@ function FlippableCard({
   }
 
   const handleSaveBackstory = async () => {
-    if (!prompt.photoId || (!locationInput.trim() && !dateInput.trim())) return
+    if (!prompt.photoId || (!locationInput.trim() && !dateInput.trim() && !backstoryText.trim())) return
     setIsSavingBackstory(true)
     try {
       const supabase = createClient()
@@ -199,8 +228,13 @@ function FlippableCard({
         .update(updates)
         .eq('id', prompt.photoId)
       
-      // Also answer the prompt
-      await onAnswer(prompt.id, { type: 'text', text: `Location: ${locationInput}, Date: ${dateInput}` })
+      // Build answer text
+      const parts: string[] = []
+      if (locationInput.trim()) parts.push(`Location: ${locationInput}`)
+      if (dateInput.trim()) parts.push(`Date: ${dateInput}`)
+      if (backstoryText.trim()) parts.push(`Story: ${backstoryText}`)
+      
+      await onAnswer(prompt.id, { type: 'text', text: parts.join('\n') })
       onDismiss()
     } catch (err) {
       console.error('Failed to save backstory:', err)
@@ -218,6 +252,7 @@ function FlippableCard({
   const config = TYPE_CONFIG[prompt.type] || TYPE_CONFIG.memory_prompt
   const isContact = isContactPrompt(prompt.type)
   const hasPhoto = prompt.photoUrl && (prompt.type === 'photo_backstory' || prompt.type === 'tag_person')
+  const photoIsVideo = isVideoUrl(prompt.photoUrl)
 
   const handleDragStart = () => {
     isDragging.current = true
@@ -313,6 +348,8 @@ function FlippableCard({
     if (showContactPicker) {
       setShowContactPicker(false)
       setTagPosition(null)
+    } else if (showVideoPlayer) {
+      setShowVideoPlayer(false)
     } else if (isFlipped) {
       setIsFlipped(false)
       setResponseText('')
@@ -321,6 +358,32 @@ function FlippableCard({
     } else {
       onDismiss()
     }
+  }
+
+  // Fetch a follow-up question from the API
+  const fetchFollowUp = async (updatedExchanges: { question: string; response: string }[]) => {
+    setIsLoadingFollowUp(true)
+    try {
+      const res = await fetch('/api/conversation/follow-up', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          exchanges: updatedExchanges,
+          promptType: prompt.type,
+          originalPrompt: getPromptText(prompt),
+        }),
+      })
+      const data = await res.json()
+      if (data.followUpQuestion) {
+        setCurrentQuestion(data.followUpQuestion)
+      } else {
+        setCurrentQuestion('Tell me more about this memory.')
+      }
+    } catch {
+      setCurrentQuestion('Tell me more about this memory.')
+    }
+    setIsLoadingFollowUp(false)
+    setTimeout(() => chatEndRef.current?.scrollIntoView({ behavior: 'smooth' }), 100)
   }
 
   // Submit response and get follow-up
@@ -333,20 +396,23 @@ function FlippableCard({
     
     setExchanges(updatedExchanges)
     setResponseText('')
+    setInterimText('')
+    setCurrentQuestion('')
     setIsSubmitting(true)
     
-    setIsSubmitting(false)
-    
-    // After 3+ exchanges, show save prompt instead of auto follow-up
-    if (updatedExchanges.length >= MAX_FOLLOW_UPS) {
-      setShowSavePrompt(true)
-      return
+    try {
+      // After MAX_FOLLOW_UPS exchanges, show save prompt
+      if (updatedExchanges.length >= MAX_FOLLOW_UPS) {
+        setShowSavePrompt(true)
+      } else if (hasAiFollowUp) {
+        // Auto-fetch follow-up for conversation types
+        await fetchFollowUp(updatedExchanges)
+      }
+    } catch (err) {
+      console.error('Follow-up fetch failed:', err)
     }
     
-    // For first 2 exchanges, don't auto-fetch follow-up — user types freely
-    // Follow-ups only appear when user clicks "Keep Going" (available after 2 exchanges)
-    setCurrentQuestion('')
-    
+    setIsSubmitting(false)
     setTimeout(() => chatEndRef.current?.scrollIntoView({ behavior: 'smooth' }), 100)
   }
   
@@ -355,12 +421,13 @@ function FlippableCard({
     setIsSubmitting(true)
     try {
       const fullText = exchanges.map(e => `Q: ${e.question}\nA: ${e.response}`).join('\n\n')
-      await onAnswer(prompt.id, { type: 'text', text: fullText })
+      await onAnswer(prompt.id, { type: 'text', text: fullText, videoUrl: videoUrl || undefined })
       setIsFlipped(false)
       setResponseText('')
       setExchanges([])
       setCurrentQuestion('')
       setShowSavePrompt(false)
+      setVideoUrl(null)
       onDismiss()
     } catch (err) {
       console.error('Failed to save:', err)
@@ -372,26 +439,10 @@ function FlippableCard({
   const handleAddMore = () => {
     setShowSavePrompt(false)
     setCurrentQuestion('')
-    // Fetch another follow-up
-    setIsLoadingFollowUp(true)
-    fetch('/api/conversation/follow-up', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        exchanges,
-        promptType: prompt.type,
-        originalPrompt: getPromptText(prompt),
-      }),
-    })
-      .then(r => r.json())
-      .then(data => {
-        setCurrentQuestion(data.followUpQuestion || 'Tell me more about this memory.')
-      })
-      .catch(() => setCurrentQuestion('Tell me more about this memory.'))
-      .finally(() => setIsLoadingFollowUp(false))
+    fetchFollowUp(exchanges)
   }
   
-  // Voice recording
+  // Voice recording with live transcription
   const startRecording = async () => {
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true })
@@ -406,7 +457,14 @@ function FlippableCard({
         stream.getTracks().forEach(t => t.stop())
         const audioBlob = new Blob(audioChunksRef.current, { type: 'audio/webm' })
         
-        // Transcribe
+        // Stop live transcription
+        if (speechRecRef.current) {
+          try { speechRecRef.current.stop() } catch {}
+          speechRecRef.current = null
+        }
+        setInterimText('')
+        
+        // Transcribe via API for final accurate text
         const formData = new FormData()
         formData.append('audio', audioBlob, 'recording.webm')
         
@@ -425,9 +483,142 @@ function FlippableCard({
       recorder.start()
       setMediaRecorder(recorder)
       setIsRecording(true)
+      
+      // Start Web Speech API for live interim transcription
+      try {
+        const SpeechRecognition = (window as any).webkitSpeechRecognition || (window as any).SpeechRecognition
+        if (SpeechRecognition) {
+          const recognition = new SpeechRecognition()
+          recognition.continuous = true
+          recognition.interimResults = true
+          recognition.lang = 'en-US'
+          
+          recognition.onresult = (event: any) => {
+            let interim = ''
+            let final = ''
+            for (let i = event.resultIndex; i < event.results.length; i++) {
+              const transcript = event.results[i][0].transcript
+              if (event.results[i].isFinal) {
+                final += transcript
+              } else {
+                interim += transcript
+              }
+            }
+            if (final) {
+              setResponseText(prev => prev ? `${prev} ${final}` : final)
+              setInterimText('')
+            } else {
+              setInterimText(interim)
+            }
+          }
+          
+          recognition.onerror = () => {
+            // Silently fail — we still have MediaRecorder as backup
+          }
+          
+          recognition.start()
+          speechRecRef.current = recognition
+        }
+      } catch {
+        // Web Speech API not available — graceful fallback
+      }
     } catch (err) {
       console.error('Mic access failed:', err)
     }
+  }
+
+  const stopRecording = () => {
+    if (mediaRecorder && mediaRecorder.state !== 'inactive') {
+      mediaRecorder.stop()
+    }
+    if (speechRecRef.current) {
+      try { speechRecRef.current.stop() } catch {}
+      speechRecRef.current = null
+    }
+    setInterimText('')
+    setIsRecording(false)
+  }
+  
+  // Video recording
+  const startVideoRecording = async () => {
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({
+        video: { facingMode: 'user', width: { max: 1280 }, height: { max: 720 } },
+        audio: true,
+      })
+      setVideoStream(stream)
+      
+      // Show preview
+      if (videoPreviewRef.current) {
+        videoPreviewRef.current.srcObject = stream
+        videoPreviewRef.current.play()
+      }
+      
+      const recorder = new MediaRecorder(stream, { mimeType: 'video/webm;codecs=vp8,opus' })
+      videoChunksRef.current = []
+      
+      recorder.ondataavailable = (e) => {
+        if (e.data.size > 0) videoChunksRef.current.push(e.data)
+      }
+      
+      recorder.onstop = async () => {
+        stream.getTracks().forEach(t => t.stop())
+        setVideoStream(null)
+        
+        const videoBlob = new Blob(videoChunksRef.current, { type: 'video/webm' })
+        
+        // Upload to Supabase storage
+        try {
+          const supabase = createClient()
+          const { data: { user } } = await supabase.auth.getUser()
+          if (!user) return
+          
+          const fileName = `video-responses/${user.id}/${Date.now()}.webm`
+          const { data: uploadData, error: uploadError } = await supabase.storage
+            .from('memory-media')
+            .upload(fileName, videoBlob, { contentType: 'video/webm' })
+          
+          if (uploadError) {
+            console.error('Video upload failed:', uploadError)
+          } else {
+            const { data: urlData } = supabase.storage
+              .from('memory-media')
+              .getPublicUrl(fileName)
+            setVideoUrl(urlData.publicUrl)
+          }
+        } catch (err) {
+          console.error('Video upload error:', err)
+        }
+        
+        // Transcribe the audio track
+        const formData = new FormData()
+        formData.append('audio', videoBlob, 'video-recording.webm')
+        
+        try {
+          const res = await fetch('/api/transcribe', { method: 'POST', body: formData })
+          const data = await res.json()
+          const transcribedText = data.transcription || data.text || ''
+          if (transcribedText) {
+            setResponseText(prev => prev ? `${prev} ${transcribedText}` : transcribedText)
+          }
+        } catch (err) {
+          console.error('Video transcription failed:', err)
+        }
+      }
+      
+      recorder.start()
+      videoRecorderRef.current = recorder
+      setIsVideoRecording(true)
+    } catch (err) {
+      console.error('Camera access failed:', err)
+    }
+  }
+  
+  const stopVideoRecording = () => {
+    if (videoRecorderRef.current && videoRecorderRef.current.state !== 'inactive') {
+      videoRecorderRef.current.stop()
+    }
+    setIsVideoRecording(false)
   }
   
   // "Keep Going" - fetch a follow-up question to continue the conversation
@@ -438,32 +629,7 @@ function FlippableCard({
       return
     }
     // Otherwise just fetch a new follow-up based on current exchanges
-    setIsLoadingFollowUp(true)
-    try {
-      const res = await fetch('/api/conversation/follow-up', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          exchanges: exchanges.length > 0 ? exchanges : [{ question: getPromptText(prompt), response: '(thinking...)' }],
-          promptType: prompt.type,
-          originalPrompt: getPromptText(prompt),
-        }),
-      })
-      const data = await res.json()
-      if (data.followUpQuestion) {
-        setCurrentQuestion(data.followUpQuestion)
-      }
-    } catch (err) {
-      console.error('Keep going failed:', err)
-    }
-    setIsLoadingFollowUp(false)
-  }
-
-  const stopRecording = () => {
-    if (mediaRecorder && mediaRecorder.state !== 'inactive') {
-      mediaRecorder.stop()
-    }
-    setIsRecording(false)
+    fetchFollowUp(exchanges.length > 0 ? exchanges : [{ question: getPromptText(prompt), response: '(thinking...)' }])
   }
 
   const stackOffset = index * 6
@@ -534,7 +700,30 @@ function FlippableCard({
             {/* Photo or gradient header — 60% of card */}
             {hasPhoto ? (
               <div className="relative h-[60%] bg-gray-100">
-                <img src={prompt.photoUrl} alt="" className="w-full h-full object-cover" draggable={false} />
+                {photoIsVideo ? (
+                  <>
+                    <video
+                      src={prompt.photoUrl}
+                      preload="metadata"
+                      muted
+                      playsInline
+                      className="w-full h-full object-cover"
+                      onLoadedData={(e) => {
+                        // Seek to 0.1s for thumbnail
+                        const vid = e.currentTarget
+                        vid.currentTime = 0.1
+                      }}
+                    />
+                    {/* Play icon overlay */}
+                    <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                      <div className="w-14 h-14 rounded-full bg-black/50 backdrop-blur-sm flex items-center justify-center">
+                        <Play size={28} className="text-white ml-1" />
+                      </div>
+                    </div>
+                  </>
+                ) : (
+                  <img src={prompt.photoUrl} alt="" className="w-full h-full object-cover" draggable={false} />
+                )}
                 <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
               </div>
             ) : (
@@ -607,14 +796,32 @@ function FlippableCard({
             <div className="h-full flex flex-col relative">
               {/* Photo fills the card */}
               <div className="flex-1 relative overflow-hidden bg-black flex items-center justify-center" style={{ marginTop: 56 }}>
-                <img
-                  ref={imageRef}
-                  src={prompt.photoUrl}
-                  alt=""
-                  onClick={handlePhotoClick}
-                  className="w-full h-full object-contain cursor-crosshair"
-                  draggable={false}
-                />
+                {photoIsVideo ? (
+                  <>
+                    <video
+                      src={prompt.photoUrl}
+                      preload="metadata"
+                      muted
+                      playsInline
+                      className="w-full h-full object-contain"
+                      onLoadedData={(e) => { e.currentTarget.currentTime = 0.1 }}
+                    />
+                    <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                      <div className="w-12 h-12 rounded-full bg-black/50 flex items-center justify-center">
+                        <Play size={24} className="text-white ml-0.5" />
+                      </div>
+                    </div>
+                  </>
+                ) : (
+                  <img
+                    ref={imageRef}
+                    src={prompt.photoUrl}
+                    alt=""
+                    onClick={handlePhotoClick}
+                    className="w-full h-full object-contain cursor-crosshair"
+                    draggable={false}
+                  />
+                )}
 
                 {/* Tagged faces */}
                 {taggedFaces.map(face => (
@@ -701,18 +908,51 @@ function FlippableCard({
               </div>
             </div>
           ) : isBackstoryType && prompt.photoUrl ? (
-            /* Photo Backstory: photo + location & date fields */
+            /* Photo Backstory: photo/video thumbnail + location & date fields + story text */
             <div className="h-full flex flex-col">
-              {/* Photo at top */}
-              <div className="h-[45%] bg-black flex items-center justify-center overflow-hidden" style={{ marginTop: 56 }}>
-                <img src={prompt.photoUrl} alt="" className="w-full h-full object-contain" draggable={false} />
+              {/* Photo/video thumbnail at top — smaller to make room for story text */}
+              <div className="h-[30%] bg-black flex items-center justify-center overflow-hidden relative" style={{ marginTop: 56 }}>
+                {photoIsVideo ? (
+                  <>
+                    {showVideoPlayer ? (
+                      <video
+                        src={prompt.photoUrl}
+                        controls
+                        autoPlay
+                        playsInline
+                        className="w-full h-full object-contain"
+                      />
+                    ) : (
+                      <>
+                        <video
+                          src={prompt.photoUrl}
+                          preload="metadata"
+                          muted
+                          playsInline
+                          className="w-full h-full object-contain"
+                          onLoadedData={(e) => { e.currentTarget.currentTime = 0.1 }}
+                        />
+                        <button
+                          onClick={(e) => { e.stopPropagation(); setShowVideoPlayer(true) }}
+                          className="absolute inset-0 flex items-center justify-center bg-black/20"
+                        >
+                          <div className="w-12 h-12 rounded-full bg-black/60 backdrop-blur-sm flex items-center justify-center">
+                            <Play size={24} className="text-white ml-0.5" />
+                          </div>
+                        </button>
+                      </>
+                    )}
+                  </>
+                ) : (
+                  <img src={prompt.photoUrl} alt="" className="w-full h-full object-contain" draggable={false} />
+                )}
               </div>
 
-              {/* Location + Date fields */}
-              <div className="flex-1 p-5 flex flex-col gap-4">
+              {/* Location + Date fields + Story text */}
+              <div className="flex-1 p-4 flex flex-col gap-3 overflow-y-auto">
                 {/* Location with autocomplete */}
                 <div className="relative">
-                  <label className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1.5 block">
+                  <label className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1 block">
                     📍 Where was this?
                   </label>
                   <input
@@ -720,7 +960,7 @@ function FlippableCard({
                     value={locationInput}
                     onChange={(e) => handleLocationChange(e.target.value)}
                     placeholder="City, place, or address..."
-                    className="w-full px-4 py-3 bg-gray-50 rounded-xl border border-gray-200 text-gray-800 text-sm focus:outline-none focus:ring-2 focus:ring-[#406A56]/30 focus:border-[#406A56]"
+                    className="w-full px-3 py-2.5 bg-gray-50 rounded-xl border border-gray-200 text-gray-800 text-sm focus:outline-none focus:ring-2 focus:ring-[#406A56]/30 focus:border-[#406A56]"
                     autoFocus={isFlipped && isBackstoryType}
                   />
                   {locationSuggestions.length > 0 && (
@@ -744,23 +984,37 @@ function FlippableCard({
 
                 {/* Date field */}
                 <div>
-                  <label className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1.5 block">
+                  <label className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1 block">
                     📅 When was this taken?
                   </label>
                   <input
                     type="text"
                     value={dateInput}
                     onChange={(e) => setDateInput(e.target.value)}
-                    placeholder="e.g. Summer 2019, March 2020, Dec 25 2015..."
-                    className="w-full px-4 py-3 bg-gray-50 rounded-xl border border-gray-200 text-gray-800 text-sm focus:outline-none focus:ring-2 focus:ring-[#406A56]/30 focus:border-[#406A56]"
+                    placeholder="e.g. Summer 2019, March 2020..."
+                    className="w-full px-3 py-2.5 bg-gray-50 rounded-xl border border-gray-200 text-gray-800 text-sm focus:outline-none focus:ring-2 focus:ring-[#406A56]/30 focus:border-[#406A56]"
+                  />
+                </div>
+
+                {/* Story text area */}
+                <div>
+                  <label className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1 block">
+                    📝 The story behind this
+                  </label>
+                  <textarea
+                    value={backstoryText}
+                    onChange={(e) => setBackstoryText(e.target.value)}
+                    placeholder="What's the story? Who was there?"
+                    rows={3}
+                    className="w-full px-3 py-2.5 bg-gray-50 rounded-xl border border-gray-200 text-gray-800 text-sm focus:outline-none focus:ring-2 focus:ring-[#406A56]/30 focus:border-[#406A56] resize-none"
                   />
                 </div>
 
                 {/* Save button */}
                 <button
                   onClick={handleSaveBackstory}
-                  disabled={(!locationInput.trim() && !dateInput.trim()) || isSavingBackstory}
-                  className="mt-auto flex items-center justify-center gap-2 w-full py-3 bg-[#406A56] text-white rounded-xl font-medium disabled:opacity-50 disabled:cursor-not-allowed hover:bg-[#4a7a64] transition-colors"
+                  disabled={(!locationInput.trim() && !dateInput.trim() && !backstoryText.trim()) || isSavingBackstory}
+                  className="flex items-center justify-center gap-2 w-full py-2.5 bg-[#406A56] text-white rounded-xl font-medium disabled:opacity-50 disabled:cursor-not-allowed hover:bg-[#4a7a64] transition-colors"
                 >
                   <Send size={16} />
                   {isSavingBackstory ? 'Saving...' : 'Save Details'}
@@ -775,6 +1029,7 @@ function FlippableCard({
               </div>
             </div>
           ) : (
+            /* Default conversation back-side: Text + Mic + Video + AI follow-ups */
             <div className="h-full flex flex-col pt-14">
               {/* Conversation thread */}
               <div className="flex-1 overflow-y-auto px-5 pb-2">
@@ -821,7 +1076,7 @@ function FlippableCard({
                   </div>
                 )}
 
-                {/* Save prompt after 3 exchanges */}
+                {/* Save prompt after MAX_FOLLOW_UPS exchanges */}
                 {showSavePrompt && (
                   <div className="bg-amber-50 rounded-2xl p-4 text-center">
                     <Bookmark size={24} className="mx-auto text-amber-500 mb-2" />
@@ -849,44 +1104,92 @@ function FlippableCard({
                 <div ref={chatEndRef} />
               </div>
 
+              {/* Video preview overlay */}
+              {isVideoRecording && (
+                <div className="absolute bottom-28 right-4 z-30">
+                  <video
+                    ref={videoPreviewRef}
+                    autoPlay
+                    muted
+                    playsInline
+                    className="w-24 h-32 rounded-2xl object-cover shadow-lg border-2 border-red-400"
+                  />
+                  <div className="absolute top-1 right-1 w-3 h-3 bg-red-500 rounded-full animate-pulse" />
+                </div>
+              )}
+
+              {/* Video URL indicator */}
+              {videoUrl && !isVideoRecording && (
+                <div className="mx-5 mb-1 flex items-center gap-1.5 text-xs text-emerald-600">
+                  <Video size={12} />
+                  <span>Video attached</span>
+                </div>
+              )}
+
               {/* Input area (hidden when showing save prompt) */}
               {!showSavePrompt && (
                 <div className="px-3 pb-3 pt-2 border-t border-gray-100">
                   {/* Textarea row */}
-                  <textarea
-                    value={responseText}
-                    onChange={(e) => setResponseText(e.target.value)}
-                    onKeyDown={(e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleSubmit() } }}
-                    placeholder="Share your thoughts..."
-                    rows={2}
-                    className="w-full p-3 bg-gray-50 rounded-2xl border-0 resize-none focus:outline-none focus:ring-2 focus:ring-[#406A56]/30 text-gray-800 text-sm placeholder-gray-400 mb-2"
-                    autoFocus={isFlipped}
-                  />
-                  {/* Button row: Mic | Keep Going | Send */}
+                  <div className="relative mb-2">
+                    <textarea
+                      value={responseText}
+                      onChange={(e) => setResponseText(e.target.value)}
+                      onKeyDown={(e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleSubmit() } }}
+                      placeholder="Share your thoughts..."
+                      rows={2}
+                      className="w-full p-3 bg-gray-50 rounded-2xl border-0 resize-none focus:outline-none focus:ring-2 focus:ring-[#406A56]/30 text-gray-800 text-sm placeholder-gray-400"
+                      style={interimText ? { color: 'transparent', caretColor: '#1f2937' } : undefined}
+                      autoFocus={isFlipped}
+                    />
+                    {/* Interim transcription overlay */}
+                    {interimText && (
+                      <div className="absolute inset-0 p-3 pointer-events-none text-sm">
+                        <span className="text-gray-800">{responseText}</span>
+                        <span className="text-gray-400 italic">{interimText}</span>
+                      </div>
+                    )}
+                  </div>
+                  {/* Button row: Mic | Video | Save Memory / Keep Going | Send */}
                   <div className="flex items-center gap-2">
+                    {/* Mic button */}
                     <button
                       onClick={isRecording ? stopRecording : startRecording}
+                      disabled={isVideoRecording}
                       className={`w-11 h-11 rounded-full flex items-center justify-center transition-colors flex-shrink-0 ${
                         isRecording 
                           ? 'bg-red-500 text-white animate-pulse' 
-                          : 'bg-gray-100 text-gray-500 hover:bg-gray-200'
+                          : 'bg-gray-100 text-gray-500 hover:bg-gray-200 disabled:opacity-40'
                       }`}
                     >
                       {isRecording ? <Square size={16} /> : <Mic size={18} />}
                     </button>
-                    {exchanges.length >= 2 && (
+                    {/* Video button */}
+                    <button
+                      onClick={isVideoRecording ? stopVideoRecording : startVideoRecording}
+                      disabled={isRecording}
+                      className={`w-11 h-11 rounded-full flex items-center justify-center transition-colors flex-shrink-0 ${
+                        isVideoRecording 
+                          ? 'bg-red-500 text-white animate-pulse' 
+                          : 'bg-gray-100 text-gray-500 hover:bg-gray-200 disabled:opacity-40'
+                      }`}
+                    >
+                      {isVideoRecording ? <Square size={16} /> : <Video size={18} />}
+                    </button>
+                    {/* Save Memory button (after 1+ exchanges) */}
+                    {exchanges.length >= 1 && (
                       <button
-                        onClick={handleKeepGoing}
-                        disabled={isLoadingFollowUp}
+                        onClick={handleSaveMemory}
+                        disabled={isSubmitting}
                         className="flex-1 h-11 rounded-full bg-amber-50 border border-amber-200 text-amber-700 text-sm font-medium hover:bg-amber-100 transition-colors disabled:opacity-50 flex items-center justify-center gap-1.5"
                       >
-                        {isLoadingFollowUp ? (
-                          <><Loader2 size={14} className="animate-spin" /> Thinking...</>
+                        {isSubmitting ? (
+                          <><Loader2 size={14} className="animate-spin" /> Saving...</>
                         ) : (
-                          <><Sparkles size={14} /> Keep Going</>
+                          <><Bookmark size={14} /> Save Memory</>
                         )}
                       </button>
                     )}
+                    {/* Send button */}
                     <button
                       onClick={handleSubmit}
                       disabled={!responseText.trim() || isSubmitting}
