@@ -305,8 +305,7 @@ export default function DashboardPage() {
           subscription={subscription}
         />
 
-        <main className="home-main home-main-row">
-          {/* Card stack — aligned to top like profile tile */}
+        <main className="home-main">
           <div className="engagement-column">
             <div className="home-bubbles">
               {isLoading ? (
@@ -332,22 +331,22 @@ export default function DashboardPage() {
               )}
             </div>
           </div>
-
-          {/* Right column: Chapter filter + Quick actions */}
-          <div className="home-right-col">
-            <LifeChapterFilter
-              selectedChapter={selectedChapter}
-              onSelectChapter={setSelectedChapter}
-            />
-            <QuickActions
-              onShuffle={handleShuffle}
-              onPhotoUpload={() => setShowPhotoUpload(true)}
-              onPostscript={() => setShowPostscriptModal(true)}
-              onAddContact={() => setShowContactModal(true)}
-              onQuickMemory={() => setShowQuickMemoryModal(true)}
-            />
-          </div>
         </main>
+
+        {/* Right sidebar: same level as left sidebar in home-layout */}
+        <aside className="home-right-sidebar">
+          <LifeChapterFilter
+            selectedChapter={selectedChapter}
+            onSelectChapter={setSelectedChapter}
+          />
+          <QuickActions
+            onShuffle={handleShuffle}
+            onPhotoUpload={() => setShowPhotoUpload(true)}
+            onPostscript={() => setShowPostscriptModal(true)}
+            onAddContact={() => setShowContactModal(true)}
+            onQuickMemory={() => setShowQuickMemoryModal(true)}
+          />
+        </aside>
       </div>
     </div>
   )
