@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef } from 'react'
 // gsap removed - animations simplified
-import { MapPin, Users, Calendar, Search, Map as MapIcon, Grid, Plus, Mic, Video, Upload, Image as ImageIcon, MessageSquare, Gift, Sparkles, BookOpen, Brain, Heart, Camera, Clock, Play, ChevronDown, X } from 'lucide-react'
+import { MapPin, Users, Calendar, Search, Map as MapIcon, Plus, Mic, Video, Upload, Image as ImageIcon, MessageSquare, Gift, Sparkles, BookOpen, Brain, Heart, Camera, Clock, Play, ChevronDown, X } from 'lucide-react'
 import Link from 'next/link'
 import { format } from 'date-fns'
 import { motion, AnimatePresence } from 'framer-motion'
@@ -46,13 +46,11 @@ const CATEGORIES = [
   { id: 'wisdom', label: 'Wisdom' },
   { id: 'media', label: 'Media' },
   { id: 'interviews', label: 'Interviews' },
-  { id: 'postscripts', label: 'PostScripts' },
 ] as const
 
-type ReminisceMode = 'timeline' | 'people' | 'places' | 'moods' | 'categories' | null
+type ReminisceMode = 'people' | 'places' | 'moods' | 'categories' | null
 
-const REMINISCE_TABS: { mode: Exclude<ReminisceMode, null>; label: string; icon: any }[] = [
-  { mode: 'timeline',   label: 'Timeline',    icon: Clock },
+const REMINISCE_OPTIONS: { mode: Exclude<ReminisceMode, null>; label: string; icon: any }[] = [
   { mode: 'people',     label: 'People',      icon: Users },
   { mode: 'places',     label: 'Places',      icon: MapPin },
   { mode: 'moods',      label: 'Moods',       icon: Heart },
@@ -412,6 +410,8 @@ export default function FeedPage() {
   
   // Reminisce by state
   const [reminisceMode, setReminisceMode] = useState<ReminisceMode>(null)
+  const [reminisceDropdownOpen, setReminisceDropdownOpen] = useState(false)
+  const reminisceRef = useRef<HTMLDivElement>(null)
   const [selectedYear, setSelectedYear] = useState<number | null>(null)
   const [selectedPerson, setSelectedPerson] = useState<string | null>(null)
   const [selectedPlace, setSelectedPlace] = useState<string | null>(null)
@@ -1145,6 +1145,17 @@ export default function FeedPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [activities, activeCategory, searchQuery, selectedYear, selectedPerson, selectedPlace, selectedMood, selectedReminisceCategory])
 
+  // Close reminisce dropdown on outside click
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (reminisceRef.current && !reminisceRef.current.contains(e.target as Node)) {
+        setReminisceDropdownOpen(false)
+      }
+    }
+    document.addEventListener('mousedown', handleClickOutside)
+    return () => document.removeEventListener('mousedown', handleClickOutside)
+  }, [])
+
   useEffect(() => {
     if (filteredActivities.length > 0 && viewMode === 'card') {
       setTimeout(() => {
@@ -1157,6 +1168,24 @@ export default function FeedPage() {
   const setupScrollAnimation = () => {
     // Scroll animations removed for cleaner UX
   }
+
+  // Compute reminisce dropdown button display
+  const getReminisceButtonDisplay = (): { icon: any; label: string } => {
+    if (selectedPerson) return { icon: Users, label: selectedPerson }
+    if (selectedPlace) return { icon: MapPin, label: selectedPlace }
+    if (selectedMood) {
+      const mood = MOOD_DISPLAY.find(m => m.value === selectedMood)
+      return { icon: Heart, label: mood ? `${mood.emoji} ${mood.label}` : selectedMood }
+    }
+    if (selectedReminisceCategory) {
+      const cat = REMINISCE_CATEGORIES.find(c => c.value === selectedReminisceCategory)
+      return { icon: BookOpen, label: cat ? `${cat.emoji} ${cat.label}` : selectedReminisceCategory }
+    }
+    return { icon: Search, label: 'Filter' }
+  }
+
+  const reminisceDisplay = getReminisceButtonDisplay()
+  const hasActiveReminisceFilter = !!(selectedPerson || selectedPlace || selectedMood || selectedReminisceCategory)
 
   return (
     <div className="feed-page" data-theme={isDarkMode ? 'dark' : 'light'}>
@@ -1234,8 +1263,9 @@ export default function FeedPage() {
               )}
             </AnimatePresence>
 
-            {/* Category Tags + View Toggle */}
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '24px', flexWrap: 'wrap' }}>
+            {/* Single Controls Row: Categories | Search + Map | Reminisce By */}
+            <div className="controls-row">
+              {/* Left: Category Pills */}
               <div className="filter-tags">
                 {CATEGORIES.map((cat) => (
                   <button
@@ -1252,63 +1282,43 @@ export default function FeedPage() {
                 ))}
               </div>
 
-              {/* View Toggle */}
-              <div className="view-toggle">
-                <span className="view-label">View:</span>
+              {/* Center: Search + Map Button */}
+              <div className="controls-center">
+                <div className="search-box-compact">
+                  <Search size={16} />
+                  <input
+                    type="text"
+                    placeholder="Search..."
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                  />
+                </div>
                 <button
-                  onClick={() => setViewMode('card')}
-                  className={`view-btn ${viewMode === 'card' ? 'active' : ''}`}
-                >
-                  <Grid size={16} />
-                  <span>Card</span>
-                </button>
-                <button
-                  onClick={() => setViewMode('map')}
-                  className={`view-btn ${viewMode === 'map' ? 'active' : ''}`}
+                  onClick={() => setViewMode(viewMode === 'map' ? 'card' : 'map')}
+                  className={`map-toggle-btn ${viewMode === 'map' ? 'active' : ''}`}
+                  title={viewMode === 'map' ? 'Switch to Card view' : 'Switch to Map view'}
                 >
                   <MapIcon size={16} />
-                  <span>Map</span>
                 </button>
               </div>
-            </div>
 
-            {/* Reminisce By Row */}
-            <div className="reminisce-row">
-              <span className="reminisce-label">Reminisce by</span>
-              <div className="reminisce-tabs">
-                {REMINISCE_TABS.map((tab) => {
-                  const Icon = tab.icon
-                  const isActive = reminisceMode === tab.mode
-                  return (
-                    <button
-                      key={tab.mode}
-                      onClick={() => {
-                        if (isActive) {
-                          setReminisceMode(null)
-                          // Clear the filter for this mode
-                          if (tab.mode === 'timeline') setSelectedYear(null)
-                          if (tab.mode === 'people') setSelectedPerson(null)
-                          if (tab.mode === 'places') setSelectedPlace(null)
-                          if (tab.mode === 'moods') setSelectedMood(null)
-                          if (tab.mode === 'categories') setSelectedReminisceCategory(null)
-                        } else {
-                          setReminisceMode(tab.mode)
-                        }
-                      }}
-                      className={`reminisce-tab ${isActive ? 'active' : ''}`}
-                    >
-                      <Icon size={14} />
-                      <span>{tab.label}</span>
-                      <ChevronDown size={12} style={{ 
-                        transform: isActive ? 'rotate(180deg)' : 'rotate(0deg)',
-                        transition: 'transform 0.2s ease'
-                      }} />
-                    </button>
-                  )
-                })}
+              {/* Right: Reminisce By Dropdown */}
+              <div className="reminisce-dropdown-wrapper" ref={reminisceRef}>
+                <span className="reminisce-label-inline">REMINISCE BY</span>
+                <button
+                  className={`reminisce-dropdown-btn ${hasActiveReminisceFilter ? 'active' : ''}`}
+                  onClick={() => setReminisceDropdownOpen(!reminisceDropdownOpen)}
+                >
+                  <reminisceDisplay.icon size={14} />
+                  <span className="reminisce-btn-text">{reminisceDisplay.label}</span>
+                  <ChevronDown size={12} style={{
+                    transform: reminisceDropdownOpen ? 'rotate(180deg)' : 'rotate(0deg)',
+                    transition: 'transform 0.2s ease'
+                  }} />
+                </button>
 
-                {/* Active filter indicator / clear button */}
-                {(selectedYear || selectedPerson || selectedPlace || selectedMood || selectedReminisceCategory) && (
+                {/* Clear filter button */}
+                {hasActiveReminisceFilter && (
                   <button
                     onClick={() => {
                       setSelectedYear(null)
@@ -1317,101 +1327,137 @@ export default function FeedPage() {
                       setSelectedMood(null)
                       setSelectedReminisceCategory(null)
                       setReminisceMode(null)
+                      setReminisceDropdownOpen(false)
                     }}
-                    className="reminisce-clear"
+                    className="reminisce-clear-inline"
+                    title="Clear filters"
                   >
                     <X size={12} />
-                    <span>Clear filters</span>
                   </button>
                 )}
+
+                {/* Dropdown Menu */}
+                <AnimatePresence>
+                  {reminisceDropdownOpen && (
+                    <motion.div
+                      initial={{ opacity: 0, y: -8, scale: 0.95 }}
+                      animate={{ opacity: 1, y: 0, scale: 1 }}
+                      exit={{ opacity: 0, y: -8, scale: 0.95 }}
+                      transition={{ duration: 0.15 }}
+                      className="reminisce-dropdown-menu"
+                    >
+                      {REMINISCE_OPTIONS.map((option) => {
+                        const Icon = option.icon
+                        const isActive = reminisceMode === option.mode
+                        return (
+                          <div key={option.mode} className="reminisce-dropdown-group">
+                            <button
+                              className={`reminisce-dropdown-item ${isActive ? 'active' : ''}`}
+                              onClick={() => {
+                                if (isActive) {
+                                  setReminisceMode(null)
+                                  if (option.mode === 'people') setSelectedPerson(null)
+                                  if (option.mode === 'places') setSelectedPlace(null)
+                                  if (option.mode === 'moods') setSelectedMood(null)
+                                  if (option.mode === 'categories') setSelectedReminisceCategory(null)
+                                } else {
+                                  setReminisceMode(option.mode)
+                                }
+                              }}
+                            >
+                              <Icon size={14} />
+                              <span>{option.label}</span>
+                              <ChevronDown size={12} style={{
+                                marginLeft: 'auto',
+                                transform: isActive ? 'rotate(180deg)' : 'rotate(0deg)',
+                                transition: 'transform 0.2s ease',
+                                opacity: 0.5
+                              }} />
+                            </button>
+
+                            {/* Submenu pills for active mode */}
+                            <AnimatePresence>
+                              {isActive && (
+                                <motion.div
+                                  initial={{ opacity: 0, height: 0 }}
+                                  animate={{ opacity: 1, height: 'auto' }}
+                                  exit={{ opacity: 0, height: 0 }}
+                                  transition={{ duration: 0.15 }}
+                                  className="reminisce-submenu-pills"
+                                >
+                                  {option.mode === 'people' && (
+                                    uniquePeople.length > 0 ? uniquePeople.map((person) => (
+                                      <button
+                                        key={person}
+                                        onClick={() => {
+                                          setSelectedPerson(selectedPerson === person ? null : person)
+                                          if (selectedPerson !== person) setReminisceDropdownOpen(false)
+                                        }}
+                                        className={`reminisce-pill ${selectedPerson === person ? 'active' : ''}`}
+                                      >
+                                        <Users size={12} />
+                                        {person}
+                                      </button>
+                                    )) : (
+                                      <span className="reminisce-empty">No people found</span>
+                                    )
+                                  )}
+
+                                  {option.mode === 'places' && (
+                                    uniquePlaces.length > 0 ? uniquePlaces.map((place) => (
+                                      <button
+                                        key={place}
+                                        onClick={() => {
+                                          setSelectedPlace(selectedPlace === place ? null : place)
+                                          if (selectedPlace !== place) setReminisceDropdownOpen(false)
+                                        }}
+                                        className={`reminisce-pill ${selectedPlace === place ? 'active' : ''}`}
+                                      >
+                                        <MapPin size={12} />
+                                        {place}
+                                      </button>
+                                    )) : (
+                                      <span className="reminisce-empty">No places found</span>
+                                    )
+                                  )}
+
+                                  {option.mode === 'moods' && MOOD_DISPLAY.map(({ value, emoji, label }) => (
+                                    <button
+                                      key={value}
+                                      onClick={() => {
+                                        setSelectedMood(selectedMood === value ? null : value)
+                                        if (selectedMood !== value) setReminisceDropdownOpen(false)
+                                      }}
+                                      className={`reminisce-pill ${selectedMood === value ? 'active' : ''}`}
+                                    >
+                                      <span>{emoji}</span>
+                                      {label}
+                                    </button>
+                                  ))}
+
+                                  {option.mode === 'categories' && REMINISCE_CATEGORIES.map(({ value, emoji, label }) => (
+                                    <button
+                                      key={value}
+                                      onClick={() => {
+                                        setSelectedReminisceCategory(selectedReminisceCategory === value ? null : value)
+                                        if (selectedReminisceCategory !== value) setReminisceDropdownOpen(false)
+                                      }}
+                                      className={`reminisce-pill ${selectedReminisceCategory === value ? 'active' : ''}`}
+                                    >
+                                      <span>{emoji}</span>
+                                      {label}
+                                    </button>
+                                  ))}
+                                </motion.div>
+                              )}
+                            </AnimatePresence>
+                          </div>
+                        )
+                      })}
+                    </motion.div>
+                  )}
+                </AnimatePresence>
               </div>
-            </div>
-
-            {/* Reminisce Submenu */}
-            <AnimatePresence>
-              {reminisceMode && (
-                <motion.div
-                  initial={{ opacity: 0, height: 0 }}
-                  animate={{ opacity: 1, height: 'auto' }}
-                  exit={{ opacity: 0, height: 0 }}
-                  transition={{ type: 'spring', damping: 25, stiffness: 300 }}
-                  className="reminisce-submenu"
-                >
-                  <div className="reminisce-pills">
-                    {reminisceMode === 'timeline' && uniqueYears.map((year) => (
-                      <button
-                        key={year}
-                        onClick={() => setSelectedYear(selectedYear === year ? null : year)}
-                        className={`reminisce-pill ${selectedYear === year ? 'active' : ''}`}
-                      >
-                        {year}
-                      </button>
-                    ))}
-
-                    {reminisceMode === 'people' && (
-                      uniquePeople.length > 0 ? uniquePeople.map((person) => (
-                        <button
-                          key={person}
-                          onClick={() => setSelectedPerson(selectedPerson === person ? null : person)}
-                          className={`reminisce-pill ${selectedPerson === person ? 'active' : ''}`}
-                        >
-                          <Users size={12} />
-                          {person}
-                        </button>
-                      )) : (
-                        <span className="reminisce-empty">No people found in your activities</span>
-                      )
-                    )}
-
-                    {reminisceMode === 'places' && (
-                      uniquePlaces.length > 0 ? uniquePlaces.map((place) => (
-                        <button
-                          key={place}
-                          onClick={() => setSelectedPlace(selectedPlace === place ? null : place)}
-                          className={`reminisce-pill ${selectedPlace === place ? 'active' : ''}`}
-                        >
-                          <MapPin size={12} />
-                          {place}
-                        </button>
-                      )) : (
-                        <span className="reminisce-empty">No places found in your activities</span>
-                      )
-                    )}
-
-                    {reminisceMode === 'moods' && MOOD_DISPLAY.map(({ value, emoji, label }) => (
-                      <button
-                        key={value}
-                        onClick={() => setSelectedMood(selectedMood === value ? null : value)}
-                        className={`reminisce-pill ${selectedMood === value ? 'active' : ''}`}
-                      >
-                        <span>{emoji}</span>
-                        {label}
-                      </button>
-                    ))}
-
-                    {reminisceMode === 'categories' && REMINISCE_CATEGORIES.map(({ value, emoji, label }) => (
-                      <button
-                        key={value}
-                        onClick={() => setSelectedReminisceCategory(selectedReminisceCategory === value ? null : value)}
-                        className={`reminisce-pill ${selectedReminisceCategory === value ? 'active' : ''}`}
-                      >
-                        <span>{emoji}</span>
-                        {label}
-                      </button>
-                    ))}
-                  </div>
-                </motion.div>
-              )}
-            </AnimatePresence>
-
-            <div className="search-box">
-              <Search size={18} />
-              <input
-                type="text"
-                placeholder="Search..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-              />
             </div>
           </div>
         </div>
@@ -1897,6 +1943,256 @@ export default function FeedPage() {
           gap: 16px;
         }
 
+        .controls-row {
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          gap: 16px;
+          flex-wrap: wrap;
+        }
+
+        .controls-center {
+          display: flex;
+          align-items: center;
+          gap: 8px;
+        }
+
+        .search-box-compact {
+          display: flex;
+          align-items: center;
+          gap: 8px;
+          padding: 6px 14px;
+          border-radius: 20px;
+          max-width: 250px;
+          width: 200px;
+          transition: all 0.3s ease;
+        }
+
+        .feed-page[data-theme="dark"] .search-box-compact {
+          background: rgba(255, 255, 255, 0.05);
+          border: 1px solid rgba(255, 255, 255, 0.1);
+          color: #fff;
+        }
+
+        .feed-page[data-theme="light"] .search-box-compact {
+          background: rgba(0, 0, 0, 0.03);
+          border: 1px solid rgba(0, 0, 0, 0.1);
+          color: #1A1A1A;
+        }
+
+        .search-box-compact:focus-within {
+          border-color: #C35F33;
+          width: 250px;
+        }
+
+        .search-box-compact input {
+          background: transparent;
+          border: none;
+          outline: none;
+          font-size: 13px;
+          flex: 1;
+          font-family: 'Inter', sans-serif;
+          color: inherit;
+          min-width: 0;
+        }
+
+        .feed-page[data-theme="dark"] .search-box-compact input::placeholder {
+          color: #666;
+        }
+
+        .feed-page[data-theme="light"] .search-box-compact input::placeholder {
+          color: #999;
+        }
+
+        .map-toggle-btn {
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          width: 34px;
+          height: 34px;
+          border-radius: 20px;
+          border: 1px solid transparent;
+          cursor: pointer;
+          transition: all 0.2s ease;
+        }
+
+        .feed-page[data-theme="dark"] .map-toggle-btn {
+          background: rgba(255, 255, 255, 0.05);
+          border-color: rgba(255, 255, 255, 0.1);
+          color: rgba(255, 255, 255, 0.6);
+        }
+
+        .feed-page[data-theme="light"] .map-toggle-btn {
+          background: rgba(0, 0, 0, 0.03);
+          border-color: rgba(0, 0, 0, 0.1);
+          color: rgba(0, 0, 0, 0.5);
+        }
+
+        .map-toggle-btn:hover {
+          border-color: #C35F33;
+          color: #C35F33;
+        }
+
+        .map-toggle-btn.active {
+          background: rgba(195, 95, 51, 0.12);
+          color: #C35F33;
+          border-color: rgba(195, 95, 51, 0.4);
+        }
+
+        /* Reminisce Dropdown */
+        .reminisce-dropdown-wrapper {
+          display: flex;
+          align-items: center;
+          gap: 8px;
+          position: relative;
+        }
+
+        .reminisce-label-inline {
+          font-size: 11px;
+          font-weight: 600;
+          text-transform: uppercase;
+          letter-spacing: 1px;
+          opacity: 0.5;
+          white-space: nowrap;
+          user-select: none;
+        }
+
+        .reminisce-dropdown-btn {
+          display: flex;
+          align-items: center;
+          gap: 6px;
+          padding: 6px 14px;
+          border-radius: 20px;
+          border: 1px solid transparent;
+          font-size: 13px;
+          font-weight: 500;
+          cursor: pointer;
+          transition: all 0.2s ease;
+          font-family: 'Inter', sans-serif;
+          white-space: nowrap;
+        }
+
+        .feed-page[data-theme="dark"] .reminisce-dropdown-btn {
+          background: rgba(255, 255, 255, 0.05);
+          color: rgba(255, 255, 255, 0.6);
+          border-color: rgba(255, 255, 255, 0.1);
+        }
+
+        .feed-page[data-theme="light"] .reminisce-dropdown-btn {
+          background: rgba(0, 0, 0, 0.03);
+          color: rgba(0, 0, 0, 0.5);
+          border-color: rgba(0, 0, 0, 0.08);
+        }
+
+        .reminisce-dropdown-btn:hover {
+          border-color: #C35F33;
+          color: #C35F33;
+        }
+
+        .reminisce-dropdown-btn.active {
+          background: rgba(195, 95, 51, 0.12);
+          color: #C35F33;
+          border-color: rgba(195, 95, 51, 0.4);
+          font-weight: 600;
+        }
+
+        .reminisce-btn-text {
+          max-width: 120px;
+          overflow: hidden;
+          text-overflow: ellipsis;
+        }
+
+        .reminisce-clear-inline {
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          width: 24px;
+          height: 24px;
+          border-radius: 50%;
+          border: 1px solid rgba(195, 95, 51, 0.3);
+          background: rgba(195, 95, 51, 0.08);
+          color: #C35F33;
+          cursor: pointer;
+          transition: all 0.2s ease;
+          flex-shrink: 0;
+        }
+
+        .reminisce-clear-inline:hover {
+          background: #C35F33;
+          color: #fff;
+          border-color: #C35F33;
+        }
+
+        .reminisce-dropdown-menu {
+          position: absolute;
+          top: calc(100% + 8px);
+          right: 0;
+          min-width: 220px;
+          border-radius: 16px;
+          padding: 8px;
+          z-index: 50;
+          box-shadow: 0 12px 40px rgba(0, 0, 0, 0.2);
+        }
+
+        .feed-page[data-theme="dark"] .reminisce-dropdown-menu {
+          background: #2a2a2a;
+          border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .feed-page[data-theme="light"] .reminisce-dropdown-menu {
+          background: #fff;
+          border: 1px solid rgba(0, 0, 0, 0.08);
+        }
+
+        .reminisce-dropdown-group {
+          display: flex;
+          flex-direction: column;
+        }
+
+        .reminisce-dropdown-item {
+          display: flex;
+          align-items: center;
+          gap: 10px;
+          padding: 10px 14px;
+          border-radius: 10px;
+          border: none;
+          background: transparent;
+          font-size: 13px;
+          font-weight: 500;
+          cursor: pointer;
+          transition: all 0.15s ease;
+          font-family: 'Inter', sans-serif;
+          width: 100%;
+          text-align: left;
+        }
+
+        .feed-page[data-theme="dark"] .reminisce-dropdown-item {
+          color: rgba(255, 255, 255, 0.7);
+        }
+
+        .feed-page[data-theme="light"] .reminisce-dropdown-item {
+          color: rgba(0, 0, 0, 0.6);
+        }
+
+        .reminisce-dropdown-item:hover {
+          background: rgba(195, 95, 51, 0.08);
+          color: #C35F33;
+        }
+
+        .reminisce-dropdown-item.active {
+          background: rgba(195, 95, 51, 0.12);
+          color: #C35F33;
+          font-weight: 600;
+        }
+
+        .reminisce-submenu-pills {
+          display: flex;
+          flex-wrap: wrap;
+          gap: 6px;
+          padding: 6px 8px 10px;
+          overflow: hidden;
+        }
+
         .quick-actions-row {
           position: absolute;
           bottom: calc(100% + 12px);
@@ -1947,45 +2243,7 @@ export default function FeedPage() {
           flex: 1;
         }
 
-        .view-toggle {
-          display: flex;
-          align-items: center;
-          gap: 12px;
-        }
-
-        .view-label {
-          font-size: 13px;
-          font-weight: 500;
-          opacity: 0.6;
-        }
-
-        .view-btn {
-          display: flex;
-          align-items: center;
-          gap: 6px;
-          padding: 6px 14px;
-          border-radius: 8px;
-          border: 1px solid transparent;
-          background: transparent;
-          cursor: pointer;
-          font-size: 13px;
-          font-weight: 500;
-          transition: all 0.2s ease;
-        }
-
-        .feed-page[data-theme="dark"] .view-btn {
-          color: #aaa;
-        }
-
-        .feed-page[data-theme="light"] .view-btn {
-          color: #666;
-        }
-
-        .view-btn.active {
-          background: rgba(255, 92, 52, 0.1);
-          color: #FF5C34;
-          border-color: rgba(255, 92, 52, 0.3);
-        }
+        /* view-toggle removed - replaced by map-toggle-btn */
 
         .category-tag {
           position: relative;
@@ -2086,45 +2344,7 @@ export default function FeedPage() {
           background: rgba(0,0,0,0.05);
         }
 
-        .search-box {
-          display: flex;
-          align-items: center;
-          gap: 12px;
-          padding: 8px 16px;
-          border-radius: 8px;
-          min-width: 300px;
-          transition: all 0.3s ease;
-        }
-
-        .feed-page[data-theme="dark"] .search-box {
-          background: rgba(255, 255, 255, 0.05);
-          border: 1px solid rgba(255, 255, 255, 0.1);
-          color: #fff;
-        }
-
-        .feed-page[data-theme="light"] .search-box {
-          background: rgba(0, 0, 0, 0.03);
-          border: 1px solid rgba(0, 0, 0, 0.1);
-          color: #1A1A1A;
-        }
-
-        .search-box input {
-          background: transparent;
-          border: none;
-          outline: none;
-          font-size: 14px;
-          flex: 1;
-          font-family: 'Inter', sans-serif;
-          color: inherit;
-        }
-
-        .feed-page[data-theme="dark"] .search-box input::placeholder {
-          color: #666;
-        }
-
-        .feed-page[data-theme="light"] .search-box input::placeholder {
-          color: #999;
-        }
+        /* search-box replaced by search-box-compact */
 
         .feed-content {
           max-width: 1920px;
@@ -2389,22 +2609,30 @@ export default function FeedPage() {
             white-space: nowrap;
           }
           
-          /* Search box responsive */
-          .search-box {
-            flex: 1 1 100%;
-            max-width: 100%;
-          }
-          
-          /* View toggle */
-          .view-toggle {
-            display: none !important;
-          }
-          
-          /* Header controls */
-          .header-controls > div:first-child {
+          /* Controls row responsive */
+          .controls-row {
             flex-direction: column;
             align-items: stretch !important;
-            gap: 16px !important;
+            gap: 12px !important;
+          }
+
+          .controls-center {
+            justify-content: stretch;
+          }
+
+          .search-box-compact {
+            flex: 1;
+            width: auto;
+            max-width: 100%;
+          }
+
+          .reminisce-dropdown-wrapper {
+            justify-content: flex-start;
+          }
+
+          .reminisce-dropdown-menu {
+            right: auto;
+            left: 0;
           }
           
           .feed-header,
@@ -2458,109 +2686,7 @@ export default function FeedPage() {
           }
         }
 
-        /* ── Reminisce By Styles ── */
-        .reminisce-row {
-          display: flex;
-          align-items: center;
-          gap: 12px;
-          flex-wrap: wrap;
-        }
-
-        .reminisce-label {
-          font-size: 11px;
-          font-weight: 600;
-          text-transform: uppercase;
-          letter-spacing: 0.8px;
-          white-space: nowrap;
-          flex-shrink: 0;
-        }
-
-        .feed-page[data-theme="dark"] .reminisce-label {
-          color: rgba(255, 255, 255, 0.4);
-        }
-
-        .feed-page[data-theme="light"] .reminisce-label {
-          color: rgba(0, 0, 0, 0.35);
-        }
-
-        .reminisce-tabs {
-          display: flex;
-          gap: 8px;
-          flex-wrap: wrap;
-          align-items: center;
-        }
-
-        .reminisce-tab {
-          display: flex;
-          align-items: center;
-          gap: 6px;
-          padding: 6px 14px;
-          border-radius: 20px;
-          border: 1px solid transparent;
-          font-size: 12px;
-          font-weight: 500;
-          cursor: pointer;
-          transition: all 0.2s ease;
-          font-family: 'Inter', sans-serif;
-          white-space: nowrap;
-        }
-
-        .feed-page[data-theme="dark"] .reminisce-tab {
-          background: rgba(255, 255, 255, 0.05);
-          color: rgba(255, 255, 255, 0.6);
-          border-color: rgba(255, 255, 255, 0.08);
-        }
-
-        .feed-page[data-theme="light"] .reminisce-tab {
-          background: rgba(0, 0, 0, 0.03);
-          color: rgba(0, 0, 0, 0.5);
-          border-color: rgba(0, 0, 0, 0.08);
-        }
-
-        .reminisce-tab:hover {
-          border-color: #C35F33;
-          color: #C35F33;
-        }
-
-        .reminisce-tab.active {
-          background: rgba(195, 95, 51, 0.12);
-          color: #C35F33;
-          border-color: rgba(195, 95, 51, 0.4);
-          font-weight: 600;
-        }
-
-        .reminisce-clear {
-          display: flex;
-          align-items: center;
-          gap: 4px;
-          padding: 5px 12px;
-          border-radius: 20px;
-          border: 1px solid rgba(195, 95, 51, 0.3);
-          background: rgba(195, 95, 51, 0.08);
-          color: #C35F33;
-          font-size: 11px;
-          font-weight: 500;
-          cursor: pointer;
-          transition: all 0.2s ease;
-          font-family: 'Inter', sans-serif;
-        }
-
-        .reminisce-clear:hover {
-          background: #C35F33;
-          color: #fff;
-          border-color: #C35F33;
-        }
-
-        .reminisce-submenu {
-          overflow: hidden;
-        }
-
-        .reminisce-pills {
-          display: flex;
-          gap: 8px;
-          flex-wrap: wrap;
-          padding: 4px 0;
-        }
+        /* ── Reminisce By Styles (dropdown version) ── */
 
         .reminisce-pill {
           display: flex;
@@ -2615,38 +2741,7 @@ export default function FeedPage() {
           color: rgba(0, 0, 0, 0.3);
         }
 
-        @media (max-width: 640px) {
-          .reminisce-row {
-            flex-direction: column;
-            align-items: flex-start;
-            gap: 8px;
-          }
-
-          .reminisce-tabs {
-            overflow-x: auto;
-            -webkit-overflow-scrolling: touch;
-            scrollbar-width: none;
-            width: 100%;
-            flex-wrap: nowrap;
-            padding-bottom: 4px;
-          }
-
-          .reminisce-tabs::-webkit-scrollbar {
-            display: none;
-          }
-
-          .reminisce-pills {
-            overflow-x: auto;
-            -webkit-overflow-scrolling: touch;
-            scrollbar-width: none;
-            flex-wrap: nowrap;
-            padding-bottom: 4px;
-          }
-
-          .reminisce-pills::-webkit-scrollbar {
-            display: none;
-          }
-        }
+        /* Old reminisce-tabs mobile styles removed - using dropdown now */
       `}</style>
     </div>
   )
