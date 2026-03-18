@@ -37,7 +37,7 @@ interface ActivityItem {
   }
 }
 
-type CategoryFilter = 'all' | 'memories' | 'wisdom' | 'media' | 'interviews' | 'postscripts'
+type CategoryFilter = 'all' | 'memories' | 'wisdom' | 'media' | 'interviews' | 'shared'
 type ViewMode = 'card' | 'map'
 
 const CATEGORIES = [
@@ -46,6 +46,7 @@ const CATEGORIES = [
   { id: 'wisdom', label: 'Wisdom' },
   { id: 'media', label: 'Media' },
   { id: 'interviews', label: 'Interviews' },
+  { id: 'shared', label: 'Shared with me' },
 ] as const
 
 type ReminisceMode = 'people' | 'places' | 'moods' | 'categories' | null
@@ -719,7 +720,7 @@ export default function FeedPage() {
         const debugYears = [...new Set((data.activities || []).map((a: any) => new Date(a.timestamp).getFullYear()))].sort((a: number, b: number) => b - a)
         console.log('[Feed] Years in data:', debugYears)
         const filtered = (data.activities || []).filter((a: ActivityItem) => 
-          a.type !== 'xp_earned' && !a.type.includes('_shared')
+          a.type !== 'xp_earned'
         )
         setActivities(filtered)
       }
@@ -1213,7 +1214,9 @@ export default function FeedPage() {
   const filterActivities = (category: CategoryFilter) => {
     let filtered = activities
 
-    if (category === 'interviews') {
+    if (category === 'shared') {
+      filtered = activities.filter(a => a.type.includes('_shared'))
+    } else if (category === 'interviews') {
       filtered = activities.filter(a => a.type === 'interview_response')
     } else if (category === 'memories') {
       filtered = activities.filter(a => a.type === 'memory_created')
@@ -1221,8 +1224,9 @@ export default function FeedPage() {
       filtered = activities.filter(a => a.type === 'wisdom_created')
     } else if (category === 'media') {
       filtered = activities.filter(a => a.type === 'photos_uploaded')
-    } else if (category === 'postscripts') {
-      filtered = activities.filter(a => a.type === 'postscript_created')
+    } else {
+      // 'all' — exclude shared items
+      filtered = activities.filter(a => !a.type.includes('_shared'))
     }
 
     // Apply Reminisce filters on top (year handled by timeline scroll, not filtering)
