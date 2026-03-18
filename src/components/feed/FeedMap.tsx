@@ -26,6 +26,8 @@ interface FeedMapProps {
 export default function FeedMap({ activities, onLocationClick }: FeedMapProps) {
   const mapContainer = useRef<HTMLDivElement>(null)
   const map = useRef<mapboxgl.Map | null>(null)
+  const mapReady = useRef(false)
+  const pendingFeatures = useRef<any[]>([])
   const [loaded, setLoaded] = useState(false)
 
   // Debug: log activities with location data
@@ -128,14 +130,14 @@ export default function FeedMap({ activities, onLocationClick }: FeedMapProps) {
       map.current.addControl(new mapboxgl.NavigationControl(), 'bottom-right')
 
       map.current.on('load', () => {
-        console.log('Map loaded successfully')
-        // Wait a tick to ensure style is fully ready
-        setTimeout(() => setLoaded(true), 100)
-      })
-
-      map.current.on('style.load', () => {
-        console.log('Map style loaded successfully')
-        setTimeout(() => setLoaded(true), 100)
+        console.log('[FeedMap] Map fully loaded')
+        mapReady.current = true
+        setLoaded(true)
+        // If features arrived before map was ready, add them now
+        if (pendingFeatures.current.length > 0) {
+          console.log('[FeedMap] Adding', pendingFeatures.current.length, 'pending features on map load')
+          applyFeaturesToMap(pendingFeatures.current)
+        }
       })
 
       map.current.on('error', (e) => {
@@ -277,41 +279,39 @@ export default function FeedMap({ activities, onLocationClick }: FeedMapProps) {
     }
   }, [geojsonData])
 
-  // Add layers once when map is loaded
-  useEffect(() => {
-    if (!map.current || !loaded || !map.current.isStyleLoaded()) return
-    addSourcesAndLayers()
-  }, [loaded, addSourcesAndLayers])
-
-  // Update source data when geocoded features change
-  useEffect(() => {
-    if (!map.current || !loaded) return
+  // Apply features to the map — called when either map loads or features arrive
+  const applyFeaturesToMap = useCallback((features: any[]) => {
+    if (!map.current) return
+    const data = { type: 'FeatureCollection' as const, features }
     const source = map.current.getSource('activities') as mapboxgl.GeoJSONSource
     if (source) {
-      console.log('[FeedMap] Updating source with', geocodedFeatures.length, 'features')
-      source.setData(geojsonData as any)
+      console.log('[FeedMap] Updating existing source with', features.length, 'features')
+      source.setData(data as any)
     } else {
-      // Source not yet added — addSourcesAndLayers will handle it
-      console.log('[FeedMap] Source not ready, will be added by addSourcesAndLayers')
+      console.log('[FeedMap] Creating source with', features.length, 'features')
       addSourcesAndLayers()
     }
 
-    // Fit bounds to geocoded markers
-    if (geocodedFeatures.length > 0 && map.current) {
+    // Fit bounds
+    if (features.length > 0) {
       const bounds = new mapboxgl.LngLatBounds()
-      geocodedFeatures.forEach(f => {
-        bounds.extend(f.geometry.coordinates as [number, number])
-      })
-      
+      features.forEach(f => bounds.extend(f.geometry.coordinates as [number, number]))
       if (!bounds.isEmpty()) {
-        map.current.fitBounds(bounds, {
-          padding: 100,
-          maxZoom: 8,
-          duration: 2000
-        })
+        map.current.fitBounds(bounds, { padding: 100, maxZoom: 8, duration: 2000 })
       }
     }
-  }, [loaded, geocodedFeatures, geojsonData, addSourcesAndLayers])
+  }, [addSourcesAndLayers])
+
+  // When geocoded features change, store in ref and apply if map is ready
+  useEffect(() => {
+    pendingFeatures.current = geocodedFeatures
+    if (mapReady.current && geocodedFeatures.length > 0) {
+      console.log('[FeedMap] Features ready, map ready — applying', geocodedFeatures.length, 'features')
+      applyFeaturesToMap(geocodedFeatures)
+    } else if (geocodedFeatures.length > 0) {
+      console.log('[FeedMap] Features ready but map not ready yet — queued', geocodedFeatures.length)
+    }
+  }, [geocodedFeatures, applyFeaturesToMap])
 
   // Handle cluster click - zoom in
   const handleClusterClick = useCallback((e: mapboxgl.MapMouseEvent) => {
