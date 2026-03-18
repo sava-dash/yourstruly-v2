@@ -283,23 +283,58 @@ GOOD (concise): "I love that! Who taught you this recipe?"`
                   whyHere: prompt.promptText,
                 }}
                 initialMessage={prompt.promptText}
-                onComplete={(state) => {
-                  // Extract people names from conversation
+                onComplete={async (state) => {
                   const allText = state.messages
                     .filter(m => m.role === 'user')
                     .map(m => m.content)
                     .join(' ');
-                  const nameMatches = allText.match(/\b[A-Z][a-z]+\b/g) || [];
-                  const filtered = nameMatches.filter(n => 
-                    !['The', 'And', 'But', 'This', 'That', 'When', 'Where', 'What', 'I', 'We'].includes(n)
-                  );
-                  if (filtered.length > 0) {
-                    setExtractedPeople(prev => [...new Set([...prev, ...filtered])]);
+                  
+                  // Actually save the memory via API
+                  try {
+                    const response = await fetch('/api/engagement/answer', {
+                      method: 'POST',
+                      headers: { 'Content-Type': 'application/json' },
+                      body: JSON.stringify({
+                        promptId: prompt.id,
+                        promptType: prompt.type,
+                        responseType: 'text',
+                        responseText: allText,
+                        contactId: prompt.contactId,
+                      }),
+                    });
+                    const result = await response.json();
+                    console.log('[Engagement] Saved memory:', result);
+                  } catch (err) {
+                    console.error('[Engagement] Failed to save:', err);
+                  }
+                  
+                  // Extract people: only names + relationship words
+                  const people = new Set<string>();
+                  
+                  // Relationship words (standalone)
+                  const relWords = allText.match(/\b(mom|dad|mother|father|grandma|grandmother|grandpa|grandfather|brother|sister|aunt|uncle|cousin|husband|wife|partner|son|daughter|nephew|niece|stepmom|stepdad|stepmother|stepfather|nana|papa|nanny|granny|bro|sis)\b/gi);
+                  if (relWords) relWords.forEach(w => people.add(w.charAt(0).toUpperCase() + w.slice(1).toLowerCase()));
+                  
+                  // "my/our [relationship] [Name]" patterns
+                  const relNamePatterns = [
+                    /(?:my|our)\s+(?:friend|buddy|pal|brother|sister|mother|father|mom|dad|grandmother|grandfather|grandma|grandpa|uncle|aunt|cousin|husband|wife|partner|son|daughter|nephew|niece|boss|teacher|mentor|neighbor)\s+([A-Z][a-z]{2,})/gi,
+                    /(?:named|called|name\s+is|name\s+was)\s+([A-Z][a-z]{2,})/gi,
+                  ];
+                  for (const pattern of relNamePatterns) {
+                    let match;
+                    while ((match = pattern.exec(allText)) !== null) {
+                      if (match[1]) people.add(match[1]);
+                    }
+                  }
+                  
+                  const extractedNames = Array.from(people);
+                  if (extractedNames.length > 0) {
+                    setExtractedPeople(prev => [...new Set([...prev, ...extractedNames])]);
                   }
                   
                   setCompleted(true);
                   
-                  if (filtered.length === 0) {
+                  if (extractedNames.length === 0) {
                     setTimeout(() => {
                       onComplete({
                         responseText: allText,
