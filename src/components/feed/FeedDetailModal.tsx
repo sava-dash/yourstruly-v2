@@ -192,6 +192,7 @@ export function FeedDetailModal({ activity, isOpen, onClose, onUpdate }: FeedDet
   const [detectedFaces, setDetectedFaces] = useState<any[]>([])
   const [selectedFaceIndex, setSelectedFaceIndex] = useState<number | null>(null)
   const [faceDropdownPosition, setFaceDropdownPosition] = useState<{x: number, y: number} | null>(null)
+  const [isFullscreen, setIsFullscreen] = useState(false)
   const imageContainerRef = useRef<HTMLDivElement>(null)
   const audioRef = useRef<HTMLAudioElement | null>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
@@ -204,6 +205,7 @@ export function FeedDetailModal({ activity, isOpen, onClose, onUpdate }: FeedDet
       // Reset to view mode when opening
       setIsEditing(false)
       setIsTaggingMode(false)
+      setIsFullscreen(false)
       setSelectedFaceIndex(null)
       setFaceDropdownPosition(null)
       
@@ -220,7 +222,18 @@ export function FeedDetailModal({ activity, isOpen, onClose, onUpdate }: FeedDet
   // Handle escape key
   useEffect(() => {
     const handleEscape = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') onClose()
+      if (e.key === 'Escape') {
+        if (isFullscreen) {
+          setIsFullscreen(false)
+        } else {
+          onClose()
+        }
+      }
+      // Arrow keys for fullscreen carousel
+      if (isFullscreen && mediaItems.length > 1) {
+        if (e.key === 'ArrowLeft') setCurrentMediaIndex(i => Math.max(0, i - 1))
+        if (e.key === 'ArrowRight') setCurrentMediaIndex(i => Math.min(mediaItems.length - 1, i + 1))
+      }
     }
     if (isOpen) {
       document.addEventListener('keydown', handleEscape)
@@ -462,20 +475,20 @@ export function FeedDetailModal({ activity, isOpen, onClose, onUpdate }: FeedDet
     const files = e.target.files
     if (!files || !activity?.metadata?.memoryId) return
 
-    const formData = new FormData()
-    for (let i = 0; i < files.length; i++) {
-      formData.append('files', files[i])
-    }
-    formData.append('memoryId', activity.metadata.memoryId)
-
     try {
-      const res = await fetch('/api/memories/upload', {
-        method: 'POST',
-        body: formData,
-      })
-      if (res.ok) {
-        loadFullDetails() // Reload media
+      for (let i = 0; i < files.length; i++) {
+        const formData = new FormData()
+        formData.append('file', files[i])
+        
+        const res = await fetch(`/api/memories/${activity.metadata.memoryId}/media`, {
+          method: 'POST',
+          body: formData,
+        })
+        if (!res.ok) {
+          console.error('Upload failed:', await res.text())
+        }
       }
+      loadFullDetails() // Reload media
     } catch (err) {
       console.error('Error uploading:', err)
     }
@@ -868,6 +881,37 @@ export function FeedDetailModal({ activity, isOpen, onClose, onUpdate }: FeedDet
                     </div>
                   </>
                 )}
+                
+                {/* Fullscreen expand button */}
+                {!isTaggingMode && (
+                  <button
+                    onClick={() => setIsFullscreen(true)}
+                    style={{
+                      position: 'absolute',
+                      top: '10px',
+                      right: '10px',
+                      background: 'rgba(0,0,0,0.6)',
+                      border: 'none',
+                      borderRadius: '8px',
+                      width: '32px',
+                      height: '32px',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      cursor: 'pointer',
+                      color: '#fff',
+                      zIndex: 10,
+                    }}
+                    title="View fullscreen"
+                  >
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                      <polyline points="15 3 21 3 21 9" />
+                      <polyline points="9 21 3 21 3 15" />
+                      <line x1="21" y1="3" x2="14" y2="10" />
+                      <line x1="3" y1="21" x2="10" y2="14" />
+                    </svg>
+                  </button>
+                )}
               </div>
             )}
 
@@ -1156,27 +1200,30 @@ export function FeedDetailModal({ activity, isOpen, onClose, onUpdate }: FeedDet
               </>
             ) : (
               <>
-                <button
-                  onClick={() => fileInputRef.current?.click()}
-                  style={{
-                    flex: 1,
-                    padding: '10px',
-                    background: '#f5f5f5',
-                    border: 'none',
-                    borderRadius: '10px',
-                    fontSize: '12px',
-                    fontWeight: '600',
-                    cursor: 'pointer',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    gap: '6px',
-                    color: '#555',
-                  }}
-                >
-                  <Camera size={14} />
-                  Photo
-                </button>
+                {/* Show Photo upload only for memory types, not photos_uploaded or postscripts */}
+                {activity.type !== 'photos_uploaded' && activity.type !== 'postscript_created' && activity.metadata?.memoryId && (
+                  <button
+                    onClick={() => fileInputRef.current?.click()}
+                    style={{
+                      flex: 1,
+                      padding: '10px',
+                      background: '#f5f5f5',
+                      border: 'none',
+                      borderRadius: '10px',
+                      fontSize: '12px',
+                      fontWeight: '600',
+                      cursor: 'pointer',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      gap: '6px',
+                      color: '#555',
+                    }}
+                  >
+                    <Camera size={14} />
+                    Photo
+                  </button>
+                )}
                 {/* Only show Tag button for memories and photos, not postscripts */}
                 {activity.type !== 'postscript_created' && (activity.thumbnail || mediaItems.length > 0) && (
                   <button
@@ -1248,6 +1295,187 @@ export function FeedDetailModal({ activity, isOpen, onClose, onUpdate }: FeedDet
             style={{ display: 'none' }}
           />
         </motion.div>
+
+        {/* Fullscreen Image Viewer */}
+        <AnimatePresence>
+          {isFullscreen && (
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setIsFullscreen(false)}
+              style={{
+                position: 'fixed',
+                inset: 0,
+                zIndex: 100,
+                background: 'rgba(0,0,0,0.95)',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+              }}
+            >
+              {/* Close button */}
+              <button
+                onClick={() => setIsFullscreen(false)}
+                style={{
+                  position: 'absolute',
+                  top: '20px',
+                  right: '20px',
+                  background: 'rgba(255,255,255,0.15)',
+                  border: '1px solid rgba(255,255,255,0.2)',
+                  borderRadius: '50%',
+                  width: '44px',
+                  height: '44px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  cursor: 'pointer',
+                  color: '#fff',
+                  zIndex: 110,
+                  transition: 'background 0.2s',
+                }}
+                onMouseEnter={(e) => (e.currentTarget.style.background = 'rgba(255,255,255,0.25)')}
+                onMouseLeave={(e) => (e.currentTarget.style.background = 'rgba(255,255,255,0.15)')}
+              >
+                <X size={22} />
+              </button>
+
+              {/* Counter */}
+              {mediaItems.length > 1 && (
+                <div style={{
+                  position: 'absolute',
+                  top: '24px',
+                  left: '50%',
+                  transform: 'translateX(-50%)',
+                  color: 'rgba(255,255,255,0.7)',
+                  fontSize: '14px',
+                  fontWeight: '600',
+                  zIndex: 110,
+                }}>
+                  {currentMediaIndex + 1} / {mediaItems.length}
+                </div>
+              )}
+
+              {/* Image */}
+              <motion.img
+                key={currentMediaIndex}
+                initial={{ opacity: 0, scale: 0.95 }}
+                animate={{ opacity: 1, scale: 1 }}
+                exit={{ opacity: 0, scale: 0.95 }}
+                src={mediaItems[currentMediaIndex]?.file_url || activity?.thumbnail}
+                alt={activity?.title || ''}
+                onClick={(e) => e.stopPropagation()}
+                style={{
+                  maxWidth: '90vw',
+                  maxHeight: '90vh',
+                  objectFit: 'contain',
+                  borderRadius: '8px',
+                  userSelect: 'none',
+                }}
+              />
+
+              {/* Prev/Next */}
+              {mediaItems.length > 1 && (
+                <>
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation()
+                      setCurrentMediaIndex(i => Math.max(0, i - 1))
+                    }}
+                    disabled={currentMediaIndex === 0}
+                    style={{
+                      position: 'absolute',
+                      left: '20px',
+                      top: '50%',
+                      transform: 'translateY(-50%)',
+                      background: 'rgba(255,255,255,0.15)',
+                      border: 'none',
+                      borderRadius: '50%',
+                      width: '48px',
+                      height: '48px',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      cursor: 'pointer',
+                      color: '#fff',
+                      opacity: currentMediaIndex === 0 ? 0.3 : 1,
+                      zIndex: 110,
+                    }}
+                  >
+                    <ChevronLeft size={24} />
+                  </button>
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation()
+                      setCurrentMediaIndex(i => Math.min(mediaItems.length - 1, i + 1))
+                    }}
+                    disabled={currentMediaIndex === mediaItems.length - 1}
+                    style={{
+                      position: 'absolute',
+                      right: '20px',
+                      top: '50%',
+                      transform: 'translateY(-50%)',
+                      background: 'rgba(255,255,255,0.15)',
+                      border: 'none',
+                      borderRadius: '50%',
+                      width: '48px',
+                      height: '48px',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      cursor: 'pointer',
+                      color: '#fff',
+                      opacity: currentMediaIndex === mediaItems.length - 1 ? 0.3 : 1,
+                      zIndex: 110,
+                    }}
+                  >
+                    <ChevronRight size={24} />
+                  </button>
+                </>
+              )}
+
+              {/* Thumbnail strip */}
+              {mediaItems.length > 1 && (
+                <div
+                  onClick={(e) => e.stopPropagation()}
+                  style={{
+                    position: 'absolute',
+                    bottom: '20px',
+                    left: '50%',
+                    transform: 'translateX(-50%)',
+                    display: 'flex',
+                    gap: '8px',
+                    padding: '8px',
+                    background: 'rgba(0,0,0,0.6)',
+                    borderRadius: '12px',
+                    maxWidth: '80vw',
+                    overflowX: 'auto',
+                  }}
+                >
+                  {mediaItems.map((m: any, idx: number) => (
+                    <img
+                      key={m.id}
+                      src={m.file_url}
+                      alt=""
+                      onClick={() => setCurrentMediaIndex(idx)}
+                      style={{
+                        width: '48px',
+                        height: '48px',
+                        objectFit: 'cover',
+                        borderRadius: '6px',
+                        cursor: 'pointer',
+                        border: idx === currentMediaIndex ? '2px solid #fff' : '2px solid transparent',
+                        opacity: idx === currentMediaIndex ? 1 : 0.6,
+                        transition: 'all 0.2s',
+                        flexShrink: 0,
+                      }}
+                    />
+                  ))}
+                </div>
+              )}
+            </motion.div>
+          )}
+        </AnimatePresence>
       </motion.div>
     </AnimatePresence>
   )
