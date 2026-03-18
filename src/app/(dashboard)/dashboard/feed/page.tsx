@@ -761,12 +761,11 @@ export default function FeedPage() {
           if (engStats?.current_streak_days) setStreakDays(prev => prev || engStats.current_streak_days)
         } catch {}
 
-        // Fetch stats + storage in parallel
-        const [memoriesRes, contactsRes, photosRes, storageRes] = await Promise.all([
+        // Fetch stats in parallel
+        const [memoriesRes, contactsRes, photosRes] = await Promise.all([
           supabase.from('memories').select('id', { count: 'exact', head: true }).eq('user_id', user.id),
           supabase.from('contacts').select('id', { count: 'exact', head: true }).eq('user_id', user.id),
           supabase.from('memory_media').select('id', { count: 'exact', head: true }).eq('user_id', user.id).eq('file_type', 'image'),
-          supabase.from('memory_media').select('file_size').eq('user_id', user.id),
         ])
         setProfileStats(prev => ({
           ...prev,
@@ -775,15 +774,18 @@ export default function FeedPage() {
           photos: photosRes.count || 0,
         }))
 
-        // Calculate storage from actual file sizes
-        const totalBytes = (storageRes.data || []).reduce((sum: number, m: any) => sum + (m.file_size || 0), 0)
-        const usedGB = totalBytes / (1024 * 1024 * 1024)
-        const limitGB = 10 // Free tier: 10 GB
-        setStorageInfo({
-          used: usedGB,
-          limit: limitGB,
-          percentage: (usedGB / limitGB) * 100,
-        })
+        // Fetch comprehensive storage usage from API
+        try {
+          const storageRes = await fetch('/api/storage/usage')
+          if (storageRes.ok) {
+            const storage = await storageRes.json()
+            setStorageInfo({
+              used: storage.used_gb || 0,
+              limit: storage.limit_gb || 10,
+              percentage: storage.percentage || 0,
+            })
+          }
+        } catch {}
       }
     } catch (err) {
       console.error('Error fetching user name:', err)
