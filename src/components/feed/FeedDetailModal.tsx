@@ -1580,7 +1580,11 @@ export function FeedDetailModal({ activity, isOpen, onClose, onUpdate }: FeedDet
             {/* Contributions (Comments, Reactions, etc.) */}
             {activity.metadata?.memoryId && (
               <div style={{ marginTop: '16px', borderTop: '1px solid #eee', paddingTop: '16px' }}>
-                <MemoryContributions memoryId={activity.metadata.memoryId} />
+                <MemoryContributions 
+                  memoryId={activity.metadata.memoryId}
+                  contentType={activity.type.includes('wisdom') ? 'wisdom' : 'memory'}
+                  onShare={() => setShowShareModal(true)}
+                />
               </div>
             )}
           </div>

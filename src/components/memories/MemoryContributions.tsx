@@ -22,6 +22,8 @@ interface Contribution {
 
 interface MemoryContributionsProps {
   memoryId: string
+  contentType?: 'memory' | 'wisdom'
+  onShare?: () => void
 }
 
 const TYPE_ICONS = {
@@ -33,7 +35,7 @@ const TYPE_ICONS = {
 
 const REACTION_EMOJIS = ['❤️', '👍', '😂', '🎉', '🔥']
 
-export default function MemoryContributions({ memoryId }: MemoryContributionsProps) {
+export default function MemoryContributions({ memoryId, contentType = 'memory', onShare }: MemoryContributionsProps) {
   const [contributions, setContributions] = useState<Contribution[]>([])
   const [loading, setLoading] = useState(true)
   const [showAddModal, setShowAddModal] = useState(false)
@@ -199,20 +201,33 @@ export default function MemoryContributions({ memoryId }: MemoryContributionsPro
     return null
   }
 
-  // If no contributions, show a minimal "invite others" section instead of empty state
+  const contentLabel = contentType === 'wisdom' ? 'Wisdom' : 'Memory'
+
+  // If no contributions, show invite + add section
   if (contributions.length === 0) {
     return (
       <div className="border-t border-gray-200 pt-6">
         <div className="text-center py-8 bg-gradient-to-r from-[#406A56]/5 to-[#8DACAB]/5 rounded-xl">
           <Users size={32} className="mx-auto mb-3 text-[#406A56]/50" />
-          <p className="text-sm text-gray-600 mb-3">Share this memory with family or friends</p>
-          <button
-            onClick={() => setShowAddModal(true)}
-            className="inline-flex items-center gap-2 px-4 py-2 bg-[#406A56]/10 text-[#406A56] rounded-lg text-sm font-medium hover:bg-[#406A56]/20 transition-colors"
-          >
-            <Plus size={16} />
-            Invite to Contribute
-          </button>
+          <p className="text-sm text-gray-600 mb-3">Share this {contentLabel.toLowerCase()} with family or friends</p>
+          <div className="flex items-center justify-center gap-3">
+            {onShare && (
+              <button
+                onClick={onShare}
+                className="inline-flex items-center gap-2 px-4 py-2 bg-[#406A56] text-white rounded-lg text-sm font-medium hover:bg-[#4a7a64] transition-colors"
+              >
+                <Users size={16} />
+                Invite to Contribute
+              </button>
+            )}
+            <button
+              onClick={() => setShowAddModal(true)}
+              className="inline-flex items-center gap-2 px-4 py-2 bg-[#406A56]/10 text-[#406A56] rounded-lg text-sm font-medium hover:bg-[#406A56]/20 transition-colors"
+            >
+              <Plus size={16} />
+              Add to {contentLabel}
+            </button>
+          </div>
         </div>
         <AddContributionModal
           isOpen={showAddModal}
@@ -235,13 +250,24 @@ export default function MemoryContributions({ memoryId }: MemoryContributionsPro
           Contributions
           <span className="text-sm font-normal text-gray-500">({contributions.length})</span>
         </h3>
-        <button
-          onClick={() => setShowAddModal(true)}
-          className="flex items-center gap-2 px-4 py-2 bg-[#406A56] text-white rounded-xl text-sm font-medium hover:bg-[#4a7a64] transition-colors"
-        >
-          <Plus size={16} />
-          Add
-        </button>
+        <div className="flex items-center gap-2">
+          {onShare && (
+            <button
+              onClick={onShare}
+              className="flex items-center gap-2 px-3 py-2 bg-[#406A56]/10 text-[#406A56] rounded-xl text-sm font-medium hover:bg-[#406A56]/20 transition-colors"
+            >
+              <Users size={14} />
+              Invite
+            </button>
+          )}
+          <button
+            onClick={() => setShowAddModal(true)}
+            className="flex items-center gap-2 px-3 py-2 bg-[#406A56] text-white rounded-xl text-sm font-medium hover:bg-[#4a7a64] transition-colors"
+          >
+            <Plus size={14} />
+            Add to {contentLabel}
+          </button>
+        </div>
       </div>
 
       {/* Timeline */}

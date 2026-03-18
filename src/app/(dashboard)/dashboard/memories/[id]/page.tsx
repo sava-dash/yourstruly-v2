@@ -918,7 +918,11 @@ export default function MemoryDetailPage({ params }: { params: Promise<{ id: str
 
         {/* Contributions Section */}
         <div className="mt-8">
-          <MemoryContributions memoryId={id} />
+          <MemoryContributions 
+            memoryId={id} 
+            contentType="memory"
+            onShare={() => setShowShareModal(true)}
+          />
         </div>
       </main>
       </div>
