@@ -100,7 +100,7 @@ export async function GET(request: NextRequest) {
       if (!owner || !memoryId) continue
       
       const mediaArray = memory?.media ? (Array.isArray(memory.media) ? memory.media : [memory.media]) : []
-      const firstImage = mediaArray.find((m: any) => m.file_type === 'image')
+      const firstImage = mediaArray.find((m: any) => m.file_type === 'image' && m.file_url?.startsWith('http'))
       
       activities.push({
         id: `memory_share_${share.id}`,
@@ -414,7 +414,7 @@ export async function GET(request: NextRequest) {
   if (myMemories) {
     for (const memory of myMemories) {
       const mediaArray = Array.isArray(memory.media) ? memory.media : (memory.media ? [memory.media] : [])
-      const firstImage = mediaArray.find((m: any) => m.file_type === 'image')
+      const firstImage = mediaArray.find((m: any) => m.file_type === 'image' && m.file_url?.startsWith('http'))
       
       activities.push({
         id: `memory_created_${memory.id}`,
@@ -508,6 +508,8 @@ export async function GET(request: NextRequest) {
       const memory = Array.isArray(photo.memory) ? photo.memory[0] : photo.memory
       const memoryId = memory?.id || photo.memory_id
       if (!memoryId) continue
+      // Skip entries with invalid URLs (e.g. "text-only", "conversation")
+      if (!photo.file_url?.startsWith('http')) continue
 
       // Use taken_at (EXIF date) > memory_date > created_at
       const photoDate = photo.taken_at || memory?.memory_date || photo.created_at

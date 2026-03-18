@@ -1307,8 +1307,8 @@ export default function FeedPage() {
     } else if (category === 'media') {
       filtered = activities.filter(a => a.type === 'photos_uploaded')
     } else {
-      // 'all' — exclude shared items
-      filtered = activities.filter(a => !SHARED_TYPES.includes(a.type))
+      // 'all' — exclude shared items and standalone photo uploads (those belong in Media tab)
+      filtered = activities.filter(a => !SHARED_TYPES.includes(a.type) && a.type !== 'photos_uploaded')
     }
 
     // Apply Reminisce filters on top (year handled by timeline scroll, not filtering)

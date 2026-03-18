@@ -287,7 +287,8 @@ export function FeedDetailModal({ activity, isOpen, onClose, onUpdate }: FeedDet
             taggedCount: data.tagged_contacts?.length || 0
           })
           
-          setMediaItems(data.media || [])
+          // Filter out entries with invalid URLs (e.g. "text-only", "conversation")
+          setMediaItems((data.media || []).filter((m: any) => m.file_url?.startsWith('http')))
           setTaggedPeople(data.tagged_contacts || [])
           setIsFavorite(data.is_favorite || false)
           
