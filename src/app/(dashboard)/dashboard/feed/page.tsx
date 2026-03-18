@@ -2180,118 +2180,6 @@ export default function FeedPage() {
               <p>No items found</p>
             </div>
           ) : (
-            <>
-            {/* Smart Albums - shown on Media tab */}
-            {activeCategory === 'media' && (() => {
-              const photoActivities = filteredActivities.filter(a => a.thumbnail)
-              // Location albums
-              const locAlbums: Record<string, { count: number; cover: string }> = {}
-              photoActivities.forEach(a => {
-                const loc = a.metadata?.location
-                if (loc) {
-                  if (!locAlbums[loc]) locAlbums[loc] = { count: 0, cover: a.thumbnail! }
-                  locAlbums[loc].count++
-                }
-              })
-              // Year albums
-              const yearAlbums: Record<number, { count: number; cover: string }> = {}
-              photoActivities.forEach(a => {
-                const year = new Date(a.timestamp).getFullYear()
-                if (!yearAlbums[year]) yearAlbums[year] = { count: 0, cover: a.thumbnail! }
-                yearAlbums[year].count++
-              })
-              // People albums
-              const peopleAlbums: Record<string, { count: number; cover: string }> = {}
-              photoActivities.forEach(a => {
-                (a.metadata?.tagged_people || []).forEach((name: string) => {
-                  if (!peopleAlbums[name]) peopleAlbums[name] = { count: 0, cover: a.thumbnail! }
-                  peopleAlbums[name].count++
-                })
-              })
-
-              const albums = [
-                ...Object.entries(locAlbums)
-                  .filter(([_, v]) => v.count >= 2)
-                  .sort((a, b) => b[1].count - a[1].count)
-                  .slice(0, 4)
-                  .map(([name, v]) => ({ name, ...v, icon: '📍' })),
-                ...Object.entries(yearAlbums)
-                  .sort((a, b) => parseInt(b[0]) - parseInt(a[0]))
-                  .slice(0, 4)
-                  .map(([year, v]) => ({ name: year, ...v, icon: '📅' })),
-                ...Object.entries(peopleAlbums)
-                  .filter(([_, v]) => v.count >= 2)
-                  .sort((a, b) => b[1].count - a[1].count)
-                  .slice(0, 4)
-                  .map(([name, v]) => ({ name, ...v, icon: '👤' })),
-              ]
-
-              if (albums.length === 0) return null
-              return (
-                <div style={{ marginBottom: '24px' }}>
-                  <h3 className="smart-albums-title" style={{
-                    fontSize: '14px',
-                    fontWeight: '700',
-                    textTransform: 'uppercase',
-                    letterSpacing: '1px',
-                    marginBottom: '12px',
-                  }}>
-                    📸 Smart Albums
-                  </h3>
-                  <div style={{
-                    display: 'grid',
-                    gridTemplateColumns: 'repeat(auto-fill, minmax(150px, 1fr))',
-                    gap: '12px',
-                  }}>
-                    {albums.map((album, idx) => (
-                      <div
-                        key={idx}
-                        onClick={() => {
-                          // Filter by album criteria
-                          if (album.icon === '📍') setSelectedPlace(album.name)
-                          else if (album.icon === '👤') setSelectedPerson(album.name)
-                          else if (album.icon === '📅') setActiveTimelineYear(parseInt(album.name))
-                        }}
-                        className="smart-album-card"
-                        style={{
-                          position: 'relative',
-                          borderRadius: '12px',
-                          overflow: 'hidden',
-                          cursor: 'pointer',
-                          aspectRatio: '4/3',
-                        }}
-                      >
-                        <img
-                          src={album.cover}
-                          alt={album.name}
-                          style={{
-                            width: '100%',
-                            height: '100%',
-                            objectFit: 'cover',
-                          }}
-                        />
-                        <div style={{
-                          position: 'absolute',
-                          inset: 0,
-                          background: 'linear-gradient(to top, rgba(0,0,0,0.7) 0%, transparent 50%)',
-                          display: 'flex',
-                          flexDirection: 'column',
-                          justifyContent: 'flex-end',
-                          padding: '10px 12px',
-                        }}>
-                          <div style={{ fontSize: '13px', fontWeight: '700', color: '#fff' }}>
-                            {album.icon} {album.name}
-                          </div>
-                          <div style={{ fontSize: '10px', color: 'rgba(255,255,255,0.7)' }}>
-                            {album.count} photos
-                          </div>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )
-            })()}
             <div ref={gridRef} className="masonry-columns-wrapper">
               {(() => {
                 // Shortest-column greedy: place each item in the shortest column
@@ -2333,7 +2221,6 @@ export default function FeedPage() {
                 ))
               })()}
             </div>
-            </>
           )}
         </div>
 
@@ -2930,12 +2817,6 @@ export default function FeedPage() {
         .feed-page[data-theme="light"] .profile-storage-label { font-size: 10px; font-weight: 600; color: rgba(64,106,86,0.6); text-transform: uppercase; letter-spacing: 0.5px; }
         .feed-page[data-theme="light"] .profile-storage-value { font-size: 10px; color: #888; }
         .feed-page[data-theme="light"] .profile-storage-track { height: 6px; background: #F2F1E5; border-radius: 3px; overflow: hidden; }
-
-        /* Smart Albums */
-        .feed-page[data-theme="dark"] .smart-albums-title { color: rgba(255,255,255,0.6); }
-        .feed-page[data-theme="light"] .smart-albums-title { color: rgba(0,0,0,0.5); }
-        .smart-album-card { transition: transform 0.2s, box-shadow 0.2s; }
-        .smart-album-card:hover { transform: scale(1.03); box-shadow: 0 4px 16px rgba(0,0,0,0.2); }
 
         .header-controls {
           position: relative;
