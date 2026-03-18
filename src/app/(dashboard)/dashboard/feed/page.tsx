@@ -411,6 +411,9 @@ export default function FeedPage() {
   const [searchQuery, setSearchQuery] = useState('')
   const [isDarkMode, setIsDarkMode] = useState(true)
   const [userFirstName, setUserFirstName] = useState<string>('')
+  const [profileStats, setProfileStats] = useState({ memories: 0, contacts: 0, photos: 0, xp: 0 })
+  const [storageInfo, setStorageInfo] = useState({ used: 0, limit: 10, percentage: 0 })
+  const [streakDays, setStreakDays] = useState(0)
   const [viewMode, setViewMode] = useState<ViewMode>('card')
   const [showMapOverlay, setShowMapOverlay] = useState(false)
   const [showEngagementModal, setShowEngagementModal] = useState(false)
@@ -725,13 +728,42 @@ export default function FeedPage() {
       if (user) {
         const { data: profile } = await supabase
           .from('profiles')
-          .select('full_name')
+          .select('full_name, xp_total, current_streak_days')
           .eq('id', user.id)
           .single()
         
         const firstName = profile?.full_name?.split(' ')[0] || user.email?.split('@')[0] || ''
         const capitalized = firstName.charAt(0).toUpperCase() + firstName.slice(1)
         setUserFirstName(capitalized)
+        setStreakDays(profile?.current_streak_days || 0)
+
+        // Fetch stats in parallel
+        const [memoriesRes, contactsRes, photosRes] = await Promise.all([
+          supabase.from('memories').select('id', { count: 'exact', head: true }).eq('user_id', user.id),
+          supabase.from('contacts').select('id', { count: 'exact', head: true }).eq('user_id', user.id),
+          supabase.from('memory_media').select('id', { count: 'exact', head: true }).eq('user_id', user.id).eq('file_type', 'image'),
+        ])
+        setProfileStats({
+          memories: memoriesRes.count || 0,
+          contacts: contactsRes.count || 0,
+          photos: photosRes.count || 0,
+          xp: profile?.xp_total || 0,
+        })
+
+        // Storage info
+        try {
+          const storageRes = await fetch('/api/subscription')
+          if (storageRes.ok) {
+            const sub = await storageRes.json()
+            if (sub.storage) {
+              setStorageInfo({
+                used: sub.storage.total_bytes / (1024*1024*1024),
+                limit: sub.storage.limit_bytes / (1024*1024*1024),
+                percentage: sub.storage.percentage || 0,
+              })
+            }
+          }
+        } catch {}
       }
     } catch (err) {
       console.error('Error fetching user name:', err)
@@ -1600,18 +1632,88 @@ export default function FeedPage() {
     <div className="feed-page" data-theme={isDarkMode ? 'dark' : 'light'}>
       <div className="feed-header">
         <div className="header-content">
-          <div style={{ marginTop: '200px', marginBottom: '40px' }}>
-            {userFirstName && (
-              <h1 className="welcome-heading">
-                Hey {userFirstName}
-              </h1>
-            )}
-          </div>
-          <div style={{ display: 'flex', justifyContent: 'flex-end', alignItems: 'center', marginBottom: '20px' }}>
+          <div style={{ marginTop: '200px', marginBottom: '24px', display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between' }}>
+            {/* Profile Card */}
+            <div style={{
+              background: 'rgba(255,255,255,0.92)',
+              backdropFilter: 'blur(12px)',
+              borderRadius: '16px',
+              padding: '16px 20px',
+              boxShadow: '0 2px 12px rgba(0,0,0,0.08)',
+              border: '1px solid rgba(64,106,86,0.1)',
+              minWidth: '280px',
+              maxWidth: '360px',
+            }}>
+              {/* Name + Streak */}
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '12px' }}>
+                <h2 style={{ fontSize: '18px', fontWeight: '600', color: '#406A56', margin: 0 }}>
+                  Hey {userFirstName || 'there'}
+                </h2>
+                {streakDays > 0 && (
+                  <div style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '3px',
+                    padding: '3px 8px',
+                    background: 'linear-gradient(90deg, rgba(217,198,26,0.15), rgba(195,95,51,0.15))',
+                    borderRadius: '12px',
+                  }}>
+                    <span style={{ fontSize: '13px' }}>🔥</span>
+                    <span style={{ fontSize: '13px', fontWeight: '700', color: '#C35F33' }}>{streakDays}</span>
+                  </div>
+                )}
+              </div>
+
+              {/* Stats Row */}
+              <div style={{ display: 'flex', alignItems: 'center', textAlign: 'center', marginBottom: '12px' }}>
+                <div style={{ flex: 1 }}>
+                  <div style={{ fontSize: '22px', fontWeight: '700', color: '#406A56' }}>{profileStats.memories}</div>
+                  <div style={{ fontSize: '9px', color: 'rgba(64,106,86,0.5)', textTransform: 'uppercase', letterSpacing: '0.5px', fontWeight: '600' }}>Memories</div>
+                </div>
+                <div style={{ flex: 1, borderLeft: '1px solid rgba(64,106,86,0.1)', borderRight: '1px solid rgba(64,106,86,0.1)' }}>
+                  <div style={{ fontSize: '22px', fontWeight: '700', color: '#406A56' }}>{profileStats.contacts}</div>
+                  <div style={{ fontSize: '9px', color: 'rgba(64,106,86,0.5)', textTransform: 'uppercase', letterSpacing: '0.5px', fontWeight: '600' }}>People</div>
+                </div>
+                <div style={{ flex: 1, borderRight: '1px solid rgba(64,106,86,0.1)' }}>
+                  <div style={{ fontSize: '22px', fontWeight: '700', color: '#406A56' }}>{profileStats.photos}</div>
+                  <div style={{ fontSize: '9px', color: 'rgba(64,106,86,0.5)', textTransform: 'uppercase', letterSpacing: '0.5px', fontWeight: '600' }}>Photos</div>
+                </div>
+                <div style={{ flex: 1 }}>
+                  <div style={{ fontSize: '22px', fontWeight: '700', color: '#D9C61A' }}>{profileStats.xp}</div>
+                  <div style={{ fontSize: '9px', color: 'rgba(217,198,26,0.5)', textTransform: 'uppercase', letterSpacing: '0.5px', fontWeight: '600', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '2px' }}>
+                    <span>⚡</span> XP
+                  </div>
+                </div>
+              </div>
+
+              {/* Storage Bar */}
+              <div style={{ borderTop: '1px solid rgba(64,106,86,0.1)', paddingTop: '10px' }}>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '6px' }}>
+                  <span style={{ fontSize: '10px', fontWeight: '600', color: 'rgba(64,106,86,0.6)', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Storage</span>
+                  <span style={{ fontSize: '10px', color: '#888' }}>
+                    {storageInfo.used.toFixed(1)} / {storageInfo.limit.toFixed(0)} GB
+                  </span>
+                </div>
+                <div style={{ height: '6px', background: '#F2F1E5', borderRadius: '3px', overflow: 'hidden' }}>
+                  <div style={{
+                    height: '100%',
+                    borderRadius: '3px',
+                    width: `${Math.min(storageInfo.percentage, 100)}%`,
+                    background: storageInfo.percentage >= 90
+                      ? 'linear-gradient(90deg, #C35F33, #dc2626)'
+                      : 'linear-gradient(90deg, #406A56, #8DACAB)',
+                    transition: 'width 0.8s ease-out',
+                  }} />
+                </div>
+              </div>
+            </div>
+
+            {/* Theme Toggle */}
             <button
               onClick={() => setIsDarkMode(!isDarkMode)}
               className="theme-toggle"
               aria-label="Toggle theme"
+              style={{ marginTop: '8px' }}
             >
               {isDarkMode ? (
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
