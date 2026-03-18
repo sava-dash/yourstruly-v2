@@ -381,6 +381,36 @@ export async function GET(request: NextRequest) {
     .order('created_at', { ascending: false })
     .limit(limit)
 
+  // Batch-fetch face-tagged contact names for all memories
+  const memoryFaceTagMap: Record<string, string[]> = {}
+  if (myMemories && myMemories.length > 0) {
+    const memoryIds = myMemories.map(m => m.id)
+    const { data: faceTags } = await supabase
+      .from('memory_face_tags')
+      .select(`
+        contact_id,
+        memory_media!inner(memory_id),
+        contacts(full_name)
+      `)
+      .in('memory_media.memory_id', memoryIds)
+      .not('contact_id', 'is', null)
+
+    if (faceTags) {
+      for (const tag of faceTags) {
+        const media = tag.memory_media as any
+        const memoryId = media?.memory_id
+        const contact = tag.contacts as any
+        const name = contact?.full_name
+        if (memoryId && name) {
+          if (!memoryFaceTagMap[memoryId]) memoryFaceTagMap[memoryId] = []
+          if (!memoryFaceTagMap[memoryId].includes(name)) {
+            memoryFaceTagMap[memoryId].push(name)
+          }
+        }
+      }
+    }
+  }
+
   if (myMemories) {
     for (const memory of myMemories) {
       const mediaArray = Array.isArray(memory.media) ? memory.media : (memory.media ? [memory.media] : [])
@@ -400,7 +430,8 @@ export async function GET(request: NextRequest) {
           location: memory.location_name,
           lat: memory.location_lat,
           lng: memory.location_lng,
-          category: memory.category
+          category: memory.category,
+          tagged_people: memoryFaceTagMap[memory.id] || []
         }
       })
     }
@@ -489,7 +520,7 @@ export async function GET(request: NextRequest) {
         timestamp: photoDate,
         link: `/dashboard/memories/${memoryId}`,
         thumbnail: photo.file_url,
-        metadata: { photoId: photo.id, memoryId }
+        metadata: { photoId: photo.id, memoryId, tagged_people: memoryFaceTagMap[memoryId] || [] }
       })
     }
   }

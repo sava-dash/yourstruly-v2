@@ -341,6 +341,32 @@ function MasonryTile({
             </div>
           )}
 
+          {/* Tagged People Pills */}
+          {activity.metadata?.tagged_people && activity.metadata.tagged_people.length > 0 && (
+            <div style={{
+              display: 'flex',
+              flexWrap: 'wrap',
+              gap: '4px',
+            }}>
+              {activity.metadata.tagged_people.map((name: string, i: number) => (
+                <span key={i} style={{
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: '4px',
+                  fontSize: '10px',
+                  fontWeight: '600',
+                  color: 'rgba(255,255,255,0.9)',
+                  background: 'rgba(255,255,255,0.15)',
+                  padding: '3px 8px',
+                  borderRadius: '10px',
+                }}>
+                  <Users size={9} />
+                  {name}
+                </span>
+              ))}
+            </div>
+          )}
+
           {/* Date & Location - at bottom */}
           <div style={{ 
             display: 'flex', 
@@ -1272,7 +1298,8 @@ export default function FeedPage() {
       filtered = filtered.filter(a =>
         a.title.toLowerCase().includes(q) ||
         a.description.toLowerCase().includes(q) ||
-        a.metadata?.location?.toLowerCase().includes(q)
+        a.metadata?.location?.toLowerCase().includes(q) ||
+        (a.metadata?.tagged_people || []).some((name: string) => name.toLowerCase().includes(q))
       )
     }
 
