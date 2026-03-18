@@ -1400,6 +1400,22 @@ export default function FeedPage() {
     return () => window.removeEventListener('scroll', handleScroll)
   }, [viewMode, activeTimelineYear, reminisceMode])
 
+  // Auto-scroll timeline to keep active year centered
+  useEffect(() => {
+    const el = timelineRef.current
+    if (!el) return
+    const activeBtn = el.querySelector('.timeline-year-btn.active') as HTMLElement
+    if (activeBtn) {
+      const containerHeight = el.clientHeight
+      const btnTop = activeBtn.offsetTop
+      const btnHeight = activeBtn.offsetHeight
+      el.scrollTo({
+        top: btnTop - containerHeight / 2 + btnHeight / 2,
+        behavior: 'smooth'
+      })
+    }
+  }, [activeTimelineYear, timelineYears])
+
   const handleTimelineYearClick = (year: number) => {
     setActiveTimelineYear(year)
     if (gridRef.current) {
@@ -3385,19 +3401,16 @@ export default function FeedPage() {
           top: 50%;
           transform: translateY(-50%);
           width: 45px;
-          height: 55vh;
+          max-height: 60vh;
           display: flex;
           flex-direction: column;
           align-items: center;
-          justify-content: center;
           padding: 12px 0;
           border-radius: 16px;
           backdrop-filter: blur(12px);
           z-index: 25;
           overflow-y: auto;
           overflow-x: hidden;
-          scroll-behavior: smooth;
-          -webkit-overflow-scrolling: touch;
           scrollbar-width: none;
           -ms-overflow-style: none;
           cursor: grab;
