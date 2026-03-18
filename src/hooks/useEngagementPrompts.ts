@@ -138,6 +138,14 @@ export function useEngagementPrompts(count: number = 5, lifeChapter: string | nu
       if (!session?.user) return;
       const user = session.user;
 
+      // Record daily activity to keep streak current
+      try {
+        await supabase.rpc('record_daily_activity', {
+          p_user_id: user.id,
+          p_activity_type: 'app_usage',
+        });
+      } catch {}
+
       const { data, error: statsError } = await supabase
         .from('engagement_stats')
         .select('*')
