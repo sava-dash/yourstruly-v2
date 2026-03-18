@@ -2113,7 +2113,7 @@ export default function FeedPage() {
                 <X size={20} />
               </button>
               <FeedMap
-                activities={activities.filter(a => a.metadata?.lat && a.metadata?.lng)}
+                activities={activities.filter(a => (a.metadata?.lat && a.metadata?.lng) || a.metadata?.location)}
                 onLocationClick={(location) => {
                   setShowMapOverlay(false)
                   setReminisceMode('places')

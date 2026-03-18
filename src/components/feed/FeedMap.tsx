@@ -34,25 +34,69 @@ export default function FeedMap({ activities, onLocationClick }: FeedMapProps) {
     console.log('Activities with lat/lng:', activities.filter(a => a.metadata?.lat && a.metadata?.lng).length)
   }, [activities])
 
-  // Convert activities to GeoJSON
+  const [geocodedFeatures, setGeocodedFeatures] = useState<any[]>([])
+
+  // Geocode activities that have location names but no lat/lng
+  useEffect(() => {
+    const geocodeActivities = async () => {
+      const features: any[] = []
+      const geocodeCache: Record<string, [number, number] | null> = {}
+
+      for (const activity of activities) {
+        let coords: [number, number] | null = null
+
+        if (activity.metadata?.lng && activity.metadata?.lat) {
+          coords = [activity.metadata.lng, activity.metadata.lat]
+        } else if (activity.metadata?.location) {
+          const locKey = activity.metadata.location.trim().toLowerCase()
+          if (locKey in geocodeCache) {
+            coords = geocodeCache[locKey]
+          } else {
+            try {
+              const res = await fetch(
+                `https://api.mapbox.com/geocoding/v5/mapbox.places/${encodeURIComponent(activity.metadata.location)}.json?access_token=${mapboxgl.accessToken}&limit=1`
+              )
+              const data = await res.json()
+              if (data.features?.length > 0) {
+                coords = data.features[0].center as [number, number]
+              }
+            } catch (err) {
+              console.warn('Geocode failed for:', activity.metadata.location)
+            }
+            geocodeCache[locKey] = coords
+          }
+        }
+
+        if (coords) {
+          features.push({
+            type: 'Feature',
+            properties: {
+              id: activity.id,
+              title: activity.title,
+              description: activity.description,
+              timestamp: activity.timestamp,
+              thumbnail: activity.thumbnail,
+              location: activity.metadata?.location,
+            },
+            geometry: {
+              type: 'Point',
+              coordinates: coords
+            }
+          })
+        }
+      }
+
+      setGeocodedFeatures(features)
+    }
+
+    geocodeActivities()
+  }, [activities])
+
+  // GeoJSON from geocoded features
   const geojsonData = useMemo(() => ({
     type: 'FeatureCollection' as const,
-    features: activities.map(activity => ({
-      type: 'Feature' as const,
-      properties: {
-        id: activity.id,
-        title: activity.title,
-        description: activity.description,
-        timestamp: activity.timestamp,
-        thumbnail: activity.thumbnail,
-        location: activity.metadata?.location,
-      },
-      geometry: {
-        type: 'Point' as const,
-        coordinates: [activity.metadata!.lng!, activity.metadata!.lat!] as [number, number]
-      }
-    }))
-  }), [activities])
+    features: geocodedFeatures
+  }), [geocodedFeatures])
 
   // Initialize map
   useEffect(() => {
@@ -69,8 +113,8 @@ export default function FeedMap({ activities, onLocationClick }: FeedMapProps) {
       map.current = new mapboxgl.Map({
         container: mapContainer.current,
         style: 'mapbox://styles/mapbox/light-v11',
-        zoom: 1,
-        center: [0, 20],
+        zoom: 3,
+        center: [-80, 35],
         maxZoom: 18,
         minZoom: 1,
         projection: 'globe' as any
@@ -237,16 +281,13 @@ export default function FeedMap({ activities, onLocationClick }: FeedMapProps) {
     
     addSourcesAndLayers()
 
-    // Fit bounds to all markers (but keep globe view)
-    if (activities.length > 0) {
+    // Fit bounds to geocoded markers
+    if (geocodedFeatures.length > 0) {
       const bounds = new mapboxgl.LngLatBounds()
-      activities.forEach(a => {
-        if (a.metadata?.lat && a.metadata?.lng) {
-          bounds.extend([a.metadata.lng, a.metadata.lat])
-        }
+      geocodedFeatures.forEach(f => {
+        bounds.extend(f.geometry.coordinates as [number, number])
       })
       
-      // Only fit if we have valid bounds
       if (!bounds.isEmpty()) {
         map.current.fitBounds(bounds, {
           padding: 100,
@@ -255,7 +296,7 @@ export default function FeedMap({ activities, onLocationClick }: FeedMapProps) {
         })
       }
     }
-  }, [loaded, addSourcesAndLayers, activities])
+  }, [loaded, addSourcesAndLayers, geocodedFeatures])
 
   // Handle cluster click - zoom in
   const handleClusterClick = useCallback((e: mapboxgl.MapMouseEvent) => {
