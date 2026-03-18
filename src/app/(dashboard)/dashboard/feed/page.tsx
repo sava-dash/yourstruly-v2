@@ -1362,9 +1362,11 @@ export default function FeedPage() {
 
   // Timeline years — always use current year as latest, birth year as earliest
   const timelineYears = (() => {
-    const latestYear = Math.max(new Date().getFullYear(), ...(uniqueYears.length > 0 ? uniqueYears : [new Date().getFullYear()]))
-    const startYear = birthYear || Math.min(...(uniqueYears.length > 0 ? uniqueYears : [latestYear]), latestYear - 30)
-    console.log('[Timeline] uniqueYears:', uniqueYears, 'latestYear:', latestYear, 'birthYear:', birthYear, 'startYear:', startYear)
+    const currentYear = new Date().getFullYear()
+    const latestYear = uniqueYears.length > 0 ? Math.max(currentYear, uniqueYears[0]) : currentYear
+    const oldestDataYear = uniqueYears.length > 0 ? uniqueYears[uniqueYears.length - 1] : latestYear
+    const startYear = birthYear || Math.min(oldestDataYear, latestYear - 40)
+    console.log('[Timeline] latestYear:', latestYear, 'oldestData:', oldestDataYear, 'birthYear:', birthYear, 'startYear:', startYear)
     const years: number[] = []
     for (let y = latestYear; y >= startYear; y--) {
       years.push(y)
@@ -2393,7 +2395,7 @@ export default function FeedPage() {
           top: 0;
           z-index: 20;
           backdrop-filter: blur(10px);
-          padding: 24px 60px;
+          padding: 24px 80px 24px 60px;
           transition: all 0.3s ease;
         }
 
