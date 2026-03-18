@@ -1214,8 +1214,9 @@ export default function FeedPage() {
   const filterActivities = (category: CategoryFilter) => {
     let filtered = activities
 
+    const SHARED_TYPES = ['memory_shared', 'wisdom_shared', 'circle_message', 'circle_content', 'circle_invite']
     if (category === 'shared') {
-      filtered = activities.filter(a => a.type.includes('_shared'))
+      filtered = activities.filter(a => SHARED_TYPES.includes(a.type))
     } else if (category === 'interviews') {
       filtered = activities.filter(a => a.type === 'interview_response')
     } else if (category === 'memories') {
@@ -1226,7 +1227,7 @@ export default function FeedPage() {
       filtered = activities.filter(a => a.type === 'photos_uploaded')
     } else {
       // 'all' — exclude shared items
-      filtered = activities.filter(a => !a.type.includes('_shared'))
+      filtered = activities.filter(a => !SHARED_TYPES.includes(a.type))
     }
 
     // Apply Reminisce filters on top (year handled by timeline scroll, not filtering)
