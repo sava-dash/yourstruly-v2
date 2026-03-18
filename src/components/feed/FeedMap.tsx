@@ -155,14 +155,16 @@ export default function FeedMap({ activities, onLocationClick }: FeedMapProps) {
     }
   }, [])
 
-  // Add clustering sources and layers
-  const addSourcesAndLayers = useCallback(() => {
+  // Add clustering sources and layers — accepts data directly to avoid stale closures
+  const addSourcesAndLayers = useCallback((dataOverride?: { type: 'FeatureCollection', features: any[] }) => {
     if (!map.current || !map.current.isStyleLoaded()) {
       console.log('Map or style not ready yet')
       return
     }
 
-    console.log('Adding sources and layers. GeoJSON features:', geojsonData.features.length)
+    const data = dataOverride || geojsonData
+
+    console.log('Adding sources and layers. GeoJSON features:', data.features.length)
 
     // Remove existing source if present
     if (map.current.getSource('activities')) {
@@ -180,7 +182,7 @@ export default function FeedMap({ activities, onLocationClick }: FeedMapProps) {
     // Add source with clustering
     map.current.addSource('activities', {
       type: 'geojson',
-      data: geojsonData,
+      data: data,
       cluster: true,
       clusterMaxZoom: 14,
       clusterRadius: 50,
@@ -288,8 +290,8 @@ export default function FeedMap({ activities, onLocationClick }: FeedMapProps) {
       console.log('[FeedMap] Updating existing source with', features.length, 'features')
       source.setData(data as any)
     } else {
-      console.log('[FeedMap] Creating source with', features.length, 'features')
-      addSourcesAndLayers()
+      console.log('[FeedMap] Creating source with', features.length, 'features (passing data directly)')
+      addSourcesAndLayers(data)
     }
 
     // Fit bounds

@@ -87,7 +87,6 @@ export function InlineAudioPlayer({
         console.error('[InlineAudioPlayer] Play failed:', err)
       })
     } else {
-      console.log('[InlineAudioPlayer] Pausing audio')
       audioRef.current.pause()
     }
   }, [isPlaying])
