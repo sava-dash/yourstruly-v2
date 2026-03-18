@@ -1225,14 +1225,7 @@ export default function FeedPage() {
       filtered = activities.filter(a => a.type === 'postscript_created')
     }
 
-    // Apply Reminisce filters on top
-    if (selectedYear) {
-      filtered = filtered.filter(a => {
-        const year = new Date(a.timestamp).getFullYear()
-        return year === selectedYear
-      })
-    }
-
+    // Apply Reminisce filters on top (year handled by timeline scroll, not filtering)
     if (selectedPerson) {
       filtered = filtered.filter(a => {
         const meta = a.metadata
@@ -1382,7 +1375,6 @@ export default function FeedPage() {
     const detectMidpointYear = () => {
       const containerRect = el.getBoundingClientRect()
       const midY = containerRect.top + containerRect.height / 2
-      // Find the year button closest to the midpoint
       const buttons = Array.from(el.querySelectorAll('.timeline-year-btn')) as HTMLElement[]
       let closestBtn: HTMLElement | null = null
       let closestDist = Infinity
@@ -1398,6 +1390,7 @@ export default function FeedPage() {
       if (closestBtn) {
         const year = parseInt(closestBtn.textContent || '0')
         if (year && year !== activeTimelineYear) {
+          isTimelineUserScroll.current = true
           setActiveTimelineYear(year)
         }
       }
@@ -1407,31 +1400,42 @@ export default function FeedPage() {
     return () => el.removeEventListener('scroll', detectMidpointYear)
   }, [activeTimelineYear])
 
-  // When active year changes from timeline, filter the tiles
+  // When active year changes from timeline, SCROLL tiles to that year (don't filter)
+  const isTimelineUserScroll = useRef(false)
   useEffect(() => {
-    if (activeTimelineYear) {
-      setSelectedYear(activeTimelineYear)
+    if (!activeTimelineYear || !gridRef.current || !isTimelineUserScroll.current) return
+    // Find the first card with this year and scroll to it
+    const wrapper = gridRef.current.closest('.feed-content') || gridRef.current.parentElement
+    const cards = gridRef.current.querySelectorAll('.card-wrapper[data-year]')
+    for (const card of Array.from(cards)) {
+      const year = parseInt(card.getAttribute('data-year') || '0')
+      if (year === activeTimelineYear) {
+        card.scrollIntoView({ behavior: 'smooth', block: 'start' })
+        break
+      }
     }
+    isTimelineUserScroll.current = false
   }, [activeTimelineYear])
 
-  // On mount: scroll timeline so 2026 (latest year) is at midpoint
+  // On mount: position timeline so 2026 is at the midpoint indicator
+  const timelineInitialized = useRef(false)
   useEffect(() => {
+    if (timelineInitialized.current) return
     const el = timelineRef.current
     if (!el || timelineYears.length === 0) return
-    // First year button should be at the midpoint
-    const firstBtn = el.querySelector('.timeline-year-btn') as HTMLElement
-    if (firstBtn) {
-      const containerHeight = el.clientHeight
-      const btnTop = firstBtn.offsetTop
-      const btnHeight = firstBtn.offsetHeight
-      el.scrollTo({
-        top: btnTop - containerHeight / 2 + btnHeight / 2,
-        behavior: 'instant'
-      })
-    }
+    // Need a small delay for DOM to be ready
+    requestAnimationFrame(() => {
+      const firstBtn = el.querySelector('.timeline-year-btn') as HTMLElement
+      if (firstBtn) {
+        const containerHeight = el.clientHeight
+        el.scrollTop = firstBtn.offsetTop - containerHeight / 2 + firstBtn.offsetHeight / 2
+        timelineInitialized.current = true
+      }
+    })
   }, [timelineYears])
 
   const handleTimelineYearClick = (year: number) => {
+    isTimelineUserScroll.current = true
     setActiveTimelineYear(year)
     // Scroll the timeline so clicked year is at midpoint
     const el = timelineRef.current
@@ -1463,7 +1467,7 @@ export default function FeedPage() {
   useEffect(() => {
     filterActivities(activeCategory)
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [activities, activeCategory, searchQuery, selectedYear, selectedPerson, selectedPlace, selectedMood, selectedReminisceCategory])
+  }, [activities, activeCategory, searchQuery, selectedPerson, selectedPlace, selectedMood, selectedReminisceCategory])
 
   // Close reminisce dropdown on outside click
   useEffect(() => {
@@ -2011,8 +2015,6 @@ export default function FeedPage() {
         {/* ── Vertical Timeline Scrubber ── */}
         {viewMode === 'card' && !isInBrowseMode && timelineYears.length > 1 && (
           <div className="timeline-wrapper">
-            {/* Midpoint indicator */}
-            <div className="timeline-midpoint-indicator" />
           <div 
             className="timeline-scrubber" 
             ref={timelineRef}
@@ -2077,6 +2079,8 @@ export default function FeedPage() {
               </div>
             ))}
           </div>
+            {/* Midpoint indicator — right side */}
+            <div className="timeline-midpoint-indicator" />
           </div>
         )}
       </div>
@@ -3433,14 +3437,14 @@ export default function FeedPage() {
 
         .timeline-midpoint-indicator {
           position: absolute;
-          left: -8px;
+          right: -8px;
           top: 50%;
           transform: translateY(-50%);
           width: 0;
           height: 0;
           border-top: 6px solid transparent;
           border-bottom: 6px solid transparent;
-          border-left: 8px solid #C35F33;
+          border-right: 8px solid #C35F33;
           z-index: 30;
           filter: drop-shadow(0 1px 3px rgba(195, 95, 51, 0.4));
         }
