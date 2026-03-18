@@ -34,6 +34,7 @@ interface ActivityItem {
     wisdomId?: string
     memoryId?: string
     contactId?: string
+    photoId?: string
   }
 }
 

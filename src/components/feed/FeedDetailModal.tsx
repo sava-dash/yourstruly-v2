@@ -146,6 +146,8 @@ interface ActivityItem {
     delivery_date?: string
     memoryId?: string
     wisdomId?: string
+    photoId?: string
+    tagged_people?: string[]
   }
 }
 
@@ -492,31 +494,36 @@ export function FeedDetailModal({ activity, isOpen, onClose, onUpdate }: FeedDet
   }
 
   const handleSaveBackstory = async () => {
-    if (!activity?.metadata?.memoryId) return
+    if (!activity?.metadata?.photoId && !activity?.metadata?.memoryId) return
     if (!backstoryLocation.trim() && !backstoryDate.trim() && !backstoryText.trim()) return
     setIsSavingBackstory(true)
     try {
-      // Update the memory with backstory info
-      const updates: Record<string, any> = {}
-      if (backstoryLocation.trim()) updates.location_name = backstoryLocation.trim()
-      if (backstoryDate.trim()) updates.date = backstoryDate.trim()
-      if (backstoryText.trim()) updates.description = backstoryText.trim()
-
-      const res = await fetch(`/api/memories/${activity.metadata.memoryId}`, {
-        method: 'PATCH',
+      // Create a new memory with this photo referenced
+      const res = await fetch('/api/memories', {
+        method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(updates),
+        body: JSON.stringify({
+          title: backstoryText.trim().slice(0, 60) || 'Memory',
+          description: backstoryText.trim(),
+          location_name: backstoryLocation.trim() || undefined,
+          memory_date: backstoryDate.trim() || undefined,
+          // Reference the existing photo
+          attach_media_id: activity.metadata?.photoId,
+        }),
       })
 
       if (res.ok) {
-        // Update activity in parent
+        const data = await res.json()
+        // Update the photo tile to show it now has a memory
         if (onUpdate) {
           onUpdate({
             ...activity,
+            title: backstoryText.trim().slice(0, 60) || activity.title,
             description: backstoryText.trim() || activity.description,
             metadata: {
               ...activity.metadata,
               location: backstoryLocation.trim() || activity.metadata?.location,
+              memoryId: data.id || data.memory?.id,
             },
           })
         }
@@ -526,7 +533,7 @@ export function FeedDetailModal({ activity, isOpen, onClose, onUpdate }: FeedDet
         setBackstoryText('')
       }
     } catch (err) {
-      console.error('Failed to save backstory:', err)
+      console.error('Failed to create memory:', err)
     }
     setIsSavingBackstory(false)
   }
@@ -1248,7 +1255,17 @@ export function FeedDetailModal({ activity, isOpen, onClose, onUpdate }: FeedDet
               </div>
             )}
 
-            {/* Title & Description */}
+            {/* Title & Description - not editable for standalone photos */}
+            {activity.type === 'photos_uploaded' ? (
+              <div style={{ marginBottom: '12px' }}>
+                <h2 style={{ fontSize: '18px', fontWeight: '700', color: '#1a1a1a', marginBottom: '4px' }}>
+                  {activity.title || 'Photo'}
+                </h2>
+                {activity.description && activity.description !== 'You uploaded an image' && (
+                  <p style={{ fontSize: '14px', color: '#555', lineHeight: '1.5' }}>{activity.description}</p>
+                )}
+              </div>
+            ) : (
             <div style={{ marginBottom: '20px' }}>
               {isEditing ? (
                 <>
@@ -1456,6 +1473,7 @@ export function FeedDetailModal({ activity, isOpen, onClose, onUpdate }: FeedDet
                 </>
               )}
             </div>
+            )}
 
             {/* Category Badge */}
             {activity.metadata?.category && (
@@ -1476,8 +1494,8 @@ export function FeedDetailModal({ activity, isOpen, onClose, onUpdate }: FeedDet
               </div>
             )}
 
-            {/* Audio & Video Recordings */}
-            {(() => {
+            {/* Audio & Video Recordings - only for memories/wisdom, not standalone photos */}
+            {activity.type !== 'photos_uploaded' && (() => {
               const audioMedia = mediaItems.filter((m: any) => m.file_type === 'audio')
               const videoMedia = mediaItems.filter((m: any) => m.file_type === 'video')
               const hasLegacyAudio = activity.audio_url && !audioMedia.some((m: any) => m.file_url === activity.audio_url)

@@ -101,6 +101,19 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: error.message, details: error }, { status: 500 })
   }
 
+  // If attach_media_id is provided, link the existing photo to this memory
+  if (body.attach_media_id) {
+    const { error: attachError } = await supabase
+      .from('memory_media')
+      .update({ memory_id: data.id, is_cover: true })
+      .eq('id', body.attach_media_id)
+      .eq('user_id', user.id)
+    
+    if (attachError) {
+      console.error('Failed to attach media to memory:', attachError)
+    }
+  }
+
   // Auto-analyze mood with AI (non-blocking)
   analyzeMoodInBackground(supabase, data.id, title, description, memory_type)
 
