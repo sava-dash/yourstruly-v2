@@ -1374,54 +1374,75 @@ export default function FeedPage() {
     return years
   })()
 
-  // Scroll detection for timeline
-  useEffect(() => {
-    if (viewMode !== 'card' || reminisceMode === 'people' || reminisceMode === 'places') return
-    
-    const handleScroll = () => {
-      if (!gridRef.current) return
-      const cards = Array.from(gridRef.current.querySelectorAll('.card-wrapper[data-year]'))
-      let visibleYear = activeTimelineYear
-      
-      for (let i = 0; i < cards.length; i++) {
-        const rect = cards[i].getBoundingClientRect()
-        if (rect.top >= 0 && rect.top < window.innerHeight / 2) {
-          const year = parseInt(cards[i].getAttribute('data-year') || '0')
-          if (year) { visibleYear = year; break }
-        }
-      }
-      
-      if (visibleYear !== activeTimelineYear) {
-        setActiveTimelineYear(visibleYear)
-      }
-    }
-    
-    window.addEventListener('scroll', handleScroll, { passive: true })
-    return () => window.removeEventListener('scroll', handleScroll)
-  }, [viewMode, activeTimelineYear, reminisceMode])
-
-  // Auto-scroll timeline to keep active year centered
+  // Timeline scroll → detect year at midpoint → filter tiles
   useEffect(() => {
     const el = timelineRef.current
     if (!el) return
-    const activeBtn = el.querySelector('.timeline-year-btn.active') as HTMLElement
-    if (activeBtn) {
+
+    const detectMidpointYear = () => {
+      const containerRect = el.getBoundingClientRect()
+      const midY = containerRect.top + containerRect.height / 2
+      // Find the year button closest to the midpoint
+      const buttons = Array.from(el.querySelectorAll('.timeline-year-btn')) as HTMLElement[]
+      let closestBtn: HTMLElement | null = null
+      let closestDist = Infinity
+      for (const btn of buttons) {
+        const btnRect = btn.getBoundingClientRect()
+        const btnMid = btnRect.top + btnRect.height / 2
+        const dist = Math.abs(btnMid - midY)
+        if (dist < closestDist) {
+          closestDist = dist
+          closestBtn = btn
+        }
+      }
+      if (closestBtn) {
+        const year = parseInt(closestBtn.textContent || '0')
+        if (year && year !== activeTimelineYear) {
+          setActiveTimelineYear(year)
+        }
+      }
+    }
+
+    el.addEventListener('scroll', detectMidpointYear, { passive: true })
+    return () => el.removeEventListener('scroll', detectMidpointYear)
+  }, [activeTimelineYear])
+
+  // When active year changes from timeline, filter the tiles
+  useEffect(() => {
+    if (activeTimelineYear) {
+      setSelectedYear(activeTimelineYear)
+    }
+  }, [activeTimelineYear])
+
+  // On mount: scroll timeline so 2026 (latest year) is at midpoint
+  useEffect(() => {
+    const el = timelineRef.current
+    if (!el || timelineYears.length === 0) return
+    // First year button should be at the midpoint
+    const firstBtn = el.querySelector('.timeline-year-btn') as HTMLElement
+    if (firstBtn) {
       const containerHeight = el.clientHeight
-      const btnTop = activeBtn.offsetTop
-      const btnHeight = activeBtn.offsetHeight
+      const btnTop = firstBtn.offsetTop
+      const btnHeight = firstBtn.offsetHeight
       el.scrollTo({
         top: btnTop - containerHeight / 2 + btnHeight / 2,
-        behavior: 'smooth'
+        behavior: 'instant'
       })
     }
-  }, [activeTimelineYear, timelineYears])
+  }, [timelineYears])
 
   const handleTimelineYearClick = (year: number) => {
     setActiveTimelineYear(year)
-    if (gridRef.current) {
-      const card = gridRef.current.querySelector(`.card-wrapper[data-year="${year}"]`)
-      if (card) {
-        card.scrollIntoView({ behavior: 'smooth', block: 'start' })
+    // Scroll the timeline so clicked year is at midpoint
+    const el = timelineRef.current
+    if (el) {
+      const btn = el.querySelector(`.timeline-year-btn[data-year="${year}"]`) as HTMLElement
+      if (btn) {
+        const containerHeight = el.clientHeight
+        el.scrollTo({
+          top: btn.offsetTop - containerHeight / 2 + btn.offsetHeight / 2,
+          behavior: 'smooth'
+        })
       }
     }
   }
@@ -1989,6 +2010,9 @@ export default function FeedPage() {
 
         {/* ── Vertical Timeline Scrubber ── */}
         {viewMode === 'card' && !isInBrowseMode && timelineYears.length > 1 && (
+          <div className="timeline-wrapper">
+            {/* Midpoint indicator */}
+            <div className="timeline-midpoint-indicator" />
           <div 
             className="timeline-scrubber" 
             ref={timelineRef}
@@ -2036,6 +2060,7 @@ export default function FeedPage() {
               <div key={year} className="timeline-year-group">
                 <button
                   className={`timeline-year-btn ${activeTimelineYear === year ? 'active' : ''}`}
+                  data-year={year}
                   onClick={() => handleTimelineYearClick(year)}
                   title={`Jump to ${year}`}
                 >
@@ -2051,6 +2076,7 @@ export default function FeedPage() {
                 )}
               </div>
             ))}
+          </div>
           </div>
         )}
       </div>
@@ -3395,11 +3421,31 @@ export default function FeedPage() {
 
         /* ── Vertical Timeline Scrubber ── */
 
-        .timeline-scrubber {
+        .timeline-wrapper {
           position: fixed;
           right: 12px;
           top: 50%;
           transform: translateY(-50%);
+          z-index: 25;
+          display: flex;
+          align-items: center;
+        }
+
+        .timeline-midpoint-indicator {
+          position: absolute;
+          left: -8px;
+          top: 50%;
+          transform: translateY(-50%);
+          width: 0;
+          height: 0;
+          border-top: 6px solid transparent;
+          border-bottom: 6px solid transparent;
+          border-left: 8px solid #C35F33;
+          z-index: 30;
+          filter: drop-shadow(0 1px 3px rgba(195, 95, 51, 0.4));
+        }
+
+        .timeline-scrubber {
           width: 45px;
           max-height: 60vh;
           display: flex;
@@ -3408,7 +3454,6 @@ export default function FeedPage() {
           padding: 12px 0;
           border-radius: 16px;
           backdrop-filter: blur(12px);
-          z-index: 25;
           overflow-y: auto;
           overflow-x: hidden;
           scrollbar-width: none;
@@ -3502,7 +3547,7 @@ export default function FeedPage() {
 
         /* Timeline responsive */
         @media (max-width: 768px) {
-          .timeline-scrubber {
+          .timeline-wrapper {
             display: none;
           }
         }
