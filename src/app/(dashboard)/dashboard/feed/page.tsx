@@ -728,14 +728,24 @@ export default function FeedPage() {
       if (user) {
         const { data: profile } = await supabase
           .from('profiles')
-          .select('full_name, xp_total, current_streak_days')
+          .select('full_name')
           .eq('id', user.id)
           .single()
         
         const firstName = profile?.full_name?.split(' ')[0] || user.email?.split('@')[0] || ''
         const capitalized = firstName.charAt(0).toUpperCase() + firstName.slice(1)
         setUserFirstName(capitalized)
-        setStreakDays(profile?.current_streak_days || 0)
+
+        // Read XP from localStorage (same as useXpState hook)
+        try {
+          const savedXp = localStorage.getItem(`yt_xp_${user.id}`)
+          if (savedXp) setProfileStats(prev => ({ ...prev, xp: parseInt(savedXp, 10) || 0 }))
+          const savedStreak = localStorage.getItem(`yt_streak_${user.id}`)
+          if (savedStreak) {
+            const streak = JSON.parse(savedStreak)
+            setStreakDays(streak.count || 0)
+          }
+        } catch {}
 
         // Fetch stats in parallel
         const [memoriesRes, contactsRes, photosRes] = await Promise.all([
@@ -743,27 +753,12 @@ export default function FeedPage() {
           supabase.from('contacts').select('id', { count: 'exact', head: true }).eq('user_id', user.id),
           supabase.from('memory_media').select('id', { count: 'exact', head: true }).eq('user_id', user.id).eq('file_type', 'image'),
         ])
-        setProfileStats({
+        setProfileStats(prev => ({
+          ...prev,
           memories: memoriesRes.count || 0,
           contacts: contactsRes.count || 0,
           photos: photosRes.count || 0,
-          xp: profile?.xp_total || 0,
-        })
-
-        // Storage info
-        try {
-          const storageRes = await fetch('/api/subscription')
-          if (storageRes.ok) {
-            const sub = await storageRes.json()
-            if (sub.storage) {
-              setStorageInfo({
-                used: sub.storage.total_bytes / (1024*1024*1024),
-                limit: sub.storage.limit_bytes / (1024*1024*1024),
-                percentage: sub.storage.percentage || 0,
-              })
-            }
-          }
-        } catch {}
+        }))
       }
     } catch (err) {
       console.error('Error fetching user name:', err)
@@ -1632,7 +1627,7 @@ export default function FeedPage() {
     <div className="feed-page" data-theme={isDarkMode ? 'dark' : 'light'}>
       <div className="feed-header">
         <div className="header-content">
-          <div style={{ marginTop: '60px', marginBottom: '110px', display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between' }}>
+          <div style={{ marginTop: '60px', marginBottom: '140px', display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between' }}>
             {/* Profile Card */}
             <div className="profile-card-feed" style={{
               borderRadius: '16px',
