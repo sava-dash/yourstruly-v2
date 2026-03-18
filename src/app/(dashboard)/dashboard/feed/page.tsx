@@ -736,22 +736,28 @@ export default function FeedPage() {
         const capitalized = firstName.charAt(0).toUpperCase() + firstName.slice(1)
         setUserFirstName(capitalized)
 
-        // Read XP from localStorage (same as useXpState hook)
+        // XP from localStorage (same key as useXpState hook)
         try {
-          const savedXp = localStorage.getItem(`yt_xp_${user.id}`)
+          const savedXp = localStorage.getItem(`yt_total_xp_${user.id}`)
           if (savedXp) setProfileStats(prev => ({ ...prev, xp: parseInt(savedXp, 10) || 0 }))
-          const savedStreak = localStorage.getItem(`yt_streak_${user.id}`)
-          if (savedStreak) {
-            const streak = JSON.parse(savedStreak)
-            setStreakDays(streak.count || 0)
-          }
         } catch {}
 
-        // Fetch stats in parallel
-        const [memoriesRes, contactsRes, photosRes] = await Promise.all([
+        // Streak from engagement_stats table
+        try {
+          const { data: engStats } = await supabase
+            .from('engagement_stats')
+            .select('current_streak_days')
+            .eq('user_id', user.id)
+            .single()
+          if (engStats?.current_streak_days) setStreakDays(engStats.current_streak_days)
+        } catch {}
+
+        // Fetch stats + storage in parallel
+        const [memoriesRes, contactsRes, photosRes, storageRes] = await Promise.all([
           supabase.from('memories').select('id', { count: 'exact', head: true }).eq('user_id', user.id),
           supabase.from('contacts').select('id', { count: 'exact', head: true }).eq('user_id', user.id),
           supabase.from('memory_media').select('id', { count: 'exact', head: true }).eq('user_id', user.id).eq('file_type', 'image'),
+          supabase.from('memory_media').select('file_size').eq('user_id', user.id),
         ])
         setProfileStats(prev => ({
           ...prev,
@@ -759,6 +765,16 @@ export default function FeedPage() {
           contacts: contactsRes.count || 0,
           photos: photosRes.count || 0,
         }))
+
+        // Calculate storage from actual file sizes
+        const totalBytes = (storageRes.data || []).reduce((sum: number, m: any) => sum + (m.file_size || 0), 0)
+        const usedGB = totalBytes / (1024 * 1024 * 1024)
+        const limitGB = 10 // Free tier: 10 GB
+        setStorageInfo({
+          used: usedGB,
+          limit: limitGB,
+          percentage: (usedGB / limitGB) * 100,
+        })
       }
     } catch (err) {
       console.error('Error fetching user name:', err)
