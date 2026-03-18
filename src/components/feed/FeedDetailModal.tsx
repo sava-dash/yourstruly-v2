@@ -810,8 +810,8 @@ export function FeedDetailModal({ activity, isOpen, onClose, onUpdate }: FeedDet
               {activity.type.includes('postscript') && '🎁 PostScript'}
             </div>
             <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-              {/* Favorite */}
-              {(activity.metadata?.memoryId || activity.metadata?.wisdomId) && (
+              {/* Favorite - not for standalone photos */}
+              {activity.type !== 'photos_uploaded' && (activity.metadata?.memoryId || activity.metadata?.wisdomId) && (
                 <button
                   onClick={toggleFavorite}
                   style={{
@@ -828,8 +828,8 @@ export function FeedDetailModal({ activity, isOpen, onClose, onUpdate }: FeedDet
                   <Heart size={20} fill={isFavorite ? 'currentColor' : 'none'} />
                 </button>
               )}
-              {/* Share */}
-              {(activity.metadata?.memoryId || activity.metadata?.wisdomId) && (
+              {/* Share - not for standalone photos */}
+              {activity.type !== 'photos_uploaded' && (activity.metadata?.memoryId || activity.metadata?.wisdomId) && (
                 <button
                   onClick={() => setShowShareModal(true)}
                   style={{
@@ -1578,8 +1578,8 @@ export function FeedDetailModal({ activity, isOpen, onClose, onUpdate }: FeedDet
                 </div>
               </div>
             )}
-            {/* Contributions (Comments, Reactions, etc.) */}
-            {(activity.metadata?.memoryId || activity.metadata?.wisdomId) && (
+            {/* Contributions (Comments, Reactions, etc.) - not for standalone photos */}
+            {activity.type !== 'photos_uploaded' && (activity.metadata?.memoryId || activity.metadata?.wisdomId) && (
               <div style={{ marginTop: '16px', borderTop: '1px solid #eee', paddingTop: '16px' }}>
                 <MemoryContributions 
                   memoryId={activity.metadata.wisdomId || activity.metadata.memoryId || ''}
@@ -1638,10 +1638,72 @@ export function FeedDetailModal({ activity, isOpen, onClose, onUpdate }: FeedDet
                   Save
                 </button>
               </>
+            ) : activity.type === 'photos_uploaded' ? (
+              <>
+                {/* Use in Memory - navigates to the memory page */}
+                {activity.metadata?.memoryId && (
+                  <button
+                    onClick={() => {
+                      window.location.href = `/dashboard/memories/${activity.metadata?.memoryId}`
+                    }}
+                    style={{
+                      flex: 1,
+                      padding: '10px',
+                      background: accentColor,
+                      color: '#fff',
+                      border: 'none',
+                      borderRadius: '10px',
+                      fontSize: '12px',
+                      fontWeight: '600',
+                      cursor: 'pointer',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      gap: '6px',
+                    }}
+                  >
+                    <Edit2 size={14} />
+                    Use in Memory
+                  </button>
+                )}
+                {/* Tag faces */}
+                {(activity.thumbnail || mediaItems.length > 0) && (
+                  <button
+                    onClick={() => {
+                      if (!isTaggingMode) {
+                        setIsTaggingMode(true)
+                        detectFaces()
+                      } else {
+                        setIsTaggingMode(false)
+                        setSelectedFaceIndex(null)
+                        setFaceDropdownPosition(null)
+                      }
+                    }}
+                    style={{
+                      flex: 1,
+                      padding: '10px',
+                      background: isTaggingMode ? '#3b82f6' : '#f5f5f5',
+                      color: isTaggingMode ? '#fff' : '#555',
+                      border: 'none',
+                      borderRadius: '10px',
+                      fontSize: '12px',
+                      fontWeight: '600',
+                      cursor: 'pointer',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      gap: '6px',
+                    }}
+                  >
+                    <Tag size={14} />
+                    {isTaggingMode ? 'Done' : 'Tag'}
+                  </button>
+                )}
+              </>
             ) : (
               <>
-                {/* Show Photo upload only for memory types, not photos_uploaded or postscripts */}
-                {activity.type !== 'photos_uploaded' && activity.type !== 'postscript_created' && activity.metadata?.memoryId && (
+                {/* Show Photo upload only for memory types, not postscripts */}
+                {activity.type !== 'postscript_created' && activity.metadata?.memoryId && (
                   <button
                     onClick={() => fileInputRef.current?.click()}
                     style={{
@@ -1664,7 +1726,7 @@ export function FeedDetailModal({ activity, isOpen, onClose, onUpdate }: FeedDet
                     Photo
                   </button>
                 )}
-                {/* Only show Tag button for memories and photos, not postscripts */}
+                {/* Only show Tag button for memories, not postscripts */}
                 {activity.type !== 'postscript_created' && (activity.thumbnail || mediaItems.length > 0) && (
                   <button
                     onClick={() => {
