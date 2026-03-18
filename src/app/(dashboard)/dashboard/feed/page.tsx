@@ -1390,8 +1390,8 @@ export default function FeedPage() {
       if (closestBtn) {
         const year = parseInt(closestBtn.textContent || '0')
         if (year && year !== activeTimelineYear) {
-          isTimelineUserScroll.current = true
           setActiveTimelineYear(year)
+          scrollTilesToYear(year)
         }
       }
     }
@@ -1400,22 +1400,18 @@ export default function FeedPage() {
     return () => el.removeEventListener('scroll', detectMidpointYear)
   }, [activeTimelineYear])
 
-  // When active year changes from timeline, SCROLL tiles to that year (don't filter)
-  const isTimelineUserScroll = useRef(false)
-  useEffect(() => {
-    if (!activeTimelineYear || !gridRef.current || !isTimelineUserScroll.current) return
-    // Find the first card with this year and scroll to it
-    const wrapper = gridRef.current.closest('.feed-content') || gridRef.current.parentElement
+  // Scroll tiles to a specific year
+  const scrollTilesToYear = useCallback((year: number) => {
+    if (!gridRef.current) return
     const cards = gridRef.current.querySelectorAll('.card-wrapper[data-year]')
     for (const card of Array.from(cards)) {
-      const year = parseInt(card.getAttribute('data-year') || '0')
-      if (year === activeTimelineYear) {
+      const cardYear = parseInt(card.getAttribute('data-year') || '0')
+      if (cardYear === year) {
         card.scrollIntoView({ behavior: 'smooth', block: 'start' })
-        break
+        return
       }
     }
-    isTimelineUserScroll.current = false
-  }, [activeTimelineYear])
+  }, [])
 
   // On mount: position timeline so 2026 is at the midpoint indicator
   const timelineInitialized = useRef(false)
@@ -1435,8 +1431,8 @@ export default function FeedPage() {
   }, [timelineYears])
 
   const handleTimelineYearClick = (year: number) => {
-    isTimelineUserScroll.current = true
     setActiveTimelineYear(year)
+    scrollTilesToYear(year)
     // Scroll the timeline so clicked year is at midpoint
     const el = timelineRef.current
     if (el) {
@@ -2058,6 +2054,8 @@ export default function FeedPage() {
               el.addEventListener('touchend', onEnd)
             }}
           >
+            {/* Top spacer so first year can sit at midpoint */}
+            <div className="timeline-spacer" />
             {timelineYears.map((year, idx) => (
               <div key={year} className="timeline-year-group">
                 <button
@@ -2078,6 +2076,8 @@ export default function FeedPage() {
                 )}
               </div>
             ))}
+            {/* Bottom spacer so last year can sit at midpoint */}
+            <div className="timeline-spacer" />
           </div>
             {/* Midpoint indicator — right side */}
             <div className="timeline-midpoint-indicator" />
@@ -3455,7 +3455,7 @@ export default function FeedPage() {
           display: flex;
           flex-direction: column;
           align-items: center;
-          padding: 12px 0;
+          padding: 0;
           border-radius: 16px;
           backdrop-filter: blur(12px);
           overflow-y: auto;
@@ -3464,6 +3464,12 @@ export default function FeedPage() {
           -ms-overflow-style: none;
           cursor: grab;
           user-select: none;
+        }
+
+        /* Spacers so first/last year can reach the midpoint */
+        .timeline-spacer {
+          flex-shrink: 0;
+          height: 30vh;
         }
 
         .timeline-scrubber::-webkit-scrollbar {
