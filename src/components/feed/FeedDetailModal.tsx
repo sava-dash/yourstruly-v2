@@ -404,7 +404,12 @@ export function FeedDetailModal({ activity, isOpen, onClose, onUpdate }: FeedDet
       const res = await fetch('/api/contacts?limit=100')
       if (res.ok) {
         const data = await res.json()
-        setContacts(data.contacts || [])
+        // API returns { name } but we need { full_name } — normalize
+        const normalized = (data.contacts || []).map((c: any) => ({
+          ...c,
+          full_name: c.full_name || c.name || 'Unknown',
+        }))
+        setContacts(normalized)
       }
     } catch (err) {
       console.error('Error loading contacts:', err)
@@ -628,10 +633,10 @@ export function FeedDetailModal({ activity, isOpen, onClose, onUpdate }: FeedDet
                   
                   {/* Face Bounding Boxes - Show in tagging mode */}
                   {isTaggingMode && detectedFaces.length > 0 && detectedFaces.map((face, idx) => {
-                    // Handle both AWS Rekognition format and stored format
+                    // Handle AWS Rekognition format (Left/Top), stored format (left/top), and faces API (x/y)
                     const bbox = face.boundingBox || face.bounding_box || {}
-                    const left = bbox.Left ?? bbox.left ?? 0
-                    const top = bbox.Top ?? bbox.top ?? 0
+                    const left = bbox.Left ?? bbox.left ?? bbox.x ?? 0
+                    const top = bbox.Top ?? bbox.top ?? bbox.y ?? 0
                     const width = bbox.Width ?? bbox.width ?? 0.15
                     const height = bbox.Height ?? bbox.height ?? 0.15
                     
@@ -648,15 +653,15 @@ export function FeedDetailModal({ activity, isOpen, onClose, onUpdate }: FeedDet
                           top: `${top * 100}%`,
                           width: `${width * 100}%`,
                           height: `${height * 100}%`,
-                          border: face.contact_id ? '3px solid #22c55e' : '3px solid #3b82f6',
+                          border: (face.tagged || face.contact_id || face.contact) ? '3px solid #22c55e' : '3px solid #3b82f6',
                           borderRadius: '8px',
                           cursor: 'pointer',
-                          background: face.contact_id ? 'rgba(34, 197, 94, 0.2)' : 'rgba(59, 130, 246, 0.2)',
+                          background: (face.tagged || face.contact_id || face.contact) ? 'rgba(34, 197, 94, 0.2)' : 'rgba(59, 130, 246, 0.2)',
                           transition: 'all 0.2s',
                           zIndex: 5,
                         }}
                       >
-                        {face.contact_name && (
+                        {(face.contact_name || face.contact?.full_name) && (
                           <div style={{
                             position: 'absolute',
                             bottom: '-24px',
@@ -670,7 +675,7 @@ export function FeedDetailModal({ activity, isOpen, onClose, onUpdate }: FeedDet
                             fontWeight: '600',
                             whiteSpace: 'nowrap',
                           }}>
-                            {face.contact_name}
+                            {face.contact_name || face.contact?.full_name}
                           </div>
                         )}
                       </div>
