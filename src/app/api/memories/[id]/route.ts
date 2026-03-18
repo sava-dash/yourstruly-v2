@@ -60,7 +60,7 @@ export async function PATCH(
     }
 
     const body = await request.json()
-    const { title, description, date, location_name, category, mood } = body
+    const { title, description, date, location_name, category, mood, audio_url, video_url } = body
 
     // Build update object with only provided fields
     const updates: Record<string, any> = {}
@@ -70,6 +70,8 @@ export async function PATCH(
     if (location_name !== undefined) updates.location_name = location_name
     if (category !== undefined) updates.category = category
     if (mood !== undefined) updates.mood = mood
+    if (audio_url !== undefined) updates.audio_url = audio_url
+    if (video_url !== undefined) updates.video_url = video_url
 
     const { data: memory, error } = await supabase
       .from('memories')

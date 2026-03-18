@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect, useRef } from 'react'
-import { X, MapPin, Calendar, Users, Camera, Mic, Tag, Edit2, Trash2, ChevronLeft, ChevronRight, Play, Pause, Upload, Check, Loader2 } from 'lucide-react'
+import { X, MapPin, Calendar, Users, Camera, Mic, Tag, Edit2, Trash2, ChevronLeft, ChevronRight, Play, Pause, Upload, Check, Loader2, Square, Video } from 'lucide-react'
 import { format } from 'date-fns'
 import { motion, AnimatePresence } from 'framer-motion'
 import dynamic from 'next/dynamic'
@@ -193,6 +193,20 @@ export function FeedDetailModal({ activity, isOpen, onClose, onUpdate }: FeedDet
   const [selectedFaceIndex, setSelectedFaceIndex] = useState<number | null>(null)
   const [faceDropdownPosition, setFaceDropdownPosition] = useState<{x: number, y: number} | null>(null)
   const [isFullscreen, setIsFullscreen] = useState(false)
+  // Voice/Video recording state
+  const [isRecordingVoice, setIsRecordingVoice] = useState(false)
+  const [isRecordingVideo, setIsRecordingVideo] = useState(false)
+  const [isTranscribing, setIsTranscribing] = useState(false)
+  const [videoStream, setVideoStream] = useState<MediaStream | null>(null)
+  const [recordedAudioUrl, setRecordedAudioUrl] = useState<string | null>(null)
+  const [recordedVideoUrl, setRecordedVideoUrl] = useState<string | null>(null)
+  const voiceRecorderRef = useRef<MediaRecorder | null>(null)
+  const voiceChunksRef = useRef<Blob[]>([])
+  const videoRecorderRef = useRef<MediaRecorder | null>(null)
+  const videoChunksRef = useRef<Blob[]>([])
+  const videoPreviewRef = useRef<HTMLVideoElement>(null)
+  const speechRecRef = useRef<any>(null)
+  const [interimText, setInterimText] = useState('')
   const imageContainerRef = useRef<HTMLDivElement>(null)
   const audioRef = useRef<HTMLAudioElement | null>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
@@ -438,31 +452,38 @@ export function FeedDetailModal({ activity, isOpen, onClose, onUpdate }: FeedDet
         ? `/api/wisdom/${activity.metadata?.wisdomId}`
         : `/api/memories/${activity.metadata?.memoryId}`
       
+      const patchBody: Record<string, any> = {
+        title: editedTitle,
+        description: editedDescription,
+        date: editedDate,
+        location_name: editedLocation,
+      }
+      if (recordedAudioUrl) patchBody.audio_url = recordedAudioUrl
+      if (recordedVideoUrl) patchBody.video_url = recordedVideoUrl
+
       const res = await fetch(endpoint, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          title: editedTitle,
-          description: editedDescription,
-          date: editedDate,
-          location_name: editedLocation,
-        }),
+        body: JSON.stringify(patchBody),
       })
 
       if (res.ok) {
         setIsEditing(false)
-        if (onUpdate) {
-          onUpdate({
-            ...activity,
-            title: editedTitle,
-            description: editedDescription,
-            timestamp: editedDate,
-            metadata: {
-              ...activity.metadata,
-              location: editedLocation,
-            },
-          })
+        const updatedActivity = {
+          ...activity,
+          title: editedTitle,
+          description: editedDescription,
+          timestamp: editedDate,
+          audio_url: recordedAudioUrl || activity.audio_url,
+          metadata: {
+            ...activity.metadata,
+            location: editedLocation,
+          },
         }
+        if (onUpdate) onUpdate(updatedActivity)
+        // Reset recorded media
+        setRecordedAudioUrl(null)
+        setRecordedVideoUrl(null)
       }
     } catch (err) {
       console.error('Error saving:', err)
@@ -492,6 +513,197 @@ export function FeedDetailModal({ activity, isOpen, onClose, onUpdate }: FeedDet
     } catch (err) {
       console.error('Error uploading:', err)
     }
+  }
+
+  // Connect video stream to preview element
+  useEffect(() => {
+    if (videoStream && videoPreviewRef.current) {
+      videoPreviewRef.current.srcObject = videoStream
+      videoPreviewRef.current.play().catch(() => {})
+    }
+  }, [videoStream, isRecordingVideo])
+
+  // Cleanup recordings on unmount/close
+  useEffect(() => {
+    if (!isOpen) {
+      if (voiceRecorderRef.current?.state === 'recording') voiceRecorderRef.current.stop()
+      if (videoRecorderRef.current?.state === 'recording') videoRecorderRef.current.stop()
+      if (speechRecRef.current) { try { speechRecRef.current.stop() } catch {} }
+      if (videoStream) videoStream.getTracks().forEach(t => t.stop())
+      setIsRecordingVoice(false)
+      setIsRecordingVideo(false)
+      setVideoStream(null)
+      setInterimText('')
+    }
+  }, [isOpen])
+
+  const startVoiceRecording = async () => {
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true })
+      const recorder = new MediaRecorder(stream)
+      voiceChunksRef.current = []
+
+      recorder.ondataavailable = (e) => {
+        if (e.data.size > 0) voiceChunksRef.current.push(e.data)
+      }
+
+      recorder.onstop = async () => {
+        stream.getTracks().forEach(t => t.stop())
+        const audioBlob = new Blob(voiceChunksRef.current, { type: 'audio/webm' })
+        
+        // Stop live transcription
+        if (speechRecRef.current) {
+          try { speechRecRef.current.stop() } catch {}
+          speechRecRef.current = null
+        }
+        setInterimText('')
+        setIsTranscribing(true)
+
+        // Upload audio to storage
+        try {
+          const { createClient } = await import('@/lib/supabase/client')
+          const supabase = createClient()
+          const { data: { user } } = await supabase.auth.getUser()
+          if (user) {
+            const fileName = `voice-recordings/${user.id}/${Date.now()}.webm`
+            const { error: uploadError } = await supabase.storage
+              .from('memories')
+              .upload(fileName, audioBlob, { contentType: 'audio/webm' })
+            if (!uploadError) {
+              const { data: urlData } = supabase.storage.from('memories').getPublicUrl(fileName)
+              setRecordedAudioUrl(urlData.publicUrl)
+            }
+          }
+        } catch (err) {
+          console.error('Audio upload error:', err)
+        }
+
+        // Transcribe via API
+        const formData = new FormData()
+        formData.append('audio', audioBlob, 'recording.webm')
+        try {
+          const res = await fetch('/api/transcribe', { method: 'POST', body: formData })
+          const data = await res.json()
+          const transcribedText = data.transcription || data.text || ''
+          if (transcribedText) {
+            setEditedDescription(prev => prev ? `${prev} ${transcribedText}` : transcribedText)
+          }
+        } catch (err) {
+          console.error('Transcription failed:', err)
+        } finally {
+          setIsTranscribing(false)
+        }
+      }
+
+      recorder.start()
+      voiceRecorderRef.current = recorder
+      setIsRecordingVoice(true)
+
+      // Start Web Speech API for live interim transcription
+      try {
+        const SpeechRecognition = (window as any).webkitSpeechRecognition || (window as any).SpeechRecognition
+        if (SpeechRecognition) {
+          const recognition = new SpeechRecognition()
+          recognition.continuous = true
+          recognition.interimResults = true
+          recognition.lang = 'en-US'
+          recognition.onresult = (event: any) => {
+            let interim = ''
+            for (let i = event.resultIndex; i < event.results.length; i++) {
+              if (!event.results[i].isFinal) {
+                interim += event.results[i][0].transcript
+              }
+            }
+            setInterimText(interim)
+          }
+          recognition.onerror = () => {}
+          recognition.start()
+          speechRecRef.current = recognition
+        }
+      } catch {}
+    } catch (err) {
+      console.error('Mic access failed:', err)
+    }
+  }
+
+  const stopVoiceRecording = () => {
+    if (voiceRecorderRef.current?.state !== 'inactive') {
+      voiceRecorderRef.current?.stop()
+    }
+    setIsRecordingVoice(false)
+  }
+
+  const startVideoRecording = async () => {
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({
+        video: { facingMode: 'user', width: { max: 1280 }, height: { max: 720 } },
+        audio: true,
+      })
+      setVideoStream(stream)
+
+      const recorder = new MediaRecorder(stream, { mimeType: 'video/webm;codecs=vp8,opus' })
+      videoChunksRef.current = []
+
+      recorder.ondataavailable = (e) => {
+        if (e.data.size > 0) videoChunksRef.current.push(e.data)
+      }
+
+      recorder.onstop = async () => {
+        stream.getTracks().forEach(t => t.stop())
+        setVideoStream(null)
+        setIsTranscribing(true)
+
+        const videoBlob = new Blob(videoChunksRef.current, { type: 'video/webm' })
+
+        // Upload to Supabase storage
+        try {
+          const { createClient } = await import('@/lib/supabase/client')
+          const supabase = createClient()
+          const { data: { user } } = await supabase.auth.getUser()
+          if (user) {
+            const fileName = `video-responses/${user.id}/${Date.now()}.webm`
+            const { error: uploadError } = await supabase.storage
+              .from('memories')
+              .upload(fileName, videoBlob, { contentType: 'video/webm' })
+            if (!uploadError) {
+              const { data: urlData } = supabase.storage.from('memories').getPublicUrl(fileName)
+              setRecordedVideoUrl(urlData.publicUrl)
+            }
+          }
+        } catch (err) {
+          console.error('Video upload error:', err)
+        }
+
+        // Transcribe audio from video
+        const formData = new FormData()
+        formData.append('audio', videoBlob, 'video-recording.webm')
+        try {
+          const res = await fetch('/api/transcribe', { method: 'POST', body: formData })
+          const data = await res.json()
+          const transcribedText = data.transcription || data.text || ''
+          if (transcribedText) {
+            setEditedDescription(prev => prev ? `${prev} ${transcribedText}` : transcribedText)
+          }
+        } catch (err) {
+          console.error('Video transcription failed:', err)
+        } finally {
+          setIsTranscribing(false)
+        }
+      }
+
+      recorder.start()
+      videoRecorderRef.current = recorder
+      setIsRecordingVideo(true)
+    } catch (err) {
+      console.error('Camera access failed:', err)
+    }
+  }
+
+  const stopVideoRecording = () => {
+    if (videoRecorderRef.current?.state !== 'inactive') {
+      videoRecorderRef.current?.stop()
+    }
+    setIsRecordingVideo(false)
   }
 
   const handleTagPerson = async (contactId: string) => {
@@ -954,6 +1166,151 @@ export function FeedDetailModal({ activity, isOpen, onClose, onUpdate }: FeedDet
                     }}
                     placeholder="Description"
                   />
+                  
+                  {/* Interim transcription preview */}
+                  {interimText && (
+                    <div style={{
+                      fontSize: '13px',
+                      color: '#888',
+                      fontStyle: 'italic',
+                      padding: '4px 0',
+                    }}>
+                      {interimText}...
+                    </div>
+                  )}
+
+                  {/* Transcribing indicator */}
+                  {isTranscribing && (
+                    <div style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '6px',
+                      fontSize: '12px',
+                      color: '#888',
+                      padding: '4px 0',
+                    }}>
+                      <Loader2 size={12} className="animate-spin" />
+                      Transcribing...
+                    </div>
+                  )}
+
+                  {/* Video preview during recording */}
+                  {isRecordingVideo && (
+                    <div style={{
+                      borderRadius: '12px',
+                      overflow: 'hidden',
+                      background: '#000',
+                      marginTop: '8px',
+                    }}>
+                      <video
+                        ref={videoPreviewRef}
+                        muted
+                        playsInline
+                        style={{
+                          width: '100%',
+                          maxHeight: '200px',
+                          objectFit: 'cover',
+                          transform: 'scaleX(-1)',
+                        }}
+                      />
+                    </div>
+                  )}
+
+                  {/* Recorded media indicators */}
+                  {(recordedAudioUrl || recordedVideoUrl) && (
+                    <div style={{
+                      display: 'flex',
+                      gap: '8px',
+                      marginTop: '8px',
+                    }}>
+                      {recordedAudioUrl && (
+                        <div style={{
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: '6px',
+                          fontSize: '12px',
+                          color: accentColor,
+                          background: `${accentColor}15`,
+                          padding: '4px 10px',
+                          borderRadius: '8px',
+                        }}>
+                          <Mic size={12} /> Voice recorded ✓
+                        </div>
+                      )}
+                      {recordedVideoUrl && (
+                        <div style={{
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: '6px',
+                          fontSize: '12px',
+                          color: accentColor,
+                          background: `${accentColor}15`,
+                          padding: '4px 10px',
+                          borderRadius: '8px',
+                        }}>
+                          <Video size={12} /> Video recorded ✓
+                        </div>
+                      )}
+                    </div>
+                  )}
+
+                  {/* Voice & Video recording buttons */}
+                  <div style={{
+                    display: 'flex',
+                    gap: '8px',
+                    marginTop: '10px',
+                  }}>
+                    <button
+                      onClick={isRecordingVoice ? stopVoiceRecording : startVoiceRecording}
+                      disabled={isRecordingVideo || isTranscribing}
+                      style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '6px',
+                        padding: '8px 14px',
+                        background: isRecordingVoice ? '#ef4444' : '#f5f5f5',
+                        color: isRecordingVoice ? '#fff' : '#555',
+                        border: 'none',
+                        borderRadius: '8px',
+                        fontSize: '12px',
+                        fontWeight: '600',
+                        cursor: isRecordingVideo || isTranscribing ? 'not-allowed' : 'pointer',
+                        opacity: isRecordingVideo || isTranscribing ? 0.5 : 1,
+                        transition: 'all 0.2s',
+                      }}
+                    >
+                      {isRecordingVoice ? (
+                        <><Square size={12} /> Stop Recording</>
+                      ) : (
+                        <><Mic size={14} /> Voice</>
+                      )}
+                    </button>
+                    <button
+                      onClick={isRecordingVideo ? stopVideoRecording : startVideoRecording}
+                      disabled={isRecordingVoice || isTranscribing}
+                      style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '6px',
+                        padding: '8px 14px',
+                        background: isRecordingVideo ? '#ef4444' : '#f5f5f5',
+                        color: isRecordingVideo ? '#fff' : '#555',
+                        border: 'none',
+                        borderRadius: '8px',
+                        fontSize: '12px',
+                        fontWeight: '600',
+                        cursor: isRecordingVoice || isTranscribing ? 'not-allowed' : 'pointer',
+                        opacity: isRecordingVoice || isTranscribing ? 0.5 : 1,
+                        transition: 'all 0.2s',
+                      }}
+                    >
+                      {isRecordingVideo ? (
+                        <><Square size={12} /> Stop Video</>
+                      ) : (
+                        <><Video size={14} /> Video</>
+                      )}
+                    </button>
+                  </div>
                 </>
               ) : (
                 <>

@@ -2209,10 +2209,11 @@ export default function FeedPage() {
           setSelectedActivity(null)
         }}
         onUpdate={(updatedActivity) => {
-          // Update the activity in the list
+          // Update the activity in the list AND the selected activity (so modal reflects changes)
           setActivities(prev => 
             prev.map(a => a.id === updatedActivity.id ? updatedActivity : a)
           )
+          setSelectedActivity(updatedActivity)
         }}
       />
 
