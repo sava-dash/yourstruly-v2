@@ -1632,21 +1632,17 @@ export default function FeedPage() {
     <div className="feed-page" data-theme={isDarkMode ? 'dark' : 'light'}>
       <div className="feed-header">
         <div className="header-content">
-          <div style={{ marginTop: '200px', marginBottom: '24px', display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between' }}>
+          <div style={{ marginTop: '120px', marginBottom: '24px', display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between' }}>
             {/* Profile Card */}
-            <div style={{
-              background: 'rgba(255,255,255,0.92)',
-              backdropFilter: 'blur(12px)',
+            <div className="profile-card-feed" style={{
               borderRadius: '16px',
               padding: '16px 20px',
-              boxShadow: '0 2px 12px rgba(0,0,0,0.08)',
-              border: '1px solid rgba(64,106,86,0.1)',
               minWidth: '280px',
               maxWidth: '360px',
             }}>
               {/* Name + Streak */}
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '12px' }}>
-                <h2 style={{ fontSize: '18px', fontWeight: '600', color: '#406A56', margin: 0 }}>
+                <h2 className="profile-card-name" style={{ fontSize: '18px', fontWeight: '600', margin: 0 }}>
                   Hey {userFirstName || 'there'}
                 </h2>
                 {streakDays > 0 && (
@@ -1665,36 +1661,36 @@ export default function FeedPage() {
               </div>
 
               {/* Stats Row */}
-              <div style={{ display: 'flex', alignItems: 'center', textAlign: 'center', marginBottom: '12px' }}>
+              <div className="profile-card-stats" style={{ display: 'flex', alignItems: 'center', textAlign: 'center', marginBottom: '12px' }}>
                 <div style={{ flex: 1 }}>
-                  <div style={{ fontSize: '22px', fontWeight: '700', color: '#406A56' }}>{profileStats.memories}</div>
-                  <div style={{ fontSize: '9px', color: 'rgba(64,106,86,0.5)', textTransform: 'uppercase', letterSpacing: '0.5px', fontWeight: '600' }}>Memories</div>
+                  <div className="profile-stat-value">{profileStats.memories}</div>
+                  <div className="profile-stat-label">Memories</div>
                 </div>
-                <div style={{ flex: 1, borderLeft: '1px solid rgba(64,106,86,0.1)', borderRight: '1px solid rgba(64,106,86,0.1)' }}>
-                  <div style={{ fontSize: '22px', fontWeight: '700', color: '#406A56' }}>{profileStats.contacts}</div>
-                  <div style={{ fontSize: '9px', color: 'rgba(64,106,86,0.5)', textTransform: 'uppercase', letterSpacing: '0.5px', fontWeight: '600' }}>People</div>
+                <div className="profile-stat-bordered" style={{ flex: 1 }}>
+                  <div className="profile-stat-value">{profileStats.contacts}</div>
+                  <div className="profile-stat-label">People</div>
                 </div>
-                <div style={{ flex: 1, borderRight: '1px solid rgba(64,106,86,0.1)' }}>
-                  <div style={{ fontSize: '22px', fontWeight: '700', color: '#406A56' }}>{profileStats.photos}</div>
-                  <div style={{ fontSize: '9px', color: 'rgba(64,106,86,0.5)', textTransform: 'uppercase', letterSpacing: '0.5px', fontWeight: '600' }}>Photos</div>
+                <div className="profile-stat-bordered-r" style={{ flex: 1 }}>
+                  <div className="profile-stat-value">{profileStats.photos}</div>
+                  <div className="profile-stat-label">Photos</div>
                 </div>
                 <div style={{ flex: 1 }}>
-                  <div style={{ fontSize: '22px', fontWeight: '700', color: '#D9C61A' }}>{profileStats.xp}</div>
-                  <div style={{ fontSize: '9px', color: 'rgba(217,198,26,0.5)', textTransform: 'uppercase', letterSpacing: '0.5px', fontWeight: '600', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '2px' }}>
+                  <div className="profile-stat-xp">{profileStats.xp}</div>
+                  <div className="profile-stat-label-xp">
                     <span>⚡</span> XP
                   </div>
                 </div>
               </div>
 
               {/* Storage Bar */}
-              <div style={{ borderTop: '1px solid rgba(64,106,86,0.1)', paddingTop: '10px' }}>
+              <div className="profile-storage">
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '6px' }}>
-                  <span style={{ fontSize: '10px', fontWeight: '600', color: 'rgba(64,106,86,0.6)', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Storage</span>
-                  <span style={{ fontSize: '10px', color: '#888' }}>
+                  <span className="profile-storage-label">Storage</span>
+                  <span className="profile-storage-value">
                     {storageInfo.used.toFixed(1)} / {storageInfo.limit.toFixed(0)} GB
                   </span>
                 </div>
-                <div style={{ height: '6px', background: '#F2F1E5', borderRadius: '3px', overflow: 'hidden' }}>
+                <div className="profile-storage-track">
                   <div style={{
                     height: '100%',
                     borderRadius: '3px',
@@ -2758,6 +2754,44 @@ export default function FeedPage() {
             font-size: 3rem;
           }
         }
+
+        /* Profile Card - Dark Theme */
+        .feed-page[data-theme="dark"] .profile-card-feed {
+          background: rgba(40, 40, 40, 0.92);
+          backdrop-filter: blur(12px);
+          box-shadow: 0 2px 12px rgba(0,0,0,0.3);
+          border: 1px solid rgba(255,255,255,0.08);
+        }
+        .feed-page[data-theme="dark"] .profile-card-name { color: #8DACAB; }
+        .feed-page[data-theme="dark"] .profile-stat-value { font-size: 22px; font-weight: 700; color: #8DACAB; }
+        .feed-page[data-theme="dark"] .profile-stat-label { font-size: 9px; color: rgba(141,172,171,0.5); text-transform: uppercase; letter-spacing: 0.5px; font-weight: 600; }
+        .feed-page[data-theme="dark"] .profile-stat-bordered { border-left: 1px solid rgba(255,255,255,0.08); border-right: 1px solid rgba(255,255,255,0.08); }
+        .feed-page[data-theme="dark"] .profile-stat-bordered-r { border-right: 1px solid rgba(255,255,255,0.08); }
+        .feed-page[data-theme="dark"] .profile-stat-xp { font-size: 22px; font-weight: 700; color: #D9C61A; }
+        .feed-page[data-theme="dark"] .profile-stat-label-xp { font-size: 9px; color: rgba(217,198,26,0.5); text-transform: uppercase; letter-spacing: 0.5px; font-weight: 600; display: flex; align-items: center; justify-content: center; gap: 2px; }
+        .feed-page[data-theme="dark"] .profile-storage { border-top: 1px solid rgba(255,255,255,0.08); padding-top: 10px; }
+        .feed-page[data-theme="dark"] .profile-storage-label { font-size: 10px; font-weight: 600; color: rgba(141,172,171,0.6); text-transform: uppercase; letter-spacing: 0.5px; }
+        .feed-page[data-theme="dark"] .profile-storage-value { font-size: 10px; color: rgba(255,255,255,0.5); }
+        .feed-page[data-theme="dark"] .profile-storage-track { height: 6px; background: rgba(255,255,255,0.08); border-radius: 3px; overflow: hidden; }
+
+        /* Profile Card - Light Theme */
+        .feed-page[data-theme="light"] .profile-card-feed {
+          background: rgba(255,255,255,0.92);
+          backdrop-filter: blur(12px);
+          box-shadow: 0 2px 12px rgba(0,0,0,0.08);
+          border: 1px solid rgba(64,106,86,0.1);
+        }
+        .feed-page[data-theme="light"] .profile-card-name { color: #406A56; }
+        .feed-page[data-theme="light"] .profile-stat-value { font-size: 22px; font-weight: 700; color: #406A56; }
+        .feed-page[data-theme="light"] .profile-stat-label { font-size: 9px; color: rgba(64,106,86,0.5); text-transform: uppercase; letter-spacing: 0.5px; font-weight: 600; }
+        .feed-page[data-theme="light"] .profile-stat-bordered { border-left: 1px solid rgba(64,106,86,0.1); border-right: 1px solid rgba(64,106,86,0.1); }
+        .feed-page[data-theme="light"] .profile-stat-bordered-r { border-right: 1px solid rgba(64,106,86,0.1); }
+        .feed-page[data-theme="light"] .profile-stat-xp { font-size: 22px; font-weight: 700; color: #D9C61A; }
+        .feed-page[data-theme="light"] .profile-stat-label-xp { font-size: 9px; color: rgba(217,198,26,0.5); text-transform: uppercase; letter-spacing: 0.5px; font-weight: 600; display: flex; align-items: center; justify-content: center; gap: 2px; }
+        .feed-page[data-theme="light"] .profile-storage { border-top: 1px solid rgba(64,106,86,0.1); padding-top: 10px; }
+        .feed-page[data-theme="light"] .profile-storage-label { font-size: 10px; font-weight: 600; color: rgba(64,106,86,0.6); text-transform: uppercase; letter-spacing: 0.5px; }
+        .feed-page[data-theme="light"] .profile-storage-value { font-size: 10px; color: #888; }
+        .feed-page[data-theme="light"] .profile-storage-track { height: 6px; background: #F2F1E5; border-radius: 3px; overflow: hidden; }
 
         .header-controls {
           position: relative;
