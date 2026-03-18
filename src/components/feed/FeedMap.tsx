@@ -20,9 +20,10 @@ interface FeedMapProps {
       location?: string
     }
   }>
+  onLocationClick?: (location: string) => void
 }
 
-export default function FeedMap({ activities }: FeedMapProps) {
+export default function FeedMap({ activities, onLocationClick }: FeedMapProps) {
   const mapContainer = useRef<HTMLDivElement>(null)
   const map = useRef<mapboxgl.Map | null>(null)
   const [loaded, setLoaded] = useState(false)
@@ -290,6 +291,7 @@ export default function FeedMap({ activities }: FeedMapProps) {
     
     const coordinates = (features[0].geometry as any).coordinates.slice()
 
+    const locationName = props.location || ''
     const popup = new mapboxgl.Popup({ offset: 25, closeButton: false })
       .setLngLat(coordinates)
       .setHTML(`
@@ -300,13 +302,24 @@ export default function FeedMap({ activities }: FeedMapProps) {
             <p>${props.description.substring(0, 100)}${props.description.length > 100 ? '...' : ''}</p>
             <div class="popup-meta">
               <span>${new Date(props.timestamp).toLocaleDateString()}</span>
-              ${props.location ? `<span>• ${props.location}</span>` : ''}
+              ${locationName ? `<span>• ${locationName}</span>` : ''}
             </div>
+            ${locationName ? `<button class="popup-filter-btn" data-location="${locationName.replace(/"/g, '&quot;')}">Show all from here →</button>` : ''}
             <a href="${activities.find(a => a.id === props.id)?.link}" class="popup-link">View Details →</a>
           </div>
         </div>
       `)
       .addTo(map.current)
+
+    // Attach click handler for filter button
+    const popupEl = popup.getElement()
+    const filterBtn = popupEl?.querySelector('.popup-filter-btn')
+    if (filterBtn && onLocationClick) {
+      filterBtn.addEventListener('click', () => {
+        onLocationClick(locationName)
+        popup.remove()
+      })
+    }
   }, [activities])
 
   // Show empty state if no activities with location
@@ -392,6 +405,25 @@ export default function FeedMap({ activities }: FeedMapProps) {
 
         .popup-link:hover {
           text-decoration: underline;
+        }
+
+        .popup-filter-btn {
+          display: block;
+          width: 100%;
+          padding: 8px 12px;
+          margin-bottom: 6px;
+          background: #C35F33;
+          color: #fff;
+          border: none;
+          border-radius: 8px;
+          font-size: 12px;
+          font-weight: 600;
+          cursor: pointer;
+          transition: background 0.2s;
+        }
+
+        .popup-filter-btn:hover {
+          background: #a84e2a;
         }
 
         .mapboxgl-popup-close-button {

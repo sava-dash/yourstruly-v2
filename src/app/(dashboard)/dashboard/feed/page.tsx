@@ -386,6 +386,7 @@ export default function FeedPage() {
   const [isDarkMode, setIsDarkMode] = useState(true)
   const [userFirstName, setUserFirstName] = useState<string>('')
   const [viewMode, setViewMode] = useState<ViewMode>('card')
+  const [showMapOverlay, setShowMapOverlay] = useState(false)
   const [showEngagementModal, setShowEngagementModal] = useState(false)
   const [engagementPrompt, setEngagementPrompt] = useState<any>(null)
   const [showInterviewModal, setShowInterviewModal] = useState(false)
@@ -1619,9 +1620,9 @@ export default function FeedPage() {
                   />
                 </div>
                 <button
-                  onClick={() => setViewMode(viewMode === 'map' ? 'card' : 'map')}
-                  className={`map-toggle-btn ${viewMode === 'map' ? 'active' : ''}`}
-                  title={viewMode === 'map' ? 'Switch to Card view' : 'Switch to Map view'}
+                  onClick={() => setShowMapOverlay(true)}
+                  className={`map-toggle-btn ${showMapOverlay ? 'active' : ''}`}
+                  title="Open map view"
                 >
                   <MapIcon size={16} />
                 </button>
@@ -1776,10 +1777,6 @@ export default function FeedPage() {
           {isLoading ? (
             <div className="loading-state">
               <div className="spinner"></div>
-            </div>
-          ) : viewMode === 'map' ? (
-            <div className="map-container">
-              <FeedMap activities={filteredActivities.filter(a => a.metadata?.lat && a.metadata?.lng)} />
             </div>
           ) : isInBrowseMode ? (
             /* ── People / Places Browse Grid ── */
@@ -2089,6 +2086,44 @@ export default function FeedPage() {
           </div>
         )}
       </div>
+
+      {/* ── Map Overlay ── */}
+      <AnimatePresence>
+        {showMapOverlay && (
+          <motion.div
+            className="map-overlay-backdrop"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.25 }}
+            onClick={() => setShowMapOverlay(false)}
+          >
+            <motion.div
+              className="map-overlay-content"
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.95 }}
+              transition={{ duration: 0.25 }}
+              onClick={(e) => e.stopPropagation()}
+            >
+              <button
+                className="map-overlay-close"
+                onClick={() => setShowMapOverlay(false)}
+              >
+                <X size={20} />
+              </button>
+              <FeedMap
+                activities={activities.filter(a => a.metadata?.lat && a.metadata?.lng)}
+                onLocationClick={(location) => {
+                  setShowMapOverlay(false)
+                  setReminisceMode('places')
+                  setBrowsedPlace(location)
+                }}
+              />
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* Hidden file input for uploads */}
       <input
@@ -2960,6 +2995,50 @@ export default function FeedPage() {
           min-height: 700px;
           border-radius: 16px;
           overflow: hidden;
+        }
+
+        .map-overlay-backdrop {
+          position: fixed;
+          inset: 0;
+          z-index: 50;
+          background: rgba(0, 0, 0, 0.6);
+          backdrop-filter: blur(4px);
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          padding: 40px;
+        }
+
+        .map-overlay-content {
+          position: relative;
+          width: 100%;
+          max-width: 1200px;
+          height: 75vh;
+          border-radius: 20px;
+          overflow: hidden;
+          box-shadow: 0 25px 60px rgba(0, 0, 0, 0.3);
+        }
+
+        .map-overlay-close {
+          position: absolute;
+          top: 16px;
+          right: 16px;
+          z-index: 55;
+          width: 36px;
+          height: 36px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          background: rgba(255, 255, 255, 0.9);
+          border: none;
+          border-radius: 50%;
+          cursor: pointer;
+          box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+          transition: transform 0.2s;
+        }
+
+        .map-overlay-close:hover {
+          transform: scale(1.1);
         }
 
         .masonry-columns-wrapper {
