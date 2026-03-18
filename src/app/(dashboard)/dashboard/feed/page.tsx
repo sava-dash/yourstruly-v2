@@ -710,6 +710,9 @@ export default function FeedPage() {
       const res = await fetch('/api/activity?limit=200&includePostscripts=true')
       if (res.ok) {
         const data = await res.json()
+        console.log('[Feed] API returned', data.activities?.length, 'activities, total:', data.total)
+        const debugYears = [...new Set((data.activities || []).map((a: any) => new Date(a.timestamp).getFullYear()))].sort((a: number, b: number) => b - a)
+        console.log('[Feed] Years in data:', debugYears)
         const filtered = (data.activities || []).filter((a: ActivityItem) => 
           a.type !== 'xp_earned' && !a.type.includes('_shared')
         )
@@ -1352,10 +1355,11 @@ export default function FeedPage() {
     return activities.filter(a => a.metadata?.location?.trim() === location)
   }
 
-  // Timeline years
+  // Timeline years — always use current year as latest, birth year as earliest
   const timelineYears = (() => {
-    const latestYear = uniqueYears.length > 0 ? uniqueYears[0] : new Date().getFullYear()
-    const startYear = birthYear || (latestYear - 30)
+    const latestYear = Math.max(new Date().getFullYear(), ...(uniqueYears.length > 0 ? uniqueYears : [new Date().getFullYear()]))
+    const startYear = birthYear || Math.min(...(uniqueYears.length > 0 ? uniqueYears : [latestYear]), latestYear - 30)
+    console.log('[Timeline] uniqueYears:', uniqueYears, 'latestYear:', latestYear, 'birthYear:', birthYear, 'startYear:', startYear)
     const years: number[] = []
     for (let y = latestYear; y >= startYear; y--) {
       years.push(y)
@@ -2884,15 +2888,16 @@ export default function FeedPage() {
         }
 
         .masonry-grid {
-          column-count: 5;
-          column-gap: 20px;
+          display: grid;
+          grid-template-columns: repeat(5, 1fr);
+          grid-auto-rows: auto;
+          gap: 20px;
           width: 100%;
         }
 
         .card-wrapper {
           display: block;
-          break-inside: avoid;
-          margin-bottom: 20px;
+          min-height: 0;
         }
 
         .card {
@@ -3044,38 +3049,29 @@ export default function FeedPage() {
         /* Responsive Masonry Breakpoints */
         @media (max-width: 1400px) {
           .masonry-grid {
-            column-count: 4;
-            column-gap: 18px;
-          }
-          .card-wrapper {
-            margin-bottom: 18px;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 18px;
           }
         }
 
         @media (max-width: 1100px) {
           .masonry-grid {
-            column-count: 3;
-            column-gap: 16px;
-          }
-          .card-wrapper {
-            margin-bottom: 16px;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 16px;
           }
         }
 
         @media (max-width: 768px) {
           .masonry-grid {
-            column-count: 2;
-            column-gap: 14px;
-          }
-          .card-wrapper {
-            margin-bottom: 14px;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 14px;
           }
         }
 
         @media (max-width: 640px) {
           .masonry-grid {
-            column-count: 1;
-            column-gap: 0;
+            grid-template-columns: 1fr;
+            gap: 12px;
           }
           
           /* All cards single column on mobile */
