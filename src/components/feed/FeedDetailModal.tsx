@@ -495,7 +495,7 @@ export function FeedDetailModal({ activity, isOpen, onClose, onUpdate }: FeedDet
 
   const handleSaveBackstory = async () => {
     if (!activity?.metadata?.photoId && !activity?.metadata?.memoryId) return
-    if (!backstoryLocation.trim() && !backstoryDate.trim() && !backstoryText.trim()) return
+    if (!backstoryLocation.trim() && !backstoryDate.trim()) return
     setIsSavingBackstory(true)
     try {
       // Create a new memory with this photo referenced
@@ -809,6 +809,38 @@ export function FeedDetailModal({ activity, isOpen, onClose, onUpdate }: FeedDet
     }
   }
 
+  const handleRemoveTag = async (faceIndex: number) => {
+    const face = detectedFaces[faceIndex]
+    if (!face || !activity?.metadata?.memoryId) return
+    const faceId = face.id || face.face_id
+    if (!faceId) return
+
+    try {
+      const res = await fetch(`/api/media/${activity.metadata.memoryId}/faces/${faceId}`, {
+        method: 'DELETE',
+      })
+      if (res.ok) {
+        setSelectedFaceIndex(null)
+        setFaceDropdownPosition(null)
+        loadFullDetails()
+      } else {
+        // Fallback: try clearing the contact_id via PATCH
+        const patchRes = await fetch(`/api/media/${activity.metadata.memoryId}/faces/${faceId}`, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ contact_id: null }),
+        })
+        if (patchRes.ok) {
+          setSelectedFaceIndex(null)
+          setFaceDropdownPosition(null)
+          loadFullDetails()
+        }
+      }
+    } catch (err) {
+      console.error('Error removing tag:', err)
+    }
+  }
+
   const toggleAudio = () => {
     if (!audioRef.current) {
       if (activity?.audio_url) {
@@ -1116,6 +1148,29 @@ export function FeedDetailModal({ activity, isOpen, onClose, onUpdate }: FeedDet
                           {contact.full_name || 'Unknown'}
                         </button>
                       ))}
+                      {/* Remove Tag - only if this face is already tagged */}
+                      {selectedFaceIndex !== null && (detectedFaces[selectedFaceIndex]?.tagged || detectedFaces[selectedFaceIndex]?.contact_id || detectedFaces[selectedFaceIndex]?.contact) && (
+                        <button
+                          onClick={() => handleRemoveTag(selectedFaceIndex!)}
+                          style={{
+                            width: '100%',
+                            padding: '8px 12px',
+                            border: 'none',
+                            background: '#fff',
+                            cursor: 'pointer',
+                            fontSize: '12px',
+                            color: '#ef4444',
+                            fontWeight: '600',
+                            borderBottom: '1px solid #f5f5f5',
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '6px',
+                          }}
+                        >
+                          <Trash2 size={12} />
+                          Remove Tag
+                        </button>
+                      )}
                       <button
                         onClick={() => {
                           setSelectedFaceIndex(null)
@@ -1258,11 +1313,11 @@ export function FeedDetailModal({ activity, isOpen, onClose, onUpdate }: FeedDet
             {/* Title & Description - not editable for standalone photos */}
             {activity.type === 'photos_uploaded' ? (
               <div style={{ marginBottom: '12px' }}>
-                <h2 style={{ fontSize: '18px', fontWeight: '700', color: '#1a1a1a', marginBottom: '4px' }}>
+                <h2 style={{ fontSize: '18px', fontWeight: '700', color: '#333', marginBottom: '4px' }}>
                   {activity.title || 'Photo'}
                 </h2>
                 {activity.description && activity.description !== 'You uploaded an image' && (
-                  <p style={{ fontSize: '14px', color: '#555', lineHeight: '1.5' }}>{activity.description}</p>
+                  <p style={{ fontSize: '14px', color: '#444', lineHeight: '1.5' }}>{activity.description}</p>
                 )}
               </div>
             ) : (
@@ -1745,7 +1800,7 @@ export function FeedDetailModal({ activity, isOpen, onClose, onUpdate }: FeedDet
                     }}
                   >
                     <Edit2 size={14} />
-                    {showBackstory ? 'Cancel' : 'Add Memory'}
+                    {showBackstory ? 'Cancel' : 'Edit'}
                   </button>
                 )}
                 {/* Tag faces */}
@@ -1873,9 +1928,10 @@ export function FeedDetailModal({ activity, isOpen, onClose, onUpdate }: FeedDet
           {showBackstory && activity.type === 'photos_uploaded' && (
             <div style={{
               padding: '16px',
-              background: '#fafafa',
+              background: '#f0f0f0',
               borderRadius: '12px',
               marginTop: '12px',
+              border: '1px solid #ddd',
               display: 'flex',
               flexDirection: 'column',
               gap: '12px',
@@ -1960,42 +2016,19 @@ export function FeedDetailModal({ activity, isOpen, onClose, onUpdate }: FeedDet
                 />
               </div>
 
-              {/* Story */}
-              <div>
-                <label style={{ fontSize: '10px', fontWeight: '700', color: '#888', textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: '4px', display: 'block' }}>
-                  📝 The story behind this
-                </label>
-                <textarea
-                  value={backstoryText}
-                  onChange={(e) => setBackstoryText(e.target.value)}
-                  placeholder="What's the story? Who was there?"
-                  rows={3}
-                  style={{
-                    width: '100%',
-                    padding: '8px 12px',
-                    background: '#fff',
-                    border: '1px solid #e0e0e0',
-                    borderRadius: '8px',
-                    fontSize: '13px',
-                    outline: 'none',
-                    resize: 'none',
-                  }}
-                />
-              </div>
-
               {/* Save */}
               <button
                 onClick={handleSaveBackstory}
-                disabled={(!backstoryLocation.trim() && !backstoryDate.trim() && !backstoryText.trim()) || isSavingBackstory}
+                disabled={(!backstoryLocation.trim() && !backstoryDate.trim()) || isSavingBackstory}
                 style={{
                   padding: '10px',
-                  background: (!backstoryLocation.trim() && !backstoryDate.trim() && !backstoryText.trim()) || isSavingBackstory ? '#ccc' : accentColor,
+                  background: (!backstoryLocation.trim() && !backstoryDate.trim()) || isSavingBackstory ? '#ccc' : accentColor,
                   color: '#fff',
                   border: 'none',
                   borderRadius: '10px',
                   fontSize: '13px',
                   fontWeight: '600',
-                  cursor: (!backstoryLocation.trim() && !backstoryDate.trim() && !backstoryText.trim()) || isSavingBackstory ? 'not-allowed' : 'pointer',
+                  cursor: (!backstoryLocation.trim() && !backstoryDate.trim()) || isSavingBackstory ? 'not-allowed' : 'pointer',
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
