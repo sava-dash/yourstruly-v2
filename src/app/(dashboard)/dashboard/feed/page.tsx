@@ -38,6 +38,31 @@ interface ActivityItem {
   }
 }
 
+// XP Level System
+const XP_LEVELS = [
+  { level: 1, title: 'Newcomer', minXp: 0, emoji: '🌱' },
+  { level: 2, title: 'Memory Keeper', minXp: 100, emoji: '📝' },
+  { level: 3, title: 'Storyteller', minXp: 300, emoji: '📖' },
+  { level: 4, title: 'Chronicler', minXp: 600, emoji: '🏛️' },
+  { level: 5, title: 'Legacy Builder', minXp: 1000, emoji: '⭐' },
+  { level: 6, title: 'Time Weaver', minXp: 1500, emoji: '🕰️' },
+  { level: 7, title: 'Memory Master', minXp: 2500, emoji: '👑' },
+  { level: 8, title: 'Living Legend', minXp: 4000, emoji: '🌟' },
+]
+
+function getXpLevel(xp: number) {
+  let current = XP_LEVELS[0]
+  for (const lvl of XP_LEVELS) {
+    if (xp >= lvl.minXp) current = lvl
+    else break
+  }
+  const nextLevel = XP_LEVELS.find(l => l.minXp > xp)
+  const progress = nextLevel
+    ? ((xp - current.minXp) / (nextLevel.minXp - current.minXp)) * 100
+    : 100
+  return { ...current, nextLevel, progress, xpToNext: nextLevel ? nextLevel.minXp - xp : 0 }
+}
+
 type CategoryFilter = 'all' | 'memories' | 'wisdom' | 'media' | 'interviews' | 'shared'
 type ViewMode = 'card' | 'map'
 
@@ -140,6 +165,20 @@ const TYPE_CONFIG: Record<string, { label: string; color: string; gradient: stri
   postscript_created: { label: 'PostScript', color: BRAND_COLORS.green, gradient: TYPE_GRADIENTS.postscript, icon: Gift },
   contact_added: { label: 'Contact', color: BRAND_COLORS.green, gradient: TYPE_GRADIENTS.contact, icon: Users },
   circle_content: { label: 'Circle', color: BRAND_COLORS.blue, gradient: TYPE_GRADIENTS.circle, icon: Users },
+}
+
+// Memory Completeness Score
+function getCompleteness(activity: ActivityItem) {
+  if (activity.type !== 'memory_created') return null
+  let score = 0
+  let total = 6
+  if (activity.title && activity.title !== 'Untitled Memory') score++
+  if (activity.description && !activity.description.toLowerCase().startsWith('you ')) score++
+  if (activity.metadata?.location) score++
+  if (activity.timestamp) score++ // has date
+  if (activity.thumbnail) score++ // has photo
+  if (activity.audio_url) score++ // has voice
+  return { score, total, percentage: Math.round((score / total) * 100) }
 }
 
 // Card heights are now determined by content (images use aspect ratio, text cards flex)
@@ -367,6 +406,40 @@ function MasonryTile({
               ))}
             </div>
           )}
+
+          {/* Completeness Score - memories only */}
+          {(() => {
+            const c = getCompleteness(activity)
+            if (!c || c.percentage === 100) return null
+            const color = c.percentage >= 80 ? '#22c55e' : c.percentage >= 50 ? '#D9C61A' : '#C35F33'
+            return (
+              <div style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '6px',
+                fontSize: '10px',
+                fontWeight: '600',
+                color,
+                padding: '4px 0',
+              }}>
+                <div style={{
+                  width: '40px',
+                  height: '4px',
+                  background: 'rgba(255,255,255,0.15)',
+                  borderRadius: '2px',
+                  overflow: 'hidden',
+                }}>
+                  <div style={{
+                    height: '100%',
+                    width: `${c.percentage}%`,
+                    background: color,
+                    borderRadius: '2px',
+                  }} />
+                </div>
+                {c.percentage}%
+              </div>
+            )
+          })()}
 
           {/* Date & Location - at bottom */}
           <div style={{ 
@@ -1704,6 +1777,34 @@ export default function FeedPage() {
                   </div>
                 </div>
               </div>
+
+              {/* XP Level + Progress */}
+              {(() => {
+                const lvl = getXpLevel(profileStats.xp)
+                return (
+                  <div style={{ marginBottom: '12px' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '4px' }}>
+                      <span style={{ fontSize: '12px', fontWeight: '700' }} className="profile-card-name">
+                        {lvl.emoji} {lvl.title}
+                      </span>
+                      {lvl.nextLevel && (
+                        <span style={{ fontSize: '10px', color: '#888' }}>
+                          {lvl.xpToNext} XP to {lvl.nextLevel.title}
+                        </span>
+                      )}
+                    </div>
+                    <div style={{ height: '4px', background: 'rgba(217,198,26,0.15)', borderRadius: '2px', overflow: 'hidden' }}>
+                      <div style={{
+                        height: '100%',
+                        borderRadius: '2px',
+                        width: `${lvl.progress}%`,
+                        background: 'linear-gradient(90deg, #D9C61A, #E8D84A)',
+                        transition: 'width 0.8s ease-out',
+                      }} />
+                    </div>
+                  </div>
+                )
+              })()}
 
               {/* Storage Bar */}
               <div className="profile-storage">
