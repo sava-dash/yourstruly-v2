@@ -30,8 +30,10 @@ export default function FeedMap({ activities, onLocationClick }: FeedMapProps) {
 
   // Debug: log activities with location data
   useEffect(() => {
-    console.log('FeedMap received activities:', activities.length)
-    console.log('Activities with lat/lng:', activities.filter(a => a.metadata?.lat && a.metadata?.lng).length)
+    console.log('[FeedMap] received activities:', activities.length)
+    console.log('[FeedMap] with lat/lng:', activities.filter(a => a.metadata?.lat && a.metadata?.lng).length)
+    console.log('[FeedMap] with location name:', activities.filter(a => a.metadata?.location).length)
+    activities.slice(0, 3).forEach(a => console.log('[FeedMap] sample:', { type: a.type || a.id, location: a.metadata?.location, lat: a.metadata?.lat, lng: a.metadata?.lng }))
   }, [activities])
 
   const [geocodedFeatures, setGeocodedFeatures] = useState<any[]>([])
@@ -39,6 +41,7 @@ export default function FeedMap({ activities, onLocationClick }: FeedMapProps) {
   // Geocode activities that have location names but no lat/lng
   useEffect(() => {
     const geocodeActivities = async () => {
+      console.log('[FeedMap] Starting geocode for', activities.length, 'activities, token:', mapboxgl.accessToken?.slice(0, 10) + '...')
       const features: any[] = []
       const geocodeCache: Record<string, [number, number] | null> = {}
 
@@ -86,6 +89,8 @@ export default function FeedMap({ activities, onLocationClick }: FeedMapProps) {
         }
       }
 
+      console.log('[FeedMap] Geocoded', features.length, 'of', activities.length, 'activities')
+      features.slice(0, 3).forEach(f => console.log('[FeedMap] pin:', f.properties.location, f.geometry.coordinates))
       setGeocodedFeatures(features)
     }
 
