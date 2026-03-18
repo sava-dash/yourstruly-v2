@@ -87,7 +87,8 @@ export async function POST(
   }
 
   const fileType = file.type.startsWith('image/') ? 'image' : 
-                   file.type.startsWith('video/') ? 'video' : null
+                   file.type.startsWith('video/') ? 'video' :
+                   file.type.startsWith('audio/') ? 'audio' : null
 
   if (!fileType) {
     return NextResponse.json({ error: 'Invalid file type' }, { status: 400 })

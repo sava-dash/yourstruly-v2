@@ -1,13 +1,15 @@
 'use client'
 
 import { useState, useEffect, useRef } from 'react'
-import { X, MapPin, Calendar, Users, Camera, Mic, Tag, Edit2, Trash2, ChevronLeft, ChevronRight, Play, Pause, Upload, Check, Loader2, Square, Video } from 'lucide-react'
+import { X, MapPin, Calendar, Users, Camera, Mic, Tag, Edit2, Trash2, ChevronLeft, ChevronRight, Play, Pause, Upload, Check, Loader2, Square, Video, Share2, Heart } from 'lucide-react'
 import { format } from 'date-fns'
 import { motion, AnimatePresence } from 'framer-motion'
 import dynamic from 'next/dynamic'
 
-// Lazy load map to avoid SSR issues
+// Lazy load map and heavy components to avoid SSR issues
 const MiniMap = dynamic(() => import('./MiniMap'), { ssr: false })
+const ShareMemoryModal = dynamic(() => import('@/components/memories/ShareMemoryModal'), { ssr: false })
+const MemoryContributions = dynamic(() => import('@/components/memories/MemoryContributions'), { ssr: false })
 
 // Location Autocomplete Component
 function LocationAutocomplete({ value, onChange, placeholder }: { 
@@ -193,6 +195,9 @@ export function FeedDetailModal({ activity, isOpen, onClose, onUpdate }: FeedDet
   const [selectedFaceIndex, setSelectedFaceIndex] = useState<number | null>(null)
   const [faceDropdownPosition, setFaceDropdownPosition] = useState<{x: number, y: number} | null>(null)
   const [isFullscreen, setIsFullscreen] = useState(false)
+  // Share & Social state
+  const [showShareModal, setShowShareModal] = useState(false)
+  const [isFavorite, setIsFavorite] = useState(false)
   // Voice/Video recording state
   const [isRecordingVoice, setIsRecordingVoice] = useState(false)
   const [isRecordingVideo, setIsRecordingVideo] = useState(false)
@@ -220,6 +225,7 @@ export function FeedDetailModal({ activity, isOpen, onClose, onUpdate }: FeedDet
       setIsEditing(false)
       setIsTaggingMode(false)
       setIsFullscreen(false)
+      setShowShareModal(false)
       setSelectedFaceIndex(null)
       setFaceDropdownPosition(null)
       
@@ -283,6 +289,7 @@ export function FeedDetailModal({ activity, isOpen, onClose, onUpdate }: FeedDet
           
           setMediaItems(data.media || [])
           setTaggedPeople(data.tagged_contacts || [])
+          setIsFavorite(data.is_favorite || false)
           
           // Pre-load faces for first media item (for when user clicks Tag)
           if (data.media?.[0]?.id) {
@@ -443,6 +450,20 @@ export function FeedDetailModal({ activity, isOpen, onClose, onUpdate }: FeedDet
     }
   }
 
+  const toggleFavorite = async () => {
+    if (!activity?.metadata?.memoryId) return
+    try {
+      const res = await fetch(`/api/memories/${activity.metadata.memoryId}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ is_favorite: !isFavorite }),
+      })
+      if (res.ok) setIsFavorite(prev => !prev)
+    } catch (err) {
+      console.error('Error toggling favorite:', err)
+    }
+  }
+
   const handleSave = async () => {
     if (!activity) return
     setIsSaving(true)
@@ -452,14 +473,14 @@ export function FeedDetailModal({ activity, isOpen, onClose, onUpdate }: FeedDet
         ? `/api/wisdom/${activity.metadata?.wisdomId}`
         : `/api/memories/${activity.metadata?.memoryId}`
       
+      // Voice/video recordings are saved as memory_media on record,
+      // so we don't need to put URLs in the memory record
       const patchBody: Record<string, any> = {
         title: editedTitle,
         description: editedDescription,
         date: editedDate,
         location_name: editedLocation,
       }
-      if (recordedAudioUrl) patchBody.audio_url = recordedAudioUrl
-      if (recordedVideoUrl) patchBody.video_url = recordedVideoUrl
 
       const res = await fetch(endpoint, {
         method: 'PATCH',
@@ -537,6 +558,27 @@ export function FeedDetailModal({ activity, isOpen, onClose, onUpdate }: FeedDet
     }
   }, [isOpen])
 
+  // Upload recording blob as memory_media via API
+  const uploadRecordingAsMedia = async (blob: Blob, filename: string): Promise<string | null> => {
+    if (!activity?.metadata?.memoryId) return null
+    try {
+      const formData = new FormData()
+      formData.append('file', blob, filename)
+      const res = await fetch(`/api/memories/${activity.metadata.memoryId}/media`, {
+        method: 'POST',
+        body: formData,
+      })
+      if (res.ok) {
+        const data = await res.json()
+        return data.media?.file_url || null
+      }
+      console.error('Recording upload failed:', await res.text())
+    } catch (err) {
+      console.error('Recording upload error:', err)
+    }
+    return null
+  }
+
   const startVoiceRecording = async () => {
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true })
@@ -550,8 +592,7 @@ export function FeedDetailModal({ activity, isOpen, onClose, onUpdate }: FeedDet
       recorder.onstop = async () => {
         stream.getTracks().forEach(t => t.stop())
         const audioBlob = new Blob(voiceChunksRef.current, { type: 'audio/webm' })
-        
-        // Stop live transcription
+
         if (speechRecRef.current) {
           try { speechRecRef.current.stop() } catch {}
           speechRecRef.current = null
@@ -559,26 +600,15 @@ export function FeedDetailModal({ activity, isOpen, onClose, onUpdate }: FeedDet
         setInterimText('')
         setIsTranscribing(true)
 
-        // Upload audio to storage
-        try {
-          const { createClient } = await import('@/lib/supabase/client')
-          const supabase = createClient()
-          const { data: { user } } = await supabase.auth.getUser()
-          if (user) {
-            const fileName = `voice-recordings/${user.id}/${Date.now()}.webm`
-            const { error: uploadError } = await supabase.storage
-              .from('memories')
-              .upload(fileName, audioBlob, { contentType: 'audio/webm' })
-            if (!uploadError) {
-              const { data: urlData } = supabase.storage.from('memories').getPublicUrl(fileName)
-              setRecordedAudioUrl(urlData.publicUrl)
-            }
-          }
-        } catch (err) {
-          console.error('Audio upload error:', err)
+        // Upload as memory_media (supports multiples)
+        const url = await uploadRecordingAsMedia(audioBlob, `voice-${Date.now()}.webm`)
+        if (url) {
+          setRecordedAudioUrl(url)
+          // Reload media to show the new recording
+          loadFullDetails()
         }
 
-        // Transcribe via API
+        // Transcribe via API and append to description
         const formData = new FormData()
         formData.append('audio', audioBlob, 'recording.webm')
         try {
@@ -599,7 +629,7 @@ export function FeedDetailModal({ activity, isOpen, onClose, onUpdate }: FeedDet
       voiceRecorderRef.current = recorder
       setIsRecordingVoice(true)
 
-      // Start Web Speech API for live interim transcription
+      // Live interim transcription via Web Speech API
       try {
         const SpeechRecognition = (window as any).webkitSpeechRecognition || (window as any).SpeechRecognition
         if (SpeechRecognition) {
@@ -610,9 +640,7 @@ export function FeedDetailModal({ activity, isOpen, onClose, onUpdate }: FeedDet
           recognition.onresult = (event: any) => {
             let interim = ''
             for (let i = event.resultIndex; i < event.results.length; i++) {
-              if (!event.results[i].isFinal) {
-                interim += event.results[i][0].transcript
-              }
+              if (!event.results[i].isFinal) interim += event.results[i][0].transcript
             }
             setInterimText(interim)
           }
@@ -627,9 +655,7 @@ export function FeedDetailModal({ activity, isOpen, onClose, onUpdate }: FeedDet
   }
 
   const stopVoiceRecording = () => {
-    if (voiceRecorderRef.current?.state !== 'inactive') {
-      voiceRecorderRef.current?.stop()
-    }
+    if (voiceRecorderRef.current?.state !== 'inactive') voiceRecorderRef.current?.stop()
     setIsRecordingVoice(false)
   }
 
@@ -655,23 +681,11 @@ export function FeedDetailModal({ activity, isOpen, onClose, onUpdate }: FeedDet
 
         const videoBlob = new Blob(videoChunksRef.current, { type: 'video/webm' })
 
-        // Upload to Supabase storage
-        try {
-          const { createClient } = await import('@/lib/supabase/client')
-          const supabase = createClient()
-          const { data: { user } } = await supabase.auth.getUser()
-          if (user) {
-            const fileName = `video-responses/${user.id}/${Date.now()}.webm`
-            const { error: uploadError } = await supabase.storage
-              .from('memories')
-              .upload(fileName, videoBlob, { contentType: 'video/webm' })
-            if (!uploadError) {
-              const { data: urlData } = supabase.storage.from('memories').getPublicUrl(fileName)
-              setRecordedVideoUrl(urlData.publicUrl)
-            }
-          }
-        } catch (err) {
-          console.error('Video upload error:', err)
+        // Upload as memory_media (supports multiples)
+        const url = await uploadRecordingAsMedia(videoBlob, `video-${Date.now()}.webm`)
+        if (url) {
+          setRecordedVideoUrl(url)
+          loadFullDetails()
         }
 
         // Transcribe audio from video
@@ -700,9 +714,7 @@ export function FeedDetailModal({ activity, isOpen, onClose, onUpdate }: FeedDet
   }
 
   const stopVideoRecording = () => {
-    if (videoRecorderRef.current?.state !== 'inactive') {
-      videoRecorderRef.current?.stop()
-    }
+    if (videoRecorderRef.current?.state !== 'inactive') videoRecorderRef.current?.stop()
     setIsRecordingVideo(false)
   }
 
@@ -796,23 +808,65 @@ export function FeedDetailModal({ activity, isOpen, onClose, onUpdate }: FeedDet
               {activity.type.includes('photo') && '📷 Photos'}
               {activity.type.includes('postscript') && '🎁 PostScript'}
             </div>
-            <button
-              onClick={onClose}
-              style={{
-                background: '#333',
-                border: 'none',
-                borderRadius: '50%',
-                width: '36px',
-                height: '36px',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                cursor: 'pointer',
-                color: '#fff',
-              }}
-            >
-              <X size={18} />
-            </button>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+              {/* Favorite */}
+              {activity.metadata?.memoryId && (
+                <button
+                  onClick={toggleFavorite}
+                  style={{
+                    background: 'transparent',
+                    border: 'none',
+                    cursor: 'pointer',
+                    color: isFavorite ? '#C35F33' : '#ccc',
+                    padding: '6px',
+                    display: 'flex',
+                    alignItems: 'center',
+                    transition: 'color 0.2s',
+                  }}
+                >
+                  <Heart size={20} fill={isFavorite ? 'currentColor' : 'none'} />
+                </button>
+              )}
+              {/* Share */}
+              {activity.metadata?.memoryId && (
+                <button
+                  onClick={() => setShowShareModal(true)}
+                  style={{
+                    background: accentColor,
+                    border: 'none',
+                    borderRadius: '8px',
+                    padding: '6px 12px',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '4px',
+                    cursor: 'pointer',
+                    color: '#fff',
+                    fontSize: '12px',
+                    fontWeight: '600',
+                  }}
+                >
+                  <Share2 size={14} />
+                  Share
+                </button>
+              )}
+              <button
+                onClick={onClose}
+                style={{
+                  background: '#333',
+                  border: 'none',
+                  borderRadius: '50%',
+                  width: '36px',
+                  height: '36px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  cursor: 'pointer',
+                  color: '#fff',
+                }}
+              >
+                <X size={18} />
+              </button>
+            </div>
           </div>
 
           {/* Content - Scrollable */}
@@ -1355,41 +1409,59 @@ export function FeedDetailModal({ activity, isOpen, onClose, onUpdate }: FeedDet
               </div>
             )}
 
-            {/* Audio Player */}
-            {activity.audio_url && (
-              <div style={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: '12px',
-                padding: '12px 16px',
-                background: '#f8f8f8',
-                borderRadius: '12px',
-                marginBottom: '16px',
-              }}>
-                <button
-                  onClick={toggleAudio}
-                  style={{
-                    width: '40px',
-                    height: '40px',
-                    borderRadius: '50%',
-                    background: accentColor,
-                    border: 'none',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    cursor: 'pointer',
-                    color: '#fff',
-                  }}
-                >
-                  {isPlaying ? <Pause size={18} /> : <Play size={18} style={{ marginLeft: '2px' }} />}
-                </button>
-                <div style={{ flex: 1 }}>
-                  <div style={{ fontSize: '13px', fontWeight: '600', color: '#333' }}>Voice Recording</div>
-                  <div style={{ fontSize: '11px', color: '#888' }}>Tap to {isPlaying ? 'pause' : 'play'}</div>
-                </div>
-                <Mic size={18} color={accentColor} />
-              </div>
-            )}
+            {/* Audio & Video Recordings */}
+            {(() => {
+              const audioMedia = mediaItems.filter((m: any) => m.file_type === 'audio')
+              const videoMedia = mediaItems.filter((m: any) => m.file_type === 'video')
+              const hasLegacyAudio = activity.audio_url && !audioMedia.some((m: any) => m.file_url === activity.audio_url)
+              const allAudio = [
+                ...(hasLegacyAudio ? [{ id: 'legacy', file_url: activity.audio_url, file_type: 'audio' }] : []),
+                ...audioMedia,
+              ]
+              return (
+                <>
+                  {allAudio.length > 0 && (
+                    <div style={{ marginBottom: '12px' }}>
+                      <div style={{ fontSize: '11px', fontWeight: '700', color: '#888', textTransform: 'uppercase', marginBottom: '6px' }}>
+                        Voice Recordings ({allAudio.length})
+                      </div>
+                      {allAudio.map((m: any, idx: number) => (
+                        <div key={m.id || idx} style={{
+                          marginBottom: '6px',
+                          borderRadius: '10px',
+                          overflow: 'hidden',
+                          background: '#f8f8f8',
+                          padding: '8px 12px',
+                        }}>
+                          <audio controls preload="metadata" style={{ width: '100%', height: '36px' }}>
+                            <source src={m.file_url} type="audio/webm" />
+                          </audio>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                  {videoMedia.length > 0 && (
+                    <div style={{ marginBottom: '12px' }}>
+                      <div style={{ fontSize: '11px', fontWeight: '700', color: '#888', textTransform: 'uppercase', marginBottom: '6px' }}>
+                        Video Recordings ({videoMedia.length})
+                      </div>
+                      {videoMedia.map((m: any, idx: number) => (
+                        <div key={m.id || idx} style={{
+                          marginBottom: '6px',
+                          borderRadius: '10px',
+                          overflow: 'hidden',
+                          background: '#000',
+                        }}>
+                          <video controls preload="metadata" style={{ width: '100%', maxHeight: '200px' }}>
+                            <source src={m.file_url} type="video/webm" />
+                          </video>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </>
+              )
+            })()}
 
             {/* Date & Location - Same row in edit mode */}
             <div style={{
@@ -1503,6 +1575,12 @@ export function FeedDetailModal({ activity, isOpen, onClose, onUpdate }: FeedDet
                     </div>
                   ))}
                 </div>
+              </div>
+            )}
+            {/* Contributions (Comments, Reactions, etc.) */}
+            {activity.metadata?.memoryId && (
+              <div style={{ marginTop: '16px', borderTop: '1px solid #eee', paddingTop: '16px' }}>
+                <MemoryContributions memoryId={activity.metadata.memoryId} />
               </div>
             )}
           </div>
@@ -1834,6 +1912,16 @@ export function FeedDetailModal({ activity, isOpen, onClose, onUpdate }: FeedDet
           )}
         </AnimatePresence>
       </motion.div>
+
+      {/* Share Memory Modal */}
+      {activity?.metadata?.memoryId && showShareModal && (
+        <ShareMemoryModal
+          isOpen={showShareModal}
+          onClose={() => setShowShareModal(false)}
+          memoryId={activity.metadata.memoryId}
+          memoryTitle={activity.title}
+        />
+      )}
     </AnimatePresence>
   )
 }
