@@ -3029,16 +3029,18 @@ export default function FeedPage() {
           display: flex;
           align-items: center;
           justify-content: center;
-          background: rgba(255, 255, 255, 0.9);
+          background: rgba(30, 30, 30, 0.85);
+          color: #fff;
           border: none;
           border-radius: 50%;
           cursor: pointer;
-          box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
-          transition: transform 0.2s;
+          box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+          transition: transform 0.2s, background 0.2s;
         }
 
         .map-overlay-close:hover {
           transform: scale(1.1);
+          background: rgba(50, 50, 50, 0.95);
         }
 
         .masonry-columns-wrapper {

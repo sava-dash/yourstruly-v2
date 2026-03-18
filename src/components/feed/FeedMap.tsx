@@ -113,7 +113,7 @@ export default function FeedMap({ activities, onLocationClick }: FeedMapProps) {
       map.current = new mapboxgl.Map({
         container: mapContainer.current,
         style: 'mapbox://styles/mapbox/light-v11',
-        zoom: 3,
+        zoom: 2.7,
         center: [-80, 35],
         maxZoom: 18,
         minZoom: 1,
@@ -272,17 +272,27 @@ export default function FeedMap({ activities, onLocationClick }: FeedMapProps) {
     }
   }, [geojsonData])
 
-  // Update data when activities change
+  // Add layers once when map is loaded
   useEffect(() => {
-    if (!map.current || !loaded || !map.current.isStyleLoaded()) {
-      console.log('Waiting for map/style to load before adding sources')
-      return
-    }
-    
+    if (!map.current || !loaded || !map.current.isStyleLoaded()) return
     addSourcesAndLayers()
+  }, [loaded, addSourcesAndLayers])
+
+  // Update source data when geocoded features change
+  useEffect(() => {
+    if (!map.current || !loaded) return
+    const source = map.current.getSource('activities') as mapboxgl.GeoJSONSource
+    if (source) {
+      console.log('[FeedMap] Updating source with', geocodedFeatures.length, 'features')
+      source.setData(geojsonData as any)
+    } else {
+      // Source not yet added — addSourcesAndLayers will handle it
+      console.log('[FeedMap] Source not ready, will be added by addSourcesAndLayers')
+      addSourcesAndLayers()
+    }
 
     // Fit bounds to geocoded markers
-    if (geocodedFeatures.length > 0) {
+    if (geocodedFeatures.length > 0 && map.current) {
       const bounds = new mapboxgl.LngLatBounds()
       geocodedFeatures.forEach(f => {
         bounds.extend(f.geometry.coordinates as [number, number])
@@ -296,7 +306,7 @@ export default function FeedMap({ activities, onLocationClick }: FeedMapProps) {
         })
       }
     }
-  }, [loaded, addSourcesAndLayers, geocodedFeatures])
+  }, [loaded, geocodedFeatures, geojsonData, addSourcesAndLayers])
 
   // Handle cluster click - zoom in
   const handleClusterClick = useCallback((e: mapboxgl.MapMouseEvent) => {
