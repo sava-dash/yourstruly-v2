@@ -315,7 +315,7 @@ export default function FeedMap({ activities, onLocationClick }: FeedMapProps) {
     }
   }, [geocodedFeatures, applyFeaturesToMap])
 
-  // Handle cluster click - zoom in
+  // Handle cluster click - show popup with location names and filter button
   const handleClusterClick = useCallback((e: mapboxgl.MapMouseEvent) => {
     if (!map.current) return
     
@@ -323,19 +323,49 @@ export default function FeedMap({ activities, onLocationClick }: FeedMapProps) {
     if (!features.length) return
 
     const clusterId = features[0].properties?.cluster_id
+    const pointCount = features[0].properties?.point_count || 0
+    const coordinates = (features[0].geometry as any).coordinates.slice()
     const source = map.current.getSource('activities') as mapboxgl.GeoJSONSource
 
-    source.getClusterExpansionZoom(clusterId, (err, zoom) => {
-      if (err || !map.current) return
+    // Get the leaves (individual points) in this cluster
+    source.getClusterLeaves(clusterId, pointCount, 0, (err, leaves) => {
+      if (err || !map.current || !leaves) return
 
-      const coordinates = (features[0].geometry as any).coordinates.slice()
-      map.current.easeTo({
-        center: coordinates,
-        zoom: zoom || map.current.getZoom() + 2,
-        duration: 500
-      })
+      // Collect unique location names from cluster
+      const locations = [...new Set(
+        leaves
+          .map((l: any) => l.properties?.location)
+          .filter(Boolean)
+      )] as string[]
+
+      const locationList = locations.length > 0
+        ? locations.map(loc => `<span class="popup-cluster-loc">${loc}</span>`).join('')
+        : `<span class="popup-cluster-loc">${pointCount} memories</span>`
+
+      const firstLocation = locations[0] || ''
+
+      const popup = new mapboxgl.Popup({ offset: 25, closeButton: false })
+        .setLngLat(coordinates)
+        .setHTML(`
+          <div class="feed-map-popup">
+            <div class="popup-content">
+              <div class="popup-cluster-locations">${locationList}</div>
+              ${firstLocation ? `<button class="popup-filter-btn" data-location="${firstLocation.replace(/"/g, '&quot;')}">Show</button>` : ''}
+            </div>
+          </div>
+        `)
+        .addTo(map.current)
+
+      const popupEl = popup.getElement()
+      const filterBtn = popupEl?.querySelector('.popup-filter-btn')
+      if (filterBtn && onLocationClick) {
+        filterBtn.addEventListener('click', () => {
+          onLocationClick(firstLocation)
+          popup.remove()
+        })
+      }
     })
-  }, [])
+  }, [onLocationClick])
 
   // Handle individual point click - open popup
   const handlePointClick = useCallback((e: mapboxgl.MapMouseEvent) => {
@@ -362,8 +392,7 @@ export default function FeedMap({ activities, onLocationClick }: FeedMapProps) {
               <span>${new Date(props.timestamp).toLocaleDateString()}</span>
               ${locationName ? `<span>• ${locationName}</span>` : ''}
             </div>
-            ${locationName ? `<button class="popup-filter-btn" data-location="${locationName.replace(/"/g, '&quot;')}">Show all from here →</button>` : ''}
-            <a href="${activities.find(a => a.id === props.id)?.link}" class="popup-link">View Details →</a>
+            ${locationName ? `<button class="popup-filter-btn" data-location="${locationName.replace(/"/g, '&quot;')}">Show</button>` : ''}
           </div>
         </div>
       `)
@@ -482,6 +511,19 @@ export default function FeedMap({ activities, onLocationClick }: FeedMapProps) {
 
         .popup-filter-btn:hover {
           background: #a84e2a;
+        }
+
+        .popup-cluster-locations {
+          display: flex;
+          flex-direction: column;
+          gap: 4px;
+          margin-bottom: 8px;
+        }
+
+        .popup-cluster-loc {
+          font-size: 13px;
+          font-weight: 500;
+          color: #333;
         }
 
         .mapboxgl-popup-close-button {
