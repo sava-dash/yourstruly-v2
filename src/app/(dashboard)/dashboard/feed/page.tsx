@@ -1707,7 +1707,10 @@ export default function FeedPage() {
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '6px' }}>
                   <span className="profile-storage-label">Storage</span>
                   <span className="profile-storage-value">
-                    {storageInfo.used.toFixed(1)} / {storageInfo.limit.toFixed(0)} GB
+                    {storageInfo.used < 0.1 
+                      ? `${(storageInfo.used * 1024).toFixed(0)} MB` 
+                      : `${storageInfo.used.toFixed(1)} GB`
+                    } / {storageInfo.limit.toFixed(0)} GB
                   </span>
                 </div>
                 <div className="profile-storage-track">
