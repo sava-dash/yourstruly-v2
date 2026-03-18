@@ -197,6 +197,14 @@ export function FeedDetailModal({ activity, isOpen, onClose, onUpdate }: FeedDet
   const [isFullscreen, setIsFullscreen] = useState(false)
   // Share & Social state
   const [showShareModal, setShowShareModal] = useState(false)
+  // Photo backstory state
+  const [showBackstory, setShowBackstory] = useState(false)
+  const [backstoryLocation, setBackstoryLocation] = useState('')
+  const [backstoryDate, setBackstoryDate] = useState('')
+  const [backstoryText, setBackstoryText] = useState('')
+  const [locationSuggestions, setLocationSuggestions] = useState<{ place_name: string; id: string }[]>([])
+  const [isSavingBackstory, setIsSavingBackstory] = useState(false)
+  const locationDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const [isFavorite, setIsFavorite] = useState(false)
   // Voice/Video recording state
   const [isRecordingVoice, setIsRecordingVoice] = useState(false)
@@ -463,6 +471,64 @@ export function FeedDetailModal({ activity, isOpen, onClose, onUpdate }: FeedDet
     } catch (err) {
       console.error('Error toggling favorite:', err)
     }
+  }
+
+  const fetchLocationSuggestions = async (query: string) => {
+    if (query.length < 2) { setLocationSuggestions([]); return }
+    try {
+      const token = process.env.NEXT_PUBLIC_MAPBOX_TOKEN
+      const res = await fetch(
+        `https://api.mapbox.com/geocoding/v5/mapbox.places/${encodeURIComponent(query)}.json?access_token=${token}&limit=5&types=place,locality,neighborhood,address`
+      )
+      const data = await res.json()
+      setLocationSuggestions(data.features?.map((f: any) => ({ place_name: f.place_name, id: f.id })) || [])
+    } catch { setLocationSuggestions([]) }
+  }
+
+  const handleBackstoryLocationChange = (val: string) => {
+    setBackstoryLocation(val)
+    if (locationDebounceRef.current) clearTimeout(locationDebounceRef.current)
+    locationDebounceRef.current = setTimeout(() => fetchLocationSuggestions(val), 300)
+  }
+
+  const handleSaveBackstory = async () => {
+    if (!activity?.metadata?.memoryId) return
+    if (!backstoryLocation.trim() && !backstoryDate.trim() && !backstoryText.trim()) return
+    setIsSavingBackstory(true)
+    try {
+      // Update the memory with backstory info
+      const updates: Record<string, any> = {}
+      if (backstoryLocation.trim()) updates.location_name = backstoryLocation.trim()
+      if (backstoryDate.trim()) updates.date = backstoryDate.trim()
+      if (backstoryText.trim()) updates.description = backstoryText.trim()
+
+      const res = await fetch(`/api/memories/${activity.metadata.memoryId}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(updates),
+      })
+
+      if (res.ok) {
+        // Update activity in parent
+        if (onUpdate) {
+          onUpdate({
+            ...activity,
+            description: backstoryText.trim() || activity.description,
+            metadata: {
+              ...activity.metadata,
+              location: backstoryLocation.trim() || activity.metadata?.location,
+            },
+          })
+        }
+        setShowBackstory(false)
+        setBackstoryLocation('')
+        setBackstoryDate('')
+        setBackstoryText('')
+      }
+    } catch (err) {
+      console.error('Failed to save backstory:', err)
+    }
+    setIsSavingBackstory(false)
   }
 
   const handleSave = async () => {
@@ -1640,16 +1706,14 @@ export function FeedDetailModal({ activity, isOpen, onClose, onUpdate }: FeedDet
               </>
             ) : activity.type === 'photos_uploaded' ? (
               <>
-                {/* Use in Memory - navigates to the memory page */}
+                {/* Add Memory - shows backstory form inline */}
                 {activity.metadata?.memoryId && (
                   <button
-                    onClick={() => {
-                      window.location.href = `/dashboard/memories/${activity.metadata?.memoryId}`
-                    }}
+                    onClick={() => setShowBackstory(!showBackstory)}
                     style={{
                       flex: 1,
                       padding: '10px',
-                      background: accentColor,
+                      background: showBackstory ? '#555' : accentColor,
                       color: '#fff',
                       border: 'none',
                       borderRadius: '10px',
@@ -1663,11 +1727,11 @@ export function FeedDetailModal({ activity, isOpen, onClose, onUpdate }: FeedDet
                     }}
                   >
                     <Edit2 size={14} />
-                    Use in Memory
+                    {showBackstory ? 'Cancel' : 'Add Memory'}
                   </button>
                 )}
                 {/* Tag faces */}
-                {(activity.thumbnail || mediaItems.length > 0) && (
+                {!showBackstory && (activity.thumbnail || mediaItems.length > 0) && (
                   <button
                     onClick={() => {
                       if (!isTaggingMode) {
@@ -1786,6 +1850,148 @@ export function FeedDetailModal({ activity, isOpen, onClose, onUpdate }: FeedDet
               </>
             )}
           </div>
+
+          {/* Photo Backstory Form */}
+          {showBackstory && activity.type === 'photos_uploaded' && (
+            <div style={{
+              padding: '16px',
+              background: '#fafafa',
+              borderRadius: '12px',
+              marginTop: '12px',
+              display: 'flex',
+              flexDirection: 'column',
+              gap: '12px',
+            }}>
+              {/* Location */}
+              <div style={{ position: 'relative' }}>
+                <label style={{ fontSize: '10px', fontWeight: '700', color: '#888', textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: '4px', display: 'block' }}>
+                  📍 Where was this?
+                </label>
+                <input
+                  type="text"
+                  value={backstoryLocation}
+                  onChange={(e) => handleBackstoryLocationChange(e.target.value)}
+                  placeholder="Start typing a location..."
+                  style={{
+                    width: '100%',
+                    padding: '8px 12px',
+                    background: '#fff',
+                    border: '1px solid #e0e0e0',
+                    borderRadius: '8px',
+                    fontSize: '13px',
+                    outline: 'none',
+                  }}
+                />
+                {locationSuggestions.length > 0 && (
+                  <div style={{
+                    position: 'absolute',
+                    top: '100%',
+                    left: 0,
+                    right: 0,
+                    background: '#fff',
+                    border: '1px solid #e0e0e0',
+                    borderRadius: '8px',
+                    marginTop: '4px',
+                    zIndex: 20,
+                    maxHeight: '150px',
+                    overflowY: 'auto',
+                    boxShadow: '0 4px 12px rgba(0,0,0,0.1)',
+                  }}>
+                    {locationSuggestions.map(s => (
+                      <div
+                        key={s.id}
+                        onClick={() => {
+                          setBackstoryLocation(s.place_name)
+                          setLocationSuggestions([])
+                        }}
+                        style={{
+                          padding: '8px 12px',
+                          fontSize: '12px',
+                          cursor: 'pointer',
+                          borderBottom: '1px solid #f0f0f0',
+                        }}
+                        onMouseEnter={(e) => (e.currentTarget.style.background = '#f5f5f5')}
+                        onMouseLeave={(e) => (e.currentTarget.style.background = '#fff')}
+                      >
+                        📍 {s.place_name}
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              {/* Date */}
+              <div>
+                <label style={{ fontSize: '10px', fontWeight: '700', color: '#888', textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: '4px', display: 'block' }}>
+                  📅 When was this taken?
+                </label>
+                <input
+                  type="text"
+                  value={backstoryDate}
+                  onChange={(e) => setBackstoryDate(e.target.value)}
+                  placeholder="e.g. Summer 2019, March 2020..."
+                  style={{
+                    width: '100%',
+                    padding: '8px 12px',
+                    background: '#fff',
+                    border: '1px solid #e0e0e0',
+                    borderRadius: '8px',
+                    fontSize: '13px',
+                    outline: 'none',
+                  }}
+                />
+              </div>
+
+              {/* Story */}
+              <div>
+                <label style={{ fontSize: '10px', fontWeight: '700', color: '#888', textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: '4px', display: 'block' }}>
+                  📝 The story behind this
+                </label>
+                <textarea
+                  value={backstoryText}
+                  onChange={(e) => setBackstoryText(e.target.value)}
+                  placeholder="What's the story? Who was there?"
+                  rows={3}
+                  style={{
+                    width: '100%',
+                    padding: '8px 12px',
+                    background: '#fff',
+                    border: '1px solid #e0e0e0',
+                    borderRadius: '8px',
+                    fontSize: '13px',
+                    outline: 'none',
+                    resize: 'none',
+                  }}
+                />
+              </div>
+
+              {/* Save */}
+              <button
+                onClick={handleSaveBackstory}
+                disabled={(!backstoryLocation.trim() && !backstoryDate.trim() && !backstoryText.trim()) || isSavingBackstory}
+                style={{
+                  padding: '10px',
+                  background: (!backstoryLocation.trim() && !backstoryDate.trim() && !backstoryText.trim()) || isSavingBackstory ? '#ccc' : accentColor,
+                  color: '#fff',
+                  border: 'none',
+                  borderRadius: '10px',
+                  fontSize: '13px',
+                  fontWeight: '600',
+                  cursor: (!backstoryLocation.trim() && !backstoryDate.trim() && !backstoryText.trim()) || isSavingBackstory ? 'not-allowed' : 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: '6px',
+                }}
+              >
+                {isSavingBackstory ? (
+                  <><Loader2 size={14} className="animate-spin" /> Saving...</>
+                ) : (
+                  <><Check size={14} /> Save Details</>
+                )}
+              </button>
+            </div>
+          )}
 
           {/* Hidden file input */}
           <input
