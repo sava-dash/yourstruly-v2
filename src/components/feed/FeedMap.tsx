@@ -35,7 +35,7 @@ export default function FeedMap({ activities, onLocationClick }: FeedMapProps) {
     console.log('[FeedMap] received activities:', activities.length)
     console.log('[FeedMap] with lat/lng:', activities.filter(a => a.metadata?.lat && a.metadata?.lng).length)
     console.log('[FeedMap] with location name:', activities.filter(a => a.metadata?.location).length)
-    activities.slice(0, 3).forEach(a => console.log('[FeedMap] sample:', { type: a.type || a.id, location: a.metadata?.location, lat: a.metadata?.lat, lng: a.metadata?.lng }))
+    activities.slice(0, 3).forEach(a => console.log('[FeedMap] sample:', { type: (a as any).type || a.id, location: a.metadata?.location, lat: a.metadata?.lat, lng: a.metadata?.lng }))
   }, [activities])
 
   const [geocodedFeatures, setGeocodedFeatures] = useState<any[]>([])
