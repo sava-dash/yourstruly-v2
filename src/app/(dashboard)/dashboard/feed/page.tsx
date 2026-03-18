@@ -446,11 +446,16 @@ export default function FeedPage() {
         .select('date_of_birth')
         .eq('id', user.id)
         .single()
+      console.log('[BirthYear] profile:', profile, 'dob:', profile?.date_of_birth)
       if (profile?.date_of_birth) {
-        setBirthYear(new Date(profile.date_of_birth).getFullYear())
+        const year = new Date(profile.date_of_birth).getFullYear()
+        console.log('[BirthYear] Setting birth year to:', year)
+        setBirthYear(year)
+      } else {
+        console.log('[BirthYear] No date_of_birth found')
       }
     } catch (err) {
-      console.error('Error fetching birth year:', err)
+      console.error('[BirthYear] Error:', err)
     }
   }
 
@@ -1928,21 +1933,38 @@ export default function FeedPage() {
               <p>No items found</p>
             </div>
           ) : (
-            <div ref={gridRef} className="masonry-grid">
-              {filteredActivities.map((activity, index) => (
-                <MasonryTile 
-                  key={activity.id} 
-                  activity={activity} 
-                  index={index} 
-                  isDarkMode={isDarkMode}
-                  playingAudio={playingAudio}
-                  onAudioToggle={handleAudioToggle}
-                  onCardClick={(a) => {
-                    setSelectedActivity(a)
-                    setShowDetailModal(true)
-                  }}
-                />
-              ))}
+            <div ref={gridRef} className="masonry-columns-wrapper">
+              {(() => {
+                // Distribute items into columns round-robin to preserve L-R reading order
+                const colCount = typeof window !== 'undefined' 
+                  ? window.innerWidth <= 640 ? 1 
+                  : window.innerWidth <= 768 ? 2 
+                  : window.innerWidth <= 1100 ? 3 
+                  : window.innerWidth <= 1400 ? 4 : 5
+                  : 5
+                const columns: ActivityItem[][] = Array.from({ length: colCount }, () => [])
+                filteredActivities.forEach((item, i) => {
+                  columns[i % colCount].push(item)
+                })
+                return columns.map((col, colIdx) => (
+                  <div key={colIdx} className="masonry-column">
+                    {col.map((activity, rowIdx) => (
+                      <MasonryTile 
+                        key={activity.id} 
+                        activity={activity} 
+                        index={rowIdx * colCount + colIdx} 
+                        isDarkMode={isDarkMode}
+                        playingAudio={playingAudio}
+                        onAudioToggle={handleAudioToggle}
+                        onCardClick={(a) => {
+                          setSelectedActivity(a)
+                          setShowDetailModal(true)
+                        }}
+                      />
+                    ))}
+                  </div>
+                ))
+              })()}
             </div>
           )}
         </div>
@@ -2887,17 +2909,30 @@ export default function FeedPage() {
           overflow: hidden;
         }
 
-        .masonry-grid {
-          display: grid;
-          grid-template-columns: repeat(5, 1fr);
-          grid-auto-rows: auto;
+        .masonry-columns-wrapper {
+          display: flex;
           gap: 20px;
           width: 100%;
         }
 
+        .masonry-column {
+          flex: 1;
+          display: flex;
+          flex-direction: column;
+          gap: 20px;
+          min-width: 0;
+        }
+
         .card-wrapper {
           display: block;
-          min-height: 0;
+        }
+
+        /* Keep .masonry-grid for browse mode grids (people/places) */
+        .masonry-grid {
+          display: grid;
+          grid-template-columns: repeat(5, 1fr);
+          gap: 20px;
+          width: 100%;
         }
 
         .card {
@@ -3048,31 +3083,27 @@ export default function FeedPage() {
 
         /* Responsive Masonry Breakpoints */
         @media (max-width: 1400px) {
-          .masonry-grid {
-            grid-template-columns: repeat(4, 1fr);
-            gap: 18px;
-          }
+          .masonry-columns-wrapper, .masonry-grid { gap: 18px; }
+          .masonry-column { gap: 18px; }
+          .masonry-grid { grid-template-columns: repeat(4, 1fr); }
         }
 
         @media (max-width: 1100px) {
-          .masonry-grid {
-            grid-template-columns: repeat(3, 1fr);
-            gap: 16px;
-          }
+          .masonry-columns-wrapper, .masonry-grid { gap: 16px; }
+          .masonry-column { gap: 16px; }
+          .masonry-grid { grid-template-columns: repeat(3, 1fr); }
         }
 
         @media (max-width: 768px) {
-          .masonry-grid {
-            grid-template-columns: repeat(2, 1fr);
-            gap: 14px;
-          }
+          .masonry-columns-wrapper, .masonry-grid { gap: 14px; }
+          .masonry-column { gap: 14px; }
+          .masonry-grid { grid-template-columns: repeat(2, 1fr); }
         }
 
         @media (max-width: 640px) {
-          .masonry-grid {
-            grid-template-columns: 1fr;
-            gap: 12px;
-          }
+          .masonry-columns-wrapper, .masonry-grid { gap: 12px; }
+          .masonry-column { gap: 12px; }
+          .masonry-grid { grid-template-columns: 1fr; }
           
           /* All cards single column on mobile */
           .card-animation-layer,
