@@ -1632,7 +1632,7 @@ export default function FeedPage() {
     <div className="feed-page" data-theme={isDarkMode ? 'dark' : 'light'}>
       <div className="feed-header">
         <div className="header-content">
-          <div style={{ marginTop: '120px', marginBottom: '24px', display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between' }}>
+          <div style={{ marginTop: '60px', marginBottom: '80px', display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between' }}>
             {/* Profile Card */}
             <div className="profile-card-feed" style={{
               borderRadius: '16px',
