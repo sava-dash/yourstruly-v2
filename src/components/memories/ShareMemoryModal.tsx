@@ -9,6 +9,7 @@ interface ShareMemoryModalProps {
   onClose: () => void
   memoryId: string
   memoryTitle?: string
+  contentType?: 'memory' | 'wisdom'
 }
 
 interface Contact {
@@ -28,7 +29,8 @@ interface Share {
   created_at?: string
 }
 
-export default function ShareMemoryModal({ isOpen, onClose, memoryId, memoryTitle }: ShareMemoryModalProps) {
+export default function ShareMemoryModal({ isOpen, onClose, memoryId, memoryTitle, contentType = 'memory' }: ShareMemoryModalProps) {
+  const apiBase = contentType === 'wisdom' ? `/api/wisdom/${memoryId}` : `/api/memories/${memoryId}`
   const [searchQuery, setSearchQuery] = useState('')
   const [searchResults, setSearchResults] = useState<Contact[]>([])
   const [isSearching, setIsSearching] = useState(false)
@@ -52,7 +54,7 @@ export default function ShareMemoryModal({ isOpen, onClose, memoryId, memoryTitl
   const loadShares = async () => {
     setLoadingShares(true)
     try {
-      const res = await fetch(`/api/memories/${memoryId}/share`)
+      const res = await fetch(`${apiBase}/share`)
       if (res.ok) {
         const data = await res.json()
         setShares(data.shares || [])
@@ -107,7 +109,7 @@ export default function ShareMemoryModal({ isOpen, onClose, memoryId, memoryTitl
     setSuccessMessage(null)
     
     try {
-      const res = await fetch(`/api/memories/${memoryId}/share`, {
+      const res = await fetch(`${apiBase}/share`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -143,7 +145,7 @@ export default function ShareMemoryModal({ isOpen, onClose, memoryId, memoryTitl
 
   const handleRemoveShare = useCallback(async (contactId: string) => {
     try {
-      const res = await fetch(`/api/memories/${memoryId}/share?contact_id=${contactId}`, {
+      const res = await fetch(`${apiBase}/share?contact_id=${contactId}`, {
         method: 'DELETE',
       })
       if (res.ok) {

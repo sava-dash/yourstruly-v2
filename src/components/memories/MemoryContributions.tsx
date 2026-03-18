@@ -47,39 +47,36 @@ export default function MemoryContributions({ memoryId, contentType = 'memory', 
     async function fetchContributions() {
       setLoading(true)
       try {
+        // Use different table/columns for wisdom vs memory
+        const isWisdom = contentType === 'wisdom'
+        const tableName = isWisdom ? 'knowledge_comments' : 'memory_contributions'
+        const idColumn = isWisdom ? 'knowledge_id' : 'memory_id'
+        const selectFields = isWisdom
+          ? 'id, content, created_at, contact_name, contact:contacts(id, full_name:name)'
+          : 'id, contribution_type, content, media_url, created_at, contributor:profiles!user_id(id, full_name, avatar_url)'
+
         const { data, error } = await supabase
-          .from('memory_contributions')
-          .select(`
-            id,
-            contribution_type,
-            content,
-            media_url,
-            created_at,
-            contributor:profiles!user_id(
-              id,
-              full_name,
-              avatar_url
-            )
-          `)
-          .eq('memory_id', memoryId)
+          .from(tableName)
+          .select(selectFields)
+          .eq(idColumn, memoryId)
           .order('created_at', { ascending: false })
 
         if (error) {
           console.error('Error fetching contributions:', error)
           setContributions([])
         } else if (data) {
-          // Transform to our Contribution type
+          // Transform to our Contribution type (handle both memory and wisdom formats)
           const transformed: Contribution[] = data.map((c: any) => ({
             id: c.id,
             type: c.contribution_type || 'comment',
             content: c.content,
             media_url: c.media_url,
             user: {
-              id: c.contributor?.id || 'unknown',
-              full_name: c.contributor?.full_name || 'Anonymous',
+              id: c.contributor?.id || c.contact?.id || 'unknown',
+              full_name: c.contributor?.full_name || c.contact?.full_name || c.contact_name || 'Anonymous',
               avatar_url: c.contributor?.avatar_url,
             },
-            reactions: [], // TODO: Fetch reactions separately if needed
+            reactions: [],
             created_at: c.created_at,
           }))
           setContributions(transformed)

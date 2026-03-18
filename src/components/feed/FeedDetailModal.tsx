@@ -810,7 +810,7 @@ export function FeedDetailModal({ activity, isOpen, onClose, onUpdate }: FeedDet
             </div>
             <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
               {/* Favorite */}
-              {activity.metadata?.memoryId && (
+              {(activity.metadata?.memoryId || activity.metadata?.wisdomId) && (
                 <button
                   onClick={toggleFavorite}
                   style={{
@@ -828,7 +828,7 @@ export function FeedDetailModal({ activity, isOpen, onClose, onUpdate }: FeedDet
                 </button>
               )}
               {/* Share */}
-              {activity.metadata?.memoryId && (
+              {(activity.metadata?.memoryId || activity.metadata?.wisdomId) && (
                 <button
                   onClick={() => setShowShareModal(true)}
                   style={{
@@ -1578,10 +1578,10 @@ export function FeedDetailModal({ activity, isOpen, onClose, onUpdate }: FeedDet
               </div>
             )}
             {/* Contributions (Comments, Reactions, etc.) */}
-            {activity.metadata?.memoryId && (
+            {(activity.metadata?.memoryId || activity.metadata?.wisdomId) && (
               <div style={{ marginTop: '16px', borderTop: '1px solid #eee', paddingTop: '16px' }}>
                 <MemoryContributions 
-                  memoryId={activity.metadata.memoryId}
+                  memoryId={activity.metadata.wisdomId || activity.metadata.memoryId || ''}
                   contentType={activity.type.includes('wisdom') ? 'wisdom' : 'memory'}
                   onShare={() => setShowShareModal(true)}
                 />
@@ -1917,13 +1917,14 @@ export function FeedDetailModal({ activity, isOpen, onClose, onUpdate }: FeedDet
         </AnimatePresence>
       </motion.div>
 
-      {/* Share Memory Modal */}
-      {activity?.metadata?.memoryId && showShareModal && (
+      {/* Share Modal (works for both memories and wisdom) */}
+      {(activity?.metadata?.memoryId || activity?.metadata?.wisdomId) && showShareModal && (
         <ShareMemoryModal
           isOpen={showShareModal}
           onClose={() => setShowShareModal(false)}
-          memoryId={activity.metadata.memoryId}
+          memoryId={activity.metadata.wisdomId || activity.metadata.memoryId || ''}
           memoryTitle={activity.title}
+          contentType={activity.type.includes('wisdom') ? 'wisdom' : 'memory'}
         />
       )}
     </AnimatePresence>

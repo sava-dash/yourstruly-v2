@@ -1424,7 +1424,7 @@ export default function FeedPage() {
         const year = parseInt(closestBtn.textContent || '0')
         if (year && year !== activeTimelineYear) {
           setActiveTimelineYear(year)
-          scrollTilesToYear(year)
+          syncedScrollTilesToYear(year)
         }
       }
     }
@@ -1465,7 +1465,7 @@ export default function FeedPage() {
 
   const handleTimelineYearClick = (year: number) => {
     setActiveTimelineYear(year)
-    scrollTilesToYear(year)
+    syncedScrollTilesToYear(year)
     // Scroll the timeline so clicked year is at midpoint
     const el = timelineRef.current
     if (el) {
@@ -1479,6 +1479,62 @@ export default function FeedPage() {
       }
     }
   }
+
+  // Sync: when user scrolls main content, update timeline to match visible year
+  const scrollSyncRef = useRef(false) // prevent feedback loops
+  useEffect(() => {
+    const handleMainScroll = () => {
+      if (scrollSyncRef.current) return // skip if timeline initiated this scroll
+      if (!gridRef.current || !timelineRef.current) return
+      
+      const cards = gridRef.current.querySelectorAll('.card-wrapper[data-year]')
+      if (cards.length === 0) return
+      
+      // Find the card closest to top of viewport
+      const viewportTop = window.scrollY + 200 // offset for header
+      let closestCard: Element | null = null
+      let closestDist = Infinity
+      for (const card of Array.from(cards)) {
+        const rect = card.getBoundingClientRect()
+        const dist = Math.abs(rect.top - 200)
+        if (dist < closestDist) {
+          closestDist = dist
+          closestCard = card
+        }
+      }
+      
+      if (closestCard) {
+        const year = parseInt(closestCard.getAttribute('data-year') || '0')
+        if (year && year !== activeTimelineYear) {
+          setActiveTimelineYear(year)
+          // Scroll timeline to this year
+          const el = timelineRef.current
+          if (el) {
+            const btn = el.querySelector(`.timeline-year-btn[data-year="${year}"]`) as HTMLElement
+            if (btn) {
+              const containerHeight = el.clientHeight
+              el.scrollTo({
+                top: btn.offsetTop - containerHeight / 2 + btn.offsetHeight / 2,
+                behavior: 'smooth'
+              })
+            }
+          }
+        }
+      }
+    }
+    
+    window.addEventListener('scroll', handleMainScroll, { passive: true })
+    return () => window.removeEventListener('scroll', handleMainScroll)
+  }, [activeTimelineYear])
+
+  // Prevent feedback loop: when scrollTilesToYear is called from timeline, skip main scroll handler
+  const originalScrollTilesToYear = scrollTilesToYear
+  const syncedScrollTilesToYear = useCallback((year: number) => {
+    scrollSyncRef.current = true
+    originalScrollTilesToYear(year)
+    // Reset after scroll animation completes
+    setTimeout(() => { scrollSyncRef.current = false }, 1000)
+  }, [originalScrollTilesToYear])
 
   // Check if we're in a browse mode (people/places tiles shown)
   const isInBrowseMode = (reminisceMode === 'people' && !browsedPersonId) || (reminisceMode === 'places' && !browsedPlace)
@@ -2009,8 +2065,8 @@ export default function FeedPage() {
                 const colCount = typeof window !== 'undefined' 
                   ? window.innerWidth <= 640 ? 1 
                   : window.innerWidth <= 768 ? 2 
-                  : window.innerWidth <= 1100 ? 3 
-                  : window.innerWidth <= 1400 ? 4 : 5
+                  : window.innerWidth <= 1024 ? 3 
+                  : window.innerWidth <= 1280 ? 4 : 5
                   : 5
                 const columns: { items: ActivityItem[]; height: number }[] = 
                   Array.from({ length: colCount }, () => ({ items: [], height: 0 }))
@@ -3252,13 +3308,13 @@ export default function FeedPage() {
         }
 
         /* Responsive Masonry Breakpoints */
-        @media (max-width: 1400px) {
+        @media (max-width: 1280px) {
           .masonry-columns-wrapper, .masonry-grid { gap: 18px; }
           .masonry-column { gap: 18px; }
           .masonry-grid { grid-template-columns: repeat(4, 1fr); }
         }
 
-        @media (max-width: 1100px) {
+        @media (max-width: 1024px) {
           .masonry-columns-wrapper, .masonry-grid { gap: 16px; }
           .masonry-column { gap: 16px; }
           .masonry-grid { grid-template-columns: repeat(3, 1fr); }
