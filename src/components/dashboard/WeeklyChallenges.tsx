@@ -39,73 +39,63 @@ export default function WeeklyChallenges() {
   if (challenges.length === 0) return null
 
   return (
-    <div style={{ marginBottom: '24px' }}>
-      <div style={{
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'space-between',
-        marginBottom: '12px',
-      }}>
-        <h3 style={{ fontSize: '16px', fontWeight: '700', margin: 0 }}>
-          🎯 This Week&apos;s Goals
-        </h3>
-        <span style={{ fontSize: '11px', color: '#888' }}>Resets Monday</span>
+    <div style={{ marginBottom: '16px' }}>
+      <div style={{ fontSize: '13px', fontWeight: '700', color: '#333', marginBottom: '10px' }}>
+        Weekly Challenges
       </div>
 
       <div style={{
-        display: 'grid',
-        gridTemplateColumns: 'repeat(3, 1fr)',
-        gap: '10px',
+        background: '#fff',
+        border: '1px solid #eee',
+        borderRadius: '12px',
+        overflow: 'hidden',
       }}>
-        {challenges.map((c) => {
+        {challenges.map((c, i) => {
           const progress = Math.min((c.current_count / c.target_count) * 100, 100)
-          const progressColor = c.completed ? '#406A56' : progress > 50 ? '#D9C61A' : '#C35F33'
 
           return (
             <div
               key={c.id}
               style={{
-                background: c.completed ? '#406A5610' : '#fff',
-                border: `1px solid ${c.completed ? '#406A5630' : '#eee'}`,
-                borderRadius: '12px',
-                padding: '12px',
+                padding: '12px 14px',
                 display: 'flex',
-                flexDirection: 'column',
-                gap: '8px',
-                position: 'relative',
-                overflow: 'hidden',
+                alignItems: 'center',
+                gap: '12px',
+                borderBottom: i < challenges.length - 1 ? '1px solid #f0f0f0' : 'none',
+                opacity: c.completed ? 0.6 : 1,
               }}
             >
-              {c.completed && (
-                <div style={{
-                  position: 'absolute',
-                  top: '8px',
-                  right: '8px',
-                  width: '20px',
-                  height: '20px',
-                  borderRadius: '50%',
-                  background: '#406A56',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                }}>
-                  <Check size={12} color="#fff" />
-                </div>
-              )}
-
-              <div style={{ fontSize: '20px' }}>{c.challenge_emoji}</div>
-
+              {/* Completion check or emoji */}
               <div style={{
-                fontSize: '12px',
-                fontWeight: '600',
-                color: '#333',
-                lineHeight: '1.3',
+                width: '28px',
+                height: '28px',
+                borderRadius: '50%',
+                background: c.completed ? '#406A56' : '#f5f5f5',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                flexShrink: 0,
               }}>
-                {c.challenge_label}
+                {c.completed ? (
+                  <Check size={14} color="#fff" />
+                ) : (
+                  <span style={{ fontSize: '14px' }}>{c.challenge_emoji}</span>
+                )}
               </div>
 
-              {/* Progress bar */}
-              <div>
+              {/* Label + progress */}
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <div style={{
+                  fontSize: '12px',
+                  fontWeight: '600',
+                  color: c.completed ? '#888' : '#333',
+                  marginBottom: '6px',
+                  textDecoration: c.completed ? 'line-through' : 'none',
+                }}>
+                  {c.challenge_label}
+                </div>
+
+                {/* Progress bar — same style as storage/data usage bar */}
                 <div style={{
                   height: '4px',
                   background: '#eee',
@@ -115,23 +105,27 @@ export default function WeeklyChallenges() {
                   <div style={{
                     height: '100%',
                     width: `${progress}%`,
-                    background: progressColor,
+                    background: c.completed ? '#406A56' : '#D9C61A',
                     borderRadius: '2px',
                     transition: 'width 0.5s ease',
                   }} />
                 </div>
-                <div style={{
-                  display: 'flex',
-                  justifyContent: 'space-between',
-                  marginTop: '4px',
-                  fontSize: '10px',
-                  color: '#888',
-                }}>
-                  <span>{c.current_count}/{c.target_count}</span>
-                  <span style={{ color: c.completed ? '#406A56' : '#D9C61A', fontWeight: '600' }}>
-                    {c.completed ? '✅ Done!' : `⚡${c.xp_reward} XP`}
-                  </span>
-                </div>
+              </div>
+
+              {/* Count + XP */}
+              <div style={{
+                display: 'flex',
+                flexDirection: 'column',
+                alignItems: 'flex-end',
+                gap: '2px',
+                flexShrink: 0,
+              }}>
+                <span style={{ fontSize: '11px', fontWeight: '600', color: '#888' }}>
+                  {c.current_count}/{c.target_count}
+                </span>
+                <span style={{ fontSize: '10px', fontWeight: '600', color: c.completed ? '#406A56' : '#D9C61A' }}>
+                  {c.completed ? '✓ Done' : `⚡${c.xp_reward} XP`}
+                </span>
               </div>
             </div>
           )
