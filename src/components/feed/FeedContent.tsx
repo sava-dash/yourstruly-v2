@@ -1,5 +1,6 @@
 'use client'
 
+import '@/styles/feed.css'
 import { useState, useEffect, useRef, useCallback } from 'react'
 import { MapPin, Users, Calendar, Search, Map as MapIcon, Plus, Mic, Video, Upload, Image as ImageIcon, MessageSquare, Gift, Sparkles, BookOpen, Brain, Heart, Camera, Clock, Play, ChevronDown, X, ArrowLeft } from 'lucide-react'
 import Link from 'next/link'
@@ -1308,7 +1309,7 @@ export default function FeedContent() {
   const hasActiveReminisceFilter = !!(reminisceMode === 'people' || reminisceMode === 'places' || selectedMood || selectedReminisceCategory)
 
   return (
-    <>
+    <div className="feed-page" data-theme="light">
       {/* Header Controls */}
       <div className="feed-header-controls">
         <div className="header-controls">
@@ -2120,6 +2121,6 @@ export default function FeedContent() {
           </motion.div>
         )}
       </AnimatePresence>
-    </>
+    </div>
   )
 }

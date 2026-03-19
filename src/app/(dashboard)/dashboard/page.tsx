@@ -12,6 +12,7 @@ import Link from 'next/link'
 import '@/styles/home.css'
 import '@/styles/engagement.css'
 import '@/styles/conversation.css'
+import '@/styles/feed.css'
 
 import type { XpLevelConfig } from '@/lib/gamification-config'
 
@@ -255,13 +256,12 @@ export default function DashboardPage() {
   const storagePercentage = subscription?.storage?.percentage || 0
 
   return (
-    <div className="feed-page">
+    <div className="feed-page" data-theme="light">
       <div style={{
         display: 'flex',
-        gap: '24px',
-        padding: '80px 24px 24px',
         maxWidth: '1800px',
         margin: '0 auto',
+        padding: '80px 24px 24px',
       }}>
         {/* Left Sidebar */}
         <aside
@@ -269,13 +269,15 @@ export default function DashboardPage() {
           style={{
             width: '320px',
             flexShrink: 0,
-            flexDirection: 'column',
-            gap: '16px',
             position: 'sticky',
             top: '80px',
-            height: 'fit-content',
+            alignSelf: 'flex-start',
             maxHeight: 'calc(100vh - 100px)',
             overflowY: 'auto',
+            display: 'flex',
+            flexDirection: 'column',
+            gap: '16px',
+            paddingRight: '8px',
           }}
         >
           {/* Profile Card - dark themed matching feed */}
@@ -400,7 +402,7 @@ export default function DashboardPage() {
         </aside>
 
         {/* Main Content - Feed */}
-        <main style={{ flex: 1, minWidth: 0 }}>
+        <main style={{ flex: 1, minWidth: 0, marginLeft: '24px' }}>
           <FeedContent />
         </main>
       </div>
