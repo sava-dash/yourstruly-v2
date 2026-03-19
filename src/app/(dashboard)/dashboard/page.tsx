@@ -256,31 +256,34 @@ export default function DashboardPage() {
   const storagePercentage = subscription?.storage?.percentage || 0
 
   return (
-    <div className="feed-page" data-theme="light">
+    <div style={{ minHeight: '100vh', paddingTop: '56px', background: '#F8FAFC' }}>
       <div style={{
         display: 'flex',
         maxWidth: '1800px',
         margin: '0 auto',
-        padding: '80px 24px 24px',
+        padding: '16px 24px 24px',
       }}>
         {/* Left Sidebar */}
         <aside
-          className="hidden lg:flex"
           style={{
-            width: '320px',
+            width: '300px',
             flexShrink: 0,
             position: 'sticky',
-            top: '80px',
+            top: '72px',
             alignSelf: 'flex-start',
-            maxHeight: 'calc(100vh - 100px)',
+            maxHeight: 'calc(100vh - 88px)',
             overflowY: 'auto',
+            overflowX: 'hidden',
             display: 'flex',
             flexDirection: 'column',
-            gap: '16px',
+            gap: '12px',
             paddingRight: '8px',
+            scrollbarWidth: 'thin',
+            scrollbarColor: '#ddd transparent',
           }}
         >
-          {/* Profile Card - dark themed matching feed */}
+          {/* Profile Card - light themed matching feed */}
+          <div className="feed-page" data-theme="light" style={{ borderRadius: '16px' }}>
           <div className="profile-card-feed" style={{
             borderRadius: '16px',
             padding: '16px 20px',
@@ -382,6 +385,7 @@ export default function DashboardPage() {
               </div>
             </div>
           </div>
+          </div>
 
           {/* Weekly Challenges */}
           <WeeklyChallenges />
@@ -402,7 +406,7 @@ export default function DashboardPage() {
         </aside>
 
         {/* Main Content - Feed */}
-        <main style={{ flex: 1, minWidth: 0, marginLeft: '24px' }}>
+        <main style={{ flex: 1, minWidth: 0, marginLeft: '16px' }}>
           <FeedContent />
         </main>
       </div>
