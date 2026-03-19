@@ -13,6 +13,10 @@ import { useSubscription } from '@/hooks/useSubscription'
 import '@/styles/home.css'
 import '@/styles/engagement.css'
 import '@/styles/conversation.css'
+import dynamic from 'next/dynamic'
+
+const WeeklyChallenges = dynamic(() => import('@/components/dashboard/WeeklyChallenges'), { ssr: false })
+const MonthlyRecap = dynamic(() => import('@/components/dashboard/MonthlyRecap'), { ssr: false })
 
 // Local imports
 import { 
@@ -330,6 +334,10 @@ export default function DashboardPage() {
                 </div>
               )}
             </div>
+
+            {/* Gamification */}
+            <WeeklyChallenges />
+            <MonthlyRecap />
           </div>
         </main>
 

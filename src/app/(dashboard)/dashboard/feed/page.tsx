@@ -12,6 +12,7 @@ import { InlineAudioPlayer } from '@/components/feed/InlineAudioPlayer'
 import { FeedDetailModal } from '@/components/feed/FeedDetailModal'
 
 const FeedMap = dynamic(() => import('@/components/feed/FeedMap'), { ssr: false })
+const BadgeDisplay = dynamic(() => import('@/components/dashboard/BadgeDisplay'), { ssr: false })
 
 interface ActivityItem {
   id: string
@@ -1805,6 +1806,9 @@ export default function FeedPage() {
                   </div>
                 )
               })()}
+
+              {/* Badges */}
+              <BadgeDisplay />
 
               {/* Storage Bar */}
               <div className="profile-storage">
