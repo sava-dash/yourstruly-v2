@@ -310,6 +310,10 @@ export default function DashboardPage() {
 
         <main className="home-main">
           <div className="engagement-column">
+            <LifeChapterFilter
+              selectedChapter={selectedChapter}
+              onSelectChapter={setSelectedChapter}
+            />
             <div className="home-bubbles">
               {isLoading ? (
                 <div className="flex flex-col items-center justify-center h-[500px] gap-4">
@@ -340,10 +344,6 @@ export default function DashboardPage() {
         {/* Right sidebar: same level as left sidebar in home-layout */}
         <aside className="home-right-sidebar">
           <MonthlyRecap />
-          <LifeChapterFilter
-            selectedChapter={selectedChapter}
-            onSelectChapter={setSelectedChapter}
-          />
           <QuickActions
             onShuffle={handleShuffle}
             onPhotoUpload={() => setShowPhotoUpload(true)}
