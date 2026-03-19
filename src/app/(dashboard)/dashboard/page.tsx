@@ -325,7 +325,6 @@ export default function DashboardPage() {
           completedTiles={completedTiles}
           currentStreakDays={engagementStats?.currentStreakDays ?? 0}
           subscription={subscription}
-          onShuffle={handleShuffle}
           onPhotoUpload={() => setShowPhotoUpload(true)}
           onPostscript={() => setShowPostscriptModal(true)}
           onAddContact={() => setShowContactModal(true)}

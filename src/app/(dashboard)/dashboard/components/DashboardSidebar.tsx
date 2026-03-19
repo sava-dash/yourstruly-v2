@@ -18,7 +18,6 @@ interface DashboardSidebarProps {
   completedTiles: CompletedTile[]
   currentStreakDays: number
   subscription: any
-  onShuffle?: () => void
   onPhotoUpload?: () => void
   onPostscript?: () => void
   onAddContact?: () => void
@@ -33,7 +32,6 @@ export function DashboardSidebar({
   completedTiles,
   currentStreakDays,
   subscription,
-  onShuffle,
   onPhotoUpload,
   onPostscript,
   onAddContact,
@@ -111,11 +109,10 @@ export function DashboardSidebar({
       <WeeklyChallenges />
 
       {/* Quick Actions */}
-      {onShuffle && (
+      {onPhotoUpload && (
         <div className="sidebar-section">
           <QuickActions
-            onShuffle={onShuffle}
-            onPhotoUpload={onPhotoUpload!}
+            onPhotoUpload={onPhotoUpload}
             onPostscript={onPostscript!}
             onAddContact={onAddContact!}
             onQuickMemory={onQuickMemory!}

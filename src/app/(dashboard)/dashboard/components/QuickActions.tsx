@@ -1,9 +1,8 @@
 'use client'
 
-import { RefreshCw, Image, FileText, UserPlus, Mic } from 'lucide-react'
+import { Image, FileText, UserPlus, Mic } from 'lucide-react'
 
 interface QuickActionsProps {
-  onShuffle: () => void
   onPhotoUpload: () => void
   onPostscript: () => void
   onAddContact: () => void
@@ -11,18 +10,18 @@ interface QuickActionsProps {
 }
 
 export function QuickActions({
-  onShuffle,
   onPhotoUpload,
   onPostscript,
   onAddContact,
   onQuickMemory,
 }: QuickActionsProps) {
   return (
-    <div className="quick-actions">
-      <button onClick={onShuffle} className="quick-action-btn">
-        <div className="quick-action-icon"><RefreshCw size={18} /></div>
-        <span>Shuffle</span>
-      </button>
+    <div style={{
+      display: 'grid',
+      gridTemplateColumns: '1fr 1fr',
+      gap: '8px',
+      width: '100%',
+    }}>
       <button onClick={onPhotoUpload} className="quick-action-btn">
         <div className="quick-action-icon"><Image size={18} /></div>
         <span>Add Photos</span>
