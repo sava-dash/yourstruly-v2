@@ -314,6 +314,7 @@ export default function DashboardPage() {
               <LifeChapterFilter
                 selectedChapter={selectedChapter}
                 onSelectChapter={setSelectedChapter}
+                educationLevel={profile?.education_level}
               />
             </div>
             <div className="home-bubbles">

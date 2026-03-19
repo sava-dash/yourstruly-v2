@@ -51,7 +51,7 @@ export const TILE_POSITIONS = [
 export const LIFE_CHAPTERS = [
   { id: 'childhood', label: 'Childhood', color: '#60A5FA' },
   { id: 'teenage', label: 'Teenage', color: '#F5A524' },
-  { id: 'high_school', label: 'High School', color: '#7828C8' },
+  { id: 'high_school', label: 'School', color: '#7828C8' },
   { id: 'college', label: 'College', color: '#F31260' },
   { id: 'jobs_career', label: 'Career', color: '#006FEE' },
   { id: 'relationships', label: 'Relationships', color: '#C084FC' },
