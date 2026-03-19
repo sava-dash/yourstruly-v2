@@ -154,8 +154,8 @@
     0 12px 32px rgba(0, 0, 0, 0.06);
   transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
   /* Wider tiles to fit more text */
-  width: 280px;
-  min-height: 180px;
+  width: 322px;
+  min-height: 207px;
   flex-shrink: 0;
 }
 
@@ -168,7 +168,7 @@
 }
 
 .bubble-card.expanded {
-  width: 320px;
+  width: 368px;
   z-index: 20;
   position: relative;
 }
