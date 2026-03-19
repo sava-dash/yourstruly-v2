@@ -1,8 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { createBrowserClient } from '@supabase/ssr'
-import { Check, Loader2 } from 'lucide-react'
+import { Check } from 'lucide-react'
 
 interface Challenge {
   id: string
@@ -48,7 +47,7 @@ export default function WeeklyChallenges() {
         marginBottom: '12px',
       }}>
         <h3 style={{ fontSize: '16px', fontWeight: '700', margin: 0 }}>
-          🎯 Weekly Challenges
+          🎯 This Week&apos;s Goals
         </h3>
         <span style={{ fontSize: '11px', color: '#888' }}>Resets Monday</span>
       </div>
@@ -129,8 +128,8 @@ export default function WeeklyChallenges() {
                   color: '#888',
                 }}>
                   <span>{c.current_count}/{c.target_count}</span>
-                  <span style={{ color: '#D9C61A', fontWeight: '600' }}>
-                    {c.completed ? '✅ Claimed!' : `⚡${c.xp_reward} XP`}
+                  <span style={{ color: c.completed ? '#406A56' : '#D9C61A', fontWeight: '600' }}>
+                    {c.completed ? '✅ Done!' : `⚡${c.xp_reward} XP`}
                   </span>
                 </div>
               </div>

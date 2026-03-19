@@ -1,3 +1,17 @@
+-- Site Config (stores admin-editable JSON config)
+CREATE TABLE IF NOT EXISTS site_config (
+  key text PRIMARY KEY,
+  value jsonb NOT NULL DEFAULT '{}',
+  updated_at timestamptz DEFAULT now(),
+  updated_by uuid REFERENCES auth.users
+);
+
+ALTER TABLE site_config ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "Anyone can read site config" ON site_config FOR SELECT USING (true);
+CREATE POLICY "Admins can update site config" ON site_config FOR ALL USING (
+  EXISTS (SELECT 1 FROM profiles WHERE id = auth.uid() AND role = 'admin')
+);
+
 -- Weekly Challenges
 CREATE TABLE IF NOT EXISTS weekly_challenges (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),

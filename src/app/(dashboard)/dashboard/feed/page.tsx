@@ -39,25 +39,16 @@ interface ActivityItem {
   }
 }
 
-// XP Level System
-const XP_LEVELS = [
-  { level: 1, title: 'Newcomer', minXp: 0, emoji: '🌱' },
-  { level: 2, title: 'Memory Keeper', minXp: 100, emoji: '📝' },
-  { level: 3, title: 'Storyteller', minXp: 300, emoji: '📖' },
-  { level: 4, title: 'Chronicler', minXp: 600, emoji: '🏛️' },
-  { level: 5, title: 'Legacy Builder', minXp: 1000, emoji: '⭐' },
-  { level: 6, title: 'Time Weaver', minXp: 1500, emoji: '🕰️' },
-  { level: 7, title: 'Memory Master', minXp: 2500, emoji: '👑' },
-  { level: 8, title: 'Living Legend', minXp: 4000, emoji: '🌟' },
-]
+import { useGamificationConfig } from '@/hooks/useGamificationConfig'
+import type { XpLevelConfig } from '@/lib/gamification-config'
 
-function getXpLevel(xp: number) {
-  let current = XP_LEVELS[0]
-  for (const lvl of XP_LEVELS) {
+function getXpLevel(xp: number, levels: XpLevelConfig[]) {
+  let current = levels[0]
+  for (const lvl of levels) {
     if (xp >= lvl.minXp) current = lvl
     else break
   }
-  const nextLevel = XP_LEVELS.find(l => l.minXp > xp)
+  const nextLevel = levels.find(l => l.minXp > xp)
   const progress = nextLevel
     ? ((xp - current.minXp) / (nextLevel.minXp - current.minXp)) * 100
     : 100
@@ -485,6 +476,7 @@ export default function FeedPage() {
   const [openSubmenu, setOpenSubmenu] = useState<CategoryFilter | null>(null)
   const [searchQuery, setSearchQuery] = useState('')
   const [isDarkMode, setIsDarkMode] = useState(true)
+  const { config: gamificationConfig } = useGamificationConfig()
   const [userFirstName, setUserFirstName] = useState<string>('')
   const [profileStats, setProfileStats] = useState({ memories: 0, contacts: 0, photos: 0, xp: 0 })
   const [storageInfo, setStorageInfo] = useState({ used: 0, limit: 10, percentage: 0 })
@@ -1781,7 +1773,7 @@ export default function FeedPage() {
 
               {/* XP Level + Progress */}
               {(() => {
-                const lvl = getXpLevel(profileStats.xp)
+                const lvl = getXpLevel(profileStats.xp, gamificationConfig.xpLevels)
                 return (
                   <div style={{ marginBottom: '12px' }}>
                     <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '4px' }}>

@@ -1,15 +1,19 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
+import { DEFAULT_CONFIG, mergeConfig, type GamificationConfig } from '@/lib/gamification-config'
 
-const CHALLENGE_TEMPLATES = [
-  { type: 'add_memories', label: 'Create {n} memories', emoji: '📝', targets: [2, 3, 5] },
-  { type: 'add_photos', label: 'Upload {n} photos', emoji: '📸', targets: [3, 5, 10] },
-  { type: 'record_voice', label: 'Record {n} voice memory', emoji: '🎙️', targets: [1, 2, 3] },
-  { type: 'tag_faces', label: 'Tag {n} faces in photos', emoji: '👤', targets: [3, 5, 8] },
-  { type: 'add_wisdom', label: 'Add {n} wisdom entries', emoji: '💡', targets: [1, 2, 3] },
-  { type: 'complete_prompts', label: 'Answer {n} prompts', emoji: '💬', targets: [2, 3, 5] },
-  { type: 'enrich_memories', label: 'Add location to {n} memories', emoji: '📍', targets: [2, 3, 5] },
-]
+async function getConfig(supabase: any): Promise<GamificationConfig> {
+  try {
+    const { data } = await supabase
+      .from('site_config')
+      .select('value')
+      .eq('key', 'gamification')
+      .single()
+    return mergeConfig(data?.value || null)
+  } catch {
+    return DEFAULT_CONFIG
+  }
+}
 
 function getWeekStart() {
   const now = new Date()
@@ -42,7 +46,8 @@ export async function GET() {
 
   // Auto-generate if none exist
   if (!challenges || challenges.length === 0) {
-    const picked = pickRandom(CHALLENGE_TEMPLATES, 3)
+    const config = await getConfig(supabase)
+    const picked = pickRandom(config.challengeTemplates, 3)
     const newChallenges = picked.map(t => {
       const target = t.targets[Math.floor(Math.random() * t.targets.length)]
       return {

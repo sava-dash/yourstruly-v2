@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { BADGE_DEFINITIONS } from '../route'
+import { DEFAULT_CONFIG, mergeConfig } from '@/lib/gamification-config'
 
 export async function POST() {
   const supabase = await createClient()

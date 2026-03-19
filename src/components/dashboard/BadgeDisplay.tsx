@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { Lock } from 'lucide-react'
+import { useGamificationConfig } from '@/hooks/useGamificationConfig'
 
 interface Badge {
   badge_type: string
@@ -10,16 +11,9 @@ interface Badge {
   earned_at?: string
 }
 
-interface BadgeDef {
-  type: string
-  name: string
-  emoji: string
-  description: string
-}
-
 export default function BadgeDisplay() {
+  const { config } = useGamificationConfig()
   const [earned, setEarned] = useState<Badge[]>([])
-  const [allBadges, setAllBadges] = useState<BadgeDef[]>([])
   const [newlyEarned, setNewlyEarned] = useState<string[]>([])
   const [selectedBadge, setSelectedBadge] = useState<string | null>(null)
 
@@ -29,27 +23,24 @@ export default function BadgeDisplay() {
 
   const checkBadges = async () => {
     try {
-      // Check for new badges
       const checkRes = await fetch('/api/badges/check', { method: 'POST' })
       if (checkRes.ok) {
         const data = await checkRes.json()
         setEarned(data.earned || [])
-        setAllBadges(data.all || [])
         setNewlyEarned(data.newlyEarned || [])
       }
-    } catch (err) {
-      // Fallback: just fetch existing
+    } catch {
       try {
         const res = await fetch('/api/badges')
         if (res.ok) {
           const data = await res.json()
           setEarned(data.earned || [])
-          setAllBadges(data.all || [])
         }
       } catch {}
     }
   }
 
+  const allBadges = config.badges
   if (allBadges.length === 0) return null
 
   const earnedTypes = new Set(earned.map(b => b.badge_type))
@@ -103,17 +94,10 @@ export default function BadgeDisplay() {
             >
               <div style={{ fontSize: '20px', position: 'relative' }}>
                 {isEarned ? def.emoji : (
-                  <span style={{ filter: 'grayscale(1)' }}>
-                    {def.emoji}
-                  </span>
+                  <span style={{ filter: 'grayscale(1)' }}>{def.emoji}</span>
                 )}
                 {!isEarned && (
-                  <Lock size={8} style={{
-                    position: 'absolute',
-                    bottom: -2,
-                    right: -4,
-                    color: '#aaa',
-                  }} />
+                  <Lock size={8} style={{ position: 'absolute', bottom: -2, right: -4, color: '#aaa' }} />
                 )}
               </div>
               <div style={{
@@ -130,7 +114,6 @@ export default function BadgeDisplay() {
                 {def.name}
               </div>
 
-              {/* Tooltip on click */}
               {isSelected && (
                 <div style={{
                   position: 'absolute',
@@ -146,9 +129,10 @@ export default function BadgeDisplay() {
                   zIndex: 20,
                   marginBottom: '4px',
                   boxShadow: '0 2px 8px rgba(0,0,0,0.2)',
+                  maxWidth: '200px',
                 }}>
                   {isEarned
-                    ? `Earned ${badge?.earned_at ? new Date(badge.earned_at).toLocaleDateString() : ''}`
+                    ? (def.congratsMessage || `Earned ${badge?.earned_at ? new Date(badge.earned_at).toLocaleDateString() : ''}`)
                     : def.description
                   }
                 </div>
