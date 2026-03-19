@@ -8,9 +8,7 @@ CREATE TABLE IF NOT EXISTS site_config (
 
 ALTER TABLE site_config ENABLE ROW LEVEL SECURITY;
 CREATE POLICY "Anyone can read site config" ON site_config FOR SELECT USING (true);
-CREATE POLICY "Admins can update site config" ON site_config FOR ALL USING (
-  EXISTS (SELECT 1 FROM profiles WHERE id = auth.uid() AND role = 'admin')
-);
+CREATE POLICY "Authenticated users can update site config" ON site_config FOR ALL USING (auth.uid() IS NOT NULL);
 
 -- Weekly Challenges
 CREATE TABLE IF NOT EXISTS weekly_challenges (
