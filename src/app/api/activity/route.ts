@@ -576,7 +576,8 @@ export async function GET(request: NextRequest) {
         description: `You answered for ${sessionTitle}`,
         timestamp: response.created_at,
         link: `/dashboard/interviews/${response.session_id}`,
-        thumbnail: response.thumbnail_url || response.video_url,
+        thumbnail: (response.thumbnail_url?.startsWith('http') ? response.thumbnail_url : null) 
+          || (response.video_url?.startsWith('http') ? response.video_url : null),
         audio_url: isValidAudioUrl(response.audio_url) || isValidAudioUrl(response.video_url),
         metadata: { 
           responseId: response.id,

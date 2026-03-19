@@ -867,9 +867,13 @@ export default function FeedPage() {
         console.log('[Feed] API returned', data.activities?.length, 'activities, total:', data.total)
         const debugYears = [...new Set((data.activities || []).map((a: any) => new Date(a.timestamp).getFullYear()))].sort((a, b) => (b as number) - (a as number))
         console.log('[Feed] Years in data:', debugYears)
-        const filtered = (data.activities || []).filter((a: ActivityItem) => 
-          a.type !== 'xp_earned'
-        )
+        const filtered = (data.activities || [])
+          .filter((a: ActivityItem) => a.type !== 'xp_earned')
+          .map((a: ActivityItem) => ({
+            ...a,
+            // Sanitize non-URL thumbnails (e.g. "conversation", "text-only")
+            thumbnail: a.thumbnail?.startsWith('http') ? a.thumbnail : undefined,
+          }))
         setActivities(filtered)
       }
     } catch (err) {
