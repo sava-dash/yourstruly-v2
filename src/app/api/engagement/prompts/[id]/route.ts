@@ -128,6 +128,18 @@ export async function POST(
     const hasContent = !!(body.responseText || body.responseAudioUrl);
     
     console.log('shouldCreateMemory:', shouldCreateMemory, 'shouldCreateKnowledge:', shouldCreateKnowledge, 'hasContent:', hasContent);
+
+    // Fetch photo metadata for photo_backstory prompts (to inherit date/location)
+    let photoMeta: any = null;
+    if (prompt.type === 'photo_backstory' && prompt.photo_id) {
+      const { data: mediaData } = await supabase
+        .from('memory_media')
+        .select('taken_at, location_name, location_lat, location_lng')
+        .eq('id', prompt.photo_id)
+        .single();
+      photoMeta = mediaData;
+      console.log('Photo metadata for backstory:', photoMeta);
+    }
     
     // === KNOWLEDGE ENTRY CREATION (wisdom prompts - separate from memories) ===
     if (shouldCreateKnowledge && hasContent) {
@@ -223,7 +235,10 @@ export async function POST(
           description: memoryDescription || '🎤 Voice memory recorded',
           audio_url: body.responseAudioUrl || null,
           video_url: body.responseVideoUrl || null,
-          memory_date: new Date().toISOString(),
+          memory_date: photoMeta?.taken_at || new Date().toISOString(),
+          location_name: photoMeta?.location_name || null,
+          location_lat: photoMeta?.location_lat || null,
+          location_lng: photoMeta?.location_lng || null,
           tags,
         })
         .select()

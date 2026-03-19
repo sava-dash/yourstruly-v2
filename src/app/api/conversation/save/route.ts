@@ -20,7 +20,8 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json();
-    const { promptId, promptType, exchanges, summary, expectedXp, photoId } = body;
+    const { promptId, promptType, exchanges, summary, expectedXp, photoId,
+      location_name, location_lat, location_lng, memory_date } = body;
 
     if (!exchanges || !Array.isArray(exchanges) || exchanges.length === 0) {
       return NextResponse.json({ error: 'No exchanges provided' }, { status: 400 });
@@ -62,6 +63,37 @@ export async function POST(request: NextRequest) {
       wisdomCategory = await detectWisdomCategory(exchanges, summary);
     }
 
+    // Fetch photo metadata for photo_backstory prompts (inherit date/location from EXIF)
+    let photoMeta: any = null;
+    const resolvedPhotoId = photoId || null;
+    if (promptType === 'photo_backstory') {
+      // Try photoId from body first, then from the prompt record
+      let lookupPhotoId = resolvedPhotoId;
+      if (!lookupPhotoId && promptId) {
+        const { data: promptData2 } = await supabase
+          .from('engagement_prompts')
+          .select('photo_id')
+          .eq('id', promptId)
+          .single();
+        lookupPhotoId = promptData2?.photo_id || null;
+      }
+      if (lookupPhotoId) {
+        const { data: mediaData } = await supabase
+          .from('memory_media')
+          .select('taken_at, location_name, location_lat, location_lng')
+          .eq('id', lookupPhotoId)
+          .single();
+        photoMeta = mediaData;
+        console.log('Photo metadata for conversation save:', photoMeta);
+      }
+    }
+
+    // Resolve location/date: prefer explicit body params > photo metadata > defaults
+    const resolvedDate = memory_date || photoMeta?.taken_at || new Date().toISOString().split('T')[0];
+    const resolvedLocationName = location_name || photoMeta?.location_name || null;
+    const resolvedLocationLat = location_lat || photoMeta?.location_lat || null;
+    const resolvedLocationLng = location_lng || photoMeta?.location_lng || null;
+
     // Create memory record - use existing columns
     const { data: memory, error: memoryError } = await supabase
       .from('memories')
@@ -74,7 +106,10 @@ export async function POST(request: NextRequest) {
         ai_category: wisdomCategory || aiCategory, // Use wisdom category if detected, else general category
         audio_url: primaryAudioUrl,
         tags: wisdomCategory ? [...tags, wisdomCategory] : tags,
-        memory_date: new Date().toISOString().split('T')[0],
+        memory_date: resolvedDate,
+        location_name: resolvedLocationName,
+        location_lat: resolvedLocationLat,
+        location_lng: resolvedLocationLng,
       })
       .select()
       .single();
