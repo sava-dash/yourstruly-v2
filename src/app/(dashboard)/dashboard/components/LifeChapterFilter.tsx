@@ -34,7 +34,7 @@ export function LifeChapterFilter({ selectedChapter, onSelectChapter }: LifeChap
   }, [])
 
   return (
-    <div ref={dropdownRef} className="relative">
+    <div ref={dropdownRef} className="relative" style={{ display: 'inline-flex', justifyContent: 'center' }}>
       {/* Trigger button */}
       <button
         onClick={() => setIsOpen(!isOpen)}
@@ -61,7 +61,8 @@ export function LifeChapterFilter({ selectedChapter, onSelectChapter }: LifeChap
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: -8, scale: 0.95 }}
             transition={{ type: 'spring', stiffness: 500, damping: 30 }}
-            className="absolute right-0 top-full mt-2 z-50 min-w-[200px] bg-white rounded-2xl shadow-xl border border-gray-100 overflow-hidden py-2"
+            className="absolute top-full mt-2 z-50 min-w-[200px] bg-white rounded-2xl shadow-xl border border-gray-100 overflow-hidden py-2"
+            style={{ left: '50%', transform: 'translateX(-50%)' }}
           >
             {/* All Chapters */}
             <button
