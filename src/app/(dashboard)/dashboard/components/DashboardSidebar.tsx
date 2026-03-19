@@ -19,7 +19,6 @@ interface DashboardSidebarProps {
   currentStreakDays: number
   subscription: any
   onPhotoUpload?: () => void
-  onPostscript?: () => void
   onAddContact?: () => void
   onQuickMemory?: () => void
 }
@@ -33,7 +32,6 @@ export function DashboardSidebar({
   currentStreakDays,
   subscription,
   onPhotoUpload,
-  onPostscript,
   onAddContact,
   onQuickMemory,
 }: DashboardSidebarProps) {
@@ -113,7 +111,6 @@ export function DashboardSidebar({
         <div className="sidebar-section">
           <QuickActions
             onPhotoUpload={onPhotoUpload}
-            onPostscript={onPostscript!}
             onAddContact={onAddContact!}
             onQuickMemory={onQuickMemory!}
           />

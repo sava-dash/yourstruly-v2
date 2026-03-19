@@ -326,7 +326,6 @@ export default function DashboardPage() {
           currentStreakDays={engagementStats?.currentStreakDays ?? 0}
           subscription={subscription}
           onPhotoUpload={() => setShowPhotoUpload(true)}
-          onPostscript={() => setShowPostscriptModal(true)}
           onAddContact={() => setShowContactModal(true)}
           onQuickMemory={() => setShowQuickMemoryModal(true)}
         />
