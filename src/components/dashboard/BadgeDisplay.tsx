@@ -58,12 +58,14 @@ export default function BadgeDisplay() {
         🏆 Badges ({earned.length}/{allBadges.length})
       </div>
 
-      <div style={{
+      <div className="badge-scroll" style={{
         display: 'flex',
         gap: '6px',
         overflowX: 'auto',
         paddingBottom: '4px',
         WebkitOverflowScrolling: 'touch',
+        scrollbarWidth: 'thin',
+        scrollbarColor: '#555 #333',
       }}>
         {allBadges.map((def) => {
           const isEarned = earnedTypes.has(def.type)
@@ -101,9 +103,9 @@ export default function BadgeDisplay() {
                 )}
               </div>
               <div style={{
-                fontSize: '8px',
+                fontSize: '9px',
                 fontWeight: '600',
-                color: isEarned ? '#333' : '#aaa',
+                color: isEarned ? '#e0e0e0' : '#666',
                 textAlign: 'center',
                 lineHeight: '1.2',
                 maxWidth: '52px',

@@ -893,3 +893,16 @@
   gap: var(--tile-gap);
   width: 100%;
 }
+
+/* Badge scrollbar */
+.badge-scroll::-webkit-scrollbar {
+  height: 4px;
+}
+.badge-scroll::-webkit-scrollbar-track {
+  background: #2a2a2a;
+  border-radius: 2px;
+}
+.badge-scroll::-webkit-scrollbar-thumb {
+  background: #555;
+  border-radius: 2px;
+}
