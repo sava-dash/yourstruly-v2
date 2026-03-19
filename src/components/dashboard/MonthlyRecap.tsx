@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import { X } from 'lucide-react'
 
 interface RecapData {
   month: string
@@ -14,7 +15,11 @@ interface RecapData {
   highlights: string[]
 }
 
-export default function MonthlyRecap() {
+interface MonthlyRecapProps {
+  onClose?: () => void
+}
+
+export default function MonthlyRecap({ onClose }: MonthlyRecapProps) {
   const [recap, setRecap] = useState<RecapData | null>(null)
   const [loading, setLoading] = useState(true)
 
@@ -47,74 +52,118 @@ export default function MonthlyRecap() {
     { label: 'Tags', value: recap.tags_count, emoji: '👤', color: '#C35F33' },
   ].filter(s => s.value > 0)
 
+  const filteredHighlights = recap.highlights.filter(h => h && h.trim())
+
   return (
-    <div style={{
-      background: 'linear-gradient(135deg, #406A56 0%, #2d4d3e 100%)',
-      borderRadius: '16px',
-      padding: '20px',
-      marginBottom: '24px',
-      color: '#fff',
-    }}>
-      <div style={{
+    <div 
+      style={{
+        position: 'fixed',
+        inset: 0,
+        zIndex: 1000,
         display: 'flex',
         alignItems: 'center',
-        justifyContent: 'space-between',
-        marginBottom: '16px',
+        justifyContent: 'center',
+        background: 'rgba(0, 0, 0, 0.5)',
+        backdropFilter: 'blur(4px)',
+      }}
+      onClick={(e) => { if (e.target === e.currentTarget) onClose?.() }}
+    >
+      <div style={{
+        background: 'linear-gradient(135deg, #406A56 0%, #2d4d3e 100%)',
+        borderRadius: '20px',
+        padding: '24px',
+        color: '#fff',
+        width: 'min(420px, 90vw)',
+        maxHeight: '85vh',
+        overflow: 'auto',
+        position: 'relative',
+        boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.4)',
       }}>
-        <div>
-          <div style={{ fontSize: '11px', fontWeight: '600', opacity: 0.7, textTransform: 'uppercase', letterSpacing: '1px' }}>
-            Monthly Recap
-          </div>
-          <div style={{ fontSize: '18px', fontWeight: '700', marginTop: '2px' }}>
-            {recap.monthName}
-          </div>
-        </div>
+        {/* Close button */}
+        <button
+          onClick={() => onClose?.()}
+          style={{
+            position: 'absolute',
+            top: '12px',
+            right: '12px',
+            width: '32px',
+            height: '32px',
+            borderRadius: '50%',
+            background: 'rgba(255,255,255,0.15)',
+            border: 'none',
+            color: '#fff',
+            cursor: 'pointer',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+          }}
+        >
+          <X size={16} />
+        </button>
+
         <div style={{
-          fontSize: '28px',
-          fontWeight: '800',
-          color: '#D9C61A',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          marginBottom: '16px',
         }}>
-          {recap.total_items}
-          <span style={{ fontSize: '12px', fontWeight: '500', opacity: 0.7, marginLeft: '4px' }}>items</span>
+          <div>
+            <div style={{ fontSize: '11px', fontWeight: '600', opacity: 0.7, textTransform: 'uppercase', letterSpacing: '1px' }}>
+              Monthly Recap
+            </div>
+            <div style={{ fontSize: '18px', fontWeight: '700', marginTop: '2px' }}>
+              {recap.monthName}
+            </div>
+          </div>
+          <div style={{
+            fontSize: '28px',
+            fontWeight: '800',
+            color: '#D9C61A',
+          }}>
+            {recap.total_items}
+            <span style={{ fontSize: '12px', fontWeight: '500', opacity: 0.7, marginLeft: '4px' }}>items</span>
+          </div>
         </div>
-      </div>
 
-      {/* Stat grid */}
-      <div style={{
-        display: 'grid',
-        gridTemplateColumns: `repeat(${Math.min(stats.length, 5)}, 1fr)`,
-        gap: '8px',
-        marginBottom: '16px',
-      }}>
-        {stats.map(s => (
-          <div key={s.label} style={{
-            background: 'rgba(255,255,255,0.1)',
-            borderRadius: '10px',
-            padding: '10px 8px',
-            textAlign: 'center',
-          }}>
-            <div style={{ fontSize: '16px', marginBottom: '2px' }}>{s.emoji}</div>
-            <div style={{ fontSize: '18px', fontWeight: '700' }}>{s.value}</div>
-            <div style={{ fontSize: '9px', opacity: 0.7, fontWeight: '600', textTransform: 'uppercase' }}>{s.label}</div>
-          </div>
-        ))}
-      </div>
+        {/* Stat grid */}
+        <div style={{
+          display: 'grid',
+          gridTemplateColumns: `repeat(${Math.min(stats.length, 5)}, 1fr)`,
+          gap: '8px',
+          marginBottom: '16px',
+        }}>
+          {stats.map(s => (
+            <div key={s.label} style={{
+              background: 'rgba(255,255,255,0.1)',
+              borderRadius: '10px',
+              padding: '10px 8px',
+              textAlign: 'center',
+            }}>
+              <div style={{ fontSize: '16px', marginBottom: '2px' }}>{s.emoji}</div>
+              <div style={{ fontSize: '18px', fontWeight: '700' }}>{s.value}</div>
+              <div style={{ fontSize: '9px', opacity: 0.7, fontWeight: '600', textTransform: 'uppercase' }}>{s.label}</div>
+            </div>
+          ))}
+        </div>
 
-      {/* Highlights */}
-      <div style={{
-        display: 'flex',
-        flexDirection: 'column',
-        gap: '4px',
-      }}>
-        {recap.highlights.map((h, i) => (
-          <div key={i} style={{
-            fontSize: '12px',
-            opacity: 0.85,
-            lineHeight: '1.4',
+        {/* Highlights */}
+        {filteredHighlights.length > 0 && (
+          <div style={{
+            display: 'flex',
+            flexDirection: 'column',
+            gap: '4px',
           }}>
-            {h}
+            {filteredHighlights.map((h, i) => (
+              <div key={i} style={{
+                fontSize: '12px',
+                opacity: 0.85,
+                lineHeight: '1.4',
+              }}>
+                {h}
+              </div>
+            ))}
           </div>
-        ))}
+        )}
       </div>
     </div>
   )

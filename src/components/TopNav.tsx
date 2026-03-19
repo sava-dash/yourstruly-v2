@@ -6,7 +6,9 @@ import { createClient } from '@/lib/supabase/client'
 import { useRouter } from 'next/navigation'
 import { User } from '@supabase/supabase-js'
 import { useState, useRef, useEffect } from 'react'
+import { motion, AnimatePresence } from 'framer-motion'
 import SlideUpLink, { SlideUpButton } from '@/components/SlideUpLink'
+import ActivityFeed from '@/components/dashboard/ActivityFeed'
 import { 
   User as UserIcon, 
   Users, 
@@ -27,7 +29,8 @@ import {
   BookOpen,
   UsersRound,
   Wrench,
-  ShoppingBag
+  ShoppingBag,
+  Bell,
 } from 'lucide-react'
 
 interface Profile {
@@ -84,15 +87,34 @@ export default function TopNav({ user, profile }: TopNavProps) {
   const [toolsOpen, setToolsOpen] = useState(false)
   const [userOpen, setUserOpen] = useState(false)
   const [mobileOpen, setMobileOpen] = useState(false)
+  const [activityOpen, setActivityOpen] = useState(false)
+  const [unreadCount, setUnreadCount] = useState(0)
   const myStoryRef = useRef<HTMLDivElement>(null)
   const peopleRef = useRef<HTMLDivElement>(null)
   const toolsRef = useRef<HTMLDivElement>(null)
   const userRef = useRef<HTMLDivElement>(null)
+  const activityRef = useRef<HTMLDivElement>(null)
 
   const handleSignOut = async () => {
     await supabase.auth.signOut()
     router.push('/login')
   }
+
+  // Fetch unread activity count
+  useEffect(() => {
+    const fetchUnread = async () => {
+      try {
+        const res = await fetch('/api/activity?limit=10')
+        if (res.ok) {
+          const data = await res.json()
+          const sharedTypes = ['memory_shared', 'wisdom_shared', 'circle_message', 'circle_invite', 'circle_content']
+          const count = (data.activities || []).filter((a: any) => sharedTypes.includes(a.type)).length
+          setUnreadCount(count)
+        }
+      } catch {}
+    }
+    fetchUnread()
+  }, [])
 
   // Close dropdowns on outside click
   useEffect(() => {
@@ -101,6 +123,7 @@ export default function TopNav({ user, profile }: TopNavProps) {
       if (peopleRef.current && !peopleRef.current.contains(e.target as Node)) setPeopleOpen(false)
       if (toolsRef.current && !toolsRef.current.contains(e.target as Node)) setToolsOpen(false)
       if (userRef.current && !userRef.current.contains(e.target as Node)) setUserOpen(false)
+      if (activityRef.current && !activityRef.current.contains(e.target as Node)) setActivityOpen(false)
     }
     document.addEventListener('mousedown', handleClick)
     return () => document.removeEventListener('mousedown', handleClick)
@@ -261,6 +284,37 @@ export default function TopNav({ user, profile }: TopNavProps) {
 
           {/* Right: Icon Buttons + User Menu */}
           <div className="flex items-center gap-1">
+            {/* Activity Bell - Desktop */}
+            <div ref={activityRef} className="relative hidden lg:block">
+              <button
+                onClick={() => setActivityOpen(!activityOpen)}
+                className={`flex items-center justify-center w-9 h-9 rounded-lg transition-all ${
+                  activityOpen ? 'bg-[#C35F33]/15 text-[#C35F33]' : 'text-gray-500 hover:bg-[#C35F33]/5 hover:text-[#C35F33]'
+                }`}
+                title="Activity"
+              >
+                <Bell size={18} />
+                {unreadCount > 0 && (
+                  <span className="absolute top-0.5 right-0.5 w-4 h-4 bg-[#F31260] text-white text-[9px] font-bold rounded-full flex items-center justify-center">
+                    {unreadCount > 9 ? '9+' : unreadCount}
+                  </span>
+                )}
+              </button>
+              <AnimatePresence>
+                {activityOpen && (
+                  <motion.div
+                    initial={{ opacity: 0, y: -8, scale: 0.95 }}
+                    animate={{ opacity: 1, y: 0, scale: 1 }}
+                    exit={{ opacity: 0, y: -8, scale: 0.95 }}
+                    transition={{ type: 'spring', stiffness: 500, damping: 30 }}
+                    className="absolute top-full right-0 mt-2 w-[360px] z-50"
+                  >
+                    <ActivityFeed />
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </div>
+
             {/* Messages & Shop Icons - Desktop */}
             {rightIcons.map((item) => {
               const Icon = item.icon
@@ -450,6 +504,21 @@ export default function TopNav({ user, profile }: TopNavProps) {
             })}
 
             <div className="border-t border-[#C35F33]/10 my-3" />
+
+            {/* Activity in mobile */}
+            <Link
+              href="/dashboard/activity"
+              onClick={() => setMobileOpen(false)}
+              className={`flex items-center gap-3 px-4 py-3 rounded-xl text-base transition-all text-gray-600 hover:bg-[#C35F33]/5 hover:text-[#C35F33]`}
+            >
+              <Bell size={20} />
+              <span>Activity</span>
+              {unreadCount > 0 && (
+                <span className="ml-auto w-5 h-5 bg-[#F31260] text-white text-[10px] font-bold rounded-full flex items-center justify-center">
+                  {unreadCount > 9 ? '9+' : unreadCount}
+                </span>
+              )}
+            </Link>
 
             {/* Messages & Shop in mobile */}
             {rightIcons.map((item) => {

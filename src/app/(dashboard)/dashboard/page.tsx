@@ -28,7 +28,6 @@ import { useXpState } from './hooks/useXpState'
 import {
   DashboardSidebar,
   LifeChapterFilter,
-  QuickActions,
   MilestoneModal,
   QuickMemoryModal,
   PostscriptModal,
@@ -109,6 +108,18 @@ export default function DashboardPage() {
   const [showPostscriptModal, setShowPostscriptModal] = useState(false)
   const [showContactModal, setShowContactModal] = useState(false)
   const [showQuickMemoryModal, setShowQuickMemoryModal] = useState(false)
+  const [showMonthlyRecap, setShowMonthlyRecap] = useState(false)
+
+  // Monthly recap: show in first week of month if not dismissed
+  useEffect(() => {
+    const now = new Date()
+    const isFirstWeek = now.getDate() <= 7
+    const lastDismissed = localStorage.getItem('yt_recap_dismissed')
+    const currentMonth = `${now.getFullYear()}-${now.getMonth()}`
+    if (isFirstWeek && lastDismissed !== currentMonth) {
+      setShowMonthlyRecap(true)
+    }
+  }, [])
   
   // Handle card answer (from flipped card)
   const handleCardAnswer = useCallback(async (promptId: string, response: { type: 'text' | 'voice' | 'selection'; text?: string; videoUrl?: string }) => {
@@ -296,6 +307,14 @@ export default function DashboardPage() {
         )}
       </AnimatePresence>
 
+      {showMonthlyRecap && (
+        <MonthlyRecap onClose={() => {
+          setShowMonthlyRecap(false)
+          const now = new Date()
+          localStorage.setItem('yt_recap_dismissed', `${now.getFullYear()}-${now.getMonth()}`)
+        }} />
+      )}
+
       {/* Main Layout */}
       <div className="home-layout">
         <DashboardSidebar
@@ -306,6 +325,11 @@ export default function DashboardPage() {
           completedTiles={completedTiles}
           currentStreakDays={engagementStats?.currentStreakDays ?? 0}
           subscription={subscription}
+          onShuffle={handleShuffle}
+          onPhotoUpload={() => setShowPhotoUpload(true)}
+          onPostscript={() => setShowPostscriptModal(true)}
+          onAddContact={() => setShowContactModal(true)}
+          onQuickMemory={() => setShowQuickMemoryModal(true)}
         />
 
         <main className="home-main">
@@ -344,17 +368,7 @@ export default function DashboardPage() {
           </div>
         </main>
 
-        {/* Right sidebar: same level as left sidebar in home-layout */}
-        <aside className="home-right-sidebar">
-          <MonthlyRecap />
-          <QuickActions
-            onShuffle={handleShuffle}
-            onPhotoUpload={() => setShowPhotoUpload(true)}
-            onPostscript={() => setShowPostscriptModal(true)}
-            onAddContact={() => setShowContactModal(true)}
-            onQuickMemory={() => setShowQuickMemoryModal(true)}
-          />
-        </aside>
+        {/* Right sidebar removed — QuickActions moved to left sidebar, MonthlyRecap is now a popup */}
       </div>
     </div>
   )

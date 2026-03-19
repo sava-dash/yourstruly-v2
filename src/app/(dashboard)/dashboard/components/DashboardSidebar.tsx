@@ -4,7 +4,7 @@ import { motion } from 'framer-motion'
 import Link from 'next/link'
 import dynamic from 'next/dynamic'
 import OnThisDay from '@/components/dashboard/OnThisDay'
-import ActivityFeed from '@/components/dashboard/ActivityFeed'
+import { QuickActions } from './QuickActions'
 
 const WeeklyChallenges = dynamic(() => import('@/components/dashboard/WeeklyChallenges'), { ssr: false })
 import type { DashboardStats } from '../hooks/useDashboardData'
@@ -18,6 +18,11 @@ interface DashboardSidebarProps {
   completedTiles: CompletedTile[]
   currentStreakDays: number
   subscription: any
+  onShuffle?: () => void
+  onPhotoUpload?: () => void
+  onPostscript?: () => void
+  onAddContact?: () => void
+  onQuickMemory?: () => void
 }
 
 export function DashboardSidebar({
@@ -28,6 +33,11 @@ export function DashboardSidebar({
   completedTiles,
   currentStreakDays,
   subscription,
+  onShuffle,
+  onPhotoUpload,
+  onPostscript,
+  onAddContact,
+  onQuickMemory,
 }: DashboardSidebarProps) {
   return (
     <aside className="home-sidebar hidden lg:flex">
@@ -99,25 +109,23 @@ export function DashboardSidebar({
       
       {/* Weekly Challenges */}
       <WeeklyChallenges />
+
+      {/* Quick Actions */}
+      {onShuffle && (
+        <div className="sidebar-section">
+          <QuickActions
+            onShuffle={onShuffle}
+            onPhotoUpload={onPhotoUpload!}
+            onPostscript={onPostscript!}
+            onAddContact={onAddContact!}
+            onQuickMemory={onQuickMemory!}
+          />
+        </div>
+      )}
       
       {/* On This Day */}
       <div className="sidebar-section">
         <OnThisDay />
-      </div>
-      
-      {/* Activity Feed - fills remaining space */}
-      <div className="sidebar-section-grow">
-        <ActivityFeed 
-          xpCompletions={completedTiles.slice(0, 10).map(tile => ({
-            id: tile.id,
-            type: tile.type,
-            title: tile.title,
-            xp: tile.xp || 0,
-            photoUrl: tile.photoUrl,
-            contactName: tile.contactName,
-            timestamp: tile.answeredAt,
-          }))}
-        />
       </div>
     </aside>
   )
