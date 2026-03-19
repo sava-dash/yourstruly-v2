@@ -4,44 +4,44 @@ import { useState, useEffect, useCallback } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { createClient } from '@/lib/supabase/client'
 import { useEngagementPrompts } from '@/hooks/useEngagementPrompts'
-import { Sparkles } from 'lucide-react'
-import { UnifiedEngagementModal } from '@/components/engagement/UnifiedEngagementModal'
-import { PhotoTaggingModal } from '@/components/engagement/PhotoTaggingModal'
-import { AddContactModal } from '@/components/contacts/AddContactModal'
-import PhotoUploadModal from '@/components/dashboard/PhotoUploadModal'
 import { useSubscription } from '@/hooks/useSubscription'
 import { useGamificationConfig } from '@/hooks/useGamificationConfig'
-import type { XpLevelConfig } from '@/lib/gamification-config'
+import { Sparkles } from 'lucide-react'
+import dynamic from 'next/dynamic'
 import Link from 'next/link'
 import '@/styles/home.css'
 import '@/styles/engagement.css'
 import '@/styles/conversation.css'
-import dynamic from 'next/dynamic'
 
-const MonthlyRecap = dynamic(() => import('@/components/dashboard/MonthlyRecap'), { ssr: false })
-const WeeklyChallenges = dynamic(() => import('@/components/dashboard/WeeklyChallenges'), { ssr: false })
-const BadgeDisplay = dynamic(() => import('@/components/dashboard/BadgeDisplay'), { ssr: false })
+import type { XpLevelConfig } from '@/lib/gamification-config'
 
-// Feed content
+// Components
 import FeedContent from '@/components/feed/FeedContent'
-
-// Local imports
-import { 
-  TYPE_CONFIG, 
-  PHOTO_TAGGING_TYPES, 
-  isContactPrompt,
-} from './constants'
+import { UnifiedEngagementModal } from '@/components/engagement/UnifiedEngagementModal'
+import { PhotoTaggingModal } from '@/components/engagement/PhotoTaggingModal'
+import { AddContactModal } from '@/components/contacts/AddContactModal'
+import PhotoUploadModal from '@/components/dashboard/PhotoUploadModal'
+import { QuickActions } from './components/QuickActions'
+import { EngagementTile } from './components/EngagementTile'
+import { EngagementOverlay } from './components/EngagementOverlay'
 import { useDashboardData } from './hooks/useDashboardData'
 import { useXpState } from './hooks/useXpState'
 import {
-  QuickActions,
   MilestoneModal,
-  QuickMemoryModal,
   PostscriptModal,
-  EngagementTile,
-  EngagementOverlay,
+  QuickMemoryModal,
+  XpFloatingCounter,
   type Milestone,
 } from './components'
+import {
+  TYPE_CONFIG,
+  PHOTO_TAGGING_TYPES,
+  isContactPrompt,
+} from './constants'
+
+const WeeklyChallenges = dynamic(() => import('@/components/dashboard/WeeklyChallenges'), { ssr: false })
+const BadgeDisplay = dynamic(() => import('@/components/dashboard/BadgeDisplay'), { ssr: false })
+const MonthlyRecap = dynamic(() => import('@/components/dashboard/MonthlyRecap'), { ssr: false })
 
 function getXpLevel(xp: number, levels: XpLevelConfig[]) {
   let current = levels[0]
@@ -60,10 +60,10 @@ export default function DashboardPage() {
   const supabase = createClient()
   const { subscription } = useSubscription()
   const { config: gamificationConfig } = useGamificationConfig()
-  
+
   // User ID for scoping
   const [currentUserId, setCurrentUserId] = useState<string | null>(null)
-  
+
   // Get user ID on mount
   useEffect(() => {
     const getUserId = async () => {
@@ -72,33 +72,33 @@ export default function DashboardPage() {
     }
     getUserId()
   }, [supabase])
-  
+
   // Custom hooks for data and XP
-  const { 
-    profile, 
-    stats, 
-    userContacts, 
-    refreshStats 
+  const {
+    profile,
+    stats,
+    userContacts,
+    refreshStats,
   } = useDashboardData(currentUserId)
-  
-  const { 
-    totalXp, 
-    xpAnimating, 
-    lastXpGain, 
+
+  const {
+    totalXp,
+    xpAnimating,
+    lastXpGain,
     completedTiles,
     addXp,
     addCompletedTile,
   } = useXpState(currentUserId)
-  
-  // Engagement prompts (for the overlay)
-  const { 
-    prompts: rawPrompts, 
-    isLoading: promptsLoading, 
-    shuffle, 
-    answerPrompt, 
-    stats: engagementStats 
-  } = useEngagementPrompts(50)
-  
+
+  // Engagement prompts — fetch all chapters, overlay handles chapter filtering
+  const {
+    prompts: rawPrompts,
+    isLoading,
+    shuffle,
+    answerPrompt,
+    stats: engagementStats,
+  } = useEngagementPrompts(50, null)
+
   // Track locally answered prompts
   const [answeredPromptIds, setAnsweredPromptIds] = useState<string[]>([])
 
@@ -106,7 +106,7 @@ export default function DashboardPage() {
   const contactTypes = ['quick_question', 'missing_info', 'tag_person']
   const seenTexts = new Set<string>()
   let contactCount = 0
-  
+
   const prompts = rawPrompts.filter(prompt => {
     if (answeredPromptIds.includes(prompt.id)) return false
     if (seenTexts.has(prompt.promptText)) return false
@@ -118,10 +118,8 @@ export default function DashboardPage() {
     return true
   })
 
-  // Engagement overlay state
-  const [showEngagementOverlay, setShowEngagementOverlay] = useState(false)
-
   // Modal states
+  const [showEngagement, setShowEngagement] = useState(false)
   const [engagementPrompt, setEngagementPrompt] = useState<any | null>(null)
   const [photoTaggingPrompt, setPhotoTaggingPrompt] = useState<any | null>(null)
   const [milestone, setMilestone] = useState<Milestone | null>(null)
@@ -141,16 +139,16 @@ export default function DashboardPage() {
       setShowMonthlyRecap(true)
     }
   }, [])
-  
-  // Handle card answer (from overlay)
+
+  // Handle card answer (from flipped card in overlay)
   const handleCardAnswer = useCallback(async (promptId: string, response: { type: 'text' | 'voice' | 'selection'; text?: string; videoUrl?: string }) => {
     const prompt = prompts.find(p => p.id === promptId)
     if (!prompt) return
-    
+
     try {
       const result = await answerPrompt(promptId, response) as any
       const config = TYPE_CONFIG[prompt.type] || TYPE_CONFIG.memory_prompt
-      
+
       addCompletedTile({
         id: promptId,
         type: prompt.type,
@@ -163,7 +161,7 @@ export default function DashboardPage() {
       if (config.xp > 0) {
         addXp(config.xp)
       }
-      
+
       setAnsweredPromptIds(prev => [...prev, promptId])
       refreshStats()
     } catch (err) {
@@ -172,17 +170,17 @@ export default function DashboardPage() {
     }
   }, [prompts, answerPrompt, addCompletedTile, addXp, refreshStats])
 
-  // Handle engagement completion
+  // Handle engagement modal completion
   const handleEngagementComplete = useCallback(async (result: {
     memoryId?: string
     responseText?: string
     xpAwarded: number
   }) => {
     if (!engagementPrompt) return
-    
+
     const config = TYPE_CONFIG[engagementPrompt.type] || TYPE_CONFIG.memory_prompt
     const xpGained = result.xpAwarded || config.xp
-    
+
     addCompletedTile({
       id: engagementPrompt.id,
       type: engagementPrompt.type,
@@ -211,19 +209,6 @@ export default function DashboardPage() {
   }, [shuffle])
 
   // Helper functions
-  const getContactName = (prompt: any, index: number = 0) => {
-    const fromPrompt = prompt.contactName 
-      || prompt.contact_name
-      || prompt.metadata?.contact?.name 
-      || prompt.metadata?.contact?.full_name
-    if (fromPrompt) return fromPrompt
-    if (isContactPrompt(prompt.type) && userContacts.length > 0) {
-      const contactIdx = prompt.id ? prompt.id.charCodeAt(0) % userContacts.length : index % userContacts.length
-      return userContacts[contactIdx]?.full_name || null
-    }
-    return null
-  }
-
   const getPromptText = (prompt: any) => {
     if (prompt.promptText && prompt.promptText.trim()) {
       let text = prompt.promptText
@@ -232,11 +217,11 @@ export default function DashboardPage() {
       text = text.replace(/\{\{occupation\}\}/gi, prompt.personalizationContext?.occupation || 'your work')
       return text
     }
-    
+
     if (isContactPrompt(prompt.type)) {
       const contactName = prompt.contactName || prompt.metadata?.contact?.name || 'this contact'
       if (prompt.missingField) {
-        const labels: Record<string, string> = { 
+        const labels: Record<string, string> = {
           phone: 'phone number', email: 'email address', date_of_birth: 'birthday',
           birth_date: 'birthday', how_met: 'story of how you met', relationship: 'relationship to you',
           nickname: 'nickname', notes: 'a story about them', address: 'address',
@@ -262,106 +247,38 @@ export default function DashboardPage() {
     return prompt.promptText || 'Share something meaningful...'
   }
 
-  // Streak days
+  // Profile data for sidebar
+  const userFirstName = profile?.full_name?.split(' ')[0] || 'there'
   const streakDays = engagementStats?.currentStreakDays ?? 0
+  const storageUsed = subscription?.storage?.total_bytes ? subscription.storage.total_bytes / (1024 * 1024 * 1024) : 0
+  const storageLimit = subscription?.storage?.limit_bytes ? subscription.storage.limit_bytes / (1024 * 1024 * 1024) : 10
+  const storagePercentage = subscription?.storage?.percentage || 0
 
   return (
-    <div className="feed-page" data-theme="dark">
-      {/* Modals */}
-      <AnimatePresence>
-        {engagementPrompt && (
-          <UnifiedEngagementModal
-            prompt={engagementPrompt}
-            expectedXp={TYPE_CONFIG[engagementPrompt.type]?.xp || 15}
-            onComplete={handleEngagementComplete}
-            onClose={() => setEngagementPrompt(null)}
-          />
-        )}
-      </AnimatePresence>
-
-      <AnimatePresence>
-        {photoTaggingPrompt && photoTaggingPrompt.photoId && (
-          <PhotoTaggingModal
-            photoId={photoTaggingPrompt.photoId}
-            photoUrl={photoTaggingPrompt.photoUrl}
-            promptId={photoTaggingPrompt.id}
-            onComplete={async (result) => {
-              try {
-                await answerPrompt(photoTaggingPrompt.id, { type: 'selection', data: { action: 'photo_tagged' } })
-              } catch (err) {
-                console.error('Failed to mark prompt answered:', err)
-              }
-              addCompletedTile({
-                id: photoTaggingPrompt.id,
-                type: photoTaggingPrompt.type,
-                title: 'Tagged photo',
-                xp: result.xpAwarded,
-                photoUrl: photoTaggingPrompt.photoUrl,
-              })
-              setPhotoTaggingPrompt(null)
-            }}
-            onClose={() => setPhotoTaggingPrompt(null)}
-          />
-        )}
-      </AnimatePresence>
-
-      <MilestoneModal milestone={milestone} onClose={() => setMilestone(null)} />
-      <PhotoUploadModal isOpen={showPhotoUpload} onClose={() => setShowPhotoUpload(false)} />
-      <PostscriptModal isOpen={showPostscriptModal} onClose={() => setShowPostscriptModal(false)} />
-      <QuickMemoryModal isOpen={showQuickMemoryModal} onClose={() => setShowQuickMemoryModal(false)} />
-      
-      <AnimatePresence>
-        {showContactModal && (
-          <AddContactModal onClose={() => setShowContactModal(false)} onSave={() => {}} />
-        )}
-      </AnimatePresence>
-
-      {showMonthlyRecap && (
-        <MonthlyRecap onClose={() => {
-          setShowMonthlyRecap(false)
-          const now = new Date()
-          localStorage.setItem('yt_recap_dismissed', `${now.getFullYear()}-${now.getMonth()}`)
-        }} />
-      )}
-
-      {/* Engagement Overlay */}
-      <EngagementOverlay
-        isOpen={showEngagementOverlay}
-        onClose={() => setShowEngagementOverlay(false)}
-        prompts={prompts}
-        isLoading={promptsLoading}
-        answeredPromptIds={answeredPromptIds}
-        onAnsweredPromptIds={setAnsweredPromptIds}
-        onCardAnswer={handleCardAnswer}
-        onShuffle={handleShuffle}
-        answerPrompt={answerPrompt}
-        getPromptText={getPromptText}
-        totalXp={totalXp}
-        xpAnimating={xpAnimating}
-        lastXpGain={lastXpGain}
-        addXp={addXp}
-        addCompletedTile={addCompletedTile}
-        refreshStats={refreshStats}
-        educationLevel={profile?.education_level}
-        userContacts={userContacts}
-      />
-
-      {/* Main Layout */}
-      <div style={{ display: 'flex', gap: '24px', padding: '80px 24px 24px' }}>
+    <div className="feed-page">
+      <div style={{
+        display: 'flex',
+        gap: '24px',
+        padding: '80px 24px 24px',
+        maxWidth: '1800px',
+        margin: '0 auto',
+      }}>
         {/* Left Sidebar */}
-        <aside style={{
-          width: '320px',
-          flexShrink: 0,
-          display: 'flex',
-          flexDirection: 'column',
-          gap: '16px',
-          position: 'sticky',
-          top: '80px',
-          height: 'fit-content',
-          maxHeight: 'calc(100vh - 100px)',
-          overflowY: 'auto',
-        }}>
-          {/* Profile Card (Feed-style dark theme) */}
+        <aside
+          className="hidden lg:flex"
+          style={{
+            width: '320px',
+            flexShrink: 0,
+            flexDirection: 'column',
+            gap: '16px',
+            position: 'sticky',
+            top: '80px',
+            height: 'fit-content',
+            maxHeight: 'calc(100vh - 100px)',
+            overflowY: 'auto',
+          }}
+        >
+          {/* Profile Card - dark themed matching feed */}
           <div className="profile-card-feed" style={{
             borderRadius: '16px',
             padding: '16px 20px',
@@ -369,7 +286,7 @@ export default function DashboardPage() {
             {/* Name + Streak */}
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '12px' }}>
               <h2 className="profile-card-name" style={{ fontSize: '18px', fontWeight: '600', margin: 0 }}>
-                Hey {profile?.full_name?.split(' ')[0] || 'there'}
+                Hey {userFirstName}
               </h2>
               {streakDays > 0 && (
                 <div style={{
@@ -388,15 +305,15 @@ export default function DashboardPage() {
 
             {/* Stats Row */}
             <div className="profile-card-stats" style={{ display: 'flex', alignItems: 'center', textAlign: 'center', marginBottom: '12px' }}>
-              <Link href="/dashboard/memories" style={{ flex: 1, textDecoration: 'none', color: 'inherit' }}>
+              <Link href="/dashboard/memories" style={{ flex: 1, textDecoration: 'none' }}>
                 <div className="profile-stat-value">{stats.memories}</div>
                 <div className="profile-stat-label">Memories</div>
               </Link>
-              <Link href="/dashboard/contacts" className="profile-stat-bordered" style={{ flex: 1, textDecoration: 'none', color: 'inherit' }}>
+              <Link href="/dashboard/contacts" className="profile-stat-bordered" style={{ flex: 1, textDecoration: 'none' }}>
                 <div className="profile-stat-value">{stats.contacts}</div>
                 <div className="profile-stat-label">People</div>
               </Link>
-              <Link href="/dashboard/gallery" className="profile-stat-bordered-r" style={{ flex: 1, textDecoration: 'none', color: 'inherit' }}>
+              <Link href="/dashboard/gallery" className="profile-stat-bordered-r" style={{ flex: 1, textDecoration: 'none' }}>
                 <div className="profile-stat-value">{stats.photos}</div>
                 <div className="profile-stat-label">Photos</div>
               </Link>
@@ -444,18 +361,18 @@ export default function DashboardPage() {
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '6px' }}>
                 <span className="profile-storage-label">Storage</span>
                 <span className="profile-storage-value">
-                  {subscription?.storage 
-                    ? `${(subscription.storage.total_bytes / (1024*1024*1024)).toFixed(1)} / ${(subscription.storage.limit_bytes / (1024*1024*1024)).toFixed(0)} GB`
-                    : '0 / 10 GB'
-                  }
+                  {storageUsed < 0.1
+                    ? `${(storageUsed * 1024).toFixed(0)} MB`
+                    : `${storageUsed.toFixed(1)} GB`
+                  } / {storageLimit.toFixed(0)} GB
                 </span>
               </div>
               <div className="profile-storage-track">
                 <div style={{
                   height: '100%',
                   borderRadius: '3px',
-                  width: `${Math.min(subscription?.storage?.percentage || 0, 100)}%`,
-                  background: (subscription?.storage?.percentage || 0) >= 90
+                  width: `${Math.min(storagePercentage, 100)}%`,
+                  background: storagePercentage >= 90
                     ? 'linear-gradient(90deg, #C35F33, #dc2626)'
                     : 'linear-gradient(90deg, #406A56, #8DACAB)',
                   transition: 'width 0.8s ease-out',
@@ -468,24 +385,17 @@ export default function DashboardPage() {
           <WeeklyChallenges />
 
           {/* Quick Actions */}
-          <div style={{
-            background: 'rgba(255,255,255,0.05)',
-            borderRadius: '16px',
-            padding: '16px',
-            border: '1px solid rgba(255,255,255,0.08)',
-          }}>
-            <QuickActions
-              onPhotoUpload={() => setShowPhotoUpload(true)}
-              onAddContact={() => setShowContactModal(true)}
-              onQuickMemory={() => setShowQuickMemoryModal(true)}
-            />
-          </div>
+          <QuickActions
+            onPhotoUpload={() => setShowPhotoUpload(true)}
+            onAddContact={() => setShowContactModal(true)}
+            onQuickMemory={() => setShowQuickMemoryModal(true)}
+          />
 
           {/* Engagement Tile */}
           <EngagementTile
             nextPrompt={prompts[0] || null}
             totalWaiting={prompts.length}
-            onOpen={() => setShowEngagementOverlay(true)}
+            onOpen={() => setShowEngagement(true)}
           />
         </aside>
 
@@ -494,6 +404,89 @@ export default function DashboardPage() {
           <FeedContent />
         </main>
       </div>
+
+      {/* Engagement Overlay */}
+      <EngagementOverlay
+        isOpen={showEngagement}
+        onClose={() => setShowEngagement(false)}
+        prompts={prompts}
+        isLoading={isLoading}
+        answeredPromptIds={answeredPromptIds}
+        onAnsweredPromptIds={setAnsweredPromptIds}
+        onCardAnswer={handleCardAnswer}
+        onShuffle={handleShuffle}
+        answerPrompt={answerPrompt}
+        getPromptText={getPromptText}
+        totalXp={totalXp}
+        xpAnimating={xpAnimating}
+        lastXpGain={lastXpGain}
+        addXp={addXp}
+        addCompletedTile={addCompletedTile}
+        refreshStats={refreshStats}
+        educationLevel={profile?.education_level}
+        userContacts={userContacts}
+      />
+
+      {/* Monthly Recap Popup */}
+      {showMonthlyRecap && (
+        <MonthlyRecap onClose={() => {
+          setShowMonthlyRecap(false)
+          const now = new Date()
+          localStorage.setItem('yt_recap_dismissed', `${now.getFullYear()}-${now.getMonth()}`)
+        }} />
+      )}
+
+      {/* Modals */}
+      <AnimatePresence>
+        {engagementPrompt && (
+          <UnifiedEngagementModal
+            prompt={engagementPrompt}
+            expectedXp={TYPE_CONFIG[engagementPrompt.type]?.xp || 15}
+            onComplete={handleEngagementComplete}
+            onClose={() => setEngagementPrompt(null)}
+          />
+        )}
+      </AnimatePresence>
+
+      <AnimatePresence>
+        {photoTaggingPrompt && photoTaggingPrompt.photoId && (
+          <PhotoTaggingModal
+            photoId={photoTaggingPrompt.photoId}
+            photoUrl={photoTaggingPrompt.photoUrl}
+            promptId={photoTaggingPrompt.id}
+            onComplete={async (result) => {
+              try {
+                await answerPrompt(photoTaggingPrompt.id, { type: 'selection', data: { action: 'photo_tagged' } })
+              } catch (err) {
+                console.error('Failed to mark prompt answered:', err)
+              }
+              addCompletedTile({
+                id: photoTaggingPrompt.id,
+                type: photoTaggingPrompt.type,
+                title: 'Tagged photo',
+                xp: result.xpAwarded,
+                photoUrl: photoTaggingPrompt.photoUrl,
+              })
+              setPhotoTaggingPrompt(null)
+            }}
+            onClose={() => setPhotoTaggingPrompt(null)}
+          />
+        )}
+      </AnimatePresence>
+
+      <MilestoneModal milestone={milestone} onClose={() => setMilestone(null)} />
+      <PhotoUploadModal isOpen={showPhotoUpload} onClose={() => setShowPhotoUpload(false)} />
+      <PostscriptModal isOpen={showPostscriptModal} onClose={() => setShowPostscriptModal(false)} />
+      <QuickMemoryModal isOpen={showQuickMemoryModal} onClose={() => setShowQuickMemoryModal(false)} />
+
+      <AnimatePresence>
+        {showContactModal && (
+          <AddContactModal onClose={() => setShowContactModal(false)} onSave={() => {}} />
+        )}
+      </AnimatePresence>
+
+      {/* XP floating counter */}
+      <XpFloatingCounter show={xpAnimating} amount={lastXpGain} />
     </div>
   )
 }
