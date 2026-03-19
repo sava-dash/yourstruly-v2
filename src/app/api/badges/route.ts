@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { DEFAULT_CONFIG, mergeConfig } from '@/lib/gamification-config'
 
-// Legacy export for badge check route
+// Legacy export — still works but prefer loading from DB config
 export const BADGE_DEFINITIONS = DEFAULT_CONFIG.badges
 
 // GET - return user's badges

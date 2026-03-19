@@ -9,12 +9,20 @@ export interface XpLevelConfig {
   message: string // shown when user reaches this level
 }
 
+export type BadgeMetric = 'memories' | 'photos' | 'voices' | 'shares' | 'tags' | 'streak' | 'complete_memories'
+
+export interface BadgeCriteria {
+  metric: BadgeMetric
+  threshold: number
+}
+
 export interface BadgeConfig {
   type: string
   name: string
   emoji: string
   description: string // what the badge means
   congratsMessage: string // shown when earned
+  criteria: BadgeCriteria
 }
 
 export interface ChallengeTemplate {
@@ -45,16 +53,16 @@ export const DEFAULT_CONFIG: GamificationConfig = {
   ],
 
   badges: [
-    { type: 'first_memory', name: 'First Step', emoji: '📝', description: 'Created your first memory for your loved ones', congratsMessage: "You've taken the first step in preserving your story for the people who matter most!" },
-    { type: 'memory_10', name: 'Dedicated', emoji: '📚', description: '10 memories saved for your family', congratsMessage: '10 memories! Your family is going to love looking back on these.' },
-    { type: 'memory_50', name: 'Family Treasure', emoji: '🏛️', description: '50 memories — a real family treasure', congratsMessage: "50 memories! You've built an incredible collection for your loved ones." },
-    { type: 'first_voice', name: 'Your Voice', emoji: '🎙️', description: 'Recorded your voice for those you love', congratsMessage: "There's nothing more precious than hearing a loved one's voice. You just gave that gift." },
-    { type: 'first_share', name: 'Sharing is Caring', emoji: '💝', description: 'Shared a memory with someone special', congratsMessage: 'You shared a piece of yourself. That means the world to the people in your life.' },
-    { type: 'streak_7', name: 'Committed', emoji: '🔥', description: '7 days of showing up for your family', congratsMessage: "A whole week! Your consistency shows how much your family's story matters to you." },
-    { type: 'streak_30', name: 'Unstoppable', emoji: '💪', description: '30 days of building your legacy', congratsMessage: "30 days of dedication. Your loved ones are lucky to have someone who cares this much." },
-    { type: 'photo_25', name: 'Moments Captured', emoji: '📸', description: '25 photos preserved for your family', congratsMessage: "25 photos! Each one is a moment your family can revisit forever." },
-    { type: 'tagger', name: 'Connector', emoji: '👤', description: 'Tagged 10 faces — connecting people to memories', congratsMessage: "You're connecting faces to stories. Now your family can see who was there." },
-    { type: 'completionist', name: 'Detail Oriented', emoji: '✨', description: '5 fully complete memories with all the details', congratsMessage: "You don't just save memories — you make them come alive with details. Your family will love that." },
+    { type: 'first_memory', name: 'First Step', emoji: '📝', description: 'Created your first memory for your loved ones', congratsMessage: "You've taken the first step in preserving your story for the people who matter most!", criteria: { metric: 'memories', threshold: 1 } },
+    { type: 'memory_10', name: 'Dedicated', emoji: '📚', description: '10 memories saved for your family', congratsMessage: '10 memories! Your family is going to love looking back on these.', criteria: { metric: 'memories', threshold: 10 } },
+    { type: 'memory_50', name: 'Family Treasure', emoji: '🏛️', description: '50 memories — a real family treasure', congratsMessage: "50 memories! You've built an incredible collection for your loved ones.", criteria: { metric: 'memories', threshold: 50 } },
+    { type: 'first_voice', name: 'Your Voice', emoji: '🎙️', description: 'Recorded your voice for those you love', congratsMessage: "There's nothing more precious than hearing a loved one's voice. You just gave that gift.", criteria: { metric: 'voices', threshold: 1 } },
+    { type: 'first_share', name: 'Sharing is Caring', emoji: '💝', description: 'Shared a memory with someone special', congratsMessage: 'You shared a piece of yourself. That means the world to the people in your life.', criteria: { metric: 'shares', threshold: 1 } },
+    { type: 'streak_7', name: 'Committed', emoji: '🔥', description: '7 days of showing up for your family', congratsMessage: "A whole week! Your consistency shows how much your family's story matters to you.", criteria: { metric: 'streak', threshold: 7 } },
+    { type: 'streak_30', name: 'Unstoppable', emoji: '💪', description: '30 days of building your legacy', congratsMessage: "30 days of dedication. Your loved ones are lucky to have someone who cares this much.", criteria: { metric: 'streak', threshold: 30 } },
+    { type: 'photo_25', name: 'Moments Captured', emoji: '📸', description: '25 photos preserved for your family', congratsMessage: "25 photos! Each one is a moment your family can revisit forever.", criteria: { metric: 'photos', threshold: 25 } },
+    { type: 'tagger', name: 'Connector', emoji: '👤', description: 'Tagged 10 faces — connecting people to memories', congratsMessage: "You're connecting faces to stories. Now your family can see who was there.", criteria: { metric: 'tags', threshold: 10 } },
+    { type: 'completionist', name: 'Detail Oriented', emoji: '✨', description: '5 fully complete memories with all the details', congratsMessage: "You don't just save memories — you make them come alive with details. Your family will love that.", criteria: { metric: 'complete_memories', threshold: 5 } },
   ],
 
   challengeTemplates: [

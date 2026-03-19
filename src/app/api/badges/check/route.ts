@@ -1,12 +1,22 @@
 import { NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
-import { BADGE_DEFINITIONS } from '../route'
 import { DEFAULT_CONFIG, mergeConfig } from '@/lib/gamification-config'
 
 export async function POST() {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+
+  // Load gamification config (DB overrides falling back to defaults)
+  let config = DEFAULT_CONFIG
+  try {
+    const { data: configData } = await supabase
+      .from('site_config')
+      .select('value')
+      .eq('key', 'gamification')
+      .single()
+    config = mergeConfig(configData?.value || null)
+  } catch {}
 
   // Get existing badges
   const { data: existingBadges } = await supabase
@@ -41,41 +51,40 @@ export async function POST() {
     .not('title', 'is', null)
     .not('description', 'is', null)
     .not('location_name', 'is', null)
-    .limit(10)
+    .limit(100)
 
   const completeCount = completeMemories?.length || 0
 
-  // Evaluate badges
-  const checks: Record<string, boolean> = {
-    first_memory: memoryCount >= 1,
-    memory_10: memoryCount >= 10,
-    memory_50: memoryCount >= 50,
-    first_voice: voiceCount >= 1,
-    first_share: shareCount >= 1,
-    streak_7: streakDays >= 7,
-    streak_30: streakDays >= 30,
-    photo_25: photoCount >= 25,
-    tagger: tagCount >= 10,
-    completionist: completeCount >= 5,
+  // Build metric values map
+  const metricValues: Record<string, number> = {
+    memories: memoryCount,
+    photos: photoCount,
+    voices: voiceCount,
+    shares: shareCount,
+    tags: tagCount,
+    streak: streakDays,
+    complete_memories: completeCount,
   }
 
+  // Evaluate badges dynamically from config
   const newlyEarned: string[] = []
 
-  for (const [badgeType, qualifies] of Object.entries(checks)) {
-    if (qualifies && !earned.has(badgeType)) {
-      const def = BADGE_DEFINITIONS.find(b => b.type === badgeType)
-      if (!def) continue
+  for (const badge of config.badges) {
+    if (!badge.criteria) continue
+    const value = metricValues[badge.criteria.metric] ?? 0
+    const qualifies = value >= badge.criteria.threshold
 
+    if (qualifies && !earned.has(badge.type)) {
       const { error } = await supabase
         .from('user_badges')
         .upsert({
           user_id: user.id,
-          badge_type: badgeType,
-          badge_name: def.name,
-          badge_emoji: def.emoji,
+          badge_type: badge.type,
+          badge_name: badge.name,
+          badge_emoji: badge.emoji,
         }, { onConflict: 'user_id,badge_type' })
 
-      if (!error) newlyEarned.push(badgeType)
+      if (!error) newlyEarned.push(badge.type)
     }
   }
 
@@ -89,6 +98,6 @@ export async function POST() {
   return NextResponse.json({
     earned: allBadges || [],
     newlyEarned,
-    all: BADGE_DEFINITIONS,
+    all: config.badges,
   })
 }

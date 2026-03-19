@@ -11,6 +11,19 @@ interface Badge {
   earned_at?: string
 }
 
+function getCriteriaLabel(criteria: { metric: string, threshold: number }): string {
+  const labels: Record<string, string> = {
+    memories: 'memories',
+    photos: 'photos uploaded',
+    voices: 'voice recordings',
+    shares: 'memories shared',
+    tags: 'people tagged',
+    streak: 'day streak',
+    complete_memories: 'complete memories',
+  }
+  return `${criteria.threshold} ${labels[criteria.metric] || criteria.metric}`
+}
+
 export default function BadgeDisplay() {
   const { config } = useGamificationConfig()
   const [earned, setEarned] = useState<Badge[]>([])
@@ -124,19 +137,56 @@ export default function BadgeDisplay() {
                   transform: 'translateX(-50%)',
                   background: '#333',
                   color: '#fff',
-                  padding: '6px 10px',
+                  padding: '8px 12px',
                   borderRadius: '8px',
-                  fontSize: '10px',
-                  whiteSpace: 'nowrap',
+                  fontSize: '11px',
+                  whiteSpace: 'normal',
                   zIndex: 20,
-                  marginBottom: '4px',
-                  boxShadow: '0 2px 8px rgba(0,0,0,0.2)',
-                  maxWidth: '200px',
+                  marginBottom: '6px',
+                  boxShadow: '0 2px 12px rgba(0,0,0,0.25)',
+                  maxWidth: '220px',
+                  width: 'max-content',
+                  lineHeight: '1.4',
+                  textAlign: 'center',
                 }}>
-                  {isEarned
-                    ? (def.congratsMessage || `Earned ${badge?.earned_at ? new Date(badge.earned_at).toLocaleDateString() : ''}`)
-                    : def.description
-                  }
+                  <div style={{ fontWeight: '700', marginBottom: '4px', fontSize: '12px' }}>
+                    {def.emoji} {def.name}
+                  </div>
+                  {isEarned ? (
+                    <>
+                      <div style={{ color: '#ccc', fontSize: '10px' }}>
+                        {def.congratsMessage}
+                      </div>
+                      {badge?.earned_at && (
+                        <div style={{ color: '#999', fontSize: '9px', marginTop: '4px' }}>
+                          Earned on {new Date(badge.earned_at).toLocaleDateString()}
+                        </div>
+                      )}
+                    </>
+                  ) : (
+                    <>
+                      <div style={{ color: '#ccc', fontSize: '10px' }}>
+                        {def.description}
+                      </div>
+                      {def.criteria && (
+                        <div style={{ color: '#D9C61A', fontSize: '10px', marginTop: '4px', fontWeight: '600' }}>
+                          🎯 Need {getCriteriaLabel(def.criteria)}
+                        </div>
+                      )}
+                    </>
+                  )}
+                  {/* Arrow pointing down */}
+                  <div style={{
+                    position: 'absolute',
+                    top: '100%',
+                    left: '50%',
+                    transform: 'translateX(-50%)',
+                    width: 0,
+                    height: 0,
+                    borderLeft: '6px solid transparent',
+                    borderRight: '6px solid transparent',
+                    borderTop: '6px solid #333',
+                  }} />
                 </div>
               )}
             </div>

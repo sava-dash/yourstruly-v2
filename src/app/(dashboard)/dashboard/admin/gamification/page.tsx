@@ -3,7 +3,19 @@
 import { useState, useEffect } from 'react'
 import { Save, RotateCcw, ChevronDown, ChevronUp, Plus, Trash2, ArrowLeft } from 'lucide-react'
 import Link from 'next/link'
-import { DEFAULT_CONFIG, type GamificationConfig, type XpLevelConfig, type BadgeConfig, type ChallengeTemplate } from '@/lib/gamification-config'
+import { DEFAULT_CONFIG, type GamificationConfig, type XpLevelConfig, type BadgeConfig, type ChallengeTemplate, type BadgeMetric } from '@/lib/gamification-config'
+
+const METRIC_OPTIONS: { value: BadgeMetric; label: string }[] = [
+  { value: 'memories', label: 'Memories' },
+  { value: 'photos', label: 'Photos uploaded' },
+  { value: 'voices', label: 'Voice recordings' },
+  { value: 'shares', label: 'Memories shared' },
+  { value: 'tags', label: 'People tagged' },
+  { value: 'streak', label: 'Day streak' },
+  { value: 'complete_memories', label: 'Complete memories' },
+]
+
+const DEFAULT_BADGE_TYPES = new Set(DEFAULT_CONFIG.badges.map(b => b.type))
 
 export default function GamificationAdminPage() {
   const [config, setConfig] = useState<GamificationConfig>(DEFAULT_CONFIG)
@@ -60,10 +72,40 @@ export default function GamificationAdminPage() {
     setConfig({ ...config, xpLevels: updated })
   }
 
-  const updateBadge = (index: number, field: keyof BadgeConfig, value: string) => {
+  const updateBadge = (index: number, field: string, value: any) => {
     const updated = [...config.badges]
-    updated[index] = { ...updated[index], [field]: value }
+    if (field === 'criteria.metric') {
+      updated[index] = { ...updated[index], criteria: { ...updated[index].criteria, metric: value as BadgeMetric } }
+    } else if (field === 'criteria.threshold') {
+      updated[index] = { ...updated[index], criteria: { ...updated[index].criteria, threshold: Number(value) } }
+    } else {
+      updated[index] = { ...updated[index], [field]: value }
+    }
     setConfig({ ...config, badges: updated })
+  }
+
+  const addBadge = () => {
+    const newBadge: BadgeConfig = {
+      type: `custom_${Date.now()}`,
+      name: 'New Badge',
+      emoji: '🎖️',
+      description: 'Description of this badge',
+      congratsMessage: 'Congratulations on earning this badge!',
+      criteria: { metric: 'memories', threshold: 1 },
+    }
+    setConfig({ ...config, badges: [...config.badges, newBadge] })
+  }
+
+  const deleteBadge = (index: number) => {
+    const badge = config.badges[index]
+    const isDefault = DEFAULT_BADGE_TYPES.has(badge.type)
+    const msg = isDefault
+      ? `Delete "${badge.name}"? This is a default badge — users who already earned it will keep it, but no new users can earn it.`
+      : `Delete "${badge.name}"?`
+    if (confirm(msg)) {
+      const updated = config.badges.filter((_, i) => i !== index)
+      setConfig({ ...config, badges: updated })
+    }
   }
 
   const updateChallenge = (index: number, field: keyof ChallengeTemplate, value: any) => {
@@ -183,32 +225,117 @@ export default function GamificationAdminPage() {
       <SectionHeader id="badges" title="🏆 Badges" count={config.badges.length} />
       {activeSection === 'badges' && (
         <div style={{ background: '#fafafa', border: '1px solid #eee', borderTop: 'none', borderRadius: '0 0 12px 12px', padding: '16px', marginBottom: '8px', display: 'flex', flexDirection: 'column', gap: '12px' }}>
-          {config.badges.map((badge, i) => (
-            <div key={i} style={{ background: '#fff', border: '1px solid #eee', borderRadius: '10px', padding: '14px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
-              <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
-                <div style={{ flex: '0 0 50px' }}>
-                  <label style={labelStyle}>Emoji</label>
-                  <input value={badge.emoji} onChange={e => updateBadge(i, 'emoji', e.target.value)} style={{ ...inputStyle, textAlign: 'center' }} />
+          {config.badges.map((badge, i) => {
+            const isDefault = DEFAULT_BADGE_TYPES.has(badge.type)
+            return (
+              <div key={i} style={{ background: '#fff', border: '1px solid #eee', borderRadius: '10px', padding: '14px', display: 'flex', flexDirection: 'column', gap: '8px', position: 'relative' }}>
+                {/* Delete button */}
+                <button
+                  onClick={() => deleteBadge(i)}
+                  style={{
+                    position: 'absolute',
+                    top: '10px',
+                    right: '10px',
+                    background: 'none',
+                    border: 'none',
+                    cursor: 'pointer',
+                    color: '#ccc',
+                    padding: '4px',
+                    borderRadius: '4px',
+                    transition: 'color 0.2s',
+                  }}
+                  onMouseEnter={e => (e.currentTarget.style.color = '#dc2626')}
+                  onMouseLeave={e => (e.currentTarget.style.color = '#ccc')}
+                  title="Delete badge"
+                >
+                  <Trash2 size={14} />
+                </button>
+
+                <div style={{ display: 'flex', gap: '8px', alignItems: 'center', paddingRight: '30px' }}>
+                  <div style={{ flex: '0 0 50px' }}>
+                    <label style={labelStyle}>Emoji</label>
+                    <input value={badge.emoji} onChange={e => updateBadge(i, 'emoji', e.target.value)} style={{ ...inputStyle, textAlign: 'center' }} />
+                  </div>
+                  <div style={{ flex: 1 }}>
+                    <label style={labelStyle}>Name</label>
+                    <input value={badge.name} onChange={e => updateBadge(i, 'name', e.target.value)} style={inputStyle} />
+                  </div>
+                  <div style={{ flex: '0 0 120px' }}>
+                    <label style={labelStyle}>Type {isDefault && <span style={{ color: '#aaa', fontWeight: '400' }}>(built-in)</span>}</label>
+                    <input
+                      value={badge.type}
+                      onChange={e => updateBadge(i, 'type', e.target.value)}
+                      disabled={isDefault}
+                      style={{ ...inputStyle, background: isDefault ? '#f5f5f5' : '#fff', color: isDefault ? '#888' : '#333' }}
+                    />
+                  </div>
                 </div>
-                <div style={{ flex: 1 }}>
-                  <label style={labelStyle}>Name</label>
-                  <input value={badge.name} onChange={e => updateBadge(i, 'name', e.target.value)} style={inputStyle} />
+                <div>
+                  <label style={labelStyle}>Description (shown when locked)</label>
+                  <input value={badge.description} onChange={e => updateBadge(i, 'description', e.target.value)} style={inputStyle} />
                 </div>
-                <div style={{ flex: '0 0 100px' }}>
-                  <label style={labelStyle}>Type</label>
-                  <input value={badge.type} disabled style={{ ...inputStyle, background: '#f5f5f5', color: '#888' }} />
+                <div>
+                  <label style={labelStyle}>Congrats Message (shown when earned)</label>
+                  <input value={badge.congratsMessage} onChange={e => updateBadge(i, 'congratsMessage', e.target.value)} style={inputStyle} />
+                </div>
+                {/* Criteria */}
+                <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+                  <div style={{ flex: 1 }}>
+                    <label style={labelStyle}>Criteria Metric</label>
+                    <select
+                      value={badge.criteria?.metric || 'memories'}
+                      onChange={e => updateBadge(i, 'criteria.metric', e.target.value)}
+                      style={{ ...inputStyle, cursor: 'pointer' }}
+                    >
+                      {METRIC_OPTIONS.map(opt => (
+                        <option key={opt.value} value={opt.value}>{opt.label}</option>
+                      ))}
+                    </select>
+                  </div>
+                  <div style={{ flex: '0 0 100px' }}>
+                    <label style={labelStyle}>Threshold</label>
+                    <input
+                      type="number"
+                      min="1"
+                      value={badge.criteria?.threshold || 1}
+                      onChange={e => updateBadge(i, 'criteria.threshold', e.target.value)}
+                      style={inputStyle}
+                    />
+                  </div>
                 </div>
               </div>
-              <div>
-                <label style={labelStyle}>Description (shown when locked)</label>
-                <input value={badge.description} onChange={e => updateBadge(i, 'description', e.target.value)} style={inputStyle} />
-              </div>
-              <div>
-                <label style={labelStyle}>Congrats Message (shown when earned)</label>
-                <input value={badge.congratsMessage} onChange={e => updateBadge(i, 'congratsMessage', e.target.value)} style={inputStyle} />
-              </div>
-            </div>
-          ))}
+            )
+          })}
+
+          {/* Add Badge button */}
+          <button
+            onClick={addBadge}
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: '8px',
+              padding: '12px',
+              background: '#fff',
+              border: '2px dashed #ddd',
+              borderRadius: '10px',
+              cursor: 'pointer',
+              fontSize: '13px',
+              fontWeight: '600',
+              color: '#888',
+              transition: 'all 0.2s',
+            }}
+            onMouseEnter={e => {
+              e.currentTarget.style.borderColor = '#406A56'
+              e.currentTarget.style.color = '#406A56'
+            }}
+            onMouseLeave={e => {
+              e.currentTarget.style.borderColor = '#ddd'
+              e.currentTarget.style.color = '#888'
+            }}
+          >
+            <Plus size={16} /> Add Badge
+          </button>
         </div>
       )}
 
@@ -269,7 +396,7 @@ export default function GamificationAdminPage() {
         <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
           {config.badges.map(b => (
             <div key={b.type} style={{ padding: '4px 8px', background: '#fff', borderRadius: '6px', fontSize: '11px', border: '1px solid #eee' }}>
-              {b.emoji} {b.name}
+              {b.emoji} {b.name} <span style={{ color: '#aaa' }}>({b.criteria?.metric} ≥ {b.criteria?.threshold})</span>
             </div>
           ))}
         </div>
