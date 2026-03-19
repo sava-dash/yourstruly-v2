@@ -16,7 +16,6 @@ import '@/styles/conversation.css'
 import dynamic from 'next/dynamic'
 
 const MonthlyRecap = dynamic(() => import('@/components/dashboard/MonthlyRecap'), { ssr: false })
-const WeeklyChallenges = dynamic(() => import('@/components/dashboard/WeeklyChallenges'), { ssr: false })
 
 // Local imports
 import { 
@@ -347,7 +346,6 @@ export default function DashboardPage() {
         {/* Right sidebar: same level as left sidebar in home-layout */}
         <aside className="home-right-sidebar">
           <MonthlyRecap />
-          <WeeklyChallenges />
           <QuickActions
             onShuffle={handleShuffle}
             onPhotoUpload={() => setShowPhotoUpload(true)}

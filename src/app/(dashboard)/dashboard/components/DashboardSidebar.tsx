@@ -2,8 +2,11 @@
 
 import { motion } from 'framer-motion'
 import Link from 'next/link'
+import dynamic from 'next/dynamic'
 import OnThisDay from '@/components/dashboard/OnThisDay'
 import ActivityFeed from '@/components/dashboard/ActivityFeed'
+
+const WeeklyChallenges = dynamic(() => import('@/components/dashboard/WeeklyChallenges'), { ssr: false })
 import type { DashboardStats } from '../hooks/useDashboardData'
 import type { CompletedTile } from '../hooks/useXpState'
 
@@ -93,6 +96,9 @@ export function DashboardSidebar({
           </div>
         </div>
       </div>
+      
+      {/* Weekly Challenges */}
+      <WeeklyChallenges />
       
       {/* On This Day */}
       <div className="sidebar-section">

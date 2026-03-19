@@ -39,17 +39,19 @@ export default function WeeklyChallenges() {
   if (challenges.length === 0) return null
 
   return (
-    <div style={{ marginBottom: '16px' }}>
-      <div style={{ fontSize: '13px', fontWeight: '700', color: '#333', marginBottom: '10px' }}>
+    <div className="glass-card glass-card-strong" style={{ padding: 0, overflow: 'hidden' }}>
+      <div style={{
+        padding: '12px 14px 8px',
+        fontSize: '12px',
+        fontWeight: '700',
+        color: '#406A56',
+        textTransform: 'uppercase',
+        letterSpacing: '0.5px',
+        borderBottom: '1px solid #f0f0f0',
+      }}>
         Weekly Challenges
       </div>
-
-      <div style={{
-        background: '#fff',
-        border: '1px solid #eee',
-        borderRadius: '12px',
-        overflow: 'hidden',
-      }}>
+      <div>
         {challenges.map((c, i) => {
           const progress = Math.min((c.current_count / c.target_count) * 100, 100)
 
