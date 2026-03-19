@@ -10,12 +10,20 @@ import { PhotoTaggingModal } from '@/components/engagement/PhotoTaggingModal'
 import { AddContactModal } from '@/components/contacts/AddContactModal'
 import PhotoUploadModal from '@/components/dashboard/PhotoUploadModal'
 import { useSubscription } from '@/hooks/useSubscription'
+import { useGamificationConfig } from '@/hooks/useGamificationConfig'
+import type { XpLevelConfig } from '@/lib/gamification-config'
+import Link from 'next/link'
 import '@/styles/home.css'
 import '@/styles/engagement.css'
 import '@/styles/conversation.css'
 import dynamic from 'next/dynamic'
 
 const MonthlyRecap = dynamic(() => import('@/components/dashboard/MonthlyRecap'), { ssr: false })
+const WeeklyChallenges = dynamic(() => import('@/components/dashboard/WeeklyChallenges'), { ssr: false })
+const BadgeDisplay = dynamic(() => import('@/components/dashboard/BadgeDisplay'), { ssr: false })
+
+// Feed content
+import FeedContent from '@/components/feed/FeedContent'
 
 // Local imports
 import { 
@@ -26,19 +34,32 @@ import {
 import { useDashboardData } from './hooks/useDashboardData'
 import { useXpState } from './hooks/useXpState'
 import {
-  DashboardSidebar,
-  LifeChapterFilter,
+  QuickActions,
   MilestoneModal,
   QuickMemoryModal,
   PostscriptModal,
-  XpFloatingCounter,
-  SwipeableCardStack,
+  EngagementTile,
+  EngagementOverlay,
   type Milestone,
 } from './components'
+
+function getXpLevel(xp: number, levels: XpLevelConfig[]) {
+  let current = levels[0]
+  for (const lvl of levels) {
+    if (xp >= lvl.minXp) current = lvl
+    else break
+  }
+  const nextLevel = levels.find(l => l.minXp > xp)
+  const progress = nextLevel
+    ? ((xp - current.minXp) / (nextLevel.minXp - current.minXp)) * 100
+    : 100
+  return { ...current, nextLevel, progress, xpToNext: nextLevel ? nextLevel.minXp - xp : 0 }
+}
 
 export default function DashboardPage() {
   const supabase = createClient()
   const { subscription } = useSubscription()
+  const { config: gamificationConfig } = useGamificationConfig()
   
   // User ID for scoping
   const [currentUserId, setCurrentUserId] = useState<string | null>(null)
@@ -69,17 +90,14 @@ export default function DashboardPage() {
     addCompletedTile,
   } = useXpState(currentUserId)
   
-  // Life chapter filter
-  const [selectedChapter, setSelectedChapter] = useState<string | null>(null)
-  
-  // Engagement prompts
+  // Engagement prompts (for the overlay)
   const { 
     prompts: rawPrompts, 
-    isLoading, 
+    isLoading: promptsLoading, 
     shuffle, 
     answerPrompt, 
     stats: engagementStats 
-  } = useEngagementPrompts(50, selectedChapter)
+  } = useEngagementPrompts(50)
   
   // Track locally answered prompts
   const [answeredPromptIds, setAnsweredPromptIds] = useState<string[]>([])
@@ -99,6 +117,9 @@ export default function DashboardPage() {
     }
     return true
   })
+
+  // Engagement overlay state
+  const [showEngagementOverlay, setShowEngagementOverlay] = useState(false)
 
   // Modal states
   const [engagementPrompt, setEngagementPrompt] = useState<any | null>(null)
@@ -121,7 +142,7 @@ export default function DashboardPage() {
     }
   }, [])
   
-  // Handle card answer (from flipped card)
+  // Handle card answer (from overlay)
   const handleCardAnswer = useCallback(async (promptId: string, response: { type: 'text' | 'voice' | 'selection'; text?: string; videoUrl?: string }) => {
     const prompt = prompts.find(p => p.id === promptId)
     if (!prompt) return
@@ -150,13 +171,6 @@ export default function DashboardPage() {
       throw err
     }
   }, [prompts, answerPrompt, addCompletedTile, addXp, refreshStats])
-
-  // Handle photo tagging (still uses modal for face selection)
-  const handlePhotoTagClick = useCallback((prompt: any) => {
-    if (PHOTO_TAGGING_TYPES.includes(prompt.type)) {
-      setPhotoTaggingPrompt(prompt)
-    }
-  }, [])
 
   // Handle engagement completion
   const handleEngagementComplete = useCallback(async (result: {
@@ -248,16 +262,11 @@ export default function DashboardPage() {
     return prompt.promptText || 'Share something meaningful...'
   }
 
-  return (
-    <div className="overflow-x-hidden">
-      {/* Background */}
-      <div className="home-background">
-        <div className="home-blob home-blob-1" />
-        <div className="home-blob home-blob-2" />
-        <div className="home-blob home-blob-3" />
-        <div className="home-blob home-blob-4" />
-      </div>
+  // Streak days
+  const streakDays = engagementStats?.currentStreakDays ?? 0
 
+  return (
+    <div className="feed-page" data-theme="dark">
       {/* Modals */}
       <AnimatePresence>
         {engagementPrompt && (
@@ -315,58 +324,175 @@ export default function DashboardPage() {
         }} />
       )}
 
-      {/* Main Layout */}
-      <div className="home-layout">
-        <DashboardSidebar
-          profile={profile}
-          stats={stats}
-          totalXp={totalXp}
-          xpAnimating={xpAnimating}
-          completedTiles={completedTiles}
-          currentStreakDays={engagementStats?.currentStreakDays ?? 0}
-          subscription={subscription}
-          onPhotoUpload={() => setShowPhotoUpload(true)}
-          onAddContact={() => setShowContactModal(true)}
-          onQuickMemory={() => setShowQuickMemoryModal(true)}
-        />
+      {/* Engagement Overlay */}
+      <EngagementOverlay
+        isOpen={showEngagementOverlay}
+        onClose={() => setShowEngagementOverlay(false)}
+        prompts={prompts}
+        isLoading={promptsLoading}
+        answeredPromptIds={answeredPromptIds}
+        onAnsweredPromptIds={setAnsweredPromptIds}
+        onCardAnswer={handleCardAnswer}
+        onShuffle={handleShuffle}
+        answerPrompt={answerPrompt}
+        getPromptText={getPromptText}
+        totalXp={totalXp}
+        xpAnimating={xpAnimating}
+        lastXpGain={lastXpGain}
+        addXp={addXp}
+        addCompletedTile={addCompletedTile}
+        refreshStats={refreshStats}
+        educationLevel={profile?.education_level}
+        userContacts={userContacts}
+      />
 
-        <main className="home-main">
-          <div className="engagement-column">
-            <div style={{ display: 'flex', justifyContent: 'center', width: '100%', marginBottom: '16px' }}>
-              <LifeChapterFilter
-                selectedChapter={selectedChapter}
-                onSelectChapter={setSelectedChapter}
-                educationLevel={profile?.education_level}
-              />
-            </div>
-            <div className="home-bubbles">
-              {isLoading ? (
-                <div className="flex flex-col items-center justify-center h-[500px] gap-4">
-                  <motion.div animate={{ rotate: 360 }} transition={{ duration: 2, repeat: Infinity, ease: 'linear' }}>
-                    <Sparkles size={32} className="text-[#F5A524]" />
-                  </motion.div>
-                  <span className="text-gray-500">Loading prompts...</span>
-                </div>
-              ) : (
-                <div className="w-full">
-                  <XpFloatingCounter show={xpAnimating} amount={lastXpGain} />
-                  <SwipeableCardStack
-                    prompts={prompts}
-                    onCardDismiss={(id) => {
-                      setAnsweredPromptIds(prev => [...prev, id])
-                    }}
-                    onCardAnswer={handleCardAnswer}
-                    onNeedMorePrompts={handleShuffle}
-                    getPromptText={getPromptText}
-                  />
+      {/* Main Layout */}
+      <div style={{ display: 'flex', gap: '24px', padding: '80px 24px 24px' }}>
+        {/* Left Sidebar */}
+        <aside style={{
+          width: '320px',
+          flexShrink: 0,
+          display: 'flex',
+          flexDirection: 'column',
+          gap: '16px',
+          position: 'sticky',
+          top: '80px',
+          height: 'fit-content',
+          maxHeight: 'calc(100vh - 100px)',
+          overflowY: 'auto',
+        }}>
+          {/* Profile Card (Feed-style dark theme) */}
+          <div className="profile-card-feed" style={{
+            borderRadius: '16px',
+            padding: '16px 20px',
+          }}>
+            {/* Name + Streak */}
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '12px' }}>
+              <h2 className="profile-card-name" style={{ fontSize: '18px', fontWeight: '600', margin: 0 }}>
+                Hey {profile?.full_name?.split(' ')[0] || 'there'}
+              </h2>
+              {streakDays > 0 && (
+                <div style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '3px',
+                  padding: '3px 8px',
+                  background: 'linear-gradient(90deg, rgba(217,198,26,0.15), rgba(195,95,51,0.15))',
+                  borderRadius: '12px',
+                }}>
+                  <span style={{ fontSize: '13px' }}>🔥</span>
+                  <span style={{ fontSize: '13px', fontWeight: '700', color: '#C35F33' }}>{streakDays}</span>
                 </div>
               )}
             </div>
 
-          </div>
-        </main>
+            {/* Stats Row */}
+            <div className="profile-card-stats" style={{ display: 'flex', alignItems: 'center', textAlign: 'center', marginBottom: '12px' }}>
+              <Link href="/dashboard/memories" style={{ flex: 1, textDecoration: 'none', color: 'inherit' }}>
+                <div className="profile-stat-value">{stats.memories}</div>
+                <div className="profile-stat-label">Memories</div>
+              </Link>
+              <Link href="/dashboard/contacts" className="profile-stat-bordered" style={{ flex: 1, textDecoration: 'none', color: 'inherit' }}>
+                <div className="profile-stat-value">{stats.contacts}</div>
+                <div className="profile-stat-label">People</div>
+              </Link>
+              <Link href="/dashboard/gallery" className="profile-stat-bordered-r" style={{ flex: 1, textDecoration: 'none', color: 'inherit' }}>
+                <div className="profile-stat-value">{stats.photos}</div>
+                <div className="profile-stat-label">Photos</div>
+              </Link>
+              <div style={{ flex: 1 }}>
+                <div className={`profile-stat-xp ${xpAnimating ? 'animate-pulse' : ''}`}>{totalXp.toLocaleString()}</div>
+                <div className="profile-stat-label-xp">
+                  <span>⚡</span> XP
+                </div>
+              </div>
+            </div>
 
-        {/* Right sidebar removed — QuickActions moved to left sidebar, MonthlyRecap is now a popup */}
+            {/* XP Level + Progress */}
+            {(() => {
+              const lvl = getXpLevel(totalXp, gamificationConfig.xpLevels)
+              return (
+                <div style={{ marginBottom: '12px' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '4px' }}>
+                    <span style={{ fontSize: '12px', fontWeight: '700' }} className="profile-card-name">
+                      {lvl.emoji} {lvl.title}
+                    </span>
+                    {lvl.nextLevel && (
+                      <span style={{ fontSize: '10px', color: '#888' }}>
+                        {lvl.xpToNext} XP to {lvl.nextLevel.title}
+                      </span>
+                    )}
+                  </div>
+                  <div style={{ height: '4px', background: 'rgba(217,198,26,0.15)', borderRadius: '2px', overflow: 'hidden' }}>
+                    <div style={{
+                      height: '100%',
+                      borderRadius: '2px',
+                      width: `${lvl.progress}%`,
+                      background: 'linear-gradient(90deg, #D9C61A, #E8D84A)',
+                      transition: 'width 0.8s ease-out',
+                    }} />
+                  </div>
+                </div>
+              )
+            })()}
+
+            {/* Badges */}
+            <BadgeDisplay />
+
+            {/* Storage Bar */}
+            <div className="profile-storage">
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '6px' }}>
+                <span className="profile-storage-label">Storage</span>
+                <span className="profile-storage-value">
+                  {subscription?.storage 
+                    ? `${(subscription.storage.total_bytes / (1024*1024*1024)).toFixed(1)} / ${(subscription.storage.limit_bytes / (1024*1024*1024)).toFixed(0)} GB`
+                    : '0 / 10 GB'
+                  }
+                </span>
+              </div>
+              <div className="profile-storage-track">
+                <div style={{
+                  height: '100%',
+                  borderRadius: '3px',
+                  width: `${Math.min(subscription?.storage?.percentage || 0, 100)}%`,
+                  background: (subscription?.storage?.percentage || 0) >= 90
+                    ? 'linear-gradient(90deg, #C35F33, #dc2626)'
+                    : 'linear-gradient(90deg, #406A56, #8DACAB)',
+                  transition: 'width 0.8s ease-out',
+                }} />
+              </div>
+            </div>
+          </div>
+
+          {/* Weekly Challenges */}
+          <WeeklyChallenges />
+
+          {/* Quick Actions */}
+          <div style={{
+            background: 'rgba(255,255,255,0.05)',
+            borderRadius: '16px',
+            padding: '16px',
+            border: '1px solid rgba(255,255,255,0.08)',
+          }}>
+            <QuickActions
+              onPhotoUpload={() => setShowPhotoUpload(true)}
+              onAddContact={() => setShowContactModal(true)}
+              onQuickMemory={() => setShowQuickMemoryModal(true)}
+            />
+          </div>
+
+          {/* Engagement Tile */}
+          <EngagementTile
+            nextPrompt={prompts[0] || null}
+            totalWaiting={prompts.length}
+            onOpen={() => setShowEngagementOverlay(true)}
+          />
+        </aside>
+
+        {/* Main Content - Feed */}
+        <main style={{ flex: 1, minWidth: 0 }}>
+          <FeedContent />
+        </main>
       </div>
     </div>
   )

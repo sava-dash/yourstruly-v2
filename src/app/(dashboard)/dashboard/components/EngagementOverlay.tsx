@@ -1,0 +1,446 @@
+'use client'
+
+import { useState, useEffect, useCallback, useMemo, useRef } from 'react'
+import { motion, AnimatePresence } from 'framer-motion'
+import { X, ChevronDown, Sparkles, Check } from 'lucide-react'
+import { SwipeableCardStack } from './SwipeableCardStack'
+import { XpFloatingCounter } from './XpFloatingCounter'
+import { TYPE_CONFIG, PHOTO_TAGGING_TYPES, isContactPrompt, LIFE_CHAPTERS } from '../constants'
+import { UnifiedEngagementModal } from '@/components/engagement/UnifiedEngagementModal'
+import { PhotoTaggingModal } from '@/components/engagement/PhotoTaggingModal'
+
+// Education levels that indicate the user attended college
+const COLLEGE_EDUCATION_LEVELS = [
+  'Some College',
+  "Associate's Degree",
+  "Bachelor's Degree",
+  "Master's Degree",
+  'Doctorate / PhD',
+  'Professional Degree (MD, JD, etc.)',
+]
+
+interface EngagementOverlayProps {
+  isOpen: boolean
+  onClose: () => void
+  prompts: any[]
+  isLoading: boolean
+  answeredPromptIds: string[]
+  onAnsweredPromptIds: (ids: string[]) => void
+  onCardAnswer: (promptId: string, response: any) => Promise<void>
+  onShuffle: () => void
+  answerPrompt: (promptId: string, response: any) => Promise<void>
+  getPromptText: (prompt: any) => string
+  totalXp: number
+  xpAnimating: boolean
+  lastXpGain: number
+  addXp: (amount: number) => void
+  addCompletedTile: (tile: any) => void
+  refreshStats: () => void
+  educationLevel?: string | null
+  userContacts: any[]
+}
+
+export function EngagementOverlay({
+  isOpen,
+  onClose,
+  prompts,
+  isLoading,
+  answeredPromptIds,
+  onAnsweredPromptIds,
+  onCardAnswer,
+  onShuffle,
+  answerPrompt,
+  getPromptText,
+  totalXp,
+  xpAnimating,
+  lastXpGain,
+  addXp,
+  addCompletedTile,
+  refreshStats,
+  educationLevel,
+  userContacts,
+}: EngagementOverlayProps) {
+  // Multi-select chapter filter
+  const [selectedChapters, setSelectedChapters] = useState<string[]>([])
+  const [chapterDropdownOpen, setChapterDropdownOpen] = useState(false)
+  const dropdownRef = useRef<HTMLDivElement>(null)
+
+  // Modal states
+  const [engagementPrompt, setEngagementPrompt] = useState<any | null>(null)
+  const [photoTaggingPrompt, setPhotoTaggingPrompt] = useState<any | null>(null)
+
+  const attendedCollege = educationLevel ? COLLEGE_EDUCATION_LEVELS.includes(educationLevel) : false
+
+  const visibleChapters = useMemo(() => {
+    return LIFE_CHAPTERS.filter(chapter => {
+      if (chapter.id === 'college' && !attendedCollege) return false
+      return true
+    })
+  }, [attendedCollege])
+
+  // Filter prompts by selected chapters (client-side)
+  const filteredPrompts = useMemo(() => {
+    if (selectedChapters.length === 0) return prompts
+    return prompts.filter(p => {
+      const chapter = p.lifeChapter || p.life_chapter || p.metadata?.lifeChapter
+      if (!chapter) return true // show prompts without chapters
+      return selectedChapters.includes(chapter)
+    })
+  }, [prompts, selectedChapters])
+
+  const toggleChapter = (chapterId: string) => {
+    setSelectedChapters(prev => 
+      prev.includes(chapterId) 
+        ? prev.filter(c => c !== chapterId)
+        : [...prev, chapterId]
+    )
+  }
+
+  const chapterButtonLabel = selectedChapters.length === 0 
+    ? 'All Chapters' 
+    : selectedChapters.length === 1
+    ? visibleChapters.find(c => c.id === selectedChapters[0])?.label || '1 chapter'
+    : `${selectedChapters.length} chapters selected`
+
+  // Close dropdown on outside click
+  useEffect(() => {
+    const handleClick = (e: MouseEvent) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(e.target as Node)) {
+        setChapterDropdownOpen(false)
+      }
+    }
+    document.addEventListener('mousedown', handleClick)
+    return () => document.removeEventListener('mousedown', handleClick)
+  }, [])
+
+  // Handle photo tagging
+  const handlePhotoTagClick = useCallback((prompt: any) => {
+    if (PHOTO_TAGGING_TYPES.includes(prompt.type)) {
+      setPhotoTaggingPrompt(prompt)
+    }
+  }, [])
+
+  // Handle engagement modal completion
+  const handleEngagementComplete = useCallback(async (result: {
+    memoryId?: string
+    responseText?: string
+    xpAwarded: number
+  }) => {
+    if (!engagementPrompt) return
+    const config = TYPE_CONFIG[engagementPrompt.type] || TYPE_CONFIG.memory_prompt
+    const xpGained = result.xpAwarded || config.xp
+    addCompletedTile({
+      id: engagementPrompt.id,
+      type: engagementPrompt.type,
+      title: engagementPrompt.promptText?.substring(0, 40) || config.label,
+      xp: xpGained,
+      photoUrl: engagementPrompt.photoUrl,
+      contactName: engagementPrompt.contactName,
+      contactId: engagementPrompt.contactId,
+      memoryId: result.memoryId,
+      resultMemoryId: result.memoryId,
+    })
+    if (xpGained > 0) addXp(xpGained)
+    setEngagementPrompt(null)
+    onAnsweredPromptIds([...answeredPromptIds, engagementPrompt.id])
+    refreshStats()
+    onShuffle()
+  }, [engagementPrompt, addCompletedTile, addXp, refreshStats, onShuffle, answeredPromptIds, onAnsweredPromptIds])
+
+  if (!isOpen) return null
+
+  return (
+    <>
+      <AnimatePresence>
+        <motion.div
+          key="engagement-overlay-backdrop"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          transition={{ duration: 0.3 }}
+          style={{
+            position: 'fixed',
+            inset: 0,
+            zIndex: 100,
+            background: 'rgba(0, 0, 0, 0.7)',
+            backdropFilter: 'blur(8px)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            padding: '5vh 24px',
+          }}
+          onClick={onClose}
+        >
+          <motion.div
+            key="engagement-overlay-content"
+            initial={{ opacity: 0, scale: 0.9, y: 20 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            exit={{ opacity: 0, scale: 0.9, y: 20 }}
+            transition={{ type: 'spring', damping: 25, stiffness: 300 }}
+            onClick={(e) => e.stopPropagation()}
+            style={{
+              width: '100%',
+              maxWidth: '600px',
+              height: '90vh',
+              maxHeight: '800px',
+              background: '#fff',
+              borderRadius: '24px',
+              display: 'flex',
+              flexDirection: 'column',
+              overflow: 'hidden',
+              boxShadow: '0 25px 60px rgba(0, 0, 0, 0.3)',
+              position: 'relative',
+            }}
+          >
+            {/* Close Button */}
+            <button
+              onClick={onClose}
+              style={{
+                position: 'absolute',
+                top: '16px',
+                right: '16px',
+                zIndex: 10,
+                width: '36px',
+                height: '36px',
+                borderRadius: '50%',
+                background: 'rgba(0,0,0,0.06)',
+                border: 'none',
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                color: '#666',
+                transition: 'all 0.2s',
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.background = 'rgba(0,0,0,0.12)'
+                e.currentTarget.style.color = '#333'
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.background = 'rgba(0,0,0,0.06)'
+                e.currentTarget.style.color = '#666'
+              }}
+            >
+              <X size={18} />
+            </button>
+
+            {/* Header */}
+            <div style={{
+              padding: '20px 24px 16px',
+              borderBottom: '1px solid rgba(0,0,0,0.06)',
+            }}>
+              <h2 style={{
+                fontSize: '20px',
+                fontWeight: '700',
+                color: '#2d2d2d',
+                margin: '0 0 12px 0',
+              }}>
+                Your Story Prompts
+              </h2>
+
+              {/* Multi-select Chapter Filter */}
+              <div ref={dropdownRef} style={{ position: 'relative', display: 'inline-flex' }}>
+                <button
+                  onClick={() => setChapterDropdownOpen(!chapterDropdownOpen)}
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '6px',
+                    padding: '8px 14px',
+                    borderRadius: '20px',
+                    border: '1px solid rgba(0,0,0,0.1)',
+                    background: selectedChapters.length > 0 
+                      ? 'linear-gradient(135deg, #7828C8, #9353D3)' 
+                      : 'rgba(0,0,0,0.03)',
+                    color: selectedChapters.length > 0 ? '#fff' : '#666',
+                    fontSize: '13px',
+                    fontWeight: '500',
+                    cursor: 'pointer',
+                    transition: 'all 0.2s',
+                  }}
+                >
+                  {chapterButtonLabel}
+                  <ChevronDown size={14} style={{
+                    transform: chapterDropdownOpen ? 'rotate(180deg)' : 'rotate(0deg)',
+                    transition: 'transform 0.2s',
+                  }} />
+                </button>
+
+                <AnimatePresence>
+                  {chapterDropdownOpen && (
+                    <motion.div
+                      initial={{ opacity: 0, y: -8, scale: 0.95 }}
+                      animate={{ opacity: 1, y: 0, scale: 1 }}
+                      exit={{ opacity: 0, y: -8, scale: 0.95 }}
+                      transition={{ type: 'spring', stiffness: 500, damping: 30 }}
+                      style={{
+                        position: 'absolute',
+                        top: 'calc(100% + 8px)',
+                        left: 0,
+                        zIndex: 50,
+                        minWidth: '240px',
+                        background: '#fff',
+                        borderRadius: '16px',
+                        boxShadow: '0 12px 40px rgba(0,0,0,0.15)',
+                        border: '1px solid rgba(0,0,0,0.08)',
+                        overflow: 'hidden',
+                        padding: '8px',
+                      }}
+                    >
+                      {/* Clear All / Select All */}
+                      <button
+                        onClick={() => setSelectedChapters([])}
+                        style={{
+                          width: '100%',
+                          padding: '10px 14px',
+                          textAlign: 'left',
+                          fontSize: '13px',
+                          fontWeight: selectedChapters.length === 0 ? '600' : '500',
+                          color: selectedChapters.length === 0 ? '#7828C8' : '#666',
+                          background: selectedChapters.length === 0 ? 'rgba(120,40,200,0.08)' : 'transparent',
+                          border: 'none',
+                          borderRadius: '10px',
+                          cursor: 'pointer',
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: '8px',
+                          transition: 'all 0.15s',
+                        }}
+                      >
+                        <span style={{
+                          width: '16px', height: '16px', borderRadius: '4px',
+                          border: `2px solid ${selectedChapters.length === 0 ? '#7828C8' : '#ccc'}`,
+                          display: 'flex', alignItems: 'center', justifyContent: 'center',
+                          background: selectedChapters.length === 0 ? '#7828C8' : 'transparent',
+                        }}>
+                          {selectedChapters.length === 0 && <Check size={10} color="#fff" />}
+                        </span>
+                        All Chapters
+                      </button>
+
+                      <div style={{ height: '1px', background: 'rgba(0,0,0,0.06)', margin: '4px 8px' }} />
+
+                      {/* Chapter Checkboxes */}
+                      {visibleChapters.map((chapter) => {
+                        const isSelected = selectedChapters.includes(chapter.id)
+                        return (
+                          <button
+                            key={chapter.id}
+                            onClick={() => toggleChapter(chapter.id)}
+                            style={{
+                              width: '100%',
+                              padding: '10px 14px',
+                              textAlign: 'left',
+                              fontSize: '13px',
+                              fontWeight: isSelected ? '600' : '500',
+                              color: isSelected ? chapter.color : '#666',
+                              background: isSelected ? `${chapter.color}12` : 'transparent',
+                              border: 'none',
+                              borderRadius: '10px',
+                              cursor: 'pointer',
+                              display: 'flex',
+                              alignItems: 'center',
+                              gap: '8px',
+                              transition: 'all 0.15s',
+                            }}
+                          >
+                            <span style={{
+                              width: '16px', height: '16px', borderRadius: '4px',
+                              border: `2px solid ${isSelected ? chapter.color : '#ccc'}`,
+                              display: 'flex', alignItems: 'center', justifyContent: 'center',
+                              background: isSelected ? chapter.color : 'transparent',
+                              transition: 'all 0.2s',
+                            }}>
+                              {isSelected && <Check size={10} color="#fff" />}
+                            </span>
+                            <span style={{
+                              width: '8px', height: '8px', borderRadius: '50%',
+                              background: chapter.color, flexShrink: 0,
+                            }} />
+                            {chapter.label}
+                          </button>
+                        )
+                      })}
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </div>
+            </div>
+
+            {/* Card Stack Content */}
+            <div style={{
+              flex: 1,
+              padding: '24px',
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'center',
+              justifyContent: 'center',
+              overflow: 'hidden',
+            }}>
+              {isLoading ? (
+                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '16px' }}>
+                  <motion.div animate={{ rotate: 360 }} transition={{ duration: 2, repeat: Infinity, ease: 'linear' }}>
+                    <Sparkles size={32} style={{ color: '#F5A524' }} />
+                  </motion.div>
+                  <span style={{ color: '#888' }}>Loading prompts...</span>
+                </div>
+              ) : (
+                <div style={{ width: '100%', maxWidth: '500px' }}>
+                  <XpFloatingCounter show={xpAnimating} amount={lastXpGain} />
+                  <SwipeableCardStack
+                    prompts={filteredPrompts}
+                    onCardDismiss={(id) => {
+                      onAnsweredPromptIds([...answeredPromptIds, id])
+                    }}
+                    onCardAnswer={onCardAnswer}
+                    onNeedMorePrompts={onShuffle}
+                    getPromptText={getPromptText}
+                  />
+                </div>
+              )}
+            </div>
+          </motion.div>
+        </motion.div>
+      </AnimatePresence>
+
+      {/* Engagement Modal (opened from overlay) */}
+      <AnimatePresence>
+        {engagementPrompt && (
+          <UnifiedEngagementModal
+            prompt={engagementPrompt}
+            expectedXp={TYPE_CONFIG[engagementPrompt.type]?.xp || 15}
+            onComplete={handleEngagementComplete}
+            onClose={() => setEngagementPrompt(null)}
+          />
+        )}
+      </AnimatePresence>
+
+      {/* Photo Tagging Modal */}
+      <AnimatePresence>
+        {photoTaggingPrompt && photoTaggingPrompt.photoId && (
+          <PhotoTaggingModal
+            photoId={photoTaggingPrompt.photoId}
+            photoUrl={photoTaggingPrompt.photoUrl}
+            promptId={photoTaggingPrompt.id}
+            onComplete={async (result) => {
+              try {
+                await answerPrompt(photoTaggingPrompt.id, { type: 'selection', data: { action: 'photo_tagged' } })
+              } catch (err) {
+                console.error('Failed to mark prompt answered:', err)
+              }
+              addCompletedTile({
+                id: photoTaggingPrompt.id,
+                type: photoTaggingPrompt.type,
+                title: 'Tagged photo',
+                xp: result.xpAwarded,
+                photoUrl: photoTaggingPrompt.photoUrl,
+              })
+              setPhotoTaggingPrompt(null)
+            }}
+            onClose={() => setPhotoTaggingPrompt(null)}
+          />
+        )}
+      </AnimatePresence>
+    </>
+  )
+}
