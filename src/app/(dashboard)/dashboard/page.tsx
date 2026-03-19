@@ -15,7 +15,6 @@ import '@/styles/engagement.css'
 import '@/styles/conversation.css'
 import dynamic from 'next/dynamic'
 
-const WeeklyChallenges = dynamic(() => import('@/components/dashboard/WeeklyChallenges'), { ssr: false })
 const MonthlyRecap = dynamic(() => import('@/components/dashboard/MonthlyRecap'), { ssr: false })
 
 // Local imports
@@ -335,14 +334,12 @@ export default function DashboardPage() {
               )}
             </div>
 
-            {/* Gamification */}
-            <WeeklyChallenges />
-            <MonthlyRecap />
           </div>
         </main>
 
         {/* Right sidebar: same level as left sidebar in home-layout */}
         <aside className="home-right-sidebar">
+          <MonthlyRecap />
           <LifeChapterFilter
             selectedChapter={selectedChapter}
             onSelectChapter={setSelectedChapter}
