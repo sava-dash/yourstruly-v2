@@ -1733,7 +1733,7 @@ export default function DashboardPage() {
     const currentYear = new Date().getFullYear()
     const latestYear = uniqueYears.length > 0 ? Math.max(currentYear, uniqueYears[0]) : currentYear
     const oldestDataYear = uniqueYears.length > 0 ? uniqueYears[uniqueYears.length - 1] : latestYear
-    const startYear = birthYear || Math.min(oldestDataYear, latestYear - 40)
+    const startYear = birthYear || (uniqueYears.length > 0 ? oldestDataYear : latestYear - 5)
     console.log('[Timeline] latestYear:', latestYear, 'oldestData:', oldestDataYear, 'birthYear:', birthYear, 'startYear:', startYear)
     const years: number[] = []
     for (let y = latestYear; y >= startYear; y--) {

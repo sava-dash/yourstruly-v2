@@ -43,37 +43,48 @@ export function SwipeableCardStack({
   onNeedMorePrompts,
   getPromptText,
 }: SwipeableCardStackProps) {
+  // Carousel index — navigates within the full prompts array
   const [currentIndex, setCurrentIndex] = useState(0)
   const containerRef = useRef<HTMLDivElement>(null)
 
-  // The visible prompts are the ones starting from currentIndex
-  const visiblePrompts = prompts.slice(currentIndex)
-
-  // Request more prompts when running low
+  // Clamp index when prompts array changes (e.g. after answer removes a prompt)
   useEffect(() => {
-    if (visiblePrompts.length < 5 && prompts.length > 0) {
+    if (prompts.length > 0 && currentIndex >= prompts.length) {
+      setCurrentIndex(prompts.length - 1)
+    }
+  }, [prompts.length, currentIndex])
+
+  // Request more prompts when near the end
+  useEffect(() => {
+    const remaining = prompts.length - currentIndex
+    if (remaining < 5 && prompts.length > 0) {
       onNeedMorePrompts()
     }
-  }, [visiblePrompts.length, prompts.length, onNeedMorePrompts])
+  }, [currentIndex, prompts.length, onNeedMorePrompts])
 
-  const handleDismiss = useCallback((id: string) => {
-    onCardDismiss(id)
-    setCurrentIndex(prev => Math.min(prev + 1, prompts.length))
-  }, [onCardDismiss, prompts.length])
+  const currentPrompt = prompts.length > 0 ? prompts[currentIndex] : null
+  const canGoBack = currentIndex > 0
+  const canGoForward = currentIndex < prompts.length - 1
 
+  // Navigate forward (skip without dismissing — just move carousel)
+  const goForward = useCallback(() => {
+    if (currentIndex < prompts.length - 1) {
+      setCurrentIndex(prev => prev + 1)
+    }
+  }, [currentIndex, prompts.length])
+
+  // Navigate backward
   const goBack = useCallback(() => {
     if (currentIndex > 0) {
       setCurrentIndex(prev => prev - 1)
     }
   }, [currentIndex])
 
-  const skipCurrent = useCallback(() => {
-    if (visiblePrompts.length > 0) {
-      handleDismiss(visiblePrompts[0].id)
-    }
-  }, [visiblePrompts, handleDismiss])
-
-  const canGoBack = currentIndex > 0
+  // Dismiss = actually answered/completed — removes from array via parent
+  const handleAnsweredDismiss = useCallback((id: string) => {
+    onCardDismiss(id)
+    // After dismiss, the prompts array shrinks. currentIndex will be clamped by the effect above.
+  }, [onCardDismiss])
 
   // Auto-focus on mount for keyboard navigation
   useEffect(() => {
@@ -83,13 +94,11 @@ export function SwipeableCardStack({
   // Keyboard navigation
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      if (visiblePrompts.length === 0) return
-      
-      const currentPrompt = visiblePrompts[0]
+      if (!currentPrompt) return
       
       if (e.key === 'ArrowRight') {
         e.preventDefault()
-        skipCurrent()
+        goForward()
       } else if (e.key === 'ArrowLeft') {
         e.preventDefault()
         goBack()
@@ -98,9 +107,9 @@ export function SwipeableCardStack({
 
     window.addEventListener('keydown', handleKeyDown)
     return () => window.removeEventListener('keydown', handleKeyDown)
-  }, [visiblePrompts, skipCurrent, goBack])
+  }, [currentPrompt, goForward, goBack])
 
-  if (visiblePrompts.length === 0) {
+  if (!currentPrompt) {
     return (
       <div className="flex flex-col items-center justify-center h-[520px] text-center">
         <div className="w-20 h-20 bg-gradient-to-br from-amber-400 to-orange-500 rounded-full flex items-center justify-center mb-6">
@@ -123,6 +132,19 @@ export function SwipeableCardStack({
 
   return (
     <div ref={containerRef} className="relative h-[600px] w-full mx-auto focus:outline-none" tabIndex={0}>
+      {/* Carousel position indicator */}
+      <div style={{
+        position: 'absolute',
+        top: '-28px',
+        left: '50%',
+        transform: 'translateX(-50%)',
+        fontSize: '12px',
+        color: '#888',
+        fontWeight: 500,
+      }}>
+        {currentIndex + 1} / {prompts.length}
+      </div>
+
       {/* Left Arrow — Go Back */}
       <button
         onClick={goBack}
@@ -147,16 +169,17 @@ export function SwipeableCardStack({
         }}
         onMouseEnter={(e) => { if (canGoBack) e.currentTarget.style.background = 'rgba(64,106,86,0.2)' }}
         onMouseLeave={(e) => { e.currentTarget.style.background = canGoBack ? 'rgba(64,106,86,0.12)' : 'rgba(0,0,0,0.04)' }}
-        title="Go back"
+        title="Previous prompt"
       >
         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
           <polyline points="15 18 9 12 15 6" />
         </svg>
       </button>
 
-      {/* Right Arrow — Skip */}
+      {/* Right Arrow — Next (skip forward without dismissing) */}
       <button
-        onClick={skipCurrent}
+        onClick={goForward}
+        disabled={!canGoForward}
         style={{
           position: 'absolute',
           right: '-52px',
@@ -166,18 +189,18 @@ export function SwipeableCardStack({
           width: '40px',
           height: '40px',
           borderRadius: '50%',
-          background: 'rgba(64,106,86,0.12)',
+          background: canGoForward ? 'rgba(64,106,86,0.12)' : 'rgba(0,0,0,0.04)',
           border: 'none',
-          cursor: 'pointer',
+          cursor: canGoForward ? 'pointer' : 'default',
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
-          color: '#406A56',
+          color: canGoForward ? '#406A56' : '#ccc',
           transition: 'all 0.2s',
         }}
-        onMouseEnter={(e) => { e.currentTarget.style.background = 'rgba(64,106,86,0.2)' }}
-        onMouseLeave={(e) => { e.currentTarget.style.background = 'rgba(64,106,86,0.12)' }}
-        title="Skip"
+        onMouseEnter={(e) => { if (canGoForward) e.currentTarget.style.background = 'rgba(64,106,86,0.2)' }}
+        onMouseLeave={(e) => { e.currentTarget.style.background = canGoForward ? 'rgba(64,106,86,0.12)' : 'rgba(0,0,0,0.04)' }}
+        title="Next prompt"
       >
         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
           <polyline points="9 18 15 12 9 6" />
@@ -185,18 +208,17 @@ export function SwipeableCardStack({
       </button>
 
       <div className="relative h-full">
-        {visiblePrompts.length > 0 && (
-          <FlippableCard
-            key={prompts[currentIndex].id}
-            prompt={visiblePrompts[0]}
-            index={0}
-            totalVisible={1}
-            onDismiss={() => handleDismiss(visiblePrompts[0].id)}
-            onGoBack={goBack}
-            onAnswer={onCardAnswer}
-            getPromptText={getPromptText}
-          />
-        )}
+        <FlippableCard
+          key={currentPrompt.id}
+          prompt={currentPrompt}
+          index={0}
+          totalVisible={1}
+          onDismiss={() => handleAnsweredDismiss(currentPrompt.id)}
+          onGoBack={goBack}
+          onGoForward={goForward}
+          onAnswer={onCardAnswer}
+          getPromptText={getPromptText}
+        />
       </div>
     </div>
   )
@@ -208,6 +230,7 @@ interface FlippableCardProps {
   totalVisible: number
   onDismiss: () => void
   onGoBack?: () => void
+  onGoForward?: () => void
   onAnswer: (promptId: string, response: { type: 'text' | 'voice' | 'selection'; text?: string; videoUrl?: string }) => Promise<void>
   getPromptText: (prompt: Prompt) => string
 }
@@ -218,6 +241,7 @@ function FlippableCard({
   totalVisible,
   onDismiss,
   onGoBack,
+  onGoForward,
   onAnswer,
   getPromptText,
 }: FlippableCardProps) {
@@ -347,7 +371,7 @@ function FlippableCard({
   }
 
   const handleDragEnd = (_: any, info: PanInfo) => {
-    if (isFlipped) return // Don't dismiss while flipped
+    if (isFlipped) return // Don't navigate while flipped
     
     const threshold = 80
     const velocity = Math.abs(info.velocity.x)
@@ -355,11 +379,11 @@ function FlippableCard({
     const absOffset = Math.abs(offset)
     
     if (absOffset > threshold || (velocity > 500 && absOffset > 30)) {
-      if (offset > 0) {
-        // Swiped RIGHT → skip (dismiss current)
-        onDismiss()
-      } else if (onGoBack) {
-        // Swiped LEFT → go back to previous (don't dismiss current card)
+      if (offset > 0 && onGoForward) {
+        // Swiped RIGHT → next prompt (carousel forward)
+        onGoForward()
+      } else if (offset < 0 && onGoBack) {
+        // Swiped LEFT → previous prompt (carousel back)
         onGoBack()
       }
     }
@@ -835,7 +859,7 @@ function FlippableCard({
               </p>
 
               <p className="text-xs text-gray-400 text-center mt-4">
-                Tap to answer • ← Go back • → Skip
+                Tap to answer • ← Previous • → Next
               </p>
             </div>
           </div>

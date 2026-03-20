@@ -408,8 +408,8 @@ export function EngagementOverlay({
                 {/* Swipe hints */}
                 <div style={{ marginTop: 'auto', paddingTop: '16px' }}>
                   <div style={{ fontSize: '11px', color: '#aaa', textAlign: 'center', lineHeight: '1.6' }}>
-                    <div>← Swipe left to go back</div>
-                    <div>→ Swipe right to skip</div>
+                    <div>← Previous prompt</div>
+                    <div>→ Next prompt</div>
                     <div>Tap card to answer</div>
                   </div>
                 </div>
