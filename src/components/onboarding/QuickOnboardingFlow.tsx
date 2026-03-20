@@ -516,17 +516,22 @@ function MapboxGlobeReveal({
 
   // Zoom out and spin the globe, then transition to traits
   // Keep globe spinning ref so we can maintain rotation across phases
-  const globeSpinRef = useRef<{ spinning: boolean; bearing: number }>({ spinning: false, bearing: 0 });
+  const globeSpinRef = useRef<{ spinning: boolean; lng: number }>({ spinning: false, lng: 0 });
 
   const startGlobeSpin = useCallback(() => {
     if (globeSpinRef.current.spinning) return;
+    const map = mapRef.current;
+    if (!map) return;
     globeSpinRef.current.spinning = true;
-    // 5 seconds per revolution = 360/5 = 72 deg/s ≈ 1.2 deg/frame at 60fps
-    const degreesPerFrame = 72 / 60;
+    globeSpinRef.current.lng = map.getCenter().lng;
+    // 10 seconds per revolution = 360/10 = 36 deg/s ≈ 0.6 deg/frame at 60fps
+    const degreesPerFrame = 36 / 60;
     const rotate = () => {
       if (!globeSpinRef.current.spinning || !mapRef.current) return;
-      globeSpinRef.current.bearing += degreesPerFrame;
-      mapRef.current.setBearing(globeSpinRef.current.bearing % 360);
+      globeSpinRef.current.lng += degreesPerFrame;
+      // Rotate by moving the center longitude (proper Earth spin axis)
+      const center = mapRef.current.getCenter();
+      mapRef.current.setCenter([globeSpinRef.current.lng % 360, center.lat]);
       requestAnimationFrame(rotate);
     };
     rotate();
