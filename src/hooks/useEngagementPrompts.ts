@@ -119,7 +119,16 @@ export function useEngagementPrompts(count: number = 5, lifeChapter: string | nu
         createdAt: p.created_at,
       }));
 
-      setPrompts(transformedPrompts);
+      // Client-side dedup: remove prompts with duplicate prompt text
+      const seenTexts = new Set<string>();
+      const dedupedPrompts = transformedPrompts.filter(p => {
+        const text = p.promptText?.toLowerCase().trim();
+        if (!text || seenTexts.has(text)) return false;
+        seenTexts.add(text);
+        return true;
+      });
+
+      setPrompts(dedupedPrompts);
       await fetchStats();
 
     } catch (err) {

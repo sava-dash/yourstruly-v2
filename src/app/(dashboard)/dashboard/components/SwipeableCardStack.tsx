@@ -44,7 +44,6 @@ export function SwipeableCardStack({
   getPromptText,
 }: SwipeableCardStackProps) {
   const [currentIndex, setCurrentIndex] = useState(0)
-  const [exitDirection, setExitDirection] = useState<'left' | 'right'>('right')
   const containerRef = useRef<HTMLDivElement>(null)
 
   // The visible prompts are the ones starting from currentIndex
@@ -59,13 +58,11 @@ export function SwipeableCardStack({
 
   const handleDismiss = useCallback((id: string) => {
     onCardDismiss(id)
-    setExitDirection('right')
     setCurrentIndex(prev => Math.min(prev + 1, prompts.length))
   }, [onCardDismiss, prompts.length])
 
   const goBack = useCallback(() => {
     if (currentIndex > 0) {
-      setExitDirection('left')
       setCurrentIndex(prev => prev - 1)
     }
   }, [currentIndex])
@@ -188,35 +185,18 @@ export function SwipeableCardStack({
       </button>
 
       <div className="relative h-full">
-        {/* Next card preview (behind current) */}
-        {visiblePrompts.length > 1 && (
-          <div
-            className="absolute inset-0 rounded-3xl overflow-hidden shadow-lg"
-            style={{
-              background: 'linear-gradient(135deg, #f0ece6, #e8e2da)',
-              transform: 'scale(0.95) translateY(8px)',
-              opacity: 0.6,
-              zIndex: 0,
-            }}
+        {visiblePrompts.length > 0 && (
+          <FlippableCard
+            key={prompts[currentIndex].id}
+            prompt={visiblePrompts[0]}
+            index={0}
+            totalVisible={1}
+            onDismiss={() => handleDismiss(visiblePrompts[0].id)}
+            onGoBack={goBack}
+            onAnswer={onCardAnswer}
+            getPromptText={getPromptText}
           />
         )}
-
-        {/* Current card */}
-        <AnimatePresence mode="popLayout" initial={false}>
-          {visiblePrompts.length > 0 && (
-            <FlippableCard
-              key={prompts[currentIndex].id}
-              prompt={visiblePrompts[0]}
-              index={0}
-              totalVisible={1}
-              onDismiss={() => handleDismiss(visiblePrompts[0].id)}
-              onGoBack={goBack}
-              onAnswer={onCardAnswer}
-              getPromptText={getPromptText}
-              exitDirection={exitDirection}
-            />
-          )}
-        </AnimatePresence>
       </div>
     </div>
   )
@@ -230,7 +210,6 @@ interface FlippableCardProps {
   onGoBack?: () => void
   onAnswer: (promptId: string, response: { type: 'text' | 'voice' | 'selection'; text?: string; videoUrl?: string }) => Promise<void>
   getPromptText: (prompt: Prompt) => string
-  exitDirection?: 'left' | 'right'
 }
 
 function FlippableCard({
@@ -241,7 +220,6 @@ function FlippableCard({
   onGoBack,
   onAnswer,
   getPromptText,
-  exitDirection = 'right',
 }: FlippableCardProps) {
   const [isFlipped, setIsFlipped] = useState(false)
   const [responseText, setResponseText] = useState('')
@@ -743,28 +721,11 @@ function FlippableCard({
   }
 
   return (
-    <motion.div
+    <div
       className="absolute inset-0"
       style={{ 
         zIndex: 1,
         perspective: 1000,
-      }}
-      initial={{ 
-        x: exitDirection === 'right' ? 200 : -200,
-        opacity: 0,
-      }}
-      animate={{
-        x: 0,
-        opacity: 1,
-      }}
-      exit={{
-        x: exitDirection === 'right' ? -200 : 200,
-        opacity: 0,
-      }}
-      transition={{
-        type: 'tween',
-        duration: 0.2,
-        ease: 'easeOut',
       }}
     >
       <motion.div
@@ -1308,6 +1269,6 @@ function FlippableCard({
       </motion.div>
 
 
-    </motion.div>
+    </div>
   )
 }
