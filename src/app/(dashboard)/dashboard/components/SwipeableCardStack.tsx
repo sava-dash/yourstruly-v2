@@ -43,11 +43,12 @@ export function SwipeableCardStack({
   onNeedMorePrompts,
   getPromptText,
 }: SwipeableCardStackProps) {
-  const [dismissedIds, setDismissedIds] = useState<Set<string>>(new Set())
+  const [currentIndex, setCurrentIndex] = useState(0)
+  const [exitDirection, setExitDirection] = useState<'left' | 'right'>('right')
   const containerRef = useRef<HTMLDivElement>(null)
 
-  // Filter out dismissed cards
-  const visiblePrompts = prompts.filter(p => !dismissedIds.has(p.id))
+  // The visible prompts are the ones starting from currentIndex
+  const visiblePrompts = prompts.slice(currentIndex)
 
   // Request more prompts when running low
   useEffect(() => {
@@ -57,21 +58,17 @@ export function SwipeableCardStack({
   }, [visiblePrompts.length, prompts.length, onNeedMorePrompts])
 
   const handleDismiss = useCallback((id: string) => {
-    setDismissedIds(prev => new Set([...prev, id]))
     onCardDismiss(id)
-  }, [onCardDismiss])
+    setExitDirection('right')
+    setCurrentIndex(prev => Math.min(prev + 1, prompts.length))
+  }, [onCardDismiss, prompts.length])
 
   const goBack = useCallback(() => {
-    if (dismissedIds.size > 0) {
-      const ids = Array.from(dismissedIds)
-      const lastId = ids[ids.length - 1]
-      setDismissedIds(prev => {
-        const next = new Set(prev)
-        next.delete(lastId)
-        return next
-      })
+    if (currentIndex > 0) {
+      setExitDirection('left')
+      setCurrentIndex(prev => prev - 1)
     }
-  }, [dismissedIds])
+  }, [currentIndex])
 
   const skipCurrent = useCallback(() => {
     if (visiblePrompts.length > 0) {
@@ -79,7 +76,7 @@ export function SwipeableCardStack({
     }
   }, [visiblePrompts, handleDismiss])
 
-  const canGoBack = dismissedIds.size > 0
+  const canGoBack = currentIndex > 0
 
   // Auto-focus on mount for keyboard navigation
   useEffect(() => {
@@ -191,7 +188,7 @@ export function SwipeableCardStack({
       </button>
 
       <div className="relative h-full">
-        <AnimatePresence mode="popLayout">
+        <AnimatePresence mode="popLayout" initial={false}>
           {visiblePrompts.slice(0, 3).map((prompt, index) => (
             <FlippableCard
               key={prompt.id}
@@ -202,6 +199,7 @@ export function SwipeableCardStack({
               onGoBack={index === 0 ? goBack : undefined}
               onAnswer={onCardAnswer}
               getPromptText={getPromptText}
+              exitDirection={exitDirection}
             />
           ))}
         </AnimatePresence>
@@ -218,6 +216,7 @@ interface FlippableCardProps {
   onGoBack?: () => void
   onAnswer: (promptId: string, response: { type: 'text' | 'voice' | 'selection'; text?: string; videoUrl?: string }) => Promise<void>
   getPromptText: (prompt: Prompt) => string
+  exitDirection?: 'left' | 'right'
 }
 
 function FlippableCard({
@@ -228,6 +227,7 @@ function FlippableCard({
   onGoBack,
   onAnswer,
   getPromptText,
+  exitDirection = 'right',
 }: FlippableCardProps) {
   const [isFlipped, setIsFlipped] = useState(false)
   const [responseText, setResponseText] = useState('')
@@ -745,9 +745,9 @@ function FlippableCard({
         y: stackOffset,
       }}
       exit={{
-        x: x.get() >= 0 ? 400 : -400,
+        x: exitDirection === 'right' ? 400 : -400,
         opacity: 0,
-        rotate: x.get() >= 0 ? 15 : -15,
+        rotate: exitDirection === 'right' ? 15 : -15,
       }}
       transition={{
         type: 'spring',
