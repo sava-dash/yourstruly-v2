@@ -293,6 +293,8 @@ async function geocodeLocation(
 // MAPBOX GLOBE STEP
 // ============================================
 
+type GlobeSubPhase = 'map' | 'places-lived' | 'traits' | 'interests';
+
 function MapboxGlobeReveal({
   name,
   birthday,
@@ -300,6 +302,7 @@ function MapboxGlobeReveal({
   onDone,
   selectedPills,
   onTogglePill,
+  onSubPhaseChange,
 }: {
   name: string;
   birthday: string;
@@ -307,6 +310,7 @@ function MapboxGlobeReveal({
   onDone: () => void;
   selectedPills: Set<string>;
   onTogglePill: (label: string) => void;
+  onSubPhaseChange?: (subPhase: GlobeSubPhase) => void;
 }) {
   const formatBirthday = (dateStr: string): string => {
     if (!dateStr) return '';
@@ -561,6 +565,20 @@ function MapboxGlobeReveal({
       setTimeout(() => setPhase('adventure-message'), 500);
     }
   }, [savePlaces, startGlobeSpin]);
+
+  // Notify parent of sub-phase changes for progress bar
+  useEffect(() => {
+    if (!onSubPhaseChange) return;
+    if (phase === 'places-lived' || phase === 'places-flying') {
+      onSubPhaseChange('places-lived');
+    } else if (phase === 'traits' || phase === 'adventure-message' || phase === 'globe-spin-out') {
+      onSubPhaseChange('traits');
+    } else if (phase === 'interests') {
+      onSubPhaseChange('interests');
+    } else {
+      onSubPhaseChange('map');
+    }
+  }, [phase, onSubPhaseChange]);
 
   const advance = useCallback(() => {
     if (!advancedRef.current) {
@@ -1656,6 +1674,18 @@ export function QuickOnboardingFlow({
   const interestCount = Array.from(selectedPills).filter(l => BUBBLE_INTERESTS.some(i => i.label === l)).length;
   const traitCount = Array.from(selectedPills).filter(l => BUBBLE_TRAITS.some(t => t.label === l)).length;
 
+  // Globe sub-phase for progress bar
+  const [globeSubPhase, setGlobeSubPhase] = useState<GlobeSubPhase>('map');
+
+  // Globe step progress: map → places-lived → traits → interests
+  const GLOBE_SUB_STEPS: { key: GlobeSubPhase; label: string }[] = [
+    { key: 'map', label: 'Map' },
+    { key: 'places-lived', label: 'Places' },
+    { key: 'traits', label: 'Personality' },
+    { key: 'interests', label: 'Interests' },
+  ];
+  const globeSubIdx = GLOBE_SUB_STEPS.findIndex(s => s.key === globeSubPhase);
+
   const progressIdx = PROGRESS_STEPS.indexOf(step);
   const progressPercent = step === 'ready' ? 100 : ((progressIdx + 1) / PROGRESS_STEPS.length) * 100;
   const tileKey = TILE_KEY[step];
@@ -1664,6 +1694,7 @@ export function QuickOnboardingFlow({
   if (step === 'globe') {
     return (
       <>
+        {/* Globe sub-step progress bar */}
         <div style={{
           position: 'fixed',
           top: 0,
@@ -1673,35 +1704,52 @@ export function QuickOnboardingFlow({
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
+          gap: '6px',
           padding: '16px 24px 12px',
           background: 'linear-gradient(to bottom, rgba(8, 8, 18, 0.7) 60%, transparent)',
         }}>
-          {PROGRESS_STEPS.map((s, i) => {
-            const isCompleted = i < progressIdx;
-            const isCurrent = i === progressIdx;
+          {GLOBE_SUB_STEPS.map((s, i) => {
+            const isCompleted = i < globeSubIdx;
+            const isCurrent = i === globeSubIdx;
             return (
-              <div key={s} style={{ display: 'flex', alignItems: 'center' }}>
+              <div key={s.key} style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
                 <div style={{
-                  width: 20,
-                  height: 20,
-                  borderRadius: '50%',
                   display: 'flex',
                   alignItems: 'center',
-                  justifyContent: 'center',
-                  fontSize: 9,
-                  fontWeight: 700,
-                  border: `2px solid ${isCompleted || isCurrent ? 'rgba(255,255,255,0.8)' : 'rgba(255,255,255,0.25)'}`,
-                  color: isCompleted ? '#080812' : isCurrent ? 'white' : 'rgba(255,255,255,0.3)',
-                  background: isCompleted ? 'rgba(255,255,255,0.85)' : isCurrent ? 'rgba(255,255,255,0.15)' : 'transparent',
-                  flexShrink: 0,
+                  gap: '6px',
                 }}>
-                  {isCompleted && <Check size={10} strokeWidth={3} />}
-                </div>
-                {i < PROGRESS_STEPS.length - 1 && (
                   <div style={{
-                    width: 12,
+                    width: 22,
+                    height: 22,
+                    borderRadius: '50%',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    fontSize: 10,
+                    fontWeight: 700,
+                    border: `2px solid ${isCompleted || isCurrent ? 'rgba(255,255,255,0.8)' : 'rgba(255,255,255,0.25)'}`,
+                    color: isCompleted ? '#080812' : isCurrent ? 'white' : 'rgba(255,255,255,0.3)',
+                    background: isCompleted ? 'rgba(255,255,255,0.85)' : isCurrent ? 'rgba(255,255,255,0.15)' : 'transparent',
+                    flexShrink: 0,
+                    transition: 'all 0.3s ease',
+                  }}>
+                    {isCompleted ? <Check size={11} strokeWidth={3} /> : i + 1}
+                  </div>
+                  <span style={{
+                    fontSize: '12px',
+                    fontWeight: isCurrent ? 600 : 400,
+                    color: isCompleted || isCurrent ? 'rgba(255,255,255,0.85)' : 'rgba(255,255,255,0.35)',
+                    transition: 'all 0.3s ease',
+                  }}>
+                    {s.label}
+                  </span>
+                </div>
+                {i < GLOBE_SUB_STEPS.length - 1 && (
+                  <div style={{
+                    width: 24,
                     height: 2,
                     background: isCompleted ? 'rgba(255,255,255,0.6)' : 'rgba(255,255,255,0.15)',
+                    transition: 'background 0.3s ease',
                   }} />
                 )}
               </div>
@@ -1720,6 +1768,7 @@ export function QuickOnboardingFlow({
           }}
           selectedPills={selectedPills}
           onTogglePill={handleBubbleToggle}
+          onSubPhaseChange={setGlobeSubPhase}
         />
       </>
     );
