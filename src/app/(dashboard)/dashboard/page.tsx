@@ -2086,42 +2086,6 @@ export default function DashboardPage() {
 
         {/* ── Main Content ── */}
         <main className="dashboard-main" style={{ marginLeft: '280px', padding: '70px 24px 24px 24px', minHeight: '100vh' }}>
-          {/* Mobile-only: compact profile bar + quick actions */}
-          <div className="mobile-top-bar">
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '12px' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                <h2 style={{ fontSize: '18px', fontWeight: '600', margin: 0 }}>
-                  Hey {sidebarFirstName}
-                </h2>
-                {sidebarStreakDays > 0 && (
-                  <span style={{ display: 'flex', alignItems: 'center', gap: '3px', fontSize: '13px' }}>
-                    🔥 <span style={{ fontWeight: '700', color: '#C35F33' }}>{sidebarStreakDays}</span>
-                  </span>
-                )}
-              </div>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '13px', fontWeight: '600' }}>
-                <Sparkles size={14} style={{ color: '#D9C61A' }} />
-                {totalXp} XP
-              </div>
-            </div>
-            <div style={{ display: 'flex', gap: '8px', overflowX: 'auto', paddingBottom: '4px' }}>
-              <QuickActions
-                onPhotoUpload={() => setShowPhotoUploadDash(true)}
-                onAddContact={() => setShowContactModal(true)}
-                onQuickMemory={() => setShowQuickMemoryModal(true)}
-              />
-            </div>
-            {engagementPrompts.length > 0 && (
-              <div style={{ marginTop: '10px' }}>
-                <EngagementTile
-                  nextPrompt={engagementPrompts[0] || null}
-                  totalWaiting={engagementPrompts.length}
-                  onOpen={() => setShowEngagement(true)}
-                />
-              </div>
-            )}
-          </div>
-
           <div className="header-controls">
             {/* Category Nav Row — sticky */}
             <div className="controls-row">
@@ -2359,6 +2323,42 @@ export default function DashboardPage() {
                 </motion.div>
               )}
             </AnimatePresence>
+          </div>
+
+          {/* Mobile-only: compact profile bar + quick actions (below sticky header) */}
+          <div className="mobile-top-bar">
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '12px' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                <h2 style={{ fontSize: '18px', fontWeight: '600', margin: 0 }}>
+                  Hey {sidebarFirstName}
+                </h2>
+                {sidebarStreakDays > 0 && (
+                  <span style={{ display: 'flex', alignItems: 'center', gap: '3px', fontSize: '13px' }}>
+                    🔥 <span style={{ fontWeight: '700', color: '#C35F33' }}>{sidebarStreakDays}</span>
+                  </span>
+                )}
+              </div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '13px', fontWeight: '600' }}>
+                <Sparkles size={14} style={{ color: '#D9C61A' }} />
+                {totalXp} XP
+              </div>
+            </div>
+            <div style={{ display: 'flex', gap: '8px', overflowX: 'auto', paddingBottom: '4px' }}>
+              <QuickActions
+                onPhotoUpload={() => setShowPhotoUploadDash(true)}
+                onAddContact={() => setShowContactModal(true)}
+                onQuickMemory={() => setShowQuickMemoryModal(true)}
+              />
+            </div>
+            {engagementPrompts.length > 0 && (
+              <div style={{ marginTop: '10px' }}>
+                <EngagementTile
+                  nextPrompt={engagementPrompts[0] || null}
+                  totalWaiting={engagementPrompts.length}
+                  onOpen={() => setShowEngagement(true)}
+                />
+              </div>
+            )}
           </div>
 
           {/* Feed Content */}
@@ -4437,10 +4437,10 @@ export default function DashboardPage() {
             padding-top: 4px;
           }
 
-          /* Main content takes full width */
+          /* Main content takes full width — top padding just clears the 56px nav */
           .dashboard-main {
             margin-left: 0 !important;
-            padding: 64px 12px 80px 12px !important;
+            padding: 60px 12px 80px 12px !important;
           }
 
           /* Timeline bubble positioned without sidebar offset */
@@ -4448,9 +4448,12 @@ export default function DashboardPage() {
             left: 12px !important;
           }
 
-          /* Header controls: remove sidebar offset */
+          /* Header controls: remove sidebar offset, make sticky instead of fixed */
           .header-controls {
-            left: 0 !important;
+            position: sticky !important;
+            left: auto !important;
+            right: auto !important;
+            top: 56px !important;
             padding-left: 12px !important;
             padding-right: 12px !important;
           }
@@ -4458,6 +4461,11 @@ export default function DashboardPage() {
           /* Controls row stacks on mobile */
           .controls-row {
             flex-wrap: wrap;
+          }
+
+          /* Less top margin on feed content since mobile-top-bar is in between */
+          .feed-content-area {
+            margin-top: 16px !important;
           }
 
           /* ── Engagement Overlay: full-screen on mobile ── */
