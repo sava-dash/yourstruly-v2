@@ -2114,17 +2114,7 @@ export default function DashboardPage() {
             </button>
           </div>
 
-          <div className="header-controls" style={{
-            position: 'sticky',
-            top: '56px',
-            zIndex: 20,
-            backdropFilter: 'blur(12px)',
-            padding: '12px 0',
-            marginLeft: '-8px',
-            marginRight: '-8px',
-            paddingLeft: '8px',
-            paddingRight: '8px',
-          }}>
+          <div className="header-controls">
             {/* Category Nav Row — sticky */}
             <div className="controls-row">
               {/* Left: Category Pills */}
@@ -3273,10 +3263,17 @@ export default function DashboardPage() {
         .feed-page[data-theme="light"] .profile-storage-track { height: 6px; background: #F2F1E5; border-radius: 3px; overflow: hidden; }
 
         .header-controls {
-          position: relative;
+          position: sticky !important;
+          top: 56px !important;
+          z-index: 20 !important;
+          backdrop-filter: blur(12px);
           display: flex;
           flex-direction: column;
           gap: 8px;
+          padding: 12px 0;
+          margin: 0 -8px;
+          padding-left: 8px;
+          padding-right: 8px;
         }
 
         .feed-page[data-theme="dark"] .header-controls {
