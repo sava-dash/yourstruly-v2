@@ -318,7 +318,7 @@ function MapboxGlobeReveal({
   const mapRef = useRef<mapboxgl.Map | null>(null);
   const markerRef = useRef<mapboxgl.Marker | null>(null);
   const advancedRef = useRef(false);
-  const [phase, setPhase] = useState<'loading' | 'spinning' | 'flying' | 'pinned' | 'places-lived' | 'places-flying' | 'globe-spin-out' | 'traits' | 'interests'>('loading');
+  const [phase, setPhase] = useState<'loading' | 'spinning' | 'flying' | 'pinned' | 'places-lived' | 'places-flying' | 'globe-spin-out' | 'adventure-message' | 'traits' | 'interests'>('loading');
 
   // Places-lived state
   const [placeInput, setPlaceInput] = useState('');
@@ -515,6 +515,23 @@ function MapboxGlobeReveal({
   }, [placesAdded]);
 
   // Zoom out and spin the globe, then transition to traits
+  // Keep globe spinning ref so we can maintain rotation across phases
+  const globeSpinRef = useRef<{ spinning: boolean; bearing: number }>({ spinning: false, bearing: 0 });
+
+  const startGlobeSpin = useCallback(() => {
+    if (globeSpinRef.current.spinning) return;
+    globeSpinRef.current.spinning = true;
+    // 5 seconds per revolution = 360/5 = 72 deg/s ≈ 1.2 deg/frame at 60fps
+    const degreesPerFrame = 72 / 60;
+    const rotate = () => {
+      if (!globeSpinRef.current.spinning || !mapRef.current) return;
+      globeSpinRef.current.bearing += degreesPerFrame;
+      mapRef.current.setBearing(globeSpinRef.current.bearing % 360);
+      requestAnimationFrame(rotate);
+    };
+    rotate();
+  }, []);
+
   const spinOutAndContinue = useCallback(async () => {
     await savePlaces();
     setPhase('globe-spin-out');
@@ -530,27 +547,15 @@ function MapboxGlobeReveal({
         essential: true,
       });
 
-      // Start slow rotation after zoom-out
-      let bearing = 0;
-      let spinning = true;
-      const rotate = () => {
-        if (!spinning || !mapRef.current) return;
-        bearing += 0.15;
-        mapRef.current.setBearing(bearing % 360);
-        requestAnimationFrame(rotate);
-      };
-      setTimeout(() => rotate(), 3000);
+      // Start spinning after zoom-out completes
+      setTimeout(() => startGlobeSpin(), 3000);
 
-      // After 5 seconds total, show traits
-      setTimeout(() => {
-        spinning = false;
-        setPhase('traits');
-      }, 5500);
+      // Show adventure info box after zoom-out
+      setTimeout(() => setPhase('adventure-message'), 3500);
     } else {
-      // Fallback if map not available
-      setTimeout(() => setPhase('traits'), 500);
+      setTimeout(() => setPhase('adventure-message'), 500);
     }
-  }, [savePlaces]);
+  }, [savePlaces, startGlobeSpin]);
 
   const advance = useCallback(() => {
     if (!advancedRef.current) {
@@ -909,6 +914,52 @@ function MapboxGlobeReveal({
         )}
       </AnimatePresence>
 
+      {/* ── Phase: Adventure message — shows during globe spin ── */}
+      <AnimatePresence>
+        {phase === 'adventure-message' && (
+          <motion.div
+            key="adventure-msg-bottom"
+            className="globe-bottom-panel"
+            initial={{ opacity: 0, y: 80 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: 80 }}
+            transition={{ type: 'spring', stiffness: 200, damping: 24 }}
+          >
+            <div className="globe-welcome-card">
+              <div className="globe-welcome-bar" />
+              <div className="globe-welcome-body">
+                <motion.p
+                  className="globe-welcome-greeting"
+                  initial={{ opacity: 0, y: 8 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.3 }}
+                >
+                  What a journey ✨
+                </motion.p>
+                <motion.h2
+                  className="globe-welcome-headline"
+                  initial={{ opacity: 0, y: 8 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.6 }}
+                  style={{ fontSize: '20px' }}
+                >
+                  You've lived in so many amazing places, I can't wait to hear more about your adventures.
+                </motion.h2>
+              </div>
+              <motion.button
+                className="globe-continue-btn"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ delay: 1.0 }}
+                onClick={() => setPhase('traits')}
+              >
+                Continue <ChevronRight size={18} />
+              </motion.button>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
       {/* ── Phase: Traits / Interests — info card + side panels ── */}
       <AnimatePresence>
         {(phase === 'traits' || phase === 'interests') && (
@@ -1078,7 +1129,7 @@ function MapboxGlobeReveal({
             <div className="globe-side-panel-footer">
               <button
                 className="globe-continue-btn"
-                onClick={onDone}
+                onClick={() => { globeSpinRef.current.spinning = false; onDone(); }}
               >
                 Continue <ChevronRight size={18} />
               </button>
@@ -1328,7 +1379,7 @@ function MapboxGlobeReveal({
           position: absolute;
           top: 60px;
           bottom: 24px;
-          width: min(360px, 82vw);
+          width: min(420px, 80vw);
           z-index: 20;
           background: rgba(255, 255, 255, 0.95);
           backdrop-filter: blur(20px);
@@ -1341,11 +1392,11 @@ function MapboxGlobeReveal({
         }
 
         .globe-floating-right {
-          right: 20px;
+          right: 40px;
         }
 
         .globe-floating-left {
-          left: 20px;
+          left: 40px;
         }
 
         .globe-side-panel-header {
