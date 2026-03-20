@@ -61,6 +61,26 @@ export function SwipeableCardStack({
     onCardDismiss(id)
   }, [onCardDismiss])
 
+  const goBack = useCallback(() => {
+    if (dismissedIds.size > 0) {
+      const ids = Array.from(dismissedIds)
+      const lastId = ids[ids.length - 1]
+      setDismissedIds(prev => {
+        const next = new Set(prev)
+        next.delete(lastId)
+        return next
+      })
+    }
+  }, [dismissedIds])
+
+  const skipCurrent = useCallback(() => {
+    if (visiblePrompts.length > 0) {
+      handleDismiss(visiblePrompts[0].id)
+    }
+  }, [visiblePrompts, handleDismiss])
+
+  const canGoBack = dismissedIds.size > 0
+
   // Auto-focus on mount for keyboard navigation
   useEffect(() => {
     containerRef.current?.focus()
@@ -75,25 +95,16 @@ export function SwipeableCardStack({
       
       if (e.key === 'ArrowRight') {
         e.preventDefault()
-        handleDismiss(currentPrompt.id)
+        skipCurrent()
       } else if (e.key === 'ArrowLeft') {
         e.preventDefault()
-        // Go back to last dismissed
-        if (dismissedIds.size > 0) {
-          const ids = Array.from(dismissedIds)
-          const lastId = ids[ids.length - 1]
-          setDismissedIds(prev => {
-            const next = new Set(prev)
-            next.delete(lastId)
-            return next
-          })
-        }
+        goBack()
       }
     }
 
     window.addEventListener('keydown', handleKeyDown)
     return () => window.removeEventListener('keydown', handleKeyDown)
-  }, [visiblePrompts, handleDismiss])
+  }, [visiblePrompts, skipCurrent, goBack])
 
   if (visiblePrompts.length === 0) {
     return (
@@ -118,6 +129,67 @@ export function SwipeableCardStack({
 
   return (
     <div ref={containerRef} className="relative h-[600px] w-full mx-auto focus:outline-none" tabIndex={0}>
+      {/* Left Arrow — Go Back */}
+      <button
+        onClick={goBack}
+        disabled={!canGoBack}
+        style={{
+          position: 'absolute',
+          left: '-52px',
+          top: '50%',
+          transform: 'translateY(-50%)',
+          zIndex: 30,
+          width: '40px',
+          height: '40px',
+          borderRadius: '50%',
+          background: canGoBack ? 'rgba(64,106,86,0.12)' : 'rgba(0,0,0,0.04)',
+          border: 'none',
+          cursor: canGoBack ? 'pointer' : 'default',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          color: canGoBack ? '#406A56' : '#ccc',
+          transition: 'all 0.2s',
+        }}
+        onMouseEnter={(e) => { if (canGoBack) e.currentTarget.style.background = 'rgba(64,106,86,0.2)' }}
+        onMouseLeave={(e) => { e.currentTarget.style.background = canGoBack ? 'rgba(64,106,86,0.12)' : 'rgba(0,0,0,0.04)' }}
+        title="Go back"
+      >
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+          <polyline points="15 18 9 12 15 6" />
+        </svg>
+      </button>
+
+      {/* Right Arrow — Skip */}
+      <button
+        onClick={skipCurrent}
+        style={{
+          position: 'absolute',
+          right: '-52px',
+          top: '50%',
+          transform: 'translateY(-50%)',
+          zIndex: 30,
+          width: '40px',
+          height: '40px',
+          borderRadius: '50%',
+          background: 'rgba(64,106,86,0.12)',
+          border: 'none',
+          cursor: 'pointer',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          color: '#406A56',
+          transition: 'all 0.2s',
+        }}
+        onMouseEnter={(e) => { e.currentTarget.style.background = 'rgba(64,106,86,0.2)' }}
+        onMouseLeave={(e) => { e.currentTarget.style.background = 'rgba(64,106,86,0.12)' }}
+        title="Skip"
+      >
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+          <polyline points="9 18 15 12 9 6" />
+        </svg>
+      </button>
+
       <div className="relative h-full">
         <AnimatePresence mode="popLayout">
           {visiblePrompts.slice(0, 3).map((prompt, index) => (
@@ -127,17 +199,7 @@ export function SwipeableCardStack({
               index={index}
               totalVisible={Math.min(visiblePrompts.length, 3)}
               onDismiss={() => handleDismiss(prompt.id)}
-              onGoBack={index === 0 ? (() => {
-                if (dismissedIds.size > 0) {
-                  const ids = Array.from(dismissedIds)
-                  const lastId = ids[ids.length - 1]
-                  setDismissedIds(prev => {
-                    const next = new Set(prev)
-                    next.delete(lastId)
-                    return next
-                  })
-                }
-              }) : undefined}
+              onGoBack={index === 0 ? goBack : undefined}
               onAnswer={onCardAnswer}
               getPromptText={getPromptText}
             />
