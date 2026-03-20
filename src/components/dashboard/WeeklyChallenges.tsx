@@ -17,9 +17,20 @@ interface Challenge {
 export default function WeeklyChallenges() {
   const [challenges, setChallenges] = useState<Challenge[]>([])
   const [loading, setLoading] = useState(true)
+  const [isDark, setIsDark] = useState(false)
 
   useEffect(() => {
     fetchChallenges()
+    // Detect dark mode from closest feed-page ancestor
+    const el = document.querySelector('.feed-page')
+    if (el) setIsDark(el.getAttribute('data-theme') === 'dark')
+    // Observe theme changes
+    const observer = new MutationObserver(() => {
+      const feedEl = document.querySelector('.feed-page')
+      if (feedEl) setIsDark(feedEl.getAttribute('data-theme') === 'dark')
+    })
+    if (el) observer.observe(el, { attributes: true, attributeFilter: ['data-theme'] })
+    return () => observer.disconnect()
   }, [])
 
   const fetchChallenges = async () => {
@@ -38,16 +49,37 @@ export default function WeeklyChallenges() {
   if (loading) return null
   if (challenges.length === 0) return null
 
+  // Theme colors
+  const t = {
+    cardBg: isDark ? 'rgba(40, 40, 40, 0.92)' : 'rgba(255,255,255,0.95)',
+    cardBorder: isDark ? '1px solid rgba(255,255,255,0.08)' : '1px solid rgba(64,106,86,0.1)',
+    headerColor: isDark ? '#8DACAB' : '#406A56',
+    divider: isDark ? 'rgba(255,255,255,0.06)' : '#f0f0f0',
+    iconBg: isDark ? 'rgba(255,255,255,0.08)' : '#f5f5f5',
+    labelColor: isDark ? 'rgba(255,255,255,0.8)' : '#333',
+    labelDone: isDark ? 'rgba(255,255,255,0.4)' : '#888',
+    progressTrack: isDark ? 'rgba(255,255,255,0.08)' : '#eee',
+    countColor: isDark ? 'rgba(255,255,255,0.4)' : '#888',
+  }
+
   return (
-    <div className="glass-card glass-card-strong" style={{ padding: 0, overflow: 'hidden' }}>
+    <div style={{
+      padding: 0,
+      overflow: 'hidden',
+      background: t.cardBg,
+      border: t.cardBorder,
+      borderRadius: '16px',
+      backdropFilter: 'blur(12px)',
+      boxShadow: isDark ? '0 2px 12px rgba(0,0,0,0.3)' : '0 2px 8px rgba(0,0,0,0.06)',
+    }}>
       <div style={{
         padding: '12px 14px 8px',
         fontSize: '12px',
         fontWeight: '700',
-        color: '#406A56',
+        color: t.headerColor,
         textTransform: 'uppercase',
         letterSpacing: '0.5px',
-        borderBottom: '1px solid #f0f0f0',
+        borderBottom: `1px solid ${t.divider}`,
       }}>
         Weekly Challenges
       </div>
@@ -63,16 +95,15 @@ export default function WeeklyChallenges() {
                 display: 'flex',
                 alignItems: 'center',
                 gap: '12px',
-                borderBottom: i < challenges.length - 1 ? '1px solid #f0f0f0' : 'none',
+                borderBottom: i < challenges.length - 1 ? `1px solid ${t.divider}` : 'none',
                 opacity: c.completed ? 0.6 : 1,
               }}
             >
-              {/* Completion check or emoji */}
               <div style={{
                 width: '28px',
                 height: '28px',
                 borderRadius: '50%',
-                background: c.completed ? '#406A56' : '#f5f5f5',
+                background: c.completed ? '#406A56' : t.iconBg,
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
@@ -85,22 +116,20 @@ export default function WeeklyChallenges() {
                 )}
               </div>
 
-              {/* Label + progress */}
               <div style={{ flex: 1, minWidth: 0 }}>
                 <div style={{
                   fontSize: '12px',
                   fontWeight: '600',
-                  color: c.completed ? '#888' : '#333',
+                  color: c.completed ? t.labelDone : t.labelColor,
                   marginBottom: '6px',
                   textDecoration: c.completed ? 'line-through' : 'none',
                 }}>
                   {c.challenge_label}
                 </div>
 
-                {/* Progress bar — same style as storage/data usage bar */}
                 <div style={{
                   height: '4px',
-                  background: '#eee',
+                  background: t.progressTrack,
                   borderRadius: '2px',
                   overflow: 'hidden',
                 }}>
@@ -114,7 +143,6 @@ export default function WeeklyChallenges() {
                 </div>
               </div>
 
-              {/* Count + XP */}
               <div style={{
                 display: 'flex',
                 flexDirection: 'column',
@@ -122,7 +150,7 @@ export default function WeeklyChallenges() {
                 gap: '2px',
                 flexShrink: 0,
               }}>
-                <span style={{ fontSize: '11px', fontWeight: '600', color: '#888' }}>
+                <span style={{ fontSize: '11px', fontWeight: '600', color: t.countColor }}>
                   {c.current_count}/{c.target_count}
                 </span>
                 <span style={{ fontSize: '10px', fontWeight: '600', color: c.completed ? '#406A56' : '#D9C61A' }}>
