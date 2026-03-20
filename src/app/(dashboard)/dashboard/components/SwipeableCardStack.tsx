@@ -302,13 +302,11 @@ function FlippableCard({
     
     if (absOffset > threshold || (velocity > 500 && absOffset > 30)) {
       if (offset > 0) {
-        // Swiped RIGHT → skip
+        // Swiped RIGHT → skip (dismiss current)
         onDismiss()
-      } else {
-        // Swiped LEFT → go back to previous
-        if (onGoBack) {
-          onGoBack()
-        }
+      } else if (onGoBack) {
+        // Swiped LEFT → go back to previous (don't dismiss current card)
+        onGoBack()
       }
     }
     
@@ -732,10 +730,10 @@ function FlippableCard({
             </button>
           )}
 
-          <div className="h-full flex flex-row">
-            {/* Left: Photo or gradient — 45% */}
+          <div className="h-full flex flex-col">
+            {/* Top: Photo or gradient — 55% */}
             {hasPhoto ? (
-              <div className="relative w-[45%] flex-shrink-0">
+              <div className="relative h-[55%] bg-gray-100">
                 {photoIsVideo ? (
                   <>
                     <video
@@ -755,21 +753,10 @@ function FlippableCard({
                 ) : (
                   <img src={prompt.photoUrl} alt="" className="w-full h-full object-cover" draggable={false} />
                 )}
-                <div className="absolute inset-0 bg-gradient-to-r from-transparent to-black/10" />
-                {/* Category badge on photo */}
-                <div className="absolute bottom-4 left-4 flex items-center gap-2">
-                  <span className="px-3 py-1 rounded-full text-xs font-medium bg-white/20 backdrop-blur-sm text-white">
-                    {config.label}
-                  </span>
-                  {config.xp > 0 && (
-                    <span className="flex items-center gap-1 text-xs text-white/80 font-medium">
-                      <Sparkles size={12} />+{config.xp} XP
-                    </span>
-                  )}
-                </div>
+                <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
               </div>
             ) : (
-              <div className={`relative w-[45%] flex-shrink-0 ${
+              <div className={`relative h-[55%] ${
                 config.color === 'yellow' ? 'bg-gradient-to-br from-amber-300 via-amber-400 to-orange-500' :
                 config.color === 'green' ? 'bg-gradient-to-br from-emerald-300 via-emerald-400 to-teal-600' :
                 config.color === 'red' ? 'bg-gradient-to-br from-rose-300 via-rose-400 to-red-600' :
@@ -780,7 +767,7 @@ function FlippableCard({
                   <Sparkles size={72} className="text-white/25" />
                 </div>
                 {/* Category badge */}
-                <div className="absolute bottom-4 left-4 flex items-center gap-2">
+                <div className="absolute bottom-4 left-5 flex items-center gap-2">
                   <span className="px-3 py-1 rounded-full text-xs font-medium bg-white/20 backdrop-blur-sm text-white">
                     {config.label}
                   </span>
@@ -793,11 +780,11 @@ function FlippableCard({
               </div>
             )}
 
-            {/* Right: Content — 55% */}
-            <div className="flex-1 p-8 flex flex-col justify-center bg-gradient-to-br from-slate-50 to-stone-100">
+            {/* Bottom: Content — 45% */}
+            <div className="flex-1 p-6 flex flex-col justify-center">
               {isContact && prompt.contactName && (
                 <div className="flex items-center gap-3 mb-4">
-                  <div className="w-12 h-12 rounded-full bg-gradient-to-br from-[#406A56] to-[#8DACAB] flex items-center justify-center text-white font-medium text-lg">
+                  <div className="w-11 h-11 rounded-full bg-gradient-to-br from-[#406A56] to-[#8DACAB] flex items-center justify-center text-white font-medium text-lg">
                     {prompt.contactName.charAt(0).toUpperCase()}
                   </div>
                   <div>
@@ -809,7 +796,7 @@ function FlippableCard({
                 </div>
               )}
 
-              <p className="text-2xl font-bold text-[#2d3b36] leading-relaxed flex-1 flex items-center">
+              <p className="text-2xl font-bold text-[#2d3b36] leading-snug flex-1 flex items-center">
                 {getPromptText(prompt)}
               </p>
 

@@ -224,39 +224,77 @@ export function EngagementOverlay({
               <X size={18} />
             </button>
 
-            {/* Header */}
+            {/* 2-Column Layout */}
             <div style={{
-              padding: '20px 24px 16px',
-              borderBottom: '1px solid rgba(0,0,0,0.06)',
+              display: 'flex',
+              height: '100%',
+              overflow: 'hidden',
             }}>
-              <h2 style={{
-                fontSize: '20px',
-                fontWeight: '700',
-                color: '#2d2d2d',
-                margin: '0 0 12px 0',
+              {/* Left Column — Header + Chapter Selector */}
+              <div style={{
+                width: '280px',
+                flexShrink: 0,
+                padding: '24px',
+                borderRight: '1px solid rgba(0,0,0,0.06)',
+                display: 'flex',
+                flexDirection: 'column',
+                gap: '16px',
+                overflowY: 'auto',
               }}>
-                Your Story Prompts
-              </h2>
+                <div>
+                  <h2 style={{
+                    fontSize: '22px',
+                    fontWeight: '700',
+                    color: '#2d2d2d',
+                    margin: '0 0 4px 0',
+                  }}>
+                    Your Story Prompts
+                  </h2>
+                  <p style={{ fontSize: '13px', color: '#888', margin: 0 }}>
+                    {filteredPrompts.length} prompt{filteredPrompts.length !== 1 ? 's' : ''} waiting
+                  </p>
+                </div>
 
-              {/* Multi-select Chapter Filter */}
-              <div ref={dropdownRef} style={{ position: 'relative', display: 'inline-flex' }}>
-                <button
-                  onClick={() => setChapterDropdownOpen(!chapterDropdownOpen)}
-                  style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '6px',
-                    padding: '8px 14px',
-                    borderRadius: '20px',
-                    border: '1px solid rgba(0,0,0,0.1)',
-                    background: selectedChapters.length > 0 
-                      ? 'linear-gradient(135deg, #7828C8, #9353D3)' 
-                      : 'rgba(0,0,0,0.03)',
-                    color: selectedChapters.length > 0 ? '#fff' : '#666',
-                    fontSize: '13px',
-                    fontWeight: '500',
-                    cursor: 'pointer',
-                    transition: 'all 0.2s',
+                {/* XP Counter */}
+                <div style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '8px',
+                  padding: '12px 16px',
+                  background: 'rgba(217, 198, 26, 0.1)',
+                  borderRadius: '12px',
+                }}>
+                  <Sparkles size={18} style={{ color: '#D9C61A' }} />
+                  <div>
+                    <div style={{ fontSize: '18px', fontWeight: '700', color: '#2d2d2d' }}>{totalXp} XP</div>
+                    <div style={{ fontSize: '11px', color: '#888' }}>Total earned</div>
+                  </div>
+                </div>
+
+                {/* Chapter Filter */}
+                <div>
+                  <div style={{ fontSize: '11px', fontWeight: '700', color: '#888', textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: '8px' }}>
+                    Filter by Chapter
+                  </div>
+                  <div ref={dropdownRef} style={{ position: 'relative' }}>
+                    <button
+                      onClick={() => setChapterDropdownOpen(!chapterDropdownOpen)}
+                      style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '6px',
+                        padding: '8px 14px',
+                        borderRadius: '12px',
+                        border: '1px solid rgba(0,0,0,0.1)',
+                        background: selectedChapters.length > 0 
+                          ? 'linear-gradient(135deg, #7828C8, #9353D3)' 
+                          : 'rgba(0,0,0,0.03)',
+                        color: selectedChapters.length > 0 ? '#fff' : '#666',
+                        fontSize: '13px',
+                        fontWeight: '500',
+                        cursor: 'pointer',
+                        transition: 'all 0.2s',
+                        width: '100%',
                   }}
                 >
                   {chapterButtonLabel}
@@ -364,41 +402,53 @@ export function EngagementOverlay({
                     </motion.div>
                   )}
                 </AnimatePresence>
-              </div>
-            </div>
+                  </div>
+                </div>
 
-            {/* Card Stack Content */}
-            <div style={{
-              flex: 1,
-              padding: '24px',
-              display: 'flex',
-              flexDirection: 'column',
-              alignItems: 'center',
-              justifyContent: 'center',
-              overflow: 'hidden',
-            }}>
-              {isLoading ? (
-                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '16px' }}>
-                  <motion.div animate={{ rotate: 360 }} transition={{ duration: 2, repeat: Infinity, ease: 'linear' }}>
-                    <Sparkles size={32} style={{ color: '#F5A524' }} />
-                  </motion.div>
-                  <span style={{ color: '#888' }}>Loading prompts...</span>
+                {/* Swipe hints */}
+                <div style={{ marginTop: 'auto', paddingTop: '16px' }}>
+                  <div style={{ fontSize: '11px', color: '#aaa', textAlign: 'center', lineHeight: '1.6' }}>
+                    <div>← Swipe left to go back</div>
+                    <div>→ Swipe right to skip</div>
+                    <div>Tap card to answer</div>
+                  </div>
                 </div>
-              ) : (
-                <div style={{ width: '100%', maxWidth: '900px' }}>
-                  <XpFloatingCounter show={xpAnimating} amount={lastXpGain} />
-                  <SwipeableCardStack
-                    prompts={filteredPrompts}
-                    onCardDismiss={(id) => {
-                      onAnsweredPromptIds([...answeredPromptIds, id])
-                    }}
-                    onCardAnswer={onCardAnswer}
-                    onNeedMorePrompts={onShuffle}
-                    getPromptText={getPromptText}
-                  />
-                </div>
-              )}
-            </div>
+              </div>
+
+              {/* Right Column — Card Stack */}
+              <div style={{
+                flex: 1,
+                padding: '24px',
+                display: 'flex',
+                flexDirection: 'column',
+                alignItems: 'center',
+                justifyContent: 'center',
+                overflow: 'hidden',
+                minWidth: 0,
+              }}>
+                {isLoading ? (
+                  <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '16px' }}>
+                    <motion.div animate={{ rotate: 360 }} transition={{ duration: 2, repeat: Infinity, ease: 'linear' }}>
+                      <Sparkles size={32} style={{ color: '#F5A524' }} />
+                    </motion.div>
+                    <span style={{ color: '#888' }}>Loading prompts...</span>
+                  </div>
+                ) : (
+                  <div style={{ width: '100%', maxWidth: '480px' }}>
+                    <XpFloatingCounter show={xpAnimating} amount={lastXpGain} />
+                    <SwipeableCardStack
+                      prompts={filteredPrompts}
+                      onCardDismiss={(id) => {
+                        onAnsweredPromptIds([...answeredPromptIds, id])
+                      }}
+                      onCardAnswer={onCardAnswer}
+                      onNeedMorePrompts={onShuffle}
+                      getPromptText={getPromptText}
+                    />
+                  </div>
+                )}
+              </div>
+            </div>{/* end 2-column layout */}
           </motion.div>
         </motion.div>
       </AnimatePresence>

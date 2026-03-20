@@ -1033,7 +1033,7 @@ export default function DashboardPage() {
             p_activity_type: 'app_usage',
           })
           const streak = streakResult?.[0]?.streak || streakResult?.streak
-          if (streak) setStreakDays(streak)
+          if (streak) setStreakDays(prev => Math.max(prev, streak))
         } catch {}
         // Fallback: read from table if RPC didn't return
         try {
@@ -1940,7 +1940,7 @@ export default function DashboardPage() {
 
   // Derived values for sidebar profile card
   const sidebarFirstName = profile?.full_name?.split(' ')[0] || userFirstName || 'there'
-  const sidebarStreakDays = engagementStats?.currentStreakDays ?? streakDays
+  const sidebarStreakDays = Math.max(engagementStats?.currentStreakDays ?? 0, streakDays)
   const sidebarStorageUsed = subscription?.storage?.total_bytes ? subscription.storage.total_bytes / (1024 * 1024 * 1024) : storageInfo.used
   const sidebarStorageLimit = subscription?.storage?.limit_bytes ? subscription.storage.limit_bytes / (1024 * 1024 * 1024) : storageInfo.limit
   const sidebarStoragePercentage = subscription?.storage?.percentage || storageInfo.percentage

@@ -1,5 +1,6 @@
 'use client'
 
+import { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
 import { Sparkles, Camera, BookOpen, Brain, Heart, MessageSquare, Users, Gift, ArrowRight } from 'lucide-react'
 import { TYPE_CONFIG } from '../constants'
@@ -34,12 +35,24 @@ const TYPE_COLORS: Record<string, string> = {
 }
 
 export function EngagementTile({ nextPrompt, totalWaiting, onOpen }: EngagementTileProps) {
+  const [isDark, setIsDark] = useState(false)
+
+  useEffect(() => {
+    const el = document.querySelector('.feed-page')
+    if (el) setIsDark(el.getAttribute('data-theme') === 'dark')
+    const observer = new MutationObserver(() => {
+      const feedEl = document.querySelector('.feed-page')
+      if (feedEl) setIsDark(feedEl.getAttribute('data-theme') === 'dark')
+    })
+    if (el) observer.observe(el, { attributes: true, attributeFilter: ['data-theme'] })
+    return () => observer.disconnect()
+  }, [])
+
   if (!nextPrompt && totalWaiting === 0) return null
 
   const config = nextPrompt ? TYPE_CONFIG[nextPrompt.type] : null
   const Icon = nextPrompt ? (TYPE_ICONS[nextPrompt.type] || Sparkles) : Sparkles
   const color = config ? TYPE_COLORS[config.color] || '#C35F33' : '#C35F33'
-
   const promptText = nextPrompt?.promptText || 'Continue your story'
 
   return (
@@ -51,8 +64,10 @@ export function EngagementTile({ nextPrompt, totalWaiting, onOpen }: EngagementT
         cursor: 'pointer',
         borderRadius: '16px',
         padding: '20px',
-        background: `linear-gradient(135deg, ${color}15, ${color}08)`,
-        border: `1px solid ${color}30`,
+        background: isDark
+          ? `linear-gradient(135deg, ${color}20, ${color}10)`
+          : `linear-gradient(135deg, ${color}15, ${color}08)`,
+        border: `1px solid ${isDark ? `${color}40` : `${color}30`}`,
         display: 'flex',
         flexDirection: 'column',
         gap: '12px',
@@ -60,21 +75,13 @@ export function EngagementTile({ nextPrompt, totalWaiting, onOpen }: EngagementT
       }}
     >
       {/* Header */}
-      <div style={{
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'space-between',
-      }}>
-        <div style={{
-          display: 'flex',
-          alignItems: 'center',
-          gap: '8px',
-        }}>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
           <div style={{
             width: '32px',
             height: '32px',
             borderRadius: '10px',
-            background: `${color}20`,
+            background: `${color}${isDark ? '30' : '20'}`,
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
@@ -82,25 +89,23 @@ export function EngagementTile({ nextPrompt, totalWaiting, onOpen }: EngagementT
           }}>
             <Icon size={16} />
           </div>
-          <div>
-            <div style={{
-              fontSize: '11px',
-              fontWeight: '600',
-              textTransform: 'uppercase',
-              letterSpacing: '0.5px',
-              color: color,
-              opacity: 0.8,
-            }}>
-              {config?.label || 'Story Prompt'}
-            </div>
+          <div style={{
+            fontSize: '11px',
+            fontWeight: '600',
+            textTransform: 'uppercase',
+            letterSpacing: '0.5px',
+            color: color,
+            opacity: 0.9,
+          }}>
+            {config?.label || 'Story Prompt'}
           </div>
         </div>
         {totalWaiting > 0 && (
           <span style={{
             fontSize: '11px',
             fontWeight: '600',
-            color: '#888',
-            background: 'rgba(0,0,0,0.04)',
+            color: isDark ? 'rgba(255,255,255,0.5)' : '#888',
+            background: isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.04)',
             padding: '3px 10px',
             borderRadius: '10px',
           }}>
@@ -114,7 +119,7 @@ export function EngagementTile({ nextPrompt, totalWaiting, onOpen }: EngagementT
         fontSize: '14px',
         fontWeight: '500',
         lineHeight: '1.4',
-        color: '#2d2d2d',
+        color: isDark ? 'rgba(255,255,255,0.85)' : '#2d2d2d',
         margin: 0,
         display: '-webkit-box',
         WebkitLineClamp: 2,
@@ -124,7 +129,7 @@ export function EngagementTile({ nextPrompt, totalWaiting, onOpen }: EngagementT
         {promptText}
       </p>
 
-      {/* Photo preview if available */}
+      {/* Photo preview */}
       {nextPrompt?.photoUrl && (
         <div style={{
           width: '100%',
@@ -133,7 +138,7 @@ export function EngagementTile({ nextPrompt, totalWaiting, onOpen }: EngagementT
           backgroundImage: `url(${nextPrompt.photoUrl})`,
           backgroundSize: 'cover',
           backgroundPosition: 'center',
-          border: '2px solid rgba(255,255,255,0.3)',
+          border: isDark ? '2px solid rgba(255,255,255,0.1)' : '2px solid rgba(255,255,255,0.3)',
         }} />
       )}
 
