@@ -1961,8 +1961,6 @@ export default function DashboardPage() {
         flexDirection: 'column',
         gap: '10px',
         zIndex: 10,
-        scrollbarWidth: 'thin',
-        scrollbarColor: 'rgba(255,255,255,0.1) transparent',
       }}>
           {/* Profile Card */}
           <div className="profile-card-feed" style={{
@@ -3130,9 +3128,21 @@ export default function DashboardPage() {
         aside::-webkit-scrollbar-track {
           background: transparent;
         }
-        aside::-webkit-scrollbar-thumb {
+        .feed-page[data-theme="dark"] aside::-webkit-scrollbar-thumb {
           background: rgba(255,255,255,0.1);
           border-radius: 2px;
+        }
+        .feed-page[data-theme="light"] aside::-webkit-scrollbar-thumb {
+          background: rgba(0,0,0,0.12);
+          border-radius: 2px;
+        }
+        .feed-page[data-theme="dark"] aside {
+          scrollbar-width: thin;
+          scrollbar-color: rgba(255,255,255,0.1) transparent;
+        }
+        .feed-page[data-theme="light"] aside {
+          scrollbar-width: thin;
+          scrollbar-color: rgba(0,0,0,0.12) transparent;
         }
 
         .feed-header {
@@ -3535,10 +3545,7 @@ export default function DashboardPage() {
         }
 
         .quick-actions-row {
-          position: absolute;
-          bottom: calc(100% + 12px);
-          left: 0;
-          right: 0;
+          position: relative;
           display: flex;
           gap: 10px;
           flex-wrap: wrap;
@@ -3699,7 +3706,7 @@ export default function DashboardPage() {
           min-width: 0;
           padding: 20px 0;
           padding-right: 48px;
-          margin-top: 60px;
+          margin-top: 30px;
         }
 
         .feed-content {
