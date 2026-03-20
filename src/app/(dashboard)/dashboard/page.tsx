@@ -1949,7 +1949,7 @@ export default function DashboardPage() {
   return (
     <div className="feed-page" data-theme={isDarkMode ? 'dark' : 'light'}>
       {/* ── Left Sidebar — fixed position ── */}
-      <aside style={{
+      <aside className="dashboard-sidebar" style={{
         position: 'fixed',
         top: '56px',
         left: 0,
@@ -2085,7 +2085,43 @@ export default function DashboardPage() {
         </aside>
 
         {/* ── Main Content ── */}
-        <main style={{ marginLeft: '280px', padding: '70px 24px 24px 24px', minHeight: '100vh' }}>
+        <main className="dashboard-main" style={{ marginLeft: '280px', padding: '70px 24px 24px 24px', minHeight: '100vh' }}>
+          {/* Mobile-only: compact profile bar + quick actions */}
+          <div className="mobile-top-bar">
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '12px' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                <h2 style={{ fontSize: '18px', fontWeight: '600', margin: 0 }}>
+                  Hey {sidebarFirstName}
+                </h2>
+                {sidebarStreakDays > 0 && (
+                  <span style={{ display: 'flex', alignItems: 'center', gap: '3px', fontSize: '13px' }}>
+                    🔥 <span style={{ fontWeight: '700', color: '#C35F33' }}>{sidebarStreakDays}</span>
+                  </span>
+                )}
+              </div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '13px', fontWeight: '600' }}>
+                <Sparkles size={14} style={{ color: '#D9C61A' }} />
+                {totalXp} XP
+              </div>
+            </div>
+            <div style={{ display: 'flex', gap: '8px', overflowX: 'auto', paddingBottom: '4px' }}>
+              <QuickActions
+                onPhotoUpload={() => setShowPhotoUploadDash(true)}
+                onAddContact={() => setShowContactModal(true)}
+                onQuickMemory={() => setShowQuickMemoryModal(true)}
+              />
+            </div>
+            {engagementPrompts.length > 0 && (
+              <div style={{ marginTop: '10px' }}>
+                <EngagementTile
+                  nextPrompt={engagementPrompts[0] || null}
+                  totalWaiting={engagementPrompts.length}
+                  onOpen={() => setShowEngagement(true)}
+                />
+              </div>
+            )}
+          </div>
+
           <div className="header-controls">
             {/* Category Nav Row — sticky */}
             <div className="controls-row">
@@ -4376,6 +4412,57 @@ export default function DashboardPage() {
         @media (max-width: 768px) {
           .timeline-wrapper {
             display: none;
+          }
+        }
+
+        /* ═══════════════════════════════════════════════
+           MOBILE RESPONSIVE — Dashboard Layout
+           ═══════════════════════════════════════════════ */
+
+        /* Mobile top bar hidden on desktop */
+        .mobile-top-bar {
+          display: none;
+        }
+
+        @media (max-width: 768px) {
+          /* Hide desktop sidebar on mobile */
+          .dashboard-sidebar {
+            display: none !important;
+          }
+
+          /* Show mobile top bar */
+          .mobile-top-bar {
+            display: block !important;
+            margin-bottom: 12px;
+          }
+
+          /* Main content takes full width */
+          .dashboard-main {
+            margin-left: 0 !important;
+            padding: 64px 12px 80px 12px !important;
+          }
+
+          /* Timeline bubble positioned without sidebar offset */
+          .timeline-bubble {
+            left: 12px !important;
+          }
+
+          /* Header controls: remove sidebar offset */
+          .header-controls {
+            left: 0 !important;
+            padding-left: 12px !important;
+            padding-right: 12px !important;
+          }
+
+          /* Controls row stacks on mobile */
+          .controls-row {
+            flex-wrap: wrap;
+          }
+        }
+
+        @media (max-width: 640px) {
+          .dashboard-main {
+            padding: 60px 8px 80px 8px !important;
           }
         }
       `}</style>

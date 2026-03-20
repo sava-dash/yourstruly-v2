@@ -177,6 +177,7 @@ export function EngagementOverlay({
         >
           <motion.div
             key="engagement-overlay-content"
+            className="engagement-overlay-content"
             initial={{ opacity: 0, scale: 0.9, y: 20 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.9, y: 20 }}
@@ -229,13 +230,13 @@ export function EngagementOverlay({
             </button>
 
             {/* 2-Column Layout */}
-            <div style={{
+            <div className="engagement-layout" style={{
               display: 'flex',
               height: '100%',
               overflow: 'hidden',
             }}>
               {/* Left Column — Header + Chapter Selector */}
-              <div style={{
+              <div className="engagement-left-panel" style={{
                 width: '280px',
                 flexShrink: 0,
                 padding: '24px',
@@ -420,7 +421,7 @@ export function EngagementOverlay({
               </div>
 
               {/* Right Column — Card Stack */}
-              <div style={{
+              <div className="engagement-right-panel" style={{
                 flex: 1,
                 padding: '24px',
                 display: 'flex',
@@ -497,6 +498,30 @@ export function EngagementOverlay({
           />
         )}
       </AnimatePresence>
+
+      {/* Mobile responsive styles */}
+      <style jsx global>{`
+        @media (max-width: 768px) {
+          /* Full-screen overlay on mobile */
+          .engagement-overlay-content {
+            width: 100% !important;
+            max-width: 100% !important;
+            height: 100vh !important;
+            max-height: 100vh !important;
+            border-radius: 0 !important;
+          }
+
+          /* Hide left panel on mobile — card takes full screen */
+          .engagement-left-panel {
+            display: none !important;
+          }
+
+          /* Card area fills entire overlay */
+          .engagement-right-panel {
+            padding: 16px 8px !important;
+          }
+        }
+      `}</style>
     </>
   )
 }

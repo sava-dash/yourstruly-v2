@@ -137,9 +137,10 @@ export function SwipeableCardStack({
   }
 
   return (
-    <div ref={containerRef} className="relative h-[600px] w-full mx-auto focus:outline-none" tabIndex={0}>
+    <>
+    <div ref={containerRef} className="card-stack-container relative h-[600px] w-full mx-auto focus:outline-none" tabIndex={0}>
       {/* Carousel position indicator */}
-      <div style={{
+      <div className="card-stack-indicator" style={{
         position: 'absolute',
         top: '-28px',
         left: '50%',
@@ -153,6 +154,7 @@ export function SwipeableCardStack({
 
       {/* Left Arrow — Go Back */}
       <button
+        className="card-nav-arrow card-nav-left"
         onClick={goBack}
         disabled={!canGoBack}
         style={{
@@ -184,6 +186,7 @@ export function SwipeableCardStack({
 
       {/* Right Arrow — Next (skip forward without dismissing) */}
       <button
+        className="card-nav-arrow card-nav-right"
         onClick={goForward}
         disabled={!canGoForward}
         style={{
@@ -251,6 +254,46 @@ export function SwipeableCardStack({
         </AnimatePresence>
       </div>
     </div>
+
+    {/* Mobile responsive styles */}
+    <style jsx global>{`
+      @media (max-width: 768px) {
+        /* Card stack fills available space on mobile */
+        .card-stack-container {
+          height: calc(100vh - 140px) !important;
+          max-height: 600px;
+        }
+
+        /* Position indicator above card */
+        .card-stack-indicator {
+          top: -20px !important;
+        }
+
+        /* Nav arrows: move inside card area on mobile */
+        .card-nav-arrow.card-nav-left {
+          left: 8px !important;
+          top: auto !important;
+          bottom: 12px !important;
+          transform: none !important;
+          width: 44px !important;
+          height: 44px !important;
+          background: rgba(255,255,255,0.9) !important;
+          box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+        }
+
+        .card-nav-arrow.card-nav-right {
+          right: 8px !important;
+          top: auto !important;
+          bottom: 12px !important;
+          transform: none !important;
+          width: 44px !important;
+          height: 44px !important;
+          background: rgba(255,255,255,0.9) !important;
+          box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+        }
+      }
+    `}</style>
+    </>
   )
 }
 
