@@ -188,20 +188,34 @@ export function SwipeableCardStack({
       </button>
 
       <div className="relative h-full">
-        <AnimatePresence mode="popLayout" initial={false}>
-          {visiblePrompts.slice(0, 3).map((prompt, index) => (
+        {/* Next card preview (behind current) */}
+        {visiblePrompts.length > 1 && (
+          <div
+            className="absolute inset-0 rounded-3xl overflow-hidden shadow-lg"
+            style={{
+              background: 'linear-gradient(135deg, #f0ece6, #e8e2da)',
+              transform: 'scale(0.95) translateY(8px)',
+              opacity: 0.6,
+              zIndex: 0,
+            }}
+          />
+        )}
+
+        {/* Current card */}
+        <AnimatePresence mode="wait" initial={false}>
+          {visiblePrompts.length > 0 && (
             <FlippableCard
-              key={prompt.id}
-              prompt={prompt}
-              index={index}
-              totalVisible={Math.min(visiblePrompts.length, 3)}
-              onDismiss={() => handleDismiss(prompt.id)}
-              onGoBack={index === 0 ? goBack : undefined}
+              key={prompts[currentIndex].id}
+              prompt={visiblePrompts[0]}
+              index={0}
+              totalVisible={1}
+              onDismiss={() => handleDismiss(visiblePrompts[0].id)}
+              onGoBack={goBack}
               onAnswer={onCardAnswer}
               getPromptText={getPromptText}
               exitDirection={exitDirection}
             />
-          ))}
+          )}
         </AnimatePresence>
       </div>
     </div>
@@ -728,26 +742,28 @@ function FlippableCard({
     fetchFollowUp(exchanges.length > 0 ? exchanges : [{ question: getPromptText(prompt), response: '(thinking...)' }])
   }
 
-  const stackOffset = index * 6
-  const stackScale = 1 - index * 0.04
-
   return (
     <motion.div
       className="absolute inset-0"
       style={{ 
-        zIndex: totalVisible - index,
+        zIndex: 1,
         perspective: 1000,
       }}
-      initial={{ scale: 0.9, opacity: 0, y: 30 }}
+      initial={{ 
+        x: exitDirection === 'right' ? 300 : -300,
+        opacity: 0,
+        scale: 0.95,
+      }}
       animate={{
-        scale: stackScale,
+        x: 0,
+        scale: 1,
         opacity: 1,
-        y: stackOffset,
+        y: 0,
       }}
       exit={{
-        x: exitDirection === 'right' ? 400 : -400,
+        x: exitDirection === 'right' ? 300 : -300,
         opacity: 0,
-        rotate: exitDirection === 'right' ? 15 : -15,
+        scale: 0.95,
       }}
       transition={{
         type: 'spring',
