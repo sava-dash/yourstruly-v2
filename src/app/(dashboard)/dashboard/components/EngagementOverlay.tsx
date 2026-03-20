@@ -179,8 +179,8 @@ export function EngagementOverlay({
             transition={{ type: 'spring', damping: 25, stiffness: 300 }}
             onClick={(e) => e.stopPropagation()}
             style={{
-              width: '100%',
-              maxWidth: '600px',
+              width: '80%',
+              maxWidth: '1200px',
               height: '90vh',
               maxHeight: '800px',
               background: '#fff',

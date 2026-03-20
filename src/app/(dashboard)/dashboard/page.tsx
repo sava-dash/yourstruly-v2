@@ -2085,33 +2085,6 @@ export default function DashboardPage() {
 
         {/* ── Main Content ── */}
         <main style={{ marginLeft: '280px', padding: '70px 24px 24px 24px', minHeight: '100vh' }}>
-          {/* Theme Toggle - top right */}
-          <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: '16px' }}>
-            <button
-              onClick={() => setIsDarkMode(!isDarkMode)}
-              className="theme-toggle"
-              aria-label="Toggle theme"
-            >
-              {isDarkMode ? (
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                  <circle cx="12" cy="12" r="5"/>
-                  <line x1="12" y1="1" x2="12" y2="3"/>
-                  <line x1="12" y1="21" x2="12" y2="23"/>
-                  <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/>
-                  <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/>
-                  <line x1="1" y1="12" x2="3" y2="12"/>
-                  <line x1="21" y1="12" x2="23" y2="12"/>
-                  <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/>
-                  <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/>
-                </svg>
-              ) : (
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                  <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>
-                </svg>
-              )}
-            </button>
-          </div>
-
           <div className="header-controls">
             {/* Category Nav Row — sticky */}
             <div className="controls-row">
@@ -2291,6 +2264,32 @@ export default function DashboardPage() {
                   )}
                 </AnimatePresence>
               </div>
+
+              {/* Theme Toggle */}
+              <button
+                onClick={() => setIsDarkMode(!isDarkMode)}
+                className="theme-toggle"
+                aria-label="Toggle theme"
+                style={{ marginLeft: '8px', flexShrink: 0 }}
+              >
+                {isDarkMode ? (
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <circle cx="12" cy="12" r="5"/>
+                    <line x1="12" y1="1" x2="12" y2="3"/>
+                    <line x1="12" y1="21" x2="12" y2="23"/>
+                    <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/>
+                    <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/>
+                    <line x1="1" y1="12" x2="3" y2="12"/>
+                    <line x1="21" y1="12" x2="23" y2="12"/>
+                    <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/>
+                    <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/>
+                  </svg>
+                ) : (
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>
+                  </svg>
+                )}
+              </button>
             </div>
 
             {/* Sub-options — expand below the sticky nav */}
@@ -3276,7 +3275,7 @@ export default function DashboardPage() {
           position: fixed !important;
           top: 56px !important;
           left: 280px !important;
-          right: 48px !important;
+          right: 0 !important;
           z-index: 20 !important;
           backdrop-filter: blur(12px);
           display: flex;
