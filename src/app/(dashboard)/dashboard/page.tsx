@@ -4430,10 +4430,11 @@ export default function DashboardPage() {
             display: none !important;
           }
 
-          /* Show mobile top bar */
+          /* Show mobile top bar — NOT sticky, just flows with content */
           .mobile-top-bar {
             display: block !important;
             margin-bottom: 12px;
+            padding-top: 4px;
           }
 
           /* Main content takes full width */
@@ -4457,6 +4458,69 @@ export default function DashboardPage() {
           /* Controls row stacks on mobile */
           .controls-row {
             flex-wrap: wrap;
+          }
+
+          /* ── Engagement Overlay: full-screen on mobile ── */
+          .engagement-overlay-content {
+            width: 100% !important;
+            max-width: 100% !important;
+            height: calc(100vh - 56px) !important;
+            max-height: calc(100vh - 56px) !important;
+            border-radius: 0 !important;
+            margin-top: 56px !important;
+          }
+
+          /* Close button: bigger, visible below nav on mobile */
+          .engagement-close-btn {
+            top: 12px !important;
+            right: 12px !important;
+            width: 44px !important;
+            height: 44px !important;
+            background: rgba(0,0,0,0.12) !important;
+            z-index: 20 !important;
+          }
+
+          /* Hide left panel on mobile — card takes full screen */
+          .engagement-left-panel {
+            display: none !important;
+          }
+
+          /* Card area fills entire overlay */
+          .engagement-right-panel {
+            padding: 56px 12px 16px 12px !important;
+          }
+
+          /* ── Card Stack responsive ── */
+          .card-stack-container {
+            height: calc(100vh - 160px) !important;
+            max-height: 560px;
+          }
+
+          .card-stack-indicator {
+            top: -20px !important;
+          }
+
+          /* Nav arrows: inside card area on mobile */
+          .card-nav-arrow.card-nav-left {
+            left: 8px !important;
+            top: auto !important;
+            bottom: 12px !important;
+            transform: none !important;
+            width: 44px !important;
+            height: 44px !important;
+            background: rgba(255,255,255,0.9) !important;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+          }
+
+          .card-nav-arrow.card-nav-right {
+            right: 8px !important;
+            top: auto !important;
+            bottom: 12px !important;
+            transform: none !important;
+            width: 44px !important;
+            height: 44px !important;
+            background: rgba(255,255,255,0.9) !important;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.15);
           }
         }
 

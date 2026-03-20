@@ -199,6 +199,7 @@ export function EngagementOverlay({
           >
             {/* Close Button */}
             <button
+              className="engagement-close-btn"
               onClick={onClose}
               style={{
                 position: 'absolute',
@@ -499,29 +500,6 @@ export function EngagementOverlay({
         )}
       </AnimatePresence>
 
-      {/* Mobile responsive styles */}
-      <style jsx global>{`
-        @media (max-width: 768px) {
-          /* Full-screen overlay on mobile */
-          .engagement-overlay-content {
-            width: 100% !important;
-            max-width: 100% !important;
-            height: 100vh !important;
-            max-height: 100vh !important;
-            border-radius: 0 !important;
-          }
-
-          /* Hide left panel on mobile — card takes full screen */
-          .engagement-left-panel {
-            display: none !important;
-          }
-
-          /* Card area fills entire overlay */
-          .engagement-right-panel {
-            padding: 16px 8px !important;
-          }
-        }
-      `}</style>
     </>
   )
 }
