@@ -202,7 +202,7 @@ export function SwipeableCardStack({
         )}
 
         {/* Current card */}
-        <AnimatePresence mode="wait" initial={false}>
+        <AnimatePresence mode="popLayout" initial={false}>
           {visiblePrompts.length > 0 && (
             <FlippableCard
               key={prompts[currentIndex].id}
@@ -750,26 +750,21 @@ function FlippableCard({
         perspective: 1000,
       }}
       initial={{ 
-        x: exitDirection === 'right' ? 300 : -300,
+        x: exitDirection === 'right' ? 200 : -200,
         opacity: 0,
-        scale: 0.95,
       }}
       animate={{
         x: 0,
-        scale: 1,
         opacity: 1,
-        y: 0,
       }}
       exit={{
-        x: exitDirection === 'right' ? 300 : -300,
+        x: exitDirection === 'right' ? -200 : 200,
         opacity: 0,
-        scale: 0.95,
       }}
       transition={{
-        type: 'spring',
-        stiffness: 400,
-        damping: 30,
-        mass: 0.8,
+        type: 'tween',
+        duration: 0.2,
+        ease: 'easeOut',
       }}
     >
       <motion.div
