@@ -297,11 +297,15 @@ function MapboxGlobeReveal({
   birthday,
   location,
   onDone,
+  selectedPills,
+  onTogglePill,
 }: {
   name: string;
   birthday: string;
   location: string;
   onDone: () => void;
+  selectedPills: Set<string>;
+  onTogglePill: (label: string) => void;
 }) {
   const formatBirthday = (dateStr: string): string => {
     if (!dateStr) return '';
@@ -313,14 +317,15 @@ function MapboxGlobeReveal({
   const mapRef = useRef<mapboxgl.Map | null>(null);
   const markerRef = useRef<mapboxgl.Marker | null>(null);
   const advancedRef = useRef(false);
-  const [phase, setPhase] = useState<'loading' | 'spinning' | 'flying' | 'pinned'>('loading');
+  const [phase, setPhase] = useState<'loading' | 'spinning' | 'flying' | 'pinned' | 'about-you' | 'traits' | 'interests'>('loading');
 
   const advance = useCallback(() => {
     if (!advancedRef.current) {
       advancedRef.current = true;
-      onDone();
+      // Transition to "about you" card instead of advancing past globe
+      setPhase('about-you');
     }
-  }, [onDone]);
+  }, []);
 
   useEffect(() => {
     if (!mapContainer.current || mapRef.current) return;
@@ -505,6 +510,133 @@ function MapboxGlobeReveal({
               >
                 Let's begin <ChevronRight size={18} />
               </motion.button>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* ── Phase: About You — new info card slides up + traits panel from right ── */}
+      <AnimatePresence>
+        {(phase === 'about-you' || phase === 'traits' || phase === 'interests') && (
+          <motion.div
+            key="about-you-bottom"
+            className="globe-bottom-panel"
+            initial={{ opacity: 0, y: 80 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: 80 }}
+            transition={{ type: 'spring', stiffness: 200, damping: 24 }}
+          >
+            <div className="globe-welcome-card">
+              <div className="globe-welcome-bar" />
+              <div className="globe-welcome-body">
+                <p className="globe-welcome-greeting">
+                  {phase === 'about-you' ? 'Tell us about you ✨' : phase === 'traits' ? 'Your personality 🧠' : 'Your interests 💡'}
+                </p>
+                <h2 className="globe-welcome-headline" style={{ fontSize: '20px' }}>
+                  {phase === 'about-you'
+                    ? "Let's start with what makes you, you."
+                    : phase === 'traits'
+                    ? 'Pick traits that describe you.'
+                    : 'What are you into?'}
+                </h2>
+              </div>
+              {phase === 'about-you' && (
+                <motion.button
+                  className="globe-continue-btn"
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  transition={{ delay: 0.3 }}
+                  onClick={() => setPhase('traits')}
+                >
+                  Continue <ChevronRight size={18} />
+                </motion.button>
+              )}
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* ── Traits panel — slides in from right ── */}
+      <AnimatePresence>
+        {phase === 'traits' && (
+          <motion.div
+            key="traits-panel"
+            className="globe-side-panel"
+            initial={{ x: '100%' }}
+            animate={{ x: 0 }}
+            exit={{ x: '100%' }}
+            transition={{ type: 'spring', stiffness: 260, damping: 28, delay: 0.5 }}
+          >
+            <div className="globe-side-panel-header">
+              <h3>Personality Traits</h3>
+              <p>Select traits that describe you</p>
+            </div>
+            <div className="globe-side-panel-items">
+              {BUBBLE_TRAITS.map(trait => {
+                const isSelected = selectedPills.has(trait.label);
+                return (
+                  <button
+                    key={trait.label}
+                    className={`globe-pill ${isSelected ? 'selected' : ''}`}
+                    onClick={() => onTogglePill(trait.label)}
+                  >
+                    <span>{trait.emoji}</span>
+                    <span>{trait.label}</span>
+                    {isSelected && <Check size={14} />}
+                  </button>
+                );
+              })}
+            </div>
+            <div className="globe-side-panel-footer">
+              <button
+                className="globe-continue-btn"
+                onClick={() => setPhase('interests')}
+              >
+                Continue <ChevronRight size={18} />
+              </button>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* ── Interests panel — slides in from right ── */}
+      <AnimatePresence>
+        {phase === 'interests' && (
+          <motion.div
+            key="interests-panel"
+            className="globe-side-panel"
+            initial={{ x: '100%' }}
+            animate={{ x: 0 }}
+            exit={{ x: '100%' }}
+            transition={{ type: 'spring', stiffness: 260, damping: 28, delay: 0.3 }}
+          >
+            <div className="globe-side-panel-header">
+              <h3>Your Interests</h3>
+              <p>Pick what you're into</p>
+            </div>
+            <div className="globe-side-panel-items">
+              {BUBBLE_INTERESTS.map(interest => {
+                const isSelected = selectedPills.has(interest.label);
+                return (
+                  <button
+                    key={interest.label}
+                    className={`globe-pill ${isSelected ? 'selected' : ''}`}
+                    onClick={() => onTogglePill(interest.label)}
+                  >
+                    <span>{interest.emoji}</span>
+                    <span>{interest.label}</span>
+                    {isSelected && <Check size={14} />}
+                  </button>
+                );
+              })}
+            </div>
+            <div className="globe-side-panel-footer">
+              <button
+                className="globe-continue-btn"
+                onClick={onDone}
+              >
+                Continue <ChevronRight size={18} />
+              </button>
             </div>
           </motion.div>
         )}
@@ -745,6 +877,99 @@ function MapboxGlobeReveal({
         .globe-fullscreen .mapboxgl-ctrl-logo {
           opacity: 0.4;
         }
+
+        /* ── Side Panel (traits / interests) ── */
+        .globe-side-panel {
+          position: absolute;
+          top: 0;
+          right: 0;
+          bottom: 0;
+          width: min(380px, 85vw);
+          z-index: 20;
+          background: rgba(255, 255, 255, 0.97);
+          backdrop-filter: blur(20px);
+          -webkit-backdrop-filter: blur(20px);
+          box-shadow: -8px 0 40px rgba(0, 0, 0, 0.25);
+          display: flex;
+          flex-direction: column;
+          overflow: hidden;
+        }
+
+        .globe-side-panel-header {
+          padding: 32px 24px 16px;
+          border-bottom: 1px solid rgba(0, 0, 0, 0.06);
+        }
+
+        .globe-side-panel-header h3 {
+          font-size: 22px;
+          font-weight: 700;
+          color: #2d2d2d;
+          margin: 0 0 4px;
+          font-family: var(--font-playfair), Georgia, serif;
+        }
+
+        .globe-side-panel-header p {
+          font-size: 14px;
+          color: rgba(45, 45, 45, 0.5);
+          margin: 0;
+        }
+
+        .globe-side-panel-items {
+          flex: 1;
+          overflow-y: auto;
+          padding: 16px 20px;
+          display: flex;
+          flex-wrap: wrap;
+          gap: 8px;
+          align-content: flex-start;
+          -webkit-overflow-scrolling: touch;
+        }
+
+        .globe-pill {
+          display: inline-flex;
+          align-items: center;
+          gap: 6px;
+          padding: 10px 16px;
+          border-radius: 100px;
+          border: 1.5px solid rgba(0, 0, 0, 0.1);
+          background: rgba(0, 0, 0, 0.02);
+          color: #2d2d2d;
+          font-size: 14px;
+          font-weight: 500;
+          cursor: pointer;
+          transition: all 0.2s ease;
+          white-space: nowrap;
+        }
+
+        .globe-pill:hover {
+          border-color: rgba(64, 106, 86, 0.3);
+          background: rgba(64, 106, 86, 0.05);
+        }
+
+        .globe-pill.selected {
+          border-color: #406A56;
+          background: rgba(64, 106, 86, 0.1);
+          color: #406A56;
+          font-weight: 600;
+        }
+
+        .globe-side-panel-footer {
+          padding: 16px 24px 24px;
+          padding-bottom: calc(24px + env(safe-area-inset-bottom));
+          border-top: 1px solid rgba(0, 0, 0, 0.06);
+        }
+
+        .globe-side-panel-footer .globe-continue-btn {
+          margin: 0;
+          width: 100%;
+        }
+
+        /* Mobile: side panel goes full-width */
+        @media (max-width: 640px) {
+          .globe-side-panel {
+            width: 100%;
+          }
+        }
       `}</style>
     </div>
   );
@@ -923,7 +1148,14 @@ export function QuickOnboardingFlow({
           name={data.name}
           birthday={data.birthday}
           location={data.location || 'somewhere beautiful'}
-          onDone={goNext}
+          onDone={() => {
+            commitPills();
+            // Skip past interests + traits steps (now embedded in globe)
+            setStep('religion');
+            setDirection(1);
+          }}
+          selectedPills={selectedPills}
+          onTogglePill={handleBubbleToggle}
         />
       </>
     );
