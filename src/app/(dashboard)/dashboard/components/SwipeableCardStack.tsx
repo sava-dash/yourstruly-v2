@@ -48,6 +48,8 @@ export function SwipeableCardStack({
   getPromptText,
 }: SwipeableCardStackProps) {
   const containerRef = useRef<HTMLDivElement>(null)
+  // Track navigation direction for slide animation: 1 = forward, -1 = back
+  const [direction, setDirection] = useState(0)
 
   // Clamp index when prompts array changes (e.g. after answer removes a prompt)
   useEffect(() => {
@@ -71,6 +73,7 @@ export function SwipeableCardStack({
   // Navigate forward (skip without dismissing — just move carousel)
   const goForward = useCallback(() => {
     if (currentIndex < prompts.length - 1) {
+      setDirection(1)
       onCurrentIndexChange(currentIndex + 1)
     }
   }, [currentIndex, prompts.length])
@@ -78,6 +81,7 @@ export function SwipeableCardStack({
   // Navigate backward
   const goBack = useCallback(() => {
     if (currentIndex > 0) {
+      setDirection(-1)
       onCurrentIndexChange(currentIndex - 1)
     }
   }, [currentIndex])
@@ -210,17 +214,41 @@ export function SwipeableCardStack({
       </button>
 
       <div className="relative h-full">
-        <FlippableCard
-          key={currentPrompt.id}
-          prompt={currentPrompt}
-          index={0}
-          totalVisible={1}
-          onDismiss={() => handleAnsweredDismiss(currentPrompt.id)}
-          onGoBack={goBack}
-          onGoForward={goForward}
-          onAnswer={onCardAnswer}
-          getPromptText={getPromptText}
-        />
+        <AnimatePresence initial={false} custom={direction} mode="popLayout">
+          <motion.div
+            key={currentPrompt.id}
+            custom={direction}
+            variants={{
+              enter: (dir: number) => ({
+                x: dir === 0 ? 0 : dir > 0 ? 300 : -300,
+                opacity: 0,
+                scale: 0.92,
+              }),
+              center: { x: 0, opacity: 1, scale: 1 },
+              exit: (dir: number) => ({
+                x: dir > 0 ? -300 : 300,
+                opacity: 0,
+                scale: 0.92,
+              }),
+            }}
+            initial="enter"
+            animate="center"
+            exit="exit"
+            transition={{ type: 'spring', stiffness: 350, damping: 32, mass: 0.8 }}
+            style={{ position: 'absolute', inset: 0 }}
+          >
+            <FlippableCard
+              prompt={currentPrompt}
+              index={0}
+              totalVisible={1}
+              onDismiss={() => handleAnsweredDismiss(currentPrompt.id)}
+              onGoBack={goBack}
+              onGoForward={goForward}
+              onAnswer={onCardAnswer}
+              getPromptText={getPromptText}
+            />
+          </motion.div>
+        </AnimatePresence>
       </div>
     </div>
   )
