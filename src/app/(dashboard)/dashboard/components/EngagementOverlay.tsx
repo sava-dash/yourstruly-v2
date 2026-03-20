@@ -183,7 +183,7 @@ export function EngagementOverlay({
               maxWidth: '1200px',
               height: '90vh',
               maxHeight: '800px',
-              background: '#fff',
+              background: 'linear-gradient(180deg, #faf9f7, #f3efe9)',
               borderRadius: '24px',
               display: 'flex',
               flexDirection: 'column',
@@ -385,7 +385,7 @@ export function EngagementOverlay({
                   <span style={{ color: '#888' }}>Loading prompts...</span>
                 </div>
               ) : (
-                <div style={{ width: '100%', maxWidth: '500px' }}>
+                <div style={{ width: '100%', maxWidth: '900px' }}>
                   <XpFloatingCounter show={xpAnimating} amount={lastXpGain} />
                   <SwipeableCardStack
                     prompts={filteredPrompts}

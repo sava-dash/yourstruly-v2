@@ -1042,7 +1042,7 @@ export default function DashboardPage() {
             .select('current_streak_days')
             .eq('user_id', user.id)
             .single()
-          if (engStats?.current_streak_days) setStreakDays(prev => prev || engStats.current_streak_days)
+          if (engStats?.current_streak_days) setStreakDays(prev => Math.max(prev, engStats.current_streak_days))
         } catch {}
 
         // Fetch stats in parallel
@@ -2325,7 +2325,10 @@ export default function DashboardPage() {
           </div>
 
           {/* Feed Content */}
-          <div className="feed-content-area">
+          <div className="feed-content-area" style={{
+            marginTop: openSubmenu && QUICK_ACTIONS[openSubmenu] ? '90px' : '30px',
+            transition: 'margin-top 0.3s ease',
+          }}>
           {isLoading ? (
             <div className="loading-state">
               <div className="spinner"></div>
@@ -3705,7 +3708,6 @@ export default function DashboardPage() {
           min-width: 0;
           padding: 20px 0;
           padding-right: 48px;
-          margin-top: 30px;
         }
 
         .feed-content {

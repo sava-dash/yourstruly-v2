@@ -73,9 +73,21 @@ export function SwipeableCardStack({
       
       const currentPrompt = visiblePrompts[0]
       
-      if (e.key === 'ArrowLeft' || e.key === 'ArrowRight') {
+      if (e.key === 'ArrowRight') {
         e.preventDefault()
         handleDismiss(currentPrompt.id)
+      } else if (e.key === 'ArrowLeft') {
+        e.preventDefault()
+        // Go back to last dismissed
+        if (dismissedIds.size > 0) {
+          const ids = Array.from(dismissedIds)
+          const lastId = ids[ids.length - 1]
+          setDismissedIds(prev => {
+            const next = new Set(prev)
+            next.delete(lastId)
+            return next
+          })
+        }
       }
     }
 
@@ -105,7 +117,7 @@ export function SwipeableCardStack({
   }
 
   return (
-    <div ref={containerRef} className="relative h-[520px] w-full max-w-md mx-auto focus:outline-none" tabIndex={0}>
+    <div ref={containerRef} className="relative h-[600px] w-full mx-auto focus:outline-none" tabIndex={0}>
       <div className="relative h-full">
         <AnimatePresence mode="popLayout">
           {visiblePrompts.slice(0, 3).map((prompt, index) => (
@@ -115,6 +127,17 @@ export function SwipeableCardStack({
               index={index}
               totalVisible={Math.min(visiblePrompts.length, 3)}
               onDismiss={() => handleDismiss(prompt.id)}
+              onGoBack={index === 0 ? (() => {
+                if (dismissedIds.size > 0) {
+                  const ids = Array.from(dismissedIds)
+                  const lastId = ids[ids.length - 1]
+                  setDismissedIds(prev => {
+                    const next = new Set(prev)
+                    next.delete(lastId)
+                    return next
+                  })
+                }
+              }) : undefined}
               onAnswer={onCardAnswer}
               getPromptText={getPromptText}
             />
@@ -130,6 +153,7 @@ interface FlippableCardProps {
   index: number
   totalVisible: number
   onDismiss: () => void
+  onGoBack?: () => void
   onAnswer: (promptId: string, response: { type: 'text' | 'voice' | 'selection'; text?: string; videoUrl?: string }) => Promise<void>
   getPromptText: (prompt: Prompt) => string
 }
@@ -139,6 +163,7 @@ function FlippableCard({
   index,
   totalVisible,
   onDismiss,
+  onGoBack,
   onAnswer,
   getPromptText,
 }: FlippableCardProps) {
@@ -272,10 +297,19 @@ function FlippableCard({
     
     const threshold = 80
     const velocity = Math.abs(info.velocity.x)
-    const offset = Math.abs(info.offset.x)
+    const offset = info.offset.x
+    const absOffset = Math.abs(offset)
     
-    if (offset > threshold || (velocity > 500 && offset > 30)) {
-      onDismiss()
+    if (absOffset > threshold || (velocity > 500 && absOffset > 30)) {
+      if (offset > 0) {
+        // Swiped RIGHT → skip
+        onDismiss()
+      } else {
+        // Swiped LEFT → go back to previous
+        if (onGoBack) {
+          onGoBack()
+        }
+      }
     }
     
     setTimeout(() => {
@@ -683,10 +717,10 @@ function FlippableCard({
         <div 
           className={`
             absolute inset-0 rounded-3xl overflow-hidden
-            bg-white shadow-xl
+            shadow-xl
             ${index === 0 && !isFlipped ? 'cursor-grab active:cursor-grabbing' : ''}
           `}
-          style={{ backfaceVisibility: 'hidden' }}
+          style={{ background: 'linear-gradient(135deg, #fafaf8, #f5f0eb)', backfaceVisibility: 'hidden' }}
         >
           {/* Close/Skip button */}
           {index === 0 && (
@@ -698,10 +732,10 @@ function FlippableCard({
             </button>
           )}
 
-          <div className="h-full flex flex-col">
-            {/* Photo or gradient header — 60% of card */}
+          <div className="h-full flex flex-row">
+            {/* Left: Photo or gradient — 45% */}
             {hasPhoto ? (
-              <div className="relative h-[60%] bg-gray-100">
+              <div className="relative w-[45%] flex-shrink-0">
                 {photoIsVideo ? (
                   <>
                     <video
@@ -710,13 +744,8 @@ function FlippableCard({
                       muted
                       playsInline
                       className="w-full h-full object-cover"
-                      onLoadedData={(e) => {
-                        // Seek to 0.1s for thumbnail
-                        const vid = e.currentTarget
-                        vid.currentTime = 0.1
-                      }}
+                      onLoadedData={(e) => { e.currentTarget.currentTime = 0.1 }}
                     />
-                    {/* Play icon overlay */}
                     <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
                       <div className="w-14 h-14 rounded-full bg-black/50 backdrop-blur-sm flex items-center justify-center">
                         <Play size={28} className="text-white ml-1" />
@@ -726,21 +755,32 @@ function FlippableCard({
                 ) : (
                   <img src={prompt.photoUrl} alt="" className="w-full h-full object-cover" draggable={false} />
                 )}
-                <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
+                <div className="absolute inset-0 bg-gradient-to-r from-transparent to-black/10" />
+                {/* Category badge on photo */}
+                <div className="absolute bottom-4 left-4 flex items-center gap-2">
+                  <span className="px-3 py-1 rounded-full text-xs font-medium bg-white/20 backdrop-blur-sm text-white">
+                    {config.label}
+                  </span>
+                  {config.xp > 0 && (
+                    <span className="flex items-center gap-1 text-xs text-white/80 font-medium">
+                      <Sparkles size={12} />+{config.xp} XP
+                    </span>
+                  )}
+                </div>
               </div>
             ) : (
-              <div className={`relative h-[60%] bg-gradient-to-br ${
-                config.color === 'yellow' ? 'from-amber-400 to-orange-500' :
-                config.color === 'green' ? 'from-emerald-400 to-teal-500' :
-                config.color === 'red' ? 'from-rose-400 to-red-500' :
-                config.color === 'blue' ? 'from-blue-400 to-indigo-500' :
-                'from-purple-400 to-violet-500'
+              <div className={`relative w-[45%] flex-shrink-0 ${
+                config.color === 'yellow' ? 'bg-gradient-to-br from-amber-300 via-amber-400 to-orange-500' :
+                config.color === 'green' ? 'bg-gradient-to-br from-emerald-300 via-emerald-400 to-teal-600' :
+                config.color === 'red' ? 'bg-gradient-to-br from-rose-300 via-rose-400 to-red-600' :
+                config.color === 'blue' ? 'bg-gradient-to-br from-sky-300 via-blue-400 to-indigo-600' :
+                'bg-gradient-to-br from-violet-300 via-purple-400 to-purple-700'
               }`}>
                 <div className="absolute inset-0 flex items-center justify-center">
-                  <Sparkles size={64} className="text-white/30" />
+                  <Sparkles size={72} className="text-white/25" />
                 </div>
-                {/* Category badge on gradient */}
-                <div className="absolute bottom-4 left-5 flex items-center gap-2">
+                {/* Category badge */}
+                <div className="absolute bottom-4 left-4 flex items-center gap-2">
                   <span className="px-3 py-1 rounded-full text-xs font-medium bg-white/20 backdrop-blur-sm text-white">
                     {config.label}
                   </span>
@@ -753,28 +793,28 @@ function FlippableCard({
               </div>
             )}
 
-            {/* Content — 40% of card */}
-            <div className="flex-1 p-5 flex flex-col justify-center">
+            {/* Right: Content — 55% */}
+            <div className="flex-1 p-8 flex flex-col justify-center bg-gradient-to-br from-slate-50 to-stone-100">
               {isContact && prompt.contactName && (
-                <div className="flex items-center gap-3 mb-3">
-                  <div className="w-10 h-10 rounded-full bg-gradient-to-br from-[#406A56] to-[#8DACAB] flex items-center justify-center text-white font-medium">
+                <div className="flex items-center gap-3 mb-4">
+                  <div className="w-12 h-12 rounded-full bg-gradient-to-br from-[#406A56] to-[#8DACAB] flex items-center justify-center text-white font-medium text-lg">
                     {prompt.contactName.charAt(0).toUpperCase()}
                   </div>
                   <div>
-                    <p className="font-medium text-gray-900">{prompt.contactName}</p>
+                    <p className="font-semibold text-gray-900 text-lg">{prompt.contactName}</p>
                     {prompt.missingField && (
-                      <p className="text-xs text-gray-500">Add {prompt.missingField.replace(/_/g, ' ')}</p>
+                      <p className="text-sm text-gray-500">Add {prompt.missingField.replace(/_/g, ' ')}</p>
                     )}
                   </div>
                 </div>
               )}
 
-              <p className="text-2xl font-bold text-[#406A56] leading-snug flex-1 flex items-center">
+              <p className="text-2xl font-bold text-[#2d3b36] leading-relaxed flex-1 flex items-center">
                 {getPromptText(prompt)}
               </p>
 
-              <p className="text-xs text-gray-400 text-center mt-3">
-                Tap to answer • Swipe or ← → to skip
+              <p className="text-xs text-gray-400 text-center mt-4">
+                Tap to answer • ← Go back • → Skip
               </p>
             </div>
           </div>
