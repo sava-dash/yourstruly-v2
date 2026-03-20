@@ -30,6 +30,8 @@ interface Prompt {
 
 interface SwipeableCardStackProps {
   prompts: Prompt[]
+  currentIndex: number
+  onCurrentIndexChange: (index: number) => void
   onCardDismiss: (promptId: string) => void
   onCardAnswer: (promptId: string, response: { type: 'text' | 'voice' | 'selection'; text?: string; videoUrl?: string }) => Promise<void>
   onNeedMorePrompts: () => void
@@ -38,19 +40,19 @@ interface SwipeableCardStackProps {
 
 export function SwipeableCardStack({
   prompts,
+  currentIndex,
+  onCurrentIndexChange,
   onCardDismiss,
   onCardAnswer,
   onNeedMorePrompts,
   getPromptText,
 }: SwipeableCardStackProps) {
-  // Carousel index — navigates within the full prompts array
-  const [currentIndex, setCurrentIndex] = useState(0)
   const containerRef = useRef<HTMLDivElement>(null)
 
   // Clamp index when prompts array changes (e.g. after answer removes a prompt)
   useEffect(() => {
     if (prompts.length > 0 && currentIndex >= prompts.length) {
-      setCurrentIndex(prompts.length - 1)
+      onCurrentIndexChange(prompts.length - 1)
     }
   }, [prompts.length, currentIndex])
 
@@ -69,14 +71,14 @@ export function SwipeableCardStack({
   // Navigate forward (skip without dismissing — just move carousel)
   const goForward = useCallback(() => {
     if (currentIndex < prompts.length - 1) {
-      setCurrentIndex(prev => prev + 1)
+      onCurrentIndexChange(currentIndex + 1)
     }
   }, [currentIndex, prompts.length])
 
   // Navigate backward
   const goBack = useCallback(() => {
     if (currentIndex > 0) {
-      setCurrentIndex(prev => prev - 1)
+      onCurrentIndexChange(currentIndex - 1)
     }
   }, [currentIndex])
 
@@ -373,12 +375,12 @@ function FlippableCard({
   const handleDragEnd = (_: any, info: PanInfo) => {
     if (isFlipped) return // Don't navigate while flipped
     
-    const threshold = 80
+    const threshold = 40 // Low threshold — container is narrow
     const velocity = Math.abs(info.velocity.x)
     const offset = info.offset.x
     const absOffset = Math.abs(offset)
     
-    if (absOffset > threshold || (velocity > 500 && absOffset > 30)) {
+    if (absOffset > threshold || (velocity > 300 && absOffset > 15)) {
       if (offset > 0 && onGoForward) {
         // Swiped RIGHT → next prompt (carousel forward)
         onGoForward()
@@ -763,8 +765,8 @@ function FlippableCard({
         animate={{ rotateY: isFlipped ? 180 : 0 }}
         transition={{ type: 'spring', stiffness: 400, damping: 35 }}
         drag={index === 0 && !isFlipped ? 'x' : false}
-        dragConstraints={{ left: 0, right: 0 }}
-        dragElastic={0.9}
+        dragConstraints={{ left: -150, right: 150 }}
+        dragElastic={0.7}
         onDragStart={handleDragStart}
         onDragEnd={handleDragEnd}
         onClick={index === 0 ? handleClick : undefined}

@@ -38,6 +38,8 @@ interface EngagementOverlayProps {
   refreshStats: () => void
   educationLevel?: string | null
   userContacts: any[]
+  carouselIndex: number
+  onCarouselIndexChange: (index: number) => void
 }
 
 export function EngagementOverlay({
@@ -59,6 +61,8 @@ export function EngagementOverlay({
   refreshStats,
   educationLevel,
   userContacts,
+  carouselIndex,
+  onCarouselIndexChange,
 }: EngagementOverlayProps) {
   // Multi-select chapter filter
   const [selectedChapters, setSelectedChapters] = useState<string[]>([])
@@ -438,6 +442,8 @@ export function EngagementOverlay({
                     <XpFloatingCounter show={xpAnimating} amount={lastXpGain} />
                     <SwipeableCardStack
                       prompts={filteredPrompts}
+                      currentIndex={carouselIndex}
+                      onCurrentIndexChange={onCarouselIndexChange}
                       onCardDismiss={(id) => {
                         onAnsweredPromptIds([...answeredPromptIds, id])
                       }}

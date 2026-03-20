@@ -617,6 +617,7 @@ export default function DashboardPage() {
   
   // Modal states for engagement
   const [showEngagement, setShowEngagement] = useState(false)
+  const [engagementCarouselIndex, setEngagementCarouselIndex] = useState(0)
   const [dashEngagementPrompt, setDashEngagementPrompt] = useState<any | null>(null)
   const [photoTaggingPrompt, setPhotoTaggingPrompt] = useState<any | null>(null)
   const [milestone, setMilestone] = useState<Milestone | null>(null)
@@ -3042,6 +3043,8 @@ export default function DashboardPage() {
         refreshStats={refreshDashboardStats}
         educationLevel={profile?.education_level}
         userContacts={dashboardContacts}
+        carouselIndex={engagementCarouselIndex}
+        onCarouselIndexChange={setEngagementCarouselIndex}
       />
 
       {/* Monthly Recap Popup */}
