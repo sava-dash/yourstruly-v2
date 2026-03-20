@@ -17,6 +17,7 @@ import { OnboardingStepExplanation } from './OnboardingStepExplanation';
 import { ConversationEngine } from '@/components/conversation-engine';
 import { ImageUploadStep } from './ImageUploadStep';
 import { BubblePickerInterests, BubblePickerTraits, ALL_INTERESTS as BUBBLE_INTERESTS, TRAIT_ITEMS as BUBBLE_TRAITS } from './BubblePicker';
+import { CURATED_TRAITS, CURATED_INTERESTS } from './curated-options';
 
 // ============================================
 // TYPES
@@ -952,7 +953,7 @@ function MapboxGlobeReveal({
               <p>Select traits that describe you</p>
             </div>
             <div className="globe-side-panel-items">
-              {[...BUBBLE_TRAITS, ...customTraits].map(trait => {
+              {[...CURATED_TRAITS, ...customTraits].map(trait => {
                 const isSelected = selectedPills.has(trait.label);
                 return (
                   <button
@@ -1027,7 +1028,7 @@ function MapboxGlobeReveal({
               <p>Pick what you're into</p>
             </div>
             <div className="globe-side-panel-items">
-              {[...BUBBLE_INTERESTS, ...customInterests].map(interest => {
+              {[...CURATED_INTERESTS, ...customInterests].map(interest => {
                 const isSelected = selectedPills.has(interest.label);
                 return (
                   <button
@@ -1578,11 +1579,13 @@ export function QuickOnboardingFlow({
   }, [step]);
 
   const commitPills = useCallback(() => {
-    const allInterestLabels = BUBBLE_INTERESTS.map(i => i.label);
-    const allTraitLabels = BUBBLE_TRAITS.map(t => t.label);
+    const allInterestLabels = [...BUBBLE_INTERESTS.map(i => i.label), ...CURATED_INTERESTS.map(i => i.label)];
+    const allTraitLabels = [...BUBBLE_TRAITS.map(t => t.label), ...CURATED_TRAITS.map(t => t.label)];
     const interests = Array.from(selectedPills).filter(l => allInterestLabels.includes(l));
     const traits = Array.from(selectedPills).filter(l => allTraitLabels.includes(l));
-    updateData({ interests, personalityTraits: traits });
+    // Anything not in either list is a custom entry — save as interest
+    const custom = Array.from(selectedPills).filter(l => !allInterestLabels.includes(l) && !allTraitLabels.includes(l));
+    updateData({ interests: [...interests, ...custom], personalityTraits: traits });
   }, [selectedPills, updateData]);
 
   // Bubble picker toggle handler (must be before any early returns)
