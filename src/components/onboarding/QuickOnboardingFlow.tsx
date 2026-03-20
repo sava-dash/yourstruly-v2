@@ -317,7 +317,7 @@ function MapboxGlobeReveal({
   const mapRef = useRef<mapboxgl.Map | null>(null);
   const markerRef = useRef<mapboxgl.Marker | null>(null);
   const advancedRef = useRef(false);
-  const [phase, setPhase] = useState<'loading' | 'spinning' | 'flying' | 'pinned' | 'places-lived' | 'places-flying' | 'traits' | 'interests'>('loading');
+  const [phase, setPhase] = useState<'loading' | 'spinning' | 'flying' | 'pinned' | 'places-lived' | 'places-flying' | 'globe-spin-out' | 'traits' | 'interests'>('loading');
 
   // Places-lived state
   const [placeInput, setPlaceInput] = useState('');
@@ -329,6 +329,12 @@ function MapboxGlobeReveal({
   // Track the last pin coordinates for drawing arcs
   const lastCoordsRef = useRef<{ lng: number; lat: number } | null>(null);
   const arcCountRef = useRef(0);
+
+  // Custom options for traits/interests
+  const [customTraitInput, setCustomTraitInput] = useState('');
+  const [customTraits, setCustomTraits] = useState<{ label: string; emoji: string }[]>([]);
+  const [customInterestInput, setCustomInterestInput] = useState('');
+  const [customInterests, setCustomInterests] = useState<{ label: string; emoji: string }[]>([]);
 
   // Fetch place suggestions from Mapbox
   const fetchPlaceSuggestions = useCallback(async (query: string) => {
@@ -374,15 +380,39 @@ function MapboxGlobeReveal({
       type: 'geojson',
       data: { type: 'Feature', properties: {}, geometry: { type: 'LineString', coordinates: coords } },
     });
+    // Outer glow layer
+    map.addLayer({
+      id: `${sourceId}-glow`,
+      type: 'line',
+      source: sourceId,
+      paint: {
+        'line-color': '#D9C61A',
+        'line-width': 12,
+        'line-opacity': 0.15,
+        'line-blur': 6,
+      },
+    });
+    // Mid glow
+    map.addLayer({
+      id: `${sourceId}-mid`,
+      type: 'line',
+      source: sourceId,
+      paint: {
+        'line-color': '#D9C61A',
+        'line-width': 6,
+        'line-opacity': 0.4,
+        'line-blur': 2,
+      },
+    });
+    // Core ribbon
     map.addLayer({
       id: sourceId,
       type: 'line',
       source: sourceId,
       paint: {
-        'line-color': '#D9C61A',
-        'line-width': 2.5,
-        'line-opacity': 0.8,
-        'line-dasharray': [2, 2],
+        'line-color': '#F5E642',
+        'line-width': 3,
+        'line-opacity': 0.9,
       },
     });
   }, []);
@@ -482,6 +512,44 @@ function MapboxGlobeReveal({
       console.error('Failed to save places:', err);
     }
   }, [placesAdded]);
+
+  // Zoom out and spin the globe, then transition to traits
+  const spinOutAndContinue = useCallback(async () => {
+    await savePlaces();
+    setPhase('globe-spin-out');
+    const map = mapRef.current;
+    if (map) {
+      // Zoom out to show full globe with all trails
+      map.flyTo({
+        center: [0, 20],
+        zoom: 1.8,
+        pitch: 0,
+        bearing: 0,
+        duration: 3000,
+        essential: true,
+      });
+
+      // Start slow rotation after zoom-out
+      let bearing = 0;
+      let spinning = true;
+      const rotate = () => {
+        if (!spinning || !mapRef.current) return;
+        bearing += 0.15;
+        mapRef.current.setBearing(bearing % 360);
+        requestAnimationFrame(rotate);
+      };
+      setTimeout(() => rotate(), 3000);
+
+      // After 5 seconds total, show traits
+      setTimeout(() => {
+        spinning = false;
+        setPhase('traits');
+      }, 5500);
+    } else {
+      // Fallback if map not available
+      setTimeout(() => setPhase('traits'), 500);
+    }
+  }, [savePlaces]);
 
   const advance = useCallback(() => {
     if (!advancedRef.current) {
@@ -818,10 +886,7 @@ function MapboxGlobeReveal({
                       {placesAdded.length === 0 ? 'Add Place' : 'Add Another'} <ChevronRight size={18} />
                     </button>
                     <button
-                      onClick={async () => {
-                        await savePlaces();
-                        setPhase('traits');
-                      }}
+                      onClick={spinOutAndContinue}
                       style={{
                         padding: '12px',
                         border: 'none',
@@ -871,15 +936,15 @@ function MapboxGlobeReveal({
         )}
       </AnimatePresence>
 
-      {/* ── Traits panel — slides in from right ── */}
+      {/* ── Traits panel — floating on the right ── */}
       <AnimatePresence>
         {phase === 'traits' && (
           <motion.div
             key="traits-panel"
-            className="globe-side-panel"
-            initial={{ x: '100%' }}
-            animate={{ x: 0 }}
-            exit={{ x: '100%' }}
+            className="globe-floating-panel globe-floating-right"
+            initial={{ x: '120%', opacity: 0 }}
+            animate={{ x: 0, opacity: 1 }}
+            exit={{ x: '120%', opacity: 0 }}
             transition={{ type: 'spring', stiffness: 260, damping: 28 }}
           >
             <div className="globe-side-panel-header">
@@ -887,7 +952,7 @@ function MapboxGlobeReveal({
               <p>Select traits that describe you</p>
             </div>
             <div className="globe-side-panel-items">
-              {BUBBLE_TRAITS.map(trait => {
+              {[...BUBBLE_TRAITS, ...customTraits].map(trait => {
                 const isSelected = selectedPills.has(trait.label);
                 return (
                   <button
@@ -902,6 +967,38 @@ function MapboxGlobeReveal({
                 );
               })}
             </div>
+            {/* Add custom trait */}
+            <div className="globe-custom-input-row">
+              <input
+                type="text"
+                value={customTraitInput}
+                onChange={(e) => setCustomTraitInput(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' && customTraitInput.trim()) {
+                    const label = customTraitInput.trim();
+                    setCustomTraits(prev => [...prev, { label, emoji: '✨' }]);
+                    onTogglePill(label);
+                    setCustomTraitInput('');
+                  }
+                }}
+                placeholder="Add your own..."
+                className="globe-custom-input"
+              />
+              <button
+                className="globe-custom-add-btn"
+                disabled={!customTraitInput.trim()}
+                onClick={() => {
+                  if (customTraitInput.trim()) {
+                    const label = customTraitInput.trim();
+                    setCustomTraits(prev => [...prev, { label, emoji: '✨' }]);
+                    onTogglePill(label);
+                    setCustomTraitInput('');
+                  }
+                }}
+              >
+                +
+              </button>
+            </div>
             <div className="globe-side-panel-footer">
               <button
                 className="globe-continue-btn"
@@ -914,23 +1011,23 @@ function MapboxGlobeReveal({
         )}
       </AnimatePresence>
 
-      {/* ── Interests panel — slides in from right ── */}
+      {/* ── Interests panel — floating on the LEFT ── */}
       <AnimatePresence>
         {phase === 'interests' && (
           <motion.div
             key="interests-panel"
-            className="globe-side-panel"
-            initial={{ x: '100%' }}
-            animate={{ x: 0 }}
-            exit={{ x: '100%' }}
-            transition={{ type: 'spring', stiffness: 260, damping: 28, delay: 0.3 }}
+            className="globe-floating-panel globe-floating-left"
+            initial={{ x: '-120%', opacity: 0 }}
+            animate={{ x: 0, opacity: 1 }}
+            exit={{ x: '-120%', opacity: 0 }}
+            transition={{ type: 'spring', stiffness: 260, damping: 28 }}
           >
             <div className="globe-side-panel-header">
               <h3>Your Interests</h3>
               <p>Pick what you're into</p>
             </div>
             <div className="globe-side-panel-items">
-              {BUBBLE_INTERESTS.map(interest => {
+              {[...BUBBLE_INTERESTS, ...customInterests].map(interest => {
                 const isSelected = selectedPills.has(interest.label);
                 return (
                   <button
@@ -944,6 +1041,38 @@ function MapboxGlobeReveal({
                   </button>
                 );
               })}
+            </div>
+            {/* Add custom interest */}
+            <div className="globe-custom-input-row">
+              <input
+                type="text"
+                value={customInterestInput}
+                onChange={(e) => setCustomInterestInput(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' && customInterestInput.trim()) {
+                    const label = customInterestInput.trim();
+                    setCustomInterests(prev => [...prev, { label, emoji: '💡' }]);
+                    onTogglePill(label);
+                    setCustomInterestInput('');
+                  }
+                }}
+                placeholder="Add your own..."
+                className="globe-custom-input"
+              />
+              <button
+                className="globe-custom-add-btn"
+                disabled={!customInterestInput.trim()}
+                onClick={() => {
+                  if (customInterestInput.trim()) {
+                    const label = customInterestInput.trim();
+                    setCustomInterests(prev => [...prev, { label, emoji: '💡' }]);
+                    onTogglePill(label);
+                    setCustomInterestInput('');
+                  }
+                }}
+              >
+                +
+              </button>
             </div>
             <div className="globe-side-panel-footer">
               <button
@@ -1193,21 +1322,29 @@ function MapboxGlobeReveal({
           opacity: 0.4;
         }
 
-        /* ── Side Panel (traits / interests) ── */
-        .globe-side-panel {
+        /* ── Floating Panel (traits / interests) ── */
+        .globe-floating-panel {
           position: absolute;
-          top: 0;
-          right: 0;
-          bottom: 0;
-          width: min(380px, 85vw);
+          top: 60px;
+          bottom: 24px;
+          width: min(360px, 82vw);
           z-index: 20;
-          background: rgba(255, 255, 255, 0.97);
+          background: rgba(255, 255, 255, 0.95);
           backdrop-filter: blur(20px);
           -webkit-backdrop-filter: blur(20px);
-          box-shadow: -8px 0 40px rgba(0, 0, 0, 0.25);
+          box-shadow: 0 12px 48px rgba(0, 0, 0, 0.3);
+          border-radius: 24px;
           display: flex;
           flex-direction: column;
           overflow: hidden;
+        }
+
+        .globe-floating-right {
+          right: 20px;
+        }
+
+        .globe-floating-left {
+          left: 20px;
         }
 
         .globe-side-panel-header {
@@ -1279,10 +1416,63 @@ function MapboxGlobeReveal({
           width: 100%;
         }
 
-        /* Mobile: side panel goes full-width */
+        /* Custom input row */
+        .globe-custom-input-row {
+          display: flex;
+          gap: 8px;
+          padding: 0 20px 12px;
+        }
+
+        .globe-custom-input {
+          flex: 1;
+          padding: 10px 14px;
+          border-radius: 12px;
+          border: 1.5px solid rgba(0, 0, 0, 0.1);
+          background: rgba(0, 0, 0, 0.02);
+          font-size: 14px;
+          color: #2d2d2d;
+          outline: none;
+          transition: border-color 0.2s;
+        }
+
+        .globe-custom-input:focus {
+          border-color: #406A56;
+        }
+
+        .globe-custom-add-btn {
+          width: 40px;
+          height: 40px;
+          border-radius: 12px;
+          border: none;
+          background: #406A56;
+          color: white;
+          font-size: 20px;
+          font-weight: 600;
+          cursor: pointer;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          transition: background 0.2s;
+          flex-shrink: 0;
+        }
+
+        .globe-custom-add-btn:hover {
+          background: #4a7a64;
+        }
+
+        .globe-custom-add-btn:disabled {
+          opacity: 0.4;
+          cursor: default;
+        }
+
+        /* Mobile: floating panels go full-width centered */
         @media (max-width: 640px) {
-          .globe-side-panel {
-            width: 100%;
+          .globe-floating-panel {
+            left: 8px !important;
+            right: 8px !important;
+            width: auto;
+            top: 48px;
+            bottom: 16px;
           }
         }
       `}</style>
