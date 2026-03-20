@@ -3263,25 +3263,25 @@ export default function DashboardPage() {
         .feed-page[data-theme="light"] .profile-storage-track { height: 6px; background: #F2F1E5; border-radius: 3px; overflow: hidden; }
 
         .header-controls {
-          position: sticky !important;
+          position: fixed !important;
           top: 56px !important;
+          left: 280px !important;
+          right: 48px !important;
           z-index: 20 !important;
           backdrop-filter: blur(12px);
           display: flex;
           flex-direction: column;
           gap: 8px;
-          padding: 12px 0;
-          margin: 0 -8px;
-          padding-left: 8px;
-          padding-right: 8px;
+          padding: 10px 16px;
+          border-bottom: 1px solid rgba(128,128,128,0.1);
         }
 
         .feed-page[data-theme="dark"] .header-controls {
-          background: rgba(26, 26, 26, 0.95);
+          background: rgba(26, 26, 26, 0.97);
         }
 
         .feed-page[data-theme="light"] .header-controls {
-          background: rgba(248, 250, 252, 0.95);
+          background: rgba(248, 250, 252, 0.97);
         }
 
         .controls-row {
@@ -3699,6 +3699,7 @@ export default function DashboardPage() {
           min-width: 0;
           padding: 20px 0;
           padding-right: 48px;
+          margin-top: 60px;
         }
 
         .feed-content {
