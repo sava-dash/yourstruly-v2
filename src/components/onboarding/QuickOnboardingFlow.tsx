@@ -317,13 +317,177 @@ function MapboxGlobeReveal({
   const mapRef = useRef<mapboxgl.Map | null>(null);
   const markerRef = useRef<mapboxgl.Marker | null>(null);
   const advancedRef = useRef(false);
-  const [phase, setPhase] = useState<'loading' | 'spinning' | 'flying' | 'pinned' | 'about-you' | 'traits' | 'interests'>('loading');
+  const [phase, setPhase] = useState<'loading' | 'spinning' | 'flying' | 'pinned' | 'places-lived' | 'places-flying' | 'traits' | 'interests'>('loading');
+
+  // Places-lived state
+  const [placeInput, setPlaceInput] = useState('');
+  const [placeSuggestions, setPlaceSuggestions] = useState<{ place_name: string; center: [number, number] }[]>([]);
+  const [placeWhen, setPlaceWhen] = useState('');
+  const [placesAdded, setPlacesAdded] = useState<{ city: string; lat: number; lng: number; when: string }[]>([]);
+  const placesDebounce = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const markersRef = useRef<mapboxgl.Marker[]>([]);
+  // Track the last pin coordinates for drawing arcs
+  const lastCoordsRef = useRef<{ lng: number; lat: number } | null>(null);
+  const arcCountRef = useRef(0);
+
+  // Fetch place suggestions from Mapbox
+  const fetchPlaceSuggestions = useCallback(async (query: string) => {
+    if (query.length < 2) { setPlaceSuggestions([]); return; }
+    try {
+      const token = process.env.NEXT_PUBLIC_MAPBOX_TOKEN;
+      const res = await fetch(
+        `https://api.mapbox.com/geocoding/v5/mapbox.places/${encodeURIComponent(query)}.json?access_token=${token}&limit=5&types=place,locality,region`
+      );
+      const data = await res.json();
+      setPlaceSuggestions(
+        data.features?.map((f: any) => ({ place_name: f.place_name, center: f.center })) || []
+      );
+    } catch { setPlaceSuggestions([]); }
+  }, []);
+
+  const handlePlaceInputChange = (val: string) => {
+    setPlaceInput(val);
+    if (placesDebounce.current) clearTimeout(placesDebounce.current);
+    placesDebounce.current = setTimeout(() => fetchPlaceSuggestions(val), 300);
+  };
+
+  // Draw a curved arc between two points on the map
+  const drawArc = useCallback((from: { lng: number; lat: number }, to: { lng: number; lat: number }) => {
+    const map = mapRef.current;
+    if (!map) return;
+
+    const steps = 80;
+    const coords: [number, number][] = [];
+    for (let i = 0; i <= steps; i++) {
+      const t = i / steps;
+      const lng = from.lng + (to.lng - from.lng) * t;
+      const lat = from.lat + (to.lat - from.lat) * t;
+      // Add curve height based on distance
+      const dist = Math.sqrt((to.lng - from.lng) ** 2 + (to.lat - from.lat) ** 2);
+      const arcHeight = Math.min(dist * 0.15, 8);
+      const curve = Math.sin(t * Math.PI) * arcHeight;
+      coords.push([lng, lat + curve]);
+    }
+
+    const sourceId = `arc-${arcCountRef.current++}`;
+    map.addSource(sourceId, {
+      type: 'geojson',
+      data: { type: 'Feature', properties: {}, geometry: { type: 'LineString', coordinates: coords } },
+    });
+    map.addLayer({
+      id: sourceId,
+      type: 'line',
+      source: sourceId,
+      paint: {
+        'line-color': '#D9C61A',
+        'line-width': 2.5,
+        'line-opacity': 0.8,
+        'line-dasharray': [2, 2],
+      },
+    });
+  }, []);
+
+  // Add a place: fly to it, drop pin, draw arc
+  const handleAddPlace = useCallback(async (cityName: string, coords?: [number, number]) => {
+    if (!cityName.trim()) return;
+
+    const map = mapRef.current;
+    if (!map) return;
+
+    setPhase('places-flying');
+
+    // Geocode if no coords provided
+    let lng: number, lat: number;
+    if (coords) {
+      [lng, lat] = coords;
+    } else {
+      const result = await geocodeLocation(cityName);
+      lng = result.lng;
+      lat = result.lat;
+    }
+
+    // Draw arc from previous location
+    if (lastCoordsRef.current) {
+      drawArc(lastCoordsRef.current, { lng, lat });
+    }
+
+    // Fly to new location
+    map.flyTo({
+      center: [lng, lat],
+      zoom: 11,
+      pitch: 45,
+      bearing: Math.random() * 30 - 15,
+      duration: 3000,
+      essential: true,
+    });
+
+    map.once('moveend', () => {
+      // Drop pin
+      const el = document.createElement('div');
+      el.className = 'yt-map-marker';
+      const displayDate = placeWhen.trim() ? `<p class="marker-loc">${placeWhen}</p>` : '';
+      el.innerHTML = `
+        <div class="marker-wrapper">
+          <div class="marker-pulse"></div>
+          <div class="marker-pulse marker-pulse-2"></div>
+          <div class="marker-pin">
+            <svg width="28" height="34" viewBox="0 0 28 34" fill="none">
+              <path d="M14 0C6.268 0 0 6.268 0 14c0 10.5 14 20 14 20S28 24.5 28 14C28 6.268 21.732 0 14 0z" fill="#C35F33"/>
+              <circle cx="14" cy="13" r="5.5" fill="white"/>
+            </svg>
+          </div>
+          <div class="marker-card">
+            <p class="marker-name">${name} moved to ${cityName.split(',')[0]}</p>
+            ${displayDate}
+          </div>
+        </div>
+      `;
+
+      const marker = new mapboxgl.Marker({ element: el, anchor: 'bottom' })
+        .setLngLat([lng, lat])
+        .addTo(map);
+      markersRef.current.push(marker);
+
+      lastCoordsRef.current = { lng, lat };
+      setPlacesAdded(prev => [...prev, { city: cityName, lat, lng, when: placeWhen }]);
+      setPlaceInput('');
+      setPlaceWhen('');
+      setPlaceSuggestions([]);
+      setPhase('places-lived');
+    });
+  }, [name, placeWhen, drawArc]);
+
+  // Save places to Supabase
+  const savePlaces = useCallback(async () => {
+    if (placesAdded.length === 0) return;
+    try {
+      const { createClient } = await import('@/lib/supabase/client');
+      const supabase = createClient();
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+
+      const rows = placesAdded.map((p, i) => ({
+        user_id: user.id,
+        city: p.city.split(',')[0].trim(),
+        country: p.city.includes(',') ? p.city.split(',').pop()?.trim() || '' : '',
+        latitude: p.lat,
+        longitude: p.lng,
+        moved_in_date: null, // free text stored in notable_memories
+        notable_memories: p.when || null,
+        life_stage: null,
+      }));
+
+      await supabase.from('location_history').insert(rows);
+    } catch (err) {
+      console.error('Failed to save places:', err);
+    }
+  }, [placesAdded]);
 
   const advance = useCallback(() => {
     if (!advancedRef.current) {
       advancedRef.current = true;
-      // Transition to "about you" card instead of advancing past globe
-      setPhase('about-you');
+      // Transition to places-lived after welcome card
+      setPhase('places-lived');
     }
   }, []);
 
@@ -411,6 +575,7 @@ function MapboxGlobeReveal({
           .addTo(map);
 
         markerRef.current = marker;
+        lastCoordsRef.current = { lng: coords.lng, lat: coords.lat };
         setPhase('pinned');
         // User must click Continue to advance (no auto-advance)
       });
@@ -515,9 +680,172 @@ function MapboxGlobeReveal({
         )}
       </AnimatePresence>
 
-      {/* ── Phase: About You — new info card slides up + traits panel from right ── */}
+      {/* ── Phase: Places Lived — location input card ── */}
       <AnimatePresence>
-        {(phase === 'about-you' || phase === 'traits' || phase === 'interests') && (
+        {(phase === 'places-lived' || phase === 'places-flying') && (
+          <motion.div
+            key="places-lived-bottom"
+            className="globe-bottom-panel"
+            initial={{ opacity: 0, y: 80 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: 80 }}
+            transition={{ type: 'spring', stiffness: 200, damping: 24 }}
+          >
+            <div className="globe-welcome-card">
+              <div className="globe-welcome-bar" />
+              <div className="globe-welcome-body">
+                <p className="globe-welcome-greeting">Your life journey 🌍</p>
+                <h2 className="globe-welcome-headline" style={{ fontSize: '20px' }}>
+                  {placesAdded.length === 0
+                    ? 'Have you lived anywhere else?'
+                    : 'Anywhere else?'}
+                </h2>
+
+                {/* Location input with autocomplete */}
+                <div style={{ marginTop: '12px', position: 'relative' }}>
+                  <input
+                    type="text"
+                    value={placeInput}
+                    onChange={(e) => handlePlaceInputChange(e.target.value)}
+                    placeholder="City or town name..."
+                    disabled={phase === 'places-flying'}
+                    style={{
+                      width: '100%',
+                      padding: '12px 16px',
+                      borderRadius: '12px',
+                      border: '1.5px solid rgba(0,0,0,0.1)',
+                      background: 'rgba(0,0,0,0.02)',
+                      fontSize: '15px',
+                      color: '#2d2d2d',
+                      outline: 'none',
+                    }}
+                    onFocus={(e) => { e.target.style.borderColor = '#406A56'; }}
+                    onBlur={(e) => { e.target.style.borderColor = 'rgba(0,0,0,0.1)'; }}
+                  />
+                  {/* Suggestions dropdown */}
+                  {placeSuggestions.length > 0 && (
+                    <div style={{
+                      position: 'absolute',
+                      top: '100%',
+                      left: 0,
+                      right: 0,
+                      marginTop: '4px',
+                      background: 'white',
+                      borderRadius: '12px',
+                      boxShadow: '0 8px 24px rgba(0,0,0,0.15)',
+                      border: '1px solid rgba(0,0,0,0.06)',
+                      zIndex: 30,
+                      overflow: 'hidden',
+                    }}>
+                      {placeSuggestions.map((s, i) => (
+                        <button
+                          key={i}
+                          onClick={() => {
+                            setPlaceInput(s.place_name);
+                            setPlaceSuggestions([]);
+                          }}
+                          style={{
+                            width: '100%',
+                            padding: '10px 16px',
+                            border: 'none',
+                            background: 'none',
+                            textAlign: 'left',
+                            fontSize: '14px',
+                            color: '#2d2d2d',
+                            cursor: 'pointer',
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '8px',
+                          }}
+                          onMouseEnter={(e) => { e.currentTarget.style.background = 'rgba(64,106,86,0.06)'; }}
+                          onMouseLeave={(e) => { e.currentTarget.style.background = 'none'; }}
+                        >
+                          <MapPin size={14} color="#406A56" />
+                          {s.place_name}
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </div>
+
+                {/* When field */}
+                <input
+                  type="text"
+                  value={placeWhen}
+                  onChange={(e) => setPlaceWhen(e.target.value)}
+                  placeholder="When did you move there? (e.g. Summer 2015)"
+                  disabled={phase === 'places-flying'}
+                  style={{
+                    width: '100%',
+                    padding: '12px 16px',
+                    borderRadius: '12px',
+                    border: '1.5px solid rgba(0,0,0,0.1)',
+                    background: 'rgba(0,0,0,0.02)',
+                    fontSize: '15px',
+                    color: '#2d2d2d',
+                    outline: 'none',
+                    marginTop: '8px',
+                  }}
+                  onFocus={(e) => { e.target.style.borderColor = '#406A56'; }}
+                  onBlur={(e) => { e.target.style.borderColor = 'rgba(0,0,0,0.1)'; }}
+                />
+
+                {/* Added places count */}
+                {placesAdded.length > 0 && (
+                  <p style={{ fontSize: '13px', color: 'rgba(45,45,45,0.5)', marginTop: '8px' }}>
+                    📍 {placesAdded.length} place{placesAdded.length !== 1 ? 's' : ''} added
+                  </p>
+                )}
+              </div>
+
+              {/* Buttons */}
+              <div style={{ padding: '0 24px 20px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                {phase === 'places-flying' ? (
+                  <div className="globe-continue-btn" style={{ opacity: 0.7, justifyContent: 'center' }}>
+                    <div className="loading-dot" style={{ width: 16, height: 16 }} /> Flying there...
+                  </div>
+                ) : (
+                  <>
+                    <button
+                      className="globe-continue-btn"
+                      disabled={!placeInput.trim()}
+                      style={{ opacity: placeInput.trim() ? 1 : 0.4, margin: 0, width: '100%' }}
+                      onClick={() => {
+                        const match = placeSuggestions.find(s => s.place_name === placeInput);
+                        handleAddPlace(placeInput, match?.center);
+                      }}
+                    >
+                      {placesAdded.length === 0 ? 'Add Place' : 'Add Another'} <ChevronRight size={18} />
+                    </button>
+                    <button
+                      onClick={async () => {
+                        await savePlaces();
+                        setPhase('traits');
+                      }}
+                      style={{
+                        padding: '12px',
+                        border: 'none',
+                        background: 'none',
+                        color: placesAdded.length > 0 ? '#406A56' : 'rgba(45,45,45,0.5)',
+                        fontSize: '15px',
+                        fontWeight: 600,
+                        cursor: 'pointer',
+                        textAlign: 'center',
+                      }}
+                    >
+                      {placesAdded.length > 0 ? "I'm done" : 'Skip'}
+                    </button>
+                  </>
+                )}
+              </div>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* ── Phase: Traits / Interests — info card + side panels ── */}
+      <AnimatePresence>
+        {(phase === 'traits' || phase === 'interests') && (
           <motion.div
             key="about-you-bottom"
             className="globe-bottom-panel"
@@ -530,27 +858,14 @@ function MapboxGlobeReveal({
               <div className="globe-welcome-bar" />
               <div className="globe-welcome-body">
                 <p className="globe-welcome-greeting">
-                  {phase === 'about-you' ? 'Tell us about you ✨' : phase === 'traits' ? 'Your personality 🧠' : 'Your interests 💡'}
+                  {phase === 'traits' ? 'Your personality 🧠' : 'Your interests 💡'}
                 </p>
                 <h2 className="globe-welcome-headline" style={{ fontSize: '20px' }}>
-                  {phase === 'about-you'
-                    ? "Let's start with what makes you, you."
-                    : phase === 'traits'
+                  {phase === 'traits'
                     ? 'Pick traits that describe you.'
                     : 'What are you into?'}
                 </h2>
               </div>
-              {phase === 'about-you' && (
-                <motion.button
-                  className="globe-continue-btn"
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  transition={{ delay: 0.3 }}
-                  onClick={() => setPhase('traits')}
-                >
-                  Continue <ChevronRight size={18} />
-                </motion.button>
-              )}
             </div>
           </motion.div>
         )}
@@ -565,7 +880,7 @@ function MapboxGlobeReveal({
             initial={{ x: '100%' }}
             animate={{ x: 0 }}
             exit={{ x: '100%' }}
-            transition={{ type: 'spring', stiffness: 260, damping: 28, delay: 0.5 }}
+            transition={{ type: 'spring', stiffness: 260, damping: 28 }}
           >
             <div className="globe-side-panel-header">
               <h3>Personality Traits</h3>
