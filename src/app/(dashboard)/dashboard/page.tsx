@@ -2114,47 +2114,18 @@ export default function DashboardPage() {
             </button>
           </div>
 
-          <div className="header-controls">
-            {/* Quick Actions - Horizontal Row Above Categories */}
-            <AnimatePresence>
-              {openSubmenu && QUICK_ACTIONS[openSubmenu] && (
-                <motion.div
-                  initial={{ opacity: 0, height: 0, y: 10 }}
-                  animate={{ opacity: 1, height: 'auto', y: 0 }}
-                  exit={{ opacity: 0, height: 0, y: 10 }}
-                  transition={{
-                    type: 'spring',
-                    damping: 20,
-                    stiffness: 300
-                  }}
-                  className="quick-actions-row"
-                >
-                  {QUICK_ACTIONS[openSubmenu].map((action, idx) => {
-                    const Icon = action.icon
-                    return (
-                      <motion.button
-                        key={action.action}
-                        initial={{ opacity: 0, scale: 0.9 }}
-                        animate={{ opacity: 1, scale: 1 }}
-                        transition={{ 
-                          delay: idx * 0.05,
-                          type: 'spring',
-                          damping: 15,
-                          stiffness: 300
-                        }}
-                        onClick={() => handleQuickAction(action.action)}
-                        className="quick-action-btn"
-                      >
-                        <Icon size={18} />
-                        <span>{action.label}</span>
-                      </motion.button>
-                    )
-                  })}
-                </motion.div>
-              )}
-            </AnimatePresence>
-
-            {/* Single Controls Row: Categories | Search + Map | Reminisce By */}
+          <div className="header-controls" style={{
+            position: 'sticky',
+            top: '56px',
+            zIndex: 20,
+            backdropFilter: 'blur(12px)',
+            padding: '12px 0',
+            marginLeft: '-8px',
+            marginRight: '-8px',
+            paddingLeft: '8px',
+            paddingRight: '8px',
+          }}>
+            {/* Category Nav Row — sticky */}
             <div className="controls-row">
               {/* Left: Category Pills */}
               <div className="filter-tags">
@@ -2333,6 +2304,37 @@ export default function DashboardPage() {
                 </AnimatePresence>
               </div>
             </div>
+
+            {/* Sub-options — expand below the sticky nav */}
+            <AnimatePresence>
+              {openSubmenu && QUICK_ACTIONS[openSubmenu] && (
+                <motion.div
+                  initial={{ opacity: 0, height: 0 }}
+                  animate={{ opacity: 1, height: 'auto' }}
+                  exit={{ opacity: 0, height: 0 }}
+                  transition={{ type: 'spring', damping: 20, stiffness: 300 }}
+                  className="quick-actions-row"
+                  style={{ marginTop: '8px' }}
+                >
+                  {QUICK_ACTIONS[openSubmenu].map((action, idx) => {
+                    const Icon = action.icon
+                    return (
+                      <motion.button
+                        key={action.action}
+                        initial={{ opacity: 0, scale: 0.9 }}
+                        animate={{ opacity: 1, scale: 1 }}
+                        transition={{ delay: idx * 0.05, type: 'spring', damping: 15, stiffness: 300 }}
+                        onClick={() => handleQuickAction(action.action)}
+                        className="quick-action-btn"
+                      >
+                        <Icon size={18} />
+                        <span>{action.label}</span>
+                      </motion.button>
+                    )
+                  })}
+                </motion.div>
+              )}
+            </AnimatePresence>
           </div>
 
           {/* Feed Content */}
@@ -3274,7 +3276,15 @@ export default function DashboardPage() {
           position: relative;
           display: flex;
           flex-direction: column;
-          gap: 16px;
+          gap: 8px;
+        }
+
+        .feed-page[data-theme="dark"] .header-controls {
+          background: rgba(26, 26, 26, 0.95);
+        }
+
+        .feed-page[data-theme="light"] .header-controls {
+          background: rgba(248, 250, 252, 0.95);
         }
 
         .controls-row {
@@ -3691,6 +3701,7 @@ export default function DashboardPage() {
           position: relative;
           min-width: 0;
           padding: 20px 0;
+          padding-right: 48px;
         }
 
         .feed-content {
