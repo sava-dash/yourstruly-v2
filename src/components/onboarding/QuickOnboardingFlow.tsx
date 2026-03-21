@@ -1507,7 +1507,7 @@ function MapboxGlobeReveal({
                   Continue <ChevronRight size={18} />
                 </button>
                 <button
-                  onClick={() => setPhase('lets-go')}}
+                  onClick={() => setPhase('lets-go')}
                   style={{
                     padding: '10px',
                     border: 'none',
