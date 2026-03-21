@@ -126,7 +126,7 @@ function TourOverlay({ step, stepIdx, total, onNext, onPrev, onClose }: {
           position: 'fixed',
           inset: 0,
           zIndex: 10000,
-          background: 'rgba(0,0,0,0.6)',
+          background: 'rgba(0,0,0,0.75)',
           clipPath,
           WebkitClipPath: clipPath,
           transition: 'clip-path 0.3s ease',
@@ -134,17 +134,17 @@ function TourOverlay({ step, stepIdx, total, onNext, onPrev, onClose }: {
         }}
         onClick={onClose}
       />
-      {/* Spotlight ring */}
+      {/* Bright spotlight glow around cutout */}
       <div
         style={{
           position: 'fixed',
-          left: spotX - 2,
-          top: spotY - 2,
-          width: spotW + 4,
-          height: spotH + 4,
-          borderRadius: spotR + 2,
-          border: '2px solid rgba(64,106,86,0.6)',
-          boxShadow: '0 0 0 4px rgba(64,106,86,0.15), 0 0 20px rgba(64,106,86,0.2)',
+          left: spotX - 6,
+          top: spotY - 6,
+          width: spotW + 12,
+          height: spotH + 12,
+          borderRadius: spotR + 6,
+          border: '3px solid rgba(255,255,255,0.8)',
+          boxShadow: '0 0 0 6px rgba(64,106,86,0.3), 0 0 30px rgba(255,255,255,0.3), 0 0 60px rgba(64,106,86,0.15), inset 0 0 20px rgba(255,255,255,0.1)',
           zIndex: 10000,
           pointerEvents: 'none',
           transition: 'all 0.3s ease',
@@ -162,7 +162,7 @@ function TourOverlay({ step, stepIdx, total, onNext, onPrev, onClose }: {
           background: '#fff',
           borderRadius: '20px',
           padding: '24px',
-          boxShadow: '0 20px 60px rgba(0,0,0,0.25), 0 0 0 1px rgba(0,0,0,0.05)',
+          boxShadow: '0 20px 60px rgba(0,0,0,0.35), 0 0 0 1px rgba(0,0,0,0.08), 0 0 0 4px rgba(64,106,86,0.1)',
         }}>
           <button
             onClick={onClose}

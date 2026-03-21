@@ -2754,36 +2754,42 @@ export default function DashboardPage() {
                 top: '16px',
                 left: '16px',
                 zIndex: 10,
+                background: 'rgba(255,255,255,0.92)',
+                backdropFilter: 'blur(12px)',
+                borderRadius: '14px',
+                padding: '12px 16px',
                 display: 'flex',
+                flexDirection: 'column',
                 gap: '8px',
-                flexWrap: 'wrap',
+                boxShadow: '0 4px 16px rgba(0,0,0,0.12)',
+                border: '1px solid rgba(0,0,0,0.06)',
               }}>
+                <span style={{ fontSize: '11px', fontWeight: 700, color: '#999', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Show on map</span>
                 {(['memories', 'wisdom', 'media'] as const).map(key => (
                   <label
                     key={key}
                     style={{
                       display: 'flex',
                       alignItems: 'center',
-                      gap: '6px',
-                      padding: '6px 12px',
-                      borderRadius: '20px',
-                      background: mapFilters[key] ? 'rgba(64,106,86,0.9)' : 'rgba(255,255,255,0.85)',
-                      color: mapFilters[key] ? '#fff' : '#666',
-                      fontSize: '12px',
-                      fontWeight: 600,
+                      gap: '8px',
                       cursor: 'pointer',
-                      backdropFilter: 'blur(8px)',
-                      border: '1px solid rgba(0,0,0,0.08)',
-                      transition: 'all 0.2s',
+                      fontSize: '13px',
+                      fontWeight: 500,
+                      color: mapFilters[key] ? '#2d2d2d' : '#999',
                     }}
                   >
                     <input
                       type="checkbox"
                       checked={mapFilters[key]}
                       onChange={() => setMapFilters(prev => ({ ...prev, [key]: !prev[key] }))}
-                      style={{ display: 'none' }}
+                      style={{
+                        width: '16px',
+                        height: '16px',
+                        accentColor: '#406A56',
+                        cursor: 'pointer',
+                      }}
                     />
-                    {key === 'memories' ? '📝' : key === 'wisdom' ? '💡' : '📷'}
+                    <span>{key === 'memories' ? '📝' : key === 'wisdom' ? '💡' : '📷'}</span>
                     {key.charAt(0).toUpperCase() + key.slice(1)}
                   </label>
                 ))}

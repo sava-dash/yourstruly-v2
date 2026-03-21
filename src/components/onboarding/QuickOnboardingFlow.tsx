@@ -666,6 +666,33 @@ function MapboxGlobeReveal({
       }));
 
       await supabase.from('location_history').insert(rows);
+
+      // Create one memory per place (deduplicated — skip if already exists)
+      for (const p of placesAdded) {
+        const cityName = p.city.split(',')[0].trim();
+        const title = `I lived in ${cityName}`;
+        
+        // Check if memory already exists for this place
+        const { data: existing } = await supabase
+          .from('memories')
+          .select('id')
+          .eq('user_id', user.id)
+          .eq('title', title)
+          .limit(1);
+        
+        if (!existing || existing.length === 0) {
+          await supabase.from('memories').insert({
+            user_id: user.id,
+            title,
+            description: p.when ? `Moved there ${p.when}` : 'A place I called home.',
+            memory_date: new Date().toISOString(),
+            location_name: p.city,
+            location_lat: p.lat,
+            location_lng: p.lng,
+            tags: ['places-lived', 'location'],
+          });
+        }
+      }
     } catch (err) {
       console.error('Failed to save places:', err);
     }
