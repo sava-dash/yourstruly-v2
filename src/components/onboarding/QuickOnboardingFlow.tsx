@@ -2631,9 +2631,6 @@ export function QuickOnboardingFlow({
                         interests: data.interests || [],
                         location: data.location || undefined,
                         whyHere: data.background || undefined,
-                        contacts: globeCollected.contacts.map(c => c.name),
-                        whyHereSelections: globeCollected.whyHere,
-                        placesLived: globeCollected.places,
                       }}
                       initialMessage={generateHeartfeltQuestion(data.name, globeCollected)}
                       onComplete={(state) => {
@@ -4010,6 +4007,7 @@ function ReadyStep({
         onClick={onContinue}
       >
         Go to my dashboard <ChevronRight size={20} />
+      </motion.button>
     </div>
   );
 }
