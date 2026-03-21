@@ -206,7 +206,8 @@ function MasonryTile({
   isDarkMode,
   playingAudio,
   onAudioToggle,
-  onCardClick
+  onCardClick,
+  dataTour,
 }: { 
   activity: ActivityItem
   index: number
@@ -214,6 +215,7 @@ function MasonryTile({
   playingAudio: string | null
   onAudioToggle: (id: string) => void
   onCardClick: (activity: ActivityItem) => void
+  dataTour?: string
 }) {
   const config = TYPE_CONFIG[activity.type] || TYPE_CONFIG.memory_created
   
@@ -227,7 +229,7 @@ function MasonryTile({
   const summary = getSummary()
 
   return (
-    <div className="card-wrapper" data-year={new Date(activity.timestamp).getFullYear()}>
+    <div className="card-wrapper" data-year={new Date(activity.timestamp).getFullYear()} {...(dataTour ? { 'data-tour': dataTour } : {})}>
       <div
         onClick={() => onCardClick(activity)}
         className="card block relative overflow-hidden"
@@ -2077,11 +2079,13 @@ export default function DashboardPage() {
           />
 
           {/* Engagement Tile */}
-          <EngagementTile
-            nextPrompt={engagementPrompts[0] || null}
-            totalWaiting={engagementPrompts.length}
-            onOpen={() => setShowEngagement(true)}
-          />
+          <div data-tour="engagement-prompts">
+            <EngagementTile
+              nextPrompt={engagementPrompts[0] || null}
+              totalWaiting={engagementPrompts.length}
+              onOpen={() => setShowEngagement(true)}
+            />
+          </div>
         </aside>
 
         {/* ── Main Content ── */}
@@ -2090,7 +2094,7 @@ export default function DashboardPage() {
             {/* Category Nav Row — sticky */}
             <div className="controls-row">
               {/* Left: Category Pills */}
-              <div className="filter-tags">
+              <div className="filter-tags" data-tour="category-tabs">
                 {CATEGORIES.map((cat) => (
                   <button
                     key={cat.id}
@@ -2127,7 +2131,7 @@ export default function DashboardPage() {
               </div>
 
               {/* Right: Reminisce By Dropdown */}
-              <div className="reminisce-dropdown-wrapper" ref={reminisceRef}>
+              <div className="reminisce-dropdown-wrapper" ref={reminisceRef} data-tour="filter-dropdown">
                 <span className="reminisce-label-inline">REMINISCE BY</span>
                 <button
                   className={`reminisce-dropdown-btn ${hasActiveReminisceFilter ? 'active' : ''}`}
@@ -2302,6 +2306,7 @@ export default function DashboardPage() {
                   exit={{ opacity: 0, height: 0 }}
                   transition={{ type: 'spring', damping: 20, stiffness: 300 }}
                   className="quick-actions-row"
+                  data-tour="category-submenu"
                   style={{ marginTop: '8px' }}
                 >
                   {QUICK_ACTIONS[openSubmenu].map((action, idx) => {
@@ -2597,6 +2602,7 @@ export default function DashboardPage() {
                         isDarkMode={isDarkMode}
                         playingAudio={playingAudio}
                         onAudioToggle={handleAudioToggle}
+                        dataTour={colIdx === 0 && rowIdx === 0 ? 'first-tile' : undefined}
                         onCardClick={(a) => {
                           setSelectedActivity(a)
                           setShowDetailModal(true)

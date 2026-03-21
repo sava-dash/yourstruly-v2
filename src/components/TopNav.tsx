@@ -9,6 +9,7 @@ import { useState, useRef, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import SlideUpLink, { SlideUpButton } from '@/components/SlideUpLink'
 import ActivityFeed from '@/components/dashboard/ActivityFeed'
+import { DashboardTourTrigger } from '@/components/dashboard/DashboardTour'
 import { 
   User as UserIcon, 
   Users, 
@@ -375,6 +376,10 @@ export default function TopNav({ user, profile }: TopNavProps) {
                     <Settings size={16} />
                     <span>Settings</span>
                   </Link>
+                  <div onClick={() => setUserOpen(false)}>
+                    <DashboardTourTrigger />
+                  </div>
+                  <div className="border-t border-[#C35F33]/10 my-1" />
                   <button
                     onClick={handleSignOut}
                     className="w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm text-red-500 hover:bg-red-50 hover:text-red-600 transition-all"

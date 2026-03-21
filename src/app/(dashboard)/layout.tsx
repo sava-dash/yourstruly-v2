@@ -1,6 +1,7 @@
 import { createClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
 import TopNav from '@/components/TopNav'
+import { DashboardTourProvider } from '@/components/dashboard/DashboardTour'
 
 export default async function DashboardLayout({
   children,
@@ -22,11 +23,13 @@ export default async function DashboardLayout({
     .single()
 
   return (
-    <div className="min-h-screen relative">
-      <TopNav user={user} profile={profile} />
-      <main id="main-content" className="pt-14" role="main">
-        {children}
-      </main>
-    </div>
+    <DashboardTourProvider>
+      <div className="min-h-screen relative">
+        <TopNav user={user} profile={profile} />
+        <main id="main-content" className="pt-14" role="main">
+          {children}
+        </main>
+      </div>
+    </DashboardTourProvider>
   )
 }
