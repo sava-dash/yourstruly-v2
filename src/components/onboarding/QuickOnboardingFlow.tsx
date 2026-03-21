@@ -945,11 +945,11 @@ function MapboxGlobeReveal({
         )}
       </AnimatePresence>
 
-      {/* ── Phase: Places Lived — location input card ── */}
+      {/* ── Phase: Places Lived — info card (bottom) ── */}
       <AnimatePresence>
         {(phase === 'places-lived' || phase === 'places-flying') && (
           <motion.div
-            key="places-lived-bottom"
+            key="places-lived-info-bottom"
             className="globe-bottom-panel"
             initial={{ opacity: 0, y: 80 }}
             animate={{ opacity: 1, y: 0 }}
@@ -960,144 +960,249 @@ function MapboxGlobeReveal({
               <div className="globe-welcome-bar" />
               <div className="globe-welcome-body">
                 <p className="globe-welcome-greeting">Your life journey 🌍</p>
-                <h2 className="globe-welcome-headline" style={{ fontSize: '20px' }}>
+                <h2 className="globe-welcome-headline" style={{ fontSize: '18px', lineHeight: '1.5' }}>
                   {placesAdded.length === 0
-                    ? 'Have you lived anywhere else?'
-                    : 'Anywhere else?'}
+                    ? 'Every place you\'ve lived holds a piece of your story.'
+                    : `${placesAdded.length} place${placesAdded.length !== 1 ? 's' : ''} added — anywhere else?`}
                 </h2>
+              </div>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
-                {/* Location input with autocomplete */}
-                <div style={{ marginTop: '12px', position: 'relative' }}>
-                  <input
-                    type="text"
-                    value={placeInput}
-                    onChange={(e) => handlePlaceInputChange(e.target.value)}
-                    placeholder="City or town name..."
-                    disabled={phase === 'places-flying'}
-                    style={{
-                      width: '100%',
-                      padding: '12px 16px',
-                      borderRadius: '12px',
-                      border: '1.5px solid rgba(0,0,0,0.1)',
-                      background: 'rgba(0,0,0,0.02)',
-                      fontSize: '15px',
-                      color: '#2d2d2d',
-                      outline: 'none',
-                    }}
-                    onFocus={(e) => { e.target.style.borderColor = '#406A56'; }}
-                    onBlur={(e) => { e.target.style.borderColor = 'rgba(0,0,0,0.1)'; }}
-                  />
-                  {/* Suggestions dropdown */}
-                  {placeSuggestions.length > 0 && (
-                    <div style={{
-                      position: 'absolute',
-                      top: '100%',
-                      left: 0,
-                      right: 0,
-                      marginTop: '4px',
-                      background: 'white',
-                      borderRadius: '12px',
-                      boxShadow: '0 8px 24px rgba(0,0,0,0.15)',
-                      border: '1px solid rgba(0,0,0,0.06)',
-                      zIndex: 30,
-                      overflow: 'hidden',
-                    }}>
-                      {placeSuggestions.map((s, i) => (
-                        <button
-                          key={i}
-                          onClick={() => {
-                            setPlaceInput(s.place_name);
-                            setPlaceSuggestions([]);
-                          }}
-                          style={{
-                            width: '100%',
-                            padding: '10px 16px',
-                            border: 'none',
-                            background: 'none',
-                            textAlign: 'left',
-                            fontSize: '14px',
-                            color: '#2d2d2d',
-                            cursor: 'pointer',
-                            display: 'flex',
-                            alignItems: 'center',
-                            gap: '8px',
-                          }}
-                          onMouseEnter={(e) => { e.currentTarget.style.background = 'rgba(64,106,86,0.06)'; }}
-                          onMouseLeave={(e) => { e.currentTarget.style.background = 'none'; }}
-                        >
-                          <MapPin size={14} color="#406A56" />
-                          {s.place_name}
-                        </button>
-                      ))}
-                    </div>
-                  )}
+      {/* ── Places Lived panel — floating on the right ── */}
+      <AnimatePresence>
+        {(phase === 'places-lived' || phase === 'places-flying') && (
+          <motion.div
+            key="places-panel"
+            className="globe-floating-panel globe-floating-right globe-panel-wide"
+            initial={{ x: '120%', opacity: 0 }}
+            animate={{ x: 0, opacity: 1 }}
+            exit={{ x: '120%', opacity: 0 }}
+            transition={{ type: 'spring', stiffness: 260, damping: 28 }}
+          >
+            <div className="globe-side-panel-header">
+              <h3>{placesAdded.length === 0 ? 'Have you lived anywhere else?' : 'Anywhere else?'}</h3>
+              <p>Add the places that shaped your story</p>
+            </div>
+            <div className="globe-side-panel-items" style={{ gap: '0', padding: '8px 16px', overflowY: 'auto', flexDirection: 'column', flexWrap: 'nowrap' }}>
+              {/* Already-added places */}
+              {placesAdded.map((p, i) => (
+                <div key={i} className="contact-entry-row">
+                  <div className="contact-entry-info">
+                    <span className="contact-entry-name">{p.city.split(',')[0]}</span>
+                    {p.when && <span className="contact-entry-relation">{p.when}</span>}
+                  </div>
                 </div>
+              ))}
 
-                {/* When field */}
+              {/* Location input with autocomplete */}
+              <div style={{ marginTop: '8px', position: 'relative' }}>
                 <input
                   type="text"
-                  value={placeWhen}
-                  onChange={(e) => setPlaceWhen(e.target.value)}
-                  placeholder="When did you move there? (e.g. Summer 2015)"
+                  value={placeInput}
+                  onChange={(e) => handlePlaceInputChange(e.target.value)}
+                  placeholder="City or town name..."
                   disabled={phase === 'places-flying'}
-                  style={{
-                    width: '100%',
-                    padding: '12px 16px',
-                    borderRadius: '12px',
-                    border: '1.5px solid rgba(0,0,0,0.1)',
-                    background: 'rgba(0,0,0,0.02)',
-                    fontSize: '15px',
-                    color: '#2d2d2d',
-                    outline: 'none',
-                    marginTop: '8px',
-                  }}
-                  onFocus={(e) => { e.target.style.borderColor = '#406A56'; }}
-                  onBlur={(e) => { e.target.style.borderColor = 'rgba(0,0,0,0.1)'; }}
+                  className="contact-add-input"
+                  style={{ width: '100%', height: 'auto', padding: '12px 16px', borderRadius: '12px', fontSize: '15px' }}
                 />
-
-                {/* Added places count */}
-                {placesAdded.length > 0 && (
-                  <p style={{ fontSize: '13px', color: 'rgba(45,45,45,0.5)', marginTop: '8px' }}>
-                    📍 {placesAdded.length} place{placesAdded.length !== 1 ? 's' : ''} added
-                  </p>
+                {/* Suggestions dropdown */}
+                {placeSuggestions.length > 0 && (
+                  <div style={{
+                    position: 'absolute',
+                    top: '100%',
+                    left: 0,
+                    right: 0,
+                    marginTop: '4px',
+                    background: 'white',
+                    borderRadius: '12px',
+                    boxShadow: '0 8px 24px rgba(0,0,0,0.15)',
+                    border: '1px solid rgba(0,0,0,0.06)',
+                    zIndex: 30,
+                    overflow: 'hidden',
+                  }}>
+                    {placeSuggestions.map((s, i) => (
+                      <button
+                        key={i}
+                        onClick={() => {
+                          setPlaceInput(s.place_name);
+                          setPlaceSuggestions([]);
+                        }}
+                        style={{
+                          width: '100%',
+                          padding: '10px 16px',
+                          border: 'none',
+                          background: 'none',
+                          textAlign: 'left',
+                          fontSize: '14px',
+                          color: '#2d2d2d',
+                          cursor: 'pointer',
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: '8px',
+                        }}
+                        onMouseEnter={(e) => { e.currentTarget.style.background = 'rgba(64,106,86,0.06)'; }}
+                        onMouseLeave={(e) => { e.currentTarget.style.background = 'none'; }}
+                      >
+                        <MapPin size={14} color="#406A56" />
+                        {s.place_name}
+                      </button>
+                    ))}
+                  </div>
                 )}
               </div>
 
-              {/* Buttons */}
-              <div style={{ padding: '0 24px 20px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                {phase === 'places-flying' ? (
-                  <div className="globe-continue-btn" style={{ opacity: 0.7, justifyContent: 'center' }}>
-                    <div className="loading-dot" style={{ width: 16, height: 16 }} /> Flying there...
+              {/* When field */}
+              <input
+                type="text"
+                value={placeWhen}
+                onChange={(e) => setPlaceWhen(e.target.value)}
+                placeholder="When? (e.g. Summer 2015)"
+                disabled={phase === 'places-flying'}
+                className="contact-add-input"
+                style={{ width: '100%', height: 'auto', padding: '12px 16px', borderRadius: '12px', fontSize: '15px', marginTop: '8px' }}
+              />
+            </div>
+            <div className="globe-side-panel-footer">
+              {phase === 'places-flying' ? (
+                <div className="globe-continue-btn" style={{ opacity: 0.7, justifyContent: 'center' }}>
+                  <div className="loading-dot" style={{ width: 16, height: 16 }} /> Flying there...
+                </div>
+              ) : (
+                <>
+                  <button
+                    className="globe-continue-btn"
+                    disabled={!placeInput.trim()}
+                    style={{ opacity: placeInput.trim() ? 1 : 0.4 }}
+                    onClick={() => {
+                      const match = placeSuggestions.find(s => s.place_name === placeInput);
+                      handleAddPlace(placeInput, match?.center);
+                    }}
+                  >
+                    {placesAdded.length === 0 ? 'Add Place' : 'Add Another'} <ChevronRight size={18} />
+                  </button>
+                  <button
+                    onClick={spinOutAndContinue}
+                    style={{
+                      padding: '10px',
+                      border: 'none',
+                      background: 'none',
+                      color: placesAdded.length > 0 ? '#406A56' : 'rgba(45,45,45,0.5)',
+                      fontSize: '14px',
+                      fontWeight: 600,
+                      cursor: 'pointer',
+                      textAlign: 'center',
+                      width: '100%',
+                    }}
+                  >
+                    {placesAdded.length > 0 ? "I'm done" : 'Skip'}
+                  </button>
+                </>
+              )}
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* ── Persistent Summary Panel — floating LEFT ── */}
+      <AnimatePresence>
+        {(phase === 'places-lived' || phase === 'places-flying' || phase === 'globe-spin-out' || phase === 'adventure-message' || phase === 'contacts' || phase === 'interests' || phase === 'why-here' || phase === 'lets-go') && (
+          <motion.div
+            key="summary-panel"
+            className="globe-floating-panel globe-floating-left globe-summary-panel"
+            initial={{ x: '-120%', opacity: 0 }}
+            animate={{ x: 0, opacity: 1 }}
+            exit={{ x: '-120%', opacity: 0 }}
+            transition={{ type: 'spring', stiffness: 260, damping: 28 }}
+          >
+            <div className="globe-side-panel-header" style={{ paddingBottom: '12px' }}>
+              <h3 style={{ fontSize: '18px' }}>📋 Your Story So Far</h3>
+            </div>
+            <div className="summary-panel-content">
+              {/* Name */}
+              <div className="summary-section">
+                <div className="summary-label">👤 Name</div>
+                <div className="summary-value">{name || <span className="summary-empty">—</span>}</div>
+              </div>
+
+              {/* Birthday */}
+              <div className="summary-section">
+                <div className="summary-label">🎂 Birthday</div>
+                <div className="summary-value">
+                  {birthday ? (() => {
+                    const d = new Date(birthday + 'T00:00:00');
+                    return d.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
+                  })() : <span className="summary-empty">—</span>}
+                </div>
+              </div>
+
+              {/* Birthplace */}
+              <div className="summary-section">
+                <div className="summary-label">📍 Born in</div>
+                <div className="summary-value">{location || <span className="summary-empty">—</span>}</div>
+              </div>
+
+              {/* Places Lived */}
+              <div className="summary-section">
+                <div className="summary-label">🗺️ Places Lived</div>
+                {placesAdded.length > 0 ? (
+                  <div className="summary-list">
+                    {placesAdded.map((p, i) => (
+                      <div key={i} className="summary-list-item">
+                        {p.city.split(',')[0].trim()}
+                        {p.when && <span className="summary-list-meta"> · {p.when}</span>}
+                      </div>
+                    ))}
                   </div>
                 ) : (
-                  <>
-                    <button
-                      className="globe-continue-btn"
-                      disabled={!placeInput.trim()}
-                      style={{ opacity: placeInput.trim() ? 1 : 0.4, margin: 0, width: '100%' }}
-                      onClick={() => {
-                        const match = placeSuggestions.find(s => s.place_name === placeInput);
-                        handleAddPlace(placeInput, match?.center);
-                      }}
-                    >
-                      {placesAdded.length === 0 ? 'Add Place' : 'Add Another'} <ChevronRight size={18} />
-                    </button>
-                    <button
-                      onClick={spinOutAndContinue}
-                      style={{
-                        padding: '12px',
-                        border: 'none',
-                        background: 'none',
-                        color: placesAdded.length > 0 ? '#406A56' : 'rgba(45,45,45,0.5)',
-                        fontSize: '15px',
-                        fontWeight: 600,
-                        cursor: 'pointer',
-                        textAlign: 'center',
-                      }}
-                    >
-                      {placesAdded.length > 0 ? "I'm done" : 'Skip'}
-                    </button>
-                  </>
+                  <div className="summary-value"><span className="summary-empty">Not yet added</span></div>
+                )}
+              </div>
+
+              {/* Close People */}
+              <div className="summary-section">
+                <div className="summary-label">👥 Close People</div>
+                {contactEntries.length > 0 ? (
+                  <div className="summary-list">
+                    {contactEntries.map((c, i) => (
+                      <div key={i} className="summary-list-item">
+                        {c.name} <span className="summary-list-meta">· {c.relationship}</span>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="summary-value"><span className="summary-empty">Not yet added</span></div>
+                )}
+              </div>
+
+              {/* Interests */}
+              <div className="summary-section">
+                <div className="summary-label">💛 Interests</div>
+                {selectedPills.size > 0 ? (
+                  <div className="summary-pills">
+                    {Array.from(selectedPills).slice(0, 8).map(label => (
+                      <span key={label} className="summary-pill">{label}</span>
+                    ))}
+                    {selectedPills.size > 8 && (
+                      <span className="summary-pill summary-pill-more">+{selectedPills.size - 8}</span>
+                    )}
+                  </div>
+                ) : (
+                  <div className="summary-value"><span className="summary-empty">Not yet added</span></div>
+                )}
+              </div>
+
+              {/* Why I'm Here */}
+              <div className="summary-section">
+                <div className="summary-label">💭 Why I&apos;m Here</div>
+                {(whyHereSelections.size > 0 || whyHereText.trim()) ? (
+                  <div className="summary-value" style={{ fontSize: '12px', lineHeight: '1.4' }}>
+                    {whyHereText.trim() || Array.from(whyHereSelections).join(', ')}
+                  </div>
+                ) : (
+                  <div className="summary-value"><span className="summary-empty">Not yet answered</span></div>
                 )}
               </div>
             </div>
@@ -2241,6 +2346,87 @@ function MapboxGlobeReveal({
           cursor: default;
         }
 
+        /* ── Summary Panel (left) ── */
+        .globe-summary-panel {
+          width: min(300px, 25vw);
+          overflow-y: auto;
+          -webkit-overflow-scrolling: touch;
+        }
+
+        .summary-panel-content {
+          flex: 1;
+          overflow-y: auto;
+          padding: 0 20px 20px;
+          display: flex;
+          flex-direction: column;
+          gap: 14px;
+        }
+
+        .summary-section {
+          display: flex;
+          flex-direction: column;
+          gap: 3px;
+        }
+
+        .summary-label {
+          font-size: 11px;
+          font-weight: 700;
+          letter-spacing: 0.5px;
+          text-transform: uppercase;
+          color: rgba(45, 45, 45, 0.45);
+        }
+
+        .summary-value {
+          font-size: 14px;
+          font-weight: 500;
+          color: #2d2d2d;
+          line-height: 1.4;
+        }
+
+        .summary-empty {
+          color: rgba(45, 45, 45, 0.25);
+          font-style: italic;
+          font-weight: 400;
+        }
+
+        .summary-list {
+          display: flex;
+          flex-direction: column;
+          gap: 2px;
+        }
+
+        .summary-list-item {
+          font-size: 13px;
+          color: #2d2d2d;
+          padding: 2px 0;
+        }
+
+        .summary-list-meta {
+          color: rgba(45, 45, 45, 0.4);
+          font-size: 12px;
+        }
+
+        .summary-pills {
+          display: flex;
+          flex-wrap: wrap;
+          gap: 4px;
+        }
+
+        .summary-pill {
+          display: inline-block;
+          padding: 3px 10px;
+          background: rgba(64, 106, 86, 0.08);
+          border-radius: 100px;
+          font-size: 11px;
+          font-weight: 500;
+          color: #406A56;
+        }
+
+        .summary-pill-more {
+          background: rgba(64, 106, 86, 0.15);
+          font-weight: 600;
+        }
+
         /* Mobile: floating panels go full-width centered */
         @media (max-width: 640px) {
           .globe-floating-panel {
@@ -2249,6 +2435,10 @@ function MapboxGlobeReveal({
             width: auto;
             top: 48px;
             bottom: 16px;
+          }
+          /* Hide summary panel on mobile */
+          .globe-summary-panel {
+            display: none !important;
           }
         }
       `}</style>
