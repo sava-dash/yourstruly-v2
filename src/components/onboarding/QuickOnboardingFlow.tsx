@@ -429,17 +429,18 @@ function MapboxGlobeReveal({
   const [whyHereSelections, setWhyHereSelections] = useState<Set<string>>(new Set());
 
   const WHY_HERE_OPTIONS = [
-    { emoji: '📖', label: 'Preserve my life story' },
-    { emoji: '👨‍👩‍👧‍👦', label: 'Leave something for my family' },
-    { emoji: '💌', label: 'Send future messages to loved ones' },
-    { emoji: '🎁', label: 'Create gifts for special occasions' },
-    { emoji: '🧠', label: 'Capture memories before they fade' },
-    { emoji: '🌱', label: 'Reflect on my life journey' },
-    { emoji: '📸', label: 'Organize photos & stories' },
-    { emoji: '✍️', label: 'Write my autobiography' },
-    { emoji: '🕊️', label: 'Plan my digital legacy' },
-    { emoji: '💡', label: 'Something else entirely' },
+    { emoji: '🧠', label: "I want to reflect on my life experiences and personal growth" },
+    { emoji: '💼', label: "I'm reflecting on my career and the lessons I've learned" },
+    { emoji: '❤️', label: "I want to preserve my parents' stories before they're lost" },
+    { emoji: '🔄', label: "I'm at a transitional moment and processing big changes" },
+    { emoji: '🌱', label: "I want to create something meaningful for my children" },
+    { emoji: '📖', label: "I want to document my life story for future generations" },
   ];
+
+  // CTA reveal states - panels only show after user clicks the CTA
+  const [showContactsPanel, setShowContactsPanel] = useState(false);
+  const [showInterestsPanel, setShowInterestsPanel] = useState(false);
+  const [showWhyHerePanel, setShowWhyHerePanel] = useState(false);
 
   // Fetch place suggestions from Mapbox
   const fetchPlaceSuggestions = useCallback(async (query: string) => {
@@ -1104,7 +1105,7 @@ function MapboxGlobeReveal({
         )}
       </AnimatePresence>
 
-      {/* ── Phase: Adventure message — shows during globe spin ── */}
+      {/* ── Phase: Adventure message → Contacts intro ── */}
       <AnimatePresence>
         {phase === 'adventure-message' && (
           <motion.div
@@ -1124,37 +1125,58 @@ function MapboxGlobeReveal({
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: 0.3 }}
                 >
-                  What a journey ✨
+                  Your story isn&apos;t just where you&apos;ve been.
                 </motion.p>
                 <motion.h2
                   className="globe-welcome-headline"
                   initial={{ opacity: 0, y: 8 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: 0.6 }}
-                  style={{ fontSize: '20px' }}
+                  style={{ fontSize: '18px', lineHeight: '1.5' }}
                 >
-                  You've lived in so many amazing places, I can't wait to hear more about your adventures.
+                  It&apos;s who was there with you, the ones who made those places feel like something more.
+                  <br />Let&apos;s bring them into your story.
                 </motion.h2>
               </div>
-              <motion.button
-                className="globe-continue-btn"
+              <motion.div
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 transition={{ delay: 1.0 }}
-                onClick={() => setPhase('contacts')}
+                style={{ padding: '0 24px 20px', display: 'flex', flexDirection: 'column', gap: '8px' }}
               >
-                Continue <ChevronRight size={18} />
-              </motion.button>
+                <button
+                  className="globe-continue-btn"
+                  style={{ margin: 0, width: '100%' }}
+                  onClick={() => { setShowContactsPanel(true); setPhase('contacts'); }}
+                >
+                  Add the people who matter <ChevronRight size={18} />
+                </button>
+                <button
+                  onClick={() => setPhase('interests')}
+                  style={{
+                    padding: '10px',
+                    border: 'none',
+                    background: 'none',
+                    color: 'rgba(45,45,45,0.5)',
+                    fontSize: '14px',
+                    fontWeight: 500,
+                    cursor: 'pointer',
+                    textAlign: 'center',
+                  }}
+                >
+                  Add this later
+                </button>
+              </motion.div>
             </div>
           </motion.div>
         )}
       </AnimatePresence>
 
-      {/* ── Phase: Contacts / Interests — info card ── */}
+      {/* ── Phase: Contacts — info card (bottom) ── */}
       <AnimatePresence>
-        {(phase === 'contacts' || phase === 'interests') && (
+        {phase === 'contacts' && (
           <motion.div
-            key="step-info-bottom"
+            key="contacts-info-bottom"
             className="globe-bottom-panel"
             initial={{ opacity: 0, y: 80 }}
             animate={{ opacity: 1, y: 0 }}
@@ -1165,12 +1187,10 @@ function MapboxGlobeReveal({
               <div className="globe-welcome-bar" />
               <div className="globe-welcome-body">
                 <p className="globe-welcome-greeting">
-                  {phase === 'contacts' ? 'Your people 👨‍👩‍👧‍👦' : 'Your interests 💡'}
+                  Your story isn&apos;t just where you&apos;ve been.
                 </p>
-                <h2 className="globe-welcome-headline" style={{ fontSize: '20px' }}>
-                  {phase === 'contacts'
-                    ? 'Who are the important people in your life?'
-                    : 'What are you into?'}
+                <h2 className="globe-welcome-headline" style={{ fontSize: '18px', lineHeight: '1.5' }}>
+                  It&apos;s who was there with you.
                 </h2>
               </div>
             </div>
@@ -1178,12 +1198,12 @@ function MapboxGlobeReveal({
         )}
       </AnimatePresence>
 
-      {/* ── Contacts panel — floating on the right ── */}
+      {/* ── Contacts panel — floating on the right (wider) ── */}
       <AnimatePresence>
-        {phase === 'contacts' && (
+        {phase === 'contacts' && showContactsPanel && (
           <motion.div
             key="contacts-panel"
-            className="globe-floating-panel globe-floating-right"
+            className="globe-floating-panel globe-floating-right globe-panel-wide"
             initial={{ x: '120%', opacity: 0 }}
             animate={{ x: 0, opacity: 1 }}
             exit={{ x: '120%', opacity: 0 }}
@@ -1194,7 +1214,7 @@ function MapboxGlobeReveal({
               <p>Add the people who matter most</p>
             </div>
             <div className="globe-side-panel-items" style={{ gap: '0', padding: '8px 16px', overflowY: 'auto' }}>
-              {/* Existing contact rows — each is a clean name + relation row */}
+              {/* Existing contact rows */}
               {contactEntries.map((entry, i) => (
                 <div key={i} className="contact-entry-row">
                   <div className="contact-entry-info">
@@ -1208,7 +1228,7 @@ function MapboxGlobeReveal({
                 </div>
               ))}
 
-              {/* Add new person row — inline name + relation + add button */}
+              {/* Add new person row */}
               <div className="contact-add-row">
                 <input
                   type="text"
@@ -1256,7 +1276,7 @@ function MapboxGlobeReveal({
             <div className="globe-side-panel-footer">
               <button
                 className="globe-continue-btn"
-                onClick={async () => { await saveContacts(); setPhase('interests'); }}
+                onClick={async () => { await saveContacts(); setShowContactsPanel(false); setPhase('interests'); }}
               >
                 {contactEntries.length > 0 ? 'Continue' : 'Skip'} <ChevronRight size={18} />
               </button>
@@ -1265,20 +1285,113 @@ function MapboxGlobeReveal({
         )}
       </AnimatePresence>
 
-      {/* ── Interests panel — floating on the LEFT ── */}
+      {/* ── Phase: Interests — info card (bottom) with CTA ── */}
       <AnimatePresence>
-        {phase === 'interests' && (
+        {phase === 'interests' && !showInterestsPanel && (
+          <motion.div
+            key="interests-intro-bottom"
+            className="globe-bottom-panel"
+            initial={{ opacity: 0, y: 80 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: 80 }}
+            transition={{ type: 'spring', stiffness: 200, damping: 24 }}
+          >
+            <div className="globe-welcome-card">
+              <div className="globe-welcome-bar" />
+              <div className="globe-welcome-body">
+                <motion.p
+                  className="globe-welcome-greeting"
+                  initial={{ opacity: 0, y: 8 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.2 }}
+                >
+                  Your story is still unfolding.
+                </motion.p>
+                <motion.h2
+                  className="globe-welcome-headline"
+                  initial={{ opacity: 0, y: 8 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.4 }}
+                  style={{ fontSize: '18px', lineHeight: '1.5' }}
+                >
+                  What you care about today shapes the moments ahead.
+                  <br />Add your interests so we can ask better questions and help your story live on in a way that feels true to you.
+                </motion.h2>
+              </div>
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ delay: 0.7 }}
+                style={{ padding: '0 24px 20px', display: 'flex', flexDirection: 'column', gap: '8px' }}
+              >
+                <button
+                  className="globe-continue-btn"
+                  style={{ margin: 0, width: '100%' }}
+                  onClick={() => setShowInterestsPanel(true)}
+                >
+                  Add what you love <ChevronRight size={18} />
+                </button>
+                <button
+                  onClick={() => setPhase('why-here')}
+                  style={{
+                    padding: '10px',
+                    border: 'none',
+                    background: 'none',
+                    color: 'rgba(45,45,45,0.5)',
+                    fontSize: '14px',
+                    fontWeight: 500,
+                    cursor: 'pointer',
+                    textAlign: 'center',
+                  }}
+                >
+                  Add this later
+                </button>
+              </motion.div>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* ── Interests info card (when panel is showing) ── */}
+      <AnimatePresence>
+        {phase === 'interests' && showInterestsPanel && (
+          <motion.div
+            key="interests-info-bottom"
+            className="globe-bottom-panel"
+            initial={{ opacity: 0, y: 80 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: 80 }}
+            transition={{ type: 'spring', stiffness: 200, damping: 24 }}
+          >
+            <div className="globe-welcome-card">
+              <div className="globe-welcome-bar" />
+              <div className="globe-welcome-body">
+                <p className="globe-welcome-greeting">
+                  Your story is still unfolding.
+                </p>
+                <h2 className="globe-welcome-headline" style={{ fontSize: '18px' }}>
+                  What you care about today shapes the moments ahead.
+                </h2>
+              </div>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* ── Interests panel — floating on the right (only after CTA click) ── */}
+      <AnimatePresence>
+        {phase === 'interests' && showInterestsPanel && (
           <motion.div
             key="interests-panel"
-            className="globe-floating-panel globe-floating-left"
-            initial={{ x: '-120%', opacity: 0 }}
+            className="globe-floating-panel globe-floating-right globe-panel-wide"
+            initial={{ x: '120%', opacity: 0 }}
             animate={{ x: 0, opacity: 1 }}
-            exit={{ x: '-120%', opacity: 0 }}
+            exit={{ x: '120%', opacity: 0 }}
             transition={{ type: 'spring', stiffness: 260, damping: 28 }}
           >
             <div className="globe-side-panel-header">
               <h3>Your Interests</h3>
-              <p>Pick what you're into</p>
+              <p>Pick what you&apos;re into</p>
             </div>
             <div className="globe-side-panel-items">
               {[...CURATED_INTERESTS, ...customInterests].map(interest => {
@@ -1296,7 +1409,6 @@ function MapboxGlobeReveal({
                 );
               })}
             </div>
-            {/* Add custom interest */}
             <div className="globe-custom-input-row">
               <input
                 type="text"
@@ -1331,7 +1443,7 @@ function MapboxGlobeReveal({
             <div className="globe-side-panel-footer">
               <button
                 className="globe-continue-btn"
-                onClick={() => setPhase('why-here')}
+                onClick={() => { setShowInterestsPanel(false); setPhase('why-here'); }}
               >
                 Continue <ChevronRight size={18} />
               </button>
@@ -1340,51 +1452,167 @@ function MapboxGlobeReveal({
         )}
       </AnimatePresence>
 
-      {/* ── Why Are You Here — floating center panel, slides from top ── */}
+      {/* ── Phase: Why Are You Here — info card (bottom) with CTA ── */}
       <AnimatePresence>
-        {phase === 'why-here' && (
+        {phase === 'why-here' && !showWhyHerePanel && (
+          <motion.div
+            key="whyhere-intro-bottom"
+            className="globe-bottom-panel"
+            initial={{ opacity: 0, y: 80 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: 80 }}
+            transition={{ type: 'spring', stiffness: 200, damping: 24 }}
+          >
+            <div className="globe-welcome-card">
+              <div className="globe-welcome-bar" />
+              <div className="globe-welcome-body">
+                <motion.p
+                  className="globe-welcome-greeting"
+                  initial={{ opacity: 0, y: 8 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.2 }}
+                >
+                  What brings you here?
+                </motion.p>
+                <motion.h2
+                  className="globe-welcome-headline"
+                  initial={{ opacity: 0, y: 8 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.4 }}
+                  style={{ fontSize: '18px', lineHeight: '1.5' }}
+                >
+                  Everyone starts for a different reason.
+                  <br />What part of your life do you want to focus on right now?
+                </motion.h2>
+                <motion.p
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  transition={{ delay: 0.6 }}
+                  style={{ fontSize: '13px', color: 'rgba(45,45,45,0.5)', marginTop: '8px' }}
+                >
+                  This helps us guide your experience and ask better questions.
+                </motion.p>
+              </div>
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ delay: 0.8 }}
+                style={{ padding: '0 24px 20px', display: 'flex', flexDirection: 'column', gap: '8px' }}
+              >
+                <button
+                  className="globe-continue-btn"
+                  style={{ margin: 0, width: '100%' }}
+                  onClick={() => setShowWhyHerePanel(true)}
+                >
+                  Continue <ChevronRight size={18} />
+                </button>
+                <button
+                  onClick={async () => {
+                    globeSpinRef.current.spinning = false;
+                    onDone({
+                      places: placesAdded.map(p => p.city.split(',')[0].trim()),
+                      contacts: contactEntries,
+                      interests: Array.from(selectedPills),
+                      whyHere: [],
+                      whyHereText: '',
+                    });
+                  }}
+                  style={{
+                    padding: '10px',
+                    border: 'none',
+                    background: 'none',
+                    color: 'rgba(45,45,45,0.5)',
+                    fontSize: '14px',
+                    fontWeight: 500,
+                    cursor: 'pointer',
+                    textAlign: 'center',
+                  }}
+                >
+                  Add this later
+                </button>
+              </motion.div>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* ── Why-here info card (when panel showing) ── */}
+      <AnimatePresence>
+        {phase === 'why-here' && showWhyHerePanel && (
+          <motion.div
+            key="whyhere-info-bottom"
+            className="globe-bottom-panel"
+            initial={{ opacity: 0, y: 80 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: 80 }}
+            transition={{ type: 'spring', stiffness: 200, damping: 24 }}
+          >
+            <div className="globe-welcome-card">
+              <div className="globe-welcome-bar" />
+              <div className="globe-welcome-body">
+                <p className="globe-welcome-greeting">
+                  What brings you here?
+                </p>
+                <h2 className="globe-welcome-headline" style={{ fontSize: '18px' }}>
+                  What part of your life do you want to focus on?
+                </h2>
+                <p style={{ fontSize: '13px', color: 'rgba(45,45,45,0.5)', marginTop: '6px' }}>
+                  This helps us guide your experience and ask better questions.
+                </p>
+              </div>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* ── Why-here panel — floating on the right (after CTA click) ── */}
+      <AnimatePresence>
+        {phase === 'why-here' && showWhyHerePanel && (
           <motion.div
             key="why-here-panel"
-            className="globe-floating-center"
-            initial={{ y: '-100%', opacity: 0 }}
-            animate={{ y: 0, opacity: 1 }}
-            exit={{ y: '-100%', opacity: 0 }}
-            transition={{ type: 'spring', stiffness: 220, damping: 26 }}
+            className="globe-floating-panel globe-floating-right globe-panel-wide"
+            initial={{ x: '120%', opacity: 0 }}
+            animate={{ x: 0, opacity: 1 }}
+            exit={{ x: '120%', opacity: 0 }}
+            transition={{ type: 'spring', stiffness: 260, damping: 28 }}
           >
-            <div className="globe-side-panel-header" style={{ textAlign: 'center' }}>
-              <h3>Why are you here? 💭</h3>
-              <p>What brought you to YoursTruly?</p>
+            <div className="globe-side-panel-header">
+              <h3>What brings you here?</h3>
+              <p>Select the one that resonates most</p>
             </div>
-            <div style={{ flex: 1, padding: '12px 20px', display: 'flex', flexDirection: 'column', gap: '12px', overflowY: 'auto' }}>
-              {/* Selectable option pills */}
-              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
-                {WHY_HERE_OPTIONS.map(opt => {
-                  const isSelected = whyHereSelections.has(opt.label);
-                  return (
-                    <button
-                      key={opt.label}
-                      className={`globe-pill ${isSelected ? 'selected' : ''}`}
-                      onClick={() => {
-                        setWhyHereSelections(prev => {
-                          const next = new Set(prev);
-                          if (next.has(opt.label)) next.delete(opt.label);
-                          else next.add(opt.label);
-                          return next;
-                        });
-                      }}
-                    >
-                      <span>{opt.emoji}</span>
-                      <span>{opt.label}</span>
-                      {isSelected && <Check size={14} />}
-                    </button>
-                  );
-                })}
+            <div className="globe-side-panel-items" style={{ gap: '0', padding: '8px 16px' }}>
+              {WHY_HERE_OPTIONS.map(opt => {
+                const isSelected = whyHereSelections.has(opt.label);
+                return (
+                  <button
+                    key={opt.label}
+                    className={`why-here-option ${isSelected ? 'why-here-selected' : ''}`}
+                    onClick={() => {
+                      setWhyHereSelections(prev => {
+                        const next = new Set(prev);
+                        if (next.has(opt.label)) next.delete(opt.label);
+                        else next.add(opt.label);
+                        return next;
+                      });
+                    }}
+                  >
+                    <span className="why-here-emoji">{opt.emoji}</span>
+                    <span className="why-here-text">{opt.label}</span>
+                    {isSelected && <Check size={14} className="why-here-check" />}
+                  </button>
+                );
+              })}
+
+              {/* Divider + freeform */}
+              <div style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '12px 0 8px' }}>
+                <div style={{ flex: 1, height: '1px', background: 'rgba(0,0,0,0.08)' }} />
+                <span style={{ fontSize: '12px', color: 'rgba(45,45,45,0.4)', whiteSpace: 'nowrap' }}>or in your own words</span>
+                <div style={{ flex: 1, height: '1px', background: 'rgba(0,0,0,0.08)' }} />
               </div>
-              {/* Freeform text */}
               <textarea
                 value={whyHereText}
                 onChange={(e) => setWhyHereText(e.target.value)}
-                placeholder="Anything else you'd like to share..."
+                placeholder="Share what's on your heart…"
                 style={{
                   width: '100%',
                   padding: '14px',
@@ -1397,7 +1625,7 @@ function MapboxGlobeReveal({
                   resize: 'none',
                   fontFamily: 'inherit',
                   lineHeight: '1.5',
-                  minHeight: '80px',
+                  minHeight: '70px',
                 }}
                 onFocus={(e) => { e.target.style.borderColor = '#406A56'; }}
                 onBlur={(e) => { e.target.style.borderColor = 'rgba(0,0,0,0.1)'; }}
@@ -1684,6 +1912,48 @@ function MapboxGlobeReveal({
 
         .globe-floating-left {
           left: 40px;
+        }
+
+        .globe-panel-wide {
+          width: min(420px, 38vw);
+        }
+
+        /* Why-here option rows */
+        .why-here-option {
+          display: flex;
+          align-items: center;
+          gap: 12px;
+          width: 100%;
+          padding: 14px 16px;
+          border-radius: 14px;
+          border: 1.5px solid rgba(0,0,0,0.08);
+          background: rgba(255,255,255,0.6);
+          cursor: pointer;
+          transition: all 0.2s;
+          text-align: left;
+          font-size: 14px;
+          color: #2d2d2d;
+          margin-bottom: 6px;
+        }
+        .why-here-option:hover {
+          border-color: rgba(64,106,86,0.3);
+          background: rgba(64,106,86,0.04);
+        }
+        .why-here-selected {
+          border-color: #406A56;
+          background: rgba(64,106,86,0.08);
+        }
+        .why-here-emoji {
+          font-size: 20px;
+          flex-shrink: 0;
+        }
+        .why-here-text {
+          flex: 1;
+          line-height: 1.4;
+        }
+        .why-here-check {
+          color: #406A56;
+          flex-shrink: 0;
         }
 
         .globe-floating-center {
