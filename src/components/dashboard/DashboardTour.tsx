@@ -110,27 +110,33 @@ const ytTheme: SpotlightTheme = {
 }
 
 function TourAutoStart() {
-  const { start } = useSpotlight()
+  const { start, isActive } = useSpotlight()
 
   useEffect(() => {
     // Only auto-start on the main dashboard page
     if (typeof window === 'undefined') return
     if (window.location.pathname !== '/dashboard') return
+    if (isActive) return
 
     const seen = localStorage.getItem(TOUR_STORAGE_KEY)
     if (!seen) {
-      // Wait for dashboard content to render fully
+      // Wait for dashboard content to render fully & tour to be registered
       const timer = setTimeout(() => {
-        // Verify that tour targets exist in the DOM before starting
         const hasTargets = document.querySelector('[data-tour="category-tabs"]')
         if (hasTargets) {
-          start('dashboard-tour')
-          localStorage.setItem(TOUR_STORAGE_KEY, 'true')
+          try {
+            start('dashboard-tour')
+            localStorage.setItem(TOUR_STORAGE_KEY, 'true')
+          } catch (e) {
+            console.error('[DashboardTour] Failed to start:', e)
+          }
+        } else {
+          console.warn('[DashboardTour] No targets found, skipping auto-start')
         }
-      }, 2500)
+      }, 3000)
       return () => clearTimeout(timer)
     }
-  }, [start])
+  }, [start, isActive])
 
   return null
 }

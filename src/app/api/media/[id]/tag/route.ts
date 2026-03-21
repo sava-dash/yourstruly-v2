@@ -1,6 +1,7 @@
 import { createClient } from '@/lib/supabase/server'
 import { NextRequest, NextResponse } from 'next/server'
 import { XP_REWARDS } from '@/lib/xp/xpService'
+import { indexFace } from '@/lib/aws/rekognition'
 
 /**
  * POST /api/media/[id]/tag - Tag a person in a photo
@@ -67,6 +68,27 @@ export async function POST(
       p_reference_id: faceId,
     })
     xpAwarded = XP_REWARDS.TAG_PERSON_IN_PHOTO
+
+    // Index face in Rekognition collection for future auto-matching
+    try {
+      const { data: media } = await supabase
+        .from('memory_face_tags')
+        .select('media_id, memory_media!inner(file_url)')
+        .eq('id', faceId)
+        .single()
+
+      if (media) {
+        const mediaRecord = media.memory_media as unknown as { file_url: string }
+        const imageRes = await fetch(mediaRecord.file_url)
+        if (imageRes.ok) {
+          const buffer = Buffer.from(await imageRes.arrayBuffer())
+          await indexFace(buffer, user.id, contactId)
+        }
+      }
+    } catch (indexErr) {
+      // Non-blocking — don't fail the tag if indexing fails
+      console.error('[Tag] Face indexing failed (non-blocking):', indexErr)
+    }
   }
 
   return NextResponse.json({ 

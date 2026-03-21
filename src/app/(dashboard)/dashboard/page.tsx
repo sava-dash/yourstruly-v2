@@ -510,6 +510,36 @@ export default function DashboardPage() {
   const [streakDays, setStreakDays] = useState(0)
   const [viewMode, setViewMode] = useState<ViewMode>('card')
   const [showMapOverlay, setShowMapOverlay] = useState(false)
+  const [mapFilters, setMapFilters] = useState({ memories: true, wisdom: true, media: true })
+  const [mapMediaItems, setMapMediaItems] = useState<ActivityItem[]>([])
+  
+  // Fetch standalone media with location for map
+  useEffect(() => {
+    if (!showMapOverlay) return
+    const fetchMapMedia = async () => {
+      try {
+        const res = await fetch('/api/media/with-location')
+        if (res.ok) {
+          const data = await res.json()
+          setMapMediaItems((data.items || []).map((m: any) => ({
+            id: `media_${m.id}`,
+            type: 'media_uploaded' as const,
+            title: m.filename || 'Photo',
+            description: m.location_name || '',
+            timestamp: m.taken_at || m.created_at,
+            thumbnail: m.file_url,
+            link: '#',
+            metadata: {
+              lat: m.location_lat,
+              lng: m.location_lng,
+              location: m.location_name,
+            }
+          })))
+        }
+      } catch {}
+    }
+    fetchMapMedia()
+  }, [showMapOverlay])
   const [showEngagementModal, setShowEngagementModal] = useState(false)
   const [engagementPrompt, setEngagementPrompt] = useState<any>(null)
   const [showInterviewModal, setShowInterviewModal] = useState(false)
@@ -2718,8 +2748,52 @@ export default function DashboardPage() {
               >
                 <X size={20} />
               </button>
+              {/* Map filter checkboxes */}
+              <div style={{
+                position: 'absolute',
+                top: '16px',
+                left: '16px',
+                zIndex: 10,
+                display: 'flex',
+                gap: '8px',
+                flexWrap: 'wrap',
+              }}>
+                {(['memories', 'wisdom', 'media'] as const).map(key => (
+                  <label
+                    key={key}
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '6px',
+                      padding: '6px 12px',
+                      borderRadius: '20px',
+                      background: mapFilters[key] ? 'rgba(64,106,86,0.9)' : 'rgba(255,255,255,0.85)',
+                      color: mapFilters[key] ? '#fff' : '#666',
+                      fontSize: '12px',
+                      fontWeight: 600,
+                      cursor: 'pointer',
+                      backdropFilter: 'blur(8px)',
+                      border: '1px solid rgba(0,0,0,0.08)',
+                      transition: 'all 0.2s',
+                    }}
+                  >
+                    <input
+                      type="checkbox"
+                      checked={mapFilters[key]}
+                      onChange={() => setMapFilters(prev => ({ ...prev, [key]: !prev[key] }))}
+                      style={{ display: 'none' }}
+                    />
+                    {key === 'memories' ? '📝' : key === 'wisdom' ? '💡' : '📷'}
+                    {key.charAt(0).toUpperCase() + key.slice(1)}
+                  </label>
+                ))}
+              </div>
               <FeedMap
-                activities={activities.filter(a => (a.metadata?.lat && a.metadata?.lng) || a.metadata?.location)}
+                activities={[
+                  ...(mapFilters.memories ? activities.filter(a => a.type === 'memory_created' && ((a.metadata?.lat && a.metadata?.lng) || a.metadata?.location)) : []),
+                  ...(mapFilters.wisdom ? activities.filter(a => a.type === 'wisdom_created' && ((a.metadata?.lat && a.metadata?.lng) || a.metadata?.location)) : []),
+                  ...(mapFilters.media ? mapMediaItems : []),
+                ]}
                 onLocationClick={(location) => {
                   setShowMapOverlay(false)
                   setReminisceMode('places')
