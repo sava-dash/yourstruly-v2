@@ -8,16 +8,23 @@ const TOUR_STEPS = [
   {
     target: '[data-tour="category-tabs"]',
     title: 'Category Tabs',
-    content: 'Switch between different types of content — Memories, Wisdom, Media, Interviews, and items shared with you. Each tab filters your feed to show just that type.',
+    content: 'Switch between different types of content: Memories, Wisdom, Media, Interviews, and items shared with you. Each tab filters your feed to show just that type.',
     placement: 'bottom' as const,
     spotlightPadding: 8,
   },
   {
-    target: '[data-tour="category-tabs"]',
+    target: '[data-tour="category-submenu"]',
     title: 'Quick Actions',
-    content: 'Click any category to reveal quick action buttons — add a memory, upload photos, start an interview, or get a random prompt to spark your storytelling.',
+    content: 'Each category reveals quick action buttons like these. Add a memory, upload photos, start an interview, or get a random prompt to spark your storytelling.',
     placement: 'bottom' as const,
-    spotlightPadding: 12,
+    spotlightPadding: 8,
+    onBeforeShow: async (): Promise<void> => {
+      // Click the first category tab to reveal the submenu
+      const firstTab = document.querySelector('[data-tour="category-tabs"] button:first-child') as HTMLElement;
+      if (firstTab) firstTab.click();
+      // Wait a tick for the submenu to render
+      await new Promise<void>(resolve => setTimeout(resolve, 300));
+    },
   },
   {
     target: '[data-tour="filter-dropdown"]',
@@ -36,7 +43,7 @@ const TOUR_STEPS = [
   {
     target: '[data-tour="first-tile"]',
     title: 'Your Content Tiles',
-    content: 'Click any tile to see its full details. From there, you can add more context — a backstory, location, tagged people, or voice recording to make your memories richer.',
+    content: 'Click any tile to see its full details. From there you can add more context: a backstory, location, tagged people, or voice recording to make your memories richer.',
     placement: 'left' as const,
     spotlightPadding: 8,
   },
@@ -106,13 +113,21 @@ function TourAutoStart() {
   const { start } = useSpotlight()
 
   useEffect(() => {
+    // Only auto-start on the main dashboard page
+    if (typeof window === 'undefined') return
+    if (window.location.pathname !== '/dashboard') return
+
     const seen = localStorage.getItem(TOUR_STORAGE_KEY)
     if (!seen) {
-      // Small delay to let the dashboard render fully
+      // Wait for dashboard content to render fully
       const timer = setTimeout(() => {
-        start('dashboard-tour')
-        localStorage.setItem(TOUR_STORAGE_KEY, 'true')
-      }, 1500)
+        // Verify that tour targets exist in the DOM before starting
+        const hasTargets = document.querySelector('[data-tour="category-tabs"]')
+        if (hasTargets) {
+          start('dashboard-tour')
+          localStorage.setItem(TOUR_STORAGE_KEY, 'true')
+        }
+      }, 2500)
       return () => clearTimeout(timer)
     }
   }, [start])

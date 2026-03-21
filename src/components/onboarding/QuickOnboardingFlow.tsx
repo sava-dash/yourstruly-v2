@@ -310,11 +310,11 @@ function generateHeartfeltQuestion(
     const place = places[Math.floor(Math.random() * places.length)];
     questions.push(
       `${name}, you mentioned you lived in ${place}. What's a memory from there that still makes you smile?`,
-      `${name}, of all the places you've lived, which one felt most like home — and why?`,
+      `${name}, of all the places you've lived, which one felt most like home, and why?`,
     );
     if (places.length > 1) {
       questions.push(
-        `${name}, you've lived in some interesting places — ${places.slice(0, 3).join(', ')}. Which move changed your life the most?`,
+        `${name}, you've lived in some interesting places: ${places.slice(0, 3).join(', ')}. Which move changed your life the most?`,
       );
     }
   }
@@ -340,7 +340,7 @@ function generateHeartfeltQuestion(
   // Why-here-based questions
   if (whyHere.includes('Leave something for my family')) {
     questions.push(
-      `${name}, you want to leave something for your family. If you could only pass down one story, one lesson — what would it be?`,
+      `${name}, you want to leave something for your family. If you could only pass down one story, one lesson... what would it be?`,
     );
   }
   if (whyHere.includes('Capture memories before they fade')) {
@@ -367,6 +367,11 @@ function generateHeartfeltQuestion(
   }
 
   return questions[Math.floor(Math.random() * questions.length)];
+}
+
+// Title-case a name: "john smith" → "John Smith"
+function titleCaseName(name: string): string {
+  return name.replace(/\b\w/g, c => c.toUpperCase());
 }
 
 function MapboxGlobeReveal({
@@ -486,41 +491,88 @@ function MapboxGlobeReveal({
       type: 'geojson',
       data: { type: 'Feature', properties: {}, geometry: { type: 'LineString', coordinates: coords } },
     });
-    // Outer glow layer
+    // Outer glow layer (3x wider)
     map.addLayer({
       id: `${sourceId}-glow`,
       type: 'line',
       source: sourceId,
       paint: {
         'line-color': '#D9C61A',
-        'line-width': 12,
-        'line-opacity': 0.15,
-        'line-blur': 6,
+        'line-width': 36,
+        'line-opacity': 0.12,
+        'line-blur': 16,
       },
     });
-    // Mid glow
+    // Mid glow (3x wider)
     map.addLayer({
       id: `${sourceId}-mid`,
       type: 'line',
       source: sourceId,
       paint: {
         'line-color': '#D9C61A',
-        'line-width': 6,
-        'line-opacity': 0.4,
-        'line-blur': 2,
+        'line-width': 18,
+        'line-opacity': 0.35,
+        'line-blur': 6,
       },
     });
-    // Core ribbon
+    // Core ribbon (3x wider)
     map.addLayer({
       id: sourceId,
       type: 'line',
       source: sourceId,
       paint: {
         'line-color': '#F5E642',
-        'line-width': 3,
+        'line-width': 9,
         'line-opacity': 0.9,
       },
     });
+
+    // Traveling pulse layer (animated dot along the arc)
+    const pulseSourceId = `${sourceId}-pulse`;
+    map.addSource(pulseSourceId, {
+      type: 'geojson',
+      data: { type: 'Feature', properties: {}, geometry: { type: 'Point', coordinates: coords[0] } },
+    });
+    map.addLayer({
+      id: pulseSourceId,
+      type: 'circle',
+      source: pulseSourceId,
+      paint: {
+        'circle-radius': 8,
+        'circle-color': '#FFFFFF',
+        'circle-opacity': 0.9,
+        'circle-blur': 0.4,
+      },
+    });
+    // Glow around pulse dot
+    map.addLayer({
+      id: `${pulseSourceId}-glow`,
+      type: 'circle',
+      source: pulseSourceId,
+      paint: {
+        'circle-radius': 18,
+        'circle-color': '#F5E642',
+        'circle-opacity': 0.25,
+        'circle-blur': 1,
+      },
+    });
+
+    // Animate the pulse along the arc
+    let frame = 0;
+    const totalFrames = coords.length;
+    const animatePulse = () => {
+      if (!map.getSource(pulseSourceId)) return;
+      const idx = frame % totalFrames;
+      (map.getSource(pulseSourceId) as any).setData({
+        type: 'Feature',
+        properties: {},
+        geometry: { type: 'Point', coordinates: coords[idx] },
+      });
+      frame++;
+      requestAnimationFrame(animatePulse);
+    };
+    // Start animation after a short delay
+    setTimeout(animatePulse, 300);
   }, []);
 
   // Add a place: fly to it, drop pin, draw arc
@@ -1236,7 +1288,7 @@ function MapboxGlobeReveal({
                   transition={{ delay: 0.6 }}
                   style={{ fontSize: '18px', lineHeight: '1.5' }}
                 >
-                  Every place holds a story — and most of those stories include someone.
+                  Every place holds a story, and most of those stories include someone.
                   <br />The people you shared life with are part of what makes those moments live on.
                 </motion.h2>
               </div>
@@ -1249,7 +1301,7 @@ function MapboxGlobeReveal({
                 <button
                   className="globe-continue-btn"
                   style={{ margin: 0, width: '100%' }}
-                  onClick={() => { setShowContactsPanel(true); setPhase('contacts'); }}
+                  onClick={() => { setPhase('contacts'); }}
                 >
                   Add your people <ChevronRight size={18} />
                 </button>
@@ -1274,35 +1326,9 @@ function MapboxGlobeReveal({
         )}
       </AnimatePresence>
 
-      {/* ── Phase: Contacts — info card (bottom) ── */}
+      {/* ── Contacts panel — floating on the right ── */}
       <AnimatePresence>
         {phase === 'contacts' && (
-          <motion.div
-            key="contacts-info-bottom"
-            className="globe-bottom-panel"
-            initial={{ opacity: 0, y: 80 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: 80 }}
-            transition={{ type: 'spring', stiffness: 200, damping: 24 }}
-          >
-            <div className="globe-welcome-card">
-              <div className="globe-welcome-bar" />
-              <div className="globe-welcome-body">
-                <p className="globe-welcome-greeting">
-                  You&apos;ve lived in some incredible places.
-                </p>
-                <h2 className="globe-welcome-headline" style={{ fontSize: '18px', lineHeight: '1.5' }}>
-                  The people you shared life with are part of what makes those moments live on.
-                </h2>
-              </div>
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
-
-      {/* ── Contacts panel — floating on the right (wider) ── */}
-      <AnimatePresence>
-        {phase === 'contacts' && showContactsPanel && (
           <motion.div
             key="contacts-panel"
             className="globe-floating-panel globe-floating-right globe-panel-wide"
@@ -1313,7 +1339,7 @@ function MapboxGlobeReveal({
           >
             <div className="globe-side-panel-header">
               <h3>Family, Friends & Loved Ones</h3>
-              <p>Add the people who matter most</p>
+              <p>The people you shared life with are part of what makes those moments live on. Add the people who matter most.</p>
             </div>
             <div className="globe-side-panel-items" style={{ gap: '0', padding: '8px 16px', overflowY: 'auto' }}>
               {/* Existing contact rows */}
@@ -1338,7 +1364,7 @@ function MapboxGlobeReveal({
                   onChange={(e) => setContactName(e.target.value)}
                   onKeyDown={(e) => {
                     if (e.key === 'Enter' && contactName.trim() && contactRelation) {
-                      setContactEntries(prev => [...prev, { name: contactName.trim(), relationship: contactRelation }]);
+                      setContactEntries(prev => [...prev, { name: titleCaseName(contactName.trim()), relationship: contactRelation }]);
                       setContactName('');
                       setContactRelation('');
                     }
@@ -1365,7 +1391,7 @@ function MapboxGlobeReveal({
                   disabled={!contactName.trim() || !contactRelation}
                   onClick={() => {
                     if (contactName.trim() && contactRelation) {
-                      setContactEntries(prev => [...prev, { name: contactName.trim(), relationship: contactRelation }]);
+                      setContactEntries(prev => [...prev, { name: titleCaseName(contactName.trim()), relationship: contactRelation }]);
                       setContactName('');
                       setContactRelation('');
                     }
@@ -1378,7 +1404,7 @@ function MapboxGlobeReveal({
             <div className="globe-side-panel-footer">
               <button
                 className="globe-continue-btn"
-                onClick={async () => { await saveContacts(); setShowContactsPanel(false); setPhase('interests'); }}
+                onClick={async () => { await saveContacts(); setPhase('interests'); }}
               >
                 {contactEntries.length > 0 ? 'Continue' : 'Skip'} <ChevronRight size={18} />
               </button>
@@ -1387,102 +1413,9 @@ function MapboxGlobeReveal({
         )}
       </AnimatePresence>
 
-      {/* ── Phase: Interests — info card (bottom) with CTA ── */}
+      {/* ── Interests panel — floating on the right (auto-show) ── */}
       <AnimatePresence>
-        {phase === 'interests' && !showInterestsPanel && (
-          <motion.div
-            key="interests-intro-bottom"
-            className="globe-bottom-panel"
-            initial={{ opacity: 0, y: 80 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: 80 }}
-            transition={{ type: 'spring', stiffness: 200, damping: 24 }}
-          >
-            <div className="globe-welcome-card">
-              <div className="globe-welcome-bar" />
-              <div className="globe-welcome-body">
-                <motion.p
-                  className="globe-welcome-greeting"
-                  initial={{ opacity: 0, y: 8 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.2 }}
-                >
-                  Your story is still unfolding.
-                </motion.p>
-                <motion.h2
-                  className="globe-welcome-headline"
-                  initial={{ opacity: 0, y: 8 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.4 }}
-                  style={{ fontSize: '18px', lineHeight: '1.5' }}
-                >
-                  What you care about today shapes the moments ahead.
-                  <br />Add your interests so we can ask better questions and help your story live on in a way that feels true to you.
-                </motion.h2>
-              </div>
-              <motion.div
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                transition={{ delay: 0.7 }}
-                style={{ padding: '0 24px 20px', display: 'flex', flexDirection: 'column', gap: '8px' }}
-              >
-                <button
-                  className="globe-continue-btn"
-                  style={{ margin: 0, width: '100%' }}
-                  onClick={() => setShowInterestsPanel(true)}
-                >
-                  Add what you love <ChevronRight size={18} />
-                </button>
-                <button
-                  onClick={() => setPhase('why-here')}
-                  style={{
-                    padding: '10px',
-                    border: 'none',
-                    background: 'none',
-                    color: 'rgba(45,45,45,0.5)',
-                    fontSize: '14px',
-                    fontWeight: 500,
-                    cursor: 'pointer',
-                    textAlign: 'center',
-                  }}
-                >
-                  Add this later
-                </button>
-              </motion.div>
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
-
-      {/* ── Interests info card (when panel is showing) ── */}
-      <AnimatePresence>
-        {phase === 'interests' && showInterestsPanel && (
-          <motion.div
-            key="interests-info-bottom"
-            className="globe-bottom-panel"
-            initial={{ opacity: 0, y: 80 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: 80 }}
-            transition={{ type: 'spring', stiffness: 200, damping: 24 }}
-          >
-            <div className="globe-welcome-card">
-              <div className="globe-welcome-bar" />
-              <div className="globe-welcome-body">
-                <p className="globe-welcome-greeting">
-                  Your story is still unfolding.
-                </p>
-                <h2 className="globe-welcome-headline" style={{ fontSize: '18px' }}>
-                  What you care about today shapes the moments ahead.
-                </h2>
-              </div>
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
-
-      {/* ── Interests panel — floating on the right (only after CTA click) ── */}
-      <AnimatePresence>
-        {phase === 'interests' && showInterestsPanel && (
+        {phase === 'interests' && (
           <motion.div
             key="interests-panel"
             className="globe-floating-panel globe-floating-right globe-panel-wide"
@@ -1493,7 +1426,7 @@ function MapboxGlobeReveal({
           >
             <div className="globe-side-panel-header">
               <h3>Your Interests</h3>
-              <p>Pick what you&apos;re into</p>
+              <p>What you care about shapes the moments ahead. Pick what you love so we can ask better questions and make your story feel true to you.</p>
             </div>
             <div className="globe-side-panel-items">
               {[...CURATED_INTERESTS, ...customInterests].map(interest => {
@@ -1545,122 +1478,18 @@ function MapboxGlobeReveal({
             <div className="globe-side-panel-footer">
               <button
                 className="globe-continue-btn"
-                onClick={() => { setShowInterestsPanel(false); setPhase('why-here'); }}
+                onClick={() => { setPhase('why-here'); }}
               >
-                Continue <ChevronRight size={18} />
+                {selectedPills.size > 0 ? 'Continue' : 'Skip'} <ChevronRight size={18} />
               </button>
             </div>
           </motion.div>
         )}
       </AnimatePresence>
 
-      {/* ── Phase: Why Are You Here — info card (bottom) with CTA ── */}
+      {/* ── Why-here panel — floating on the right (auto-show) ── */}
       <AnimatePresence>
-        {phase === 'why-here' && !showWhyHerePanel && (
-          <motion.div
-            key="whyhere-intro-bottom"
-            className="globe-bottom-panel"
-            initial={{ opacity: 0, y: 80 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: 80 }}
-            transition={{ type: 'spring', stiffness: 200, damping: 24 }}
-          >
-            <div className="globe-welcome-card">
-              <div className="globe-welcome-bar" />
-              <div className="globe-welcome-body">
-                <motion.p
-                  className="globe-welcome-greeting"
-                  initial={{ opacity: 0, y: 8 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.2 }}
-                >
-                  What brings you here?
-                </motion.p>
-                <motion.h2
-                  className="globe-welcome-headline"
-                  initial={{ opacity: 0, y: 8 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.4 }}
-                  style={{ fontSize: '18px', lineHeight: '1.5' }}
-                >
-                  Everyone starts for a different reason.
-                  <br />What part of your life do you want to focus on right now?
-                </motion.h2>
-                <motion.p
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  transition={{ delay: 0.6 }}
-                  style={{ fontSize: '13px', color: 'rgba(45,45,45,0.5)', marginTop: '8px' }}
-                >
-                  This helps us guide your experience and ask better questions.
-                </motion.p>
-              </div>
-              <motion.div
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                transition={{ delay: 0.8 }}
-                style={{ padding: '0 24px 20px', display: 'flex', flexDirection: 'column', gap: '8px' }}
-              >
-                <button
-                  className="globe-continue-btn"
-                  style={{ margin: 0, width: '100%' }}
-                  onClick={() => setShowWhyHerePanel(true)}
-                >
-                  Continue <ChevronRight size={18} />
-                </button>
-                <button
-                  onClick={() => setPhase('lets-go')}
-                  style={{
-                    padding: '10px',
-                    border: 'none',
-                    background: 'none',
-                    color: 'rgba(45,45,45,0.5)',
-                    fontSize: '14px',
-                    fontWeight: 500,
-                    cursor: 'pointer',
-                    textAlign: 'center',
-                  }}
-                >
-                  Add this later
-                </button>
-              </motion.div>
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
-
-      {/* ── Why-here info card (when panel showing) ── */}
-      <AnimatePresence>
-        {phase === 'why-here' && showWhyHerePanel && (
-          <motion.div
-            key="whyhere-info-bottom"
-            className="globe-bottom-panel"
-            initial={{ opacity: 0, y: 80 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: 80 }}
-            transition={{ type: 'spring', stiffness: 200, damping: 24 }}
-          >
-            <div className="globe-welcome-card">
-              <div className="globe-welcome-bar" />
-              <div className="globe-welcome-body">
-                <p className="globe-welcome-greeting">
-                  What brings you here?
-                </p>
-                <h2 className="globe-welcome-headline" style={{ fontSize: '18px' }}>
-                  What part of your life do you want to focus on?
-                </h2>
-                <p style={{ fontSize: '13px', color: 'rgba(45,45,45,0.5)', marginTop: '6px' }}>
-                  This helps us guide your experience and ask better questions.
-                </p>
-              </div>
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
-
-      {/* ── Why-here panel — floating on the right (after CTA click) ── */}
-      <AnimatePresence>
-        {phase === 'why-here' && showWhyHerePanel && (
+        {phase === 'why-here' && (
           <motion.div
             key="why-here-panel"
             className="globe-floating-panel globe-floating-right globe-panel-wide"
@@ -1670,8 +1499,8 @@ function MapboxGlobeReveal({
             transition={{ type: 'spring', stiffness: 260, damping: 28 }}
           >
             <div className="globe-side-panel-header">
-              <h3>What brings you here?</h3>
-              <p>Select the one that resonates most</p>
+              <h3>What Brings You Here?</h3>
+              <p>Everyone starts for a different reason. What part of your life do you want to focus on? This helps us guide your experience.</p>
             </div>
             <div className="globe-side-panel-items" style={{ gap: '0', padding: '8px 16px' }}>
               {WHY_HERE_OPTIONS.map(opt => {
@@ -1729,7 +1558,6 @@ function MapboxGlobeReveal({
                 className="globe-continue-btn"
                 onClick={async () => {
                   await saveWhyHere();
-                  setShowWhyHerePanel(false);
                   setPhase('lets-go');
                 }}
               >
@@ -1764,7 +1592,7 @@ function MapboxGlobeReveal({
                   Let&apos;s bring this to life.
                 </p>
                 <h2 className="globe-welcome-headline" style={{ fontSize: '18px', lineHeight: '1.5' }}>
-                  You&apos;ve set your focus — now see how easy it is to start capturing what matters.
+                  You&apos;ve set your focus. Now see how easy it is to start capturing what matters.
                 </h2>
               </div>
               <div style={{ padding: '0 24px 24px' }}>
@@ -2495,7 +2323,7 @@ export function QuickOnboardingFlow({
     whyHereText: string;
   }>({ places: [], contacts: [], interests: [], whyHere: [], whyHereText: '' });
   const [data, setData] = useState<OnboardingData>(savedProgress?.data || {
-    name: initialName || '',
+    name: initialName ? titleCaseName(initialName) : '',
     birthday: '',
     interests: [],
     hobbies: [],
@@ -2831,7 +2659,7 @@ export function QuickOnboardingFlow({
                         Let&apos;s Go Deeper
                       </h2>
                       <p className="text-gray-500 text-xs mt-1">
-                        Share what&apos;s on your mind — we&apos;ll capture the moments that matter
+                        Share what&apos;s on your mind. We&apos;ll capture the moments that matter
                       </p>
                     </div>
                     <ConversationEngine
@@ -3548,7 +3376,7 @@ function AboutYouStep({
       <div className="about-header">
         <h2>A little about you</h2>
         <p className="subtitle">
-          Pick what fits — or add your own. The more you choose, the more personalized your experience.
+          Pick what fits, or add your own. The more you choose, the more personalized your experience.
         </p>
       </div>
 
@@ -4191,7 +4019,7 @@ function ReadyStep({
         transition={{ delay: 0.6 }}
       >
         You&apos;ve already started building something meaningful.
-        <br />From here, your story grows naturally — one moment at a time.
+        <br />From here, your story grows naturally, one moment at a time.
       </motion.p>
 
       <motion.button
@@ -4674,7 +4502,7 @@ function WhyHereStep({
       >
         <h2>What brings you here?</h2>
         <p className="subtitle">
-          This shapes the first question we ask you — so be as honest as you like.
+          This shapes the first question we ask you, so be as honest as you like.
         </p>
       </motion.div>
 

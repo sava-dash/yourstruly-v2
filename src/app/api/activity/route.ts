@@ -378,6 +378,7 @@ export async function GET(request: NextRequest) {
       media:memory_media(file_url, file_type)
     `)
     .eq('user_id', user.id)
+    .neq('memory_type', 'onboarding_gallery')
     .order('created_at', { ascending: false })
     .limit(limit)
 
