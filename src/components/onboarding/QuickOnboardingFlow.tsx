@@ -59,8 +59,8 @@ type QuickStep =
 const ALL_STEPS: QuickStep[] = [
   'birth-info',
   'globe',
-  // interests, traits, why-here are now embedded in the globe step
-  'religion',
+  // interests, contacts, why-here are now embedded in the globe step
+  // religion removed
   'heartfelt',
   'image-upload',
   'ready',
@@ -70,7 +70,6 @@ const ALL_STEPS: QuickStep[] = [
 const PROGRESS_STEPS: QuickStep[] = [
   'birth-info',
   'globe',
-  'religion',
   'heartfelt',
   'image-upload',
   'ready',
@@ -290,6 +289,86 @@ async function geocodeLocation(
 
 type GlobeSubPhase = 'map' | 'places-lived' | 'contacts' | 'interests' | 'why-here';
 
+// Generate a personalized heartfelt question based on everything collected
+function generateHeartfeltQuestion(
+  name: string,
+  context: {
+    places: string[];
+    contacts: { name: string; relationship: string }[];
+    interests: string[];
+    whyHere: string[];
+    whyHereText: string;
+  }
+): string {
+  const { places, contacts, interests, whyHere } = context;
+
+  // Build question pool based on available data
+  const questions: string[] = [];
+
+  // Place-based questions
+  if (places.length > 0) {
+    const place = places[Math.floor(Math.random() * places.length)];
+    questions.push(
+      `${name}, you mentioned you lived in ${place}. What's a memory from there that still makes you smile?`,
+      `${name}, of all the places you've lived, which one felt most like home — and why?`,
+    );
+    if (places.length > 1) {
+      questions.push(
+        `${name}, you've lived in some interesting places — ${places.slice(0, 3).join(', ')}. Which move changed your life the most?`,
+      );
+    }
+  }
+
+  // Contact-based questions
+  if (contacts.length > 0) {
+    const person = contacts[Math.floor(Math.random() * contacts.length)];
+    const relation = person.relationship.toLowerCase();
+    questions.push(
+      `${name}, tell me about ${person.name}. What's a moment with your ${relation} that you'd love to preserve forever?`,
+      `${name}, what's something ${person.name} taught you that you carry with you every day?`,
+    );
+  }
+
+  // Interest-based questions
+  if (interests.length > 0) {
+    const interest = interests[Math.floor(Math.random() * interests.length)];
+    questions.push(
+      `${name}, you said you're into ${interest}. How did that start? Was there a moment that sparked it?`,
+    );
+  }
+
+  // Why-here-based questions
+  if (whyHere.includes('Leave something for my family')) {
+    questions.push(
+      `${name}, you want to leave something for your family. If you could only pass down one story, one lesson — what would it be?`,
+    );
+  }
+  if (whyHere.includes('Capture memories before they fade')) {
+    questions.push(
+      `${name}, what's a memory that you're afraid of forgetting? Let's make sure it's captured.`,
+    );
+  }
+  if (whyHere.includes('Preserve my life story')) {
+    questions.push(
+      `${name}, every life story has a turning point. What was yours?`,
+    );
+  }
+  if (whyHere.includes('Send future messages to loved ones')) {
+    questions.push(
+      `${name}, if you could send a message to someone 10 years from now, who would it be and what would you say?`,
+    );
+  }
+
+  // Fallback
+  if (questions.length === 0) {
+    questions.push(
+      `${name}, what's a moment in your life that really shaped who you are today?`,
+    );
+  }
+
+  return questions[Math.floor(Math.random() * questions.length)];
+}
+
 function MapboxGlobeReveal({
   name,
   birthday,
@@ -302,7 +381,13 @@ function MapboxGlobeReveal({
   name: string;
   birthday: string;
   location: string;
-  onDone: () => void;
+  onDone: (globeData?: {
+    places: string[];
+    contacts: { name: string; relationship: string }[];
+    interests: string[];
+    whyHere: string[];
+    whyHereText: string;
+  }) => void;
   selectedPills: Set<string>;
   onTogglePill: (label: string) => void;
   onSubPhaseChange?: (subPhase: GlobeSubPhase) => void;
@@ -341,6 +426,20 @@ function MapboxGlobeReveal({
 
   // Why are you here
   const [whyHereText, setWhyHereText] = useState('');
+  const [whyHereSelections, setWhyHereSelections] = useState<Set<string>>(new Set());
+
+  const WHY_HERE_OPTIONS = [
+    { emoji: '📖', label: 'Preserve my life story' },
+    { emoji: '👨‍👩‍👧‍👦', label: 'Leave something for my family' },
+    { emoji: '💌', label: 'Send future messages to loved ones' },
+    { emoji: '🎁', label: 'Create gifts for special occasions' },
+    { emoji: '🧠', label: 'Capture memories before they fade' },
+    { emoji: '🌱', label: 'Reflect on my life journey' },
+    { emoji: '📸', label: 'Organize photos & stories' },
+    { emoji: '✍️', label: 'Write my autobiography' },
+    { emoji: '🕊️', label: 'Plan my digital legacy' },
+    { emoji: '💡', label: 'Something else entirely' },
+  ];
 
   // Fetch place suggestions from Mapbox
   const fetchPlaceSuggestions = useCallback(async (query: string) => {
@@ -539,8 +638,8 @@ function MapboxGlobeReveal({
     if (!map) return;
     globeSpinRef.current.spinning = true;
     globeSpinRef.current.lng = map.getCenter().lng;
-    // 10 seconds per revolution = 360/10 = 36 deg/s ≈ 0.6 deg/frame at 60fps
-    const degreesPerFrame = 36 / 60;
+    // 20 seconds per revolution = 360/20 = 18 deg/s ≈ 0.3 deg/frame at 60fps
+    const degreesPerFrame = 18 / 60;
     const rotate = () => {
       if (!globeSpinRef.current.spinning || !mapRef.current) return;
       globeSpinRef.current.lng += degreesPerFrame;
@@ -606,26 +705,31 @@ function MapboxGlobeReveal({
     }
   }, [contactEntries]);
 
-  // Save why-here as a memory
+  // Save why-here as a memory (selections + freeform text)
   const saveWhyHere = useCallback(async () => {
-    if (!whyHereText.trim()) return;
+    const selections = Array.from(whyHereSelections);
+    if (!whyHereText.trim() && selections.length === 0) return;
     try {
       const { createClient } = await import('@/lib/supabase/client');
       const supabase = createClient();
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return;
 
+      const parts: string[] = [];
+      if (selections.length > 0) parts.push('Goals: ' + selections.join(', '));
+      if (whyHereText.trim()) parts.push(whyHereText.trim());
+
       await supabase.from('memories').insert({
         user_id: user.id,
         title: 'Why I\'m Here',
-        description: whyHereText,
+        description: parts.join('\n\n'),
         memory_date: new Date().toISOString(),
-        tags: ['onboarding', 'why-here', 'reflection'],
+        tags: ['onboarding', 'why-here', 'reflection', ...selections.map(s => s.toLowerCase().replace(/[^a-z0-9]+/g, '-'))],
       });
     } catch (err) {
       console.error('Failed to save why-here:', err);
     }
-  }, [whyHereText]);
+  }, [whyHereText, whyHereSelections]);
 
   // Notify parent of sub-phase changes for progress bar
   useEffect(() => {
@@ -1089,44 +1193,43 @@ function MapboxGlobeReveal({
               <h3>Family, Friends & Loved Ones</h3>
               <p>Add the people who matter most</p>
             </div>
-            <div className="globe-side-panel-items" style={{ gap: '0', padding: '8px 20px' }}>
-              {/* Added contacts list */}
+            <div className="globe-side-panel-items" style={{ gap: '0', padding: '8px 16px', overflowY: 'auto' }}>
+              {/* Existing contact rows — each is a clean name + relation row */}
               {contactEntries.map((entry, i) => (
-                <div key={i} style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'space-between',
-                  padding: '10px 0',
-                  borderBottom: '1px solid rgba(0,0,0,0.06)',
-                }}>
-                  <div>
-                    <span style={{ fontWeight: 600, fontSize: '15px', color: '#2d2d2d' }}>{entry.name}</span>
-                    <span style={{ fontSize: '13px', color: 'rgba(45,45,45,0.5)', marginLeft: '8px' }}>{entry.relationship}</span>
+                <div key={i} className="contact-entry-row">
+                  <div className="contact-entry-info">
+                    <span className="contact-entry-name">{entry.name}</span>
+                    <span className="contact-entry-relation">{entry.relationship}</span>
                   </div>
                   <button
+                    className="contact-entry-remove"
                     onClick={() => setContactEntries(prev => prev.filter((_, idx) => idx !== i))}
-                    style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#999', fontSize: '16px' }}
                   >×</button>
                 </div>
               ))}
 
-              {/* Add contact form */}
-              <div style={{ padding: '12px 0', display: 'flex', flexDirection: 'column', gap: '8px' }}>
+              {/* Add new person row — inline name + relation + add button */}
+              <div className="contact-add-row">
                 <input
                   type="text"
                   value={contactName}
                   onChange={(e) => setContactName(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' && contactName.trim() && contactRelation) {
+                      setContactEntries(prev => [...prev, { name: contactName.trim(), relationship: contactRelation }]);
+                      setContactName('');
+                      setContactRelation('');
+                    }
+                  }}
                   placeholder="Name"
-                  className="globe-custom-input"
-                  style={{ width: '100%' }}
+                  className="contact-add-input contact-add-name"
                 />
                 <select
                   value={contactRelation}
                   onChange={(e) => setContactRelation(e.target.value)}
-                  className="globe-custom-input"
-                  style={{ width: '100%', appearance: 'auto' }}
+                  className="contact-add-input contact-add-select"
                 >
-                  <option value="">Relationship...</option>
+                  <option value="">Relation</option>
                   {RELATIONSHIP_OPTIONS.map(cat => (
                     <optgroup key={cat.category} label={cat.category}>
                       {cat.options.map(opt => (
@@ -1136,9 +1239,8 @@ function MapboxGlobeReveal({
                   ))}
                 </select>
                 <button
-                  className="globe-custom-add-btn"
+                  className="contact-add-btn"
                   disabled={!contactName.trim() || !contactRelation}
-                  style={{ width: '100%', borderRadius: '12px', height: '42px', fontSize: '15px', display: 'flex', gap: '6px' }}
                   onClick={() => {
                     if (contactName.trim() && contactRelation) {
                       setContactEntries(prev => [...prev, { name: contactName.trim(), relationship: contactRelation }]);
@@ -1147,7 +1249,7 @@ function MapboxGlobeReveal({
                     }
                   }}
                 >
-                  + Add Person
+                  +
                 </button>
               </div>
             </div>
@@ -1251,27 +1353,51 @@ function MapboxGlobeReveal({
           >
             <div className="globe-side-panel-header" style={{ textAlign: 'center' }}>
               <h3>Why are you here? 💭</h3>
-              <p>What brought you to YoursTruly? What do you hope to preserve?</p>
+              <p>What brought you to YoursTruly?</p>
             </div>
-            <div style={{ flex: 1, padding: '16px 24px', display: 'flex', flexDirection: 'column' }}>
+            <div style={{ flex: 1, padding: '12px 20px', display: 'flex', flexDirection: 'column', gap: '12px', overflowY: 'auto' }}>
+              {/* Selectable option pills */}
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
+                {WHY_HERE_OPTIONS.map(opt => {
+                  const isSelected = whyHereSelections.has(opt.label);
+                  return (
+                    <button
+                      key={opt.label}
+                      className={`globe-pill ${isSelected ? 'selected' : ''}`}
+                      onClick={() => {
+                        setWhyHereSelections(prev => {
+                          const next = new Set(prev);
+                          if (next.has(opt.label)) next.delete(opt.label);
+                          else next.add(opt.label);
+                          return next;
+                        });
+                      }}
+                    >
+                      <span>{opt.emoji}</span>
+                      <span>{opt.label}</span>
+                      {isSelected && <Check size={14} />}
+                    </button>
+                  );
+                })}
+              </div>
+              {/* Freeform text */}
               <textarea
                 value={whyHereText}
                 onChange={(e) => setWhyHereText(e.target.value)}
-                placeholder="I'm here because..."
+                placeholder="Anything else you'd like to share..."
                 style={{
-                  flex: 1,
                   width: '100%',
-                  padding: '16px',
-                  borderRadius: '16px',
+                  padding: '14px',
+                  borderRadius: '14px',
                   border: '1.5px solid rgba(0,0,0,0.1)',
                   background: 'rgba(0,0,0,0.02)',
-                  fontSize: '15px',
+                  fontSize: '14px',
                   color: '#2d2d2d',
                   outline: 'none',
                   resize: 'none',
                   fontFamily: 'inherit',
-                  lineHeight: '1.6',
-                  minHeight: '120px',
+                  lineHeight: '1.5',
+                  minHeight: '80px',
                 }}
                 onFocus={(e) => { e.target.style.borderColor = '#406A56'; }}
                 onBlur={(e) => { e.target.style.borderColor = 'rgba(0,0,0,0.1)'; }}
@@ -1283,10 +1409,16 @@ function MapboxGlobeReveal({
                 onClick={async () => {
                   await saveWhyHere();
                   globeSpinRef.current.spinning = false;
-                  onDone();
+                  onDone({
+                    places: placesAdded.map(p => p.city.split(',')[0].trim()),
+                    contacts: contactEntries,
+                    interests: Array.from(selectedPills),
+                    whyHere: Array.from(whyHereSelections),
+                    whyHereText,
+                  });
                 }}
               >
-                {whyHereText.trim() ? 'Continue' : 'Skip'} <ChevronRight size={18} />
+                {(whyHereText.trim() || whyHereSelections.size > 0) ? 'Continue' : 'Skip'} <ChevronRight size={18} />
               </button>
             </div>
           </motion.div>
@@ -1690,6 +1822,115 @@ function MapboxGlobeReveal({
           cursor: default;
         }
 
+        /* Contact entry rows */
+        .contact-entry-row {
+          display: flex;
+          align-items: center;
+          gap: 12px;
+          padding: 10px 12px;
+          border-radius: 12px;
+          background: rgba(64, 106, 86, 0.05);
+          margin-bottom: 6px;
+          transition: background 0.15s;
+        }
+        .contact-entry-row:hover {
+          background: rgba(64, 106, 86, 0.1);
+        }
+        .contact-entry-info {
+          flex: 1;
+          min-width: 0;
+          display: flex;
+          align-items: baseline;
+          gap: 8px;
+        }
+        .contact-entry-name {
+          font-weight: 600;
+          font-size: 15px;
+          color: #2d2d2d;
+          white-space: nowrap;
+          overflow: hidden;
+          text-overflow: ellipsis;
+        }
+        .contact-entry-relation {
+          font-size: 13px;
+          color: rgba(45, 45, 45, 0.5);
+          white-space: nowrap;
+        }
+        .contact-entry-remove {
+          background: none;
+          border: none;
+          cursor: pointer;
+          color: #bbb;
+          font-size: 18px;
+          line-height: 1;
+          padding: 4px;
+          border-radius: 8px;
+          transition: color 0.15s, background 0.15s;
+          flex-shrink: 0;
+        }
+        .contact-entry-remove:hover {
+          color: #e53e3e;
+          background: rgba(229, 62, 62, 0.08);
+        }
+
+        /* Add contact row */
+        .contact-add-row {
+          display: flex;
+          gap: 8px;
+          align-items: center;
+          padding: 8px 0;
+          margin-top: 4px;
+          border-top: 1px solid rgba(0,0,0,0.06);
+        }
+        .contact-add-input {
+          flex: 1;
+          height: 40px;
+          padding: 0 12px;
+          border-radius: 12px;
+          border: 1.5px solid rgba(0,0,0,0.1);
+          background: rgba(0,0,0,0.02);
+          font-size: 14px;
+          color: #2d2d2d;
+          outline: none;
+          font-family: inherit;
+          transition: border-color 0.2s;
+        }
+        .contact-add-input:focus {
+          border-color: #406A56;
+        }
+        .contact-add-name {
+          flex: 1.2;
+          min-width: 0;
+        }
+        .contact-add-select {
+          flex: 1;
+          min-width: 0;
+          appearance: auto;
+        }
+        .contact-add-btn {
+          width: 40px;
+          height: 40px;
+          border-radius: 12px;
+          border: none;
+          background: #406A56;
+          color: white;
+          font-size: 22px;
+          font-weight: 600;
+          cursor: pointer;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          flex-shrink: 0;
+          transition: background 0.2s;
+        }
+        .contact-add-btn:hover {
+          background: #4a7a64;
+        }
+        .contact-add-btn:disabled {
+          opacity: 0.4;
+          cursor: default;
+        }
+
         /* Mobile: floating panels go full-width centered */
         @media (max-width: 640px) {
           .globe-floating-panel {
@@ -1747,6 +1988,14 @@ export function QuickOnboardingFlow({
   
   const [step, setStep] = useState<QuickStep>(savedProgress?.step || 'birth-info');
   const [direction, setDirection] = useState<1 | -1>(1);
+  // Globe-collected data for heartfelt question generation
+  const [globeCollected, setGlobeCollected] = useState<{
+    places: string[];
+    contacts: { name: string; relationship: string }[];
+    interests: string[];
+    whyHere: string[];
+    whyHereText: string;
+  }>({ places: [], contacts: [], interests: [], whyHere: [], whyHereText: '' });
   const [data, setData] = useState<OnboardingData>(savedProgress?.data || {
     name: initialName || '',
     birthday: '',
@@ -1909,11 +2158,11 @@ export function QuickOnboardingFlow({
           name={data.name}
           birthday={data.birthday}
           location={data.location || 'somewhere beautiful'}
-          onDone={() => {
+          onDone={(gd) => {
             commitPills();
-            // Skip past interests, traits, why-here steps (now embedded in globe)
-            // Jump straight to religion (next standalone step after globe)
-            setStep('religion');
+            if (gd) setGlobeCollected(gd);
+            // Skip past embedded globe steps, jump to heartfelt
+            setStep('heartfelt');
             setDirection(1);
           }}
           selectedPills={selectedPills}
@@ -2070,11 +2319,13 @@ export function QuickOnboardingFlow({
                       userName={data.name}
                       userProfile={{
                         interests: data.interests || [],
-                        religion: data.religion || undefined,
                         location: data.location || undefined,
                         whyHere: data.background || undefined,
+                        contacts: globeCollected.contacts.map(c => c.name),
+                        whyHereSelections: globeCollected.whyHere,
+                        placesLived: globeCollected.places,
                       }}
-                      initialMessage={`${data.name}, what's a moment in your life that really shaped who you are today?`}
+                      initialMessage={generateHeartfeltQuestion(data.name, globeCollected)}
                       onComplete={(state) => {
                         updateData({
                           heartfeltAnswer: state.messages
