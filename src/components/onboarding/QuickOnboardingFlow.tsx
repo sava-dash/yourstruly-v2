@@ -945,11 +945,11 @@ function MapboxGlobeReveal({
         )}
       </AnimatePresence>
 
-      {/* ── Phase: Places Lived — info card (bottom) ── */}
+      {/* ── Phase: Places Lived — location input card (bottom center) ── */}
       <AnimatePresence>
         {(phase === 'places-lived' || phase === 'places-flying') && (
           <motion.div
-            key="places-lived-info-bottom"
+            key="places-lived-bottom"
             className="globe-bottom-panel"
             initial={{ opacity: 0, y: 80 }}
             animate={{ opacity: 1, y: 0 }}
@@ -960,155 +960,154 @@ function MapboxGlobeReveal({
               <div className="globe-welcome-bar" />
               <div className="globe-welcome-body">
                 <p className="globe-welcome-greeting">Your life journey 🌍</p>
-                <h2 className="globe-welcome-headline" style={{ fontSize: '18px', lineHeight: '1.5' }}>
+                <h2 className="globe-welcome-headline" style={{ fontSize: '20px' }}>
                   {placesAdded.length === 0
-                    ? 'Every place you\'ve lived holds a piece of your story.'
-                    : `${placesAdded.length} place${placesAdded.length !== 1 ? 's' : ''} added — anywhere else?`}
+                    ? 'Have you lived anywhere else?'
+                    : 'Anywhere else?'}
                 </h2>
-              </div>
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
 
-      {/* ── Places Lived panel — floating on the right ── */}
-      <AnimatePresence>
-        {(phase === 'places-lived' || phase === 'places-flying') && (
-          <motion.div
-            key="places-panel"
-            className="globe-floating-panel globe-floating-right globe-panel-wide"
-            initial={{ x: '120%', opacity: 0 }}
-            animate={{ x: 0, opacity: 1 }}
-            exit={{ x: '120%', opacity: 0 }}
-            transition={{ type: 'spring', stiffness: 260, damping: 28 }}
-          >
-            <div className="globe-side-panel-header">
-              <h3>{placesAdded.length === 0 ? 'Have you lived anywhere else?' : 'Anywhere else?'}</h3>
-              <p>Add the places that shaped your story</p>
-            </div>
-            <div className="globe-side-panel-items" style={{ gap: '0', padding: '8px 16px', overflowY: 'auto', flexDirection: 'column', flexWrap: 'nowrap' }}>
-              {/* Already-added places */}
-              {placesAdded.map((p, i) => (
-                <div key={i} className="contact-entry-row">
-                  <div className="contact-entry-info">
-                    <span className="contact-entry-name">{p.city.split(',')[0]}</span>
-                    {p.when && <span className="contact-entry-relation">{p.when}</span>}
-                  </div>
+                {/* Location input with autocomplete */}
+                <div style={{ marginTop: '12px', position: 'relative' }}>
+                  <input
+                    type="text"
+                    value={placeInput}
+                    onChange={(e) => handlePlaceInputChange(e.target.value)}
+                    placeholder="City or town name..."
+                    disabled={phase === 'places-flying'}
+                    style={{
+                      width: '100%',
+                      padding: '12px 16px',
+                      borderRadius: '12px',
+                      border: '1.5px solid rgba(0,0,0,0.1)',
+                      background: 'rgba(0,0,0,0.02)',
+                      fontSize: '15px',
+                      color: '#2d2d2d',
+                      outline: 'none',
+                    }}
+                    onFocus={(e) => { e.target.style.borderColor = '#406A56'; }}
+                    onBlur={(e) => { e.target.style.borderColor = 'rgba(0,0,0,0.1)'; }}
+                  />
+                  {/* Suggestions dropdown */}
+                  {placeSuggestions.length > 0 && (
+                    <div style={{
+                      position: 'absolute',
+                      top: '100%',
+                      left: 0,
+                      right: 0,
+                      marginTop: '4px',
+                      background: 'white',
+                      borderRadius: '12px',
+                      boxShadow: '0 8px 24px rgba(0,0,0,0.15)',
+                      border: '1px solid rgba(0,0,0,0.06)',
+                      zIndex: 30,
+                      overflow: 'hidden',
+                    }}>
+                      {placeSuggestions.map((s, i) => (
+                        <button
+                          key={i}
+                          onClick={() => {
+                            setPlaceInput(s.place_name);
+                            setPlaceSuggestions([]);
+                          }}
+                          style={{
+                            width: '100%',
+                            padding: '10px 16px',
+                            border: 'none',
+                            background: 'none',
+                            textAlign: 'left',
+                            fontSize: '14px',
+                            color: '#2d2d2d',
+                            cursor: 'pointer',
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '8px',
+                          }}
+                          onMouseEnter={(e) => { e.currentTarget.style.background = 'rgba(64,106,86,0.06)'; }}
+                          onMouseLeave={(e) => { e.currentTarget.style.background = 'none'; }}
+                        >
+                          <MapPin size={14} color="#406A56" />
+                          {s.place_name}
+                        </button>
+                      ))}
+                    </div>
+                  )}
                 </div>
-              ))}
 
-              {/* Location input with autocomplete */}
-              <div style={{ marginTop: '8px', position: 'relative' }}>
+                {/* When field */}
                 <input
                   type="text"
-                  value={placeInput}
-                  onChange={(e) => handlePlaceInputChange(e.target.value)}
-                  placeholder="City or town name..."
+                  value={placeWhen}
+                  onChange={(e) => setPlaceWhen(e.target.value)}
+                  placeholder="When did you move there? (e.g. Summer 2015)"
                   disabled={phase === 'places-flying'}
-                  className="contact-add-input"
-                  style={{ width: '100%', height: 'auto', padding: '12px 16px', borderRadius: '12px', fontSize: '15px' }}
-                />
-                {/* Suggestions dropdown */}
-                {placeSuggestions.length > 0 && (
-                  <div style={{
-                    position: 'absolute',
-                    top: '100%',
-                    left: 0,
-                    right: 0,
-                    marginTop: '4px',
-                    background: 'white',
+                  style={{
+                    width: '100%',
+                    padding: '12px 16px',
                     borderRadius: '12px',
-                    boxShadow: '0 8px 24px rgba(0,0,0,0.15)',
-                    border: '1px solid rgba(0,0,0,0.06)',
-                    zIndex: 30,
-                    overflow: 'hidden',
-                  }}>
-                    {placeSuggestions.map((s, i) => (
-                      <button
-                        key={i}
-                        onClick={() => {
-                          setPlaceInput(s.place_name);
-                          setPlaceSuggestions([]);
-                        }}
-                        style={{
-                          width: '100%',
-                          padding: '10px 16px',
-                          border: 'none',
-                          background: 'none',
-                          textAlign: 'left',
-                          fontSize: '14px',
-                          color: '#2d2d2d',
-                          cursor: 'pointer',
-                          display: 'flex',
-                          alignItems: 'center',
-                          gap: '8px',
-                        }}
-                        onMouseEnter={(e) => { e.currentTarget.style.background = 'rgba(64,106,86,0.06)'; }}
-                        onMouseLeave={(e) => { e.currentTarget.style.background = 'none'; }}
-                      >
-                        <MapPin size={14} color="#406A56" />
-                        {s.place_name}
-                      </button>
-                    ))}
-                  </div>
+                    border: '1.5px solid rgba(0,0,0,0.1)',
+                    background: 'rgba(0,0,0,0.02)',
+                    fontSize: '15px',
+                    color: '#2d2d2d',
+                    outline: 'none',
+                    marginTop: '8px',
+                  }}
+                  onFocus={(e) => { e.target.style.borderColor = '#406A56'; }}
+                  onBlur={(e) => { e.target.style.borderColor = 'rgba(0,0,0,0.1)'; }}
+                />
+
+                {/* Added places count */}
+                {placesAdded.length > 0 && (
+                  <p style={{ fontSize: '13px', color: 'rgba(45,45,45,0.5)', marginTop: '8px' }}>
+                    📍 {placesAdded.length} place{placesAdded.length !== 1 ? 's' : ''} added
+                  </p>
                 )}
               </div>
 
-              {/* When field */}
-              <input
-                type="text"
-                value={placeWhen}
-                onChange={(e) => setPlaceWhen(e.target.value)}
-                placeholder="When? (e.g. Summer 2015)"
-                disabled={phase === 'places-flying'}
-                className="contact-add-input"
-                style={{ width: '100%', height: 'auto', padding: '12px 16px', borderRadius: '12px', fontSize: '15px', marginTop: '8px' }}
-              />
-            </div>
-            <div className="globe-side-panel-footer">
-              {phase === 'places-flying' ? (
-                <div className="globe-continue-btn" style={{ opacity: 0.7, justifyContent: 'center' }}>
-                  <div className="loading-dot" style={{ width: 16, height: 16 }} /> Flying there...
-                </div>
-              ) : (
-                <>
-                  <button
-                    className="globe-continue-btn"
-                    disabled={!placeInput.trim()}
-                    style={{ opacity: placeInput.trim() ? 1 : 0.4 }}
-                    onClick={() => {
-                      const match = placeSuggestions.find(s => s.place_name === placeInput);
-                      handleAddPlace(placeInput, match?.center);
-                    }}
-                  >
-                    {placesAdded.length === 0 ? 'Add Place' : 'Add Another'} <ChevronRight size={18} />
-                  </button>
-                  <button
-                    onClick={spinOutAndContinue}
-                    style={{
-                      padding: '10px',
-                      border: 'none',
-                      background: 'none',
-                      color: placesAdded.length > 0 ? '#406A56' : 'rgba(45,45,45,0.5)',
-                      fontSize: '14px',
-                      fontWeight: 600,
-                      cursor: 'pointer',
-                      textAlign: 'center',
-                      width: '100%',
-                    }}
-                  >
-                    {placesAdded.length > 0 ? "I'm done" : 'Skip'}
-                  </button>
-                </>
-              )}
+              {/* Buttons */}
+              <div style={{ padding: '0 24px 20px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                {phase === 'places-flying' ? (
+                  <div className="globe-continue-btn" style={{ opacity: 0.7, justifyContent: 'center' }}>
+                    <div className="loading-dot" style={{ width: 16, height: 16 }} /> Flying there...
+                  </div>
+                ) : (
+                  <>
+                    <button
+                      className="globe-continue-btn"
+                      disabled={!placeInput.trim()}
+                      style={{ opacity: placeInput.trim() ? 1 : 0.4, margin: 0, width: '100%' }}
+                      onClick={() => {
+                        const match = placeSuggestions.find(s => s.place_name === placeInput);
+                        handleAddPlace(placeInput, match?.center);
+                      }}
+                    >
+                      {placesAdded.length === 0 ? 'Add Place' : 'Add Another'} <ChevronRight size={18} />
+                    </button>
+                    <button
+                      onClick={spinOutAndContinue}
+                      style={{
+                        padding: '12px',
+                        border: 'none',
+                        background: 'none',
+                        color: placesAdded.length > 0 ? '#406A56' : 'rgba(45,45,45,0.5)',
+                        fontSize: '15px',
+                        fontWeight: 600,
+                        cursor: 'pointer',
+                        textAlign: 'center',
+                      }}
+                    >
+                      {placesAdded.length > 0 ? "I'm done" : 'Skip'}
+                    </button>
+                  </>
+                )}
+              </div>
             </div>
           </motion.div>
         )}
       </AnimatePresence>
 
-      {/* ── Persistent Summary Panel — floating LEFT ── */}
+      {/* ── Persistent Summary Panel — floating LEFT (only show collected data, hide at lets-go) ── */}
       <AnimatePresence>
-        {(phase === 'places-lived' || phase === 'places-flying' || phase === 'globe-spin-out' || phase === 'adventure-message' || phase === 'contacts' || phase === 'interests' || phase === 'why-here' || phase === 'lets-go') && (
+        {(phase === 'places-lived' || phase === 'places-flying' || phase === 'globe-spin-out' || phase === 'adventure-message' || phase === 'contacts' || phase === 'interests' || phase === 'why-here') && (
           <motion.div
             key="summary-panel"
             className="globe-floating-panel globe-floating-left globe-summary-panel"
@@ -1121,33 +1120,39 @@ function MapboxGlobeReveal({
               <h3 style={{ fontSize: '18px' }}>📋 Your Story So Far</h3>
             </div>
             <div className="summary-panel-content">
-              {/* Name */}
-              <div className="summary-section">
-                <div className="summary-label">👤 Name</div>
-                <div className="summary-value">{name || <span className="summary-empty">—</span>}</div>
-              </div>
-
-              {/* Birthday */}
-              <div className="summary-section">
-                <div className="summary-label">🎂 Birthday</div>
-                <div className="summary-value">
-                  {birthday ? (() => {
-                    const d = new Date(birthday + 'T00:00:00');
-                    return d.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
-                  })() : <span className="summary-empty">—</span>}
+              {/* Name — always show (we always have it at this point) */}
+              {name && (
+                <div className="summary-section">
+                  <div className="summary-label">👤 Name</div>
+                  <div className="summary-value">{name}</div>
                 </div>
-              </div>
+              )}
 
-              {/* Birthplace */}
-              <div className="summary-section">
-                <div className="summary-label">📍 Born in</div>
-                <div className="summary-value">{location || <span className="summary-empty">—</span>}</div>
-              </div>
+              {/* Birthday — always show (collected in birth-info step) */}
+              {birthday && (
+                <div className="summary-section">
+                  <div className="summary-label">🎂 Birthday</div>
+                  <div className="summary-value">
+                    {(() => {
+                      const d = new Date(birthday + 'T00:00:00');
+                      return d.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
+                    })()}
+                  </div>
+                </div>
+              )}
 
-              {/* Places Lived */}
-              <div className="summary-section">
-                <div className="summary-label">🗺️ Places Lived</div>
-                {placesAdded.length > 0 ? (
+              {/* Birthplace — always show (collected in birth-info step) */}
+              {location && (
+                <div className="summary-section">
+                  <div className="summary-label">📍 Born in</div>
+                  <div className="summary-value">{location}</div>
+                </div>
+              )}
+
+              {/* Places Lived — only show once user has added at least one */}
+              {placesAdded.length > 0 && (
+                <div className="summary-section">
+                  <div className="summary-label">🗺️ Places Lived</div>
                   <div className="summary-list">
                     {placesAdded.map((p, i) => (
                       <div key={i} className="summary-list-item">
@@ -1156,15 +1161,13 @@ function MapboxGlobeReveal({
                       </div>
                     ))}
                   </div>
-                ) : (
-                  <div className="summary-value"><span className="summary-empty">Not yet added</span></div>
-                )}
-              </div>
+                </div>
+              )}
 
-              {/* Close People */}
-              <div className="summary-section">
-                <div className="summary-label">👥 Close People</div>
-                {contactEntries.length > 0 ? (
+              {/* Close People — only show once user has added at least one */}
+              {contactEntries.length > 0 && (
+                <div className="summary-section">
+                  <div className="summary-label">👥 Close People</div>
                   <div className="summary-list">
                     {contactEntries.map((c, i) => (
                       <div key={i} className="summary-list-item">
@@ -1172,15 +1175,13 @@ function MapboxGlobeReveal({
                       </div>
                     ))}
                   </div>
-                ) : (
-                  <div className="summary-value"><span className="summary-empty">Not yet added</span></div>
-                )}
-              </div>
+                </div>
+              )}
 
-              {/* Interests */}
-              <div className="summary-section">
-                <div className="summary-label">💛 Interests</div>
-                {selectedPills.size > 0 ? (
+              {/* Interests — only show once user has selected at least one */}
+              {selectedPills.size > 0 && (
+                <div className="summary-section">
+                  <div className="summary-label">💛 Interests</div>
                   <div className="summary-pills">
                     {Array.from(selectedPills).slice(0, 8).map(label => (
                       <span key={label} className="summary-pill">{label}</span>
@@ -1189,22 +1190,18 @@ function MapboxGlobeReveal({
                       <span className="summary-pill summary-pill-more">+{selectedPills.size - 8}</span>
                     )}
                   </div>
-                ) : (
-                  <div className="summary-value"><span className="summary-empty">Not yet added</span></div>
-                )}
-              </div>
+                </div>
+              )}
 
-              {/* Why I'm Here */}
-              <div className="summary-section">
-                <div className="summary-label">💭 Why I&apos;m Here</div>
-                {(whyHereSelections.size > 0 || whyHereText.trim()) ? (
+              {/* Why I'm Here — only show once user has answered */}
+              {(whyHereSelections.size > 0 || whyHereText.trim()) && (
+                <div className="summary-section">
+                  <div className="summary-label">💭 Why I&apos;m Here</div>
                   <div className="summary-value" style={{ fontSize: '12px', lineHeight: '1.4' }}>
                     {whyHereText.trim() || Array.from(whyHereSelections).join(', ')}
                   </div>
-                ) : (
-                  <div className="summary-value"><span className="summary-empty">Not yet answered</span></div>
-                )}
-              </div>
+                </div>
+              )}
             </div>
           </motion.div>
         )}
@@ -2588,11 +2585,23 @@ export function QuickOnboardingFlow({
   const progressPercent = step === 'ready' ? 100 : ((progressIdx + 1) / PROGRESS_STEPS.length) * 100;
   const tileKey = TILE_KEY[step];
 
-  // Full-screen globe step — with progress bar overlay
+  // Unified progress steps: birth-info (done) + globe sub-steps + post-globe steps
+  const UNIFIED_STEPS: { key: string; label: string }[] = [
+    { key: 'birth-info', label: 'Basics' },
+    ...GLOBE_SUB_STEPS.map(s => ({ key: `globe-${s.key}`, label: s.label })),
+    { key: 'heartfelt', label: 'Reflect' },
+    { key: 'image-upload', label: 'Photos' },
+    { key: 'ready', label: 'Done' },
+  ];
+
+  // Full-screen globe step — with unified progress bar overlay
   if (step === 'globe') {
+    // birth-info is always done (index 0), globe sub-steps start at index 1
+    const unifiedCurrentIdx = 1 + globeSubIdx; // 1 = birth-info offset
+
     return (
       <>
-        {/* Globe sub-step progress bar */}
+        {/* Unified progress bar */}
         <div style={{
           position: 'fixed',
           top: 0,
@@ -2602,28 +2611,28 @@ export function QuickOnboardingFlow({
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
-          gap: '6px',
-          padding: '16px 24px 12px',
+          gap: '4px',
+          padding: '16px 20px 12px',
           background: 'linear-gradient(to bottom, rgba(8, 8, 18, 0.7) 60%, transparent)',
         }}>
-          {GLOBE_SUB_STEPS.map((s, i) => {
-            const isCompleted = i < globeSubIdx;
-            const isCurrent = i === globeSubIdx;
+          {UNIFIED_STEPS.map((s, i) => {
+            const isCompleted = i < unifiedCurrentIdx;
+            const isCurrent = i === unifiedCurrentIdx;
             return (
-              <div key={s.key} style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+              <div key={s.key} style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
                 <div style={{
                   display: 'flex',
                   alignItems: 'center',
-                  gap: '6px',
+                  gap: '4px',
                 }}>
                   <div style={{
-                    width: 22,
-                    height: 22,
+                    width: 20,
+                    height: 20,
                     borderRadius: '50%',
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center',
-                    fontSize: 10,
+                    fontSize: 9,
                     fontWeight: 700,
                     border: `2px solid ${isCompleted || isCurrent ? 'rgba(255,255,255,0.8)' : 'rgba(255,255,255,0.25)'}`,
                     color: isCompleted ? '#080812' : isCurrent ? 'white' : 'rgba(255,255,255,0.3)',
@@ -2631,20 +2640,21 @@ export function QuickOnboardingFlow({
                     flexShrink: 0,
                     transition: 'all 0.3s ease',
                   }}>
-                    {isCompleted ? <Check size={11} strokeWidth={3} /> : i + 1}
+                    {isCompleted ? <Check size={10} strokeWidth={3} /> : i + 1}
                   </div>
                   <span style={{
-                    fontSize: '12px',
+                    fontSize: '11px',
                     fontWeight: isCurrent ? 600 : 400,
                     color: isCompleted || isCurrent ? 'rgba(255,255,255,0.85)' : 'rgba(255,255,255,0.35)',
                     transition: 'all 0.3s ease',
+                    whiteSpace: 'nowrap',
                   }}>
                     {s.label}
                   </span>
                 </div>
-                {i < GLOBE_SUB_STEPS.length - 1 && (
+                {i < UNIFIED_STEPS.length - 1 && (
                   <div style={{
-                    width: 24,
+                    width: 16,
                     height: 2,
                     background: isCompleted ? 'rgba(255,255,255,0.6)' : 'rgba(255,255,255,0.15)',
                     transition: 'background 0.3s ease',
@@ -2718,17 +2728,26 @@ export function QuickOnboardingFlow({
       <div className="home-blob home-blob-1" />
       <div className="home-blob home-blob-2" />
 
-      {/* Stepwise Progress Bar */}
+      {/* Unified Progress Bar (same steps as globe view) */}
       <div className="step-progress-bar">
-        {PROGRESS_STEPS.map((s, i) => {
-          const isCompleted = i < progressIdx;
-          const isCurrent = i === progressIdx;
+        {UNIFIED_STEPS.map((s, i) => {
+          // Map current non-globe step to unified index
+          const unifiedCurrentIdx = (() => {
+            if (step === 'birth-info') return 0;
+            // Globe sub-steps all done if we're past globe
+            if (step === 'heartfelt') return UNIFIED_STEPS.length - 3;
+            if (step === 'image-upload') return UNIFIED_STEPS.length - 2;
+            if (step === 'ready') return UNIFIED_STEPS.length - 1;
+            return 0;
+          })();
+          const isCompleted = i < unifiedCurrentIdx;
+          const isCurrent = i === unifiedCurrentIdx;
           return (
-            <div key={s} className="step-progress-item">
+            <div key={s.key} className="step-progress-item">
               <div className={`step-dot ${isCompleted ? 'step-completed' : ''} ${isCurrent ? 'step-current' : ''}`}>
                 {isCompleted && <Check size={10} strokeWidth={3} />}
               </div>
-              {i < PROGRESS_STEPS.length - 1 && (
+              {i < UNIFIED_STEPS.length - 1 && (
                 <div className={`step-line ${isCompleted ? 'step-line-done' : ''}`} />
               )}
             </div>
@@ -2912,13 +2931,13 @@ export function QuickOnboardingFlow({
         }
 
         .step-dot {
-          width: 24px;
-          height: 24px;
+          width: 18px;
+          height: 18px;
           border-radius: 50%;
           display: flex;
           align-items: center;
           justify-content: center;
-          font-size: 11px;
+          font-size: 9px;
           font-weight: 700;
           border: 2px solid rgba(64, 106, 86, 0.2);
           color: rgba(64, 106, 86, 0.35);
@@ -2931,7 +2950,7 @@ export function QuickOnboardingFlow({
           border-color: #406A56;
           color: #406A56;
           background: rgba(64, 106, 86, 0.08);
-          box-shadow: 0 0 0 4px rgba(64, 106, 86, 0.1);
+          box-shadow: 0 0 0 3px rgba(64, 106, 86, 0.1);
         }
 
         .step-dot.step-completed {
@@ -2945,7 +2964,7 @@ export function QuickOnboardingFlow({
         }
 
         .step-line {
-          width: 20px;
+          width: 12px;
           height: 2px;
           background: rgba(64, 106, 86, 0.15);
           transition: background 0.3s ease;
@@ -2957,15 +2976,15 @@ export function QuickOnboardingFlow({
 
         @media (max-width: 480px) {
           .step-progress-bar {
-            padding: 12px 16px 10px;
+            padding: 12px 12px 10px;
           }
           .step-dot {
-            width: 20px;
-            height: 20px;
-            font-size: 9px;
+            width: 14px;
+            height: 14px;
+            font-size: 7px;
           }
           .step-line {
-            width: 12px;
+            width: 6px;
           }
         }
 
