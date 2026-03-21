@@ -1116,7 +1116,7 @@ function MapboxGlobeReveal({
             exit={{ x: '-120%', opacity: 0 }}
             transition={{ type: 'spring', stiffness: 260, damping: 28 }}
           >
-            <div className="globe-side-panel-header" style={{ paddingBottom: '12px' }}>
+            <div className="globe-side-panel-header" style={{ paddingBottom: '12px', paddingTop: '24px' }}>
               <h3 style={{ fontSize: '18px' }}>📋 Your Story So Far</h3>
             </div>
             <div className="summary-panel-content">
@@ -2348,12 +2348,13 @@ function MapboxGlobeReveal({
           width: min(300px, 25vw);
           overflow-y: auto;
           -webkit-overflow-scrolling: touch;
+          bottom: auto !important;
+          height: auto !important;
         }
 
         .summary-panel-content {
-          flex: 1;
           overflow-y: auto;
-          padding: 0 20px 20px;
+          padding: 4px 20px 20px;
           display: flex;
           flex-direction: column;
           gap: 14px;
