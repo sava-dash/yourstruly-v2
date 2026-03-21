@@ -31,6 +31,7 @@ export function useMemories(filters?: { contactId?: string; limit?: number }) {
         `)
         .eq('user_id', user.id)
         .is('deleted_at', null)
+        .neq('memory_type', 'onboarding_gallery')
         .order('created_at', { ascending: false })
 
       if (filters?.contactId) {

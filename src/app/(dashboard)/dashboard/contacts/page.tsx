@@ -445,32 +445,32 @@ export default function ContactsPage() {
               </button>
             </div>
           ) : (
-            <div className="cards-grid">
+            <div className="contacts-grid">
               {filteredContacts.map(contact => (
                 <div 
                   key={contact.id} 
-                  className="bubble-tile glass-card group cursor-pointer"
+                  className="contact-tile group cursor-pointer"
                   onClick={() => window.location.href = `/dashboard/contacts/${contact.id}`}
                 >
-                  <div className="bubble-content">
+                  <div className="contact-tile-inner">
                     <div className="flex items-start justify-between mb-3">
                       <div className="flex items-center gap-3">
-                        <div className="bubble-contact-avatar">
+                        <div className="contact-avatar">
                           {contact.full_name.charAt(0)}
                         </div>
                         <div>
-                          <h3 className="text-[#2d2d2d] font-semibold">{contact.full_name}</h3>
+                          <h3 className="contact-name">{contact.full_name}</h3>
                           <div className="flex items-center gap-1.5 flex-wrap mt-1">
-                            <span className={`bubble-type bubble-type-${getRelationshipColor(contact.relationship_type)} text-[10px]`}>
+                            <span className={`contact-badge contact-badge-${getRelationshipColor(contact.relationship_type)}`}>
                               {getRelationshipLabel(contact.relationship_type)}
                             </span>
                             {getContactCircles(contact).map(circle => (
                               <span 
                                 key={circle.circleId}
-                                className="inline-flex items-center gap-1 px-1.5 py-0.5 bg-[#D9C61A]/20 text-[#8B7B00] text-[10px] font-medium rounded-full"
+                                className="contact-circle-badge"
                                 title={`Member of ${circle.circleName} circle`}
                               >
-                                <Users size={10} />
+                                <Users size={11} />
                                 {circle.circleName}
                               </span>
                             ))}
@@ -479,35 +479,35 @@ export default function ContactsPage() {
                       </div>
                       <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity" onClick={(e) => e.stopPropagation()}>
                         <button onClick={() => { setEditingContact(contact); setShowContactModal(true) }} className="p-2 text-[#406A56]/50 hover:text-[#406A56] hover:bg-[#406A56]/10 rounded-lg transition-colors">
-                          <Edit2 size={14} />
+                          <Edit2 size={15} />
                         </button>
                         <button onClick={() => handleDeleteContact(contact.id)} className="p-2 text-[#406A56]/50 hover:text-[#C35F33] hover:bg-[#C35F33]/10 rounded-lg transition-colors">
-                          <Trash2 size={14} />
+                          <Trash2 size={15} />
                         </button>
                       </div>
                     </div>
-                    <div className="space-y-1.5 text-sm">
+                    <div className="contact-details">
                       {contact.date_of_birth && (
-                        <div className="flex items-center gap-2 text-[#666]">
-                          <Calendar size={13} className="text-[#406A56]" />
+                        <div className="contact-detail-row">
+                          <Calendar size={14} className="text-[#406A56]" />
                           <span>{formatDateNoTimezone(contact.date_of_birth, 'short')}</span>
                         </div>
                       )}
                       {contact.email && (
-                        <div className="flex items-center gap-2 text-[#666]">
-                          <Mail size={13} className="text-[#406A56]" />
+                        <div className="contact-detail-row">
+                          <Mail size={14} className="text-[#406A56]" />
                           <span className="truncate">{contact.email}</span>
                         </div>
                       )}
                       {contact.phone && (
-                        <div className="flex items-center gap-2 text-[#666]">
-                          <Phone size={13} className="text-[#406A56]" />
+                        <div className="contact-detail-row">
+                          <Phone size={14} className="text-[#406A56]" />
                           <span>{contact.phone}</span>
                         </div>
                       )}
                       {(contact.city || contact.country) && (
-                        <div className="flex items-center gap-2 text-[#888]">
-                          <MapPin size={13} className="text-[#406A56]" />
+                        <div className="contact-detail-row">
+                          <MapPin size={14} className="text-[#406A56]" />
                           <span>{[contact.city, contact.state, contact.country].filter(Boolean).join(', ')}</span>
                         </div>
                       )}
