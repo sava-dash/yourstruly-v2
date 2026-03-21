@@ -74,5 +74,90 @@ export async function GET() {
     challenges = inserted
   }
 
-  return NextResponse.json({ challenges, weekStart })
+  // Compute current_count from actual data for each challenge
+  const weekStartDate = `${weekStart}T00:00:00.000Z`
+  const now = new Date().toISOString()
+  
+  const enriched = await Promise.all((challenges || []).map(async (c: any) => {
+    let actualCount = c.current_count
+    try {
+      switch (c.challenge_type) {
+        case 'tag_faces': {
+          const { count } = await supabase
+            .from('memory_face_tags')
+            .select('id', { count: 'exact', head: true })
+            .eq('user_id', user.id)
+            .eq('is_confirmed', true)
+            .gte('confirmed_at', weekStartDate)
+          actualCount = count || 0
+          break
+        }
+        case 'record_voice': {
+          const { count } = await supabase
+            .from('memories')
+            .select('id', { count: 'exact', head: true })
+            .eq('user_id', user.id)
+            .not('audio_url', 'is', null)
+            .gte('created_at', weekStartDate)
+          actualCount = count || 0
+          break
+        }
+        case 'complete_prompts': {
+          const { count } = await supabase
+            .from('knowledge_entries')
+            .select('id', { count: 'exact', head: true })
+            .eq('user_id', user.id)
+            .gte('created_at', weekStartDate)
+          actualCount = count || 0
+          break
+        }
+        case 'add_photos': {
+          const { count } = await supabase
+            .from('memory_media')
+            .select('id', { count: 'exact', head: true })
+            .eq('user_id', user.id)
+            .eq('file_type', 'image')
+            .gte('created_at', weekStartDate)
+          actualCount = count || 0
+          break
+        }
+        case 'add_memories': {
+          const { count } = await supabase
+            .from('memories')
+            .select('id', { count: 'exact', head: true })
+            .eq('user_id', user.id)
+            .gte('created_at', weekStartDate)
+          actualCount = count || 0
+          break
+        }
+        case 'add_wisdom': {
+          const { count } = await supabase
+            .from('knowledge_entries')
+            .select('id', { count: 'exact', head: true })
+            .eq('user_id', user.id)
+            .gte('created_at', weekStartDate)
+          actualCount = count || 0
+          break
+        }
+      }
+    } catch {}
+
+    const completed = actualCount >= c.target_count
+    
+    // Update in DB if counts changed
+    if (actualCount !== c.current_count || completed !== c.completed) {
+      await supabase
+        .from('weekly_challenges')
+        .update({ 
+          current_count: actualCount,
+          completed,
+          completed_at: completed && !c.completed ? new Date().toISOString() : c.completed_at,
+        })
+        .eq('id', c.id)
+    }
+
+    return { ...c, current_count: actualCount, completed }
+  }))
+
+  return NextResponse.json({ challenges: enriched, weekStart })
 }

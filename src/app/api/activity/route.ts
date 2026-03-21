@@ -483,7 +483,7 @@ export async function GET(request: NextRequest) {
     }
   }
 
-  // 9. User's photo uploads (recent media)
+  // 9. User's photo uploads (recent media) — excluding onboarding gallery
   const { data: myPhotos } = await supabase
     .from('memory_media')
     .select(`
@@ -496,7 +496,8 @@ export async function GET(request: NextRequest) {
       memory:memories!memory_media_memory_id_fkey (
         id,
         title,
-        memory_date
+        memory_date,
+        memory_type
       )
     `)
     .eq('user_id', user.id)
@@ -511,6 +512,8 @@ export async function GET(request: NextRequest) {
       if (!memoryId) continue
       // Skip entries with invalid URLs (e.g. "text-only", "conversation")
       if (!photo.file_url?.startsWith('http')) continue
+      // Skip photos from onboarding gallery
+      if (memory?.memory_type === 'onboarding_gallery') continue
 
       // Use taken_at (EXIF date) > memory_date > created_at
       const photoDate = photo.taken_at || memory?.memory_date || photo.created_at

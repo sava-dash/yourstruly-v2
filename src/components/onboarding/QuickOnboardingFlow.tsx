@@ -666,16 +666,6 @@ function MapboxGlobeReveal({
       }));
 
       await supabase.from('location_history').insert(rows);
-
-      // Also save each place as a memory
-      const memoryRows = placesAdded.map(p => ({
-        user_id: user.id,
-        title: `I lived in ${p.city.split(',')[0].trim()}`,
-        description: p.when ? `Moved there ${p.when}` : `A place I called home.`,
-        memory_date: new Date().toISOString(),
-        tags: ['onboarding', 'places-lived', 'location'],
-      }));
-      await supabase.from('memories').insert(memoryRows);
     } catch (err) {
       console.error('Failed to save places:', err);
     }
