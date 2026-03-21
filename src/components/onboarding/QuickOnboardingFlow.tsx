@@ -646,8 +646,11 @@ function MapboxGlobeReveal({
   }, [name, placeWhen, drawArc]);
 
   // Save places to Supabase
+  const placesSavedRef = useRef(false);
   const savePlaces = useCallback(async () => {
     if (placesAdded.length === 0) return;
+    if (placesSavedRef.current) return;
+    placesSavedRef.current = true;
     try {
       const { createClient } = await import('@/lib/supabase/client');
       const supabase = createClient();

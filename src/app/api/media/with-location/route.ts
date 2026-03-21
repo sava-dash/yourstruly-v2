@@ -13,28 +13,26 @@ export async function GET() {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
 
-  // Fetch media with any location data (location_lat/lng OR exif_lat/lng)
+  // Fetch media with EXIF GPS data
   const { data: media } = await supabase
     .from('memory_media')
-    .select('id, file_url, file_type, created_at, taken_at, location_name, location_lat, location_lng, exif_lat, exif_lng, original_filename')
+    .select('id, file_url, file_type, created_at, taken_at, exif_lat, exif_lng')
     .eq('user_id', user.id)
+    .not('exif_lat', 'is', null)
+    .not('exif_lng', 'is', null)
     .order('taken_at', { ascending: false, nullsFirst: false })
-    .limit(1000)
+    .limit(500)
 
-  // Filter to items with any geo data and normalize
-  const items = (media || [])
-    .filter(m => (m.location_lat && m.location_lng) || (m.exif_lat && m.exif_lng))
-    .map(m => ({
-      id: m.id,
-      file_url: m.file_url,
-      filename: m.original_filename || 'Photo',
-      created_at: m.created_at,
-      taken_at: m.taken_at,
-      location_name: m.location_name,
-      location_lat: m.location_lat || m.exif_lat,
-      location_lng: m.location_lng || m.exif_lng,
-    }))
-    .slice(0, 500)
+  const items = (media || []).map(m => ({
+    id: m.id,
+    file_url: m.file_url,
+    filename: 'Photo',
+    created_at: m.created_at,
+    taken_at: m.taken_at,
+    location_name: null,
+    location_lat: m.exif_lat,
+    location_lng: m.exif_lng,
+  }))
 
   return NextResponse.json({ items })
 }

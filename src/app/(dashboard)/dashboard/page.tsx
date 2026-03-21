@@ -1390,7 +1390,8 @@ export default function DashboardPage() {
           title: memoryMetadata.location || 'Uploaded Media',
           description: '',
           memory_date: memoryMetadata.date,
-          location_name: memoryMetadata.location || null
+          location_name: memoryMetadata.location || null,
+          memory_type: 'media_upload',
         })
         .select()
         .single()

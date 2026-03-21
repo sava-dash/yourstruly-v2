@@ -95,8 +95,8 @@ function TourOverlay({ step, stepIdx, total, onNext, onPrev, onClose }: {
   const spotH = rect.height + pad * 2
   const spotR = 12
 
-  // Clip-path with rounded cutout
-  const clipPath = `path('M 0 0 H ${window.innerWidth} V ${window.innerHeight} H 0 Z M ${spotX} ${spotY + spotR} Q ${spotX} ${spotY} ${spotX + spotR} ${spotY} H ${spotX + spotW - spotR} Q ${spotX + spotW} ${spotY} ${spotX + spotW} ${spotY + spotR} V ${spotY + spotH - spotR} Q ${spotX + spotW} ${spotY + spotH} ${spotX + spotW - spotR} ${spotY + spotH} H ${spotX + spotR} Q ${spotX} ${spotY + spotH} ${spotX} ${spotY + spotH - spotR} Z')`
+  // Clip-path with rounded cutout (inner path counter-clockwise to create hole via evenodd)
+  const clipPath = `path(evenodd, 'M 0 0 H ${window.innerWidth} V ${window.innerHeight} H 0 Z M ${spotX + spotR} ${spotY} H ${spotX + spotW - spotR} Q ${spotX + spotW} ${spotY} ${spotX + spotW} ${spotY + spotR} V ${spotY + spotH - spotR} Q ${spotX + spotW} ${spotY + spotH} ${spotX + spotW - spotR} ${spotY + spotH} H ${spotX + spotR} Q ${spotX} ${spotY + spotH} ${spotX} ${spotY + spotH - spotR} V ${spotY + spotR} Q ${spotX} ${spotY} ${spotX + spotR} ${spotY} Z')`
 
   // Tooltip position
   let tooltipStyle: React.CSSProperties = { position: 'fixed', zIndex: 10001, maxWidth: 360 }
@@ -134,7 +134,7 @@ function TourOverlay({ step, stepIdx, total, onNext, onPrev, onClose }: {
         }}
         onClick={onClose}
       />
-      {/* Bright spotlight glow around cutout */}
+      {/* Bright spotlight glow ring (outside the cutout, no inset shadow) */}
       <div
         style={{
           position: 'fixed',
@@ -143,11 +143,12 @@ function TourOverlay({ step, stepIdx, total, onNext, onPrev, onClose }: {
           width: spotW + 12,
           height: spotH + 12,
           borderRadius: spotR + 6,
-          border: '3px solid rgba(255,255,255,0.8)',
-          boxShadow: '0 0 0 6px rgba(64,106,86,0.3), 0 0 30px rgba(255,255,255,0.3), 0 0 60px rgba(64,106,86,0.15), inset 0 0 20px rgba(255,255,255,0.1)',
+          border: '3px solid rgba(255,255,255,0.9)',
+          boxShadow: '0 0 0 6px rgba(64,106,86,0.4), 0 0 40px rgba(255,255,255,0.25), 0 0 80px rgba(64,106,86,0.15)',
           zIndex: 10000,
           pointerEvents: 'none',
           transition: 'all 0.3s ease',
+          background: 'transparent',
         }}
       />
       {/* Tooltip */}

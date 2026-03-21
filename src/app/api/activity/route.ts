@@ -378,7 +378,7 @@ export async function GET(request: NextRequest) {
       media:memory_media(file_url, file_type)
     `)
     .eq('user_id', user.id)
-    .neq('memory_type', 'onboarding_gallery')
+    .not('memory_type', 'in', '("onboarding_gallery","media_upload")')
     .order('created_at', { ascending: false })
     .limit(limit)
 
@@ -512,8 +512,8 @@ export async function GET(request: NextRequest) {
       if (!memoryId) continue
       // Skip entries with invalid URLs (e.g. "text-only", "conversation")
       if (!photo.file_url?.startsWith('http')) continue
-      // Skip photos from onboarding gallery
-      if (memory?.memory_type === 'onboarding_gallery') continue
+      // Skip photos from onboarding gallery and media uploads
+      if (memory?.memory_type === 'onboarding_gallery' || memory?.memory_type === 'media_upload') continue
 
       // Use taken_at (EXIF date) > memory_date > created_at
       const photoDate = photo.taken_at || memory?.memory_date || photo.created_at

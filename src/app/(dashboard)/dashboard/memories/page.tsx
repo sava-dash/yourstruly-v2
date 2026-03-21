@@ -109,7 +109,7 @@ export default function MemoriesPage() {
       .select(`*, memory_media(id, file_url, file_type, is_cover)`)
       .eq('user_id', user.id)
       .neq('memory_type', 'wisdom') // Filter out wisdom - those belong on /wisdom page
-      .neq('memory_type', 'onboarding_gallery') // Gallery is just a container for uploaded photos
+      .not('memory_type', 'in', '("onboarding_gallery","media_upload")') // Hide auto-created containers
       .order('memory_date', { ascending: false })
 
     if (selectedCategory && selectedCategory !== 'all') {

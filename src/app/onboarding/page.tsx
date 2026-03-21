@@ -147,6 +147,30 @@ function OnboardingPageContent() {
           console.error('Profile update error:', profileError);
         }
 
+        // Save birthplace as a memory + location_history
+        const birthCity = locationParts[0] || data.birthplace || data.location;
+        if (birthCity?.trim()) {
+          const birthTitle = `Born in ${birthCity.split(',')[0].trim()}`;
+          // Deduplicate
+          const { data: existingBirth } = await supabase
+            .from('memories')
+            .select('id')
+            .eq('user_id', user.id)
+            .eq('title', birthTitle)
+            .limit(1);
+          
+          if (!existingBirth || existingBirth.length === 0) {
+            await supabase.from('memories').insert({
+              user_id: user.id,
+              title: birthTitle,
+              description: 'Where my story began.',
+              memory_date: data.birthday || new Date().toISOString(),
+              location_name: birthCity,
+              tags: ['birthplace', 'location'],
+            });
+          }
+        }
+
         // Save heartfelt answer as first memory
         const heartfelt = data.heartfeltAnswer || data.heartfelt;
         if (heartfelt?.trim()) {
