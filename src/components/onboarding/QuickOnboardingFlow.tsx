@@ -8,7 +8,7 @@ import {
   ChevronRight,
   ChevronLeft,
   MapPin,
-  Sparkles,
+
   Check,
   Shield,
   Heart,
@@ -402,7 +402,7 @@ function MapboxGlobeReveal({
   const mapRef = useRef<mapboxgl.Map | null>(null);
   const markerRef = useRef<mapboxgl.Marker | null>(null);
   const advancedRef = useRef(false);
-  const [phase, setPhase] = useState<'loading' | 'spinning' | 'flying' | 'pinned' | 'places-lived' | 'places-flying' | 'globe-spin-out' | 'adventure-message' | 'contacts' | 'interests' | 'why-here'>('loading');
+  const [phase, setPhase] = useState<'loading' | 'spinning' | 'flying' | 'pinned' | 'places-lived' | 'places-flying' | 'globe-spin-out' | 'adventure-message' | 'contacts' | 'interests' | 'why-here' | 'lets-go'>('loading');
 
   // Places-lived state
   const [placeInput, setPlaceInput] = useState('');
@@ -1125,7 +1125,7 @@ function MapboxGlobeReveal({
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: 0.3 }}
                 >
-                  Your story isn&apos;t just where you&apos;ve been.
+                  You&apos;ve lived in some incredible places.
                 </motion.p>
                 <motion.h2
                   className="globe-welcome-headline"
@@ -1134,8 +1134,8 @@ function MapboxGlobeReveal({
                   transition={{ delay: 0.6 }}
                   style={{ fontSize: '18px', lineHeight: '1.5' }}
                 >
-                  It&apos;s who was there with you, the ones who made those places feel like something more.
-                  <br />Let&apos;s bring them into your story.
+                  Every place holds a story — and most of those stories include someone.
+                  <br />The people you shared life with are part of what makes those moments live on.
                 </motion.h2>
               </div>
               <motion.div
@@ -1149,7 +1149,7 @@ function MapboxGlobeReveal({
                   style={{ margin: 0, width: '100%' }}
                   onClick={() => { setShowContactsPanel(true); setPhase('contacts'); }}
                 >
-                  Add the people who matter <ChevronRight size={18} />
+                  Add your people <ChevronRight size={18} />
                 </button>
                 <button
                   onClick={() => setPhase('interests')}
@@ -1164,7 +1164,7 @@ function MapboxGlobeReveal({
                     textAlign: 'center',
                   }}
                 >
-                  Add this later
+                  I&apos;ll do this later
                 </button>
               </motion.div>
             </div>
@@ -1187,10 +1187,10 @@ function MapboxGlobeReveal({
               <div className="globe-welcome-bar" />
               <div className="globe-welcome-body">
                 <p className="globe-welcome-greeting">
-                  Your story isn&apos;t just where you&apos;ve been.
+                  You&apos;ve lived in some incredible places.
                 </p>
                 <h2 className="globe-welcome-headline" style={{ fontSize: '18px', lineHeight: '1.5' }}>
-                  It&apos;s who was there with you.
+                  The people you shared life with are part of what makes those moments live on.
                 </h2>
               </div>
             </div>
@@ -1507,16 +1507,7 @@ function MapboxGlobeReveal({
                   Continue <ChevronRight size={18} />
                 </button>
                 <button
-                  onClick={async () => {
-                    globeSpinRef.current.spinning = false;
-                    onDone({
-                      places: placesAdded.map(p => p.city.split(',')[0].trim()),
-                      contacts: contactEntries,
-                      interests: Array.from(selectedPills),
-                      whyHere: [],
-                      whyHereText: '',
-                    });
-                  }}
+                  onClick={() => setPhase('lets-go')}}
                   style={{
                     padding: '10px',
                     border: 'none',
@@ -1636,19 +1627,63 @@ function MapboxGlobeReveal({
                 className="globe-continue-btn"
                 onClick={async () => {
                   await saveWhyHere();
-                  globeSpinRef.current.spinning = false;
-                  onDone({
-                    places: placesAdded.map(p => p.city.split(',')[0].trim()),
-                    contacts: contactEntries,
-                    interests: Array.from(selectedPills),
-                    whyHere: Array.from(whyHereSelections),
-                    whyHereText,
-                  });
+                  setShowWhyHerePanel(false);
+                  setPhase('lets-go');
                 }}
               >
                 {(whyHereText.trim() || whyHereSelections.size > 0) ? 'Continue' : 'Skip'} <ChevronRight size={18} />
               </button>
             </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* ── "Let's bring this to life" — transition popup after why-here ── */}
+      <AnimatePresence>
+        {phase === 'lets-go' && (
+          <motion.div
+            key="lets-go-overlay"
+            className="globe-overlay-center"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+          >
+            <motion.div
+              className="globe-welcome-card"
+              initial={{ scale: 0.9, opacity: 0, y: 20 }}
+              animate={{ scale: 1, opacity: 1, y: 0 }}
+              exit={{ scale: 0.9, opacity: 0 }}
+              transition={{ type: 'spring', stiffness: 260, damping: 24 }}
+              style={{ maxWidth: '440px', width: '90%' }}
+            >
+              <div className="globe-welcome-bar" />
+              <div className="globe-welcome-body" style={{ textAlign: 'center' }}>
+                <p className="globe-welcome-greeting">
+                  Let&apos;s bring this to life.
+                </p>
+                <h2 className="globe-welcome-headline" style={{ fontSize: '18px', lineHeight: '1.5' }}>
+                  You&apos;ve set your focus — now see how easy it is to start capturing what matters.
+                </h2>
+              </div>
+              <div style={{ padding: '0 24px 24px' }}>
+                <button
+                  className="globe-continue-btn"
+                  style={{ margin: 0, width: '100%' }}
+                  onClick={() => {
+                    globeSpinRef.current.spinning = false;
+                    onDone({
+                      places: placesAdded.map(p => p.city.split(',')[0].trim()),
+                      contacts: contactEntries,
+                      interests: Array.from(selectedPills),
+                      whyHere: Array.from(whyHereSelections),
+                      whyHereText,
+                    });
+                  }}
+                >
+                  Start <ChevronRight size={18} />
+                </button>
+              </div>
+            </motion.div>
           </motion.div>
         )}
       </AnimatePresence>
@@ -1916,6 +1951,7 @@ function MapboxGlobeReveal({
 
         .globe-panel-wide {
           width: min(420px, 38vw);
+          overflow-x: hidden;
         }
 
         /* Why-here option rows */
@@ -2146,35 +2182,39 @@ function MapboxGlobeReveal({
         /* Add contact row */
         .contact-add-row {
           display: flex;
+          flex-wrap: wrap;
           gap: 8px;
           align-items: center;
           padding: 8px 0;
           margin-top: 4px;
           border-top: 1px solid rgba(0,0,0,0.06);
+          width: 100%;
+          box-sizing: border-box;
         }
         .contact-add-input {
-          flex: 1;
           height: 40px;
-          padding: 0 12px;
+          padding: 0 10px;
           border-radius: 12px;
           border: 1.5px solid rgba(0,0,0,0.1);
           background: rgba(0,0,0,0.02);
-          font-size: 14px;
+          font-size: 13px;
           color: #2d2d2d;
           outline: none;
           font-family: inherit;
           transition: border-color 0.2s;
+          box-sizing: border-box;
+          min-width: 0;
         }
         .contact-add-input:focus {
           border-color: #406A56;
         }
         .contact-add-name {
-          flex: 1.2;
-          min-width: 0;
+          flex: 1 1 40%;
+          min-width: 80px;
         }
         .contact-add-select {
-          flex: 1;
-          min-width: 0;
+          flex: 1 1 35%;
+          min-width: 80px;
           appearance: auto;
         }
         .contact-add-btn {
@@ -3928,7 +3968,7 @@ function ReadyStep({
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.4 }}
       >
-        You&apos;re all set, {name}!
+        You&apos;re all set.
       </motion.h1>
 
       <motion.p
@@ -3937,16 +3977,14 @@ function ReadyStep({
           color: 'rgba(45, 45, 45, 0.6)',
           lineHeight: 1.6,
           margin: '0 0 40px',
-          maxWidth: 380,
+          maxWidth: 420,
         }}
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ delay: 0.6 }}
       >
-        {location
-          ? `Your story from ${location} is just beginning.`
-          : 'Your story is just beginning.'}{' '}
-        Let&apos;s make it unforgettable.
+        You&apos;ve already started building something meaningful.
+        <br />From here, your story grows naturally — one moment at a time.
       </motion.p>
 
       <motion.button
@@ -3971,8 +4009,7 @@ function ReadyStep({
         transition={{ delay: 0.8 }}
         onClick={onContinue}
       >
-        Enter YoursTruly <Sparkles size={20} />
-      </motion.button>
+        Go to my dashboard <ChevronRight size={20} />
     </div>
   );
 }

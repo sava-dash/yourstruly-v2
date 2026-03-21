@@ -180,17 +180,22 @@ export function ImageUploadStep({ userId, onBack, onContinue, onSkip }: ImageUpl
       animate={{ opacity: 1, x: 0 }}
       exit={{ opacity: 0, x: -50 }}
       className="glass-card glass-card-strong p-6"
+      style={{ maxWidth: '560px', margin: '0 auto' }}
     >
-      {/* Header */}
+      {/* Info card */}
       <div className="text-center mb-5">
         <div className="w-14 h-14 bg-gradient-to-br from-[#C35F33] to-[#D9C61A] rounded-full flex items-center justify-center mx-auto mb-3 shadow-lg">
           <Camera size={28} className="text-white" />
         </div>
         <h2 className="text-xl font-semibold text-[#2d2d2d] font-playfair">
-          Bring Your Memories to Life
+          Turn your photos into real memories.
         </h2>
-        <p className="text-gray-500 text-sm mt-1">
-          Upload a few photos to get started
+        <p className="text-gray-500 text-sm mt-2" style={{ lineHeight: '1.6' }}>
+          Upload images and we&apos;ll organize them automatically —
+          recognizing faces, grouping moments, and adding context along the way.
+        </p>
+        <p className="text-xs mt-2" style={{ color: 'rgba(45,45,45,0.4)', fontStyle: 'italic' }}>
+          Your gallery becomes your story.
         </p>
       </div>
 
