@@ -59,23 +59,18 @@ type QuickStep =
 const ALL_STEPS: QuickStep[] = [
   'birth-info',
   'globe',
-  'interests',
-  'traits',
+  // interests, traits, why-here are now embedded in the globe step
   'religion',
-  'why-here',
   'heartfelt',
   'image-upload',
   'ready',
 ];
 
-// All steps show the progress bar now
+// Progress steps for the non-globe flow
 const PROGRESS_STEPS: QuickStep[] = [
   'birth-info',
   'globe',
-  'interests',
-  'traits',
   'religion',
-  'why-here',
   'heartfelt',
   'image-upload',
   'ready',
@@ -293,7 +288,7 @@ async function geocodeLocation(
 // MAPBOX GLOBE STEP
 // ============================================
 
-type GlobeSubPhase = 'map' | 'places-lived' | 'traits' | 'interests';
+type GlobeSubPhase = 'map' | 'places-lived' | 'contacts' | 'interests' | 'why-here';
 
 function MapboxGlobeReveal({
   name,
@@ -322,7 +317,7 @@ function MapboxGlobeReveal({
   const mapRef = useRef<mapboxgl.Map | null>(null);
   const markerRef = useRef<mapboxgl.Marker | null>(null);
   const advancedRef = useRef(false);
-  const [phase, setPhase] = useState<'loading' | 'spinning' | 'flying' | 'pinned' | 'places-lived' | 'places-flying' | 'globe-spin-out' | 'adventure-message' | 'traits' | 'interests'>('loading');
+  const [phase, setPhase] = useState<'loading' | 'spinning' | 'flying' | 'pinned' | 'places-lived' | 'places-flying' | 'globe-spin-out' | 'adventure-message' | 'contacts' | 'interests' | 'why-here'>('loading');
 
   // Places-lived state
   const [placeInput, setPlaceInput] = useState('');
@@ -335,11 +330,17 @@ function MapboxGlobeReveal({
   const lastCoordsRef = useRef<{ lng: number; lat: number } | null>(null);
   const arcCountRef = useRef(0);
 
-  // Custom options for traits/interests
-  const [customTraitInput, setCustomTraitInput] = useState('');
-  const [customTraits, setCustomTraits] = useState<{ label: string; emoji: string }[]>([]);
+  // Custom options for interests
   const [customInterestInput, setCustomInterestInput] = useState('');
   const [customInterests, setCustomInterests] = useState<{ label: string; emoji: string }[]>([]);
+
+  // Contacts (family/friends) state
+  const [contactEntries, setContactEntries] = useState<{ name: string; relationship: string }[]>([]);
+  const [contactName, setContactName] = useState('');
+  const [contactRelation, setContactRelation] = useState('');
+
+  // Why are you here
+  const [whyHereText, setWhyHereText] = useState('');
 
   // Fetch place suggestions from Mapbox
   const fetchPlaceSuggestions = useCallback(async (query: string) => {
@@ -513,6 +514,16 @@ function MapboxGlobeReveal({
       }));
 
       await supabase.from('location_history').insert(rows);
+
+      // Also save each place as a memory
+      const memoryRows = placesAdded.map(p => ({
+        user_id: user.id,
+        title: `I lived in ${p.city.split(',')[0].trim()}`,
+        description: p.when ? `Moved there ${p.when}` : `A place I called home.`,
+        memory_date: new Date().toISOString(),
+        tags: ['onboarding', 'places-lived', 'location'],
+      }));
+      await supabase.from('memories').insert(memoryRows);
     } catch (err) {
       console.error('Failed to save places:', err);
     }
@@ -566,15 +577,67 @@ function MapboxGlobeReveal({
     }
   }, [savePlaces, startGlobeSpin]);
 
+  // Relationship options (same as AddContactModal)
+  const RELATIONSHIP_OPTIONS = [
+    { category: 'Family', options: ['Mother', 'Father', 'Spouse', 'Partner', 'Son', 'Daughter', 'Brother', 'Sister', 'Grandmother', 'Grandfather', 'Grandson', 'Granddaughter', 'Aunt', 'Uncle', 'Cousin', 'Niece', 'Nephew', 'In-Law'] },
+    { category: 'Friends', options: ['Best Friend', 'Close Friend', 'Friend', 'Childhood Friend'] },
+    { category: 'Professional', options: ['Colleague', 'Boss', 'Mentor', 'Business Partner'] },
+    { category: 'Other', options: ['Neighbor', 'Other'] },
+  ];
+
+  // Save contacts to Supabase
+  const saveContacts = useCallback(async () => {
+    if (contactEntries.length === 0) return;
+    try {
+      const { createClient } = await import('@/lib/supabase/client');
+      const supabase = createClient();
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+
+      const rows = contactEntries.map(c => ({
+        user_id: user.id,
+        full_name: c.name,
+        relationship_type: c.relationship.toLowerCase().replace(/ /g, '_'),
+      }));
+
+      await supabase.from('contacts').insert(rows);
+    } catch (err) {
+      console.error('Failed to save contacts:', err);
+    }
+  }, [contactEntries]);
+
+  // Save why-here as a memory
+  const saveWhyHere = useCallback(async () => {
+    if (!whyHereText.trim()) return;
+    try {
+      const { createClient } = await import('@/lib/supabase/client');
+      const supabase = createClient();
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+
+      await supabase.from('memories').insert({
+        user_id: user.id,
+        title: 'Why I\'m Here',
+        description: whyHereText,
+        memory_date: new Date().toISOString(),
+        tags: ['onboarding', 'why-here', 'reflection'],
+      });
+    } catch (err) {
+      console.error('Failed to save why-here:', err);
+    }
+  }, [whyHereText]);
+
   // Notify parent of sub-phase changes for progress bar
   useEffect(() => {
     if (!onSubPhaseChange) return;
     if (phase === 'places-lived' || phase === 'places-flying') {
       onSubPhaseChange('places-lived');
-    } else if (phase === 'traits' || phase === 'adventure-message' || phase === 'globe-spin-out') {
-      onSubPhaseChange('traits');
+    } else if (phase === 'contacts' || phase === 'adventure-message' || phase === 'globe-spin-out') {
+      onSubPhaseChange('contacts');
     } else if (phase === 'interests') {
       onSubPhaseChange('interests');
+    } else if (phase === 'why-here') {
+      onSubPhaseChange('why-here');
     } else {
       onSubPhaseChange('map');
     }
@@ -974,7 +1037,7 @@ function MapboxGlobeReveal({
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 transition={{ delay: 1.0 }}
-                onClick={() => setPhase('traits')}
+                onClick={() => setPhase('contacts')}
               >
                 Continue <ChevronRight size={18} />
               </motion.button>
@@ -983,11 +1046,11 @@ function MapboxGlobeReveal({
         )}
       </AnimatePresence>
 
-      {/* ── Phase: Traits / Interests — info card + side panels ── */}
+      {/* ── Phase: Contacts / Interests — info card ── */}
       <AnimatePresence>
-        {(phase === 'traits' || phase === 'interests') && (
+        {(phase === 'contacts' || phase === 'interests') && (
           <motion.div
-            key="about-you-bottom"
+            key="step-info-bottom"
             className="globe-bottom-panel"
             initial={{ opacity: 0, y: 80 }}
             animate={{ opacity: 1, y: 0 }}
@@ -998,11 +1061,11 @@ function MapboxGlobeReveal({
               <div className="globe-welcome-bar" />
               <div className="globe-welcome-body">
                 <p className="globe-welcome-greeting">
-                  {phase === 'traits' ? 'Your personality 🧠' : 'Your interests 💡'}
+                  {phase === 'contacts' ? 'Your people 👨‍👩‍👧‍👦' : 'Your interests 💡'}
                 </p>
                 <h2 className="globe-welcome-headline" style={{ fontSize: '20px' }}>
-                  {phase === 'traits'
-                    ? 'Pick traits that describe you.'
+                  {phase === 'contacts'
+                    ? 'Who are the important people in your life?'
                     : 'What are you into?'}
                 </h2>
               </div>
@@ -1011,11 +1074,11 @@ function MapboxGlobeReveal({
         )}
       </AnimatePresence>
 
-      {/* ── Traits panel — floating on the right ── */}
+      {/* ── Contacts panel — floating on the right ── */}
       <AnimatePresence>
-        {phase === 'traits' && (
+        {phase === 'contacts' && (
           <motion.div
-            key="traits-panel"
+            key="contacts-panel"
             className="globe-floating-panel globe-floating-right"
             initial={{ x: '120%', opacity: 0 }}
             animate={{ x: 0, opacity: 1 }}
@@ -1023,63 +1086,77 @@ function MapboxGlobeReveal({
             transition={{ type: 'spring', stiffness: 260, damping: 28 }}
           >
             <div className="globe-side-panel-header">
-              <h3>Personality Traits</h3>
-              <p>Select traits that describe you</p>
+              <h3>Family, Friends & Loved Ones</h3>
+              <p>Add the people who matter most</p>
             </div>
-            <div className="globe-side-panel-items">
-              {[...CURATED_TRAITS, ...customTraits].map(trait => {
-                const isSelected = selectedPills.has(trait.label);
-                return (
+            <div className="globe-side-panel-items" style={{ gap: '0', padding: '8px 20px' }}>
+              {/* Added contacts list */}
+              {contactEntries.map((entry, i) => (
+                <div key={i} style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'space-between',
+                  padding: '10px 0',
+                  borderBottom: '1px solid rgba(0,0,0,0.06)',
+                }}>
+                  <div>
+                    <span style={{ fontWeight: 600, fontSize: '15px', color: '#2d2d2d' }}>{entry.name}</span>
+                    <span style={{ fontSize: '13px', color: 'rgba(45,45,45,0.5)', marginLeft: '8px' }}>{entry.relationship}</span>
+                  </div>
                   <button
-                    key={trait.label}
-                    className={`globe-pill ${isSelected ? 'selected' : ''}`}
-                    onClick={() => onTogglePill(trait.label)}
-                  >
-                    <span>{trait.emoji}</span>
-                    <span>{trait.label}</span>
-                    {isSelected && <Check size={14} />}
-                  </button>
-                );
-              })}
-            </div>
-            {/* Add custom trait */}
-            <div className="globe-custom-input-row">
-              <input
-                type="text"
-                value={customTraitInput}
-                onChange={(e) => setCustomTraitInput(e.target.value)}
-                onKeyDown={(e) => {
-                  if (e.key === 'Enter' && customTraitInput.trim()) {
-                    const label = customTraitInput.trim();
-                    setCustomTraits(prev => [...prev, { label, emoji: '✨' }]);
-                    onTogglePill(label);
-                    setCustomTraitInput('');
-                  }
-                }}
-                placeholder="Add your own..."
-                className="globe-custom-input"
-              />
-              <button
-                className="globe-custom-add-btn"
-                disabled={!customTraitInput.trim()}
-                onClick={() => {
-                  if (customTraitInput.trim()) {
-                    const label = customTraitInput.trim();
-                    setCustomTraits(prev => [...prev, { label, emoji: '✨' }]);
-                    onTogglePill(label);
-                    setCustomTraitInput('');
-                  }
-                }}
-              >
-                +
-              </button>
+                    onClick={() => setContactEntries(prev => prev.filter((_, idx) => idx !== i))}
+                    style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#999', fontSize: '16px' }}
+                  >×</button>
+                </div>
+              ))}
+
+              {/* Add contact form */}
+              <div style={{ padding: '12px 0', display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                <input
+                  type="text"
+                  value={contactName}
+                  onChange={(e) => setContactName(e.target.value)}
+                  placeholder="Name"
+                  className="globe-custom-input"
+                  style={{ width: '100%' }}
+                />
+                <select
+                  value={contactRelation}
+                  onChange={(e) => setContactRelation(e.target.value)}
+                  className="globe-custom-input"
+                  style={{ width: '100%', appearance: 'auto' }}
+                >
+                  <option value="">Relationship...</option>
+                  {RELATIONSHIP_OPTIONS.map(cat => (
+                    <optgroup key={cat.category} label={cat.category}>
+                      {cat.options.map(opt => (
+                        <option key={opt} value={opt}>{opt}</option>
+                      ))}
+                    </optgroup>
+                  ))}
+                </select>
+                <button
+                  className="globe-custom-add-btn"
+                  disabled={!contactName.trim() || !contactRelation}
+                  style={{ width: '100%', borderRadius: '12px', height: '42px', fontSize: '15px', display: 'flex', gap: '6px' }}
+                  onClick={() => {
+                    if (contactName.trim() && contactRelation) {
+                      setContactEntries(prev => [...prev, { name: contactName.trim(), relationship: contactRelation }]);
+                      setContactName('');
+                      setContactRelation('');
+                    }
+                  }}
+                >
+                  + Add Person
+                </button>
+              </div>
             </div>
             <div className="globe-side-panel-footer">
               <button
                 className="globe-continue-btn"
-                onClick={() => setPhase('interests')}
+                onClick={async () => { await saveContacts(); setPhase('interests'); }}
               >
-                Continue <ChevronRight size={18} />
+                {contactEntries.length > 0 ? 'Continue' : 'Skip'} <ChevronRight size={18} />
               </button>
             </div>
           </motion.div>
@@ -1152,9 +1229,64 @@ function MapboxGlobeReveal({
             <div className="globe-side-panel-footer">
               <button
                 className="globe-continue-btn"
-                onClick={() => { globeSpinRef.current.spinning = false; onDone(); }}
+                onClick={() => setPhase('why-here')}
               >
                 Continue <ChevronRight size={18} />
+              </button>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* ── Why Are You Here — floating center panel, slides from top ── */}
+      <AnimatePresence>
+        {phase === 'why-here' && (
+          <motion.div
+            key="why-here-panel"
+            className="globe-floating-center"
+            initial={{ y: '-100%', opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            exit={{ y: '-100%', opacity: 0 }}
+            transition={{ type: 'spring', stiffness: 220, damping: 26 }}
+          >
+            <div className="globe-side-panel-header" style={{ textAlign: 'center' }}>
+              <h3>Why are you here? 💭</h3>
+              <p>What brought you to YoursTruly? What do you hope to preserve?</p>
+            </div>
+            <div style={{ flex: 1, padding: '16px 24px', display: 'flex', flexDirection: 'column' }}>
+              <textarea
+                value={whyHereText}
+                onChange={(e) => setWhyHereText(e.target.value)}
+                placeholder="I'm here because..."
+                style={{
+                  flex: 1,
+                  width: '100%',
+                  padding: '16px',
+                  borderRadius: '16px',
+                  border: '1.5px solid rgba(0,0,0,0.1)',
+                  background: 'rgba(0,0,0,0.02)',
+                  fontSize: '15px',
+                  color: '#2d2d2d',
+                  outline: 'none',
+                  resize: 'none',
+                  fontFamily: 'inherit',
+                  lineHeight: '1.6',
+                  minHeight: '120px',
+                }}
+                onFocus={(e) => { e.target.style.borderColor = '#406A56'; }}
+                onBlur={(e) => { e.target.style.borderColor = 'rgba(0,0,0,0.1)'; }}
+              />
+            </div>
+            <div className="globe-side-panel-footer">
+              <button
+                className="globe-continue-btn"
+                onClick={async () => {
+                  await saveWhyHere();
+                  globeSpinRef.current.spinning = false;
+                  onDone();
+                }}
+              >
+                {whyHereText.trim() ? 'Continue' : 'Skip'} <ChevronRight size={18} />
               </button>
             </div>
           </motion.div>
@@ -1422,6 +1554,24 @@ function MapboxGlobeReveal({
           left: 40px;
         }
 
+        .globe-floating-center {
+          position: absolute;
+          top: 50%;
+          left: 50%;
+          transform: translate(-50%, -50%);
+          width: min(480px, 90vw);
+          max-height: min(500px, 70vh);
+          z-index: 20;
+          background: rgba(255, 255, 255, 0.95);
+          backdrop-filter: blur(20px);
+          -webkit-backdrop-filter: blur(20px);
+          box-shadow: 0 12px 48px rgba(0, 0, 0, 0.3);
+          border-radius: 24px;
+          display: flex;
+          flex-direction: column;
+          overflow: hidden;
+        }
+
         .globe-side-panel-header {
           padding: 32px 24px 16px;
           border-bottom: 1px solid rgba(0, 0, 0, 0.06);
@@ -1646,8 +1796,6 @@ export function QuickOnboardingFlow({
 
   const goBack = useCallback(() => {
     setDirection(-1);
-    // Skip globe when going backwards from interests
-    if (step === 'interests') { setStep('birth-info'); return; }
     const idx = ALL_STEPS.indexOf(step);
     if (idx > 0) setStep(ALL_STEPS[idx - 1]);
   }, [step]);
@@ -1677,12 +1825,13 @@ export function QuickOnboardingFlow({
   // Globe sub-phase for progress bar
   const [globeSubPhase, setGlobeSubPhase] = useState<GlobeSubPhase>('map');
 
-  // Globe step progress: map → places-lived → traits → interests
+  // Globe step progress: map → places → contacts → interests → why-here
   const GLOBE_SUB_STEPS: { key: GlobeSubPhase; label: string }[] = [
     { key: 'map', label: 'Map' },
     { key: 'places-lived', label: 'Places' },
-    { key: 'traits', label: 'Personality' },
+    { key: 'contacts', label: 'People' },
     { key: 'interests', label: 'Interests' },
+    { key: 'why-here', label: 'Why' },
   ];
   const globeSubIdx = GLOBE_SUB_STEPS.findIndex(s => s.key === globeSubPhase);
 
@@ -1762,7 +1911,8 @@ export function QuickOnboardingFlow({
           location={data.location || 'somewhere beautiful'}
           onDone={() => {
             commitPills();
-            // Skip past interests + traits steps (now embedded in globe)
+            // Skip past interests, traits, why-here steps (now embedded in globe)
+            // Jump straight to religion (next standalone step after globe)
             setStep('religion');
             setDirection(1);
           }}
