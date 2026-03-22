@@ -8,14 +8,16 @@ import {
   ChevronRight,
   ChevronLeft,
   MapPin,
-
+  Upload,
+  Camera,
+  Loader2,
+  X,
   Check,
   Shield,
   Heart,
 } from 'lucide-react';
 import { OnboardingStepExplanation } from './OnboardingStepExplanation';
 import { ConversationEngine } from '@/components/conversation-engine';
-import { ImageUploadStep } from './ImageUploadStep';
 import { BubblePickerInterests, BubblePickerTraits, ALL_INTERESTS as BUBBLE_INTERESTS, TRAIT_ITEMS as BUBBLE_TRAITS } from './BubblePicker';
 import { CURATED_TRAITS, CURATED_INTERESTS } from './curated-options';
 
@@ -53,16 +55,14 @@ type QuickStep =
   | 'religion'
   | 'why-here'
   | 'heartfelt'
-  | 'image-upload'
   | 'ready';
 
 const ALL_STEPS: QuickStep[] = [
   'birth-info',
   'globe',
-  // interests, contacts, why-here are now embedded in the globe step
+  // interests, contacts, why-here, photo-upload are now embedded in the globe step
   // religion removed
   'heartfelt',
-  'image-upload',
   'ready',
 ];
 
@@ -71,7 +71,6 @@ const PROGRESS_STEPS: QuickStep[] = [
   'birth-info',
   'globe',
   'heartfelt',
-  'image-upload',
   'ready',
 ];
 
@@ -83,7 +82,6 @@ const TILE_KEY: Partial<Record<QuickStep, string>> = {
   religion: 'religion',
   'why-here': 'background',
   heartfelt: 'heartfelt-question',
-  'image-upload': 'image-upload',
   ready: 'celebration',
 };
 
@@ -287,7 +285,7 @@ async function geocodeLocation(
 // MAPBOX GLOBE STEP
 // ============================================
 
-type GlobeSubPhase = 'map' | 'places-lived' | 'contacts' | 'interests' | 'why-here';
+type GlobeSubPhase = 'map' | 'places-lived' | 'contacts' | 'interests' | 'why-here' | 'photo-upload' | 'photo-map';
 
 // Generate a personalized heartfelt question based on everything collected
 function generateHeartfeltQuestion(
@@ -392,6 +390,7 @@ function MapboxGlobeReveal({
     interests: string[];
     whyHere: string[];
     whyHereText: string;
+    uploadedPhotosCount?: number;
   }) => void;
   selectedPills: Set<string>;
   onTogglePill: (label: string) => void;
@@ -407,7 +406,7 @@ function MapboxGlobeReveal({
   const mapRef = useRef<mapboxgl.Map | null>(null);
   const markerRef = useRef<mapboxgl.Marker | null>(null);
   const advancedRef = useRef(false);
-  const [phase, setPhase] = useState<'loading' | 'spinning' | 'flying' | 'pinned' | 'places-lived' | 'places-flying' | 'globe-spin-out' | 'adventure-message' | 'contacts' | 'interests' | 'why-here' | 'lets-go'>('loading');
+  const [phase, setPhase] = useState<'loading' | 'spinning' | 'flying' | 'pinned' | 'places-lived' | 'places-flying' | 'globe-spin-out' | 'adventure-message' | 'contacts' | 'interests' | 'why-here' | 'photo-upload' | 'photo-map' | 'lets-go'>('loading');
 
   // Places-lived state
   const [placeInput, setPlaceInput] = useState('');
@@ -446,6 +445,23 @@ function MapboxGlobeReveal({
   const [showContactsPanel, setShowContactsPanel] = useState(false);
   const [showInterestsPanel, setShowInterestsPanel] = useState(false);
   const [showWhyHerePanel, setShowWhyHerePanel] = useState(false);
+
+  // Photo upload state
+  interface UploadedPhoto {
+    id: string;
+    file: File;
+    preview: string;
+    fileUrl?: string;
+    lat: number | null;
+    lng: number | null;
+    locationName: string | null;
+    status: 'pending' | 'uploading' | 'done' | 'error';
+  }
+  const [uploadedPhotos, setUploadedPhotos] = useState<UploadedPhoto[]>([]);
+  const [isDraggingPhotos, setIsDraggingPhotos] = useState(false);
+  const [isUploadingPhotos, setIsUploadingPhotos] = useState(false);
+  const photoInputRef = useRef<HTMLInputElement>(null);
+  const photoMarkersRef = useRef<mapboxgl.Marker[]>([]);
 
   // Fetch place suggestions from Mapbox
   const fetchPlaceSuggestions = useCallback(async (query: string) => {
@@ -815,10 +831,65 @@ function MapboxGlobeReveal({
       onSubPhaseChange('interests');
     } else if (phase === 'why-here') {
       onSubPhaseChange('why-here');
+    } else if (phase === 'photo-upload' || phase === 'photo-map') {
+      onSubPhaseChange('photo-upload');
     } else {
       onSubPhaseChange('map');
     }
   }, [phase, onSubPhaseChange]);
+
+  // Add photo thumbnail markers when entering photo-map phase
+  useEffect(() => {
+    if (phase !== 'photo-map') return;
+    const map = mapRef.current;
+    if (!map || photoMarkersRef.current.length > 0) return;
+
+    const geoPhotos = uploadedPhotos.filter(p => p.status === 'done' && p.lat != null && p.lng != null);
+    if (geoPhotos.length === 0) return;
+
+    // Stop globe spinning if active
+    globeSpinRef.current.spinning = false;
+
+    // Zoom out to show all photo + place locations
+    const bounds = new mapboxgl.LngLatBounds();
+    geoPhotos.forEach(p => bounds.extend([p.lng!, p.lat!]));
+    placesAdded.forEach(p => bounds.extend([p.lng, p.lat]));
+
+    map.flyTo({
+      center: bounds.getCenter(),
+      zoom: geoPhotos.length === 1 ? 4 : 1.8,
+      pitch: 0,
+      bearing: 0,
+      duration: 2500,
+      essential: true,
+    });
+
+    // Add photo thumbnail markers with staggered animation
+    geoPhotos.forEach((photo, idx) => {
+      setTimeout(() => {
+        const el = document.createElement('div');
+        el.className = 'yt-photo-marker';
+        el.innerHTML = `
+          <div class="photo-marker-wrapper">
+            <div class="photo-marker-ring"></div>
+            <img src="${photo.preview}" class="photo-marker-thumb" />
+            ${photo.locationName ? `<div class="photo-marker-label">${photo.locationName.split(',')[0]}</div>` : ''}
+          </div>
+        `;
+
+        const marker = new mapboxgl.Marker({ element: el, anchor: 'center' })
+          .setLngLat([photo.lng!, photo.lat!])
+          .addTo(map);
+        photoMarkersRef.current.push(marker);
+      }, 800 + idx * 300); // Stagger each pin by 300ms after initial 800ms
+    });
+
+    return () => {
+      // Cleanup markers on phase exit
+      photoMarkersRef.current.forEach(m => m.remove());
+      photoMarkersRef.current = [];
+    };
+  }, [phase]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const advance = useCallback(() => {
     if (!advancedRef.current) {
@@ -1179,7 +1250,7 @@ function MapboxGlobeReveal({
 
       {/* ── Persistent Summary Panel — floating LEFT (only show collected data, hide at lets-go) ── */}
       <AnimatePresence>
-        {(phase === 'places-lived' || phase === 'places-flying' || phase === 'globe-spin-out' || phase === 'adventure-message' || phase === 'contacts' || phase === 'interests' || phase === 'why-here') && (
+        {(phase === 'places-lived' || phase === 'places-flying' || phase === 'globe-spin-out' || phase === 'adventure-message' || phase === 'contacts' || phase === 'interests' || phase === 'why-here' || phase === 'photo-upload') && (
           <motion.div
             key="summary-panel"
             className="globe-floating-panel globe-floating-left globe-summary-panel"
@@ -1578,13 +1649,310 @@ function MapboxGlobeReveal({
                 className="globe-continue-btn"
                 onClick={async () => {
                   await saveWhyHere();
-                  setPhase('lets-go');
+                  setPhase('photo-upload');
                 }}
               >
                 {(whyHereText.trim() || whyHereSelections.size > 0) ? 'Continue' : 'Skip'} <ChevronRight size={18} />
               </button>
             </div>
           </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* ── Phase: Photo Upload — floating right panel ── */}
+      <AnimatePresence>
+        {phase === 'photo-upload' && (
+          <motion.div
+            key="photo-upload-panel"
+            className="globe-floating-panel globe-floating-right globe-panel-wide"
+            initial={{ x: '120%', opacity: 0 }}
+            animate={{ x: 0, opacity: 1 }}
+            exit={{ x: '120%', opacity: 0 }}
+            transition={{ type: 'spring', stiffness: 260, damping: 28 }}
+          >
+            <div className="globe-side-panel-header">
+              <h3>📸 Your Photos</h3>
+              <p>Upload your favorite photos. We&apos;ll place geotagged ones on the globe to map your memories around the world.</p>
+            </div>
+            <div className="globe-side-panel-items" style={{ gap: '0', padding: '8px 16px', overflowY: 'auto' }}>
+              {/* Drop zone */}
+              <div
+                onDragOver={(e) => { e.preventDefault(); setIsDraggingPhotos(true); }}
+                onDragLeave={(e) => { e.preventDefault(); setIsDraggingPhotos(false); }}
+                onDrop={(e) => {
+                  e.preventDefault();
+                  setIsDraggingPhotos(false);
+                  if (e.dataTransfer.files?.length) {
+                    const files = Array.from(e.dataTransfer.files).filter(f => f.type.startsWith('image/') && f.size <= 20 * 1024 * 1024);
+                    const newPhotos: UploadedPhoto[] = files.map(file => ({
+                      id: `${Date.now()}-${Math.random().toString(36).slice(2)}`,
+                      file,
+                      preview: URL.createObjectURL(file),
+                      lat: null,
+                      lng: null,
+                      locationName: null,
+                      status: 'pending' as const,
+                    }));
+                    setUploadedPhotos(prev => [...prev, ...newPhotos]);
+                  }
+                }}
+                onClick={() => photoInputRef.current?.click()}
+                style={{
+                  border: `2px dashed ${isDraggingPhotos ? '#406A56' : 'rgba(0,0,0,0.15)'}`,
+                  borderRadius: '16px',
+                  padding: '24px',
+                  textAlign: 'center',
+                  cursor: 'pointer',
+                  background: isDraggingPhotos ? 'rgba(64,106,86,0.06)' : 'rgba(0,0,0,0.02)',
+                  transition: 'all 0.2s ease',
+                  marginBottom: '12px',
+                }}
+              >
+                <Camera size={28} color="#406A56" style={{ margin: '0 auto 8px' }} />
+                <p style={{ fontSize: '14px', fontWeight: 600, color: '#2d2d2d', margin: 0 }}>
+                  {uploadedPhotos.length === 0 ? 'Drop photos here or click to browse' : 'Add more photos'}
+                </p>
+                <p style={{ fontSize: '12px', color: 'rgba(45,45,45,0.5)', margin: '4px 0 0' }}>
+                  JPG, PNG up to 20MB each
+                </p>
+              </div>
+              <input
+                ref={photoInputRef}
+                type="file"
+                accept="image/*"
+                multiple
+                style={{ display: 'none' }}
+                onChange={(e) => {
+                  if (e.target.files?.length) {
+                    const files = Array.from(e.target.files).filter(f => f.type.startsWith('image/') && f.size <= 20 * 1024 * 1024);
+                    const newPhotos: UploadedPhoto[] = files.map(file => ({
+                      id: `${Date.now()}-${Math.random().toString(36).slice(2)}`,
+                      file,
+                      preview: URL.createObjectURL(file),
+                      lat: null,
+                      lng: null,
+                      locationName: null,
+                      status: 'pending' as const,
+                    }));
+                    setUploadedPhotos(prev => [...prev, ...newPhotos]);
+                  }
+                  if (photoInputRef.current) photoInputRef.current.value = '';
+                }}
+              />
+
+              {/* Photo thumbnails grid */}
+              {uploadedPhotos.length > 0 && (
+                <div style={{
+                  display: 'grid',
+                  gridTemplateColumns: 'repeat(3, 1fr)',
+                  gap: '8px',
+                  marginTop: '4px',
+                }}>
+                  {uploadedPhotos.map((photo) => (
+                    <div key={photo.id} style={{ position: 'relative', aspectRatio: '1', borderRadius: '12px', overflow: 'hidden' }}>
+                      <img
+                        src={photo.preview}
+                        alt=""
+                        style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                      />
+                      {/* Status overlay */}
+                      {photo.status === 'uploading' && (
+                        <div style={{
+                          position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.4)',
+                          display: 'flex', alignItems: 'center', justifyContent: 'center',
+                        }}>
+                          <Loader2 size={20} color="white" className="animate-spin" />
+                        </div>
+                      )}
+                      {photo.status === 'done' && (
+                        <div style={{
+                          position: 'absolute', bottom: 4, right: 4, width: 20, height: 20,
+                          borderRadius: '50%', background: '#406A56',
+                          display: 'flex', alignItems: 'center', justifyContent: 'center',
+                        }}>
+                          <Check size={12} color="white" />
+                        </div>
+                      )}
+                      {photo.status === 'done' && photo.lat != null && (
+                        <div style={{
+                          position: 'absolute', bottom: 4, left: 4, padding: '2px 6px',
+                          borderRadius: '8px', background: 'rgba(0,0,0,0.6)', fontSize: '9px',
+                          color: 'white', display: 'flex', alignItems: 'center', gap: '2px',
+                        }}>
+                          <MapPin size={8} /> GPS
+                        </div>
+                      )}
+                      {photo.status === 'error' && (
+                        <div style={{
+                          position: 'absolute', inset: 0, background: 'rgba(200,50,50,0.4)',
+                          display: 'flex', alignItems: 'center', justifyContent: 'center',
+                          fontSize: '11px', color: 'white', fontWeight: 600,
+                        }}>
+                          Failed
+                        </div>
+                      )}
+                      {/* Remove button */}
+                      {photo.status !== 'uploading' && (
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            URL.revokeObjectURL(photo.preview);
+                            setUploadedPhotos(prev => prev.filter(p => p.id !== photo.id));
+                          }}
+                          style={{
+                            position: 'absolute', top: 4, right: 4, width: 20, height: 20,
+                            borderRadius: '50%', background: 'rgba(0,0,0,0.6)', border: 'none',
+                            display: 'flex', alignItems: 'center', justifyContent: 'center',
+                            cursor: 'pointer', color: 'white',
+                          }}
+                        >
+                          <X size={12} />
+                        </button>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              {uploadedPhotos.length > 0 && (
+                <p style={{ fontSize: '12px', color: 'rgba(45,45,45,0.5)', marginTop: '8px' }}>
+                  📷 {uploadedPhotos.length} photo{uploadedPhotos.length !== 1 ? 's' : ''} selected
+                </p>
+              )}
+            </div>
+            <div className="globe-side-panel-footer">
+              <button
+                className="globe-continue-btn"
+                disabled={isUploadingPhotos}
+                onClick={async () => {
+                  if (uploadedPhotos.length === 0) {
+                    // Skip — no photos
+                    setPhase('lets-go');
+                    return;
+                  }
+
+                  // Upload all pending photos
+                  setIsUploadingPhotos(true);
+                  const pendingPhotos = uploadedPhotos.filter(p => p.status === 'pending');
+
+                  for (const photo of pendingPhotos) {
+                    setUploadedPhotos(prev => prev.map(p =>
+                      p.id === photo.id ? { ...p, status: 'uploading' as const } : p
+                    ));
+
+                    try {
+                      const formData = new FormData();
+                      formData.append('file', photo.file);
+                      const res = await fetch('/api/onboarding/upload-image', { method: 'POST', body: formData });
+
+                      if (res.ok) {
+                        const data = await res.json();
+                        setUploadedPhotos(prev => prev.map(p =>
+                          p.id === photo.id ? {
+                            ...p,
+                            status: 'done' as const,
+                            fileUrl: data.fileUrl,
+                            lat: data.metadata?.lat ?? null,
+                            lng: data.metadata?.lng ?? null,
+                            locationName: data.metadata?.locationName ?? null,
+                          } : p
+                        ));
+                      } else {
+                        setUploadedPhotos(prev => prev.map(p =>
+                          p.id === photo.id ? { ...p, status: 'error' as const } : p
+                        ));
+                      }
+                    } catch {
+                      setUploadedPhotos(prev => prev.map(p =>
+                        p.id === photo.id ? { ...p, status: 'error' as const } : p
+                      ));
+                    }
+                  }
+
+                  setIsUploadingPhotos(false);
+
+                  // Check if any photos have geolocation — use latest state
+                  setUploadedPhotos(prev => {
+                    const geoPhotos = prev.filter(p => p.status === 'done' && p.lat != null && p.lng != null);
+                    if (geoPhotos.length > 0) {
+                      // Defer phase change to avoid state update during render
+                      setTimeout(() => setPhase('photo-map'), 50);
+                    } else {
+                      setTimeout(() => setPhase('lets-go'), 50);
+                    }
+                    return prev;
+                  });
+                }}
+              >
+                {isUploadingPhotos ? (
+                  <><Loader2 size={16} className="animate-spin" /> Uploading...</>
+                ) : (
+                  <>{uploadedPhotos.length > 0 ? 'Upload & Continue' : 'Skip'} <ChevronRight size={18} /></>
+                )}
+              </button>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* ── Phase: Photo Map — show geotagged photos as pins on globe ── */}
+      <AnimatePresence>
+        {phase === 'photo-map' && (
+          <>
+            {/* Bottom panel */}
+            <motion.div
+              key="photo-map-bottom"
+              className="globe-bottom-panel"
+              initial={{ opacity: 0, y: 80 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: 80 }}
+              transition={{ type: 'spring', stiffness: 200, damping: 24, delay: 1.5 }}
+            >
+              <div className="globe-welcome-card">
+                <div className="globe-welcome-bar" />
+                <div className="globe-welcome-body">
+                  <motion.p
+                    className="globe-welcome-greeting"
+                    initial={{ opacity: 0, y: 8 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 2.0 }}
+                  >
+                    Your memories around the world 🌍
+                  </motion.p>
+                  <motion.h2
+                    className="globe-welcome-headline"
+                    initial={{ opacity: 0, y: 8 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 2.3 }}
+                    style={{ fontSize: '16px', lineHeight: '1.5' }}
+                  >
+                    {uploadedPhotos.filter(p => p.lat != null && p.lng != null).length} photo{uploadedPhotos.filter(p => p.lat != null && p.lng != null).length !== 1 ? 's' : ''} placed on your map.
+                    {uploadedPhotos.filter(p => p.status === 'done' && p.lat == null).length > 0 && (
+                      <span style={{ fontSize: '13px', opacity: 0.6, display: 'block', marginTop: '4px' }}>
+                        {uploadedPhotos.filter(p => p.status === 'done' && p.lat == null).length} without location — you can add those later.
+                      </span>
+                    )}
+                  </motion.h2>
+                </div>
+                <motion.div
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  transition={{ delay: 2.5 }}
+                  style={{ padding: '0 24px 20px' }}
+                >
+                  <button
+                    className="globe-continue-btn"
+                    style={{ margin: 0, width: '100%' }}
+                    onClick={() => {
+                      setPhase('lets-go');
+                    }}
+                  >
+                    Continue <ChevronRight size={18} />
+                  </button>
+                </motion.div>
+              </div>
+            </motion.div>
+          </>
         )}
       </AnimatePresence>
 
@@ -1627,6 +1995,7 @@ function MapboxGlobeReveal({
                       interests: Array.from(selectedPills),
                       whyHere: Array.from(whyHereSelections),
                       whyHereText,
+                      uploadedPhotosCount: uploadedPhotos.filter(p => p.status === 'done').length,
                     });
                   }}
                 >
@@ -1867,6 +2236,68 @@ function MapboxGlobeReveal({
           font-size: 11px;
           color: rgba(45, 45, 45, 0.55);
           margin: 0;
+        }
+
+        /* ── Photo thumbnail markers ── */
+        .yt-photo-marker {
+          cursor: default;
+        }
+
+        .photo-marker-wrapper {
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          position: relative;
+          animation: photoMarkerAppear 0.6s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+        }
+
+        @keyframes photoMarkerAppear {
+          from { transform: scale(0) translateY(-20px); opacity: 0; }
+          to { transform: scale(1) translateY(0); opacity: 1; }
+        }
+
+        .photo-marker-ring {
+          position: absolute;
+          top: 50%;
+          left: 50%;
+          transform: translate(-50%, -50%);
+          width: 56px;
+          height: 56px;
+          border-radius: 50%;
+          border: 2px solid rgba(255, 255, 255, 0.4);
+          animation: photoRingPulse 3s ease-in-out infinite;
+          pointer-events: none;
+        }
+
+        @keyframes photoRingPulse {
+          0%, 100% { transform: translate(-50%, -50%) scale(1); opacity: 0.6; }
+          50% { transform: translate(-50%, -50%) scale(1.3); opacity: 0; }
+        }
+
+        .photo-marker-thumb {
+          width: 48px;
+          height: 48px;
+          border-radius: 50%;
+          object-fit: cover;
+          border: 3px solid white;
+          box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4), 0 0 0 1px rgba(255, 255, 255, 0.2);
+          position: relative;
+          z-index: 1;
+        }
+
+        .photo-marker-label {
+          margin-top: 4px;
+          padding: 2px 8px;
+          background: rgba(0, 0, 0, 0.7);
+          backdrop-filter: blur(8px);
+          border-radius: 8px;
+          font-size: 10px;
+          font-weight: 600;
+          color: white;
+          white-space: nowrap;
+          max-width: 120px;
+          overflow: hidden;
+          text-overflow: ellipsis;
         }
 
         /* Hide mapbox logo on this step */
@@ -2341,6 +2772,7 @@ export function QuickOnboardingFlow({
     interests: string[];
     whyHere: string[];
     whyHereText: string;
+    uploadedPhotosCount?: number;
   }>({ places: [], contacts: [], interests: [], whyHere: [], whyHereText: '' });
   const [data, setData] = useState<OnboardingData>(savedProgress?.data || {
     name: initialName ? titleCaseName(initialName) : '',
@@ -2427,6 +2859,7 @@ export function QuickOnboardingFlow({
     { key: 'contacts', label: 'People' },
     { key: 'interests', label: 'Interests' },
     { key: 'why-here', label: 'Why' },
+    { key: 'photo-upload', label: 'Photos' },
   ];
   const globeSubIdx = GLOBE_SUB_STEPS.findIndex(s => s.key === globeSubPhase);
 
@@ -2439,7 +2872,6 @@ export function QuickOnboardingFlow({
     { key: 'birth-info', label: 'Basics' },
     ...GLOBE_SUB_STEPS.map(s => ({ key: `globe-${s.key}`, label: s.label })),
     { key: 'heartfelt', label: 'Reflect' },
-    { key: 'image-upload', label: 'Photos' },
     { key: 'ready', label: 'Done' },
   ];
 
@@ -2519,7 +2951,12 @@ export function QuickOnboardingFlow({
           location={data.location || 'somewhere beautiful'}
           onDone={(gd) => {
             commitPills();
-            if (gd) setGlobeCollected(gd);
+            if (gd) {
+              setGlobeCollected(gd);
+              if (gd.uploadedPhotosCount) {
+                updateData({ uploadedImagesCount: gd.uploadedPhotosCount });
+              }
+            }
             // Skip past embedded globe steps, jump to heartfelt
             setStep('heartfelt');
             setDirection(1);
@@ -2568,7 +3005,7 @@ export function QuickOnboardingFlow({
   };
 
   const isFullWidthStep =
-    step === 'heartfelt' || step === 'image-upload' || step === 'ready';
+    step === 'heartfelt' || step === 'ready';
 
   return (
     <div className="yt-onboard-root">
@@ -2584,8 +3021,7 @@ export function QuickOnboardingFlow({
           const unifiedCurrentIdx = (() => {
             if (step === 'birth-info') return 0;
             // Globe sub-steps all done if we're past globe
-            if (step === 'heartfelt') return UNIFIED_STEPS.length - 3;
-            if (step === 'image-upload') return UNIFIED_STEPS.length - 2;
+            if (step === 'heartfelt') return UNIFIED_STEPS.length - 2;
             if (step === 'ready') return UNIFIED_STEPS.length - 1;
             return 0;
           })();
@@ -2707,18 +3143,6 @@ export function QuickOnboardingFlow({
                   </div>
                 )}
 
-                {step === 'image-upload' && (
-                  <ImageUploadStep
-                    userId={userId}
-                    onBack={goBack}
-                    onContinue={(count) => {
-                      updateData({ uploadedImagesCount: count });
-                      goNext();
-                    }}
-                    onSkip={goNext}
-                  />
-                )}
-
                 {step === 'ready' && (
                   <ReadyStep
                     name={data.name}
@@ -2739,7 +3163,6 @@ export function QuickOnboardingFlow({
         {/* Skip all */}
         {step !== 'ready' &&
           step !== 'heartfelt' &&
-          step !== 'image-upload' &&
           onSkipAll && (
             <button className="skip-all-btn" onClick={onSkipAll}>
               Skip setup
