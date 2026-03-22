@@ -2,9 +2,10 @@
 
 import { useState, useCallback } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { X, Sparkles, Video, VideoOff } from 'lucide-react'
+import { X, Video, VideoOff } from 'lucide-react'
 import { VoiceVideoChat } from '@/components/voice'
 import type { EngagementPrompt } from '@/types/engagement'
+import { CompletionOverlay } from './CompletionOverlay'
 
 interface VoiceEngagementModalProps {
   /** The engagement prompt to answer via voice */
@@ -150,29 +151,7 @@ export function VoiceEngagementModal({
         </div>
 
         {/* Success overlay */}
-        <AnimatePresence>
-          {completed && (
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              className="absolute inset-0 flex items-center justify-center bg-white/95 backdrop-blur-sm"
-            >
-              <motion.div
-                initial={{ scale: 0 }}
-                animate={{ scale: 1 }}
-                transition={{ type: 'spring', damping: 15 }}
-                className="text-center"
-              >
-                <div className="w-20 h-20 mx-auto mb-4 rounded-full bg-green-500 flex items-center justify-center shadow-lg shadow-green-500/30">
-                  <Sparkles size={36} className="text-white" />
-                </div>
-                <h3 className="text-xl font-bold text-[#406A56]">Memory Saved!</h3>
-                <p className="text-[#406A56]/70 mt-2">+{expectedXp} XP earned</p>
-              </motion.div>
-            </motion.div>
-          )}
-        </AnimatePresence>
+        <CompletionOverlay show={completed} xp={expectedXp} />
       </motion.div>
     </motion.div>
   )

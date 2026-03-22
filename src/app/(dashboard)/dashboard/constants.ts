@@ -2,18 +2,18 @@ import { type PromptType } from '@/lib/prompt-icons'
 
 // Type configs with semantic design tokens
 export const TYPE_CONFIG: Record<string, { type: PromptType; label: string; xp: number; color: 'yellow' | 'green' | 'red' | 'blue' | 'purple' }> = {
-  photo_backstory: { type: 'photo_backstory', label: 'Photo Story', xp: 15, color: 'yellow' },
-  tag_person: { type: 'tag_person', label: 'Tag Person', xp: 5, color: 'blue' },
-  missing_info: { type: 'missing_info', label: 'Contact', xp: 5, color: 'green' },
-  quick_question: { type: 'quick_question', label: 'Contact', xp: 5, color: 'green' },
-  contact_info: { type: 'contact_info', label: 'Complete Info', xp: 10, color: 'green' },
-  memory_prompt: { type: 'memory_prompt', label: 'Memory', xp: 20, color: 'purple' },
-  knowledge: { type: 'knowledge', label: 'Wisdom', xp: 15, color: 'red' },
-  connect_dots: { type: 'connect_dots', label: 'Connect', xp: 10, color: 'blue' },
-  highlight: { type: 'highlight', label: 'Highlight', xp: 5, color: 'yellow' },
-  postscript: { type: 'postscript', label: 'Future', xp: 20, color: 'purple' },
-  favorites_firsts: { type: 'favorites_firsts', label: 'Favorites', xp: 10, color: 'red' },
-  recipes_wisdom: { type: 'recipes_wisdom', label: 'Recipes', xp: 15, color: 'yellow' },
+  photo_backstory: { type: 'photo_backstory', label: 'Tell the Story', xp: 15, color: 'yellow' },
+  tag_person: { type: 'tag_person', label: "Who's This?", xp: 5, color: 'blue' },
+  missing_info: { type: 'missing_info', label: 'Update Info', xp: 5, color: 'green' },
+  quick_question: { type: 'missing_info', label: 'Update Info', xp: 5, color: 'green' }, // alias → missing_info
+  contact_info: { type: 'contact_info', label: 'Complete Profile', xp: 10, color: 'green' },
+  memory_prompt: { type: 'memory_prompt', label: 'Remember When', xp: 20, color: 'purple' },
+  knowledge: { type: 'knowledge', label: 'Share Wisdom', xp: 15, color: 'red' },
+  connect_dots: { type: 'connect_dots', label: 'Then & Now', xp: 10, color: 'blue' },
+  highlight: { type: 'highlight', label: 'Spotlight', xp: 5, color: 'yellow' },
+  postscript: { type: 'postscript', label: 'Future Message', xp: 20, color: 'purple' },
+  favorites_firsts: { type: 'favorites_firsts', label: 'Your Favorites', xp: 10, color: 'red' },
+  recipes_wisdom: { type: 'recipes_wisdom', label: 'Pass It Down', xp: 15, color: 'yellow' },
 }
 
 // Prompt types that should use ConversationView (multi-turn voice/text)
@@ -33,8 +33,8 @@ export const PHOTO_TAGGING_TYPES = ['tag_person']
 
 // Prompt types that should use simple inline input
 export const INLINE_INPUT_TYPES = [
-  'quick_question',
   'missing_info',
+  'quick_question', // legacy alias for missing_info
   'contact_info',
 ]
 

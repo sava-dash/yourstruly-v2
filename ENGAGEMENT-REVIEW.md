@@ -1,6 +1,19 @@
 # Engagement Cards System — Review & Improvement Plan
 
-*Generated 2026-03-22 by Zima*
+*Generated 2026-03-22 by Zima | Updated 2026-03-22*
+
+---
+
+## Current Architecture
+
+The engagement system now uses a **single-card-at-a-time** approach:
+
+- **`EngagementTile`** — Preview card on dashboard (shows next prompt + count waiting)
+- **`EngagementOverlay`** — Full-screen overlay with `SwipeableCardStack` (swipe left/right through prompts)
+- **`UnifiedEngagementModal`** — Opens for conversation-based responses (text/voice/video)
+- **Life Chapter filter** — Users can filter prompts by life stage (Childhood, Career, etc.)
+
+The old `EngagementBubbles` (3-5 masonry bubbles) is **legacy code** — still exists but no longer rendered in the dashboard. Its `Bubble.tsx` component still contains duplicate input logic.
 
 ---
 
@@ -97,19 +110,19 @@ Each shows a "Memory Saved! +XP" animation independently. This should be a share
 
 ## C. UX/Intuitiveness Improvements
 
-### The Bubble Metaphor
+### Single-Card + Swipe UX
 
-**Currently works well for**: Showing 3-5 prompts in a visually engaging way. The masonry layout with slight rotations feels like a scrapbook.
+**Currently works well for**: Focused engagement — one prompt at a time reduces decision paralysis. The SwipeableCardStack with chapter filtering is a good pattern.
 
 **Pain points**:
-- Clicking a bubble expands it inline (for simple types) OR opens a modal (for conversation types) — **inconsistent behavior**. User doesn't know what will happen on click.
-- The inline expansion in `Bubble.tsx` is cramped for voice/text input
-- No visual distinction between "quick tap" prompts and "sit down and talk" prompts
+- Swiping left/right navigates but the affordance isn't obvious on desktop (mouse users)
+- Tapping a card opens either `UnifiedEngagementModal` (conversation) or handles inline — user doesn't know what to expect
+- No visual distinction between "quick tap" prompts (~30 sec) and "sit down and talk" prompts (~3 min)
 
 **Recommendation**: 
-- Add a visual indicator on the bubble card: small icon showing expected interaction type (⌨️ type, 🎙️ talk, 📋 form)
-- Already partially done with `showConversationIndicator` but not visible enough
-- Consider showing estimated time: "~30 sec" vs "~3 min"
+- Add estimated time badge on each card: "~30 sec" vs "~3 min"
+- Show input type indicator: ⌨️ type / 🎙️ voice / 📋 quick select
+- The old `EngagementBubbles` + `Bubble.tsx` should be removed to reduce confusion and dead code (~1,200 lines)
 
 ### Card Category Labels
 
@@ -143,20 +156,31 @@ Each shows a "Memory Saved! +XP" animation independently. This should be a share
 ### Component Structure
 
 ```
+# Current active components (dashboard):
+app/(dashboard)/dashboard/components/
+├── EngagementTile.tsx           ← single preview card on dashboard
+├── EngagementOverlay.tsx        ← full-screen overlay with card stack
+├── SwipeableCardStack.tsx       ← one-card-at-a-time with swipe navigation
+├── XpFloatingCounter.tsx        ← XP animation
+
+# Shared engagement components:
 components/engagement/
-├── EngagementFeed.tsx          ← renamed from EngagementBubbles (feed, not just bubbles)
-├── PromptCard.tsx              ← renamed from Bubble (it's a card, not a bubble)
-├── modals/
-│   ├── ConversationModal.tsx   ← merge Engagement + Voice + Unified
-│   ├── QuickInfoModal.tsx      ← merge ContactInfo + PhotoMetadata  
-│   └── CompletionOverlay.tsx   ← shared "Memory Saved! +XP" animation
-├── inputs/                     ← keep, but use consistently
+├── UnifiedEngagementModal.tsx   ← main conversation modal (text/voice/video)
+├── CompletionOverlay.tsx        ← ✅ NEW shared "Memory Saved! +XP" animation
+├── ContactInfoModal.tsx         ← quick contact info form
+├── PhotoTaggingModal.tsx        ← face tagging
+├── inputs/                      ← keep, use consistently
 │   ├── TextInput.tsx
 │   ├── VoiceInput.tsx
 │   ├── QuickButtons.tsx
 │   ├── DatePicker.tsx
 │   └── ContactPicker.tsx
-└── animations.ts               ← keep
+├── animations.ts
+│
+├── EngagementBubbles.tsx        ← ⚠️ LEGACY (not used in dashboard)
+├── Bubble.tsx                   ← ⚠️ LEGACY (not used in dashboard)
+├── EngagementConversationModal.tsx ← ⚠️ LEGACY (only used by EngagementBubbles)
+└── VoiceEngagementModal.tsx     ← ⚠️ LEGACY (not used in dashboard)
 ```
 
 ### State Management
@@ -179,12 +203,12 @@ This replaces the 5+ separate handler functions in `EngagementBubbles.tsx` (hand
 
 ## Priority Action Plan
 
-### P0 — Quick Wins (1-2 hours each)
+### P0 — Quick Wins ✅ DONE
 
-1. **Merge `quick_question` into `missing_info`** — Remove `quick_question` from PROMPT_TYPES, update DB records, simplify routing logic
-2. **Merge `photo_location` + `photo_date` into `photo_metadata`** — One type, modal shows relevant fields
-3. **Create shared `<CompletionOverlay />`** — Replace 3 duplicated "Memory Saved" animations
-4. **Rename user-facing labels** — Make them action-oriented in TYPE_CONFIG
+1. ✅ **Merged `quick_question` → `missing_info`** — `quick_question` kept as alias in TYPE_CONFIG, marked deprecated in PROMPT_TYPES
+2. ✅ **Merged `photo_location` + `photo_date` → `photo_metadata`** — Marked deprecated, all route to same modal
+3. ✅ **Created `<CompletionOverlay />`** — Shared component at `components/engagement/CompletionOverlay.tsx`, integrated into EngagementConversationModal + VoiceEngagementModal. UnifiedEngagementModal kept custom (has "add contact" feature)
+4. ✅ **Renamed labels** — Action-oriented: "Tell the Story", "Who's This?", "Remember When", "Share Wisdom", "Then & Now", "Pass It Down", "Future Message", etc.
 
 ### P1 — Medium Effort (half day each)
 

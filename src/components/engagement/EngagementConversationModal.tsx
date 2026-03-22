@@ -2,8 +2,9 @@
 
 import { useState, useCallback, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, Sparkles } from 'lucide-react';
+import { X } from 'lucide-react';
 import { ConversationEngine } from '@/components/conversation-engine';
+import { CompletionOverlay } from './CompletionOverlay';
 import { createClient } from '@/lib/supabase/client';
 import type { EngineState } from '@/lib/conversation-engine/types';
 
@@ -145,27 +146,9 @@ export function EngagementConversationModal({
             </div>
           )}
 
-          {saved ? (
-            <motion.div
-              initial={{ opacity: 0, scale: 0.9 }}
-              animate={{ opacity: 1, scale: 1 }}
-              className="conversation-complete"
-            >
-              <motion.div
-                initial={{ scale: 0 }}
-                animate={{ scale: 1 }}
-                transition={{ type: 'spring', damping: 15 }}
-                className="conversation-complete-icon"
-              >
-                ✓
-              </motion.div>
-              <h2 className="conversation-complete-title">Memory Saved!</h2>
-              <div className="conversation-complete-xp">
-                <Sparkles size={16} />
-                +{expectedXp} XP earned
-              </div>
-            </motion.div>
-          ) : (
+          <CompletionOverlay show={saved} xp={expectedXp} />
+
+          {!saved && (
             <ConversationEngine
               context="engagement"
               userName={userName}

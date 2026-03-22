@@ -161,10 +161,10 @@ export const PROMPT_TYPES = [
   { value: 'knowledge', label: 'Knowledge', description: 'Capture wisdom and life lessons' },
   { value: 'connect_dots', label: 'Connect Dots', description: 'Compare photos, contacts, or memories' },
   { value: 'highlight', label: 'Highlight', description: 'Featured or important prompts' },
-  { value: 'quick_question', label: 'Quick Question', description: 'Short, easy questions' },
-  { value: 'photo_metadata', label: 'Photo Metadata', description: 'Add location or date to a photo' },
-  { value: 'photo_location', label: 'Photo Location', description: 'Tag where a photo was taken' },
-  { value: 'photo_date', label: 'Photo Date', description: 'Add when a photo was taken' },
+  { value: 'quick_question', label: 'Quick Question (→ missing_info)', description: 'Deprecated: alias for missing_info' },
+  { value: 'photo_metadata', label: 'Photo Details', description: 'Add location, date, or other details to a photo' },
+  { value: 'photo_location', label: 'Photo Location (→ photo_metadata)', description: 'Deprecated: alias for photo_metadata' },
+  { value: 'photo_date', label: 'Photo Date (→ photo_metadata)', description: 'Deprecated: alias for photo_metadata' },
 ];
 
 export const KNOWLEDGE_CATEGORIES = [

@@ -20,17 +20,17 @@ interface BubbleProps {
 }
 
 const TYPE_CONFIG: Record<string, { icon: string; label: string; xp: number; categoryClass: string }> = {
-  photo_backstory: { icon: '📸', label: 'Photo Story', xp: 15, categoryClass: 'category-pill-yellow' },
-  tag_person: { icon: '👤', label: 'Tag Person', xp: 5, categoryClass: 'category-pill-blue' },
-  missing_info: { icon: '📝', label: 'Contact Info', xp: 5, categoryClass: 'category-pill-green' },
-  memory_prompt: { icon: '💭', label: 'Memory', xp: 20, categoryClass: 'category-pill-purple' },
-  knowledge: { icon: '🧠', label: 'Knowledge', xp: 15, categoryClass: 'category-pill-red' },
-  connect_dots: { icon: '🔗', label: 'Connect', xp: 10, categoryClass: 'category-pill-blue' },
-  highlight: { icon: '⭐', label: 'Highlight', xp: 5, categoryClass: 'category-pill-yellow' },
-  quick_question: { icon: '👤', label: 'Contact Info', xp: 5, categoryClass: 'category-pill-green' },
+  photo_backstory: { icon: '📸', label: 'Tell the Story', xp: 15, categoryClass: 'category-pill-yellow' },
+  tag_person: { icon: '👤', label: "Who's This?", xp: 5, categoryClass: 'category-pill-blue' },
+  missing_info: { icon: '📝', label: 'Update Info', xp: 5, categoryClass: 'category-pill-green' },
+  memory_prompt: { icon: '💭', label: 'Remember When', xp: 20, categoryClass: 'category-pill-purple' },
+  knowledge: { icon: '🧠', label: 'Share Wisdom', xp: 15, categoryClass: 'category-pill-red' },
+  connect_dots: { icon: '🔗', label: 'Then & Now', xp: 10, categoryClass: 'category-pill-blue' },
+  highlight: { icon: '⭐', label: 'Spotlight', xp: 5, categoryClass: 'category-pill-yellow' },
+  quick_question: { icon: '👤', label: 'Update Info', xp: 5, categoryClass: 'category-pill-green' }, // alias → missing_info
   postscript: { icon: '💌', label: 'Future Message', xp: 20, categoryClass: 'category-pill-purple' },
-  favorites_firsts: { icon: '🏆', label: 'Favorites', xp: 10, categoryClass: 'category-pill-red' },
-  recipes_wisdom: { icon: '📖', label: 'Wisdom', xp: 15, categoryClass: 'category-pill-yellow' },
+  favorites_firsts: { icon: '🏆', label: 'Your Favorites', xp: 10, categoryClass: 'category-pill-red' },
+  recipes_wisdom: { icon: '📖', label: 'Pass It Down', xp: 15, categoryClass: 'category-pill-yellow' },
 };
 
 // Contact fields to display when expanded
