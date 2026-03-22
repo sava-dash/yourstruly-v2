@@ -26,6 +26,7 @@ import {
   Film,
   Music,
   UtensilsCrossed,
+  ChefHat,
   type LucideIcon,
 } from 'lucide-react';
 
@@ -51,7 +52,8 @@ export type PromptType =
   | 'favorite_books'
   | 'favorite_movies'
   | 'favorite_music'
-  | 'favorite_foods';
+  | 'favorite_foods'
+  | 'recipe';
 
 /**
  * Icon mapping for prompt types
@@ -80,6 +82,7 @@ export const promptIcons: Record<PromptType, LucideIcon> = {
   favorite_movies: Film,
   favorite_music: Music,
   favorite_foods: UtensilsCrossed,
+  recipe: ChefHat,
 };
 
 /**

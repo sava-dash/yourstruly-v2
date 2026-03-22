@@ -32,6 +32,7 @@ export const TYPE_CONFIG: Record<string, {
   favorite_movies: { type: 'favorite_movies' as PromptType, label: 'Favorite Movies', xp: 10, color: 'red', inputHint: '⌨️ Add titles', timeHint: '~1 min' },
   favorite_music: { type: 'favorite_music' as PromptType, label: 'Favorite Music', xp: 10, color: 'yellow', inputHint: '⌨️ Add artists', timeHint: '~1 min' },
   favorite_foods: { type: 'favorite_foods' as PromptType, label: 'Favorite Foods', xp: 10, color: 'green', inputHint: '⌨️ Add dishes', timeHint: '~1 min' },
+  recipe: { type: 'recipe' as PromptType, label: 'Family Recipe', xp: 25, color: 'yellow', inputHint: '👨‍🍳 Full recipe', timeHint: '~5 min' },
 }
 
 // Prompt types that should use ConversationView (multi-turn voice/text)

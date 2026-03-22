@@ -1180,6 +1180,15 @@ function FlippableCard({
               onAnswer={onAnswer}
               onDismiss={onDismiss}
             />
+          ) : prompt.type === 'recipe' ? (
+            /* Recipe card — multi-section form */
+            <RecipeCardBack
+              prompt={prompt}
+              config={config}
+              onAnswer={onAnswer}
+              onDismiss={onDismiss}
+              getPromptText={getPromptText}
+            />
           ) : (prompt.type === 'favorite_books' || prompt.type === 'favorite_movies' || prompt.type === 'favorite_music' || prompt.type === 'favorite_foods') ? (
             /* Favorites list with custom input + suggestions */
             <FavoritesListBack
@@ -1376,6 +1385,484 @@ function FlippableCard({
       </motion.div>
 
 
+    </div>
+  )
+}
+
+/* ─── Recipe Card Back (full recipe capture) ─── */
+
+const CUISINE_OPTIONS = [
+  'American', 'Italian', 'Mexican', 'Chinese', 'Indian', 'Japanese', 'Thai',
+  'Mediterranean', 'French', 'Southern', 'Soul Food', 'Caribbean', 'Korean',
+  'Middle Eastern', 'African', 'German', 'Brazilian', 'Vietnamese', 'Greek', 'Other',
+]
+
+const OCCASION_OPTIONS = [
+  'Everyday', 'Holiday', 'Sunday Dinner', 'Comfort Food', 'Celebration',
+  'Birthday', 'Potluck', 'Summer BBQ', 'Winter Warmer', 'Quick Weeknight',
+]
+
+const DIFFICULTY_OPTIONS = ['Easy', 'Medium', 'Advanced']
+
+interface RecipeIngredient {
+  name: string
+  amount: string
+}
+
+function RecipeCardBack({
+  prompt,
+  config,
+  onAnswer,
+  onDismiss,
+  getPromptText,
+}: {
+  prompt: Prompt
+  config: any
+  onAnswer: (id: string, r: any) => Promise<void>
+  onDismiss: () => void
+  getPromptText: (p: Prompt) => string
+}) {
+  const [recipeName, setRecipeName] = useState('')
+  const [learnedFrom, setLearnedFrom] = useState('')
+  const [story, setStory] = useState('')
+  const [ingredients, setIngredients] = useState<RecipeIngredient[]>([])
+  const [newIngName, setNewIngName] = useState('')
+  const [newIngAmount, setNewIngAmount] = useState('')
+  const [directions, setDirections] = useState('')
+  const [tips, setTips] = useState('')
+  const [serves, setServes] = useState('')
+  const [prepTime, setPrepTime] = useState('')
+  const [cookTime, setCookTime] = useState('')
+  const [cuisine, setCuisine] = useState('')
+  const [occasion, setOccasion] = useState('')
+  const [difficulty, setDifficulty] = useState('')
+  const [photoFile, setPhotoFile] = useState<File | null>(null)
+  const [photoPreview, setPhotoPreview] = useState<string | null>(null)
+  const [isSubmitting, setIsSubmitting] = useState(false)
+  const [activeSection, setActiveSection] = useState(0)
+  const photoInputRef = useRef<HTMLInputElement>(null)
+
+  const addIngredient = () => {
+    if (!newIngName.trim()) return
+    setIngredients(prev => [...prev, { name: newIngName.trim(), amount: newIngAmount.trim() }])
+    setNewIngName('')
+    setNewIngAmount('')
+  }
+
+  const removeIngredient = (idx: number) => {
+    setIngredients(prev => prev.filter((_, i) => i !== idx))
+  }
+
+  const handlePhotoSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (file) {
+      setPhotoFile(file)
+      setPhotoPreview(URL.createObjectURL(file))
+    }
+  }
+
+  const handleSave = async () => {
+    if (!recipeName.trim()) return
+    setIsSubmitting(true)
+
+    // Upload photo if provided
+    let photoUrl: string | undefined
+    if (photoFile) {
+      try {
+        const formData = new FormData()
+        formData.append('file', photoFile)
+        const res = await fetch('/api/onboarding/upload-image', { method: 'POST', body: formData })
+        if (res.ok) {
+          const data = await res.json()
+          photoUrl = data.fileUrl
+        }
+      } catch { /* photo upload is optional */ }
+    }
+
+    const recipeData = {
+      name: recipeName.trim(),
+      learnedFrom: learnedFrom.trim(),
+      story: story.trim(),
+      ingredients,
+      directions: directions.trim(),
+      tips: tips.trim(),
+      serves: serves.trim(),
+      prepTime: prepTime.trim(),
+      cookTime: cookTime.trim(),
+      cuisine,
+      occasion,
+      difficulty,
+      photoUrl,
+    }
+
+    // Build readable text summary for the memory
+    const parts: string[] = [`🍳 ${recipeName}`]
+    if (learnedFrom) parts.push(`Learned from: ${learnedFrom}`)
+    if (story) parts.push(`\nThe Story:\n${story}`)
+    if (ingredients.length > 0) {
+      parts.push(`\nIngredients (serves ${serves || '?'}):`)
+      ingredients.forEach(i => parts.push(`  • ${i.amount ? `${i.amount} ` : ''}${i.name}`))
+    }
+    if (directions) parts.push(`\nDirections:\n${directions}`)
+    if (tips) parts.push(`\n💡 Tips & Secrets:\n${tips}`)
+    if (prepTime || cookTime) parts.push(`\n⏱ Prep: ${prepTime || '?'} | Cook: ${cookTime || '?'}`)
+
+    await onAnswer(prompt.id, {
+      type: 'text',
+      text: parts.join('\n'),
+      data: recipeData,
+    } as any)
+    onDismiss()
+  }
+
+  // Section navigation
+  const sections = [
+    { label: 'Story', icon: '💬' },
+    { label: 'Ingredients', icon: '🥘' },
+    { label: 'Directions', icon: '📝' },
+    { label: 'Details', icon: '📋' },
+  ]
+
+  return (
+    <div className="h-full flex flex-col" style={{ backfaceVisibility: 'hidden', transform: 'rotateY(180deg)' }}>
+      {/* Header with recipe name */}
+      <div style={{ padding: '56px 20px 12px', borderBottom: '1px solid rgba(0,0,0,0.06)' }}>
+        <input
+          type="text"
+          value={recipeName}
+          onChange={(e) => setRecipeName(e.target.value)}
+          placeholder="Recipe name..."
+          style={{
+            width: '100%', border: 'none', outline: 'none', fontSize: '20px',
+            fontWeight: 700, color: '#2d2d2d', background: 'transparent',
+            padding: 0,
+          }}
+          autoFocus
+        />
+
+        {/* Section tabs */}
+        <div style={{ display: 'flex', gap: '4px', marginTop: '12px' }}>
+          {sections.map((s, i) => (
+            <button
+              key={s.label}
+              onClick={() => setActiveSection(i)}
+              style={{
+                flex: 1, padding: '8px 4px', borderRadius: '10px', border: 'none',
+                background: activeSection === i ? '#406A56' : 'rgba(0,0,0,0.04)',
+                color: activeSection === i ? 'white' : '#888',
+                fontSize: '12px', fontWeight: 600, cursor: 'pointer',
+                transition: 'all 0.15s',
+              }}
+            >
+              {s.icon} {s.label}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* Scrollable content area */}
+      <div style={{ flex: 1, overflowY: 'auto', padding: '16px 20px' }}>
+
+        {/* Section 0: Story (emotional lead) */}
+        {activeSection === 0 && (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
+            <div>
+              <label style={{ fontSize: '12px', fontWeight: 600, color: '#888', textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: '6px', display: 'block' }}>
+                👩‍🍳 Who taught you this recipe?
+              </label>
+              <input
+                type="text"
+                value={learnedFrom}
+                onChange={(e) => setLearnedFrom(e.target.value)}
+                placeholder="Grandma, Mom, a friend, self-taught..."
+                style={{
+                  width: '100%', padding: '10px 14px', borderRadius: '12px',
+                  border: '2px solid rgba(0,0,0,0.08)', fontSize: '14px',
+                  outline: 'none', background: '#fafafa',
+                }}
+              />
+            </div>
+            <div>
+              <label style={{ fontSize: '12px', fontWeight: 600, color: '#888', textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: '6px', display: 'block' }}>
+                📖 The story behind it
+              </label>
+              <textarea
+                value={story}
+                onChange={(e) => setStory(e.target.value)}
+                placeholder="When do you make it? What memories does it bring back? Any family traditions tied to it?"
+                rows={4}
+                style={{
+                  width: '100%', padding: '10px 14px', borderRadius: '12px',
+                  border: '2px solid rgba(0,0,0,0.08)', fontSize: '14px',
+                  outline: 'none', background: '#fafafa', resize: 'none',
+                }}
+              />
+            </div>
+
+            {/* Photo upload */}
+            <div>
+              <label style={{ fontSize: '12px', fontWeight: 600, color: '#888', textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: '6px', display: 'block' }}>
+                📸 Photo of the dish
+              </label>
+              {photoPreview ? (
+                <div style={{ position: 'relative', borderRadius: '12px', overflow: 'hidden' }}>
+                  <img src={photoPreview} alt="" style={{ width: '100%', height: '120px', objectFit: 'cover' }} />
+                  <button
+                    onClick={() => { setPhotoFile(null); setPhotoPreview(null) }}
+                    style={{
+                      position: 'absolute', top: '6px', right: '6px',
+                      width: '24px', height: '24px', borderRadius: '50%',
+                      background: 'rgba(0,0,0,0.6)', border: 'none', color: 'white',
+                      fontSize: '14px', cursor: 'pointer', display: 'flex',
+                      alignItems: 'center', justifyContent: 'center',
+                    }}
+                  >×</button>
+                </div>
+              ) : (
+                <button
+                  onClick={() => photoInputRef.current?.click()}
+                  style={{
+                    width: '100%', padding: '16px', borderRadius: '12px',
+                    border: '2px dashed rgba(0,0,0,0.12)', background: 'rgba(0,0,0,0.02)',
+                    fontSize: '14px', color: '#888', cursor: 'pointer',
+                    display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px',
+                  }}
+                >
+                  📷 Add a photo (optional)
+                </button>
+              )}
+              <input ref={photoInputRef} type="file" accept="image/*" style={{ display: 'none' }} onChange={handlePhotoSelect} />
+            </div>
+          </div>
+        )}
+
+        {/* Section 1: Ingredients */}
+        {activeSection === 1 && (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <label style={{ fontSize: '12px', fontWeight: 600, color: '#888', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+                Serves
+              </label>
+              <input
+                type="text"
+                value={serves}
+                onChange={(e) => setServes(e.target.value)}
+                placeholder="4"
+                style={{
+                  width: '60px', padding: '6px 10px', borderRadius: '8px',
+                  border: '1px solid rgba(0,0,0,0.1)', fontSize: '14px',
+                  outline: 'none', textAlign: 'center',
+                }}
+              />
+            </div>
+
+            {/* Ingredient list */}
+            {ingredients.map((ing, i) => (
+              <div key={i} style={{
+                display: 'flex', alignItems: 'center', gap: '8px',
+                padding: '8px 12px', background: 'rgba(64,106,86,0.06)',
+                borderRadius: '10px',
+              }}>
+                <span style={{ flex: 1, fontSize: '14px', color: '#333' }}>
+                  {ing.amount && <span style={{ fontWeight: 600, color: '#406A56' }}>{ing.amount} </span>}
+                  {ing.name}
+                </span>
+                <button onClick={() => removeIngredient(i)} style={{
+                  background: 'none', border: 'none', color: '#ccc',
+                  cursor: 'pointer', fontSize: '16px', padding: '0 4px',
+                }}>×</button>
+              </div>
+            ))}
+
+            {/* Add ingredient row */}
+            <div style={{ display: 'flex', gap: '6px' }}>
+              <input
+                type="text"
+                value={newIngAmount}
+                onChange={(e) => setNewIngAmount(e.target.value)}
+                placeholder="Amount"
+                style={{
+                  width: '80px', padding: '10px', borderRadius: '10px',
+                  border: '1px solid rgba(0,0,0,0.1)', fontSize: '13px', outline: 'none',
+                }}
+                onKeyDown={(e) => { if (e.key === 'Enter') addIngredient() }}
+              />
+              <input
+                type="text"
+                value={newIngName}
+                onChange={(e) => setNewIngName(e.target.value)}
+                placeholder="Ingredient..."
+                style={{
+                  flex: 1, padding: '10px', borderRadius: '10px',
+                  border: '1px solid rgba(0,0,0,0.1)', fontSize: '13px', outline: 'none',
+                }}
+                onKeyDown={(e) => { if (e.key === 'Enter') addIngredient() }}
+              />
+              <button onClick={addIngredient} disabled={!newIngName.trim()} style={{
+                padding: '10px 14px', borderRadius: '10px', border: 'none',
+                background: newIngName.trim() ? '#406A56' : 'rgba(0,0,0,0.05)',
+                color: newIngName.trim() ? 'white' : '#ccc',
+                fontSize: '13px', fontWeight: 600, cursor: 'pointer',
+              }}>+</button>
+            </div>
+
+            {ingredients.length === 0 && (
+              <p style={{ fontSize: '13px', color: '#bbb', textAlign: 'center', margin: '8px 0' }}>
+                Add ingredients one at a time — amounts are optional!
+              </p>
+            )}
+          </div>
+        )}
+
+        {/* Section 2: Directions */}
+        {activeSection === 2 && (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
+            <div>
+              <label style={{ fontSize: '12px', fontWeight: 600, color: '#888', textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: '6px', display: 'block' }}>
+                📝 Step-by-step directions
+              </label>
+              <textarea
+                value={directions}
+                onChange={(e) => setDirections(e.target.value)}
+                placeholder={"1. Preheat oven to 350°F\n2. Mix dry ingredients\n3. Add wet ingredients\n4. ..."}
+                rows={6}
+                style={{
+                  width: '100%', padding: '10px 14px', borderRadius: '12px',
+                  border: '2px solid rgba(0,0,0,0.08)', fontSize: '14px',
+                  outline: 'none', background: '#fafafa', resize: 'none',
+                  lineHeight: '1.6',
+                }}
+              />
+            </div>
+            <div>
+              <label style={{ fontSize: '12px', fontWeight: 600, color: '#888', textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: '6px', display: 'block' }}>
+                💡 Tips, secrets & tricks
+              </label>
+              <textarea
+                value={tips}
+                onChange={(e) => setTips(e.target.value)}
+                placeholder="The secret ingredient is... Don't skip the resting time... Use room temperature butter..."
+                rows={3}
+                style={{
+                  width: '100%', padding: '10px 14px', borderRadius: '12px',
+                  border: '2px solid rgba(0,0,0,0.08)', fontSize: '14px',
+                  outline: 'none', background: '#fafafa', resize: 'none',
+                }}
+              />
+            </div>
+          </div>
+        )}
+
+        {/* Section 3: Details */}
+        {activeSection === 3 && (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
+            {/* Times */}
+            <div style={{ display: 'flex', gap: '12px' }}>
+              <div style={{ flex: 1 }}>
+                <label style={{ fontSize: '11px', fontWeight: 600, color: '#888', textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: '4px', display: 'block' }}>
+                  ⏱ Prep time
+                </label>
+                <input type="text" value={prepTime} onChange={(e) => setPrepTime(e.target.value)} placeholder="15 min"
+                  style={{ width: '100%', padding: '8px 12px', borderRadius: '10px', border: '1px solid rgba(0,0,0,0.1)', fontSize: '13px', outline: 'none' }}
+                />
+              </div>
+              <div style={{ flex: 1 }}>
+                <label style={{ fontSize: '11px', fontWeight: 600, color: '#888', textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: '4px', display: 'block' }}>
+                  🔥 Cook time
+                </label>
+                <input type="text" value={cookTime} onChange={(e) => setCookTime(e.target.value)} placeholder="45 min"
+                  style={{ width: '100%', padding: '8px 12px', borderRadius: '10px', border: '1px solid rgba(0,0,0,0.1)', fontSize: '13px', outline: 'none' }}
+                />
+              </div>
+            </div>
+
+            {/* Difficulty */}
+            <div>
+              <label style={{ fontSize: '11px', fontWeight: 600, color: '#888', textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: '6px', display: 'block' }}>
+                Difficulty
+              </label>
+              <div style={{ display: 'flex', gap: '8px' }}>
+                {DIFFICULTY_OPTIONS.map(d => (
+                  <button key={d} onClick={() => setDifficulty(d)} style={{
+                    flex: 1, padding: '8px', borderRadius: '10px',
+                    border: `2px solid ${difficulty === d ? '#406A56' : 'rgba(0,0,0,0.08)'}`,
+                    background: difficulty === d ? '#406A56' : 'transparent',
+                    color: difficulty === d ? 'white' : '#666',
+                    fontSize: '13px', fontWeight: 600, cursor: 'pointer',
+                    transition: 'all 0.15s',
+                  }}>{d}</button>
+                ))}
+              </div>
+            </div>
+
+            {/* Cuisine */}
+            <div>
+              <label style={{ fontSize: '11px', fontWeight: 600, color: '#888', textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: '6px', display: 'block' }}>
+                🌍 Cuisine
+              </label>
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
+                {CUISINE_OPTIONS.map(c => (
+                  <button key={c} onClick={() => setCuisine(c)} style={{
+                    padding: '6px 12px', borderRadius: '100px',
+                    border: `1.5px solid ${cuisine === c ? '#406A56' : 'rgba(0,0,0,0.1)'}`,
+                    background: cuisine === c ? '#406A56' : 'transparent',
+                    color: cuisine === c ? 'white' : '#666',
+                    fontSize: '12px', fontWeight: 500, cursor: 'pointer',
+                    transition: 'all 0.15s',
+                  }}>{c}</button>
+                ))}
+              </div>
+            </div>
+
+            {/* Occasion */}
+            <div>
+              <label style={{ fontSize: '11px', fontWeight: 600, color: '#888', textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: '6px', display: 'block' }}>
+                🎉 Occasion
+              </label>
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
+                {OCCASION_OPTIONS.map(o => (
+                  <button key={o} onClick={() => setOccasion(o)} style={{
+                    padding: '6px 12px', borderRadius: '100px',
+                    border: `1.5px solid ${occasion === o ? '#C35F33' : 'rgba(0,0,0,0.1)'}`,
+                    background: occasion === o ? '#C35F33' : 'transparent',
+                    color: occasion === o ? 'white' : '#666',
+                    fontSize: '12px', fontWeight: 500, cursor: 'pointer',
+                    transition: 'all 0.15s',
+                  }}>{o}</button>
+                ))}
+              </div>
+            </div>
+          </div>
+        )}
+      </div>
+
+      {/* Footer */}
+      <div style={{ padding: '12px 20px', borderTop: '1px solid rgba(0,0,0,0.06)', display: 'flex', gap: '8px' }}>
+        <button onClick={() => onDismiss()} style={{
+          flex: 1, padding: '12px', borderRadius: '14px',
+          border: '1px solid rgba(0,0,0,0.1)', background: 'white',
+          fontSize: '14px', fontWeight: 500, color: '#666', cursor: 'pointer',
+        }}>Skip</button>
+
+        {activeSection < 3 ? (
+          <button onClick={() => setActiveSection(prev => prev + 1)} style={{
+            flex: 2, padding: '12px', borderRadius: '14px', border: 'none',
+            background: '#406A56', color: 'white', fontSize: '14px',
+            fontWeight: 600, cursor: 'pointer',
+          }}>
+            Next →
+          </button>
+        ) : (
+          <button onClick={handleSave} disabled={!recipeName.trim() || isSubmitting} style={{
+            flex: 2, padding: '12px', borderRadius: '14px', border: 'none',
+            background: '#406A56', color: 'white', fontSize: '14px',
+            fontWeight: 600, cursor: 'pointer',
+            opacity: (!recipeName.trim() || isSubmitting) ? 0.5 : 1,
+          }}>
+            {isSubmitting ? 'Saving...' : '👨‍🍳 Save Recipe (+25 XP)'}
+          </button>
+        )}
+      </div>
     </div>
   )
 }

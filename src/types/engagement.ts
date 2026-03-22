@@ -175,6 +175,7 @@ export const PROMPT_TYPES = [
   { value: 'favorite_movies', label: 'Favorite Movies', description: 'What are your favorite movies? (list with suggestions)' },
   { value: 'favorite_music', label: 'Favorite Music', description: 'What are your favorite artists/songs? (list with suggestions)' },
   { value: 'favorite_foods', label: 'Favorite Foods', description: 'What are your favorite foods? (list with suggestions)' },
+  { value: 'recipe', label: 'Family Recipe', description: 'Capture a family recipe with story, ingredients, directions, and tips' },
 ];
 
 export const KNOWLEDGE_CATEGORIES = [
