@@ -1,19 +1,33 @@
 import { type PromptType } from '@/lib/prompt-icons'
 
 // Type configs with semantic design tokens
-export const TYPE_CONFIG: Record<string, { type: PromptType; label: string; xp: number; color: 'yellow' | 'green' | 'red' | 'blue' | 'purple' }> = {
-  photo_backstory: { type: 'photo_backstory', label: 'Tell the Story', xp: 15, color: 'yellow' },
-  tag_person: { type: 'tag_person', label: "Who's This?", xp: 5, color: 'blue' },
-  missing_info: { type: 'missing_info', label: 'Update Info', xp: 5, color: 'green' },
-  quick_question: { type: 'missing_info', label: 'Update Info', xp: 5, color: 'green' }, // alias → missing_info
-  contact_info: { type: 'contact_info', label: 'Complete Profile', xp: 10, color: 'green' },
-  memory_prompt: { type: 'memory_prompt', label: 'Remember When', xp: 20, color: 'purple' },
-  knowledge: { type: 'knowledge', label: 'Share Wisdom', xp: 15, color: 'red' },
-  connect_dots: { type: 'connect_dots', label: 'Then & Now', xp: 10, color: 'blue' },
-  highlight: { type: 'highlight', label: 'Spotlight', xp: 5, color: 'yellow' },
-  postscript: { type: 'postscript', label: 'Future Message', xp: 20, color: 'purple' },
-  favorites_firsts: { type: 'favorites_firsts', label: 'Your Favorites', xp: 10, color: 'red' },
-  recipes_wisdom: { type: 'recipes_wisdom', label: 'Pass It Down', xp: 15, color: 'yellow' },
+export const TYPE_CONFIG: Record<string, {
+  type: PromptType;
+  label: string;
+  xp: number;
+  color: 'yellow' | 'green' | 'red' | 'blue' | 'purple';
+  inputHint: string;  // e.g. "⌨️ Type" or "🎙️ Talk"
+  timeHint: string;   // e.g. "~30 sec" or "~2 min"
+}> = {
+  photo_backstory: { type: 'photo_backstory', label: 'Tell the Story', xp: 15, color: 'yellow', inputHint: '🎙️ Talk or type', timeHint: '~2 min' },
+  tag_person: { type: 'tag_person', label: "Who's This?", xp: 5, color: 'blue', inputHint: '👆 Tap to tag', timeHint: '~30 sec' },
+  missing_info: { type: 'missing_info', label: 'Update Info', xp: 5, color: 'green', inputHint: '⌨️ Quick fill', timeHint: '~30 sec' },
+  quick_question: { type: 'missing_info', label: 'Update Info', xp: 5, color: 'green', inputHint: '⌨️ Quick fill', timeHint: '~30 sec' }, // alias
+  contact_info: { type: 'contact_info', label: 'Complete Profile', xp: 10, color: 'green', inputHint: '⌨️ Quick fill', timeHint: '~1 min' },
+  memory_prompt: { type: 'memory_prompt', label: 'Remember When', xp: 20, color: 'purple', inputHint: '🎙️ Talk or type', timeHint: '~3 min' },
+  knowledge: { type: 'knowledge', label: 'Share Wisdom', xp: 15, color: 'red', inputHint: '🎙️ Talk or type', timeHint: '~3 min' },
+  connect_dots: { type: 'connect_dots', label: 'Then & Now', xp: 10, color: 'blue', inputHint: '🎙️ Talk or type', timeHint: '~2 min' },
+  highlight: { type: 'highlight', label: 'Spotlight', xp: 5, color: 'yellow', inputHint: '⌨️ Quick answer', timeHint: '~1 min' },
+  postscript: { type: 'postscript', label: 'Future Message', xp: 20, color: 'purple', inputHint: '✍️ Write a letter', timeHint: '~5 min' },
+  favorites_firsts: { type: 'favorites_firsts', label: 'Your Favorites', xp: 10, color: 'red', inputHint: '⌨️ Quick answer', timeHint: '~1 min' },
+  recipes_wisdom: { type: 'recipes_wisdom', label: 'Pass It Down', xp: 15, color: 'yellow', inputHint: '🎙️ Talk or type', timeHint: '~3 min' },
+  // New card types for profile completion
+  personality: { type: 'personality' as PromptType, label: 'Your Personality', xp: 10, color: 'purple', inputHint: '👆 Pick traits', timeHint: '~30 sec' },
+  religion: { type: 'religion' as PromptType, label: 'Faith & Spirituality', xp: 10, color: 'blue', inputHint: '👆 Select', timeHint: '~30 sec' },
+  skills: { type: 'skills' as PromptType, label: 'Your Skills', xp: 10, color: 'green', inputHint: '👆 Pick skills', timeHint: '~30 sec' },
+  languages: { type: 'languages' as PromptType, label: 'Languages', xp: 5, color: 'blue', inputHint: '👆 Select', timeHint: '~30 sec' },
+  binary_choice: { type: 'binary_choice' as PromptType, label: 'Quick Pick', xp: 5, color: 'yellow', inputHint: '👆 Tap one', timeHint: '~10 sec' },
+  daily_checkin: { type: 'daily_checkin' as PromptType, label: 'Daily Check-in', xp: 5, color: 'green', inputHint: '⌨️ Quick thought', timeHint: '~30 sec' },
 }
 
 // Prompt types that should use ConversationView (multi-turn voice/text)
@@ -26,7 +40,19 @@ export const CONVERSATION_TYPES = [
   'postscript',
   'connect_dots',
   'highlight',
+  'daily_checkin',
 ]
+
+// Prompt types that use pill selection UI
+export const PILL_SELECTION_TYPES = [
+  'personality',
+  'religion',
+  'skills',
+  'languages',
+]
+
+// Prompt types that use binary choice UI
+export const BINARY_CHOICE_TYPES = ['binary_choice']
 
 // Prompt types that use face tagging modal
 export const PHOTO_TAGGING_TYPES = ['tag_person']

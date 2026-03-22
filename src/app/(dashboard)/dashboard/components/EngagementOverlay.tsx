@@ -40,6 +40,7 @@ interface EngagementOverlayProps {
   userContacts: any[]
   carouselIndex: number
   onCarouselIndexChange: (index: number) => void
+  streakDays?: number
 }
 
 export function EngagementOverlay({
@@ -63,6 +64,7 @@ export function EngagementOverlay({
   userContacts,
   carouselIndex,
   onCarouselIndexChange,
+  streakDays = 0,
 }: EngagementOverlayProps) {
   // Multi-select chapter filter
   const [selectedChapters, setSelectedChapters] = useState<string[]>([])
@@ -276,6 +278,39 @@ export function EngagementOverlay({
                     <div style={{ fontSize: '11px', color: '#888' }}>Total earned</div>
                   </div>
                 </div>
+
+                {/* Streak Counter */}
+                {streakDays > 0 && (
+                  <div style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '8px',
+                    padding: '12px 16px',
+                    background: 'rgba(255, 140, 0, 0.1)',
+                    borderRadius: '12px',
+                  }}>
+                    <span style={{ fontSize: '22px' }}>🔥</span>
+                    <div>
+                      <div style={{ fontSize: '18px', fontWeight: '700', color: '#2d2d2d' }}>{streakDays} day{streakDays !== 1 ? 's' : ''}</div>
+                      <div style={{ fontSize: '11px', color: '#888' }}>Current streak</div>
+                    </div>
+                  </div>
+                )}
+
+                {/* Streak saver hint - shows when streak is at risk */}
+                {streakDays >= 3 && (
+                  <div style={{
+                    fontSize: '12px',
+                    color: '#e67700',
+                    background: 'rgba(255, 140, 0, 0.06)',
+                    padding: '8px 12px',
+                    borderRadius: '10px',
+                    textAlign: 'center',
+                    fontWeight: 500,
+                  }}>
+                    💪 Answer 1 prompt to keep your streak alive!
+                  </div>
+                )}
 
                 {/* Chapter Filter */}
                 <div>

@@ -16,6 +16,12 @@ import {
   Trophy,
   BookOpen,
   Users,
+  Fingerprint,
+  Heart,
+  Wrench,
+  Languages,
+  ArrowLeftRight,
+  Sun,
   type LucideIcon,
 } from 'lucide-react';
 
@@ -31,7 +37,13 @@ export type PromptType =
   | 'highlight'
   | 'postscript'
   | 'favorites_firsts'
-  | 'recipes_wisdom';
+  | 'recipes_wisdom'
+  | 'personality'
+  | 'religion'
+  | 'skills'
+  | 'languages'
+  | 'binary_choice'
+  | 'daily_checkin';
 
 /**
  * Icon mapping for prompt types
@@ -50,6 +62,12 @@ export const promptIcons: Record<PromptType, LucideIcon> = {
   postscript: Mail,
   favorites_firsts: Trophy,
   recipes_wisdom: BookOpen,
+  personality: Fingerprint,
+  religion: Heart,
+  skills: Wrench,
+  languages: Languages,
+  binary_choice: ArrowLeftRight,
+  daily_checkin: Sun,
 };
 
 /**

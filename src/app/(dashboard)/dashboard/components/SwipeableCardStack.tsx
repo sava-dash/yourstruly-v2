@@ -891,9 +891,24 @@ function FlippableCard({
                 {getPromptText(prompt)}
               </p>
 
-              <p className="text-xs text-gray-400 text-center mt-4">
-                Tap to answer • ← Previous • → Next
-              </p>
+              {/* Interaction hints */}
+              <div style={{
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                gap: '12px',
+                marginTop: '12px',
+                fontSize: '12px',
+                color: '#999',
+              }}>
+                <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                  {config.inputHint}
+                </span>
+                <span style={{ width: '3px', height: '3px', borderRadius: '50%', background: '#ccc' }} />
+                <span>{config.timeHint}</span>
+                <span style={{ width: '3px', height: '3px', borderRadius: '50%', background: '#ccc' }} />
+                <span>Tap to start</span>
+              </div>
             </div>
           </div>
         </div>
@@ -1148,6 +1163,24 @@ function FlippableCard({
                 </div>
               </div>
             </div>
+          ) : (prompt.type === 'personality' || prompt.type === 'religion' || prompt.type === 'skills' || prompt.type === 'languages') ? (
+            /* Pill selection back-side for profile completion cards */
+            <PillSelectionBack
+              prompt={prompt}
+              config={config}
+              onAnswer={onAnswer}
+              onDismiss={onDismiss}
+              getPromptText={getPromptText}
+            />
+          ) : prompt.type === 'binary_choice' ? (
+            /* Binary choice: Two big tap targets */
+            <BinaryChoiceBack
+              prompt={prompt}
+              config={config}
+              onAnswer={onAnswer}
+              onDismiss={onDismiss}
+              getPromptText={getPromptText}
+            />
           ) : (
             /* Default conversation back-side: Text + Mic + Video + AI follow-ups */
             <div className="h-full flex flex-col pt-14">
@@ -1326,6 +1359,230 @@ function FlippableCard({
       </motion.div>
 
 
+    </div>
+  )
+}
+
+/* ─── Pill Selection Back (personality, religion, skills, languages) ─── */
+
+const PILL_OPTIONS: Record<string, string[]> = {
+  personality: [
+    'Creative', 'Analytical', 'Empathetic', 'Adventurous', 'Organized', 'Spontaneous',
+    'Introverted', 'Extroverted', 'Patient', 'Ambitious', 'Resilient', 'Curious',
+    'Compassionate', 'Independent', 'Loyal', 'Optimistic', 'Practical', 'Thoughtful',
+    'Humorous', 'Detail-oriented', 'Big-picture', 'Calm', 'Energetic', 'Spiritual',
+  ],
+  religion: [
+    'Christianity', 'Islam', 'Judaism', 'Hinduism', 'Buddhism', 'Sikhism',
+    'Spiritual but not religious', 'Agnostic', 'Atheist', 'Bahá\'í', 'Taoism',
+    'Jainism', 'Shinto', 'Indigenous', 'Other',
+  ],
+  skills: [
+    'Leadership', 'Public Speaking', 'Writing', 'Teaching', 'Problem Solving',
+    'Negotiation', 'Project Management', 'Mentoring', 'Cooking', 'Gardening',
+    'Photography', 'Music', 'Art', 'Coding', 'Design', 'Carpentry',
+    'Financial Planning', 'First Aid', 'Driving', 'Swimming', 'Crafts',
+  ],
+  languages: [
+    'English', 'Spanish', 'French', 'Mandarin', 'Hindi', 'Arabic', 'Portuguese',
+    'Russian', 'Japanese', 'Korean', 'German', 'Italian', 'Vietnamese', 'Thai',
+    'Turkish', 'Polish', 'Dutch', 'Greek', 'Hebrew', 'Tagalog', 'Swahili',
+    'Sign Language', 'Other',
+  ],
+}
+
+function PillSelectionBack({
+  prompt,
+  config,
+  onAnswer,
+  onDismiss,
+  getPromptText,
+}: {
+  prompt: Prompt
+  config: any
+  onAnswer: (id: string, r: any) => Promise<void>
+  onDismiss: () => void
+  getPromptText: (p: Prompt) => string
+}) {
+  const [selected, setSelected] = useState<Set<string>>(new Set())
+  const [customValue, setCustomValue] = useState('')
+  const [isSubmitting, setIsSubmitting] = useState(false)
+  const options = PILL_OPTIONS[prompt.type] || []
+  const isMulti = prompt.type !== 'religion' // religion = single select
+
+  const toggle = (val: string) => {
+    setSelected(prev => {
+      const next = new Set(prev)
+      if (isMulti) {
+        if (next.has(val)) next.delete(val); else next.add(val)
+      } else {
+        next.clear(); next.add(val)
+      }
+      return next
+    })
+  }
+
+  const handleSave = async () => {
+    if (selected.size === 0) return
+    setIsSubmitting(true)
+    const vals = Array.from(selected)
+    if (customValue.trim()) vals.push(customValue.trim())
+    await onAnswer(prompt.id, { type: 'selection', text: vals.join(', '), data: { values: vals, field: prompt.type } })
+    onDismiss()
+  }
+
+  return (
+    <div className="h-full flex flex-col pt-14" style={{ backfaceVisibility: 'hidden', transform: 'rotateY(180deg)' }}>
+      <div style={{ padding: '0 20px 8px', borderBottom: '1px solid rgba(0,0,0,0.06)' }}>
+        <p style={{ fontSize: '16px', fontWeight: 600, color: '#2d2d2d', margin: '0 0 4px' }}>
+          {getPromptText(prompt)}
+        </p>
+        <p style={{ fontSize: '12px', color: '#999', margin: 0 }}>
+          {isMulti ? 'Select all that apply' : 'Choose one'}
+        </p>
+      </div>
+
+      <div style={{ flex: 1, overflowY: 'auto', padding: '16px 20px', display: 'flex', flexWrap: 'wrap', gap: '8px', alignContent: 'flex-start' }}>
+        {options.map(opt => (
+          <button
+            key={opt}
+            onClick={() => toggle(opt)}
+            style={{
+              padding: '8px 16px',
+              borderRadius: '100px',
+              border: `2px solid ${selected.has(opt) ? '#406A56' : 'rgba(0,0,0,0.1)'}`,
+              background: selected.has(opt) ? '#406A56' : 'white',
+              color: selected.has(opt) ? 'white' : '#444',
+              fontSize: '14px',
+              fontWeight: selected.has(opt) ? 600 : 500,
+              cursor: 'pointer',
+              transition: 'all 0.15s ease',
+            }}
+          >
+            {opt}
+          </button>
+        ))}
+
+        {/* Custom option */}
+        <input
+          type="text"
+          value={customValue}
+          onChange={(e) => setCustomValue(e.target.value)}
+          placeholder="+ Add your own..."
+          style={{
+            padding: '8px 16px',
+            borderRadius: '100px',
+            border: '2px dashed rgba(0,0,0,0.15)',
+            background: 'transparent',
+            fontSize: '14px',
+            color: '#666',
+            outline: 'none',
+            minWidth: '140px',
+          }}
+        />
+      </div>
+
+      <div style={{ padding: '12px 20px', borderTop: '1px solid rgba(0,0,0,0.06)', display: 'flex', gap: '8px' }}>
+        <button
+          onClick={() => onDismiss()}
+          style={{
+            flex: 1, padding: '12px', borderRadius: '14px',
+            border: '1px solid rgba(0,0,0,0.1)', background: 'white',
+            fontSize: '14px', fontWeight: 500, color: '#666', cursor: 'pointer',
+          }}
+        >
+          Skip
+        </button>
+        <button
+          onClick={handleSave}
+          disabled={selected.size === 0 || isSubmitting}
+          style={{
+            flex: 2, padding: '12px', borderRadius: '14px',
+            border: 'none', background: '#406A56', color: 'white',
+            fontSize: '14px', fontWeight: 600, cursor: 'pointer',
+            opacity: (selected.size === 0 || isSubmitting) ? 0.5 : 1,
+          }}
+        >
+          {isSubmitting ? 'Saving...' : `Save (${selected.size} selected)`}
+        </button>
+      </div>
+    </div>
+  )
+}
+
+/* ─── Binary Choice Back (quick A/B decisions) ─── */
+
+function BinaryChoiceBack({
+  prompt,
+  config,
+  onAnswer,
+  onDismiss,
+  getPromptText,
+}: {
+  prompt: Prompt
+  config: any
+  onAnswer: (id: string, r: any) => Promise<void>
+  onDismiss: () => void
+  getPromptText: (p: Prompt) => string
+}) {
+  const [isSubmitting, setIsSubmitting] = useState(false)
+  const options = prompt.metadata?.options || ['Option A', 'Option B']
+
+  const handleChoice = async (choice: string) => {
+    if (isSubmitting) return
+    setIsSubmitting(true)
+    await onAnswer(prompt.id, { type: 'selection', text: choice, data: { choice } })
+    onDismiss()
+  }
+
+  return (
+    <div className="h-full flex flex-col" style={{ backfaceVisibility: 'hidden', transform: 'rotateY(180deg)' }}>
+      {/* Question */}
+      <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '24px', textAlign: 'center' }}>
+        <p style={{ fontSize: '18px', fontWeight: 600, color: '#2d2d2d', marginBottom: '32px', lineHeight: 1.4 }}>
+          {getPromptText(prompt)}
+        </p>
+
+        {/* Two big tap targets */}
+        <div style={{ display: 'flex', gap: '16px', width: '100%', maxWidth: '360px' }}>
+          {options.slice(0, 2).map((opt: string, i: number) => (
+            <button
+              key={i}
+              onClick={() => handleChoice(opt)}
+              disabled={isSubmitting}
+              style={{
+                flex: 1,
+                padding: '24px 16px',
+                borderRadius: '20px',
+                border: 'none',
+                background: i === 0
+                  ? 'linear-gradient(135deg, #406A56, #5a9a7a)'
+                  : 'linear-gradient(135deg, #C35F33, #e08a60)',
+                color: 'white',
+                fontSize: '16px',
+                fontWeight: 700,
+                cursor: 'pointer',
+                transition: 'all 0.2s',
+                boxShadow: '0 4px 16px rgba(0,0,0,0.15)',
+                opacity: isSubmitting ? 0.6 : 1,
+              }}
+            >
+              {opt}
+            </button>
+          ))}
+        </div>
+
+        <button
+          onClick={() => onDismiss()}
+          style={{
+            marginTop: '20px', padding: '8px 24px', borderRadius: '10px',
+            border: 'none', background: 'transparent', color: '#999',
+            fontSize: '13px', cursor: 'pointer',
+          }}
+        >
+          Skip
+        </button>
+      </div>
     </div>
   )
 }

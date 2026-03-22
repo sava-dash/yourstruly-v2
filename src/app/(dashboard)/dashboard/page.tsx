@@ -3217,6 +3217,7 @@ export default function DashboardPage() {
         userContacts={dashboardContacts}
         carouselIndex={engagementCarouselIndex}
         onCarouselIndexChange={setEngagementCarouselIndex}
+        streakDays={Math.max(engagementStats?.currentStreakDays ?? 0, streakDays)}
       />
 
       {/* Monthly Recap Popup */}

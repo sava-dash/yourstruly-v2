@@ -165,6 +165,12 @@ export const PROMPT_TYPES = [
   { value: 'photo_metadata', label: 'Photo Details', description: 'Add location, date, or other details to a photo' },
   { value: 'photo_location', label: 'Photo Location (→ photo_metadata)', description: 'Deprecated: alias for photo_metadata' },
   { value: 'photo_date', label: 'Photo Date (→ photo_metadata)', description: 'Deprecated: alias for photo_metadata' },
+  { value: 'personality', label: 'Personality', description: 'How would you describe yourself? (pill selection)' },
+  { value: 'religion', label: 'Faith & Spirituality', description: 'Spiritual or religious background (selection)' },
+  { value: 'skills', label: 'Skills', description: 'What are your skills? (pill selection)' },
+  { value: 'languages', label: 'Languages', description: 'What languages do you speak? (selection)' },
+  { value: 'binary_choice', label: 'Quick Pick', description: 'A/B choice about a photo or memory' },
+  { value: 'daily_checkin', label: 'Daily Check-in', description: 'Low-friction daily gratitude or reflection prompt' },
 ];
 
 export const KNOWLEDGE_CATEGORIES = [
