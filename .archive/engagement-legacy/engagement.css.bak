@@ -1,7 +1,733 @@
 /* =============================================================================
-   ENGAGEMENT STYLES
-   Cleaned up 2026-03-22: Removed dead bubble/masonry/conversation styles
+   ENGAGEMENT BUBBLES - Explore-Style Theme
+   Based on YT Brand Guidelines with vibrant accent colors
    ============================================================================= */
+
+/* Color palette from brand guidelines */
+:root {
+  --yt-offwhite: #F2F1E5;
+  --yt-green: #406A56;
+  --yt-green-light: #D3E1DF;
+  --yt-green-dark: #2d4d3e;
+  --yt-yellow: #D9C61A;
+  --yt-yellow-light: #F5EFBE;
+  --yt-yellow-dark: #8a7c08;
+  --yt-blue: #8DACAB;
+  --yt-blue-light: #C5CDD6;
+  --yt-blue-dark: #5d7a79;
+  --yt-red: #C35F33;
+  --yt-red-light: #EBD4CA;
+  --yt-red-dark: #9a4a28;
+  --yt-purple: #4A3552;
+  --yt-purple-light: #D8D3DA;
+  --yt-purple-mid: #6b4a7a;
+  --yt-purple-dark: #3a2942;
+}
+
+/* Masonry container - centered and spacious */
+.engagement-masonry {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 40px;
+  justify-content: center;
+  align-items: flex-start;
+  padding: 32px;
+  max-width: 900px;
+  margin: 0 auto;
+}
+
+/* Page wrapper for vertical centering */
+.engagement-page-wrapper {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: calc(100vh - 120px);
+  padding: 24px;
+}
+
+/* Progress tracker at top - Canonical frosted glass */
+.progress-tracker {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 16px;
+  background: rgba(255, 255, 255, 0.8);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border-radius: 20px;
+  border: 1px solid rgba(255, 255, 255, 0.5);
+  box-shadow:
+    0 4px 16px rgba(195, 95, 51, 0.06),
+    0 12px 32px rgba(0, 0, 0, 0.06);
+  min-height: 56px;
+  overflow-x: auto;
+  overflow-y: hidden;
+  max-width: 100%;
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.progress-tracker:hover {
+  background: rgba(255, 255, 255, 0.85);
+  box-shadow:
+    0 6px 20px rgba(195, 95, 51, 0.08),
+    0 16px 40px rgba(0, 0, 0, 0.08);
+}
+
+.progress-tracker::-webkit-scrollbar {
+  height: 4px;
+}
+
+.progress-tracker::-webkit-scrollbar-thumb {
+  background: rgba(64, 106, 86, 0.2);
+  border-radius: 2px;
+}
+
+.progress-tracker-empty {
+  font-size: 12px;
+  color: #999;
+  font-style: italic;
+  white-space: nowrap;
+}
+
+.progress-tracker-label {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--yt-green);
+  white-space: nowrap;
+  padding-right: 12px;
+  border-right: 1px solid rgba(64, 106, 86, 0.15);
+  margin-right: 8px;
+}
+
+/* Completed tile thumbnails in progress tracker */
+.progress-tile {
+  flex-shrink: 0;
+  width: 40px;
+  height: 40px;
+  border-radius: 8px;
+  overflow: hidden;
+  background: rgba(64, 106, 86, 0.1);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 16px;
+  border: 2px solid white;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+.progress-tile:hover {
+  transform: scale(1.1);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.progress-tile img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.progress-tile-avatar {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+  font-weight: 600;
+  background: var(--yt-green-light);
+  color: var(--yt-green);
+}
+
+/* Base bubble card - canonical frosted glass style */
+.bubble-card {
+  position: relative;
+  background: rgba(255, 255, 255, 0.8);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.5);
+  border-radius: 20px;
+  overflow: hidden;
+  box-shadow:
+    0 4px 16px rgba(195, 95, 51, 0.06),
+    0 12px 32px rgba(0, 0, 0, 0.06);
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  /* Wider tiles to fit more text */
+  width: 322px;
+  min-height: 207px;
+  flex-shrink: 0;
+}
+
+.bubble-card:hover {
+  background: rgba(255, 255, 255, 0.85);
+  box-shadow:
+    0 6px 20px rgba(195, 95, 51, 0.08),
+    0 16px 40px rgba(0, 0, 0, 0.08);
+  transform: translateY(-2px);
+}
+
+.bubble-card.expanded {
+  width: 368px;
+  z-index: 20;
+  position: relative;
+}
+
+/* Top border removed - using glow effect instead */
+
+/* =============================================================================
+   CATEGORY PILLS - Color-coded labels for tile types
+   ============================================================================= */
+
+.category-pill {
+  display: inline-block;
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  padding: 4px 10px;
+  border-radius: 12px;
+}
+
+/* Photo/Yellow types (photo_backstory, highlight, recipes_wisdom) - Yellow/Amber theme */
+.category-pill-photo,
+.category-pill-yellow {
+  background: rgba(217, 198, 26, 0.15);
+  color: var(--yt-yellow-dark);
+}
+
+/* Blue contact types (tag_person, connect_dots) - Blue theme */
+.category-pill-contact,
+.category-pill-blue {
+  background: rgba(141, 172, 171, 0.2);
+  color: var(--yt-blue-dark);
+}
+
+/* Green contact types (missing_info, quick_question) - Green theme */
+.category-pill-green {
+  background: rgba(64, 106, 86, 0.12);
+  color: var(--yt-green);
+}
+
+/* Memory types (memory_prompt, postscript) - Purple theme */
+.category-pill-memory,
+.category-pill-purple {
+  background: rgba(74, 53, 82, 0.15);
+  color: var(--yt-purple);
+}
+
+/* Knowledge types (knowledge, favorites_firsts) - Terra Cotta theme */
+.category-pill-knowledge,
+.category-pill-red {
+  background: rgba(195, 95, 51, 0.12);
+  color: var(--yt-red);
+}
+
+/* XP badge */
+.bubble-xp-badge {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 10px;
+  border-radius: 20px;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+}
+
+.bubble-card[data-type="photo_backstory"] .bubble-xp-badge { 
+  background: rgba(217, 198, 26, 0.15); 
+  color: var(--yt-yellow-dark); 
+}
+.bubble-card[data-type="tag_person"] .bubble-xp-badge { 
+  background: rgba(141, 172, 171, 0.2); 
+  color: var(--yt-blue-dark); 
+}
+.bubble-card[data-type="missing_info"] .bubble-xp-badge,
+.bubble-card[data-type="quick_question"] .bubble-xp-badge { 
+  background: rgba(64, 106, 86, 0.12); 
+  color: var(--yt-green); 
+}
+.bubble-card[data-type="memory_prompt"] .bubble-xp-badge,
+.bubble-card[data-type="postscript"] .bubble-xp-badge { 
+  background: linear-gradient(135deg, var(--yt-purple), var(--yt-purple-mid)); 
+  color: white; 
+}
+.bubble-card[data-type="knowledge"] .bubble-xp-badge,
+.bubble-card[data-type="favorites_firsts"] .bubble-xp-badge { 
+  background: rgba(195, 95, 51, 0.12); 
+  color: var(--yt-red); 
+}
+.bubble-card[data-type="recipes_wisdom"] .bubble-xp-badge { 
+  background: rgba(217, 198, 26, 0.15); 
+  color: var(--yt-yellow-dark); 
+}
+
+/* Type label - Refined small caps */
+.bubble-type-label {
+  font-size: 0.65rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  opacity: 0.85;
+}
+
+.bubble-card[data-type="photo_backstory"] .bubble-type-label { color: var(--yt-yellow-dark); }
+.bubble-card[data-type="tag_person"] .bubble-type-label { color: var(--yt-blue-dark); }
+.bubble-card[data-type="missing_info"] .bubble-type-label,
+.bubble-card[data-type="quick_question"] .bubble-type-label { color: var(--yt-green); }
+.bubble-card[data-type="memory_prompt"] .bubble-type-label,
+.bubble-card[data-type="postscript"] .bubble-type-label { color: var(--yt-purple); }
+.bubble-card[data-type="knowledge"] .bubble-type-label,
+.bubble-card[data-type="favorites_firsts"] .bubble-type-label { color: var(--yt-red); }
+.bubble-card[data-type="recipes_wisdom"] .bubble-type-label { color: var(--yt-yellow-dark); }
+
+/* Contact card within bubble - Refined */
+.bubble-contact-card {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px;
+  margin: 12px 0;
+  background: rgba(195, 95, 51, 0.04);
+  border: 1px solid rgba(195, 95, 51, 0.08);
+  border-radius: 0.75rem;
+  border-radius: 12px;
+}
+
+.bubble-contact-avatar {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 18px;
+  font-weight: 600;
+  background: var(--yt-green-light);
+  color: var(--yt-green);
+  flex-shrink: 0;
+}
+
+.bubble-contact-avatar img {
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+.bubble-contact-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.bubble-contact-name {
+  font-size: 13px;
+  font-weight: 600;
+  color: #2d2d2d;
+  margin: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  max-width: 140px;
+}
+
+.bubble-contact-subtitle {
+  font-size: 12px;
+  color: var(--yt-green);
+  margin: 2px 0 0;
+}
+
+/* Expanded contact detail view */
+.bubble-contact-expanded {
+  padding: 16px;
+  background: rgba(64, 106, 86, 0.04);
+  border-radius: 12px;
+  margin: 12px 0;
+}
+
+.bubble-contact-field {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 0;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+}
+
+.bubble-contact-field:last-child {
+  border-bottom: none;
+}
+
+.bubble-contact-field-label {
+  font-size: 12px;
+  color: #666;
+}
+
+.bubble-contact-field-value {
+  font-size: 13px;
+  color: #2d2d2d;
+  font-weight: 500;
+}
+
+.bubble-contact-field.missing .bubble-contact-field-value {
+  color: var(--yt-red);
+  background: rgba(195, 95, 51, 0.1);
+  padding: 4px 10px;
+  border-radius: 6px;
+  font-size: 11px;
+  font-weight: 600;
+}
+
+/* Photo within bubble */
+.bubble-photo {
+  width: 100%;
+  height: 120px;
+  object-fit: cover;
+  border-radius: 8px;
+  margin: 8px 0;
+}
+
+.bubble-card.expanded .bubble-photo {
+  height: 160px;
+}
+
+/* Prompt text */
+.bubble-prompt-text {
+  font-size: 15px;
+  line-height: 1.6;
+  color: #3d3d3d;
+  margin: 8px 0;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+}
+
+.bubble-card.expanded .bubble-prompt-text {
+  font-size: 15px;
+}
+
+/* Hint text */
+.bubble-hint {
+  font-size: 11px;
+  color: #999;
+  text-align: right;
+  margin-top: 8px;
+}
+
+/* Input buttons */
+.bubble-input-buttons {
+  display: flex;
+  gap: 10px;
+  margin: 12px 0;
+}
+
+.bubble-input-btn {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 12px;
+  background: rgba(64, 106, 86, 0.06);
+  border: 1px solid rgba(64, 106, 86, 0.12);
+  border-radius: 10px;
+  font-size: 13px;
+  color: var(--yt-green);
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.bubble-input-btn:hover {
+  background: rgba(64, 106, 86, 0.12);
+  border-color: rgba(64, 106, 86, 0.2);
+}
+
+/* Text input area */
+.bubble-textarea {
+  width: 100%;
+  padding: 12px;
+  background: rgba(64, 106, 86, 0.04);
+  border: 1px solid rgba(64, 106, 86, 0.12);
+  border-radius: 10px;
+  font-size: 14px;
+  color: #2d2d2d;
+  resize: none;
+  transition: all 0.2s ease;
+}
+
+.bubble-textarea:focus {
+  outline: none;
+  border-color: var(--yt-green);
+  background: white;
+}
+
+.bubble-textarea::placeholder {
+  color: #aaa;
+}
+
+/* Submit button */
+.bubble-submit-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 10px 20px;
+  background: var(--yt-green);
+  border: none;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 600;
+  color: white;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.bubble-submit-btn:hover {
+  background: #4a7a64;
+}
+
+.bubble-submit-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* Quick answer buttons */
+.bubble-quick-answers {
+  display: flex;
+  gap: 10px;
+  margin: 12px 0;
+}
+
+.bubble-quick-btn {
+  flex: 1;
+  padding: 12px;
+  background: white;
+  border: 2px solid rgba(64, 106, 86, 0.2);
+  border-radius: 10px;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--yt-green);
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.bubble-quick-btn:hover {
+  background: var(--yt-green);
+  border-color: var(--yt-green);
+  color: white;
+}
+
+/* Footer actions */
+.bubble-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding-top: 12px;
+  margin-top: 8px;
+  border-top: 1px solid rgba(0, 0, 0, 0.06);
+}
+
+.bubble-action-btn {
+  font-size: 11px;
+  color: #999;
+  background: none;
+  border: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  transition: color 0.2s ease;
+}
+
+.bubble-action-btn:hover {
+  color: #666;
+}
+
+/* Close button */
+.bubble-close-btn {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  padding: 6px;
+  background: rgba(0, 0, 0, 0.05);
+  border: none;
+  border-radius: 50%;
+  cursor: pointer;
+  z-index: 10;
+  transition: background 0.2s ease;
+}
+
+.bubble-close-btn:hover {
+  background: rgba(0, 0, 0, 0.1);
+}
+
+/* Stats bar */
+.engagement-stats {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  padding: 10px 20px;
+  background: rgba(255, 255, 255, 0.8);
+  backdrop-filter: blur(8px);
+  border-radius: 24px;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.06);
+}
+
+.engagement-stat {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  color: #666;
+}
+
+.engagement-stat strong {
+  color: var(--yt-green);
+  font-weight: 600;
+}
+
+/* Refresh button */
+.engagement-refresh-btn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 20px;
+  background: rgba(255, 255, 255, 0.8);
+  backdrop-filter: blur(8px);
+  border: 1px solid rgba(64, 106, 86, 0.15);
+  border-radius: 24px;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--yt-green);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.04);
+}
+
+.engagement-refresh-btn:hover {
+  background: white;
+  border-color: var(--yt-green);
+}
+
+/* Empty state */
+.engagement-empty {
+  text-align: center;
+  padding: 48px 24px;
+}
+
+.engagement-empty-icon {
+  width: 80px;
+  height: 80px;
+  margin: 0 auto 20px;
+  background: rgba(64, 106, 86, 0.08);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.engagement-empty h3 {
+  font-size: 20px;
+  font-weight: 600;
+  color: var(--yt-green);
+  margin: 0 0 8px;
+}
+
+.engagement-empty p {
+  font-size: 14px;
+  color: #888;
+  max-width: 280px;
+  margin: 0 auto;
+}
+
+/* =============================================================================
+   XP COUNTER & ANIMATIONS
+   ============================================================================= */
+
+.xp-counter {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 14px;
+  background: linear-gradient(135deg, rgba(217, 198, 26, 0.15), rgba(217, 198, 26, 0.25));
+  border-radius: 20px;
+  border: 1px solid rgba(217, 198, 26, 0.3);
+}
+
+.xp-value {
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--yt-yellow-dark);
+}
+
+.xp-label {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--yt-yellow-dark);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.xp-gain-popup {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--yt-yellow);
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.15);
+  white-space: nowrap;
+  pointer-events: none;
+  background: rgba(255, 255, 255, 0.95);
+  padding: 4px 10px;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(217, 198, 26, 0.3);
+}
+
+.progress-tracker-divider {
+  width: 1px;
+  height: 24px;
+  background: rgba(64, 106, 86, 0.15);
+  margin: 0 8px;
+}
+
+.progress-tiles-container {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex: 1;
+  overflow-x: auto;
+  overflow-y: hidden;
+  padding: 4px 0;
+}
+
+.progress-tiles-container::-webkit-scrollbar {
+  height: 4px;
+}
+
+.progress-tiles-container::-webkit-scrollbar-thumb {
+  background: rgba(64, 106, 86, 0.2);
+  border-radius: 2px;
+}
+
+/* Flying tile animation overlay */
+.flying-tile {
+  background: white;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.15);
+  pointer-events: none;
+}
+
+/* =============================================================================
+   BUBBLE DESCRIPTION
+   ============================================================================= */
+
+.bubble-description {
+  font-size: 12px;
+  line-height: 1.5;
+  color: #888;
+  margin: 8px 0 0;
+  padding-top: 8px;
+  border-top: 1px solid rgba(0, 0, 0, 0.05);
+}
 
 /* =============================================================================
    BUBBLE TILE (Used in dashboard)
@@ -199,6 +925,126 @@
   margin-top: auto;
 }
 
+/* =============================================================================
+   MULTI-STEP CONVERSATION UI
+   ============================================================================= */
+
+.conversation-history {
+  margin-bottom: 12px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid rgba(64, 106, 86, 0.1);
+}
+
+.conversation-response {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  padding: 8px 0;
+  font-size: 13px;
+}
+
+.conversation-response:not(:last-child) {
+  border-bottom: 1px dashed rgba(64, 106, 86, 0.08);
+}
+
+.conversation-checkmark {
+  color: var(--yt-green);
+  font-size: 12px;
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+.conversation-answer {
+  color: #555;
+  line-height: 1.4;
+}
+
+.step-indicator {
+  display: inline-block;
+  font-size: 10px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--yt-green);
+  background: rgba(64, 106, 86, 0.08);
+  padding: 3px 8px;
+  border-radius: 10px;
+  margin-top: 8px;
+}
+
+/* Progress dots for multi-step */
+.step-dots {
+  display: flex;
+  gap: 6px;
+  justify-content: center;
+  margin-top: 12px;
+}
+
+.step-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: rgba(64, 106, 86, 0.2);
+}
+
+.step-dot.active {
+  background: var(--yt-green);
+}
+
+.step-dot.completed {
+  background: var(--yt-green);
+}
+
+/* =============================================================================
+   PERSONALIZED GREETING HEADER
+   ============================================================================= */
+
+.greeting-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 24px;
+  margin-bottom: 24px;
+  padding: 0 16px;
+}
+
+.greeting-text h1 {
+  font-size: 28px;
+  font-weight: 600;
+  color: var(--yt-green);
+  margin: 0 0 4px;
+}
+
+.greeting-text p {
+  font-size: 14px;
+  color: #666;
+  margin: 0;
+}
+
+.upcoming-events {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.upcoming-event {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 14px;
+  background: rgba(217, 198, 26, 0.1);
+  border: 1px solid rgba(217, 198, 26, 0.2);
+  border-radius: 20px;
+  font-size: 13px;
+  color: #666;
+  text-decoration: none;
+  transition: all 0.2s ease;
+}
+
+.upcoming-event:hover {
+  background: rgba(217, 198, 26, 0.2);
+  border-color: rgba(217, 198, 26, 0.3);
+}
 
 /* =============================================================================
    MILESTONE CELEBRATION MODAL
@@ -279,7 +1125,6 @@
   background: #4a7a64;
 }
 
-
 /* =============================================================================
    VOICE RECORDER
    ============================================================================= */
@@ -336,6 +1181,106 @@
   height: 40px;
 }
 
+/* =============================================================================
+   FAMILY REACTIONS (HEARTS)
+   ============================================================================= */
+
+.memory-reactions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 0;
+  border-top: 1px solid rgba(0, 0, 0, 0.06);
+  margin-top: 12px;
+}
+
+.reaction-button {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  background: transparent;
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  border-radius: 20px;
+  font-size: 13px;
+  color: #666;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.reaction-button:hover {
+  background: rgba(255, 107, 107, 0.1);
+  border-color: rgba(255, 107, 107, 0.3);
+  color: #ff6b6b;
+}
+
+.reaction-button.active {
+  background: rgba(255, 107, 107, 0.15);
+  border-color: rgba(255, 107, 107, 0.4);
+  color: #ff6b6b;
+}
+
+.reaction-button .heart-icon {
+  transition: transform 0.2s ease;
+}
+
+.reaction-button:hover .heart-icon,
+.reaction-button.active .heart-icon {
+  transform: scale(1.2);
+}
+
+.reaction-avatars {
+  display: flex;
+  margin-left: auto;
+}
+
+.reaction-avatar {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: var(--yt-green-light);
+  color: var(--yt-green);
+  font-size: 10px;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-left: -8px;
+  border: 2px solid white;
+}
+
+.reaction-avatar:first-child {
+  margin-left: 0;
+}
+
+.reaction-count {
+  font-size: 12px;
+  color: #999;
+  margin-left: 8px;
+}
+
+/* -----------------------------------------------------------------------------
+   CONVERSATION INDICATOR
+   ----------------------------------------------------------------------------- */
+
+.bubble-hint-container {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  margin-top: 8px;
+}
+
+.bubble-hint {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11px;
+  color: #4A7C59;
+  background: rgba(74, 124, 89, 0.1);
+  padding: 4px 10px;
+  border-radius: 12px;
+  font-weight: 500;
+}
 
 /* =============================================================================
    INTERVIEW TILE STYLES (Dashboard)
@@ -938,7 +1883,6 @@
   cursor: not-allowed;
 }
 
-
 /* =============================================================================
    QUESTION PROMPT BAR (Wisdom page)
    ============================================================================= */
@@ -1066,7 +2010,6 @@
     100% 100%, 0% 100%
   );
 }
-
 
 /* ============================================
    Media Recorder Component (Video + Voice)
@@ -1293,7 +2236,6 @@
   border-radius: 4px;
   font-size: 11px;
 }
-
 
 /* =============================================================================
    INSTANT QUESTIONS BAR (Wisdom page - horizontal scrolling questions)
