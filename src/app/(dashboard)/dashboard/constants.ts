@@ -19,8 +19,8 @@ export const TYPE_CONFIG: Record<string, {
   connect_dots: { type: 'connect_dots', label: 'Then & Now', xp: 10, color: 'blue', inputHint: '🎙️ Talk or type', timeHint: '~2 min' },
   highlight: { type: 'highlight', label: 'Spotlight', xp: 5, color: 'yellow', inputHint: '⌨️ Quick answer', timeHint: '~1 min' },
   postscript: { type: 'postscript', label: 'Future Message', xp: 20, color: 'purple', inputHint: '✍️ Write a letter', timeHint: '~5 min' },
-  favorites_firsts: { type: 'favorites_firsts', label: 'Your Favorites', xp: 10, color: 'red', inputHint: '⌨️ Quick answer', timeHint: '~1 min' },
-  recipes_wisdom: { type: 'recipes_wisdom', label: 'Pass It Down', xp: 15, color: 'yellow', inputHint: '🎙️ Talk or type', timeHint: '~3 min' },
+  favorites_firsts: { type: 'favorites_firsts', label: 'Your Favorites', xp: 10, color: 'red', inputHint: '⌨️ Quick answer', timeHint: '~1 min' }, // consider merging into knowledge
+  recipes_wisdom: { type: 'recipes_wisdom', label: 'Pass It Down', xp: 15, color: 'yellow', inputHint: '🎙️ Talk or type', timeHint: '~3 min' }, // consider merging into knowledge
   // New card types for profile completion
   personality: { type: 'personality' as PromptType, label: 'Your Personality', xp: 10, color: 'purple', inputHint: '👆 Pick traits', timeHint: '~30 sec' },
   religion: { type: 'religion' as PromptType, label: 'Faith & Spirituality', xp: 10, color: 'blue', inputHint: '👆 Select', timeHint: '~30 sec' },
