@@ -493,6 +493,7 @@ export async function GET(request: NextRequest) {
       file_type,
       created_at,
       taken_at,
+      description,
       memory:memories!memory_media_memory_id_fkey (
         id,
         title,
@@ -521,8 +522,10 @@ export async function GET(request: NextRequest) {
       activities.push({
         id: `photo_uploaded_${photo.id}`,
         type: 'photos_uploaded',
-        title: 'Image uploaded',
-        description: memory?.title ? `Added to "${memory.title}"` : 'You uploaded an image',
+        title: photo.taken_at
+          ? new Date(photo.taken_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
+          : 'Photo',
+        description: (photo as any).description || '',
         timestamp: photoDate,
         link: `/dashboard/memories/${memoryId}`,
         thumbnail: photo.file_url,

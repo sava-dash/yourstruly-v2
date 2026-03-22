@@ -19,6 +19,7 @@ import { EngagementOverlay } from './components/EngagementOverlay'
 import { QuickActions } from './components/QuickActions'
 import { AddContactModal } from '@/components/contacts/AddContactModal'
 import PhotoUploadModal from '@/components/dashboard/PhotoUploadModal'
+import PhotoDetailModal from '@/components/dashboard/PhotoDetailModal'
 import { useDashboardData } from './hooks/useDashboardData'
 import { useXpState } from './hooks/useXpState'
 import {
@@ -510,6 +511,7 @@ export default function DashboardPage() {
   const [streakDays, setStreakDays] = useState(0)
   const [viewMode, setViewMode] = useState<ViewMode>('card')
   const [showMapOverlay, setShowMapOverlay] = useState(false)
+  const [photoDetail, setPhotoDetail] = useState<{ photoId: string; photoUrl: string; memoryId?: string; date?: string; location?: string } | null>(null)
   const [mapFilters, setMapFilters] = useState({ memories: true, wisdom: true, media: true })
   const [mapMediaItems, setMapMediaItems] = useState<ActivityItem[]>([])
   
@@ -2589,8 +2591,17 @@ export default function DashboardPage() {
                       playingAudio={playingAudio}
                       onAudioToggle={handleAudioToggle}
                       onCardClick={(a) => {
-                        setSelectedActivity(a)
-                        setShowDetailModal(true)
+                        if (a.type === 'photos_uploaded' && a.metadata?.photoId) {
+                          setPhotoDetail({
+                            photoId: a.metadata.photoId,
+                            photoUrl: a.thumbnail || '',
+                            memoryId: a.metadata?.memoryId,
+                            date: a.timestamp?.split('T')[0],
+                          })
+                        } else {
+                          setSelectedActivity(a)
+                          setShowDetailModal(true)
+                        }
                       }}
                     />
                   ))}
@@ -2635,8 +2646,17 @@ export default function DashboardPage() {
                         onAudioToggle={handleAudioToggle}
                         dataTour={colIdx === 0 && rowIdx === 0 ? 'first-tile' : undefined}
                         onCardClick={(a) => {
-                          setSelectedActivity(a)
-                          setShowDetailModal(true)
+                          if (a.type === 'photos_uploaded' && a.metadata?.photoId) {
+                            setPhotoDetail({
+                              photoId: a.metadata.photoId,
+                              photoUrl: a.thumbnail || '',
+                              memoryId: a.metadata?.memoryId,
+                              date: a.timestamp?.split('T')[0],
+                            })
+                          } else {
+                            setSelectedActivity(a)
+                            setShowDetailModal(true)
+                          }
                         }}
                       />
                     ))}
@@ -2868,6 +2888,22 @@ export default function DashboardPage() {
           setSelectedActivity(updatedActivity)
         }}
       />
+
+      {/* Photo Detail Modal */}
+      {photoDetail && (
+        <PhotoDetailModal
+          photoId={photoDetail.photoId}
+          photoUrl={photoDetail.photoUrl}
+          memoryId={photoDetail.memoryId}
+          initialDate={photoDetail.date}
+          initialLocation={photoDetail.location}
+          onClose={() => setPhotoDetail(null)}
+          onSaved={() => {
+            // Refresh activities
+            fetchActivities()
+          }}
+        />
+      )}
 
       {/* Interview Modal */}
       <AnimatePresence>
@@ -3677,6 +3713,7 @@ export default function DashboardPage() {
           display: flex;
           gap: 10px;
           flex-wrap: wrap;
+          margin-bottom: 12px;
         }
 
         .quick-action-btn {
