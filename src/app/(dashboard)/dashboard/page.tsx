@@ -261,7 +261,7 @@ function MasonryTile({
             <div style={{
               position: 'absolute',
               inset: 0,
-              background: 'linear-gradient(to bottom, transparent 60%, rgba(0,0,0,0.9))'
+              background: 'linear-gradient(to bottom, transparent 40%, rgba(0,0,0,0.95))'
             }} />
           </div>
         )}

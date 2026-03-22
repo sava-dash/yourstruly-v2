@@ -137,13 +137,15 @@ export default function PhotoDetailModal({
             <X size={18} />
           </button>
 
-          {/* Photo */}
+          {/* Photo — covers full width */}
           <div style={{
             position: 'relative',
             width: '100%',
-            maxHeight: '50vh',
+            height: '45vh',
+            minHeight: '280px',
             overflow: 'hidden',
             borderRadius: '24px 24px 0 0',
+            background: '#1a1a1a',
           }}>
             <img
               src={photoUrl}
@@ -151,9 +153,7 @@ export default function PhotoDetailModal({
               style={{
                 width: '100%',
                 height: '100%',
-                objectFit: 'contain',
-                background: '#f5f5f5',
-                maxHeight: '50vh',
+                objectFit: 'cover',
               }}
             />
           </div>
