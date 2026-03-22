@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback } from 'react'
 import { createClient } from '@/lib/supabase/client'
-import { Save, RefreshCw, Check } from 'lucide-react'
+import { Save, RefreshCw, Check, Plus } from 'lucide-react'
 
 interface CopyItem {
   id: string
@@ -19,9 +19,77 @@ const SECTIONS: { title: string; prefix: string; icon: string }[] = [
   { title: 'Contacts / People', prefix: 'globe.contacts', icon: '👨‍👩‍👧‍👦' },
   { title: 'Interests', prefix: 'globe.interests', icon: '💡' },
   { title: 'Why Are You Here', prefix: 'globe.whyhere', icon: '💭' },
+  { title: 'Photo Upload', prefix: 'globe.photos', icon: '📸' },
+  { title: 'Photo Map', prefix: 'globe.photomap', icon: '🗺️' },
+  { title: "Let's Go Transition", prefix: 'globe.letsgo', icon: '🚀' },
+  { title: 'Heartfelt Question', prefix: 'globe.heartfelt', icon: '💜' },
+  { title: 'Ready / Complete', prefix: 'globe.ready', icon: '🎉' },
   { title: 'Progress Bar Labels', prefix: 'globe.progress', icon: '📊' },
   { title: 'Shared Buttons', prefix: 'globe.button', icon: '🔘' },
 ]
+
+// Default copy values — same as useOnboardingCopy defaults
+const COPY_DEFAULTS: Record<string, { value: string; description: string | null }> = {
+  'globe.welcome.greeting': { value: 'Hi {name} 👋', description: 'Greeting with {name} placeholder' },
+  'globe.welcome.headline': { value: 'We look forward to hearing more about this adventure.', description: null },
+  'globe.welcome.button': { value: "Let's begin", description: null },
+  'globe.places.title_first': { value: 'Have you lived anywhere else?', description: 'First prompt' },
+  'globe.places.title_more': { value: 'Anywhere else?', description: 'After adding first place' },
+  'globe.places.greeting': { value: 'Your life journey 🌍', description: null },
+  'globe.places.input_placeholder': { value: 'City or town name...', description: null },
+  'globe.places.when_placeholder': { value: 'When did you move there? (e.g. Summer 2015)', description: null },
+  'globe.places.button_first': { value: 'Add Place', description: null },
+  'globe.places.button_more': { value: 'Add Another', description: null },
+  'globe.places.done': { value: "I'm done", description: null },
+  'globe.places.skip': { value: 'Skip', description: null },
+  'globe.adventure.greeting': { value: 'What a journey ✨', description: null },
+  'globe.adventure.headline': { value: "You've lived in so many amazing places, I can't wait to hear more about your adventures.", description: null },
+  'globe.adventure.button': { value: 'Continue', description: null },
+  'globe.contacts.greeting': { value: 'Your people 👨‍👩‍👧‍👦', description: null },
+  'globe.contacts.headline': { value: 'Who are the important people in your life?', description: null },
+  'globe.contacts.panel_title': { value: 'Family, Friends & Loved Ones', description: null },
+  'globe.contacts.panel_subtitle': { value: 'Add the people who matter most', description: null },
+  'globe.contacts.name_placeholder': { value: 'Name', description: null },
+  'globe.contacts.relation_placeholder': { value: 'Relationship...', description: null },
+  'globe.contacts.add_button': { value: '+ Add Person', description: null },
+  'globe.interests.greeting': { value: 'Your interests 💡', description: null },
+  'globe.interests.headline': { value: 'What are you into?', description: null },
+  'globe.interests.panel_title': { value: 'Your Interests', description: null },
+  'globe.interests.panel_subtitle': { value: "Pick what you're into", description: null },
+  'globe.interests.custom_placeholder': { value: 'Add your own...', description: null },
+  'globe.whyhere.panel_title': { value: 'Why are you here? 💭', description: null },
+  'globe.whyhere.panel_subtitle': { value: 'What brought you to YoursTruly? What do you hope to preserve?', description: null },
+  'globe.whyhere.placeholder': { value: "I'm here because...", description: null },
+  'globe.photos.panel_title': { value: '📸 Your Photos', description: null },
+  'globe.photos.panel_subtitle': { value: "Upload your favorite photos. We'll place geotagged ones on the globe to map your memories around the world.", description: null },
+  'globe.photos.dropzone_text': { value: 'Drop photos here or click to browse', description: null },
+  'globe.photos.dropzone_add': { value: 'Add more photos', description: null },
+  'globe.photos.dropzone_hint': { value: 'JPG, PNG up to 20MB each', description: null },
+  'globe.photos.button_upload': { value: 'Upload & Continue', description: null },
+  'globe.photos.button_skip': { value: 'Skip', description: null },
+  'globe.photos.uploading': { value: 'Uploading...', description: null },
+  'globe.photomap.greeting': { value: 'Your memories around the world 🌍', description: null },
+  'globe.photomap.count': { value: '{count} photo{plural} placed on your map.', description: 'Use {count} and {plural} (s)' },
+  'globe.photomap.missing': { value: '{count} without location — you can add those later.', description: 'Photos without GPS' },
+  'globe.letsgo.greeting': { value: "Let's bring this to life.", description: null },
+  'globe.letsgo.headline': { value: "You've set your focus. Now see how easy it is to start capturing what matters.", description: null },
+  'globe.letsgo.button': { value: 'Start', description: null },
+  'globe.heartfelt.title': { value: "Let's Go Deeper", description: null },
+  'globe.heartfelt.subtitle': { value: "Share what's on your mind. We'll capture the moments that matter", description: null },
+  'globe.ready.title': { value: "You're all set!", description: null },
+  'globe.ready.subtitle': { value: 'Your story is waiting to be told.', description: null },
+  'globe.ready.button': { value: 'Go to Dashboard', description: null },
+  'globe.progress.map': { value: 'Map', description: 'Progress bar label' },
+  'globe.progress.places': { value: 'Places', description: 'Progress bar label' },
+  'globe.progress.contacts': { value: 'People', description: 'Progress bar label' },
+  'globe.progress.interests': { value: 'Interests', description: 'Progress bar label' },
+  'globe.progress.whyhere': { value: 'Why', description: 'Progress bar label' },
+  'globe.progress.photos': { value: 'Photos', description: 'Progress bar label' },
+  'globe.progress.heartfelt': { value: 'Reflect', description: 'Progress bar label' },
+  'globe.progress.ready': { value: 'Done', description: 'Progress bar label' },
+  'globe.button.continue': { value: 'Continue', description: 'Shared continue button' },
+  'globe.button.skip': { value: 'Skip', description: 'Shared skip button' },
+}
 
 export default function OnboardingAdminPage() {
   const [items, setItems] = useState<CopyItem[]>([])
@@ -71,6 +139,33 @@ export default function OnboardingAdminPage() {
     }
   }
 
+  const [seeding, setSeeding] = useState(false)
+  const seedMissing = async () => {
+    setSeeding(true)
+    const existingIds = new Set(items.map(i => i.id))
+    const missing = Object.entries(COPY_DEFAULTS).filter(([id]) => !existingIds.has(id))
+
+    if (missing.length === 0) {
+      setSeeding(false)
+      return
+    }
+
+    const rows = missing.map(([id, def]) => ({
+      id,
+      value: def.value,
+      description: def.description,
+      updated_at: new Date().toISOString(),
+    }))
+
+    const { error } = await supabase.from('onboarding_copy').insert(rows)
+    if (!error) {
+      await fetchCopy()
+    }
+    setSeeding(false)
+  }
+
+  const missingCount = Object.keys(COPY_DEFAULTS).filter(id => !items.some(i => i.id === id)).length
+
   const getItemsByPrefix = (prefix: string) =>
     items.filter(item => item.id.startsWith(prefix))
 
@@ -96,6 +191,21 @@ export default function OnboardingAdminPage() {
           </p>
         </div>
         <div style={{ display: 'flex', gap: '12px' }}>
+          {missingCount > 0 && (
+            <button
+              onClick={seedMissing}
+              disabled={seeding}
+              style={{
+                display: 'flex', alignItems: 'center', gap: '6px',
+                padding: '10px 16px', borderRadius: '12px',
+                border: '1px solid #406A56', background: 'rgba(64,106,86,0.08)',
+                cursor: 'pointer', fontSize: '14px', fontWeight: 500, color: '#406A56',
+                opacity: seeding ? 0.6 : 1,
+              }}
+            >
+              <Plus size={16} /> {seeding ? 'Seeding...' : `Seed ${missingCount} missing keys`}
+            </button>
+          )}
           <button
             onClick={fetchCopy}
             style={{
