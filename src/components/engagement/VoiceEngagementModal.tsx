@@ -2,7 +2,7 @@
 
 import { useState, useCallback } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { X, Video, VideoOff } from 'lucide-react'
+import { X, Sparkles, Video, VideoOff } from 'lucide-react'
 import { VoiceVideoChat } from '@/components/voice'
 import type { EngagementPrompt } from '@/types/engagement'
 import { CompletionOverlay } from './CompletionOverlay'
