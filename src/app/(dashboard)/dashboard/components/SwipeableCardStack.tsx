@@ -1172,6 +1172,23 @@ function FlippableCard({
               onDismiss={onDismiss}
               getPromptText={getPromptText}
             />
+          ) : (isContact && prompt.missingField) ? (
+            /* Contact field input (phone, email, address, dob) */
+            <ContactFieldBack
+              prompt={prompt}
+              config={config}
+              onAnswer={onAnswer}
+              onDismiss={onDismiss}
+            />
+          ) : (prompt.type === 'favorite_books' || prompt.type === 'favorite_movies' || prompt.type === 'favorite_music' || prompt.type === 'favorite_foods') ? (
+            /* Favorites list with custom input + suggestions */
+            <FavoritesListBack
+              prompt={prompt}
+              config={config}
+              onAnswer={onAnswer}
+              onDismiss={onDismiss}
+              getPromptText={getPromptText}
+            />
           ) : prompt.type === 'binary_choice' ? (
             /* Binary choice: Two big tap targets */
             <BinaryChoiceBack
@@ -1363,6 +1380,132 @@ function FlippableCard({
   )
 }
 
+/* ─── Contact Field Back (phone, email, address, dob for contacts) ─── */
+
+const CONTACT_FIELD_CONFIG: Record<string, { label: string; type: string; placeholder: string; icon: string; dbField: string }> = {
+  phone: { label: 'Phone Number', type: 'tel', placeholder: '+1 (555) 123-4567', icon: '📱', dbField: 'phone' },
+  email: { label: 'Email Address', type: 'email', placeholder: 'name@example.com', icon: '📧', dbField: 'email' },
+  address: { label: 'Address', type: 'text', placeholder: '123 Main St, City, State', icon: '🏠', dbField: 'address' },
+  date_of_birth: { label: 'Date of Birth', type: 'date', placeholder: 'YYYY-MM-DD', icon: '🎂', dbField: 'date_of_birth' },
+  birthday: { label: 'Birthday', type: 'date', placeholder: 'YYYY-MM-DD', icon: '🎂', dbField: 'date_of_birth' },
+  dob: { label: 'Date of Birth', type: 'date', placeholder: 'YYYY-MM-DD', icon: '🎂', dbField: 'date_of_birth' },
+}
+
+function ContactFieldBack({
+  prompt,
+  config,
+  onAnswer,
+  onDismiss,
+}: {
+  prompt: Prompt
+  config: any
+  onAnswer: (id: string, r: any) => Promise<void>
+  onDismiss: () => void
+}) {
+  const [value, setValue] = useState('')
+  const [isSubmitting, setIsSubmitting] = useState(false)
+  const fieldKey = prompt.missingField || 'phone'
+  const fieldConfig = CONTACT_FIELD_CONFIG[fieldKey] || CONTACT_FIELD_CONFIG.phone
+
+  const handleSave = async () => {
+    if (!value.trim()) return
+    setIsSubmitting(true)
+
+    // Save directly to the contact record
+    if (prompt.contactId) {
+      try {
+        const supabase = createClient()
+        await supabase
+          .from('contacts')
+          .update({ [fieldConfig.dbField]: value.trim() })
+          .eq('id', prompt.contactId)
+      } catch (err) {
+        console.error('Failed to update contact:', err)
+      }
+    }
+
+    await onAnswer(prompt.id, { type: 'text', text: value.trim() })
+    onDismiss()
+  }
+
+  return (
+    <div className="h-full flex flex-col" style={{ backfaceVisibility: 'hidden', transform: 'rotateY(180deg)' }}>
+      <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '24px' }}>
+        {/* Contact avatar */}
+        {prompt.contactName && (
+          <div style={{
+            width: '64px', height: '64px', borderRadius: '50%',
+            background: 'linear-gradient(135deg, #406A56, #8DACAB)',
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            color: 'white', fontSize: '28px', fontWeight: 600, marginBottom: '16px',
+          }}>
+            {prompt.contactName.charAt(0).toUpperCase()}
+          </div>
+        )}
+
+        <p style={{ fontSize: '14px', color: '#999', margin: '0 0 4px', fontWeight: 500 }}>
+          {prompt.contactName}
+        </p>
+        <p style={{ fontSize: '18px', fontWeight: 600, color: '#2d2d2d', margin: '0 0 24px', textAlign: 'center' }}>
+          {fieldConfig.icon} What's their {fieldConfig.label.toLowerCase()}?
+        </p>
+
+        <input
+          type={fieldConfig.type}
+          value={value}
+          onChange={(e) => setValue(e.target.value)}
+          onKeyDown={(e) => { if (e.key === 'Enter') handleSave() }}
+          placeholder={fieldConfig.placeholder}
+          autoFocus
+          style={{
+            width: '100%', maxWidth: '320px', padding: '14px 18px',
+            borderRadius: '16px', border: '2px solid rgba(0,0,0,0.1)',
+            fontSize: '16px', textAlign: 'center', outline: 'none',
+            background: '#fafafa',
+          }}
+        />
+      </div>
+
+      <div style={{ padding: '12px 20px', borderTop: '1px solid rgba(0,0,0,0.06)', display: 'flex', gap: '8px' }}>
+        <button
+          onClick={() => onDismiss()}
+          style={{
+            flex: 1, padding: '12px', borderRadius: '14px',
+            border: '1px solid rgba(0,0,0,0.1)', background: 'white',
+            fontSize: '14px', fontWeight: 500, color: '#666', cursor: 'pointer',
+          }}
+        >
+          Skip
+        </button>
+        <button
+          onClick={handleSave}
+          disabled={!value.trim() || isSubmitting}
+          style={{
+            flex: 2, padding: '12px', borderRadius: '14px',
+            border: 'none', background: '#406A56', color: 'white',
+            fontSize: '14px', fontWeight: 600, cursor: 'pointer',
+            opacity: (!value.trim() || isSubmitting) ? 0.5 : 1,
+          }}
+        >
+          {isSubmitting ? 'Saving...' : 'Save'}
+        </button>
+      </div>
+    </div>
+  )
+}
+
+/* ─── Profile field mapping for pill/favorites types ─── */
+const PROFILE_FIELD_MAP: Record<string, string> = {
+  personality: 'personality_traits',
+  religion: 'religions',
+  skills: 'skills',
+  languages: 'languages',
+  favorite_books: 'favorite_books',
+  favorite_movies: 'favorite_movies',
+  favorite_music: 'favorite_music',
+  favorite_foods: 'favorite_foods',
+}
+
 /* ─── Pill Selection Back (personality, religion, skills, languages) ─── */
 
 const PILL_OPTIONS: Record<string, string[]> = {
@@ -1408,7 +1551,7 @@ function PillSelectionBack({
   const [customValue, setCustomValue] = useState('')
   const [isSubmitting, setIsSubmitting] = useState(false)
   const options = PILL_OPTIONS[prompt.type] || []
-  const isMulti = prompt.type !== 'religion' // religion = single select
+  const isMulti = true // all pill types support multi-select
 
   const toggle = (val: string) => {
     setSelected(prev => {
@@ -1423,10 +1566,33 @@ function PillSelectionBack({
   }
 
   const handleSave = async () => {
-    if (selected.size === 0) return
+    if (selected.size === 0 && !customValue.trim()) return
     setIsSubmitting(true)
     const vals = Array.from(selected)
     if (customValue.trim()) vals.push(customValue.trim())
+
+    // Save to profile directly
+    const profileField = PROFILE_FIELD_MAP[prompt.type]
+    if (profileField) {
+      try {
+        const supabase = createClient()
+        const { data: { user } } = await supabase.auth.getUser()
+        if (user) {
+          // Merge with existing values (don't overwrite)
+          const { data: existing } = await supabase
+            .from('profiles')
+            .select(profileField)
+            .eq('id', user.id)
+            .single()
+          const existingVals: string[] = (existing as any)?.[profileField] || []
+          const merged = [...new Set([...existingVals, ...vals])]
+          await supabase.from('profiles').update({ [profileField]: merged }).eq('id', user.id)
+        }
+      } catch (err) {
+        console.error('Failed to save to profile:', err)
+      }
+    }
+
     await onAnswer(prompt.id, { type: 'selection', text: vals.join(', '), data: { values: vals, field: prompt.type } })
     onDismiss()
   }
@@ -1504,6 +1670,264 @@ function PillSelectionBack({
           }}
         >
           {isSubmitting ? 'Saving...' : `Save (${selected.size} selected)`}
+        </button>
+      </div>
+    </div>
+  )
+}
+
+/* ─── Favorites List Back (books, movies, music, foods) ─── */
+
+const FAVORITES_SUGGESTIONS: Record<string, string[]> = {
+  favorite_books: [
+    'To Kill a Mockingbird', 'The Great Gatsby', '1984', 'Pride and Prejudice',
+    'Harry Potter', 'The Lord of the Rings', 'The Alchemist', 'Sapiens',
+    'The Bible', 'Don Quixote', 'Beloved', 'One Hundred Years of Solitude',
+    'The Catcher in the Rye', 'Brave New World', 'The Little Prince',
+  ],
+  favorite_movies: [
+    'The Shawshank Redemption', 'The Godfather', 'Forrest Gump', 'The Lion King',
+    'Pulp Fiction', 'Inception', 'The Matrix', 'Titanic', 'Star Wars',
+    'Schindler\'s List', 'Goodfellas', 'The Dark Knight', 'Fight Club',
+    'The Wizard of Oz', 'Casablanca', 'Back to the Future',
+  ],
+  favorite_music: [
+    'The Beatles', 'Michael Jackson', 'Queen', 'Bob Marley', 'Elvis Presley',
+    'Beyoncé', 'Taylor Swift', 'Stevie Wonder', 'Frank Sinatra', 'Aretha Franklin',
+    'Led Zeppelin', 'Nirvana', 'Kendrick Lamar', 'Adele', 'Bach', 'Mozart',
+  ],
+  favorite_foods: [
+    'Pizza', 'Sushi', 'Tacos', 'Pasta', 'Curry', 'Burgers', 'Ramen',
+    'Pad Thai', 'Steak', 'Ice Cream', 'Chocolate', 'Biryani', 'Dim Sum',
+    'Paella', 'Pho', 'BBQ Ribs', 'Fresh Bread', 'Mom\'s Cooking',
+  ],
+}
+
+const FAVORITES_LABELS: Record<string, { title: string; placeholder: string; addLabel: string }> = {
+  favorite_books: { title: '📚 Your Favorite Books', placeholder: 'Search or add a book...', addLabel: 'Add book' },
+  favorite_movies: { title: '🎬 Your Favorite Movies', placeholder: 'Search or add a movie...', addLabel: 'Add movie' },
+  favorite_music: { title: '🎵 Your Favorite Music', placeholder: 'Search or add an artist...', addLabel: 'Add artist' },
+  favorite_foods: { title: '🍕 Your Favorite Foods', placeholder: 'Search or add a dish...', addLabel: 'Add food' },
+}
+
+function FavoritesListBack({
+  prompt,
+  config,
+  onAnswer,
+  onDismiss,
+  getPromptText,
+}: {
+  prompt: Prompt
+  config: any
+  onAnswer: (id: string, r: any) => Promise<void>
+  onDismiss: () => void
+  getPromptText: (p: Prompt) => string
+}) {
+  const [items, setItems] = useState<string[]>([])
+  const [inputValue, setInputValue] = useState('')
+  const [isSubmitting, setIsSubmitting] = useState(false)
+  const [showSuggestions, setShowSuggestions] = useState(false)
+  const inputRef = useRef<HTMLInputElement>(null)
+
+  const suggestions = FAVORITES_SUGGESTIONS[prompt.type] || []
+  const labels = FAVORITES_LABELS[prompt.type] || { title: 'Your Favorites', placeholder: 'Add an item...', addLabel: 'Add' }
+
+  // Filter suggestions based on input and already-added items
+  const filteredSuggestions = inputValue.trim().length > 0
+    ? suggestions.filter(s =>
+        s.toLowerCase().includes(inputValue.toLowerCase()) && !items.includes(s)
+      ).slice(0, 6)
+    : suggestions.filter(s => !items.includes(s)).slice(0, 8)
+
+  const addItem = (val: string) => {
+    const trimmed = val.trim()
+    if (trimmed && !items.includes(trimmed)) {
+      setItems(prev => [...prev, trimmed])
+    }
+    setInputValue('')
+    setShowSuggestions(false)
+    inputRef.current?.focus()
+  }
+
+  const removeItem = (val: string) => {
+    setItems(prev => prev.filter(i => i !== val))
+  }
+
+  const handleSave = async () => {
+    if (items.length === 0) return
+    setIsSubmitting(true)
+
+    // Save to profile
+    const profileField = PROFILE_FIELD_MAP[prompt.type]
+    if (profileField) {
+      try {
+        const supabase = createClient()
+        const { data: { user } } = await supabase.auth.getUser()
+        if (user) {
+          const { data: existing } = await supabase
+            .from('profiles')
+            .select(profileField)
+            .eq('id', user.id)
+            .single()
+          const existingVals: string[] = (existing as any)?.[profileField] || []
+          const merged = [...new Set([...existingVals, ...items])]
+          await supabase.from('profiles').update({ [profileField]: merged }).eq('id', user.id)
+        }
+      } catch (err) {
+        console.error('Failed to save favorites to profile:', err)
+      }
+    }
+
+    await onAnswer(prompt.id, { type: 'selection', text: items.join(', '), data: { values: items, field: prompt.type } })
+    onDismiss()
+  }
+
+  return (
+    <div className="h-full flex flex-col pt-14" style={{ backfaceVisibility: 'hidden', transform: 'rotateY(180deg)' }}>
+      {/* Header */}
+      <div style={{ padding: '0 20px 12px', borderBottom: '1px solid rgba(0,0,0,0.06)' }}>
+        <p style={{ fontSize: '16px', fontWeight: 600, color: '#2d2d2d', margin: '0 0 4px' }}>
+          {labels.title}
+        </p>
+        <p style={{ fontSize: '12px', color: '#999', margin: 0 }}>
+          Type to search or pick from suggestions
+        </p>
+      </div>
+
+      <div style={{ flex: 1, overflowY: 'auto', padding: '12px 20px' }}>
+        {/* Input with inline add */}
+        <div style={{ position: 'relative', marginBottom: '12px' }}>
+          <div style={{
+            display: 'flex', gap: '8px', alignItems: 'center',
+          }}>
+            <input
+              ref={inputRef}
+              type="text"
+              value={inputValue}
+              onChange={(e) => { setInputValue(e.target.value); setShowSuggestions(true) }}
+              onFocus={() => setShowSuggestions(true)}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' && inputValue.trim()) {
+                  e.preventDefault()
+                  addItem(inputValue)
+                }
+              }}
+              placeholder={labels.placeholder}
+              style={{
+                flex: 1, padding: '10px 14px', borderRadius: '12px',
+                border: '2px solid rgba(0,0,0,0.1)', fontSize: '14px',
+                outline: 'none', background: '#fafafa',
+              }}
+              autoFocus
+            />
+            {inputValue.trim() && (
+              <button
+                onClick={() => addItem(inputValue)}
+                style={{
+                  padding: '10px 16px', borderRadius: '12px', border: 'none',
+                  background: '#406A56', color: 'white', fontSize: '13px',
+                  fontWeight: 600, cursor: 'pointer', whiteSpace: 'nowrap',
+                }}
+              >
+                + Add
+              </button>
+            )}
+          </div>
+
+          {/* Suggestions dropdown */}
+          {showSuggestions && filteredSuggestions.length > 0 && (
+            <div style={{
+              position: 'absolute', top: '100%', left: 0, right: 0, marginTop: '4px',
+              background: 'white', borderRadius: '12px', border: '1px solid rgba(0,0,0,0.08)',
+              boxShadow: '0 8px 24px rgba(0,0,0,0.12)', zIndex: 20, overflow: 'hidden',
+              maxHeight: '200px', overflowY: 'auto',
+            }}>
+              {!inputValue.trim() && (
+                <div style={{ padding: '6px 14px', fontSize: '11px', fontWeight: 600, color: '#999', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+                  Popular picks
+                </div>
+              )}
+              {filteredSuggestions.map(s => (
+                <button
+                  key={s}
+                  onClick={() => addItem(s)}
+                  style={{
+                    width: '100%', padding: '10px 14px', textAlign: 'left',
+                    border: 'none', background: 'transparent', fontSize: '14px',
+                    color: '#333', cursor: 'pointer', display: 'flex',
+                    alignItems: 'center', gap: '8px',
+                  }}
+                  onMouseEnter={(e) => { e.currentTarget.style.background = 'rgba(64,106,86,0.06)' }}
+                  onMouseLeave={(e) => { e.currentTarget.style.background = 'transparent' }}
+                >
+                  <span style={{ color: '#406A56', fontWeight: 600 }}>+</span> {s}
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
+
+        {/* Added items as removable chips */}
+        {items.length > 0 && (
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', marginTop: '4px' }}>
+            {items.map(item => (
+              <div
+                key={item}
+                style={{
+                  display: 'flex', alignItems: 'center', gap: '6px',
+                  padding: '6px 12px', borderRadius: '100px',
+                  background: '#406A56', color: 'white',
+                  fontSize: '13px', fontWeight: 500,
+                }}
+              >
+                {item}
+                <button
+                  onClick={() => removeItem(item)}
+                  style={{
+                    background: 'rgba(255,255,255,0.3)', border: 'none',
+                    width: '18px', height: '18px', borderRadius: '50%',
+                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    cursor: 'pointer', color: 'white', fontSize: '12px', fontWeight: 700,
+                    padding: 0, lineHeight: 1,
+                  }}
+                >
+                  ×
+                </button>
+              </div>
+            ))}
+          </div>
+        )}
+
+        {items.length === 0 && !showSuggestions && (
+          <p style={{ textAlign: 'center', color: '#bbb', fontSize: '13px', marginTop: '24px' }}>
+            Start typing or pick from suggestions above
+          </p>
+        )}
+      </div>
+
+      {/* Footer */}
+      <div style={{ padding: '12px 20px', borderTop: '1px solid rgba(0,0,0,0.06)', display: 'flex', gap: '8px' }}>
+        <button
+          onClick={() => onDismiss()}
+          style={{
+            flex: 1, padding: '12px', borderRadius: '14px',
+            border: '1px solid rgba(0,0,0,0.1)', background: 'white',
+            fontSize: '14px', fontWeight: 500, color: '#666', cursor: 'pointer',
+          }}
+        >
+          Skip
+        </button>
+        <button
+          onClick={handleSave}
+          disabled={items.length === 0 || isSubmitting}
+          style={{
+            flex: 2, padding: '12px', borderRadius: '14px',
+            border: 'none', background: '#406A56', color: 'white',
+            fontSize: '14px', fontWeight: 600, cursor: 'pointer',
+            opacity: (items.length === 0 || isSubmitting) ? 0.5 : 1,
+          }}
+        >
+          {isSubmitting ? 'Saving...' : `Save ${items.length} item${items.length !== 1 ? 's' : ''}`}
         </button>
       </div>
     </div>

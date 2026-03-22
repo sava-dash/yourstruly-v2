@@ -171,6 +171,10 @@ export const PROMPT_TYPES = [
   { value: 'languages', label: 'Languages', description: 'What languages do you speak? (selection)' },
   { value: 'binary_choice', label: 'Quick Pick', description: 'A/B choice about a photo or memory' },
   { value: 'daily_checkin', label: 'Daily Check-in', description: 'Low-friction daily gratitude or reflection prompt' },
+  { value: 'favorite_books', label: 'Favorite Books', description: 'What are your favorite books? (list with suggestions)' },
+  { value: 'favorite_movies', label: 'Favorite Movies', description: 'What are your favorite movies? (list with suggestions)' },
+  { value: 'favorite_music', label: 'Favorite Music', description: 'What are your favorite artists/songs? (list with suggestions)' },
+  { value: 'favorite_foods', label: 'Favorite Foods', description: 'What are your favorite foods? (list with suggestions)' },
 ];
 
 export const KNOWLEDGE_CATEGORIES = [

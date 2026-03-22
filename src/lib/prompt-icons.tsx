@@ -22,6 +22,10 @@ import {
   Languages,
   ArrowLeftRight,
   Sun,
+  BookMarked,
+  Film,
+  Music,
+  UtensilsCrossed,
   type LucideIcon,
 } from 'lucide-react';
 
@@ -43,7 +47,11 @@ export type PromptType =
   | 'skills'
   | 'languages'
   | 'binary_choice'
-  | 'daily_checkin';
+  | 'daily_checkin'
+  | 'favorite_books'
+  | 'favorite_movies'
+  | 'favorite_music'
+  | 'favorite_foods';
 
 /**
  * Icon mapping for prompt types
@@ -68,6 +76,10 @@ export const promptIcons: Record<PromptType, LucideIcon> = {
   languages: Languages,
   binary_choice: ArrowLeftRight,
   daily_checkin: Sun,
+  favorite_books: BookMarked,
+  favorite_movies: Film,
+  favorite_music: Music,
+  favorite_foods: UtensilsCrossed,
 };
 
 /**

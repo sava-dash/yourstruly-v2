@@ -28,6 +28,10 @@ export const TYPE_CONFIG: Record<string, {
   languages: { type: 'languages' as PromptType, label: 'Languages', xp: 5, color: 'blue', inputHint: '👆 Select', timeHint: '~30 sec' },
   binary_choice: { type: 'binary_choice' as PromptType, label: 'Quick Pick', xp: 5, color: 'yellow', inputHint: '👆 Tap one', timeHint: '~10 sec' },
   daily_checkin: { type: 'daily_checkin' as PromptType, label: 'Daily Check-in', xp: 5, color: 'green', inputHint: '⌨️ Quick thought', timeHint: '~30 sec' },
+  favorite_books: { type: 'favorite_books' as PromptType, label: 'Favorite Books', xp: 10, color: 'purple', inputHint: '⌨️ Add titles', timeHint: '~1 min' },
+  favorite_movies: { type: 'favorite_movies' as PromptType, label: 'Favorite Movies', xp: 10, color: 'red', inputHint: '⌨️ Add titles', timeHint: '~1 min' },
+  favorite_music: { type: 'favorite_music' as PromptType, label: 'Favorite Music', xp: 10, color: 'yellow', inputHint: '⌨️ Add artists', timeHint: '~1 min' },
+  favorite_foods: { type: 'favorite_foods' as PromptType, label: 'Favorite Foods', xp: 10, color: 'green', inputHint: '⌨️ Add dishes', timeHint: '~1 min' },
 }
 
 // Prompt types that should use ConversationView (multi-turn voice/text)
@@ -49,6 +53,14 @@ export const PILL_SELECTION_TYPES = [
   'religion',
   'skills',
   'languages',
+]
+
+// Prompt types that use favorites list UI (custom input + suggestions)
+export const FAVORITES_TYPES = [
+  'favorite_books',
+  'favorite_movies',
+  'favorite_music',
+  'favorite_foods',
 ]
 
 // Prompt types that use binary choice UI
