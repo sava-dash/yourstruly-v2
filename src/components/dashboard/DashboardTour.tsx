@@ -13,13 +13,15 @@ const TOUR_STEPS = [
     placement: 'bottom' as const,
   },
   {
-    target: '[data-tour="category-tabs"]',
+    target: '[data-tour="category-submenu"]',
     title: 'Quick Actions',
-    content: 'Click any category to reveal quick action buttons. Add a memory, upload photos, start an interview, or get a random prompt.',
+    content: 'Each category reveals quick action buttons. Add a memory, upload photos, start an interview, or get a random prompt.',
     placement: 'bottom' as const,
     beforeShow: () => {
-      const btn = document.querySelector('[data-tour="category-tabs"] button:first-child') as HTMLElement
-      btn?.click()
+      // Click "Memories" tab to show a submenu with actions
+      const tabs = document.querySelectorAll('[data-tour="category-tabs"] button')
+      const memoriesTab = Array.from(tabs).find(t => t.textContent?.includes('Memories')) as HTMLElement
+      memoriesTab?.click()
     },
   },
   {
@@ -32,7 +34,7 @@ const TOUR_STEPS = [
     target: '[data-tour="engagement-prompts"]',
     title: 'Engagement Prompts',
     content: 'Your personal storytelling coach! Tap here to see prompts that help you capture more of your story. Answer them to earn XP and level up.',
-    placement: 'left' as const,
+    placement: 'right' as const,
   },
   {
     target: '[data-tour="first-tile"]',

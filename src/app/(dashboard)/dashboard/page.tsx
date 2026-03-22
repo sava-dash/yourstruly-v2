@@ -2401,7 +2401,7 @@ export default function DashboardPage() {
 
           {/* Feed Content */}
           <div className="feed-content-area" style={{
-            marginTop: openSubmenu && QUICK_ACTIONS[openSubmenu] ? '90px' : '30px',
+            marginTop: openSubmenu && QUICK_ACTIONS[openSubmenu] ? '110px' : '30px',
             transition: 'margin-top 0.3s ease',
           }}>
           {isLoading ? (
@@ -2898,8 +2898,21 @@ export default function DashboardPage() {
           initialDate={photoDetail.date}
           initialLocation={photoDetail.location}
           onClose={() => setPhotoDetail(null)}
-          onSaved={() => {
-            // Refresh activities
+          onSaved={() => fetchActivities()}
+          onCreateMemory={async (newMemoryId) => {
+            // Fetch the new memory as an activity and open FeedDetailModal
+            setPhotoDetail(null)
+            try {
+              const res = await fetch(`/api/activity?memoryId=${newMemoryId}`)
+              if (res.ok) {
+                const data = await res.json()
+                const newActivity = data.activities?.[0]
+                if (newActivity) {
+                  setSelectedActivity(newActivity)
+                  setShowDetailModal(true)
+                }
+              }
+            } catch {}
             fetchActivities()
           }}
         />
