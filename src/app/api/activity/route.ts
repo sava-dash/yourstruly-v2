@@ -500,13 +500,24 @@ export async function GET(request: NextRequest) {
         id,
         title,
         memory_date,
-        memory_type
+        memory_type,
+        location_name,
+        location_lat,
+        location_lng
       )
     `)
     .eq('user_id', user.id)
     .eq('file_type', 'image')
     .order('created_at', { ascending: false })
     .limit(limit)
+
+  // Build set of memory IDs already in the feed to avoid duplicates
+  const memoryIdsInFeed = new Set(
+    activities
+      .filter(a => a.id.startsWith('memory_created_'))
+      .map(a => a.metadata?.memoryId)
+      .filter(Boolean)
+  )
 
   if (myPhotos) {
     for (const photo of myPhotos) {
@@ -517,6 +528,8 @@ export async function GET(request: NextRequest) {
       if (!photo.file_url?.startsWith('http')) continue
       // Skip photos from onboarding gallery (standalone uploads should appear in feed)
       if (memory?.memory_type === 'onboarding_gallery') continue
+      // Skip photos whose parent memory already appears as a feed tile
+      if (memoryIdsInFeed.has(memoryId)) continue
 
       // Use taken_at (EXIF date) > memory_date > created_at
       const photoDate = photo.taken_at || memory?.memory_date || photo.created_at
@@ -535,9 +548,9 @@ export async function GET(request: NextRequest) {
           photoId: photo.id, 
           memoryId, 
           tagged_people: memoryFaceTagMap[memoryId] || [],
-          location: (photo as any).description || undefined,
-          lat: (photo as any).exif_lat || undefined,
-          lng: (photo as any).exif_lng || undefined,
+          location: memory?.location_name || (photo as any).description || undefined,
+          lat: (photo as any).exif_lat || memory?.location_lat || undefined,
+          lng: (photo as any).exif_lng || memory?.location_lng || undefined,
         }
       })
     }

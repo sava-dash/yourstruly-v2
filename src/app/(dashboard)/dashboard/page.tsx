@@ -653,8 +653,11 @@ export default function DashboardPage() {
     return true
   })
   
-  // Modal states for engagement — open by default so prompts are front-and-center
-  const [showEngagement, setShowEngagement] = useState(true)
+  // Modal states for engagement — only auto-open after tour is complete
+  const [showEngagement, setShowEngagement] = useState(() => {
+    if (typeof window === 'undefined') return false
+    return !!localStorage.getItem('yt_dashboard_tour_seen')
+  })
   const [engagementCarouselIndex, setEngagementCarouselIndex] = useState(0)
   const [dashEngagementPrompt, setDashEngagementPrompt] = useState<any | null>(null)
   const [photoTaggingPrompt, setPhotoTaggingPrompt] = useState<any | null>(null)
@@ -664,6 +667,13 @@ export default function DashboardPage() {
   const [showContactModal, setShowContactModal] = useState(false)
   const [showQuickMemoryModal, setShowQuickMemoryModal] = useState(false)
   const [showMonthlyRecap, setShowMonthlyRecap] = useState(false)
+
+  // Open engagement overlay after tour completes
+  useEffect(() => {
+    const handleTourComplete = () => setShowEngagement(true)
+    window.addEventListener('yt-tour-complete', handleTourComplete)
+    return () => window.removeEventListener('yt-tour-complete', handleTourComplete)
+  }, [])
   
   // Monthly recap: show in first week of month if not dismissed
   useEffect(() => {
@@ -2624,6 +2634,7 @@ export default function DashboardPage() {
                             photoUrl: a.thumbnail || '',
                             memoryId: a.metadata?.memoryId,
                             date: a.timestamp?.split('T')[0],
+                            location: a.metadata?.location,
                           })
                         } else {
                           setSelectedActivity(a)
@@ -2679,6 +2690,7 @@ export default function DashboardPage() {
                               photoUrl: a.thumbnail || '',
                               memoryId: a.metadata?.memoryId,
                               date: a.timestamp?.split('T')[0],
+                              location: a.metadata?.location,
                             })
                           } else {
                             setSelectedActivity(a)

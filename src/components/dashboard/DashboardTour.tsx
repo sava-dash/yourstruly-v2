@@ -243,11 +243,17 @@ export function DashboardTourProvider({ children }: { children: React.ReactNode 
     return () => { delete (window as any).__startDashboardTour }
   }, [])
 
+  const finishTour = () => {
+    setActive(false)
+    // Dispatch event so engagement overlay knows tour is done
+    window.dispatchEvent(new CustomEvent('yt-tour-complete'))
+  }
+
   const handleNext = () => {
     if (stepIdx < TOUR_STEPS.length - 1) {
       setStepIdx(i => i + 1)
     } else {
-      setActive(false)
+      finishTour()
     }
   }
 
@@ -255,7 +261,7 @@ export function DashboardTourProvider({ children }: { children: React.ReactNode 
     if (stepIdx > 0) setStepIdx(i => i - 1)
   }
 
-  const handleClose = () => setActive(false)
+  const handleClose = () => finishTour()
 
   return (
     <>
