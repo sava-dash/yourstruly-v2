@@ -33,9 +33,10 @@ export async function GET() {
   }
 
   // Check environment variables
+  // Only check server-side env vars here.
+  // NEXT_PUBLIC_* vars are baked into the JS bundle at build time
+  // and may not exist as runtime process.env values.
   const requiredEnvVars = [
-    'NEXT_PUBLIC_SUPABASE_URL',
-    'NEXT_PUBLIC_SUPABASE_ANON_KEY',
     'SUPABASE_SERVICE_ROLE_KEY',
     'STRIPE_SECRET_KEY',
   ];
