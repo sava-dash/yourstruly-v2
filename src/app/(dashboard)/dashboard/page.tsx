@@ -497,6 +497,7 @@ function MasonryTile({
 }
 
 export default function DashboardPage() {
+  const [mounted, setMounted] = useState(false)
   const [activities, setActivities] = useState<ActivityItem[]>([])
   const [filteredActivities, setFilteredActivities] = useState<ActivityItem[]>([])
   const [isLoading, setIsLoading] = useState(true)
@@ -603,6 +604,9 @@ export default function DashboardPage() {
     }
     getUserId()
   }, [supabase])
+
+  // Prevent FOUC — don't render until client-side styles are ready
+  useEffect(() => { setMounted(true) }, [])
   
   // Custom hooks for data and XP
   const {
@@ -1980,6 +1984,29 @@ export default function DashboardPage() {
   const sidebarStorageUsed = subscription?.storage?.total_bytes ? subscription.storage.total_bytes / (1024 * 1024 * 1024) : storageInfo.used
   const sidebarStorageLimit = subscription?.storage?.limit_bytes ? subscription.storage.limit_bytes / (1024 * 1024 * 1024) : storageInfo.limit
   const sidebarStoragePercentage = subscription?.storage?.percentage || storageInfo.percentage
+
+  // Prevent FOUC: show nothing until client styles are hydrated
+  if (!mounted) {
+    return (
+      <div style={{
+        minHeight: '100vh',
+        background: '#1a1a1a',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+      }}>
+        <div style={{
+          width: '32px',
+          height: '32px',
+          border: '3px solid rgba(255,255,255,0.1)',
+          borderTopColor: '#406A56',
+          borderRadius: '50%',
+          animation: 'spin 0.8s linear infinite',
+        }} />
+        <style>{`@keyframes spin { to { transform: rotate(360deg) } }`}</style>
+      </div>
+    )
+  }
 
   return (
     <div className="feed-page" data-theme={isDarkMode ? 'dark' : 'light'}>
