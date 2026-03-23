@@ -494,6 +494,8 @@ export async function GET(request: NextRequest) {
       created_at,
       taken_at,
       description,
+      exif_lat,
+      exif_lng,
       memory:memories!memory_media_memory_id_fkey (
         id,
         title,
@@ -513,8 +515,8 @@ export async function GET(request: NextRequest) {
       if (!memoryId) continue
       // Skip entries with invalid URLs (e.g. "text-only", "conversation")
       if (!photo.file_url?.startsWith('http')) continue
-      // Skip photos from onboarding gallery and media uploads
-      if (memory?.memory_type === 'onboarding_gallery' || memory?.memory_type === 'media_upload') continue
+      // Skip photos from onboarding gallery (standalone uploads should appear in feed)
+      if (memory?.memory_type === 'onboarding_gallery') continue
 
       // Use taken_at (EXIF date) > memory_date > created_at
       const photoDate = photo.taken_at || memory?.memory_date || photo.created_at
@@ -529,7 +531,14 @@ export async function GET(request: NextRequest) {
         timestamp: photoDate,
         link: `/dashboard/memories/${memoryId}`,
         thumbnail: photo.file_url,
-        metadata: { photoId: photo.id, memoryId, tagged_people: memoryFaceTagMap[memoryId] || [] }
+        metadata: { 
+          photoId: photo.id, 
+          memoryId, 
+          tagged_people: memoryFaceTagMap[memoryId] || [],
+          location: (photo as any).description || undefined,
+          lat: (photo as any).exif_lat || undefined,
+          lng: (photo as any).exif_lng || undefined,
+        }
       })
     }
   }

@@ -577,15 +577,22 @@ function MapboxGlobeReveal({
     let frame = 0;
     const totalFrames = coords.length;
     const animatePulse = () => {
-      if (!map.getSource(pulseSourceId)) return;
-      const idx = frame % totalFrames;
-      (map.getSource(pulseSourceId) as any).setData({
-        type: 'Feature',
-        properties: {},
-        geometry: { type: 'Point', coordinates: coords[idx] },
-      });
-      frame++;
-      requestAnimationFrame(animatePulse);
+      const currentMap = mapRef.current;
+      if (!currentMap) return;
+      try {
+        if (!currentMap.getSource(pulseSourceId)) return;
+        const idx = frame % totalFrames;
+        (currentMap.getSource(pulseSourceId) as any).setData({
+          type: 'Feature',
+          properties: {},
+          geometry: { type: 'Point', coordinates: coords[idx] },
+        });
+        frame++;
+        requestAnimationFrame(animatePulse);
+      } catch {
+        // Map may have been removed/destroyed — stop animating
+        return;
+      }
     };
     // Start animation after a short delay
     setTimeout(animatePulse, 300);

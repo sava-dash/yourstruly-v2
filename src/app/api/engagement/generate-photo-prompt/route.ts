@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
+import { createAIPrompt } from '@/lib/prompts/registry';
 
 /**
  * POST /api/engagement/generate-photo-prompt
@@ -98,29 +99,22 @@ CRITICAL RULES - never assume:
       }
     }
 
-    // Create engagement prompt record
-    const { data: prompt, error: promptError } = await supabase
-      .from('engagement_prompts')
-      .insert({
-        user_id: user.id,
-        type: promptType,
-        prompt_text: promptText,
-        status: 'pending',
-        priority: isOnboarding ? 10 : 5, // higher priority for onboarding photos
-        photo_id: mediaId,
-        source: isOnboarding ? 'onboarding_upload' : 'photo_upload',
-        metadata: {
-          photo_url: photoUrl,
-          taken_at: takenAt,
-          is_onboarding: isOnboarding,
-        },
-      })
-      .select()
-      .single();
-
-    if (promptError) {
-      console.error('Failed to create engagement prompt:', promptError);
-    }
+    // Create engagement prompt via registry (tracks source + lineage)
+    const prompt = await createAIPrompt({
+      userId: user.id,
+      promptText,
+      type: promptType,
+      category: 'photos',
+      photoId: mediaId,
+      priority: isOnboarding ? 10 : 5,
+      source: isOnboarding ? 'onboarding_upload' : 'photo_upload',
+      generatedBy: GEMINI_API_KEY ? 'gemini' : 'fallback',
+      metadata: {
+        photo_url: photoUrl,
+        taken_at: takenAt,
+        is_onboarding: isOnboarding,
+      },
+    });
 
     return NextResponse.json({
       success: true,

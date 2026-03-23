@@ -1,511 +1,117 @@
 import { createClient } from '@/lib/supabase/server'
 import { NextRequest, NextResponse } from 'next/server'
-import exifr from 'exifr'
-import { generateSmartTags } from '@/lib/ai/smartTags'
-import { reverseGeocode } from '@/lib/geo/reverseGeocode'
-import { detectFaces, getDominantEmotion, searchFaces } from '@/lib/aws/rekognition'
 
-// Force dynamic to avoid build-time evaluation
-export const dynamic = 'force-dynamic'
-
-// POST /api/memories/[id]/media - Upload media to memory
+/**
+ * POST /api/memories/[id]/media — Add a photo to a memory
+ * 
+ * Supports:
+ * - Owner adding their own photo to their memory
+ * - Circle member adding their photo to a shared memory (collaboration)
+ * 
+ * Body: { media_id: string }
+ */
 export async function POST(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
   const { id: memoryId } = await params
   const supabase = await createClient()
-  
+
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
 
-  // Verify memory belongs to user
+  const body = await request.json()
+  const { media_id } = body
+
+  if (!media_id) {
+    return NextResponse.json({ error: 'media_id is required' }, { status: 400 })
+  }
+
+  // 1. Verify the user owns the media they're attaching
+  const { data: media, error: mediaError } = await supabase
+    .from('memory_media')
+    .select('id, user_id, memory_id')
+    .eq('id', media_id)
+    .eq('user_id', user.id)
+    .single()
+
+  if (mediaError || !media) {
+    return NextResponse.json({ error: 'Media not found or not owned by you' }, { status: 404 })
+  }
+
+  // 2. Check authorization: user owns the memory OR has access via circle
   const { data: memory } = await supabase
     .from('memories')
-    .select('id')
+    .select('id, user_id')
     .eq('id', memoryId)
-    .eq('user_id', user.id)
     .single()
 
   if (!memory) {
     return NextResponse.json({ error: 'Memory not found' }, { status: 404 })
   }
 
-  const contentType = request.headers.get('content-type') || ''
+  let authorized = memory.user_id === user.id
 
-  // Handle already-uploaded media (JSON payload)
-  if (contentType.includes('application/json')) {
-    const body = await request.json()
-    
-    // Check if this is count request (no media to insert)
-    const { count } = await supabase
-      .from('memory_media')
-      .select('id', { count: 'exact', head: true })
-      .eq('memory_id', memoryId)
+  if (!authorized) {
+    // Check if this memory is shared to a circle where the user is a member
+    const { data: sharedToCircle } = await supabase
+      .from('circle_content')
+      .select(`
+        id,
+        circle_id,
+        circle_members!inner (
+          user_id,
+          invite_status
+        )
+      `)
+      .eq('content_type', 'memory')
+      .eq('content_id', memoryId)
+      .eq('circle_members.user_id', user.id)
+      .eq('circle_members.invite_status', 'accepted')
+      .limit(1)
 
-    const isCover = count === 0
-
-    // Create media record from already-uploaded file
-    const { data: media, error: mediaError } = await supabase
-      .from('memory_media')
-      .insert({
-        memory_id: memoryId,
-        user_id: user.id,
-        file_url: body.file_url,
-        file_key: body.file_key,
-        file_type: body.file_type,
-        mime_type: body.mime_type,
-        file_size: body.file_size,
-        width: body.width,
-        height: body.height,
-        is_cover: isCover,
-        exif_lat: body.exif_lat,
-        exif_lng: body.exif_lng,
-        taken_at: body.taken_at,
-        camera_make: body.camera_make,
-        camera_model: body.camera_model,
-      })
-      .select()
-      .single()
-
-    if (mediaError) {
-      console.error('[Media Attach] Error:', mediaError)
-      return NextResponse.json({ error: 'Failed to attach media' }, { status: 500 })
+    if (sharedToCircle && sharedToCircle.length > 0) {
+      authorized = true
     }
 
-    return NextResponse.json({ media })
-  }
+    // Also check direct memory shares
+    if (!authorized) {
+      const { data: directShare } = await supabase
+        .from('memory_shares')
+        .select('id')
+        .eq('memory_id', memoryId)
+        .eq('shared_with_user_id', user.id)
+        .eq('status', 'accepted')
+        .limit(1)
 
-  // Handle file upload (FormData)
-  const formData = await request.formData()
-  const file = formData.get('file') as File
-  
-  if (!file) {
-    return NextResponse.json({ error: 'No file provided' }, { status: 400 })
-  }
-
-  const fileType = file.type.startsWith('image/') ? 'image' : 
-                   file.type.startsWith('video/') ? 'video' :
-                   file.type.startsWith('audio/') ? 'audio' : null
-
-  if (!fileType) {
-    return NextResponse.json({ error: 'Invalid file type' }, { status: 400 })
-  }
-
-  // Upload to Supabase Storage
-  const fileExt = file.name.split('.').pop()?.toLowerCase() || 'jpg'
-  const fileName = `${user.id}/${memoryId}/${Date.now()}-${Math.random().toString(36).slice(2)}.${fileExt}`
-
-  const arrayBuffer = await file.arrayBuffer()
-  const buffer = Buffer.from(arrayBuffer)
-
-  // Extract EXIF data server-side
-  let exifLat: number | null = null
-  let exifLng: number | null = null
-  let takenAt: string | null = null
-  let cameraMake: string | null = null
-  let cameraModel: string | null = null
-  let dateSource: 'exif' | 'filename' | null = null
-
-  if (fileType === 'image') {
-    try {
-      const exif = await exifr.parse(buffer, {
-        // Don't use pick — it can exclude GPSLatitudeRef/GPSLongitudeRef needed for hemisphere
-        gps: true,
-      })
-      if (exif) {
-        // GPS coordinates
-        if (exif.latitude && exif.longitude) {
-          exifLat = exif.latitude
-          exifLng = exif.longitude
-        }
-        // Date taken from EXIF
-        const dateField = exif.DateTimeOriginal || exif.CreateDate
-        if (dateField) {
-          const exifDate = dateField instanceof Date ? dateField : new Date(dateField)
-          // Sanity check: date should be between 1990 and now+1year
-          const now = new Date()
-          const minDate = new Date('1990-01-01')
-          const maxDate = new Date(now.getFullYear() + 1, 11, 31)
-          if (exifDate >= minDate && exifDate <= maxDate) {
-            takenAt = exifDate.toISOString()
-            dateSource = 'exif'
-          }
-        }
-        // Camera info
-        cameraMake = exif.Make || null
-        cameraModel = exif.Model || null
+      if (directShare && directShare.length > 0) {
+        authorized = true
       }
-    } catch (e) {
-      console.log('EXIF extraction failed (normal for some images):', e)
     }
   }
 
-  // Fallback: Try to parse date from filename if no EXIF date
-  if (!takenAt) {
-    const parsedDate = parseDateFromFilename(file.name)
-    if (parsedDate) {
-      takenAt = parsedDate.toISOString()
-      dateSource = 'filename'
-    }
+  if (!authorized) {
+    return NextResponse.json(
+      { error: 'You do not have access to add photos to this memory' },
+      { status: 403 }
+    )
   }
 
-  const { error: uploadError } = await supabase.storage
-    .from('memories')
-    .upload(fileName, buffer, {
-      contentType: file.type,
-      upsert: false,
-    })
-
-  if (uploadError) {
-    console.error('Upload error:', uploadError)
-    return NextResponse.json({ error: 'Upload failed' }, { status: 500 })
-  }
-
-  const { data: { publicUrl } } = supabase.storage
-    .from('memories')
-    .getPublicUrl(fileName)
-
-  // Face detection using AWS Rekognition
-  let detectedFaces: Array<{
-    boundingBox: { x: number; y: number; width: number; height: number }
-    confidence: number
-    age?: { low: number; high: number }
-    gender?: string
-    expression?: string
-    suggestions?: Array<{ contactId: string; contactName: string; similarity: number }>
-  }> = []
-
-  if (fileType === 'image') {
-    try {
-      console.log('[Media Upload] Starting face detection with Rekognition...')
-      const faces = await detectFaces(buffer)
-      
-      // For each detected face, search for matches in user's collection
-      const facesWithSuggestions = await Promise.all(
-        faces.map(async (face) => {
-          let suggestions: Array<{ contactId: string; contactName: string; similarity: number }> = []
-          
-          try {
-            // Search for matching faces (70% similarity threshold)
-            const matches = await searchFaces(buffer, user.id, 70)
-            
-            if (matches.length > 0) {
-              // Get contact names for matches
-              const contactIds = matches.map(m => m.contactId)
-              const { data: contacts } = await supabase
-                .from('contacts')
-                .select('id, full_name')
-                .in('id', contactIds)
-              
-              suggestions = matches.map(match => {
-                const contact = contacts?.find(c => c.id === match.contactId)
-                return {
-                  contactId: match.contactId,
-                  contactName: contact?.full_name || 'Unknown',
-                  similarity: Math.round(match.similarity),
-                }
-              }).slice(0, 3) // Top 3 suggestions
-              
-              console.log(`[Media Upload] Found ${suggestions.length} face match suggestions`)
-            }
-          } catch (err) {
-            const errorMessage = err instanceof Error ? err.message : 'Unknown error'
-            console.log('[Media Upload] Face search failed (no indexed faces yet):', errorMessage)
-          }
-          
-          return {
-            boundingBox: face.boundingBox,
-            confidence: face.confidence,
-            age: face.age,
-            gender: face.gender,
-            expression: face.emotions ? getDominantEmotion(face.emotions) : undefined,
-            suggestions,
-          }
-        })
-      )
-      
-      detectedFaces = facesWithSuggestions
-      console.log(`[Media Upload] ✅ Rekognition found ${detectedFaces.length} faces`)
-    } catch (e) {
-      console.error('[Media Upload] ❌ Face detection failed:', e)
-      // Continue without face data
-    }
-  }
-
-  // No XP for photo upload - only backstory earns XP
-
-  // Get image dimensions (for images)
-  let width = null
-  let height = null
-
-  if (fileType === 'image') {
-    // Simple dimension detection from buffer header
-    // For production, use sharp or similar
-    try {
-      const dimensions = getImageDimensions(buffer)
-      width = dimensions.width
-      height = dimensions.height
-    } catch (e) {
-      // Ignore dimension errors
-    }
-  }
-
-  // Check if this should be cover
-  const { count } = await supabase
+  // 3. Attach the photo to the memory
+  const { data: updated, error: updateError } = await supabase
     .from('memory_media')
-    .select('id', { count: 'exact', head: true })
-    .eq('memory_id', memoryId)
-
-  const isCover = count === 0
-
-  // Create media record with EXIF data
-  const { data: media, error: mediaError } = await supabase
-    .from('memory_media')
-    .insert({
-      memory_id: memoryId,
-      user_id: user.id,
-      file_url: publicUrl,
-      file_key: fileName,
-      file_type: fileType,
-      mime_type: file.type,
-      file_size: file.size,
-      width,
-      height,
-      is_cover: isCover,
-      // EXIF data (extracted server-side)
-      exif_lat: exifLat,
-      exif_lng: exifLng,
-      taken_at: takenAt,
-      camera_make: cameraMake,
-      camera_model: cameraModel,
-      // AI analysis
-      ai_faces: detectedFaces.map(f => ({
-        boundingBox: f.boundingBox,
-        confidence: f.confidence,
-        age: f.age,
-        gender: f.gender,
-        expression: f.expression,
-      })),
-      ai_processed: detectedFaces.length > 0,
-    })
+    .update({ memory_id: memoryId })
+    .eq('id', media_id)
+    .eq('user_id', user.id)
     .select()
     .single()
 
-  if (mediaError) {
-    console.error('Media record error:', mediaError)
-    return NextResponse.json({ error: 'Failed to save media' }, { status: 500 })
+  if (updateError) {
+    console.error('Failed to attach media to memory:', updateError)
+    return NextResponse.json({ error: updateError.message }, { status: 500 })
   }
 
-  console.log('[Media Upload] Successfully saved media:', {
-    mediaId: media.id,
-    memoryId,
-    userId: user.id,
-    fileType,
-    fileSize: file.size,
-  })
-
-  // Store detected faces for tagging (if faces detected)
-  if (detectedFaces.length > 0) {
-    const faceRecords = detectedFaces.map((face) => ({
-      media_id: media.id,
-      user_id: user.id,
-      box_left: face.boundingBox.x,
-      box_top: face.boundingBox.y,
-      box_width: face.boundingBox.width,
-      box_height: face.boundingBox.height,
-      confidence: Math.round(face.confidence),
-      age: face.age ? Math.round((face.age.low + face.age.high) / 2) : null,
-      gender: face.gender,
-      expression: face.expression,
-      is_auto_detected: true,
-      is_confirmed: false,
-    }))
-
-    const { error: faceError } = await supabase.from('memory_face_tags').insert(faceRecords)
-    if (faceError) {
-      console.error('[Media Upload] Failed to save face records:', faceError)
-    } else {
-      console.log(`[Media Upload] ✅ Saved ${faceRecords.length} face records`)
-    }
-  }
-
-  // Update parent memory with EXIF data if it doesn't have date/location yet
-  if (exifLat || exifLng || takenAt) {
-    const { data: currentMemory } = await supabase
-      .from('memories')
-      .select('memory_date, location_lat, location_lng, location_name')
-      .eq('id', memoryId)
-      .single()
-
-    const updates: Record<string, unknown> = {}
-    
-    // Update date if memory has no date or has today's placeholder date
-    if (takenAt && (!currentMemory?.memory_date || currentMemory.memory_date === new Date().toISOString().split('T')[0])) {
-      updates.memory_date = takenAt.split('T')[0]
-    }
-    
-    // Update location if memory has no location
-    if (exifLat && exifLng && !currentMemory?.location_lat) {
-      updates.location_lat = exifLat
-      updates.location_lng = exifLng
-      
-      // Reverse geocode to get human-readable location name
-      if (!currentMemory?.location_name) {
-        const locationName = await reverseGeocode(exifLat, exifLng)
-        if (locationName) {
-          updates.location_name = locationName
-        }
-      }
-    }
-
-    if (Object.keys(updates).length > 0) {
-      await supabase.from('memories').update(updates).eq('id', memoryId)
-    }
-  }
-
-  // Generate smart tags async (don't block response)
-  // This runs in the background after response is sent
-  if (fileType === 'image') {
-    generateSmartTags(buffer, file.type || 'image/jpeg')
-      .then(async (tags) => {
-        if (tags.allTags.length > 0) {
-          const adminSupabase = await createClient()
-          await adminSupabase
-            .from('memory_media')
-            .update({
-              ai_labels: {
-                scene: tags.scene,
-                setting: tags.setting,
-                activities: tags.activities,
-                objects: tags.objects,
-                people: tags.people,
-                mood: tags.mood,
-                weather: tags.weather,
-                allTags: tags.allTags,
-                caption: tags.caption,
-                category: tags.category,
-                analyzedAt: new Date().toISOString(),
-              },
-              ai_processed: true,
-            })
-            .eq('id', media.id)
-
-          // Update parent memory with AI data if not set
-          const memoryUpdates: Record<string, string> = {}
-          
-          const { data: currentMemory } = await adminSupabase
-            .from('memories')
-            .select('ai_category, ai_mood, ai_summary')
-            .eq('id', memoryId)
-            .single()
-
-          if (!currentMemory?.ai_category && tags.category) {
-            memoryUpdates.ai_category = tags.category
-          }
-          if (!currentMemory?.ai_mood && tags.mood.length > 0) {
-            memoryUpdates.ai_mood = tags.mood[0]
-          }
-          if (!currentMemory?.ai_summary && tags.caption) {
-            memoryUpdates.ai_summary = tags.caption
-          }
-
-          if (Object.keys(memoryUpdates).length > 0) {
-            await adminSupabase
-              .from('memories')
-              .update(memoryUpdates)
-              .eq('id', memoryId)
-          }
-        }
-      })
-      .catch((err) => {
-        console.error('Background smart tag generation failed:', err)
-      })
-  }
-
-  return NextResponse.json({ 
-    media,
-    faces: detectedFaces.map(f => ({
-      boundingBox: f.boundingBox,
-      age: f.age,
-      gender: f.gender,
-      expression: f.expression,
-      suggestions: f.suggestions || [],
-    })),
-  })
-}
-
-// Simple dimension detection (JPEG/PNG only)
-function getImageDimensions(buffer: Buffer): { width: number; height: number } {
-  // PNG
-  if (buffer[0] === 0x89 && buffer[1] === 0x50) {
-    return {
-      width: buffer.readUInt32BE(16),
-      height: buffer.readUInt32BE(20),
-    }
-  }
-  
-  // JPEG
-  if (buffer[0] === 0xff && buffer[1] === 0xd8) {
-    let offset = 2
-    while (offset < buffer.length) {
-      if (buffer[offset] !== 0xff) break
-      const marker = buffer[offset + 1]
-      if (marker === 0xc0 || marker === 0xc2) {
-        return {
-          height: buffer.readUInt16BE(offset + 5),
-          width: buffer.readUInt16BE(offset + 7),
-        }
-      }
-      const length = buffer.readUInt16BE(offset + 2)
-      offset += 2 + length
-    }
-  }
-
-  return { width: 0, height: 0 }
-}
-
-// Parse date from common filename patterns
-function parseDateFromFilename(filename: string): Date | null {
-  // Remove extension
-  const name = filename.replace(/\.[^/.]+$/, '')
-  
-  // Pattern: WhatsApp Image 2026-02-18 at 3.17.34 PM
-  const whatsappMatch = name.match(/(\d{4})-(\d{2})-(\d{2}) at (\d{1,2})\.(\d{2})\.(\d{2}) (AM|PM)/i)
-  if (whatsappMatch) {
-    let [, year, month, day, hour, min, sec, ampm] = whatsappMatch
-    let hourNum = parseInt(hour)
-    if (ampm.toUpperCase() === 'PM' && hourNum < 12) hourNum += 12
-    if (ampm.toUpperCase() === 'AM' && hourNum === 12) hourNum = 0
-    return new Date(parseInt(year), parseInt(month) - 1, parseInt(day), hourNum, parseInt(min), parseInt(sec))
-  }
-  
-  // Pattern: IMG_20231225_143052 or VID_20231225_143052
-  const imgMatch = name.match(/(?:IMG|VID|PXL|DCIM)_(\d{4})(\d{2})(\d{2})_(\d{2})(\d{2})(\d{2})/i)
-  if (imgMatch) {
-    const [, year, month, day, hour, min, sec] = imgMatch
-    return new Date(parseInt(year), parseInt(month) - 1, parseInt(day), parseInt(hour), parseInt(min), parseInt(sec))
-  }
-  
-  // Pattern: Screenshot_2023-12-25-14-30-52 or Screenshot 2023-12-25 at 14.30.52
-  const screenshotMatch = name.match(/Screenshot[_\s](\d{4})-(\d{2})-(\d{2})[-_\s](?:at\s)?(\d{2})[-.](\d{2})[-.](\d{2})/i)
-  if (screenshotMatch) {
-    const [, year, month, day, hour, min, sec] = screenshotMatch
-    return new Date(parseInt(year), parseInt(month) - 1, parseInt(day), parseInt(hour), parseInt(min), parseInt(sec))
-  }
-  
-  // Pattern: 2023-12-25 or 2023_12_25 or 20231225
-  const dateOnlyMatch = name.match(/(\d{4})[-_]?(\d{2})[-_]?(\d{2})/)
-  if (dateOnlyMatch) {
-    const [, year, month, day] = dateOnlyMatch
-    const yearNum = parseInt(year)
-    // Sanity check: year should be reasonable (1990-2030)
-    if (yearNum >= 1990 && yearNum <= 2030) {
-      return new Date(yearNum, parseInt(month) - 1, parseInt(day), 12, 0, 0)
-    }
-  }
-  
-  return null
+  return NextResponse.json({ success: true, media: updated })
 }
