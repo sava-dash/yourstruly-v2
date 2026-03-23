@@ -22,13 +22,14 @@ COPY . .
 ENV NEXT_TELEMETRY_DISABLED 1
 
 # Build arguments for public env vars (needed at build time)
-# Default values provided for build-time static generation
-ARG NEXT_PUBLIC_SUPABASE_URL=https://placeholder.supabase.co
-ARG NEXT_PUBLIC_SUPABASE_ANON_KEY=placeholder-key
-ARG NEXT_PUBLIC_APP_URL=http://localhost:3000
-ARG NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY=pk_test_placeholder
-ARG NEXT_PUBLIC_MAPBOX_TOKEN=pk.placeholder
-ARG NEXT_PUBLIC_PERSONAPLEX_URL=http://localhost:8000
+# NO defaults for critical vars — build will fail if you forget them.
+# Use ./deploy.sh which reads from .env.local automatically.
+ARG NEXT_PUBLIC_SUPABASE_URL
+ARG NEXT_PUBLIC_SUPABASE_ANON_KEY
+ARG NEXT_PUBLIC_APP_URL=https://app.yourstruly.love
+ARG NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY
+ARG NEXT_PUBLIC_MAPBOX_TOKEN
+ARG NEXT_PUBLIC_PERSONAPLEX_URL=ws://100.97.242.10:8998/api/chat
 ARG NEXT_PUBLIC_VOICE_PROVIDER=personaplex
 
 ENV NEXT_PUBLIC_SUPABASE_URL=$NEXT_PUBLIC_SUPABASE_URL
