@@ -649,8 +649,8 @@ export default function DashboardPage() {
     return true
   })
   
-  // Modal states for engagement
-  const [showEngagement, setShowEngagement] = useState(false)
+  // Modal states for engagement — open by default so prompts are front-and-center
+  const [showEngagement, setShowEngagement] = useState(true)
   const [engagementCarouselIndex, setEngagementCarouselIndex] = useState(0)
   const [dashEngagementPrompt, setDashEngagementPrompt] = useState<any | null>(null)
   const [photoTaggingPrompt, setPhotoTaggingPrompt] = useState<any | null>(null)
@@ -3195,9 +3195,9 @@ export default function DashboardPage() {
         )}
       </AnimatePresence>
 
-      {/* ── Dashboard Engagement Overlay ── */}
+      {/* ── Dashboard Engagement Overlay — auto-opens on load ── */}
       <EngagementOverlay
-        isOpen={showEngagement}
+        isOpen={showEngagement && (engagementLoading || engagementPrompts.length > 0)}
         onClose={() => setShowEngagement(false)}
         prompts={engagementPrompts}
         isLoading={engagementLoading}
