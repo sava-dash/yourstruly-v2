@@ -1,4 +1,17 @@
 
+## 🎯 Engagement Overlay — Smart Auto-Open (Future)
+
+Currently the engagement overlay auto-opens on every dashboard load. Upgrade to a smarter system:
+
+- [ ] Track overlay dismissals in localStorage (timestamp + count)
+- [ ] First 5-7 visits: always auto-open (build the habit)
+- [ ] After that: only auto-open if there are fresh/high-priority prompts (new photo prompts, contact prompts, streak-at-risk)
+- [ ] Don't auto-open if dismissed in the same session
+- [ ] Consider time-of-day awareness (don't auto-open at 2am)
+- [ ] Maybe a gentle nudge instead (pulsing engagement tile) after the habit-building period
+
+---
+
 ## 🎨 Design System / Figma Integration (Pending)
 - [ ] Get Figma Design file URL from design team
 - [ ] Get Figma Design System file URL from design team
