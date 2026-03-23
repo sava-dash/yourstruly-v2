@@ -1904,16 +1904,24 @@ function MapboxGlobeReveal({
 
       {/* ── Phase: Photo Map — show geotagged photos as pins on globe ── */}
       <AnimatePresence>
-        {phase === 'photo-map' && (
+        {phase === 'photo-map' && (() => {
+          // Wait for all photo markers to land before showing the panel
+          const geoCount = uploadedPhotos.filter(p => p.lat != null && p.lng != null).length;
+          const allPinsLandedDelay = Math.max(2.0, (0.8 + geoCount * 0.3 + 0.5)); // 800ms base + 300ms per photo + 500ms buffer
+          const panelDelay = allPinsLandedDelay;
+          const textDelay = panelDelay + 0.5;
+          const subtextDelay = panelDelay + 0.8;
+          const buttonDelay = panelDelay + 1.2;
+          return (
           <>
-            {/* Bottom panel */}
+            {/* Bottom panel — waits for all photo pins to land */}
             <motion.div
               key="photo-map-bottom"
               className="globe-bottom-panel"
               initial={{ opacity: 0, y: 80 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: 80 }}
-              transition={{ type: 'spring', stiffness: 200, damping: 24, delay: 1.5 }}
+              transition={{ type: 'spring', stiffness: 200, damping: 24, delay: panelDelay }}
             >
               <div className="globe-welcome-card">
                 <div className="globe-welcome-bar" />
@@ -1922,7 +1930,7 @@ function MapboxGlobeReveal({
                     className="globe-welcome-greeting"
                     initial={{ opacity: 0, y: 8 }}
                     animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: 2.0 }}
+                    transition={{ delay: textDelay }}
                   >
                     Your memories around the world 🌍
                   </motion.p>
@@ -1930,21 +1938,29 @@ function MapboxGlobeReveal({
                     className="globe-welcome-headline"
                     initial={{ opacity: 0, y: 8 }}
                     animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: 2.3 }}
+                    transition={{ delay: subtextDelay }}
                     style={{ fontSize: '16px', lineHeight: '1.5' }}
                   >
-                    {uploadedPhotos.filter(p => p.lat != null && p.lng != null).length} photo{uploadedPhotos.filter(p => p.lat != null && p.lng != null).length !== 1 ? 's' : ''} placed on your map.
+                    {geoCount} photo{geoCount !== 1 ? 's' : ''} placed on your map.
                     {uploadedPhotos.filter(p => p.status === 'done' && p.lat == null).length > 0 && (
                       <span style={{ fontSize: '13px', opacity: 0.6, display: 'block', marginTop: '4px' }}>
                         {uploadedPhotos.filter(p => p.status === 'done' && p.lat == null).length} without location — you can add those later.
                       </span>
                     )}
                   </motion.h2>
+                  <motion.p
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 0.5 }}
+                    transition={{ delay: subtextDelay + 0.3 }}
+                    style={{ fontSize: '13px', color: '#666', margin: '8px 0 0' }}
+                  >
+                    Take a moment to explore your map — drag to spin the globe!
+                  </motion.p>
                 </div>
                 <motion.div
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
-                  transition={{ delay: 2.5 }}
+                  transition={{ delay: buttonDelay }}
                   style={{ padding: '0 24px 20px' }}
                 >
                   <button
@@ -1954,13 +1970,14 @@ function MapboxGlobeReveal({
                       setPhase('lets-go');
                     }}
                   >
-                    Continue <ChevronRight size={18} />
+                    I&apos;m ready to continue <ChevronRight size={18} />
                   </button>
                 </motion.div>
               </div>
             </motion.div>
           </>
-        )}
+          );
+        })()}
       </AnimatePresence>
 
       {/* ── "Let's bring this to life" — transition popup after why-here ── */}

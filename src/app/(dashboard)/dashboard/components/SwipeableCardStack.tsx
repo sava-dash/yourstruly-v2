@@ -50,19 +50,31 @@ export function SwipeableCardStack({
   const containerRef = useRef<HTMLDivElement>(null)
   // Track navigation direction for slide animation: 1 = forward, -1 = back
   const [direction, setDirection] = useState(0)
+  // Guard to prevent "need more prompts" from firing repeatedly
+  const needMoreCooldown = useRef(false)
+  const lastPromptCount = useRef(prompts.length)
 
   // Clamp index when prompts array changes (e.g. after answer removes a prompt)
   useEffect(() => {
     if (prompts.length > 0 && currentIndex >= prompts.length) {
       onCurrentIndexChange(prompts.length - 1)
     }
+    // Reset cooldown when we actually get new prompts
+    if (prompts.length > lastPromptCount.current) {
+      needMoreCooldown.current = false
+    }
+    lastPromptCount.current = prompts.length
   }, [prompts.length, currentIndex])
 
-  // Request more prompts when near the end
+  // Request more prompts when near the end (with cooldown to prevent infinite loop)
   useEffect(() => {
     const remaining = prompts.length - currentIndex
-    if (remaining < 5 && prompts.length > 0) {
+    if (remaining < 5 && prompts.length > 0 && !needMoreCooldown.current) {
+      needMoreCooldown.current = true
       onNeedMorePrompts()
+      // Safety: reset cooldown after 10s in case new prompts never arrive
+      const timer = setTimeout(() => { needMoreCooldown.current = false }, 10000)
+      return () => clearTimeout(timer)
     }
   }, [currentIndex, prompts.length, onNeedMorePrompts])
 

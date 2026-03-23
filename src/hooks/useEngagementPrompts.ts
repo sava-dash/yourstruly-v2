@@ -23,6 +23,8 @@ export function useEngagementPrompts(count: number = 5, lifeChapter: string | nu
   const [error, setError] = useState<Error | null>(null);
 
   const isFetching = useRef(false);
+  const promptsRef = useRef(prompts);
+  promptsRef.current = prompts;
 
   const supabase = createClient();
 
@@ -219,15 +221,18 @@ export function useEngagementPrompts(count: number = 5, lifeChapter: string | nu
       console.log('Answer prompt result:', result);
 
       // Remove from local state
-      setPrompts(prev => prev.filter(p => p.id !== promptId));
+      setPrompts(prev => {
+        const filtered = prev.filter(p => p.id !== promptId);
+        // Fetch more if running low (using fresh count, not stale closure)
+        if (filtered.length <= 2) {
+          // Schedule fetch after state settles
+          setTimeout(() => fetchPrompts(), 100);
+        }
+        return filtered;
+      });
 
       // Refresh stats
       await fetchStats();
-
-      // Fetch more if running low
-      if (prompts.length <= 2) {
-        await fetchPrompts();
-      }
       
       // Return the result so caller can get memoryId, etc.
       return result;
@@ -236,7 +241,7 @@ export function useEngagementPrompts(count: number = 5, lifeChapter: string | nu
       console.error('Failed to answer prompt:', err);
       throw err;
     }
-  }, [prompts.length, fetchPrompts]);
+  }, [fetchPrompts]);
 
   // Skip a prompt
   const skipPrompt = useCallback(async (promptId: string) => {
@@ -249,19 +254,20 @@ export function useEngagementPrompts(count: number = 5, lifeChapter: string | nu
 
       if (skipError) throw skipError;
 
-      // Remove from local state
-      setPrompts(prev => prev.filter(p => p.id !== promptId));
-
-      // Fetch replacement
-      if (prompts.length <= 2) {
-        await fetchPrompts();
-      }
+      // Remove from local state, fetch more if running low
+      setPrompts(prev => {
+        const filtered = prev.filter(p => p.id !== promptId);
+        if (filtered.length <= 2) {
+          setTimeout(() => fetchPrompts(), 100);
+        }
+        return filtered;
+      });
 
     } catch (err) {
       console.error('Failed to skip prompt:', err);
       throw err;
     }
-  }, [prompts.length, fetchPrompts, supabase]);
+  }, [fetchPrompts, supabase]);
 
   // Dismiss a prompt (don't show again)
   const dismissPrompt = useCallback(async (promptId: string) => {
@@ -273,19 +279,20 @@ export function useEngagementPrompts(count: number = 5, lifeChapter: string | nu
 
       if (dismissError) throw dismissError;
 
-      // Remove from local state
-      setPrompts(prev => prev.filter(p => p.id !== promptId));
-
-      // Fetch replacement
-      if (prompts.length <= 2) {
-        await fetchPrompts();
-      }
+      // Remove from local state, fetch more if running low
+      setPrompts(prev => {
+        const filtered = prev.filter(p => p.id !== promptId);
+        if (filtered.length <= 2) {
+          setTimeout(() => fetchPrompts(), 100);
+        }
+        return filtered;
+      });
 
     } catch (err) {
       console.error('Failed to dismiss prompt:', err);
       throw err;
     }
-  }, [prompts.length, fetchPrompts, supabase]);
+  }, [fetchPrompts, supabase]);
 
   // Fetch prompts when category changes
   useEffect(() => {
