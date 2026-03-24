@@ -71,6 +71,7 @@ export interface UsePersonaPlexReturn {
   isRecording: boolean
   recordingBlob: Blob | null
   recordingUrl: string | null
+  recordingStartTime: number | null
   // Actions
   start: () => Promise<void>
   stop: () => void
@@ -521,6 +522,7 @@ export function usePersonaPlexVoice(options: UsePersonaPlexOptions = {}): UsePer
   const [isRecording, setIsRecording] = useState(false)
   const [recordingBlob, setRecordingBlob] = useState<Blob | null>(null)
   const [recordingUrl, setRecordingUrl] = useState<string | null>(null)
+  const [recordingStartTime, setRecordingStartTime] = useState<number | null>(null)
 
   // Refs
   const socketRef = useRef<WebSocket | null>(null)
@@ -740,6 +742,7 @@ export function usePersonaPlexVoice(options: UsePersonaPlexOptions = {}): UsePer
       // Start recording
       if (stereoRecorderRef.current && stereoRecorderRef.current.state === 'inactive') {
         stereoRecorderRef.current.start()
+        setRecordingStartTime(Date.now())
         setIsRecording(true)
       }
     }
@@ -975,6 +978,7 @@ export function usePersonaPlexVoice(options: UsePersonaPlexOptions = {}): UsePer
     isRecording,
     recordingBlob,
     recordingUrl,
+    recordingStartTime,
     // Actions
     start,
     stop,

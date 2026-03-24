@@ -59,6 +59,7 @@ interface ParsedExchange {
   question: string;
   answer: string;
   audioUrl?: string;
+  questionAudioUrl?: string;
 }
 
 export default function WisdomDetailPage() {
@@ -204,16 +205,19 @@ export default function WisdomDetailPage() {
     for (const pair of qaPairs) {
       // Extract question
       const qMatch = pair.match(/\*\*Q\d+:\*\*\s*(.+?)(?=\n\n\*\*A)/s);
-      // Extract answer
-      const aMatch = pair.match(/\*\*A\d+:\*\*\s*(.+?)(?=\n\n🎙️|$)/s);
-      // Extract audio URL
+      // Extract answer (stop at audio links or end)
+      const aMatch = pair.match(/\*\*A\d+:\*\*\s*(.+?)(?=\n\n🔊|\n\n🎙️|$)/s);
+      // Extract user answer audio URL
       const audioMatch = pair.match(/🎙️ \[Audio\]\((.+?)\)/);
+      // Extract AI question audio URL
+      const questionAudioMatch = pair.match(/🔊 \[Question Audio\]\((.+?)\)/);
       
       if (qMatch && aMatch) {
         exchanges.push({
           question: qMatch[1]?.trim() || '',
           answer: aMatch[1]?.trim() || '',
           audioUrl: audioMatch?.[1]?.trim(),
+          questionAudioUrl: questionAudioMatch?.[1]?.trim(),
         });
       }
     }
@@ -311,28 +315,41 @@ export default function WisdomDetailPage() {
         setCurrentExchangeIndex(i);
         setPlaybackProgress(((i) / exchanges.length) * 100);
 
-        // Play question (TTS)
+        // Play question (real audio if available, else TTS)
         setPlayingPart('question');
-        try {
-          await speakText(exchange.question);
-        } catch (e) {
-          console.log('TTS failed for question, skipping:', e);
+        if (exchange.questionAudioUrl) {
+          try {
+            await playAudioUrl(exchange.questionAudioUrl);
+          } catch (e) {
+            console.log('Question audio failed, falling back to TTS:', e);
+            try { await speakText(exchange.question); } catch {}
+          }
+        } else {
+          try {
+            await speakText(exchange.question);
+          } catch (e) {
+            console.log('TTS failed for question, skipping:', e);
+          }
         }
         
         // Small pause between question and answer
         await new Promise(r => setTimeout(r, 400));
 
-        // Play answer (audio URL if available, else TTS)
+        // Play answer (real audio if available, else TTS)
         setPlayingPart('answer');
         if (exchange.audioUrl) {
           try {
             await playAudioUrl(exchange.audioUrl);
           } catch (e) {
-            console.log('Audio URL failed, trying TTS:', e);
-            await speakText(exchange.answer);
+            console.log('Answer audio failed, trying TTS:', e);
+            try { await speakText(exchange.answer); } catch {}
           }
         } else {
-          await speakText(exchange.answer);
+          try {
+            await speakText(exchange.answer);
+          } catch (e) {
+            console.log('TTS failed for answer, skipping:', e);
+          }
         }
 
         // Pause between exchanges

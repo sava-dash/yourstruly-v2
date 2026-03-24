@@ -7,6 +7,7 @@ import { usePersonaPlexVoice, type PersonaPlexVoice } from '@/hooks/usePersonaPl
 import { useVideoRecorder } from '@/hooks/useVideoRecorder'
 import { VoiceChatUI } from './VoiceChatUI'
 import { createClient } from '@/lib/supabase/client'
+import { extractConversationClips } from '@/lib/audio/clip-stitcher'
 import type { 
   VoiceSessionType, 
   PersonaConfig,
@@ -196,6 +197,119 @@ export function VoiceVideoChat({
     }
   }
 
+  // Background: extract clips from stereo recording and upload per-exchange audio
+  const processConversationClips = useCallback(async (
+    memoryId: string,
+    userId: string,
+    recordingBlob: Blob,
+    recordingStartTime: number,
+    transcriptEntries: typeof transcript,
+  ) => {
+    try {
+      console.log('[VoiceVideoChat] Starting background clip extraction...')
+      
+      // Extract individual clips from stereo recording
+      const result = await extractConversationClips(recordingBlob, transcriptEntries, recordingStartTime)
+      
+      if (result.clips.length === 0) {
+        console.warn('[VoiceVideoChat] No clips extracted')
+        return
+      }
+      
+      console.log(`[VoiceVideoChat] Extracted ${result.clips.length} clips, uploading...`)
+      
+      // Upload the stitched full conversation audio
+      const stitchedPath = `${userId}/${memoryId}/stitched_conversation.wav`
+      const { error: stitchError } = await supabase.storage
+        .from('memory-media')
+        .upload(stitchedPath, result.fullBlob, { contentType: 'audio/wav', upsert: true })
+      
+      let stitchedUrl: string | undefined
+      if (!stitchError) {
+        const { data: urlData } = supabase.storage.from('memory-media').getPublicUrl(stitchedPath)
+        stitchedUrl = urlData.publicUrl
+      }
+      
+      // Upload individual clips and collect URLs
+      const clipUrls: Array<{ exchangeIndex: number; part: 'question' | 'answer'; url: string }> = []
+      
+      for (const clip of result.clips) {
+        const clipPath = `${userId}/${memoryId}/clip_${clip.exchangeIndex}_${clip.part}.wav`
+        const { error: uploadError } = await supabase.storage
+          .from('memory-media')
+          .upload(clipPath, clip.blob, { contentType: 'audio/wav', upsert: true })
+        
+        if (!uploadError) {
+          const { data: urlData } = supabase.storage.from('memory-media').getPublicUrl(clipPath)
+          clipUrls.push({
+            exchangeIndex: clip.exchangeIndex,
+            part: clip.part,
+            url: urlData.publicUrl,
+          })
+        }
+      }
+      
+      // Build updated description with per-exchange audio URLs
+      // Group clips by exchange
+      const exchangeMap = new Map<number, { questionUrl?: string; answerUrl?: string }>()
+      for (const c of clipUrls) {
+        const existing = exchangeMap.get(c.exchangeIndex) || {}
+        if (c.part === 'question') existing.questionUrl = c.url
+        else existing.answerUrl = c.url
+        exchangeMap.set(c.exchangeIndex, existing)
+      }
+      
+      // Rebuild the memory description with audio links per exchange
+      const exchanges: Array<{ question: string; answer: string }> = []
+      for (let i = 0; i < transcriptEntries.length; i++) {
+        const entry = transcriptEntries[i]
+        if (entry.role === 'assistant') {
+          const nextUser = transcriptEntries.slice(i + 1).find(e => e.role === 'user')
+          if (nextUser) {
+            exchanges.push({ question: entry.text.trim(), answer: nextUser.text.trim() })
+          }
+        }
+      }
+      
+      // Format as structured Q&A with audio links
+      const summary = exchanges.map(e => {
+        let text = e.answer
+        if (!text.endsWith('.') && !text.endsWith('!') && !text.endsWith('?')) text += '.'
+        return text
+      }).join(' ')
+      
+      const qaSection = exchanges.map((e, i) => {
+        const urls = exchangeMap.get(i)
+        let qa = `**Q${i + 1}:** ${e.question}\n\n**A${i + 1}:** ${e.answer}`
+        // Add audio links for each part
+        if (urls?.questionUrl) {
+          qa += `\n\n🔊 [Question Audio](${urls.questionUrl})`
+        }
+        if (urls?.answerUrl) {
+          qa += `\n\n🎙️ [Audio](${urls.answerUrl})`
+        }
+        return qa
+      }).join('\n\n---\n\n')
+      
+      const updatedDescription = `## Summary\n\n${summary}\n\n## Conversation\n\n${qaSection}`
+      
+      // Update memory with stitched audio and enriched description
+      await supabase
+        .from('memories')
+        .update({
+          audio_url: stitchedUrl || null,
+          description: updatedDescription,
+        })
+        .eq('id', memoryId)
+      
+      console.log('[VoiceVideoChat] Clip processing complete, memory updated')
+      
+    } catch (err) {
+      console.error('[VoiceVideoChat] Background clip processing failed:', err)
+      // Non-fatal — the memory was already saved with transcript text
+    }
+  }, [supabase])
+
   // Handle save
   const handleSave = useCallback(async () => {
     setIsSaving(true)
@@ -210,19 +324,12 @@ export function VoiceVideoChat({
       const { data: { user } } = await supabase.auth.getUser()
       if (!user) throw new Error('Not authenticated')
 
-      // Upload conversation audio recording first (if available)
-      let conversationAudioUrl: string | undefined
-      if (personaPlex.recordingBlob) {
-        // We need a temp ID for the path — upload after memory creation
-        // For now, create the memory first, then upload and update
-      }
-
       // Call the memory creation API with transcript array
       const response = await fetch('/api/voice/memory', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          transcript, // Pass the array directly, not formatted string
+          transcript,
           sessionType,
           topic,
           contactId,
@@ -238,18 +345,6 @@ export function VoiceVideoChat({
       const { memoryId } = await response.json()
       savedMemoryIdRef.current = memoryId
 
-      // Now upload conversation audio and update the memory with the URL
-      if (personaPlex.recordingBlob) {
-        conversationAudioUrl = await uploadConversationAudio(memoryId, personaPlex.recordingBlob)
-        if (conversationAudioUrl) {
-          // Update the memory record with the audio URL
-          await supabase
-            .from('memories')
-            .update({ audio_url: conversationAudioUrl })
-            .eq('id', memoryId)
-        }
-      }
-
       // Extract entities
       const entities = extractEntities(transcript)
       if (entities.people.length > 0 || entities.places.length > 0) {
@@ -262,6 +357,17 @@ export function VoiceVideoChat({
         videoUrl = await uploadVideo(memoryId, recordedBlob)
       }
 
+      // Kick off background clip extraction (don't await — runs in background)
+      if (personaPlex.recordingBlob && personaPlex.recordingStartTime) {
+        processConversationClips(
+          memoryId,
+          user.id,
+          personaPlex.recordingBlob,
+          personaPlex.recordingStartTime,
+          transcript,
+        )
+      }
+
       onMemorySaved?.(memoryId, videoUrl)
     } catch (err) {
       onError?.(err instanceof Error ? err : new Error('Save failed'))
@@ -269,9 +375,10 @@ export function VoiceVideoChat({
       setIsSaving(false)
     }
   }, [
-    videoRecording, stopVideoRecording, transcript, supabase, personaPlex.recordingBlob,
+    videoRecording, stopVideoRecording, transcript, supabase,
+    personaPlex.recordingBlob, personaPlex.recordingStartTime,
     sessionType, topic, contactId, sessionDuration, recordedBlob,
-    onMemorySaved, onEntitiesExtracted, onError
+    onMemorySaved, onEntitiesExtracted, onError, processConversationClips,
   ])
 
   // Handle abort
