@@ -2199,8 +2199,8 @@ export default function DashboardPage() {
             />
           )}
 
-          <div className="header-controls" style={{ position: 'sticky', top: '64px', zIndex: 20, background: '#FDF8F3', paddingTop: '8px', marginTop: '-8px' }}>
-            {/* Category Nav Row — sticky */}
+          <div className="header-controls" style={{ position: 'sticky', top: '64px', zIndex: 20, background: '#FDF8F3', paddingBottom: '8px' }}>
+            {/* Category Nav Row — visible at bottom of engagement section, sticky on scroll */}
             <div className="controls-row">
               {/* Left: Category Pills */}
               <div className="filter-tags" data-tour="category-tabs">

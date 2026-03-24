@@ -147,19 +147,16 @@ export function EngagementSection({
           minHeight: '600px',
           maxHeight: '900px',
           display: 'flex',
-          background: 'linear-gradient(180deg, #faf9f7, #f3efe9)',
-          borderRadius: '24px',
+          background: 'transparent',
           overflow: 'hidden',
-          boxShadow: '0 4px 24px rgba(0, 0, 0, 0.06), 0 0 0 1px rgba(0,0,0,0.04)',
-          marginBottom: '24px',
+          marginBottom: '0',
         }}
       >
         {/* Left Column — Header + Chapter Selector */}
         <div style={{
-          width: '260px',
+          width: '240px',
           flexShrink: 0,
-          padding: '24px',
-          borderRight: '1px solid rgba(0,0,0,0.06)',
+          padding: '0 24px 24px 0',
           display: 'flex',
           flexDirection: 'column',
           gap: '16px',
@@ -179,51 +176,52 @@ export function EngagementSection({
             </p>
           </div>
 
-          {/* XP Counter */}
-          <div style={{
-            display: 'flex',
-            alignItems: 'center',
-            gap: '8px',
-            padding: '12px 16px',
-            background: 'rgba(217, 198, 26, 0.1)',
-            borderRadius: '12px',
-          }}>
-            <Sparkles size={18} style={{ color: '#D9C61A' }} />
-            <div>
-              <div style={{ fontSize: '18px', fontWeight: '700', color: '#2d2d2d' }}>{totalXp} XP</div>
-              <div style={{ fontSize: '11px', color: '#888' }}>Total earned</div>
-            </div>
-          </div>
-
-          {/* Streak Counter */}
-          {streakDays > 0 && (
+          {/* XP & Streak — compact row */}
+          <div style={{ display: 'flex', gap: '8px' }}>
             <div style={{
+              flex: 1,
               display: 'flex',
               alignItems: 'center',
-              gap: '8px',
-              padding: '12px 16px',
-              background: 'rgba(255, 140, 0, 0.1)',
+              gap: '6px',
+              padding: '10px 12px',
+              background: 'rgba(217, 198, 26, 0.08)',
               borderRadius: '12px',
             }}>
-              <span style={{ fontSize: '22px' }}>🔥</span>
+              <Sparkles size={16} style={{ color: '#D9C61A' }} />
               <div>
-                <div style={{ fontSize: '18px', fontWeight: '700', color: '#2d2d2d' }}>{streakDays} day{streakDays !== 1 ? 's' : ''}</div>
-                <div style={{ fontSize: '11px', color: '#888' }}>Current streak</div>
+                <div style={{ fontSize: '16px', fontWeight: '700', color: '#2d2d2d' }}>{totalXp}</div>
+                <div style={{ fontSize: '10px', color: '#888' }}>XP</div>
               </div>
             </div>
-          )}
+            {streakDays > 0 && (
+              <div style={{
+                flex: 1,
+                display: 'flex',
+                alignItems: 'center',
+                gap: '6px',
+                padding: '10px 12px',
+                background: 'rgba(255, 140, 0, 0.08)',
+                borderRadius: '12px',
+              }}>
+                <span style={{ fontSize: '16px' }}>🔥</span>
+                <div>
+                  <div style={{ fontSize: '16px', fontWeight: '700', color: '#2d2d2d' }}>{streakDays}</div>
+                  <div style={{ fontSize: '10px', color: '#888' }}>day{streakDays !== 1 ? 's' : ''}</div>
+                </div>
+              </div>
+            )}
+          </div>
 
           {streakDays >= 3 && (
             <div style={{
-              fontSize: '12px',
+              fontSize: '11px',
               color: '#e67700',
-              background: 'rgba(255, 140, 0, 0.06)',
-              padding: '8px 12px',
-              borderRadius: '10px',
+              padding: '6px 10px',
+              borderRadius: '8px',
               textAlign: 'center',
               fontWeight: 500,
             }}>
-              💪 Answer 1 prompt to keep your streak alive!
+              💪 Answer 1 to keep your streak!
             </div>
           )}
 
@@ -362,9 +360,8 @@ export function EngagementSection({
 
           {/* Swipe hints */}
           <div style={{ marginTop: 'auto', paddingTop: '16px' }}>
-            <div style={{ fontSize: '11px', color: '#aaa', textAlign: 'center', lineHeight: '1.6' }}>
-              <div>← Previous prompt</div>
-              <div>→ Next prompt</div>
+            <div style={{ fontSize: '11px', color: '#aaa', lineHeight: '1.8' }}>
+              <div>← → Navigate prompts</div>
               <div>Tap card to answer</div>
             </div>
           </div>
@@ -373,7 +370,7 @@ export function EngagementSection({
         {/* Right Column — Card Stack */}
         <div style={{
           flex: 1,
-          padding: '24px',
+          padding: '0 0 24px 0',
           display: 'flex',
           flexDirection: 'column',
           alignItems: 'center',
