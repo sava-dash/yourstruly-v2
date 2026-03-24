@@ -29,7 +29,8 @@ export default function LoginPage() {
       setError(error.message);
       setLoading(false);
     } else {
-      router.push('/dashboard');
+      // Hard navigation ensures auth cookies are set before middleware runs
+      window.location.href = '/dashboard';
     }
   };
 

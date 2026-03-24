@@ -58,9 +58,11 @@ export default function SignupPage() {
       setLoading(false);
     } else {
       if (data.session) {
-        router.push('/onboarding');
+        // Hard navigation ensures auth cookies are fully set before middleware runs
+        // router.push can race with cookie writes, causing infinite spinner
+        window.location.href = '/onboarding';
       } else {
-        router.push('/verify-email?email=' + encodeURIComponent(email));
+        window.location.href = '/verify-email?email=' + encodeURIComponent(email);
       }
     }
   };
