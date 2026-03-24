@@ -87,28 +87,14 @@ export default function LifeStoryEngine({ slideItems = [] }: LifeStoryEngineProp
       {/* ── Header ── */}
       <div
         className="relative p-5 cursor-pointer select-none"
-        style={{ background: 'linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%)' }}
+        style={{ background: 'linear-gradient(132deg, #180828 0%, #4A3552 22%, #F7B750 100%)' }}
         onClick={() => setExpanded(e => !e)}
       >
-        {/* Stars background */}
-        <div className="absolute inset-0 overflow-hidden opacity-30">
-          {[...Array(20)].map((_, i) => (
-            <div
-              key={i}
-              className="absolute w-0.5 h-0.5 bg-white rounded-full"
-              style={{
-                left: `${Math.random() * 100}%`,
-                top: `${Math.random() * 100}%`,
-                opacity: Math.random() * 0.8 + 0.2,
-              }}
-            />
-          ))}
-        </div>
 
         <div className="relative z-10 flex items-center justify-between">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-xl bg-white/10 flex items-center justify-center">
-              <BookOpen size={20} className="text-[#D9C61A]" />
+              <BookOpen size={20} className="text-[#F7B750]" />
             </div>
             <div>
               <h2 className="text-white font-bold text-lg leading-tight">The Life Story Engine</h2>
@@ -120,7 +106,7 @@ export default function LifeStoryEngine({ slideItems = [] }: LifeStoryEngineProp
             {photoSlides.length > 0 && (
               <button
                 onClick={(e) => { e.stopPropagation(); setShowSlideshow(true) }}
-                className="flex items-center gap-2 px-4 py-2 bg-[#D9C61A] text-[#1a1a2e] rounded-xl font-bold text-sm hover:bg-[#f0d820] transition-colors shadow-lg"
+                className="flex items-center gap-2 px-4 py-2 bg-[#F7B750] text-[#180828] rounded-xl font-bold text-sm hover:bg-[#f5a830] transition-colors shadow-lg"
               >
                 <Play size={16} className="fill-current" />
                 Play My Life
@@ -148,23 +134,23 @@ export default function LifeStoryEngine({ slideItems = [] }: LifeStoryEngineProp
             <div className="p-5 space-y-6">
               {loading ? (
                 <div className="flex items-center justify-center py-8">
-                  <Loader2 size={24} className="animate-spin text-[#406A56]" />
+                  <Loader2 size={24} className="animate-spin text-[#4A3552]" />
                   <span className="ml-2 text-[#666] text-sm">Loading your life story...</span>
                 </div>
               ) : !profile ? (
                 /* ── No profile yet ── */
                 <div className="text-center py-8">
-                  <div className="w-16 h-16 mx-auto mb-4 rounded-2xl bg-gradient-to-br from-[#1a1a2e] to-[#0f3460] flex items-center justify-center">
-                    <Sparkles size={28} className="text-[#D9C61A]" />
+                  <div className="w-16 h-16 mx-auto mb-4 rounded-2xl bg-[#4A3552] flex items-center justify-center">
+                    <Sparkles size={28} className="text-[#F7B750]" />
                   </div>
-                  <h3 className="text-lg font-bold text-[#2d2d2d] mb-2">Generate Your Life Story</h3>
-                  <p className="text-sm text-[#666] mb-6 max-w-sm mx-auto">
+                  <h3 className="text-lg font-bold text-[#11181c] mb-2">Generate Your Life Story</h3>
+                  <p className="text-sm text-[#52525b] mb-6 max-w-sm mx-auto">
                     AI will analyze your memories and create a biography, life chapters, and legacy archive.
                   </p>
                   <button
                     onClick={handleGenerate}
                     disabled={computing}
-                    className="flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-[#1a1a2e] to-[#0f3460] text-white rounded-xl font-semibold hover:opacity-90 transition-all mx-auto disabled:opacity-50"
+                    className="flex items-center gap-2 px-6 py-3 bg-[#4A3552] text-white rounded-xl font-semibold hover:bg-[#3a2842] transition-colors mx-auto disabled:opacity-50"
                   >
                     {computing ? (
                       <><Loader2 size={18} className="animate-spin" /> Generating...</>

@@ -272,12 +272,6 @@ export default function LifePage() {
 
   return (
     <div className="page-container">
-      <div className="page-background">
-        <div className="page-blob page-blob-1" />
-        <div className="page-blob page-blob-2" />
-        <div className="page-blob page-blob-3" />
-      </div>
-
       <div className="relative z-10">
 
         {/* ── Header ────────────────────────────────────────────────────────── */}
