@@ -2199,7 +2199,27 @@ export default function DashboardPage() {
             />
           )}
 
-          <div className="header-controls">
+          <div className="header-controls" ref={(el) => {
+            if (!el) return;
+            const sentinel = document.getElementById('sticky-sentinel');
+            if (sentinel) return;
+            // Create a sentinel element above header-controls to detect scroll position
+            const s = document.createElement('div');
+            s.id = 'sticky-sentinel';
+            s.style.height = '0px';
+            el.parentElement?.insertBefore(s, el);
+            const observer = new IntersectionObserver(([entry]) => {
+              const stuck = !entry.isIntersecting;
+              el.classList.toggle('is-stuck', stuck);
+              // When fixed, add a spacer to prevent content jump
+              if (stuck) {
+                s.style.height = el.offsetHeight + 'px';
+              } else {
+                s.style.height = '0px';
+              }
+            }, { threshold: 0, rootMargin: '-57px 0px 0px 0px' });
+            observer.observe(s);
+          }}>
             {/* Category Nav Row */}
             <div className="controls-row">
               {/* Left: Category Pills */}
@@ -3536,15 +3556,25 @@ export default function DashboardPage() {
         .feed-page[data-theme="light"] .profile-storage-track { height: 6px; background: #F2F1E5; border-radius: 3px; overflow: hidden; }
 
         .header-controls {
+          position: -webkit-sticky;
           position: sticky;
           top: 56px;
           z-index: 20;
           backdrop-filter: blur(12px);
+          -webkit-backdrop-filter: blur(12px);
           display: flex;
           flex-direction: column;
           gap: 8px;
           padding: 10px 16px;
           border-bottom: 1px solid rgba(128,128,128,0.1);
+          transition: box-shadow 0.2s;
+        }
+        .header-controls.is-stuck {
+          position: fixed;
+          top: 56px;
+          left: 280px;
+          right: 0;
+          box-shadow: 0 2px 8px rgba(0,0,0,0.06);
         }
 
         .feed-page[data-theme="dark"] .header-controls {

@@ -143,9 +143,9 @@ export function EngagementSection({
       <section
         id="engagement-section"
         style={{
-          height: '90vh',
-          minHeight: '600px',
-          maxHeight: '900px',
+          height: 'calc(100vh - 180px)',
+          minHeight: '400px',
+          maxHeight: '600px',
           display: 'flex',
           background: 'transparent',
           overflow: 'hidden',
