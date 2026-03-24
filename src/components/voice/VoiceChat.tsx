@@ -25,7 +25,7 @@ export interface VoiceChatProps {
   /** Optional contact ID if memory is about a specific person */
   contactId?: string
   /** Voice to use - defaults to 'NATF3' (warm, friendly female) */
-  voice?: PersonaPlexVoice
+  voice?: PersonaPlexVoice | string
   /** Persona configuration - defaults to journalist */
   persona?: PersonaConfig
   /** Pre-configured persona name shorthand */
@@ -88,7 +88,7 @@ export function VoiceChat({
   sessionType = 'memory_capture',
   topic,
   contactId,
-  voice = 'NATF3',
+  voice = 'CHUCK.mp3',
   persona,
   personaName = 'journalist',
   maxQuestions = 5,

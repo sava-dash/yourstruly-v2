@@ -22,7 +22,7 @@ export interface VoiceVideoChatProps {
   /** Optional contact ID */
   contactId?: string
   /** Voice to use - defaults to 'NATF3' (warm female) */
-  voice?: PersonaPlexVoice
+  voice?: PersonaPlexVoice | string
   /** Persona name shorthand */
   personaName?: 'journalist' | 'friend' | 'life-story'
   /** Custom persona config */
@@ -61,7 +61,7 @@ export function VoiceVideoChat({
   sessionType = 'memory_capture',
   topic,
   contactId,
-  voice = 'NATF3',
+  voice = 'CHUCK.mp3',
   personaName = 'journalist',
   persona,
   maxQuestions = 5,

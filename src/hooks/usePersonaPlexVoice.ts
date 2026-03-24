@@ -38,7 +38,7 @@ export interface UsePersonaPlexOptions {
   systemPrompt?: string
   /** Topic/question to start with - AI will speak this first */
   initialTopic?: string
-  voice?: PersonaPlexVoice
+  voice?: PersonaPlexVoice | string
   // Model parameters
   textTemperature?: number
   textTopk?: number
@@ -486,7 +486,7 @@ export function usePersonaPlexVoice(options: UsePersonaPlexOptions = {}): UsePer
     serverUrl = DEFAULT_SERVER_URL,
     systemPrompt: baseSystemPrompt = 'You enjoy having a good conversation.',
     initialTopic,
-    voice = 'NATF3',
+    voice = 'CHUCK.mp3',
     textTemperature = 0.7,
     textTopk = 25,
     audioTemperature = 0.8,
@@ -551,7 +551,9 @@ export function usePersonaPlexVoice(options: UsePersonaPlexOptions = {}): UsePer
       url.pathname = '/api/chat'
     }
     url.searchParams.set('text_prompt', systemPrompt)
-    url.searchParams.set('voice_prompt', `${voice}.pt`)
+    // Custom voices use their full filename; built-in voices append .pt
+    const voiceFile = voice.includes('.') ? voice : `${voice}.pt`
+    url.searchParams.set('voice_prompt', voiceFile)
     url.searchParams.set('text_temperature', textTemperature.toString())
     url.searchParams.set('text_topk', textTopk.toString())
     url.searchParams.set('audio_temperature', audioTemperature.toString())
