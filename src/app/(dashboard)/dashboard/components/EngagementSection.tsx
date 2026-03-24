@@ -143,13 +143,12 @@ export function EngagementSection({
       <section
         id="engagement-section"
         style={{
-          height: 'calc(100vh - 180px)',
-          minHeight: '400px',
-          maxHeight: '600px',
+          minHeight: '500px',
           display: 'flex',
           background: 'transparent',
-          overflow: 'hidden',
-          marginBottom: '0',
+          overflow: 'visible',
+          marginBottom: '16px',
+          paddingTop: '8px',
         }}
       >
         {/* Left Column — Header + Chapter Selector */}
@@ -370,12 +369,11 @@ export function EngagementSection({
         {/* Right Column — Card Stack */}
         <div style={{
           flex: 1,
-          padding: '0 0 24px 0',
+          padding: '16px 0 24px 0',
           display: 'flex',
           flexDirection: 'column',
           alignItems: 'center',
-          justifyContent: 'center',
-          overflow: 'hidden',
+          justifyContent: 'flex-start',
           minWidth: 0,
         }}>
           {isLoading ? (
