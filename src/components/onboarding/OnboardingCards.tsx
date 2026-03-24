@@ -724,16 +724,7 @@ function OnboardingFlippableCard({
                     >
                       {isRecording ? <Square size={14} fill="white" /> : <Mic size={16} />}
                     </button>
-                    {/* Save Memory button (after 1+ exchanges) */}
-                    {exchanges.length >= 1 && (
-                      <button
-                        onClick={(e) => { e.stopPropagation(); handleSaveMemory() }}
-                        disabled={isSubmitting}
-                        className="flex-1 h-10 rounded-full bg-amber-50 border border-amber-200 text-amber-700 text-xs font-medium hover:bg-amber-100 transition-colors disabled:opacity-50 flex items-center justify-center gap-1"
-                      >
-                        {isSubmitting ? <Loader2 size={12} className="animate-spin" /> : '✨ Save Memory'}
-                      </button>
-                    )}
+
                     <button
                       onClick={(e) => { e.stopPropagation(); handleSubmit() }}
                       disabled={!responseText.trim() || isSubmitting}
