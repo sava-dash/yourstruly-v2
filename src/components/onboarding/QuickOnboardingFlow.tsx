@@ -17,6 +17,7 @@ import {
   Heart,
 } from 'lucide-react';
 import { OnboardingStepExplanation } from './OnboardingStepExplanation';
+import { OnboardingCards } from './OnboardingCards';
 import { ConversationEngine } from '@/components/conversation-engine';
 import { BubblePickerInterests, BubblePickerTraits, ALL_INTERESTS as BUBBLE_INTERESTS, TRAIT_ITEMS as BUBBLE_TRAITS } from './BubblePicker';
 import { CURATED_TRAITS, CURATED_INTERESTS } from './curated-options';
@@ -391,6 +392,7 @@ function MapboxGlobeReveal({
     whyHere: string[];
     whyHereText: string;
     uploadedPhotosCount?: number;
+    uploadedPhotos?: { id: string; preview: string; fileUrl?: string; locationName?: string | null }[];
   }) => void;
   selectedPills: Set<string>;
   onTogglePill: (label: string) => void;
@@ -2027,6 +2029,9 @@ function MapboxGlobeReveal({
                       whyHere: Array.from(whyHereSelections),
                       whyHereText,
                       uploadedPhotosCount: uploadedPhotos.filter(p => p.status === 'done').length,
+                      uploadedPhotos: uploadedPhotos
+                        .filter(p => p.status === 'done')
+                        .map(p => ({ id: p.id, preview: p.preview, fileUrl: p.fileUrl, locationName: p.locationName })),
                     });
                   }}
                 >
@@ -2796,7 +2801,7 @@ export function QuickOnboardingFlow({
   
   const [step, setStep] = useState<QuickStep>(savedProgress?.step || 'birth-info');
   const [direction, setDirection] = useState<1 | -1>(1);
-  // Globe-collected data for heartfelt question generation
+  // Globe-collected data for engagement cards
   const [globeCollected, setGlobeCollected] = useState<{
     places: string[];
     contacts: { name: string; relationship: string }[];
@@ -2804,6 +2809,7 @@ export function QuickOnboardingFlow({
     whyHere: string[];
     whyHereText: string;
     uploadedPhotosCount?: number;
+    uploadedPhotos?: { id: string; preview: string; fileUrl?: string; locationName?: string | null }[];
   }>({ places: [], contacts: [], interests: [], whyHere: [], whyHereText: '' });
   const [data, setData] = useState<OnboardingData>(savedProgress?.data || {
     name: initialName ? titleCaseName(initialName) : '',
@@ -2902,7 +2908,7 @@ export function QuickOnboardingFlow({
   const UNIFIED_STEPS: { key: string; label: string }[] = [
     { key: 'birth-info', label: 'Basics' },
     ...GLOBE_SUB_STEPS.map(s => ({ key: `globe-${s.key}`, label: s.label })),
-    { key: 'heartfelt', label: 'Reflect' },
+    { key: 'heartfelt', label: 'Try It' },
     { key: 'ready', label: 'Done' },
   ];
 
@@ -3137,41 +3143,22 @@ export function QuickOnboardingFlow({
                 )}
 
                 {step === 'heartfelt' && (
-                  <div className="glass-card glass-card-strong p-6 max-w-2xl mx-auto">
-                    <div className="text-center mb-4">
-                      <div className="inline-flex items-center justify-center w-12 h-12 rounded-full bg-gradient-to-br from-[#406A56] to-[#8DACAB] mb-3">
-                        <Heart size={20} className="text-white" />
-                      </div>
-                      <h2 className="text-lg font-semibold text-[#2d2d2d] font-playfair">
-                        Let&apos;s Go Deeper
-                      </h2>
-                      <p className="text-gray-500 text-xs mt-1">
-                        Share what&apos;s on your mind. We&apos;ll capture the moments that matter
-                      </p>
-                    </div>
-                    <ConversationEngine
-                      context="onboarding"
-                      userName={data.name}
-                      userProfile={{
-                        interests: data.interests || [],
-                        location: data.location || undefined,
-                        whyHere: data.background || undefined,
-                      }}
-                      initialMessage={generateHeartfeltQuestion(data.name, globeCollected)}
-                      onComplete={(state) => {
+                  <OnboardingCards
+                    name={data.name}
+                    places={globeCollected.places}
+                    contacts={globeCollected.contacts}
+                    interests={globeCollected.interests}
+                    uploadedPhotos={globeCollected.uploadedPhotos || []}
+                    onComplete={(answeredCount) => {
+                      if (answeredCount > 0) {
                         updateData({
-                          heartfeltAnswer: state.messages
-                            .filter((m) => m.role === 'user')
-                            .map((m) => m.content)
-                            .join('\n\n'),
+                          heartfeltAnswer: `Answered ${answeredCount} engagement cards during onboarding`,
                         });
-                        goNext();
-                      }}
-                      onSkip={goNext}
-                      showSkip={true}
-                      maxHeight="350px"
-                    />
-                  </div>
+                      }
+                      goNext();
+                    }}
+                    onSkip={goNext}
+                  />
                 )}
 
                 {step === 'ready' && (
