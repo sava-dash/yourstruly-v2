@@ -639,14 +639,23 @@ export default function DashboardPage() {
   const [answeredPromptIds, setAnsweredPromptIds] = useState<string[]>([])
   
   // Filter prompts
-  const engagementContactTypes = ['quick_question', 'missing_info', 'tag_person']
+  const engagementContactTypes = ['quick_question', 'missing_info']
   const seenTexts = new Set<string>()
+  const seenPhotoIds = new Set<string>()
   let engContactCount = 0
   
   const engagementPrompts = rawEngagementPrompts.filter(prompt => {
     if (answeredPromptIds.includes(prompt.id)) return false
     if (seenTexts.has(prompt.promptText)) return false
     seenTexts.add(prompt.promptText)
+    // Consolidate photo prompts: keep only one card per photo
+    // tag_person is now handled by the tabbed photo_backstory card
+    if (prompt.type === 'tag_person') return false
+    if (prompt.photoId || prompt.metadata?.photo_id) {
+      const pid = prompt.photoId || prompt.metadata?.photo_id
+      if (seenPhotoIds.has(pid)) return false
+      seenPhotoIds.add(pid)
+    }
     if (engagementContactTypes.includes(prompt.type)) {
       if (engContactCount >= 2) return false
       engContactCount++

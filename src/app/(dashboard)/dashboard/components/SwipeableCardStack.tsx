@@ -338,6 +338,7 @@ function FlippableCard({
   // Photo backstory state (location + date)
   const isBackstoryType = prompt.type === 'photo_backstory'
   const [photoTab, setPhotoTab] = useState<'details' | 'tag' | 'story'>('details')
+  const [showPhotoPreview, setShowPhotoPreview] = useState(false)
   const [locationInput, setLocationInput] = useState('')
   const [locationSuggestions, setLocationSuggestions] = useState<{ place_name: string; id: string }[]>([])
   const [dateInput, setDateInput] = useState('')
@@ -1068,8 +1069,11 @@ function FlippableCard({
           ) : isBackstoryType && prompt.photoUrl ? (
             /* Photo Backstory: tabbed interface — When & Where | Tag People | Story */
             <div className="h-full flex flex-col">
-              {/* Photo/video thumbnail at top */}
-              <div className="h-[28%] bg-black flex items-center justify-center overflow-hidden relative" style={{ marginTop: 56 }}>
+              {/* Photo — tappable for full preview, tappable for tagging in tag mode */}
+              <div
+                className={`${photoTab === 'tag' ? 'h-[45%]' : 'h-[28%]'} bg-black flex items-center justify-center overflow-hidden relative transition-all`}
+                style={{ marginTop: 56 }}
+              >
                 {photoIsVideo ? (
                   <>
                     {showVideoPlayer ? (
@@ -1088,9 +1092,9 @@ function FlippableCard({
                     ref={imageRef}
                     src={prompt.photoUrl}
                     alt=""
-                    className={`w-full h-full object-contain ${photoTab === 'tag' ? 'cursor-crosshair' : ''}`}
+                    className={`w-full h-full object-contain ${photoTab === 'tag' ? 'cursor-crosshair' : 'cursor-pointer'}`}
                     draggable={false}
-                    onClick={photoTab === 'tag' ? handlePhotoClick : undefined}
+                    onClick={photoTab === 'tag' ? handlePhotoClick : (e) => { e.stopPropagation(); setShowPhotoPreview(true) }}
                   />
                 )}
                 {/* Tagged faces overlay */}
@@ -1128,6 +1132,12 @@ function FlippableCard({
                     </div>
                   </div>
                 )}
+                {/* Tap hint for tag mode */}
+                {photoTab === 'tag' && taggedFaces.length === 0 && !tagPosition && (
+                  <div className="absolute bottom-2 left-1/2 -translate-x-1/2 px-3 py-1 bg-black/60 rounded-full text-white text-[10px] font-medium">
+                    Tap on faces to tag
+                  </div>
+                )}
               </div>
 
               {/* Tabs */}
@@ -1147,10 +1157,9 @@ function FlippableCard({
                     }`}
                   >
                     {tab.label}
-                    {/* Indicator dots for filled tabs */}
                     {tab.key === 'details' && (locationInput || dateInput) && <span className="ml-1 w-1.5 h-1.5 bg-[#406A56] rounded-full inline-block" />}
                     {tab.key === 'tag' && taggedFaces.length > 0 && <span className="ml-1 w-1.5 h-1.5 bg-[#406A56] rounded-full inline-block" />}
-                    {tab.key === 'story' && backstoryText && <span className="ml-1 w-1.5 h-1.5 bg-[#406A56] rounded-full inline-block" />}
+                    {tab.key === 'story' && (backstoryText || videoUrl) && <span className="ml-1 w-1.5 h-1.5 bg-[#406A56] rounded-full inline-block" />}
                   </button>
                 ))}
               </div>
@@ -1161,14 +1170,7 @@ function FlippableCard({
                   <div className="flex flex-col gap-3">
                     <div className="relative">
                       <label className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1 block">Where was this?</label>
-                      <input
-                        type="text"
-                        value={locationInput}
-                        onChange={(e) => handleLocationChange(e.target.value)}
-                        placeholder="City, place, or address..."
-                        className="w-full px-3 py-2.5 bg-gray-50 rounded-xl border border-gray-200 text-gray-800 text-sm focus:outline-none focus:ring-2 focus:ring-[#406A56]/30 focus:border-[#406A56]"
-                        autoFocus={isFlipped && photoTab === 'details'}
-                      />
+                      <input type="text" value={locationInput} onChange={(e) => handleLocationChange(e.target.value)} placeholder="City, place, or address..." className="w-full px-3 py-2.5 bg-gray-50 rounded-xl border border-gray-200 text-gray-800 text-sm focus:outline-none focus:ring-2 focus:ring-[#406A56]/30 focus:border-[#406A56]" autoFocus={isFlipped && photoTab === 'details'} />
                       {locationSuggestions.length > 0 && (
                         <div className="absolute top-full left-0 right-0 mt-1 bg-white rounded-xl shadow-lg border border-gray-100 z-20 overflow-hidden">
                           {locationSuggestions.map(s => (
@@ -1188,11 +1190,6 @@ function FlippableCard({
 
                 {photoTab === 'tag' && (
                   <div className="flex flex-col gap-3">
-                    <p className="text-sm text-gray-500 text-center">
-                      {taggedFaces.length === 0
-                        ? 'Tap on people in the photo above to tag them'
-                        : `${taggedFaces.length} person${taggedFaces.length !== 1 ? 's' : ''} tagged`}
-                    </p>
                     {taggedFaces.length > 0 && (
                       <div className="flex flex-wrap gap-2">
                         {taggedFaces.map(face => (
@@ -1215,23 +1212,40 @@ function FlippableCard({
                       value={backstoryText}
                       onChange={(e) => setBackstoryText(e.target.value)}
                       placeholder="What's the story behind this photo? What was happening that day?"
-                      className="w-full flex-1 min-h-[120px] px-3 py-2.5 bg-gray-50 rounded-xl border border-gray-200 text-gray-800 text-sm focus:outline-none focus:ring-2 focus:ring-[#406A56]/30 focus:border-[#406A56] resize-none"
+                      className="w-full flex-1 min-h-[100px] px-3 py-2.5 bg-gray-50 rounded-xl border border-gray-200 text-gray-800 text-sm focus:outline-none focus:ring-2 focus:ring-[#406A56]/30 focus:border-[#406A56] resize-none"
                       autoFocus={isFlipped && photoTab === 'story'}
                     />
-                    {/* Voice record for story */}
-                    <button
-                      onClick={isRecording ? stopRecording : startRecording}
-                      className={`flex items-center justify-center gap-2 w-full py-2 rounded-xl text-sm font-medium transition-colors ${
-                        isRecording ? 'bg-red-500 text-white animate-pulse' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-                      }`}
-                    >
-                      {isRecording ? <><Square size={14} fill="white" /> Stop Recording</> : <><Mic size={14} /> Record Your Story</>}
-                    </button>
+                    {/* Voice + Video recording buttons */}
+                    <div className="flex gap-2">
+                      <button
+                        onClick={isRecording ? stopRecording : startRecording}
+                        disabled={isVideoRecording}
+                        className={`flex-1 flex items-center justify-center gap-2 py-2 rounded-xl text-sm font-medium transition-colors ${
+                          isRecording ? 'bg-red-500 text-white animate-pulse' : 'bg-gray-100 text-gray-600 hover:bg-gray-200 disabled:opacity-40'
+                        }`}
+                      >
+                        {isRecording ? <><Square size={14} fill="white" /> Stop</> : <><Mic size={14} /> Voice</>}
+                      </button>
+                      <button
+                        onClick={isVideoRecording ? stopVideoRecording : startVideoRecording}
+                        disabled={isRecording}
+                        className={`flex-1 flex items-center justify-center gap-2 py-2 rounded-xl text-sm font-medium transition-colors ${
+                          isVideoRecording ? 'bg-red-500 text-white animate-pulse' : 'bg-gray-100 text-gray-600 hover:bg-gray-200 disabled:opacity-40'
+                        }`}
+                      >
+                        {isVideoRecording ? <><Square size={14} fill="white" /> Stop</> : <><Video size={14} /> Video</>}
+                      </button>
+                    </div>
+                    {videoUrl && !isVideoRecording && (
+                      <div className="flex items-center gap-1.5 text-xs text-emerald-600">
+                        <Video size={12} /> Video attached
+                      </div>
+                    )}
                   </div>
                 )}
               </div>
 
-              {/* Save button — always visible */}
+              {/* Save button */}
               <div className="p-4 pt-2 border-t border-gray-100">
                 <button
                   onClick={handleSaveBackstory}
@@ -1245,6 +1259,16 @@ function FlippableCard({
                   <span className="text-xs text-amber-600 font-medium"><Sparkles size={12} className="inline mr-1" />Earn +{config.xp} XP</span>
                 </div>
               </div>
+
+              {/* Full photo preview modal */}
+              {showPhotoPreview && (
+                <div className="absolute inset-0 z-40 bg-black/95 flex items-center justify-center rounded-3xl" onClick={(e) => { e.stopPropagation(); setShowPhotoPreview(false) }}>
+                  <button onClick={(e) => { e.stopPropagation(); setShowPhotoPreview(false) }} className="absolute top-4 right-4 z-50 w-10 h-10 rounded-full bg-white/20 flex items-center justify-center text-white hover:bg-white/30">
+                    <X size={20} />
+                  </button>
+                  <img src={prompt.photoUrl} alt="" className="max-w-full max-h-full object-contain p-4" />
+                </div>
+              )}
             </div>
           ) : (prompt.type === 'personality' || prompt.type === 'religion' || prompt.type === 'skills' || prompt.type === 'languages') ? (
             /* Pill selection back-side for profile completion cards */
