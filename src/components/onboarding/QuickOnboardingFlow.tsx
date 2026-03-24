@@ -857,6 +857,13 @@ function MapboxGlobeReveal({
     // Stop globe spinning if active
     globeSpinRef.current.spinning = false;
 
+    // Enable user interaction so they can drag/spin the globe
+    map.dragPan.enable();
+    map.scrollZoom.enable();
+    map.dragRotate.enable();
+    map.touchZoomRotate.enable();
+    map.doubleClickZoom.enable();
+
     // Zoom out to show all photo + place locations
     const bounds = new mapboxgl.LngLatBounds();
     geoPhotos.forEach(p => bounds.extend([p.lng!, p.lat!]));

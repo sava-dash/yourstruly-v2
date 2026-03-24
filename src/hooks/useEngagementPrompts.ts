@@ -123,9 +123,18 @@ export function useEngagementPrompts(count: number = 5, lifeChapter: string | nu
 
       // Client-side dedup: remove prompts with duplicate prompt text
       const seenTexts = new Set<string>();
+      // Filter out prompts that duplicate onboarding questions
+      const BLOCKED_PATTERNS = [
+        /where were you born/i,
+        /where you were born/i,
+        /all the places you'?ve lived/i,
+        /places have you lived/i,
+      ];
       const dedupedPrompts = transformedPrompts.filter(p => {
         const text = p.promptText?.toLowerCase().trim();
         if (!text || seenTexts.has(text)) return false;
+        // Block prompts that repeat onboarding questions
+        if (BLOCKED_PATTERNS.some(pattern => pattern.test(p.promptText || ''))) return false;
         seenTexts.add(text);
         return true;
       });

@@ -16,6 +16,7 @@ import { useEngagementPrompts } from '@/hooks/useEngagementPrompts'
 import { useSubscription } from '@/hooks/useSubscription'
 import { EngagementTile } from './components/EngagementTile'
 import { EngagementOverlay } from './components/EngagementOverlay'
+import { EngagementSection } from './components/EngagementSection'
 import { QuickActions } from './components/QuickActions'
 import { AddContactModal } from '@/components/contacts/AddContactModal'
 import PhotoUploadModal from '@/components/dashboard/PhotoUploadModal'
@@ -1426,9 +1427,10 @@ export default function DashboardPage() {
       for (let i = 0; i < fileArray.length; i++) {
         const file = fileArray[i]
         const formData = new FormData()
-        formData.append('file', file)
+        formData.append('memoryId', memory.id)
+        formData.append('photos', file)
 
-        const response = await fetch(`/api/memories/${memory.id}/media`, {
+        const response = await fetch('/api/memories/upload-photos', {
           method: 'POST',
           body: formData,
         })
@@ -1438,20 +1440,24 @@ export default function DashboardPage() {
 
         if (response.ok) {
           const result = await response.json()
-          uploadedResults.push(result)
+          // upload-photos returns { media: [...] }
+          const mediaItems = result.media || [result]
+          uploadedResults.push(...mediaItems)
           
-          // Auto-trigger face detection for images
-          if (result.file_type?.includes('image') || file.type.startsWith('image/')) {
-            console.log('Running face detection on uploaded image:', result.id)
-            fetch(`/api/media/${result.id}/detect-faces`, { 
-              method: 'POST' 
-            }).then(res => res.json()).then(faceResult => {
-              if (faceResult.facesDetected > 0) {
-                console.log(`Detected ${faceResult.facesDetected} face(s), auto-tagged: ${faceResult.autoTagged}`)
-              }
-            }).catch(err => {
-              console.warn('Face detection failed:', err)
-            })
+          // Auto-trigger face detection for each uploaded image
+          for (const mediaItem of mediaItems) {
+            if (mediaItem.file_type?.includes('image') || file.type.startsWith('image/')) {
+              console.log('Running face detection on uploaded image:', mediaItem.id)
+              fetch(`/api/media/${mediaItem.id}/detect-faces`, { 
+                method: 'POST' 
+              }).then(res => res.json()).then(faceResult => {
+                if (faceResult.facesDetected > 0) {
+                  console.log(`Detected ${faceResult.facesDetected} face(s), auto-tagged: ${faceResult.autoTagged}`)
+                }
+              }).catch(err => {
+                console.warn('Face detection failed:', err)
+              })
+            }
           }
         } else {
           const error = await response.json()
@@ -2153,14 +2159,47 @@ export default function DashboardPage() {
             <EngagementTile
               nextPrompt={engagementPrompts[0] || null}
               totalWaiting={engagementPrompts.length}
-              onOpen={() => setShowEngagement(true)}
+              onOpen={() => {
+                const section = document.getElementById('engagement-section')
+                if (section) {
+                  section.scrollIntoView({ behavior: 'smooth', block: 'start' })
+                } else {
+                  // Fallback: open overlay if section not rendered
+                  setShowEngagement(true)
+                }
+              }}
             />
           </div>
         </aside>
 
         {/* ── Main Content ── */}
         <main className="dashboard-main" style={{ marginLeft: '280px', padding: '70px 24px 24px 24px', minHeight: '100vh' }}>
-          <div className="header-controls">
+          {/* ── Inline Engagement Section — 90vh hero at top of page ── */}
+          {(engagementLoading || engagementPrompts.length > 0) && (
+            <EngagementSection
+              prompts={engagementPrompts}
+              isLoading={engagementLoading}
+              answeredPromptIds={answeredPromptIds}
+              onAnsweredPromptIds={setAnsweredPromptIds}
+              onCardAnswer={handleCardAnswer}
+              onShuffle={handleEngagementShuffle}
+              answerPrompt={engagementAnswerPrompt}
+              getPromptText={getPromptText}
+              totalXp={totalXp}
+              xpAnimating={xpAnimating}
+              lastXpGain={lastXpGain}
+              addXp={addXp}
+              addCompletedTile={addCompletedTile}
+              refreshStats={refreshDashboardStats}
+              educationLevel={profile?.education_level}
+              userContacts={dashboardContacts}
+              carouselIndex={engagementCarouselIndex}
+              onCarouselIndexChange={setEngagementCarouselIndex}
+              streakDays={Math.max(engagementStats?.currentStreakDays ?? 0, streakDays)}
+            />
+          )}
+
+          <div className="header-controls" style={{ position: 'sticky', top: '64px', zIndex: 20, background: '#FDF8F3', paddingTop: '8px', marginTop: '-8px' }}>
             {/* Category Nav Row — sticky */}
             <div className="controls-row">
               {/* Left: Category Pills */}
@@ -2430,7 +2469,14 @@ export default function DashboardPage() {
                 <EngagementTile
                   nextPrompt={engagementPrompts[0] || null}
                   totalWaiting={engagementPrompts.length}
-                  onOpen={() => setShowEngagement(true)}
+                  onOpen={() => {
+                    const section = document.getElementById('engagement-section')
+                    if (section) {
+                      section.scrollIntoView({ behavior: 'smooth', block: 'start' })
+                    } else {
+                      setShowEngagement(true)
+                    }
+                  }}
                 />
               </div>
             )}
