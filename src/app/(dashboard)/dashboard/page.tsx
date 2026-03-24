@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef, useCallback } from 'react'
 // gsap removed - animations simplified
-import { MapPin, Users, Calendar, Search, Map as MapIcon, Plus, Mic, Video, Upload, Image as ImageIcon, MessageSquare, Gift, Sparkles, BookOpen, Brain, Heart, Camera, Clock, Play, ChevronDown, X, ArrowLeft } from 'lucide-react'
+import { MapPin, Users, Calendar, Search, Globe, Plus, Mic, Video, Upload, Image as ImageIcon, MessageSquare, Gift, Sparkles, BookOpen, Brain, Heart, Camera, Clock, Play, ChevronDown, X, ArrowLeft } from 'lucide-react'
 import Link from 'next/link'
 import { format } from 'date-fns'
 import { motion, AnimatePresence } from 'framer-motion'
@@ -654,11 +654,8 @@ export default function DashboardPage() {
     return true
   })
   
-  // Modal states for engagement — only auto-open after tour is complete
-  const [showEngagement, setShowEngagement] = useState(() => {
-    if (typeof window === 'undefined') return false
-    return !!localStorage.getItem('yt_dashboard_tour_seen')
-  })
+  // Engagement overlay — only opens as fallback (e.g. mobile), never auto-opens
+  const [showEngagement, setShowEngagement] = useState(false)
   const [engagementCarouselIndex, setEngagementCarouselIndex] = useState(0)
   const [dashEngagementPrompt, setDashEngagementPrompt] = useState<any | null>(null)
   const [photoTaggingPrompt, setPhotoTaggingPrompt] = useState<any | null>(null)
@@ -669,12 +666,6 @@ export default function DashboardPage() {
   const [showQuickMemoryModal, setShowQuickMemoryModal] = useState(false)
   const [showMonthlyRecap, setShowMonthlyRecap] = useState(false)
 
-  // Open engagement overlay after tour completes
-  useEffect(() => {
-    const handleTourComplete = () => setShowEngagement(true)
-    window.addEventListener('yt-tour-complete', handleTourComplete)
-    return () => window.removeEventListener('yt-tour-complete', handleTourComplete)
-  }, [])
   
   // Monthly recap: show in first week of month if not dismissed
   useEffect(() => {
@@ -1469,6 +1460,9 @@ export default function DashboardPage() {
       setUploadedFiles(uploadedResults)
       setUploadProgress(100)
       
+      // Refresh feed immediately so the upload appears
+      fetchActivities()
+
       // Move to backstory step
       setTimeout(() => {
         setUploadStep('backstory')
@@ -2203,20 +2197,28 @@ export default function DashboardPage() {
             if (!el) return;
             const sentinel = document.getElementById('sticky-sentinel');
             if (sentinel) return;
-            // Create a sentinel element above header-controls to detect scroll position
             const s = document.createElement('div');
             s.id = 'sticky-sentinel';
             s.style.height = '0px';
             el.parentElement?.insertBefore(s, el);
+            // Capture natural dimensions before first stick
+            let naturalHeight = 0;
+            let naturalWidth = 0;
             const observer = new IntersectionObserver(([entry]) => {
               const stuck = !entry.isIntersecting;
-              el.classList.toggle('is-stuck', stuck);
-              // When fixed, add a spacer to prevent content jump
-              if (stuck) {
-                s.style.height = el.offsetHeight + 'px';
-              } else {
+              if (stuck && !el.classList.contains('is-stuck')) {
+                // Capture dimensions before going fixed
+                naturalHeight = el.offsetHeight;
+                naturalWidth = el.offsetWidth;
+                el.style.width = naturalWidth + 'px';
+                el.style.height = naturalHeight + 'px';
+                s.style.height = naturalHeight + 'px';
+              } else if (!stuck) {
+                el.style.width = '';
+                el.style.height = '';
                 s.style.height = '0px';
               }
+              el.classList.toggle('is-stuck', stuck);
             }, { threshold: 0, rootMargin: '-57px 0px 0px 0px' });
             observer.observe(s);
           }}>
@@ -2255,7 +2257,7 @@ export default function DashboardPage() {
                   className={`map-toggle-btn ${showMapOverlay ? 'active' : ''}`}
                   title="Open map view"
                 >
-                  <MapIcon size={16} />
+                  <Globe size={16} />
                 </button>
               </div>
 
@@ -3573,7 +3575,6 @@ export default function DashboardPage() {
           position: fixed;
           top: 56px;
           left: 280px;
-          right: 0;
           box-shadow: 0 2px 8px rgba(0,0,0,0.06);
         }
 
