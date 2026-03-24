@@ -36,6 +36,7 @@ export async function POST(request: NextRequest) {
       durationSeconds,
       questionCount,
       generateTitle = true,
+      audioUrl,
     } = body as {
       transcript: TranscriptEntry[]
       topic?: string
@@ -43,6 +44,7 @@ export async function POST(request: NextRequest) {
       durationSeconds: number
       questionCount: number
       generateTitle?: boolean
+      audioUrl?: string
     }
 
     // Validate transcript
@@ -77,6 +79,7 @@ export async function POST(request: NextRequest) {
         description: memoryContent,
         memory_type: 'voice',
         memory_date: new Date().toISOString().split('T')[0],
+        audio_url: audioUrl || null,
         ai_labels: {
           transcript,
           duration_seconds: durationSeconds,
@@ -97,6 +100,40 @@ export async function POST(request: NextRequest) {
       )
     }
 
+    // Also create a knowledge_entry so voice conversations appear in the Wisdom page
+    let knowledgeEntryId: string | null = null
+    try {
+      // Extract first Q&A for the knowledge entry
+      const firstAssistant = transcript.find(t => t.role === 'assistant')
+      const firstUser = transcript.find(t => t.role === 'user')
+      const promptText = firstAssistant?.text || topic || title
+      const responseText = transcript
+        .filter(t => t.role === 'user')
+        .map(t => t.text)
+        .join(' ')
+
+      const { data: knowledgeEntry, error: keError } = await supabase
+        .from('knowledge_entries')
+        .insert({
+          user_id: user.id,
+          category: 'life_lessons',
+          prompt_text: promptText,
+          response_text: responseText || null,
+          audio_url: audioUrl || null,
+          memory_id: memory.id,
+          word_count: responseText.split(/\s+/).filter((w: string) => w.length > 0).length,
+          is_featured: false,
+        })
+        .select('id')
+        .single()
+
+      if (!keError && knowledgeEntry) {
+        knowledgeEntryId = knowledgeEntry.id
+      }
+    } catch (keError) {
+      console.error('Knowledge entry creation error (non-fatal):', keError)
+    }
+
     // Award XP for creating a memory via voice
     try {
       await supabase.rpc('award_xp', {
@@ -112,6 +149,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({
       success: true,
       memoryId: memory.id,
+      knowledgeEntryId,
       title,
       description: memoryContent,
     })
@@ -126,31 +164,54 @@ export async function POST(request: NextRequest) {
 }
 
 /**
- * Build memory content from transcript
- * Extracts user responses and formats them as a coherent narrative
+ * Build memory content from transcript as structured Q&A exchanges
+ * Pairs assistant messages (questions) with user messages (answers)
+ * Format matches /api/conversation/save for consistent playback
  */
 function buildMemoryContent(transcript: TranscriptEntry[]): string {
-  // Extract just the user responses for the main content
-  const userResponses = transcript
-    .filter(entry => entry.role === 'user')
-    .map(entry => entry.text.trim())
-    .filter(text => text.length > 0)
-
-  if (userResponses.length === 0) {
-    return 'No content captured'
+  // Build exchanges by pairing assistant (question) + user (answer)
+  const exchanges: { question: string; answer: string }[] = []
+  
+  for (let i = 0; i < transcript.length; i++) {
+    const entry = transcript[i]
+    if (entry.role === 'assistant') {
+      // Look for the next user message as the answer
+      const nextUser = transcript.slice(i + 1).find(e => e.role === 'user')
+      if (nextUser) {
+        exchanges.push({
+          question: entry.text.trim(),
+          answer: nextUser.text.trim(),
+        })
+      }
+    }
   }
 
-  // Format as a narrative
-  const paragraphs = userResponses.map(response => {
-    // Ensure proper punctuation
-    let text = response
-    if (!text.endsWith('.') && !text.endsWith('!') && !text.endsWith('?')) {
-      text += '.'
-    }
-    return text
-  })
+  if (exchanges.length === 0) {
+    // Fallback: just use user responses as narrative
+    const userResponses = transcript
+      .filter(entry => entry.role === 'user')
+      .map(entry => entry.text.trim())
+      .filter(text => text.length > 0)
+    return userResponses.join('\n\n') || 'No content captured'
+  }
 
-  return paragraphs.join('\n\n')
+  // Build summary from user responses
+  const summary = exchanges
+    .map(e => {
+      let text = e.answer
+      if (!text.endsWith('.') && !text.endsWith('!') && !text.endsWith('?')) {
+        text += '.'
+      }
+      return text
+    })
+    .join(' ')
+
+  // Build Q&A section matching the format parsed by wisdom detail page
+  const qaSection = exchanges.map((e, i) => {
+    return `**Q${i + 1}:** ${e.question}\n\n**A${i + 1}:** ${e.answer}`
+  }).join('\n\n---\n\n')
+
+  return `## Summary\n\n${summary}\n\n## Conversation\n\n${qaSection}`
 }
 
 /**

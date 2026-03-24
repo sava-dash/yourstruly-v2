@@ -59,7 +59,7 @@ export {
 // Constants
 export const PERSONAPLEX_DEFAULTS = {
   SERVER_URL: process.env.NEXT_PUBLIC_PERSONAPLEX_URL || 'wss://100.97.242.10:8998/api/chat',
-  VOICE: 'NATF3' as const,
+  VOICE: 'yourstruly-voice.mp3' as const,
   SYSTEM_PROMPT: 'You enjoy having a good conversation.',
   TEXT_TEMPERATURE: 0.7,
   TEXT_TOPK: 25,

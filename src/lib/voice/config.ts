@@ -11,13 +11,14 @@
 
 // PersonaPlex voice IDs
 export type PersonaPlexVoice = 
+  | 'yourstruly-voice.mp3'  // Custom YoursTruly voice (uploaded)
   | 'NATF0' | 'NATF1' | 'NATF2' | 'NATF3'  // Female voices
   | 'NATM0' | 'NATM1' | 'NATM2' | 'NATM3'  // Male voices
   | 'VARF0' | 'VARF1' | 'VARF2' | 'VARF3' | 'VARF4'  // Variable female
   | 'VARM0' | 'VARM1' | 'VARM2' | 'VARM3' | 'VARM4'  // Variable male
 
-// Default voice - warm, friendly female
-export const DEFAULT_VOICE: PersonaPlexVoice = 'NATF3'
+// Default voice - custom YoursTruly voice
+export const DEFAULT_VOICE: PersonaPlexVoice = 'yourstruly-voice.mp3'
 
 // ============================================================================
 // Provider Configuration
@@ -50,6 +51,9 @@ export interface VoiceInfo {
 }
 
 export const PERSONAPLEX_VOICES: Record<PersonaPlexVoice, VoiceInfo> = {
+  // Custom YoursTruly voice
+  'yourstruly-voice.mp3': { id: 'yourstruly-voice.mp3' as PersonaPlexVoice, name: 'YoursTruly Voice', description: 'Custom YoursTruly voice', gender: 'female', tone: 'warm' },
+  
   // Natural Female voices
   'NATF0': { id: 'NATF0', name: 'Natural Female 0', description: 'Neutral, clear female voice', gender: 'female', tone: 'neutral' },
   'NATF1': { id: 'NATF1', name: 'Natural Female 1', description: 'Warm, friendly female voice (default)', gender: 'female', tone: 'warm' },

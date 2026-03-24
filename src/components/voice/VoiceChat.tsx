@@ -88,7 +88,7 @@ export function VoiceChat({
   sessionType = 'memory_capture',
   topic,
   contactId,
-  voice = 'CHUCK.mp3',
+  voice = 'yourstruly-voice.mp3',
   persona,
   personaName = 'journalist',
   maxQuestions = 5,

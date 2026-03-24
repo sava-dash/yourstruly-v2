@@ -18,6 +18,8 @@ export type PersonaPlexState =
 
 // All 18 PersonaPlex voices
 export type PersonaPlexVoice =
+  // Custom YoursTruly voice
+  | 'yourstruly-voice.mp3'
   // Natural Female (4)
   | 'NATF0' | 'NATF1' | 'NATF2' | 'NATF3'
   // Natural Male (4)
@@ -486,7 +488,7 @@ export function usePersonaPlexVoice(options: UsePersonaPlexOptions = {}): UsePer
     serverUrl = DEFAULT_SERVER_URL,
     systemPrompt: baseSystemPrompt = 'You enjoy having a good conversation.',
     initialTopic,
-    voice = 'CHUCK.mp3',
+    voice = 'yourstruly-voice.mp3',
     textTemperature = 0.7,
     textTopk = 25,
     audioTemperature = 0.8,
@@ -986,6 +988,8 @@ export function usePersonaPlexVoice(options: UsePersonaPlexOptions = {}): UsePer
 // ============================================================================
 
 export const PERSONAPLEX_VOICES: Record<PersonaPlexVoice, { name: string; category: string; gender: 'female' | 'male' }> = {
+  // Custom YoursTruly voice
+  'yourstruly-voice.mp3': { name: 'YoursTruly Voice', category: 'Custom', gender: 'female' },
   // Natural Female
   NATF0: { name: 'Natural Female 1', category: 'Natural', gender: 'female' },
   NATF1: { name: 'Natural Female 2', category: 'Natural', gender: 'female' },

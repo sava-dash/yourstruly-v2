@@ -23,8 +23,10 @@ export type Voice = 'alloy' | 'ash' | 'ballad' | 'coral' | 'echo' | 'fable' | 'm
 // PersonaPlex Voice Types
 // ============================================================================
 
-// PersonaPlex native voice IDs (all 18 voices)
+// PersonaPlex native voice IDs (all 18 voices + custom)
 export type PersonaPlexVoice = 
+  // Custom YoursTruly voice
+  | 'yourstruly-voice.mp3'
   // Natural Female (4)
   | 'NATF0' | 'NATF1' | 'NATF2' | 'NATF3'
   // Natural Male (4)

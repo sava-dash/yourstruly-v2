@@ -621,15 +621,17 @@ export default function WisdomDetailPage() {
                 </div>
               </div>
 
-              {/* Direct Audio Player (for simple audio_url) */}
-              {entry.audio_url && exchanges.length === 0 && (
+              {/* Direct Audio Player (for audio_url - shown always when available) */}
+              {entry.audio_url && (
                 <div className="mt-6">
                   <div className="flex items-center gap-3 px-5 py-4 bg-gradient-to-r from-[#4A3552]/5 to-[#D9C61A]/5 rounded-2xl border border-[#4A3552]/10">
                     <div className="w-12 h-12 rounded-full bg-[#4A3552]/20 flex items-center justify-center flex-shrink-0">
                       <Volume2 size={20} className="text-[#4A3552]" />
                     </div>
                     <div className="flex-1 min-w-0">
-                      <span className="text-[#2d2d2d] font-medium block mb-2">Voice Recording</span>
+                      <span className="text-[#2d2d2d] font-medium block mb-2">
+                        {exchanges.length > 0 ? 'Full Recording' : 'Voice Recording'}
+                      </span>
                       <audio 
                         controls 
                         className="w-full h-10"

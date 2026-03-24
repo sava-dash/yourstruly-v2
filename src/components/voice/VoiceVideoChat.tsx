@@ -61,7 +61,7 @@ export function VoiceVideoChat({
   sessionType = 'memory_capture',
   topic,
   contactId,
-  voice = 'CHUCK.mp3',
+  voice = 'yourstruly-voice.mp3',
   personaName = 'journalist',
   persona,
   maxQuestions = 5,
@@ -168,6 +168,34 @@ export function VoiceVideoChat({
     }
   }, [personaPlex, videoRecording, stopVideoRecording])
 
+  // Upload conversation audio recording to Supabase storage
+  const uploadConversationAudio = async (memoryId: string, blob: Blob): Promise<string | undefined> => {
+    try {
+      const { data: { user } } = await supabase.auth.getUser()
+      if (!user) throw new Error('Not authenticated')
+
+      const fileName = `${user.id}/${memoryId}/conversation_${Date.now()}.webm`
+      
+      const { data, error: uploadError } = await supabase.storage
+        .from('memory-media')
+        .upload(fileName, blob, {
+          contentType: 'audio/webm',
+          upsert: false,
+        })
+
+      if (uploadError) throw uploadError
+
+      const { data: urlData } = supabase.storage
+        .from('memory-media')
+        .getPublicUrl(fileName)
+
+      return urlData.publicUrl
+    } catch (err) {
+      console.error('Conversation audio upload failed:', err)
+      return undefined
+    }
+  }
+
   // Handle save
   const handleSave = useCallback(async () => {
     setIsSaving(true)
@@ -181,6 +209,13 @@ export function VoiceVideoChat({
       // Create memory from transcript
       const { data: { user } } = await supabase.auth.getUser()
       if (!user) throw new Error('Not authenticated')
+
+      // Upload conversation audio recording first (if available)
+      let conversationAudioUrl: string | undefined
+      if (personaPlex.recordingBlob) {
+        // We need a temp ID for the path — upload after memory creation
+        // For now, create the memory first, then upload and update
+      }
 
       // Call the memory creation API with transcript array
       const response = await fetch('/api/voice/memory', {
@@ -203,6 +238,18 @@ export function VoiceVideoChat({
       const { memoryId } = await response.json()
       savedMemoryIdRef.current = memoryId
 
+      // Now upload conversation audio and update the memory with the URL
+      if (personaPlex.recordingBlob) {
+        conversationAudioUrl = await uploadConversationAudio(memoryId, personaPlex.recordingBlob)
+        if (conversationAudioUrl) {
+          // Update the memory record with the audio URL
+          await supabase
+            .from('memories')
+            .update({ audio_url: conversationAudioUrl })
+            .eq('id', memoryId)
+        }
+      }
+
       // Extract entities
       const entities = extractEntities(transcript)
       if (entities.people.length > 0 || entities.places.length > 0) {
@@ -222,7 +269,7 @@ export function VoiceVideoChat({
       setIsSaving(false)
     }
   }, [
-    videoRecording, stopVideoRecording, transcript, supabase, 
+    videoRecording, stopVideoRecording, transcript, supabase, personaPlex.recordingBlob,
     sessionType, topic, contactId, sessionDuration, recordedBlob,
     onMemorySaved, onEntitiesExtracted, onError
   ])
