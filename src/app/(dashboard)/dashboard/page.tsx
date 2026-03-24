@@ -2173,7 +2173,7 @@ export default function DashboardPage() {
         </aside>
 
         {/* ── Main Content ── */}
-        <main className="dashboard-main" style={{ marginLeft: '280px', padding: '70px 24px 24px 24px', minHeight: '100vh' }}>
+        <main className="dashboard-main" style={{ marginLeft: '280px', padding: '16px 24px 24px 24px', minHeight: '100vh' }}>
           {/* ── Inline Engagement Section — 90vh hero at top of page ── */}
           {(engagementLoading || engagementPrompts.length > 0) && (
             <EngagementSection
@@ -2199,8 +2199,8 @@ export default function DashboardPage() {
             />
           )}
 
-          <div className="header-controls" style={{ position: 'sticky', top: '64px', zIndex: 20, background: '#FDF8F3', paddingBottom: '8px' }}>
-            {/* Category Nav Row — visible at bottom of engagement section, sticky on scroll */}
+          <div className="header-controls">
+            {/* Category Nav Row */}
             <div className="controls-row">
               {/* Left: Category Pills */}
               <div className="filter-tags" data-tour="category-tabs">
@@ -3536,11 +3536,9 @@ export default function DashboardPage() {
         .feed-page[data-theme="light"] .profile-storage-track { height: 6px; background: #F2F1E5; border-radius: 3px; overflow: hidden; }
 
         .header-controls {
-          position: fixed !important;
-          top: 56px !important;
-          left: 280px !important;
-          right: 0 !important;
-          z-index: 20 !important;
+          position: sticky;
+          top: 56px;
+          z-index: 20;
           backdrop-filter: blur(12px);
           display: flex;
           flex-direction: column;
