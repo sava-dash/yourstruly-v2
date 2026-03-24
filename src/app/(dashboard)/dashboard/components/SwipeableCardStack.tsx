@@ -551,6 +551,11 @@ function FlippableCard({
 
   // Submit response and get follow-up
   const handleSubmit = async () => {
+    // Stop any active recording before submitting
+    if (isRecording) {
+      stopRecording()
+    }
+    
     if (!responseText.trim() || isSubmitting) return
     
     const currentQ = currentQuestion || getPromptText(prompt)
@@ -581,6 +586,10 @@ function FlippableCard({
   
   // Save the full conversation as a memory
   const handleSaveMemory = async () => {
+    // Stop any active recording before saving
+    if (isRecording) {
+      stopRecording()
+    }
     setIsSubmitting(true)
     try {
       const fullText = exchanges.map(e => `Q: ${e.question}\nA: ${e.response}`).join('\n\n')

@@ -469,7 +469,7 @@ function MapboxGlobeReveal({
     try {
       const token = process.env.NEXT_PUBLIC_MAPBOX_TOKEN;
       const res = await fetch(
-        `https://api.mapbox.com/geocoding/v5/mapbox.places/${encodeURIComponent(query)}.json?access_token=${token}&limit=5&types=place,locality,region`
+        `https://api.mapbox.com/geocoding/v5/mapbox.places/${encodeURIComponent(query)}.json?access_token=${token}&limit=5&types=address,place,locality,region`
       );
       const data = await res.json();
       setPlaceSuggestions(
@@ -3557,7 +3557,7 @@ function BirthInfoStep({
     if (!query || query.length < 2) { setSuggestions([]); return; }
     try {
       const token = process.env.NEXT_PUBLIC_MAPBOX_TOKEN;
-      const url = `https://api.mapbox.com/geocoding/v5/mapbox.places/${encodeURIComponent(query)}.json?access_token=${token}&types=place,locality,region,country&limit=5`;
+      const url = `https://api.mapbox.com/geocoding/v5/mapbox.places/${encodeURIComponent(query)}.json?access_token=${token}&types=address,place,locality,region,country&limit=5`;
       const res = await fetch(url);
       const data = await res.json();
       if (data.features) {

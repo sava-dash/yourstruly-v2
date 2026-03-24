@@ -121,12 +121,31 @@ GOOD (concise): "I love that! Who taught you this recipe?"`
   }
 
   // Handle voice/video memory saved
-  const handleMemorySaved = useCallback((memoryId: string) => {
+  const handleMemorySaved = useCallback(async (memoryId: string) => {
     setSavedMemoryId(memoryId)
+    
+    // Mark the engagement prompt as answered
+    if (prompt.id) {
+      try {
+        await fetch(`/api/engagement/prompts/${prompt.id}`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            responseType: 'voice',
+            responseText: `Voice memory saved (${memoryId})`,
+            responseData: { memoryId },
+          }),
+        })
+      } catch (err) {
+        console.error('Failed to mark prompt as answered:', err)
+        // Non-fatal — memory is already saved
+      }
+    }
+    
     setCompleted(true)
     // Don't close immediately if we have people to add
     // The close will happen when user clicks "Done" or after adding contacts
-  }, [])
+  }, [prompt.id])
 
   // Handle extracted entities from voice chat
   const handleEntitiesExtracted = useCallback((entities: { people: string[]; places: string[] }) => {
