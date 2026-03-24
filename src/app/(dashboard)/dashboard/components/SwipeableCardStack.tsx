@@ -337,6 +337,7 @@ function FlippableCard({
   
   // Photo backstory state (location + date)
   const isBackstoryType = prompt.type === 'photo_backstory'
+  const [photoTab, setPhotoTab] = useState<'details' | 'tag' | 'story'>('details')
   const [locationInput, setLocationInput] = useState('')
   const [locationSuggestions, setLocationSuggestions] = useState<{ place_name: string; id: string }[]>([])
   const [dateInput, setDateInput] = useState('')
@@ -363,7 +364,7 @@ function FlippableCard({
   }
 
   const handleSaveBackstory = async () => {
-    if (!prompt.photoId || (!locationInput.trim() && !dateInput.trim() && !backstoryText.trim())) return
+    if (!prompt.photoId || (!locationInput.trim() && !dateInput.trim() && !backstoryText.trim() && taggedFaces.length === 0)) return
     setIsSavingBackstory(true)
     try {
       const supabase = createClient()
@@ -380,6 +381,7 @@ function FlippableCard({
       const parts: string[] = []
       if (locationInput.trim()) parts.push(`Location: ${locationInput}`)
       if (dateInput.trim()) parts.push(`Date: ${dateInput}`)
+      if (taggedFaces.length > 0) parts.push(`People: ${taggedFaces.map(f => f.name).join(', ')}`)
       if (backstoryText.trim()) parts.push(`Story: ${backstoryText}`)
       
       await onAnswer(prompt.id, { type: 'text', text: parts.join('\n') })
@@ -442,8 +444,8 @@ function FlippableCard({
     if (isFlipped) return
     if (!isDragging.current && Math.abs(x.get() - dragStartX.current) < 10) {
       setIsFlipped(true)
-      // Load contacts when flipping a tag card
-      if (isTagType) {
+      // Load contacts when flipping a tag or photo backstory card
+      if (isTagType || isBackstoryType) {
         loadContacts()
       }
     }
@@ -1064,123 +1066,183 @@ function FlippableCard({
               </div>
             </div>
           ) : isBackstoryType && prompt.photoUrl ? (
-            /* Photo Backstory: photo/video thumbnail + location & date fields + story text */
+            /* Photo Backstory: tabbed interface — When & Where | Tag People | Story */
             <div className="h-full flex flex-col">
-              {/* Photo/video thumbnail at top — smaller to make room for story text */}
-              <div className="h-[30%] bg-black flex items-center justify-center overflow-hidden relative" style={{ marginTop: 56 }}>
+              {/* Photo/video thumbnail at top */}
+              <div className="h-[28%] bg-black flex items-center justify-center overflow-hidden relative" style={{ marginTop: 56 }}>
                 {photoIsVideo ? (
                   <>
                     {showVideoPlayer ? (
-                      <video
-                        src={prompt.photoUrl}
-                        controls
-                        autoPlay
-                        playsInline
-                        className="w-full h-full object-contain"
-                      />
+                      <video src={prompt.photoUrl} controls autoPlay playsInline className="w-full h-full object-contain" />
                     ) : (
                       <>
-                        <video
-                          src={prompt.photoUrl}
-                          preload="metadata"
-                          muted
-                          playsInline
-                          className="w-full h-full object-contain"
-                          onLoadedData={(e) => { e.currentTarget.currentTime = 0.1 }}
-                        />
-                        <button
-                          onClick={(e) => { e.stopPropagation(); setShowVideoPlayer(true) }}
-                          className="absolute inset-0 flex items-center justify-center bg-black/20"
-                        >
-                          <div className="w-12 h-12 rounded-full bg-black/60 backdrop-blur-sm flex items-center justify-center">
-                            <Play size={24} className="text-white ml-0.5" />
-                          </div>
+                        <video src={prompt.photoUrl} preload="metadata" muted playsInline className="w-full h-full object-contain" onLoadedData={(e) => { e.currentTarget.currentTime = 0.1 }} />
+                        <button onClick={(e) => { e.stopPropagation(); setShowVideoPlayer(true) }} className="absolute inset-0 flex items-center justify-center bg-black/20">
+                          <div className="w-12 h-12 rounded-full bg-black/60 backdrop-blur-sm flex items-center justify-center"><Play size={24} className="text-white ml-0.5" /></div>
                         </button>
                       </>
                     )}
                   </>
                 ) : (
-                  <img src={prompt.photoUrl} alt="" className="w-full h-full object-contain" draggable={false} />
+                  <img
+                    ref={imageRef}
+                    src={prompt.photoUrl}
+                    alt=""
+                    className={`w-full h-full object-contain ${photoTab === 'tag' ? 'cursor-crosshair' : ''}`}
+                    draggable={false}
+                    onClick={photoTab === 'tag' ? handlePhotoClick : undefined}
+                  />
+                )}
+                {/* Tagged faces overlay */}
+                {taggedFaces.map(face => (
+                  <div key={face.id} className="absolute pointer-events-none" style={{ left: `${face.x}%`, top: `${face.y}%`, transform: 'translate(-50%, -50%)' }}>
+                    <div className="w-8 h-8 rounded-full border-2 border-[#406A56] bg-[#406A56]/20" />
+                    <span className="absolute top-full left-1/2 -translate-x-1/2 mt-0.5 bg-[#406A56] text-white text-[9px] px-1.5 py-0.5 rounded-full whitespace-nowrap font-medium">{face.name}</span>
+                  </div>
+                ))}
+                {/* Current tap pin (tag mode) */}
+                {photoTab === 'tag' && tagPosition && (
+                  <div className="absolute animate-pulse" style={{ left: `${tagPosition.x}%`, top: `${tagPosition.y}%`, transform: 'translate(-50%, -50%)' }}>
+                    <div className="w-8 h-8 rounded-full border-2 border-amber-400 bg-amber-400/20" />
+                  </div>
+                )}
+                {/* Contact picker popup */}
+                {photoTab === 'tag' && showContactPicker && tagPosition && (
+                  <div className="absolute z-30 bg-white rounded-xl shadow-2xl overflow-hidden" style={{ width: 200, maxHeight: 240, left: `${Math.min(Math.max(tagPosition.x, 30), 70)}%`, top: `${Math.min(tagPosition.y + 8, 65)}%`, transform: 'translateX(-50%)' }} onClick={(e) => e.stopPropagation()}>
+                    <div className="p-2 border-b border-gray-100">
+                      <div className="relative">
+                        <Search size={14} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-gray-400" />
+                        <input type="text" placeholder="Search contacts..." value={contactSearch} onChange={(e) => setContactSearch(e.target.value)} className="w-full pl-8 pr-2 py-1.5 rounded-lg border border-gray-200 text-sm focus:outline-none focus:border-[#406A56] text-gray-800" autoFocus />
+                      </div>
+                    </div>
+                    <div className="max-h-[160px] overflow-y-auto">
+                      {contacts.filter(c => c.full_name.toLowerCase().includes(contactSearch.toLowerCase())).map(contact => (
+                        <button key={contact.id} onClick={() => handleSelectContact(contact)} className="w-full px-3 py-2 text-left hover:bg-[#406A56]/10 flex items-center gap-2">
+                          <div className="w-6 h-6 rounded-full bg-gray-200 flex items-center justify-center text-gray-600 text-xs font-medium flex-shrink-0">{contact.full_name.charAt(0)}</div>
+                          <span className="text-sm text-gray-800 truncate">{contact.full_name}</span>
+                        </button>
+                      ))}
+                      {contacts.filter(c => c.full_name.toLowerCase().includes(contactSearch.toLowerCase())).length === 0 && (
+                        <p className="px-3 py-2 text-xs text-gray-500">No contacts found</p>
+                      )}
+                    </div>
+                  </div>
                 )}
               </div>
 
-              {/* Location + Date fields + Story text */}
-              <div className="flex-1 p-4 flex flex-col gap-3 overflow-y-auto">
-                {/* Location with autocomplete */}
-                <div className="relative">
-                  <label className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1 block">
-                    📍 Where was this?
-                  </label>
-                  <input
-                    type="text"
-                    value={locationInput}
-                    onChange={(e) => handleLocationChange(e.target.value)}
-                    placeholder="City, place, or address..."
-                    className="w-full px-3 py-2.5 bg-gray-50 rounded-xl border border-gray-200 text-gray-800 text-sm focus:outline-none focus:ring-2 focus:ring-[#406A56]/30 focus:border-[#406A56]"
-                    autoFocus={isFlipped && isBackstoryType}
-                  />
-                  {locationSuggestions.length > 0 && (
-                    <div className="absolute top-full left-0 right-0 mt-1 bg-white rounded-xl shadow-lg border border-gray-100 z-20 overflow-hidden">
-                      {locationSuggestions.map(s => (
-                        <button
-                          key={s.id}
-                          onClick={() => {
-                            setLocationInput(s.place_name)
-                            setLocationSuggestions([])
-                          }}
-                          className="w-full px-4 py-2.5 text-left text-sm text-gray-700 hover:bg-[#406A56]/10 flex items-center gap-2"
-                        >
-                          <span className="text-gray-400">📍</span>
-                          {s.place_name}
-                        </button>
-                      ))}
+              {/* Tabs */}
+              <div className="flex border-b border-gray-200">
+                {[
+                  { key: 'details' as const, label: '📍 When & Where' },
+                  { key: 'tag' as const, label: '👤 Tag People' },
+                  { key: 'story' as const, label: '📝 Story' },
+                ].map(tab => (
+                  <button
+                    key={tab.key}
+                    onClick={(e) => { e.stopPropagation(); setPhotoTab(tab.key) }}
+                    className={`flex-1 py-2.5 text-xs font-medium transition-colors ${
+                      photoTab === tab.key
+                        ? 'text-[#406A56] border-b-2 border-[#406A56]'
+                        : 'text-gray-400 hover:text-gray-600'
+                    }`}
+                  >
+                    {tab.label}
+                    {/* Indicator dots for filled tabs */}
+                    {tab.key === 'details' && (locationInput || dateInput) && <span className="ml-1 w-1.5 h-1.5 bg-[#406A56] rounded-full inline-block" />}
+                    {tab.key === 'tag' && taggedFaces.length > 0 && <span className="ml-1 w-1.5 h-1.5 bg-[#406A56] rounded-full inline-block" />}
+                    {tab.key === 'story' && backstoryText && <span className="ml-1 w-1.5 h-1.5 bg-[#406A56] rounded-full inline-block" />}
+                  </button>
+                ))}
+              </div>
+
+              {/* Tab content */}
+              <div className="flex-1 overflow-y-auto p-4">
+                {photoTab === 'details' && (
+                  <div className="flex flex-col gap-3">
+                    <div className="relative">
+                      <label className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1 block">Where was this?</label>
+                      <input
+                        type="text"
+                        value={locationInput}
+                        onChange={(e) => handleLocationChange(e.target.value)}
+                        placeholder="City, place, or address..."
+                        className="w-full px-3 py-2.5 bg-gray-50 rounded-xl border border-gray-200 text-gray-800 text-sm focus:outline-none focus:ring-2 focus:ring-[#406A56]/30 focus:border-[#406A56]"
+                        autoFocus={isFlipped && photoTab === 'details'}
+                      />
+                      {locationSuggestions.length > 0 && (
+                        <div className="absolute top-full left-0 right-0 mt-1 bg-white rounded-xl shadow-lg border border-gray-100 z-20 overflow-hidden">
+                          {locationSuggestions.map(s => (
+                            <button key={s.id} onClick={() => { setLocationInput(s.place_name); setLocationSuggestions([]) }} className="w-full px-4 py-2.5 text-left text-sm text-gray-700 hover:bg-[#406A56]/10 flex items-center gap-2">
+                              <span className="text-gray-400">📍</span>{s.place_name}
+                            </button>
+                          ))}
+                        </div>
+                      )}
                     </div>
-                  )}
-                </div>
+                    <div>
+                      <label className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1 block">When was this taken?</label>
+                      <input type="text" value={dateInput} onChange={(e) => setDateInput(e.target.value)} placeholder="e.g. Summer 2019, March 2020..." className="w-full px-3 py-2.5 bg-gray-50 rounded-xl border border-gray-200 text-gray-800 text-sm focus:outline-none focus:ring-2 focus:ring-[#406A56]/30 focus:border-[#406A56]" />
+                    </div>
+                  </div>
+                )}
 
-                {/* Date field */}
-                <div>
-                  <label className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1 block">
-                    📅 When was this taken?
-                  </label>
-                  <input
-                    type="text"
-                    value={dateInput}
-                    onChange={(e) => setDateInput(e.target.value)}
-                    placeholder="e.g. Summer 2019, March 2020..."
-                    className="w-full px-3 py-2.5 bg-gray-50 rounded-xl border border-gray-200 text-gray-800 text-sm focus:outline-none focus:ring-2 focus:ring-[#406A56]/30 focus:border-[#406A56]"
-                  />
-                </div>
+                {photoTab === 'tag' && (
+                  <div className="flex flex-col gap-3">
+                    <p className="text-sm text-gray-500 text-center">
+                      {taggedFaces.length === 0
+                        ? 'Tap on people in the photo above to tag them'
+                        : `${taggedFaces.length} person${taggedFaces.length !== 1 ? 's' : ''} tagged`}
+                    </p>
+                    {taggedFaces.length > 0 && (
+                      <div className="flex flex-wrap gap-2">
+                        {taggedFaces.map(face => (
+                          <span key={face.id} className="flex items-center gap-1.5 px-3 py-1.5 bg-[#406A56]/10 text-[#406A56] rounded-full text-sm font-medium">
+                            <span className="w-5 h-5 rounded-full bg-[#406A56]/20 flex items-center justify-center text-[10px] font-bold">{face.name.charAt(0)}</span>
+                            {face.name}
+                            <button onClick={(e) => { e.stopPropagation(); setTaggedFaces(prev => prev.filter(f => f.id !== face.id)) }} className="ml-0.5 text-[#406A56]/50 hover:text-[#406A56]">
+                              <X size={12} />
+                            </button>
+                          </span>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                )}
 
-                {/* Story text area */}
-                <div>
-                  <label className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1 block">
-                    📝 The story behind this
-                  </label>
-                  <textarea
-                    value={backstoryText}
-                    onChange={(e) => setBackstoryText(e.target.value)}
-                    placeholder="What's the story? Who was there?"
-                    rows={3}
-                    className="w-full px-3 py-2.5 bg-gray-50 rounded-xl border border-gray-200 text-gray-800 text-sm focus:outline-none focus:ring-2 focus:ring-[#406A56]/30 focus:border-[#406A56] resize-none"
-                  />
-                </div>
+                {photoTab === 'story' && (
+                  <div className="flex flex-col gap-3 h-full">
+                    <textarea
+                      value={backstoryText}
+                      onChange={(e) => setBackstoryText(e.target.value)}
+                      placeholder="What's the story behind this photo? What was happening that day?"
+                      className="w-full flex-1 min-h-[120px] px-3 py-2.5 bg-gray-50 rounded-xl border border-gray-200 text-gray-800 text-sm focus:outline-none focus:ring-2 focus:ring-[#406A56]/30 focus:border-[#406A56] resize-none"
+                      autoFocus={isFlipped && photoTab === 'story'}
+                    />
+                    {/* Voice record for story */}
+                    <button
+                      onClick={isRecording ? stopRecording : startRecording}
+                      className={`flex items-center justify-center gap-2 w-full py-2 rounded-xl text-sm font-medium transition-colors ${
+                        isRecording ? 'bg-red-500 text-white animate-pulse' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                      }`}
+                    >
+                      {isRecording ? <><Square size={14} fill="white" /> Stop Recording</> : <><Mic size={14} /> Record Your Story</>}
+                    </button>
+                  </div>
+                )}
+              </div>
 
-                {/* Save button */}
+              {/* Save button — always visible */}
+              <div className="p-4 pt-2 border-t border-gray-100">
                 <button
                   onClick={handleSaveBackstory}
-                  disabled={(!locationInput.trim() && !dateInput.trim() && !backstoryText.trim()) || isSavingBackstory}
+                  disabled={(!locationInput.trim() && !dateInput.trim() && !backstoryText.trim() && taggedFaces.length === 0) || isSavingBackstory}
                   className="flex items-center justify-center gap-2 w-full py-2.5 bg-[#406A56] text-white rounded-xl font-medium disabled:opacity-50 disabled:cursor-not-allowed hover:bg-[#4a7a64] transition-colors"
                 >
                   <Send size={16} />
                   {isSavingBackstory ? 'Saving...' : 'Save Details'}
                 </button>
-
-                <div className="text-center">
-                  <span className="text-xs text-amber-600 font-medium">
-                    <Sparkles size={12} className="inline mr-1" />
-                    Earn +{config.xp} XP
-                  </span>
+                <div className="text-center mt-1.5">
+                  <span className="text-xs text-amber-600 font-medium"><Sparkles size={12} className="inline mr-1" />Earn +{config.xp} XP</span>
                 </div>
               </div>
             </div>

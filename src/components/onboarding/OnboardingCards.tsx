@@ -2,8 +2,7 @@
 
 import { useState, useCallback, useMemo, useRef } from 'react'
 import { motion, AnimatePresence, useMotionValue, useTransform, PanInfo } from 'framer-motion'
-import { Sparkles, Mic, Send, RotateCcw, Loader2, ChevronRight, X, Square, Search, UserPlus, Video, Play } from 'lucide-react'
-import { createClient } from '@/lib/supabase/client'
+import { Sparkles, Mic, Send, RotateCcw, Loader2, Square, Bookmark } from 'lucide-react'
 
 // ============================================================================
 // Types
@@ -283,17 +282,21 @@ function OnboardingFlippableCard({
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [isRecording, setIsRecording] = useState(false)
   const [interimText, setInterimText] = useState('')
+  const [exchanges, setExchanges] = useState<{ question: string; response: string }[]>([])
+  const [currentQuestion, setCurrentQuestion] = useState('')
+  const [isLoadingFollowUp, setIsLoadingFollowUp] = useState(false)
+  const [showSavePrompt, setShowSavePrompt] = useState(false)
+  const chatEndRef = useRef<HTMLDivElement>(null)
   const isDragging = useRef(false)
   const mediaRecorderRef = useRef<MediaRecorder | null>(null)
   const audioChunksRef = useRef<Blob[]>([])
   const speechRecRef = useRef<any>(null)
   const textareaRef = useRef<HTMLTextAreaElement>(null)
+  const usedWebSpeechRef = useRef(false) // track if Web Speech API captured text
 
   const x = useMotionValue(0)
   const rotate = useTransform(x, [-200, 0, 200], [-8, 0, 8])
   const opacity = useTransform(x, [-200, -100, 0, 100, 200], [0.5, 0.8, 1, 0.8, 0.5])
-
-  const supabase = useMemo(() => createClient(), [])
 
   const handleDragEnd = (_: any, info: PanInfo) => {
     if (isFlipped) return
@@ -329,12 +332,40 @@ function OnboardingFlippableCard({
     setInterimText('')
   }
 
+  const MAX_FOLLOW_UPS = 3
+
+  // Fetch AI follow-up question
+  const fetchFollowUp = async (currentExchanges: { question: string; response: string }[]) => {
+    setIsLoadingFollowUp(true)
+    try {
+      const res = await fetch('/api/conversation/follow-up', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          promptType: prompt.type,
+          originalPrompt: prompt.promptText,
+          exchanges: currentExchanges,
+        }),
+      })
+      const data = await res.json()
+      if (data.followUpQuestion) {
+        setCurrentQuestion(data.followUpQuestion)
+      } else if (data.shouldEnd) {
+        setShowSavePrompt(true)
+      }
+    } catch {
+      // No follow-up — that's fine
+    }
+    setIsLoadingFollowUp(false)
+  }
+
   // Voice recording
   const startRecording = async () => {
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true })
       const recorder = new MediaRecorder(stream)
       audioChunksRef.current = []
+      usedWebSpeechRef.current = false
 
       recorder.ondataavailable = (e) => {
         if (e.data.size > 0) audioChunksRef.current.push(e.data)
@@ -342,30 +373,39 @@ function OnboardingFlippableCard({
 
       recorder.onstop = async () => {
         stream.getTracks().forEach(t => t.stop())
-        const audioBlob = new Blob(audioChunksRef.current, { type: 'audio/webm' })
 
-        if (speechRecRef.current) {
-          try { speechRecRef.current.stop() } catch {}
-          speechRecRef.current = null
+        // Only use API transcription if Web Speech didn't capture anything
+        if (!usedWebSpeechRef.current) {
+          const audioBlob = new Blob(audioChunksRef.current, { type: 'audio/webm' })
+          if (speechRecRef.current) {
+            try { speechRecRef.current.stop() } catch {}
+            speechRecRef.current = null
+          }
+          setInterimText('')
+
+          const formData = new FormData()
+          formData.append('audio', audioBlob, 'recording.webm')
+          try {
+            const res = await fetch('/api/transcribe', { method: 'POST', body: formData })
+            const data = await res.json()
+            const text = data.transcription || data.text || ''
+            if (text) setResponseText(prev => prev ? `${prev} ${text}` : text)
+          } catch {}
+        } else {
+          // Web Speech already captured — just clean up
+          if (speechRecRef.current) {
+            try { speechRecRef.current.stop() } catch {}
+            speechRecRef.current = null
+          }
+          setInterimText('')
         }
-        setInterimText('')
-
-        // Transcribe
-        const formData = new FormData()
-        formData.append('audio', audioBlob, 'recording.webm')
-        try {
-          const res = await fetch('/api/transcribe', { method: 'POST', body: formData })
-          const data = await res.json()
-          const text = data.transcription || data.text || ''
-          if (text) setResponseText(prev => prev ? `${prev} ${text}` : text)
-        } catch {}
       }
 
       recorder.start()
       mediaRecorderRef.current = recorder
       setIsRecording(true)
 
-      // Live interim transcription
+      // Live interim transcription via Web Speech API
       try {
         const SR = (window as any).webkitSpeechRecognition || (window as any).SpeechRecognition
         if (SR) {
@@ -376,6 +416,7 @@ function OnboardingFlippableCard({
             let interim = ''
             for (let i = event.resultIndex; i < event.results.length; i++) {
               if (event.results[i].isFinal) {
+                usedWebSpeechRef.current = true
                 setResponseText(prev => prev ? `${prev} ${event.results[i][0].transcript}` : event.results[i][0].transcript)
                 setInterimText('')
               } else {
@@ -411,30 +452,58 @@ function OnboardingFlippableCard({
     const text = responseText.trim()
     if (!text || isSubmitting) return
 
+    const questionText = currentQuestion || prompt.promptText
+    const newExchange = { question: questionText, response: text }
+    const updatedExchanges = [...exchanges, newExchange]
+    setExchanges(updatedExchanges)
+    setResponseText('')
+    setInterimText('')
+    setCurrentQuestion('')
+
+    // After MAX_FOLLOW_UPS exchanges, show save prompt
+    if (updatedExchanges.length >= MAX_FOLLOW_UPS) {
+      setShowSavePrompt(true)
+    } else {
+      // Fetch follow-up question
+      await fetchFollowUp(updatedExchanges)
+    }
+
+    setTimeout(() => chatEndRef.current?.scrollIntoView({ behavior: 'smooth' }), 100)
+  }
+
+  const handleSaveMemory = async () => {
+    if (isRecording) stopRecording()
     setIsSubmitting(true)
     try {
-      // Save as a memory via the API
-      const { data: { user } } = await supabase.auth.getUser()
-      if (user) {
-        await fetch('/api/engagement/answer', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            promptId: prompt.id,
-            promptType: prompt.type,
-            responseType: 'text',
-            responseText: text,
-          }),
-        })
-      }
+      const fullText = exchanges.map(e => `Q: ${e.question}\nA: ${e.response}`).join('\n\n')
+      const summary = exchanges.map(e => e.response).join(' ')
+
+      await fetch('/api/conversation/save', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          promptType: prompt.type,
+          exchanges,
+          summary,
+          expectedXp: 15,
+        }),
+      })
     } catch (err) {
       console.error('Save failed:', err)
     }
-
     setIsSubmitting(false)
     setIsFlipped(false)
     setResponseText('')
+    setExchanges([])
+    setCurrentQuestion('')
+    setShowSavePrompt(false)
     onAnswered(prompt.id)
+  }
+
+  const handleAddMore = () => {
+    setShowSavePrompt(false)
+    setCurrentQuestion('')
+    fetchFollowUp(exchanges)
   }
 
   return (
@@ -530,9 +599,9 @@ function OnboardingFlippableCard({
               boxShadow: '0 8px 32px rgba(0,0,0,0.08)',
             }}
           >
-            <div className="flex flex-col h-full p-5">
+            <div className="flex flex-col h-full">
               {/* Back header */}
-              <div className="flex items-center justify-between mb-3">
+              <div className="flex items-center justify-between p-4 pb-2">
                 <span
                   className="text-xs font-semibold uppercase tracking-wider px-2 py-0.5 rounded-full"
                   style={{ color: colors.accent, background: `${colors.accent}15` }}
@@ -547,67 +616,134 @@ function OnboardingFlippableCard({
                 </button>
               </div>
 
-              {/* Question */}
-              <p className="text-sm font-medium text-[#2d2d2d] mb-3 leading-relaxed">
-                {prompt.promptText}
-              </p>
-
-              {/* Text input */}
-              <div className="flex-1 relative">
-                <textarea
-                  ref={textareaRef}
-                  value={responseText}
-                  onChange={(e) => setResponseText(e.target.value)}
-                  placeholder={prompt.type === 'missing_info'
-                    ? 'Enter their info (birthday, phone, email...)'
-                    : 'Share your thoughts...'
-                  }
-                  className="w-full h-full resize-none rounded-xl border border-gray-200 p-3 text-sm text-[#2d2d2d] placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#406A56]/30 focus:border-[#406A56]"
-                  onKeyDown={(e) => {
-                    if (e.key === 'Enter' && !e.shiftKey) {
-                      e.preventDefault()
-                      handleSubmit()
-                    }
-                  }}
-                />
-                {interimText && (
-                  <p className="absolute bottom-3 left-3 right-3 text-xs text-gray-400 italic truncate">
-                    {interimText}
-                  </p>
+              {/* Conversation thread */}
+              <div className="flex-1 overflow-y-auto px-4 pb-2">
+                {/* Original question (when no exchanges yet) */}
+                {exchanges.length === 0 && !showSavePrompt && (
+                  <div className="mb-3">
+                    <p className="text-sm font-medium text-[#406A56] leading-relaxed">
+                      {prompt.promptText}
+                    </p>
+                  </div>
                 )}
+
+                {/* Past exchanges */}
+                {exchanges.map((ex, i) => (
+                  <div key={i} className="mb-3">
+                    <div className="bg-[#406A56]/5 rounded-2xl rounded-bl-sm px-3 py-2 mb-1.5">
+                      <p className="text-xs text-[#406A56] font-medium">{ex.question}</p>
+                    </div>
+                    <div className="bg-gray-100 rounded-2xl rounded-br-sm px-3 py-2 ml-4">
+                      <p className="text-xs text-gray-800">{ex.response}</p>
+                    </div>
+                  </div>
+                ))}
+
+                {/* Current follow-up question */}
+                {currentQuestion && !showSavePrompt && (
+                  <div className="bg-[#406A56]/5 rounded-2xl rounded-bl-sm px-3 py-2 mb-2">
+                    <p className="text-xs text-[#406A56] font-medium">{currentQuestion}</p>
+                  </div>
+                )}
+
+                {/* Loading follow-up */}
+                {isLoadingFollowUp && (
+                  <div className="flex items-center gap-2 text-gray-400 text-xs px-2 py-2">
+                    <Loader2 size={12} className="animate-spin" />
+                    Thinking...
+                  </div>
+                )}
+
+                {/* Save prompt after MAX_FOLLOW_UPS */}
+                {showSavePrompt && (
+                  <div className="bg-amber-50 rounded-2xl p-4 text-center">
+                    <p className="text-sm font-medium text-gray-800 mb-3">
+                      Great story! Save this memory or keep going?
+                    </p>
+                    <div className="flex gap-2">
+                      <button
+                        onClick={(e) => { e.stopPropagation(); handleAddMore() }}
+                        className="flex-1 py-2 px-3 rounded-xl border border-gray-200 text-xs font-medium text-gray-600 hover:bg-gray-50"
+                      >
+                        Keep Going
+                      </button>
+                      <button
+                        onClick={(e) => { e.stopPropagation(); handleSaveMemory() }}
+                        disabled={isSubmitting}
+                        className="flex-1 py-2 px-3 rounded-xl bg-[#406A56] text-white text-xs font-medium hover:bg-[#4a7a64] disabled:opacity-50"
+                      >
+                        {isSubmitting ? 'Saving...' : '✨ Save Memory'}
+                      </button>
+                    </div>
+                  </div>
+                )}
+
+                <div ref={chatEndRef} />
               </div>
 
-              {/* Actions */}
-              <div className="flex items-center justify-between mt-3 pt-3 border-t border-gray-100">
-                <button
-                  onClick={(e) => {
-                    e.stopPropagation()
-                    isRecording ? stopRecording() : startRecording()
-                  }}
-                  className={`p-2.5 rounded-full transition-colors ${
-                    isRecording
-                      ? 'bg-red-500 text-white animate-pulse'
-                      : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-                  }`}
-                >
-                  {isRecording ? <Square size={16} fill="white" /> : <Mic size={16} />}
-                </button>
-
-                <button
-                  onClick={(e) => { e.stopPropagation(); handleSubmit() }}
-                  disabled={!responseText.trim() || isSubmitting}
-                  className="flex items-center gap-2 px-5 py-2.5 bg-[#406A56] text-white text-sm font-medium rounded-xl hover:bg-[#4a7a64] disabled:opacity-50 transition-colors"
-                >
-                  {isSubmitting ? (
-                    <Loader2 size={16} className="animate-spin" />
-                  ) : (
-                    <>
+              {/* Input area (hidden when save prompt is showing) */}
+              {!showSavePrompt && (
+                <div className="px-3 pb-3 pt-2 border-t border-gray-100">
+                  <div className="relative mb-2">
+                    <textarea
+                      ref={textareaRef}
+                      value={responseText}
+                      onChange={(e) => setResponseText(e.target.value)}
+                      placeholder={prompt.type === 'missing_info'
+                        ? 'Enter their info (birthday, phone, email...)'
+                        : 'Share your thoughts...'
+                      }
+                      rows={2}
+                      className="w-full p-3 bg-gray-50 rounded-2xl border-0 resize-none focus:outline-none focus:ring-2 focus:ring-[#406A56]/30 text-gray-800 text-sm placeholder-gray-400"
+                      style={interimText ? { color: 'transparent', caretColor: '#1f2937' } : undefined}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter' && !e.shiftKey) {
+                          e.preventDefault()
+                          handleSubmit()
+                        }
+                      }}
+                    />
+                    {interimText && (
+                      <div className="absolute inset-0 p-3 pointer-events-none text-sm">
+                        <span className="text-gray-800">{responseText}</span>
+                        <span className="text-gray-400 italic">{interimText}</span>
+                      </div>
+                    )}
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation()
+                        isRecording ? stopRecording() : startRecording()
+                      }}
+                      className={`w-10 h-10 rounded-full flex items-center justify-center transition-colors flex-shrink-0 ${
+                        isRecording
+                          ? 'bg-red-500 text-white animate-pulse'
+                          : 'bg-gray-100 text-gray-500 hover:bg-gray-200'
+                      }`}
+                    >
+                      {isRecording ? <Square size={14} fill="white" /> : <Mic size={16} />}
+                    </button>
+                    {/* Save Memory button (after 1+ exchanges) */}
+                    {exchanges.length >= 1 && (
+                      <button
+                        onClick={(e) => { e.stopPropagation(); handleSaveMemory() }}
+                        disabled={isSubmitting}
+                        className="flex-1 h-10 rounded-full bg-amber-50 border border-amber-200 text-amber-700 text-xs font-medium hover:bg-amber-100 transition-colors disabled:opacity-50 flex items-center justify-center gap-1"
+                      >
+                        {isSubmitting ? <Loader2 size={12} className="animate-spin" /> : '✨ Save Memory'}
+                      </button>
+                    )}
+                    <button
+                      onClick={(e) => { e.stopPropagation(); handleSubmit() }}
+                      disabled={!responseText.trim() || isSubmitting}
+                      className="w-10 h-10 rounded-full bg-[#406A56] text-white flex items-center justify-center disabled:opacity-40 hover:bg-[#4a7a64] transition-colors flex-shrink-0"
+                    >
                       <Send size={14} />
-                      Submit
-                    </>
-                  )}
-                </button>
-              </div>
+                    </button>
+                  </div>
+                </div>
+              )}
             </div>
           </div>
         </motion.div>
