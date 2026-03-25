@@ -1,7 +1,7 @@
 'use client'
 
 import { motion } from 'framer-motion'
-import { Sparkles, Camera, Heart, Brain, User, BookOpen, ChevronRight } from 'lucide-react'
+import { Sparkles, Camera, Heart, Brain, User, BookOpen, Mic } from 'lucide-react'
 import type { PromptCategory } from './types'
 
 interface PromptColumnItem {
@@ -21,91 +21,97 @@ interface PromptColumnProps {
   isLoading: boolean
 }
 
-const CATEGORY_ICONS: Record<string, any> = {
-  memory: Heart,
-  photo: Camera,
-  wisdom: Brain,
-  contact: User,
-  profile: Sparkles,
-  favorites: BookOpen,
-}
-
-const CATEGORY_COLORS: Record<string, string> = {
-  memory: '#8B5CF6',
-  photo: '#D9C61A',
-  wisdom: '#EF4444',
-  contact: '#406A56',
-  profile: '#8DACAB',
-  favorites: '#F59E0B',
+const CATEGORY_META: Record<string, { icon: any; label: string; inputHint: string; timeHint: string }> = {
+  memory: { icon: Heart, label: 'Remember When', inputHint: '🎙️ Talk or type', timeHint: '~2 min' },
+  photo: { icon: Camera, label: 'Tell The Story', inputHint: '🎙️ Talk or type', timeHint: '~2 min' },
+  wisdom: { icon: Brain, label: 'Share Wisdom', inputHint: '🎙️ Talk or type', timeHint: '~3 min' },
+  contact: { icon: User, label: 'Update Info', inputHint: '⌨️ Quick fill', timeHint: '~30 sec' },
+  profile: { icon: Sparkles, label: 'About You', inputHint: '👆 Tap to select', timeHint: '~30 sec' },
+  favorites: { icon: BookOpen, label: 'Your Favorites', inputHint: '⌨️ Type', timeHint: '~1 min' },
 }
 
 export function PromptColumn({ prompts, onSelect, isLoading }: PromptColumnProps) {
   if (isLoading) {
     return (
-      <div className="space-y-3">
-        {[1, 2, 3, 4, 5].map(i => (
-          <div key={i} className="h-[88px] rounded-2xl bg-white/5 animate-pulse" />
+      <div className="space-y-5">
+        {[1, 2, 3, 4].map(i => (
+          <div key={i} className="h-[280px] rounded-3xl bg-white/5 animate-pulse" />
         ))}
       </div>
     )
   }
 
   return (
-    <div className="space-y-3">
+    <div className="space-y-5 max-w-2xl mx-auto">
       {prompts.map((prompt, index) => {
-        const Icon = CATEGORY_ICONS[prompt.category] || Sparkles
-        const color = CATEGORY_COLORS[prompt.category] || '#8DACAB'
-        const progress = prompt.totalCards > 0 ? prompt.savedCount / prompt.totalCards : 0
+        const meta = CATEGORY_META[prompt.category] || CATEGORY_META.memory
+        const hasPhoto = !!prompt.photoUrl
 
         return (
           <motion.button
             key={prompt.id}
-            initial={{ opacity: 0, y: 12 }}
+            initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: index * 0.03, duration: 0.3 }}
+            transition={{ delay: index * 0.04, duration: 0.35 }}
             onClick={() => onSelect(prompt.id)}
             className="w-full text-left group"
           >
-            <div className="relative rounded-2xl border border-white/[0.08] bg-[#252525] hover:bg-[#2a2a2a] hover:border-white/[0.12] transition-all overflow-hidden">
-              {/* Progress bar — top edge */}
-              <div className="h-[3px]" style={{ background: progress > 0 ? `linear-gradient(to right, ${color} ${progress * 100}%, transparent ${progress * 100}%)` : 'transparent' }} />
-
-              <div className="flex items-center gap-4 px-5 py-4">
-                {/* Left: photo thumbnail or icon circle */}
-                {prompt.photoUrl ? (
-                  <div className="w-14 h-14 rounded-xl overflow-hidden flex-shrink-0 border border-white/[0.06]">
-                    <img src={prompt.photoUrl} alt="" className="w-full h-full object-cover" draggable={false} />
+            <div className="rounded-3xl overflow-hidden shadow-xl shadow-black/20 hover:shadow-2xl hover:shadow-black/30 transition-all hover:scale-[1.01] active:scale-[0.99]"
+              style={{ background: 'linear-gradient(to bottom, #faf8f4, #f3efe8)' }}
+            >
+              {/* Photo hero (if available) */}
+              {hasPhoto && (
+                <div className="relative h-[220px] overflow-hidden">
+                  <img
+                    src={prompt.photoUrl}
+                    alt=""
+                    className="w-full h-full object-cover"
+                    draggable={false}
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-transparent" />
+                  {/* Category badge on photo */}
+                  <div className="absolute bottom-3 left-4 flex items-center gap-2">
+                    <span className="px-3 py-1 rounded-full text-[11px] font-semibold bg-white/20 backdrop-blur-md text-white">
+                      {meta.label}
+                    </span>
                   </div>
-                ) : (
-                  <div
-                    className="w-14 h-14 rounded-full flex items-center justify-center flex-shrink-0"
-                    style={{ background: `${color}18`, border: `1px solid ${color}30` }}
-                  >
-                    <Icon size={22} style={{ color }} />
+                </div>
+              )}
+
+              {/* Content area */}
+              <div className={`${hasPhoto ? 'p-6' : 'p-8'} flex flex-col`}>
+                {/* Category badge (when no photo) */}
+                {!hasPhoto && (
+                  <div className="flex items-center gap-2 mb-4">
+                    <div className="w-9 h-9 rounded-full bg-[#406A56]/10 flex items-center justify-center">
+                      <meta.icon size={16} className="text-[#406A56]" />
+                    </div>
+                    <span className="text-xs font-semibold text-[#406A56]/60 uppercase tracking-wider">
+                      {meta.label}
+                    </span>
                   </div>
                 )}
 
-                {/* Center: prompt text + meta */}
-                <div className="flex-1 min-w-0">
-                  <p className="text-[15px] text-white/90 font-medium leading-snug truncate">
-                    {prompt.promptText}
-                  </p>
-                  <div className="flex items-center gap-2 mt-1">
-                    {prompt.contactName && (
-                      <span className="text-xs text-white/35">
-                        About {prompt.contactName}
-                      </span>
-                    )}
-                    {prompt.savedCount > 0 && (
-                      <span className="text-xs text-emerald-400/80 font-medium">
-                        {prompt.savedCount} saved
-                      </span>
-                    )}
-                  </div>
-                </div>
+                {/* Prompt text */}
+                <p className={`${hasPhoto ? 'text-xl' : 'text-2xl'} font-bold text-[#2d3b36] leading-snug`}>
+                  {prompt.promptText}
+                </p>
 
-                {/* Right: chevron */}
-                <ChevronRight size={18} className="text-white/15 group-hover:text-white/30 transition-colors flex-shrink-0" />
+                {/* Contact name */}
+                {prompt.contactName && (
+                  <p className="text-sm text-[#406A56]/50 mt-1.5">
+                    About {prompt.contactName}
+                  </p>
+                )}
+
+                {/* Input hints */}
+                <div className="flex items-center justify-center gap-3 mt-5 text-[12px] text-[#2d3b36]/35">
+                  <span>{meta.inputHint}</span>
+                  <span className="w-1 h-1 rounded-full bg-[#2d3b36]/20" />
+                  <span>{meta.timeHint}</span>
+                  <span className="w-1 h-1 rounded-full bg-[#2d3b36]/20" />
+                  <span>Tap to start</span>
+                </div>
               </div>
             </div>
           </motion.button>
