@@ -70,8 +70,8 @@ export default function HomeV2Page() {
   } = useEngagementPrompts(30, null)
 
   const { subscription } = useSubscription()
-  const { stats: dashboardStats, refresh: refreshDashboardStats } = useDashboardData()
-  const { totalXp, xpAnimating, streakDays, gamificationConfig } = useXpState()
+  const { stats: dashboardStats, refreshStats: refreshDashboardStats } = useDashboardData(user?.id || null)
+  const { totalXp, xpAnimating, streakDays, gamificationConfig } = useXpState(user?.id || null)
 
   const [expandedRowId, setExpandedRowId] = useState<string | null>(null)
   const [chainVisible, setChainVisible] = useState(false)
