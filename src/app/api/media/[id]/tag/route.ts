@@ -82,7 +82,14 @@ export async function POST(
         const imageRes = await fetch(mediaRecord.file_url)
         if (imageRes.ok) {
           const buffer = Buffer.from(await imageRes.arrayBuffer())
-          await indexFace(buffer, user.id, contactId)
+          const rekFaceId = await indexFace(buffer, user.id, contactId)
+          // Store Rekognition face ID for future reference
+          if (rekFaceId) {
+            await supabase
+              .from('memory_face_tags')
+              .update({ rekognition_face_id: rekFaceId })
+              .eq('id', faceId)
+          }
         }
       }
     } catch (indexErr) {

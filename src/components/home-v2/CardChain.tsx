@@ -1,18 +1,18 @@
 'use client'
 
-import { useRef, useCallback } from 'react'
+import { useCallback, useRef } from 'react'
 import { motion } from 'framer-motion'
-import { ArrowLeft, Sparkles } from 'lucide-react'
 import type { PromptRow, CardType, ChainCard } from './types'
 import { WhenWhereCard } from './cards/WhenWhereCard'
 import { TextVoiceVideoCard } from './cards/TextVoiceVideoCard'
+import { BackstoryCard } from './cards/BackstoryCard'
 import { MediaUploadCard } from './cards/MediaUploadCard'
 import { MediaItemCard } from './cards/MediaItemCard'
 import { FieldInputCard } from './cards/FieldInputCard'
 import { PillSelectCard } from './cards/PillSelectCard'
+import { TagPeopleCard } from './cards/TagPeopleCard'
 import { PlusCard } from './cards/PlusCard'
 
-// Pill options for profile cards
 const PROFILE_OPTIONS: Record<string, string[]> = {
   personality: ['Adventurous', 'Analytical', 'Creative', 'Empathetic', 'Funny', 'Introverted', 'Leader', 'Optimistic', 'Patient', 'Thoughtful'],
   religion: ['Christianity', 'Islam', 'Judaism', 'Buddhism', 'Hinduism', 'Spiritual', 'Agnostic', 'Atheist', 'Other'],
@@ -20,155 +20,123 @@ const PROFILE_OPTIONS: Record<string, string[]> = {
   languages: ['English', 'Spanish', 'French', 'Mandarin', 'Arabic', 'Hindi', 'Portuguese', 'German', 'Japanese', 'Korean'],
 }
 
+const cardVariants = {
+  hidden: { opacity: 0, x: 120, scale: 0.88 },
+  visible: (i: number) => ({
+    opacity: 1, x: 0, scale: 1,
+    transition: { type: 'spring', stiffness: 220, damping: 18, mass: 0.8, delay: 0.08 + i * 0.1 },
+  }),
+  exit: (i: number) => ({
+    opacity: 0, x: 100, scale: 0.92,
+    transition: { type: 'spring', stiffness: 300, damping: 26, delay: i * 0.04 },
+  }),
+}
+
+const CARD_W = 530
+const CARD_H = 600
+
 interface CardChainProps {
   row: PromptRow
-  onBack: () => void
   onCardSave: (cardId: string, data: Record<string, any>) => void
   onAddCard: (type: CardType) => void
   onMediaUploaded: (files: { url: string; name: string; type: string }[]) => void
 }
 
-export function CardChain({ row, onBack, onCardSave, onAddCard, onMediaUploaded }: CardChainProps) {
-  const scrollRef = useRef<HTMLDivElement>(null)
+export function CardChain({ row, onCardSave, onAddCard, onMediaUploaded }: CardChainProps) {
+  const containerRef = useRef<HTMLDivElement>(null)
+
+  // Scroll to next card after saving
+  const scrollToNext = useCallback((currentIndex: number) => {
+    const nextIndex = currentIndex + 1
+    // +1 because the prompt card is the first element in the flex row (not part of this component)
+    // Each card is CARD_W + 16px gap
+    if (nextIndex < row.cards.length) {
+      const el = containerRef.current?.parentElement
+      if (el) {
+        // Scroll by one card width + gap
+        el.scrollBy({ left: CARD_W + 16, behavior: 'smooth' })
+      }
+    }
+  }, [row.cards.length])
+
+  const handleSave = useCallback((cardId: string, data: Record<string, any>, index: number) => {
+    onCardSave(cardId, data)
+    // Auto-advance unless it's the last non-plus card
+    const nonPlusCards = row.cards.filter(c => c.type !== 'plus')
+    const cardIdx = nonPlusCards.findIndex(c => c.id === cardId)
+    if (cardIdx < nonPlusCards.length - 1) {
+      setTimeout(() => scrollToNext(index), 300)
+    }
+  }, [onCardSave, row.cards, scrollToNext])
 
   const renderCard = useCallback((card: ChainCard, index: number) => {
-    const cardStyle = "w-[300px] h-[380px] flex-shrink-0 rounded-2xl bg-[#252525] border border-white/8 overflow-hidden"
+    const wrapCard = (children: React.ReactNode) => (
+      <motion.div
+        key={card.id}
+        custom={index}
+        variants={cardVariants}
+        initial="hidden"
+        exit="exit"
+        animate="visible"
+        style={{
+          flexShrink: 0, width: `${CARD_W}px`, height: `${CARD_H}px`,
+          borderRadius: '24px', overflow: 'hidden', background: '#222',
+          border: '1px solid rgba(255,255,255,0.08)',
+          boxShadow: '0 12px 40px rgba(0,0,0,0.4)',
+          display: 'flex', flexDirection: 'column', scrollSnapAlign: 'start',
+        }}
+      >
+        {children}
+      </motion.div>
+    )
+
+    const wrapPlus = (children: React.ReactNode) => (
+      <motion.div
+        key={card.id}
+        custom={index}
+        variants={cardVariants}
+        initial="hidden"
+        exit="exit"
+        animate="visible"
+        style={{
+          flexShrink: 0, width: '280px', height: `${CARD_H}px`,
+          borderRadius: '24px', overflow: 'hidden', background: 'rgba(34,34,34,0.5)',
+          border: '2px dashed rgba(255,255,255,0.1)',
+          display: 'flex', flexDirection: 'column',
+        }}
+      >
+        {children}
+      </motion.div>
+    )
 
     switch (card.type) {
       case 'when-where':
-        return (
-          <div key={card.id} className={cardStyle}>
-            <WhenWhereCard
-              data={card.data}
-              onSave={(data) => onCardSave(card.id, data)}
-              saved={card.saved}
-            />
-          </div>
-        )
-
+        return wrapCard(<WhenWhereCard data={card.data} onSave={(data) => handleSave(card.id, data, index)} saved={card.saved} />)
       case 'text-voice-video':
-        return (
-          <div key={card.id} className={cardStyle}>
-            <TextVoiceVideoCard
-              label={row.category === 'wisdom' ? 'Share Your Wisdom' : 'Your Story'}
-              placeholder={row.promptText || 'Share your thoughts...'}
-              data={card.data}
-              onSave={(data) => onCardSave(card.id, data)}
-              saved={card.saved}
-            />
-          </div>
-        )
-
+        // Use BackstoryCard for photo/memory categories (conversational), TextVoiceVideoCard for others
+        if (row.category === 'photo' || row.category === 'memory') {
+          return wrapCard(<BackstoryCard promptText={row.promptText} category={row.category} data={card.data} onSave={(data) => handleSave(card.id, data, index)} saved={card.saved} />)
+        }
+        return wrapCard(<TextVoiceVideoCard label={row.category === 'wisdom' ? 'Share Your Wisdom' : 'Your Story'} placeholder={row.promptText || 'Share your thoughts...'} data={card.data} onSave={(data) => handleSave(card.id, data, index)} saved={card.saved} />)
+      case 'tag-people':
+        return wrapCard(<TagPeopleCard photoUrl={row.photoUrl} photoId={row.photoId} data={card.data} onSave={(data) => handleSave(card.id, data, index)} saved={card.saved} />)
       case 'media-upload':
-        return (
-          <div key={card.id} className={cardStyle}>
-            <MediaUploadCard onUpload={onMediaUploaded} />
-          </div>
-        )
-
+        return wrapCard(<MediaUploadCard onUpload={onMediaUploaded} />)
       case 'media-item':
-        return (
-          <div key={card.id} className={cardStyle}>
-            <MediaItemCard
-              url={card.data.url}
-              name={card.data.name}
-              type={card.data.type}
-              addedBy={card.addedBy}
-            />
-          </div>
-        )
-
+        return wrapCard(<MediaItemCard url={card.data.url} name={card.data.name} type={card.data.type} addedBy={card.addedBy} />)
       case 'field-input':
-        return (
-          <div key={card.id} className={cardStyle}>
-            <FieldInputCard
-              contactName={row.contactName}
-              data={card.data}
-              onSave={(data) => onCardSave(card.id, data)}
-              saved={card.saved}
-            />
-          </div>
-        )
-
+        return wrapCard(<FieldInputCard contactName={row.contactName} data={card.data} onSave={(data) => handleSave(card.id, data, index)} saved={card.saved} />)
       case 'pill-select':
-        return (
-          <div key={card.id} className={cardStyle}>
-            <PillSelectCard
-              label={row.promptText}
-              options={PROFILE_OPTIONS[row.promptType] || PROFILE_OPTIONS.skills}
-              data={card.data}
-              onSave={(data) => onCardSave(card.id, data)}
-              saved={card.saved}
-            />
-          </div>
-        )
-
+        return wrapCard(<PillSelectCard label={row.promptText} options={PROFILE_OPTIONS[row.promptType] || PROFILE_OPTIONS.skills} data={card.data} onSave={(data) => handleSave(card.id, data, index)} saved={card.saved} />)
       case 'quote':
       case 'comment':
-        return (
-          <div key={card.id} className={cardStyle}>
-            <TextVoiceVideoCard
-              label={card.type === 'quote' ? 'Quote' : 'Comment'}
-              placeholder={card.type === 'quote' ? 'Add a memorable quote...' : 'Add a note...'}
-              data={card.data}
-              onSave={(data) => onCardSave(card.id, data)}
-              saved={card.saved}
-            />
-          </div>
-        )
-
+        return wrapCard(<TextVoiceVideoCard label={card.type === 'quote' ? 'Quote' : 'Comment'} placeholder={card.type === 'quote' ? 'Add a memorable quote...' : 'Add a note...'} data={card.data} onSave={(data) => handleSave(card.id, data, index)} saved={card.saved} />)
       case 'plus':
-        return (
-          <div key={card.id} className={`w-[200px] h-[380px] flex-shrink-0 rounded-2xl bg-[#252525]/50 border border-dashed border-white/8 overflow-hidden`}>
-            <PlusCard onAdd={onAddCard} category={row.category} />
-          </div>
-        )
-
+        return wrapPlus(<PlusCard onAdd={onAddCard} category={row.category} />)
       default:
         return null
     }
-  }, [row, onCardSave, onAddCard, onMediaUploaded])
+  }, [row, handleSave, onAddCard, onMediaUploaded])
 
-  return (
-    <motion.div
-      initial={{ opacity: 0, x: 100 }}
-      animate={{ opacity: 1, x: 0 }}
-      exit={{ opacity: 0, x: 100 }}
-      transition={{ type: 'spring', damping: 25, stiffness: 300 }}
-      className="h-full flex flex-col"
-    >
-      {/* Header */}
-      <div className="flex items-center gap-4 px-6 py-4">
-        <button
-          onClick={onBack}
-          className="w-10 h-10 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-white transition-colors"
-        >
-          <ArrowLeft size={18} />
-        </button>
-        <div className="flex-1 min-w-0">
-          <p className="text-white font-medium text-lg truncate">{row.promptText}</p>
-          <p className="text-white/40 text-xs flex items-center gap-1.5">
-            <Sparkles size={10} />
-            {row.cards.filter(c => c.saved).length} of {row.cards.filter(c => c.type !== 'plus').length} completed
-          </p>
-        </div>
-        {row.photoUrl && (
-          <div className="w-12 h-12 rounded-xl overflow-hidden flex-shrink-0">
-            <img src={row.photoUrl} alt="" className="w-full h-full object-cover" />
-          </div>
-        )}
-      </div>
-
-      {/* Horizontal scrolling card chain */}
-      <div
-        ref={scrollRef}
-        className="flex-1 overflow-x-auto overflow-y-hidden px-6 pb-4"
-        style={{ scrollbarWidth: 'none' }}
-      >
-        <div className="flex gap-4 h-full items-center">
-          {row.cards.map((card, i) => renderCard(card, i))}
-        </div>
-      </div>
-    </motion.div>
-  )
+  return <div ref={containerRef} style={{ display: 'contents' }}>{row.cards.map((card, i) => renderCard(card, i))}</div>
 }

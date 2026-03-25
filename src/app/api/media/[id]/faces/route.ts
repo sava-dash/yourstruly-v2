@@ -36,9 +36,65 @@ export async function GET(
       return NextResponse.json({ faces: [] })
     }
 
+    // For untagged faces, search Rekognition collection for suggestions
+    const untaggedFaces = (faceTags || []).filter(t => !t.contact_id)
+    let suggestionsMap: Map<string, Array<{ contact: { id: string; full_name: string; avatar_url?: string }; confidence: number }>> = new Map()
+
+    if (untaggedFaces.length > 0) {
+      try {
+        // Get the media URL to search
+        const { data: media } = await supabase
+          .from('memory_media')
+          .select('file_url')
+          .eq('id', mediaId)
+          .single()
+
+        if (media?.file_url) {
+          const { searchFaces } = await import('@/lib/aws/rekognition')
+          const imageRes = await fetch(media.file_url)
+          if (imageRes.ok) {
+            const buffer = Buffer.from(await imageRes.arrayBuffer())
+            const matches = await searchFaces(buffer, user.id, 70)
+
+            if (matches.length > 0) {
+              const contactIds = matches.map(m => m.contactId).filter(Boolean)
+              const { data: contactData } = await supabase
+                .from('contacts')
+                .select('id, full_name, avatar_url')
+                .in('id', contactIds)
+
+              const contactMap = new Map((contactData || []).map(c => [c.id, c]))
+
+              // Assign suggestions to the largest untagged face
+              let largestUntagged = untaggedFaces[0]
+              let largestArea = 0
+              for (const f of untaggedFaces) {
+                const area = (Number(f.box_width) || 0) * (Number(f.box_height) || 0)
+                if (area > largestArea) { largestArea = area; largestUntagged = f }
+              }
+
+              suggestionsMap.set(largestUntagged.id, matches.map(m => {
+                const c = contactMap.get(m.contactId)
+                return {
+                  contact: {
+                    id: m.contactId,
+                    full_name: c?.full_name || 'Unknown',
+                    avatar_url: c?.avatar_url,
+                  },
+                  confidence: m.similarity,
+                }
+              }))
+            }
+          }
+        }
+      } catch (searchErr) {
+        // Non-blocking
+        console.error('[faces] Rekognition search failed (non-blocking):', searchErr)
+      }
+    }
+
     // Transform to frontend format
     const faces = (faceTags || []).map(tag => {
-      // Supabase returns single relation as object (cast through unknown for type safety)
       const contact = tag.contacts as unknown as { id: string; full_name: string; avatar_url?: string } | null
       return {
         id: tag.id,
@@ -55,7 +111,7 @@ export async function GET(
           full_name: contact.full_name,
           avatar_url: contact.avatar_url,
         } : undefined,
-        suggestions: [], // Face recognition suggestions would go here when implemented
+        suggestions: suggestionsMap.get(tag.id) || [],
       }
     })
 
