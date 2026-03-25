@@ -13,6 +13,7 @@ import type { PromptRow, ChainCard, CardType, PromptCategory } from '@/component
 import { categorizePrompt, generateInitialCards } from '@/components/home-v2/types'
 import { useDashboardData } from '../hooks/useDashboardData'
 import { useXpState } from '../hooks/useXpState'
+import { useGamificationConfig } from '@/hooks/useGamificationConfig'
 
 const BadgeDisplay = dynamic(() => import('@/components/dashboard/BadgeDisplay'), { ssr: false })
 const WeeklyChallenges = dynamic(() => import('@/components/dashboard/WeeklyChallenges'), { ssr: false })
@@ -71,7 +72,9 @@ export default function HomeV2Page() {
 
   const { subscription } = useSubscription()
   const { stats: dashboardStats, refreshStats: refreshDashboardStats } = useDashboardData(user?.id || null)
-  const { totalXp, xpAnimating, streakDays, gamificationConfig } = useXpState(user?.id || null)
+  const { totalXp, xpAnimating } = useXpState(user?.id || null)
+  const { config: gamificationConfig } = useGamificationConfig()
+  const streakDays = 0
 
   const [expandedRowId, setExpandedRowId] = useState<string | null>(null)
   const [chainVisible, setChainVisible] = useState(false)
