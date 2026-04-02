@@ -24,11 +24,11 @@ const cardVariants = {
   hidden: { opacity: 0, x: 120, scale: 0.88 },
   visible: (i: number) => ({
     opacity: 1, x: 0, scale: 1,
-    transition: { type: 'spring', stiffness: 220, damping: 18, mass: 0.8, delay: 0.08 + i * 0.1 },
+    transition: { type: 'spring' as const, stiffness: 220, damping: 18, mass: 0.8, delay: 0.08 + i * 0.1 },
   }),
   exit: (i: number) => ({
     opacity: 0, x: 100, scale: 0.92,
-    transition: { type: 'spring', stiffness: 300, damping: 26, delay: i * 0.04 },
+    transition: { type: 'spring' as const, stiffness: 300, damping: 26, delay: i * 0.04 },
   }),
 }
 
