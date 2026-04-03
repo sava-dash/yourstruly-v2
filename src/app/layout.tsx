@@ -2,8 +2,7 @@ import type { Metadata } from "next";
 import { Geist, Geist_Mono, Caveat, Playfair_Display, Patrick_Hand, Inter_Tight, Dancing_Script, Crimson_Text } from "next/font/google";
 import "./globals.css";
 import "@/styles/themes.css";
-import 'mapbox-gl/dist/mapbox-gl.css';
-import 'leaflet/dist/leaflet.css';
+// Map CSS moved to dashboard layout — only load where maps are used
 import { SkipToMain } from "@/components/ui/AccessibleIcon";
 import { CookiebotScript } from "@/components/ui/CookiebotScript";
 import { Providers } from "@/providers";

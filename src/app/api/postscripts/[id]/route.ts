@@ -55,7 +55,7 @@ export async function GET(
       return NextResponse.json({ error: 'PostScript not found' }, { status: 404 })
     }
     console.error('[PostScript GET] Database error:', error)
-    return NextResponse.json({ error: error.message }, { status: 500 })
+    return NextResponse.json({ error: 'Failed to load PostScript' }, { status: 500 })
   }
 
   console.log('[PostScript GET] Found postscript:', postscript.id, postscript.title)
@@ -141,7 +141,7 @@ export async function PUT(
 
   if (error) {
     console.error('Error updating postscript:', error)
-    return NextResponse.json({ error: error.message }, { status: 500 })
+    return NextResponse.json({ error: 'Failed to update PostScript' }, { status: 500 })
   }
 
   // Handle attachments if provided
@@ -242,7 +242,7 @@ export async function DELETE(
 
   if (error) {
     console.error('Error deleting postscript:', error)
-    return NextResponse.json({ error: error.message }, { status: 500 })
+    return NextResponse.json({ error: 'Failed to delete PostScript' }, { status: 500 })
   }
 
   return NextResponse.json({ success: true })

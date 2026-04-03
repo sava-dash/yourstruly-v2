@@ -34,7 +34,7 @@ export async function GET(
 
   if (error) {
     console.error('Error fetching postscript gifts:', error)
-    return NextResponse.json({ error: error.message }, { status: 500 })
+    return NextResponse.json({ error: 'Failed to load gifts' }, { status: 500 })
   }
 
   return NextResponse.json({ gifts })
@@ -117,7 +117,7 @@ export async function POST(
 
   if (error) {
     console.error('Error creating postscript gift:', error)
-    return NextResponse.json({ error: error.message }, { status: 500 })
+    return NextResponse.json({ error: 'Failed to attach gift' }, { status: 500 })
   }
 
   // Update postscript has_gift flag if not already set
@@ -161,7 +161,7 @@ export async function DELETE(
 
   if (error) {
     console.error('Error deleting postscript gifts:', error)
-    return NextResponse.json({ error: error.message }, { status: 500 })
+    return NextResponse.json({ error: 'Failed to remove gifts' }, { status: 500 })
   }
 
   // Update postscript has_gift flag

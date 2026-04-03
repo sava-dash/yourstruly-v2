@@ -45,7 +45,7 @@
     "lucide-react": "^0.575.0",
     "mapbox-gl": "^3.18.1",
     "masonry-layout": "^4.2.2",
-    "next": "16.1.6",
+    "next": "^16.2.2",
     "openai": "^6.22.0",
     "qrcode": "^1.5.4",
     "qrcode.react": "^4.2.0",
@@ -59,7 +59,8 @@
     "sharp": "^0.34.5",
     "stripe": "^20.3.1",
     "telnyx": "^5.47.1",
-    "three": "^0.183.1"
+    "three": "^0.183.1",
+    "zod": "^4.3.6"
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4",

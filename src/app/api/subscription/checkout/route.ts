@@ -1,6 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { z } from 'zod'
 import { createClient } from '@/lib/supabase/server'
 import { getStripeServer } from '@/lib/stripe'
+
+const CheckoutSchema = z.object({
+  plan: z.enum(['monthly', 'yearly']).optional().default('monthly'),
+  seats: z.number().int().min(1).max(100).optional().default(2),
+  billingCycle: z.enum(['monthly', 'yearly']).optional().default('monthly'),
+})
 
 // Stripe Price IDs
 const PRICE_IDS = {
@@ -42,7 +49,12 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json()
-    const { seats = 2, billingCycle = 'monthly' } = body
+    const parsed = CheckoutSchema.safeParse(body)
+    if (!parsed.success) {
+      return NextResponse.json({ error: 'Invalid request data' }, { status: 400 })
+    }
+
+    const { seats, billingCycle } = parsed.data
 
     // Calculate price
     const monthlyTotal = calculateSeatPrice(seats)
@@ -116,10 +128,10 @@ export async function POST(request: NextRequest) {
     })
 
     return NextResponse.json({ url: session.url })
-  } catch (error: any) {
+  } catch (error) {
     console.error('Checkout error:', error)
     return NextResponse.json(
-      { error: error.message || 'Failed to create checkout session' },
+      { error: 'Failed to create checkout session' },
       { status: 500 }
     )
   }

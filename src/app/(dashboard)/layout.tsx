@@ -1,3 +1,5 @@
+import 'mapbox-gl/dist/mapbox-gl.css'
+import 'leaflet/dist/leaflet.css'
 import { createClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
 import TopNav from '@/components/TopNav'

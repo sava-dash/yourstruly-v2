@@ -1,5 +1,14 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { z } from 'zod'
 import { createClient } from '@/lib/supabase/server'
+
+const AnswerSchema = z.object({
+  promptId: z.string().uuid().optional(),
+  promptType: z.enum(['knowledge', 'memory', 'reflection', 'gratitude']),
+  responseType: z.string().min(1).max(50),
+  responseText: z.string().min(1).max(5000),
+  contactId: z.string().uuid().optional(),
+})
 
 /**
  * POST /api/engagement/answer
@@ -15,17 +24,18 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json()
+    const parsed = AnswerSchema.safeParse(body)
+    if (!parsed.success) {
+      return NextResponse.json({ error: 'Invalid request data' }, { status: 400 })
+    }
+
     const {
       promptId,
       promptType,
       responseType,
       responseText,
       contactId,
-    } = body
-
-    if (!responseText?.trim()) {
-      return NextResponse.json({ error: 'Response text is required' }, { status: 400 })
-    }
+    } = parsed.data
 
     // Determine memory type based on prompt type
     const memoryType = promptType === 'knowledge' ? 'wisdom' : 'memory'

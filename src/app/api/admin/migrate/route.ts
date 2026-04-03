@@ -8,6 +8,11 @@ import { createAdminClient } from '@/lib/supabase/admin';
  * Only callable with the admin secret.
  */
 export async function POST(request: NextRequest) {
+  // Block raw SQL execution in production
+  if (process.env.NODE_ENV === 'production') {
+    return NextResponse.json({ error: 'Migrations disabled in production. Use CI/CD pipeline.' }, { status: 403 });
+  }
+
   const secret = request.headers.get('x-admin-secret');
   if (secret !== process.env.ADMIN_SECRET) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });

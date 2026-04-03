@@ -17,7 +17,7 @@ export async function GET() {
 
   if (error) {
     console.error('Failed to fetch coupons:', error);
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    return NextResponse.json({ error: 'Failed to load coupons' }, { status: 500 });
   }
 
   return NextResponse.json({ coupons: coupons || [] });
@@ -54,7 +54,7 @@ export async function POST(request: NextRequest) {
 
   if (error) {
     console.error('Failed to create coupon:', error);
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    return NextResponse.json({ error: 'Failed to create coupon' }, { status: 500 });
   }
 
   return NextResponse.json({ coupon });

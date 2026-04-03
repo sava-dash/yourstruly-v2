@@ -5,64 +5,42 @@ export const dynamic = 'force-dynamic';
 
 export async function GET() {
   const startTime = Date.now();
-  
-  const checks: Record<string, { status: 'ok' | 'error'; latencyMs?: number; error?: string }> = {};
+
+  const checks: Record<string, { status: 'ok' | 'error'; latencyMs?: number }> = {};
   let overallStatus: 'healthy' | 'degraded' | 'unhealthy' = 'healthy';
 
-  // Check Supabase connection
+  // Check Supabase connection using anon key (never expose service role key in health checks)
   try {
-    const supabase = createClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.SUPABASE_SERVICE_ROLE_KEY!
-    );
+    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+    const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+
+    if (!supabaseUrl || !supabaseKey) {
+      throw new Error('Supabase not configured');
+    }
+
+    const supabase = createClient(supabaseUrl, supabaseKey);
     const dbStart = Date.now();
     const { error } = await supabase.from('profiles').select('id').limit(1);
-    
+
     if (error) throw error;
-    
+
     checks.database = {
       status: 'ok',
-      latencyMs: Date.now() - dbStart
+      latencyMs: Date.now() - dbStart,
     };
-  } catch (err) {
-    checks.database = {
-      status: 'error',
-      error: err instanceof Error ? err.message : 'Unknown error'
-    };
+  } catch {
+    checks.database = { status: 'error' };
     overallStatus = 'degraded';
-  }
-
-  // Check environment variables
-  // Only check server-side env vars here.
-  // NEXT_PUBLIC_* vars are baked into the JS bundle at build time
-  // and may not exist as runtime process.env values.
-  const requiredEnvVars = [
-    'SUPABASE_SERVICE_ROLE_KEY',
-    'STRIPE_SECRET_KEY',
-  ];
-
-  const missingEnvVars = requiredEnvVars.filter(v => !process.env[v]);
-  
-  if (missingEnvVars.length > 0) {
-    checks.environment = {
-      status: 'error',
-      error: `Missing: ${missingEnvVars.join(', ')}`
-    };
-    overallStatus = 'unhealthy';
-  } else {
-    checks.environment = { status: 'ok' };
   }
 
   const response = {
     status: overallStatus,
     timestamp: new Date().toISOString(),
-    version: process.env.npm_package_version || '1.0.0',
-    uptime: process.uptime(),
     latencyMs: Date.now() - startTime,
-    checks
+    checks,
   };
 
-  const statusCode = overallStatus === 'healthy' ? 200 : overallStatus === 'degraded' ? 200 : 503;
-  
+  const statusCode = overallStatus === 'healthy' ? 200 : 200;
+
   return NextResponse.json(response, { status: statusCode });
 }

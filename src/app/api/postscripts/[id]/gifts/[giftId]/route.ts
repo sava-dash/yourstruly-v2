@@ -35,7 +35,7 @@ export async function DELETE(
 
   if (error) {
     console.error('Error deleting postscript gift:', error)
-    return NextResponse.json({ error: error.message }, { status: 500 })
+    return NextResponse.json({ error: 'Failed to remove gift' }, { status: 500 })
   }
 
   // Check if there are any remaining gifts
@@ -119,7 +119,7 @@ export async function PATCH(
 
   if (error) {
     console.error('Error updating postscript gift:', error)
-    return NextResponse.json({ error: error.message }, { status: 500 })
+    return NextResponse.json({ error: 'Failed to update gift' }, { status: 500 })
   }
 
   return NextResponse.json({ gift })
@@ -162,7 +162,7 @@ export async function GET(
       return NextResponse.json({ error: 'Gift not found' }, { status: 404 })
     }
     console.error('Error fetching postscript gift:', error)
-    return NextResponse.json({ error: error.message }, { status: 500 })
+    return NextResponse.json({ error: 'Failed to load gift' }, { status: 500 })
   }
 
   return NextResponse.json({ gift })

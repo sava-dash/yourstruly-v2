@@ -230,7 +230,7 @@ export async function POST(
       results.push({
         giftId: gift.id,
         success: false,
-        error: error.message,
+        error: 'Failed to fulfill gift',
       })
     }
   }

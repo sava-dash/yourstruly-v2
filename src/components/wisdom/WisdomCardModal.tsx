@@ -8,7 +8,7 @@ import {
   Sparkles, Quote, Sun, Zap, Camera, Loader2, Twitter,
   Facebook, MessageCircle
 } from 'lucide-react'
-import html2canvas from 'html2canvas'
+// html2canvas loaded dynamically at call site to reduce bundle size
 
 interface WisdomCardModalProps {
   isOpen: boolean
@@ -72,6 +72,7 @@ export default function WisdomCardModal({
     if (!cardRef.current) return null
 
     try {
+      const html2canvas = (await import('html2canvas')).default
       const canvas = await html2canvas(cardRef.current, {
         scale: EXPORT_SCALE,
         useCORS: true,

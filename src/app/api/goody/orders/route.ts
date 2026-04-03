@@ -277,15 +277,8 @@ export async function POST(request: NextRequest) {
   } catch (error) {
     console.error('Goody create order error:', error);
 
-    if (error instanceof Error) {
-      return NextResponse.json(
-        { error: error.message },
-        { status: 500 }
-      );
-    }
-
     return NextResponse.json(
-      { error: 'Internal server error' },
+      { error: 'Failed to create gift order' },
       { status: 500 }
     );
   }
@@ -330,15 +323,8 @@ export async function GET(request: NextRequest) {
   } catch (error) {
     console.error('Goody orders API error:', error);
 
-    if (error instanceof Error) {
-      return NextResponse.json(
-        { error: error.message },
-        { status: 500 }
-      );
-    }
-
     return NextResponse.json(
-      { error: 'Internal server error' },
+      { error: 'Failed to load orders' },
       { status: 500 }
     );
   }

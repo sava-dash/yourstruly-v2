@@ -131,20 +131,20 @@ export async function POST(request: NextRequest) {
       });
     }
 
-    // Verify webhook signature (required in production)
+    // Verify webhook signature (always required unless explicitly skipped for local dev)
     const webhookSecret = process.env.GOODY_WEBHOOK_SECRET;
-    if (process.env.NODE_ENV === 'production') {
+    if (process.env.SKIP_WEBHOOK_VERIFY !== 'true') {
       if (!webhookSecret) {
         console.error('GOODY_WEBHOOK_SECRET not configured');
         return NextResponse.json({ error: 'Webhook not configured' }, { status: 500 });
       }
-      
+
       const isValid = verifySvixSignature(rawBody, {
         svixId,
         svixTimestamp,
         svixSignature,
       }, webhookSecret);
-      
+
       if (!isValid) {
         console.error('Invalid Goody webhook signature');
         return NextResponse.json({ error: 'Invalid signature' }, { status: 401 });

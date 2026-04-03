@@ -50,13 +50,17 @@ export async function POST(request: NextRequest) {
     const timestamp = request.headers.get('telnyx-timestamp');
     const publicKey = process.env.TELNYX_PUBLIC_KEY;
     
-    // In production, reject unsigned webhooks
-    if (process.env.NODE_ENV === 'production' && publicKey) {
+    // Always verify webhook signatures unless explicitly skipped for local dev
+    if (process.env.SKIP_WEBHOOK_VERIFY !== 'true') {
+      if (!publicKey) {
+        console.error('TELNYX_PUBLIC_KEY not configured — rejecting webhook');
+        return NextResponse.json({ error: 'Webhook verification not configured' }, { status: 500 });
+      }
       if (!verifyTelnyxSignature(signature, timestamp, rawBody, publicKey)) {
         console.error('Invalid Telnyx webhook signature');
         return NextResponse.json({ error: 'Invalid signature' }, { status: 401 });
       }
-      
+
       // Check timestamp to prevent replay attacks (5 minute tolerance)
       const webhookTime = parseInt(timestamp || '0', 10) * 1000;
       const now = Date.now();

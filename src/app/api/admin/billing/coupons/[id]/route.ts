@@ -24,7 +24,8 @@ export async function PATCH(
     .single();
 
   if (error) {
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    console.error('Error updating coupon:', error);
+    return NextResponse.json({ error: 'Failed to update coupon' }, { status: 500 });
   }
 
   return NextResponse.json({ coupon });
@@ -49,7 +50,8 @@ export async function DELETE(
     .eq('id', id);
 
   if (error) {
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    console.error('Error deleting coupon:', error);
+    return NextResponse.json({ error: 'Failed to delete coupon' }, { status: 500 });
   }
 
   return NextResponse.json({ success: true });

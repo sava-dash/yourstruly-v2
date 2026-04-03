@@ -43,7 +43,8 @@ export async function POST(
     .single()
 
   if (error) {
-    return NextResponse.json({ error: error.message }, { status: 500 })
+    console.error('Error updating challenge progress:', error)
+    return NextResponse.json({ error: 'Failed to update challenge progress' }, { status: 500 })
   }
 
   // Award XP if completed

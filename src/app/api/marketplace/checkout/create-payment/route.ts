@@ -1,6 +1,35 @@
 import { NextRequest, NextResponse } from 'next/server';
 import Stripe from 'stripe';
+import { z } from 'zod';
 import { createClient } from '@/lib/supabase/server';
+
+const CreatePaymentSchema = z.object({
+  items: z.array(z.object({
+    id: z.string().uuid(),
+    name: z.string().min(1).max(200),
+    price: z.number().positive().max(10000),
+    quantity: z.number().int().positive().max(100),
+    variant: z.object({
+      id: z.string(),
+      name: z.string(),
+    }).optional(),
+  })).min(1).max(50),
+  shippingAddress: z.object({
+    firstName: z.string().min(1).max(100),
+    lastName: z.string().min(1).max(100),
+    email: z.string().email(),
+    phone: z.string().max(20).optional(),
+    address1: z.string().min(1).max(200),
+    address2: z.string().max(200).optional(),
+    city: z.string().min(1).max(100),
+    state: z.string().min(1).max(100),
+    zipCode: z.string().min(1).max(20),
+    country: z.string().max(5).default('US'),
+  }),
+  isGift: z.boolean().optional(),
+  giftMessage: z.string().max(500).optional(),
+  testMode: z.boolean().optional().default(false),
+});
 
 // Support test mode vs live mode
 const getStripeClient = (testMode: boolean) => {
@@ -13,29 +42,6 @@ const getStripeClient = (testMode: boolean) => {
   });
 };
 
-interface CartItem {
-  id: string;
-  name: string;
-  price: number;
-  quantity: number;
-  variant?: {
-    id: string;
-    name: string;
-  };
-}
-
-interface ShippingAddress {
-  firstName: string;
-  lastName: string;
-  email: string;
-  phone?: string;
-  address1: string;
-  address2?: string;
-  city: string;
-  state: string;
-  zipCode: string;
-  country: string;
-}
 
 /**
  * POST /api/marketplace/checkout/create-payment
@@ -46,30 +52,46 @@ export async function POST(request: NextRequest) {
     const supabase = await createClient();
     const { data: { user } } = await supabase.auth.getUser();
 
+    if (!user) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
     const body = await request.json();
+    const parsed = CreatePaymentSchema.safeParse(body);
+    if (!parsed.success) {
+      return NextResponse.json({ error: 'Invalid request data' }, { status: 400 });
+    }
+
     const {
-      items,
       shippingAddress,
       isGift,
       giftMessage,
-      testMode = false, // Default to live mode
-    }: {
-      items: CartItem[];
-      shippingAddress: ShippingAddress;
-      isGift?: boolean;
-      giftMessage?: string;
-      testMode?: boolean;
-    } = body;
-    
+      testMode,
+    } = parsed.data;
+    // Create mutable copy so server-side price override can modify items
+    const items = parsed.data.items.map(item => ({ ...item }));
+
     // Get appropriate Stripe client
     const stripe = getStripeClient(testMode);
 
-    // Validate items
-    if (!items || items.length === 0) {
-      return NextResponse.json({ error: 'No items in cart' }, { status: 400 });
+    // Server-side price validation — never trust client-supplied prices
+    const productIds = items.map(item => item.id);
+    const { data: products } = await supabase
+      .from('marketplace_products')
+      .select('id, price')
+      .in('id', productIds);
+
+    if (products && products.length > 0) {
+      const priceMap = new Map(products.map(p => [p.id, p.price]));
+      for (const item of items) {
+        const serverPrice = priceMap.get(item.id);
+        if (serverPrice !== undefined) {
+          item.price = serverPrice; // Override with server-side price
+        }
+      }
     }
 
-    // Calculate totals
+    // Calculate totals using validated prices
     const subtotal = items.reduce((sum, item) => sum + item.price * item.quantity, 0);
     const shipping = subtotal > 50 ? 0 : 5.99;
     const tax = subtotal * 0.08; // 8% estimated tax
@@ -91,7 +113,7 @@ export async function POST(request: NextRequest) {
         enabled: true,
       },
       metadata: {
-        user_id: user?.id || 'guest',
+        user_id: user.id,
         items_count: items.length.toString(),
         items_json: JSON.stringify(items.map(i => ({
           id: i.id,

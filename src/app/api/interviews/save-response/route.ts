@@ -36,9 +36,8 @@ export async function POST(request: NextRequest) {
 
     if (checkError || !sessionCheck) {
       console.error('Session not found:', sessionId, checkError);
-      return NextResponse.json({ 
-        error: 'Session not found',
-        details: `No session with ID ${sessionId}`
+      return NextResponse.json({
+        error: 'Session not found'
       }, { status: 404 });
     }
 
@@ -48,9 +47,8 @@ export async function POST(request: NextRequest) {
         expected: sessionCheck.access_token?.substring(0, 10) + '...', 
         received: accessToken?.substring(0, 10) + '...' 
       });
-      return NextResponse.json({ 
-        error: 'Invalid access token',
-        details: 'Token does not match session'
+      return NextResponse.json({
+        error: 'Invalid access token'
       }, { status: 403 });
     }
 
@@ -62,7 +60,7 @@ export async function POST(request: NextRequest) {
 
     if (sessionError || !session) {
       console.error('Session load error:', sessionError);
-      return NextResponse.json({ error: 'Failed to load session data', details: sessionError?.message }, { status: 500 });
+      return NextResponse.json({ error: 'Failed to save response' }, { status: 500 });
     }
 
     // Get contact info separately
@@ -94,9 +92,8 @@ export async function POST(request: NextRequest) {
 
     if (!contact?.id) {
       console.error('Contact not found for session:', { sessionId, contact_id: session.contact_id, contact });
-      return NextResponse.json({ 
-        error: 'Session has no linked contact',
-        details: `contact_id: ${session.contact_id}, contact: ${JSON.stringify(contact)}`
+      return NextResponse.json({
+        error: 'Session has no linked contact'
       }, { status: 400 });
     }
 
@@ -123,11 +120,8 @@ export async function POST(request: NextRequest) {
 
     if (responseError) {
       console.error('Failed to save response:', JSON.stringify(responseError, null, 2));
-      return NextResponse.json({ 
-        error: 'Failed to save response',
-        details: responseError.message,
-        code: responseError.code,
-        hint: responseError.hint
+      return NextResponse.json({
+        error: 'Failed to save response'
       }, { status: 500 });
     }
 
@@ -172,9 +166,8 @@ export async function POST(request: NextRequest) {
     });
   } catch (error: any) {
     console.error('Save response error:', error);
-    return NextResponse.json({ 
-      error: 'Failed to save response',
-      details: error.message 
+    return NextResponse.json({
+      error: 'Failed to save response'
     }, { status: 500 });
   }
 }

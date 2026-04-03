@@ -9,11 +9,14 @@ import {
   Music, ChevronLeft, ChevronRight, Loader2, Check
 } from 'lucide-react'
 import Image from 'next/image'
-import { FFmpeg } from '@ffmpeg/ffmpeg'
-import { fetchFile, toBlobURL } from '@ffmpeg/util'
+// FFmpeg loaded dynamically to avoid 25MB WASM in client bundle
+// import { FFmpeg } from '@ffmpeg/ffmpeg' — loaded on demand
+// import { fetchFile, toBlobURL } from '@ffmpeg/util' — loaded on demand
+
+type FFmpegType = import('@ffmpeg/ffmpeg').FFmpeg
 
 // Singleton FFmpeg instance for reuse
-let ffmpegInstance: FFmpeg | null = null
+let ffmpegInstance: FFmpegType | null = null
 
 interface SlideItem {
   id: string
@@ -217,13 +220,17 @@ export default function SlideshowPlayer({
       return ffmpegInstance
     }
     
+    // Dynamic import to avoid 25MB WASM in initial bundle
+    const { FFmpeg } = await import('@ffmpeg/ffmpeg')
+    const { toBlobURL } = await import('@ffmpeg/util')
+
     const ffmpeg = new FFmpeg()
-    
+
     // Progress callback for conversion
     ffmpeg.on('progress', ({ progress }) => {
       setExportProgress(Math.round(progress * 100))
     })
-    
+
     // Load from local files (faster than CDN)
     const baseURL = '/ffmpeg'
     await ffmpeg.load({
@@ -243,6 +250,7 @@ export default function SlideshowPlayer({
     const ffmpeg = await loadFFmpeg()
     
     // Write input file
+    const { fetchFile } = await import('@ffmpeg/util')
     await ffmpeg.writeFile('input.webm', await fetchFile(webmBlob))
     
     // Convert to MP4 with H.264 codec for maximum compatibility

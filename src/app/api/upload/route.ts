@@ -18,8 +18,19 @@ export async function POST(request: NextRequest) {
   const file = formData.get('file') as File | null
   const bucket = (formData.get('bucket') as string) || 'uploads'
 
+  // Validate bucket name — prevent access to arbitrary storage buckets
+  const ALLOWED_BUCKETS = ['uploads', 'memories', 'avatars', 'videos']
+  if (!ALLOWED_BUCKETS.includes(bucket)) {
+    return NextResponse.json({ error: 'Invalid bucket' }, { status: 400 })
+  }
+
   if (!file) {
     return NextResponse.json({ error: 'No file provided' }, { status: 400 })
+  }
+
+  // Enforce file size limit (50MB)
+  if (file.size > 50 * 1024 * 1024) {
+    return NextResponse.json({ error: 'File too large (max 50MB)' }, { status: 400 })
   }
 
   const fileType = file.type.startsWith('image/') ? 'image' : 
