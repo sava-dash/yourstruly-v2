@@ -2,6 +2,7 @@
 
 import { useState, useRef, useEffect } from 'react'
 import { Calendar, Plus, Pencil, Camera, Image, Users, Mail, FolderOpen, Mic } from 'lucide-react'
+import NextImage from 'next/image'
 import { createClient } from '@/lib/supabase/client'
 import { getCache, setCache, CACHE_KEYS } from '@/lib/cache'
 import Link from 'next/link'
@@ -190,8 +191,8 @@ export default function ProfileCard({ profile, onUpdate, compact = false }: Prof
           >
             {profile?.avatar_url ? (
               <>
-                <img src={profile.avatar_url}
-                alt="User avatar" className="w-full h-full object-cover" />
+                <NextImage src={profile.avatar_url}
+                alt="User avatar" width={128} height={128} className="w-full h-full object-cover" unoptimized />
                 <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center rounded-full">
                   <Camera className="text-white" size={24} />
                 </div>

@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import Image from 'next/image'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Calendar, ChevronLeft, ChevronRight, Image as ImageIcon, X } from 'lucide-react'
 import Link from 'next/link'
@@ -50,10 +51,13 @@ function MemoryPreview({ memory, onClick }: { memory: OnThisDayMemory; onClick: 
       {/* Thumbnail */}
       <div className="flex-shrink-0 w-14 h-14 rounded-xl overflow-hidden bg-gradient-to-br from-[#D9C61A]/20 to-[#C35F33]/20 flex items-center justify-center">
         {hasImage ? (
-          <img 
-            src={coverMedia.file_url} 
+          <Image
+            src={coverMedia.file_url}
             alt=""
+            width={56}
+            height={56}
             className="w-full h-full object-cover"
+            unoptimized
           />
         ) : (
           <ImageIcon size={20} className="text-[#406A56]/40" />
@@ -146,10 +150,12 @@ function MemoryModal({ memory, onClose }: { memory: OnThisDayMemory; onClose: ()
         {/* Image */}
         {hasImage && (
           <div className="relative aspect-[4/3] w-full">
-            <img 
-              src={coverMedia.file_url} 
+            <Image
+              src={coverMedia.file_url}
               alt={memory.title || 'Memory'}
-              className="w-full h-full object-cover"
+              fill
+              className="object-cover"
+              unoptimized
             />
             <div className="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent" />
             

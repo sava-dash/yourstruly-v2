@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import Image from 'next/image'
 import { X, Play } from 'lucide-react'
 
 interface MediaItemCardProps {
@@ -32,7 +33,7 @@ export function MediaItemCard({ url, name, type, addedBy, onRemove }: MediaItemC
             </div>
           </>
         ) : (
-          <img src={url} alt={name} className="w-full h-full object-cover" />
+          <Image src={url} alt={name} fill className="object-cover" unoptimized />
         )}
       </div>
 
@@ -59,7 +60,7 @@ export function MediaItemCard({ url, name, type, addedBy, onRemove }: MediaItemC
           {isVideo ? (
             <video src={url} controls autoPlay className="max-w-full max-h-full" />
           ) : (
-            <img src={url} alt={name} className="max-w-full max-h-full object-contain p-4" />
+            <Image src={url} alt={name} fill className="object-contain p-4" unoptimized />
           )}
         </div>
       )}

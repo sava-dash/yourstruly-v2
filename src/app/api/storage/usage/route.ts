@@ -1,17 +1,10 @@
-import { createClient } from '@/lib/supabase/server'
 import { NextResponse } from 'next/server'
+import { withAuth } from '@/lib/api/withAuth'
 
 export const dynamic = 'force-dynamic'
 
 // GET /api/storage/usage - Get actual storage usage for the current user
-export async function GET() {
-  const supabase = await createClient()
-  
-  const { data: { user } } = await supabase.auth.getUser()
-  if (!user) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-  }
-
+export const GET = withAuth(async (_request, { user, supabase }) => {
   try {
     let totalBytes = 0
     let fileCount = 0
@@ -22,7 +15,7 @@ export async function GET() {
       .select('file_size')
       .eq('user_id', user.id)
       .not('file_size', 'is', null)
-    
+
     for (const m of (mediaFiles || [])) {
       totalBytes += m.file_size || 0
       fileCount++
@@ -33,7 +26,7 @@ export async function GET() {
       .from('memories')
       .select('description, title')
       .eq('user_id', user.id)
-    
+
     for (const m of (memories || [])) {
       totalBytes += Buffer.byteLength(m.description || '') + Buffer.byteLength(m.title || '')
     }
@@ -58,7 +51,7 @@ export async function GET() {
       .from('memory_contributions')
       .select('media_url')
       .not('media_url', 'is', null)
-    
+
     // Estimate ~500KB per contribution image
     totalBytes += (contributions || []).filter(c => c.media_url).length * 500 * 1024
 
@@ -76,4 +69,4 @@ export async function GET() {
     console.error('Storage usage error:', err)
     return NextResponse.json({ error: 'Failed to calculate storage' }, { status: 500 })
   }
-}
+})

@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { motion, AnimatePresence, Reorder } from 'framer-motion'
 import { X, Image as ImageIcon, Check, GripVertical, Trash2, Plus, Sparkles, Search } from 'lucide-react'
+import NextImage from 'next/image'
 import { MemoryAlbum, AlbumTheme, CAPSULE_THEMES, AlbumMemory } from '@/types/album'
 
 interface CreateAlbumModalProps {
@@ -251,8 +252,8 @@ export default function CreateAlbumModal({ isOpen, onClose, onSave, editAlbum }:
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">Cover Image</label>
                     <div className="relative w-32 aspect-[4/5] rounded-xl overflow-hidden">
-                      
-<img src={coverImageUrl} alt="Cover" className="w-full h-full object-cover" />
+
+<NextImage src={coverImageUrl} alt="Cover" fill className="object-cover" unoptimized />
                       <button
                         onClick={() => setCoverImageUrl(null)}
                         className="absolute top-1 right-1 w-6 h-6 rounded-full bg-black/50 flex items-center justify-center text-white hover:bg-black/70"
@@ -294,8 +295,8 @@ export default function CreateAlbumModal({ isOpen, onClose, onSave, editAlbum }:
                             <GripVertical size={16} className="text-gray-400" />
                             <div className="w-12 h-12 rounded-lg overflow-hidden flex-shrink-0 bg-gray-100">
                               {coverMedia ? (
-                                
-<img src={coverMedia.file_url} alt="" className="w-full h-full object-cover" />
+
+<NextImage src={coverMedia.file_url} alt="" width={48} height={48} className="w-full h-full object-cover" unoptimized />
                               ) : (
                                 <div className="w-full h-full flex items-center justify-center">
                                   <ImageIcon size={16} className="text-gray-400" />
@@ -361,8 +362,8 @@ export default function CreateAlbumModal({ isOpen, onClose, onSave, editAlbum }:
                             }`}
                           >
                             {coverMedia ? (
-                              
-<img src={coverMedia.file_url} alt="" className="w-full h-full object-cover" />
+
+<NextImage src={coverMedia.file_url} alt="" fill className="object-cover" unoptimized />
                             ) : (
                               <div className="w-full h-full bg-gradient-to-br from-gray-100 to-gray-200 flex items-center justify-center">
                                 <ImageIcon size={20} className="text-gray-400" />

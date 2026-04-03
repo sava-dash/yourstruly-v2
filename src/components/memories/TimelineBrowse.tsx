@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useMemo } from 'react'
+import Image from 'next/image'
 import { ChevronLeft, Calendar, Clock, Sparkles } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 import MemoryCard from './MemoryCard'
@@ -272,15 +273,17 @@ export function TimelineBrowse({ memories }: TimelineBrowseProps) {
               >
                 {/* Background */}
                 {coverUrl ? (
-                  <img 
-                    src={coverUrl} 
+                  <Image
+                    src={coverUrl}
                     alt={monthName}
-                    className="absolute inset-0 w-full h-full object-cover"
+                    fill
+                    className="object-cover"
+                    unoptimized
                   />
                 ) : (
                   <div className={`absolute inset-0 ${
-                    count > 0 
-                      ? 'bg-gradient-to-br from-[#406A56]/30 to-[#D9C61A]/30' 
+                    count > 0
+                      ? 'bg-gradient-to-br from-[#406A56]/30 to-[#D9C61A]/30'
                       : 'bg-gray-200/50'
                   }`} />
                 )}
@@ -370,15 +373,17 @@ export function TimelineBrowse({ memories }: TimelineBrowseProps) {
               >
                 {/* Background */}
                 {coverUrl ? (
-                  <img 
-                    src={coverUrl} 
+                  <Image
+                    src={coverUrl}
                     alt={String(year)}
-                    className="absolute inset-0 w-full h-full object-cover"
+                    fill
+                    className="object-cover"
+                    unoptimized
                   />
                 ) : (
                   <div className={`absolute inset-0 ${
-                    count > 0 
-                      ? 'bg-gradient-to-br from-[#406A56]/30 to-[#D9C61A]/30' 
+                    count > 0
+                      ? 'bg-gradient-to-br from-[#406A56]/30 to-[#D9C61A]/30'
                       : 'bg-gray-200/50'
                   }`} />
                 )}
@@ -463,11 +468,12 @@ export function TimelineBrowse({ memories }: TimelineBrowseProps) {
               >
                 {/* Background */}
                 {coverUrl ? (
-                  <img 
-                    src={coverUrl} 
+                  <Image
+                    src={coverUrl}
                     alt={`${decade}s`}
-                    className="absolute inset-0 w-full h-full object-cover 
-                               group-hover:scale-110 transition-transform duration-500"
+                    fill
+                    className="object-cover group-hover:scale-110 transition-transform duration-500"
+                    unoptimized
                   />
                 ) : (
                   <div className="absolute inset-0 bg-gradient-to-br from-[#406A56]/40 to-[#D9C61A]/40" />

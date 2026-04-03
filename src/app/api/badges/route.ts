@@ -1,16 +1,12 @@
 import { NextResponse } from 'next/server'
-import { createClient } from '@/lib/supabase/server'
+import { withAuth } from '@/lib/api/withAuth'
 import { DEFAULT_CONFIG, mergeConfig } from '@/lib/gamification-config'
 
 // Legacy export — still works but prefer loading from DB config
 export const BADGE_DEFINITIONS = DEFAULT_CONFIG.badges
 
 // GET - return user's badges
-export async function GET() {
-  const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
-  if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-
+export const GET = withAuth(async (_request, { user, supabase }) => {
   const { data: earned } = await supabase
     .from('user_badges')
     .select('*')
@@ -32,4 +28,4 @@ export async function GET() {
     earned: earned || [],
     all: config.badges,
   })
-}
+})

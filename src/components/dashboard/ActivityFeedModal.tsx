@@ -8,7 +8,7 @@ import {
   MessageCircle, 
   Users, 
   BookOpen, 
-  Image, 
+  Image as ImageIcon,
   Smile,
   Send,
   Sparkles,
@@ -18,6 +18,7 @@ import {
   UserPlus
 } from 'lucide-react'
 import { formatDistanceToNow } from 'date-fns'
+import Image from 'next/image'
 import Link from 'next/link'
 
 interface ActivityActor {
@@ -45,7 +46,7 @@ interface ActivityFeedModalProps {
 }
 
 const ACTIVITY_ICONS: Record<string, { icon: typeof Heart; color: string; bg: string }> = {
-  memory_shared: { icon: Image, color: 'text-[#C35F33]', bg: 'bg-[#C35F33]/10' },
+  memory_shared: { icon: ImageIcon, color: 'text-[#C35F33]', bg: 'bg-[#C35F33]/10' },
   wisdom_shared: { icon: BookOpen, color: 'text-[#4A3552]', bg: 'bg-[#4A3552]/10' },
   circle_message: { icon: MessageCircle, color: 'text-[#406A56]', bg: 'bg-[#406A56]/10' },
   circle_invite: { icon: Users, color: 'text-[#8DACAB]', bg: 'bg-[#8DACAB]/15' },
@@ -87,16 +88,22 @@ function ActivityCard({ activity }: { activity: ActivityItem }) {
         <div className="flex items-start gap-3">
           <div className={`w-12 h-12 rounded-full ${config.bg} flex items-center justify-center flex-shrink-0 overflow-hidden`}>
             {activity.thumbnail ? (
-              <img 
-                src={activity.thumbnail} 
+              <Image
+                src={activity.thumbnail}
                 alt={activity.title}
+                width={48}
+                height={48}
                 className="w-full h-full object-cover"
+                unoptimized
               />
             ) : activity.actor?.avatar_url ? (
-              <img 
-                src={activity.actor.avatar_url} 
+              <Image
+                src={activity.actor.avatar_url}
                 alt={activity.actor.name}
+                width={48}
+                height={48}
                 className="w-full h-full object-cover"
+                unoptimized
               />
             ) : (
               <Icon size={20} className={config.color} />
@@ -121,10 +128,12 @@ function ActivityCard({ activity }: { activity: ActivityItem }) {
       <Link href={activity.link} className="block hover:bg-gray-50 transition-colors">
         {activity.thumbnail ? (
           <div className="relative w-full aspect-[4/3] bg-gray-100">
-            <img 
-              src={activity.thumbnail} 
+            <Image
+              src={activity.thumbnail}
               alt={activity.title}
-              className="w-full h-full object-cover"
+              fill
+              className="object-cover"
+              unoptimized
             />
           </div>
         ) : (

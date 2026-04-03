@@ -1,12 +1,8 @@
 import { NextResponse } from 'next/server'
-import { createClient } from '@/lib/supabase/server'
+import { withAuth } from '@/lib/api/withAuth'
 import { DEFAULT_CONFIG, mergeConfig } from '@/lib/gamification-config'
 
-export async function POST() {
-  const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
-  if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-
+export const POST = withAuth(async (_request, { user, supabase }) => {
   // Load gamification config (DB overrides falling back to defaults)
   let config = DEFAULT_CONFIG
   try {
@@ -100,4 +96,4 @@ export async function POST() {
     newlyEarned,
     all: config.badges,
   })
-}
+})

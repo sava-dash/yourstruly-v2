@@ -1,7 +1,6 @@
 'use client'
 
 import { useEffect, useRef, useState, useCallback } from 'react'
-import mapboxgl from 'mapbox-gl'
 import 'mapbox-gl/dist/mapbox-gl.css'
 import { GalleryMediaItem as MediaItem } from '@/types/gallery'
 
@@ -13,8 +12,8 @@ interface GalleryGlobeProps {
 
 export default function GalleryGlobe({ media, onSelectMedia, selectedTimeframe }: GalleryGlobeProps) {
   const mapContainer = useRef<HTMLDivElement>(null)
-  const map = useRef<mapboxgl.Map | null>(null)
-  const markersRef = useRef<mapboxgl.Marker[]>([])
+  const map = useRef<any>(null)
+  const markersRef = useRef<any[]>([])
   const spinEnabledRef = useRef(true)
   const [loaded, setLoaded] = useState(false)
   const [webglError, setWebglError] = useState(false)
@@ -42,11 +41,13 @@ export default function GalleryGlobe({ media, onSelectMedia, selectedTimeframe }
       return
     }
 
-    try {
-      mapboxgl.accessToken = process.env.NEXT_PUBLIC_MAPBOX_TOKEN || ''
+    const initMap = async () => {
+      try {
+        const mapboxgl = (await import('mapbox-gl')).default
+        mapboxgl.accessToken = process.env.NEXT_PUBLIC_MAPBOX_TOKEN || ''
 
-      map.current = new mapboxgl.Map({
-        container: mapContainer.current,
+        map.current = new mapboxgl.Map({
+        container: mapContainer.current!,
         style: 'mapbox://styles/mapbox/dark-v11',
         projection: 'globe',
         zoom: 1.5,
@@ -54,7 +55,7 @@ export default function GalleryGlobe({ media, onSelectMedia, selectedTimeframe }
         pitch: 0,
       })
 
-      map.current.on('error', (e) => {
+      map.current.on('error', (e: any) => {
         console.error('Mapbox error:', e)
         if (e.error?.message?.includes('WebGL')) {
           setWebglError(true)
@@ -87,7 +88,7 @@ export default function GalleryGlobe({ media, onSelectMedia, selectedTimeframe }
           }
           const center = map.current.getCenter()
           center.lng -= distancePerSecond / 60
-          map.current.easeTo({ center, duration: 1000, easing: (n) => n })
+          map.current.easeTo({ center, duration: 1000, easing: (n: number) => n })
         }
       }
 
@@ -99,10 +100,13 @@ export default function GalleryGlobe({ media, onSelectMedia, selectedTimeframe }
       map.current.on('moveend', spinGlobe)
 
       spinGlobe()
-    } catch (err) {
-      console.error('Failed to initialize map:', err)
-      setWebglError(true)
+      } catch (err) {
+        console.error('Failed to initialize map:', err)
+        setWebglError(true)
+      }
     }
+
+    initMap()
 
     return () => {
       map.current?.remove()
@@ -153,13 +157,16 @@ export default function GalleryGlobe({ media, onSelectMedia, selectedTimeframe }
   useEffect(() => {
     if (!map.current || !loaded) return
 
-    // Remove existing markers
-    markersRef.current.forEach(m => m.remove())
-    markersRef.current = []
+    const addMarkers = async () => {
+      const mapboxgl = (await import('mapbox-gl')).default
 
-    const clusters = clusterMedia(filteredMedia)
+      // Remove existing markers
+      markersRef.current.forEach(m => m.remove())
+      markersRef.current = []
 
-    clusters.forEach((cluster) => {
+      const clusters = clusterMedia(filteredMedia)
+
+      clusters.forEach((cluster) => {
       const coverItem = cluster.items[0]
       const isCluster = cluster.items.length > 1
 
@@ -271,7 +278,9 @@ export default function GalleryGlobe({ media, onSelectMedia, selectedTimeframe }
 
       markersRef.current.push(marker)
     })
+    }
 
+    addMarkers()
   }, [filteredMedia, loaded, onSelectMedia, clusterMedia])
 
   // Stats

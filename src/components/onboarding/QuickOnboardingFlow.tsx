@@ -2,7 +2,6 @@
 
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import mapboxgl from 'mapbox-gl';
 import 'mapbox-gl/dist/mapbox-gl.css';
 import {
   ChevronRight,
@@ -405,8 +404,9 @@ function MapboxGlobeReveal({
   };
   const formattedBirthday = formatBirthday(birthday);
   const mapContainer = useRef<HTMLDivElement>(null);
-  const mapRef = useRef<mapboxgl.Map | null>(null);
-  const markerRef = useRef<mapboxgl.Marker | null>(null);
+  const mapRef = useRef<any>(null);
+  const markerRef = useRef<any>(null);
+  const mapboxglRef = useRef<any>(null);
   const advancedRef = useRef(false);
   const [phase, setPhase] = useState<'loading' | 'spinning' | 'flying' | 'pinned' | 'places-lived' | 'places-flying' | 'globe-spin-out' | 'adventure-message' | 'contacts' | 'interests' | 'why-here' | 'photo-upload' | 'photo-map' | 'lets-go'>('loading');
 
@@ -416,7 +416,7 @@ function MapboxGlobeReveal({
   const [placeWhen, setPlaceWhen] = useState('');
   const [placesAdded, setPlacesAdded] = useState<{ city: string; lat: number; lng: number; when: string }[]>([]);
   const placesDebounce = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const markersRef = useRef<mapboxgl.Marker[]>([]);
+  const markersRef = useRef<any[]>([]);
   // Track the last pin coordinates for drawing arcs
   const lastCoordsRef = useRef<{ lng: number; lat: number } | null>(null);
   const arcCountRef = useRef(0);
@@ -463,7 +463,7 @@ function MapboxGlobeReveal({
   const [isDraggingPhotos, setIsDraggingPhotos] = useState(false);
   const [isUploadingPhotos, setIsUploadingPhotos] = useState(false);
   const photoInputRef = useRef<HTMLInputElement>(null);
-  const photoMarkersRef = useRef<mapboxgl.Marker[]>([]);
+  const photoMarkersRef = useRef<any[]>([]);
 
   // Fetch place suggestions from Mapbox
   const fetchPlaceSuggestions = useCallback(async (query: string) => {
@@ -656,6 +656,8 @@ function MapboxGlobeReveal({
         </div>
       `;
 
+      const mapboxgl = mapboxglRef.current;
+      if (!mapboxgl) return;
       const marker = new mapboxgl.Marker({ element: el, anchor: 'bottom' })
         .setLngLat([lng, lat])
         .addTo(map);
@@ -867,6 +869,8 @@ function MapboxGlobeReveal({
     map.doubleClickZoom.enable();
 
     // Zoom out to show all photo + place locations
+    const mapboxgl = mapboxglRef.current;
+    if (!mapboxgl) return;
     const bounds = new mapboxgl.LngLatBounds();
     geoPhotos.forEach(p => bounds.extend([p.lng!, p.lat!]));
     placesAdded.forEach(p => bounds.extend([p.lng, p.lat]));
@@ -893,7 +897,9 @@ function MapboxGlobeReveal({
           </div>
         `;
 
-        const marker = new mapboxgl.Marker({ element: el, anchor: 'center' })
+        const mbgl = mapboxglRef.current;
+        if (!mbgl) return;
+        const marker = new mbgl.Marker({ element: el, anchor: 'center' })
           .setLngLat([photo.lng!, photo.lat!])
           .addTo(map);
         photoMarkersRef.current.push(marker);
@@ -918,20 +924,23 @@ function MapboxGlobeReveal({
   useEffect(() => {
     if (!mapContainer.current || mapRef.current) return;
 
-    mapboxgl.accessToken = process.env.NEXT_PUBLIC_MAPBOX_TOKEN || '';
+    const initMap = async () => {
+      const mapboxgl = (await import('mapbox-gl')).default;
+      mapboxglRef.current = mapboxgl;
+      mapboxgl.accessToken = process.env.NEXT_PUBLIC_MAPBOX_TOKEN || '';
 
-    const map = new mapboxgl.Map({
-      container: mapContainer.current,
-      style: 'mapbox://styles/mapbox/satellite-streets-v12',
-      projection: 'globe',
-      zoom: 1.8,
-      center: [0, 20],
-      interactive: false,
-      attributionControl: false,
-      logoPosition: 'bottom-right',
-    });
+      const map = new mapboxgl.Map({
+        container: mapContainer.current!,
+        style: 'mapbox://styles/mapbox/satellite-streets-v12',
+        projection: 'globe',
+        zoom: 1.8,
+        center: [0, 20],
+        interactive: false,
+        attributionControl: false,
+        logoPosition: 'bottom-right',
+      });
 
-    mapRef.current = map;
+      mapRef.current = map;
 
     // Slow auto-rotation before fly-in
     let rotating = true;
@@ -1004,12 +1013,16 @@ function MapboxGlobeReveal({
         // User must click Continue to advance (no auto-advance)
       });
     });
+    };
+
+    initMap();
 
     return () => {
-      rotating = false;
       markerRef.current?.remove();
-      map.remove();
-      mapRef.current = null;
+      if (mapRef.current) {
+        mapRef.current.remove();
+        mapRef.current = null;
+      }
     };
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 

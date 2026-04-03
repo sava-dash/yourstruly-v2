@@ -1,7 +1,6 @@
 'use client'
 
 import { useEffect, useRef, useState } from 'react'
-import mapboxgl from 'mapbox-gl'
 import 'mapbox-gl/dist/mapbox-gl.css'
 
 interface Memory {
@@ -26,16 +25,18 @@ interface GlobeViewProps {
 
 export default function GlobeView({ memories, onSelectMemory }: GlobeViewProps) {
   const mapContainer = useRef<HTMLDivElement>(null)
-  const map = useRef<mapboxgl.Map | null>(null)
+  const map = useRef<any>(null)
   const [loaded, setLoaded] = useState(false)
 
   useEffect(() => {
     if (!mapContainer.current || map.current) return
 
-    mapboxgl.accessToken = process.env.NEXT_PUBLIC_MAPBOX_TOKEN || ''
+    const initMap = async () => {
+      const mapboxgl = (await import('mapbox-gl')).default
+      mapboxgl.accessToken = process.env.NEXT_PUBLIC_MAPBOX_TOKEN || ''
 
-    map.current = new mapboxgl.Map({
-      container: mapContainer.current,
+      map.current = new mapboxgl.Map({
+      container: mapContainer.current!,
       style: 'mapbox://styles/mapbox/dark-v11',
       projection: 'globe',
       zoom: 1.5,
@@ -70,7 +71,7 @@ export default function GlobeView({ memories, onSelectMemory }: GlobeViewProps) 
         }
         const center = map.current.getCenter()
         center.lng -= distancePerSecond / 60
-        map.current.easeTo({ center, duration: 1000, easing: (n) => n })
+        map.current.easeTo({ center, duration: 1000, easing: (n: number) => n })
       }
     }
 
@@ -82,6 +83,9 @@ export default function GlobeView({ memories, onSelectMemory }: GlobeViewProps) 
     map.current.on('moveend', spinGlobe)
 
     spinGlobe()
+    }
+
+    initMap()
 
     return () => {
       map.current?.remove()
@@ -93,64 +97,69 @@ export default function GlobeView({ memories, onSelectMemory }: GlobeViewProps) 
   useEffect(() => {
     if (!map.current || !loaded) return
 
-    // Remove existing markers
-    const existingMarkers = document.querySelectorAll('.memory-marker')
-    existingMarkers.forEach(m => m.remove())
+    const addMarkers = async () => {
+      const mapboxgl = (await import('mapbox-gl')).default
 
-    // Add markers for memories with coordinates
-    const memoriesWithLocation = memories.filter(m => m.location_lat && m.location_lng)
+      // Remove existing markers
+      const existingMarkers = document.querySelectorAll('.memory-marker')
+      existingMarkers.forEach(m => m.remove())
 
-    memoriesWithLocation.forEach((memory) => {
-      const coverMedia = memory.memory_media?.find(m => m.is_cover) || memory.memory_media?.[0]
+      // Add markers for memories with coordinates
+      const memoriesWithLocation = memories.filter(m => m.location_lat && m.location_lng)
 
-      // Create custom marker element
-      const el = document.createElement('div')
-      el.className = 'memory-marker'
-      el.style.cssText = `
-        width: 40px;
-        height: 40px;
-        border-radius: 50%;
-        border: 3px solid #f59e0b;
-        background-size: cover;
-        background-position: center;
-        cursor: pointer;
-        box-shadow: 0 2px 10px rgba(0,0,0,0.5);
-        transition: transform 0.2s;
-      `
-      
-      if (coverMedia) {
-        el.style.backgroundImage = `url(${coverMedia.file_url})`
-      } else {
-        el.style.backgroundColor = '#1f2937'
-        el.innerHTML = '<div style="display:flex;align-items:center;justify-content:center;height:100%;font-size:16px;">📍</div>'
-      }
+      memoriesWithLocation.forEach((memory) => {
+        const coverMedia = memory.memory_media?.find(m => m.is_cover) || memory.memory_media?.[0]
 
-      el.addEventListener('mouseenter', () => {
-        el.style.transform = 'scale(1.2)'
+        // Create custom marker element
+        const el = document.createElement('div')
+        el.className = 'memory-marker'
+        el.style.cssText = `
+          width: 40px;
+          height: 40px;
+          border-radius: 50%;
+          border: 3px solid #f59e0b;
+          background-size: cover;
+          background-position: center;
+          cursor: pointer;
+          box-shadow: 0 2px 10px rgba(0,0,0,0.5);
+          transition: transform 0.2s;
+        `
+
+        if (coverMedia) {
+          el.style.backgroundImage = `url(${coverMedia.file_url})`
+        } else {
+          el.style.backgroundColor = '#1f2937'
+          el.innerHTML = '<div style="display:flex;align-items:center;justify-content:center;height:100%;font-size:16px;">📍</div>'
+        }
+
+        el.addEventListener('mouseenter', () => {
+          el.style.transform = 'scale(1.2)'
+        })
+        el.addEventListener('mouseleave', () => {
+          el.style.transform = 'scale(1)'
+        })
+        el.addEventListener('click', () => {
+          onSelectMemory?.(memory)
+        })
+
+        // Create popup
+        const popup = new mapboxgl.Popup({ offset: 25, closeButton: false })
+          .setHTML(`
+            <div style="padding: 8px; max-width: 200px;">
+              <p style="font-weight: 600; color: white; margin: 0 0 4px 0;">${memory.title || 'Memory'}</p>
+              <p style="font-size: 12px; color: #9ca3af; margin: 0;">${memory.location_name || ''}</p>
+              ${memory.memory_date ? `<p style="font-size: 11px; color: #6b7280; margin: 4px 0 0 0;">${new Date(memory.memory_date).toLocaleDateString()}</p>` : ''}
+            </div>
+          `)
+
+        new mapboxgl.Marker(el)
+          .setLngLat([memory.location_lng, memory.location_lat])
+          .setPopup(popup)
+          .addTo(map.current!)
       })
-      el.addEventListener('mouseleave', () => {
-        el.style.transform = 'scale(1)'
-      })
-      el.addEventListener('click', () => {
-        onSelectMemory?.(memory)
-      })
+    }
 
-      // Create popup
-      const popup = new mapboxgl.Popup({ offset: 25, closeButton: false })
-        .setHTML(`
-          <div style="padding: 8px; max-width: 200px;">
-            <p style="font-weight: 600; color: white; margin: 0 0 4px 0;">${memory.title || 'Memory'}</p>
-            <p style="font-size: 12px; color: #9ca3af; margin: 0;">${memory.location_name || ''}</p>
-            ${memory.memory_date ? `<p style="font-size: 11px; color: #6b7280; margin: 4px 0 0 0;">${new Date(memory.memory_date).toLocaleDateString()}</p>` : ''}
-          </div>
-        `)
-
-      new mapboxgl.Marker(el)
-        .setLngLat([memory.location_lng, memory.location_lat])
-        .setPopup(popup)
-        .addTo(map.current!)
-    })
-
+    addMarkers()
   }, [memories, loaded, onSelectMemory])
 
   return (

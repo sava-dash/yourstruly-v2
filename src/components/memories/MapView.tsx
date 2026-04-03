@@ -1,7 +1,6 @@
 'use client'
 
 import { useEffect, useRef, useState, useCallback, useMemo } from 'react'
-import mapboxgl from 'mapbox-gl'
 import 'mapbox-gl/dist/mapbox-gl.css'
 import { X, Calendar, MapPin, ChevronLeft, ChevronRight, ZoomIn, ZoomOut, Locate, Globe2, Map as MapIcon, Layers, Filter } from 'lucide-react'
 import Link from 'next/link'
@@ -67,7 +66,7 @@ export default function MapView({
   isGlobeMode = false
 }: MapViewProps) {
   const mapContainer = useRef<HTMLDivElement>(null)
-  const map = useRef<mapboxgl.Map | null>(null)
+  const map = useRef<any>(null)
   const [loaded, setLoaded] = useState(false)
   const [webglError, setWebglError] = useState(false)
   const [selectedCluster, setSelectedCluster] = useState<Memory[] | null>(null)
@@ -129,41 +128,46 @@ export default function MapView({
       return
     }
 
-    try {
-      mapboxgl.accessToken = process.env.NEXT_PUBLIC_MAPBOX_TOKEN || ''
+    const initMap = async () => {
+      try {
+        const mapboxgl = (await import('mapbox-gl')).default
+        mapboxgl.accessToken = process.env.NEXT_PUBLIC_MAPBOX_TOKEN || ''
 
-      map.current = new mapboxgl.Map({
-        container: mapContainer.current,
-        style: styleUrls[mapStyle],
-        zoom: 2,
-        center: [0, 30],
-        pitch: 0,
-        maxZoom: 18,
-        minZoom: 1,
-      })
+        map.current = new mapboxgl.Map({
+          container: mapContainer.current!,
+          style: styleUrls[mapStyle],
+          zoom: 2,
+          center: [0, 30],
+          pitch: 0,
+          maxZoom: 18,
+          minZoom: 1,
+        })
 
-      map.current.on('error', (e) => {
-        console.error('Mapbox error:', e)
-        if (e.error?.message?.includes('WebGL')) {
-          setWebglError(true)
-        }
-      })
+        map.current.on('error', (e: any) => {
+          console.error('Mapbox error:', e)
+          if (e.error?.message?.includes('WebGL')) {
+            setWebglError(true)
+          }
+        })
 
-      // Add navigation controls
-      map.current.addControl(new mapboxgl.NavigationControl({ showCompass: true }), 'bottom-right')
+        // Add navigation controls
+        map.current.addControl(new mapboxgl.NavigationControl({ showCompass: true }), 'bottom-right')
 
-      // Add touch gestures for mobile
-      map.current.touchZoomRotate.enable()
-      map.current.touchPitch.enable()
-      map.current.dragPan.enable()
+        // Add touch gestures for mobile
+        map.current.touchZoomRotate.enable()
+        map.current.touchPitch.enable()
+        map.current.dragPan.enable()
 
-      map.current.on('load', () => {
-        setLoaded(true)
-      })
-    } catch (err) {
-      console.error('Failed to initialize map:', err)
-      setWebglError(true)
+        map.current.on('load', () => {
+          setLoaded(true)
+        })
+      } catch (err) {
+        console.error('Failed to initialize map:', err)
+        setWebglError(true)
+      }
     }
+
+    initMap()
 
     return () => {
       map.current?.remove()
@@ -298,16 +302,16 @@ export default function MapView({
   }, [loaded, addSourcesAndLayers])
 
   // Handle cluster click - zoom in or show photos
-  const handleClusterClick = useCallback((e: mapboxgl.MapMouseEvent) => {
+  const handleClusterClick = useCallback((e: any) => {
     if (!map.current) return
     
     const features = map.current.queryRenderedFeatures(e.point, { layers: ['clusters'] })
     if (!features.length) return
 
     const clusterId = features[0].properties?.cluster_id
-    const source = map.current.getSource('memories') as mapboxgl.GeoJSONSource
+    const source = map.current.getSource('memories') as any
 
-    source.getClusterExpansionZoom(clusterId, (err, zoom) => {
+    source.getClusterExpansionZoom(clusterId, (err: any, zoom: any) => {
       if (err || !map.current) return
 
       const coordinates = (features[0].geometry as any).coordinates.slice()
@@ -315,7 +319,7 @@ export default function MapView({
       // If we're already zoomed in enough, show the cluster contents
       if (zoom && map.current.getZoom() >= zoom - 1) {
         // Get cluster leaves (individual points)
-        source.getClusterLeaves(clusterId, 100, 0, (err, leaves) => {
+        source.getClusterLeaves(clusterId, 100, 0, (err: any, leaves: any) => {
           if (err || !leaves) return
           
           const clusterMemories = leaves
@@ -341,7 +345,7 @@ export default function MapView({
   }, [filteredMemories])
 
   // Handle individual point click
-  const handlePointClick = useCallback((e: mapboxgl.MapMouseEvent) => {
+  const handlePointClick = useCallback((e: any) => {
     if (!map.current) return
     
     const features = map.current.queryRenderedFeatures(e.point, { layers: ['unclustered-point'] })
@@ -367,9 +371,10 @@ export default function MapView({
   }, [filteredMemories])
 
   // Fit bounds to all markers
-  const fitToBounds = useCallback(() => {
+  const fitToBounds = useCallback(async () => {
     if (!map.current || filteredMemories.length === 0) return
 
+    const mapboxgl = (await import('mapbox-gl')).default
     const bounds = new mapboxgl.LngLatBounds()
     filteredMemories.forEach(m => {
       if (m.location_lat && m.location_lng) {

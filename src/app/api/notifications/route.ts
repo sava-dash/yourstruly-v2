@@ -1,15 +1,8 @@
-import { createClient } from '@/lib/supabase/server'
-import { NextRequest, NextResponse } from 'next/server'
+import { NextResponse } from 'next/server'
+import { withAuth } from '@/lib/api/withAuth'
 
 // GET /api/notifications - List user's notifications
-export async function GET(request: NextRequest) {
-  const supabase = await createClient()
-  
-  const { data: { user } } = await supabase.auth.getUser()
-  if (!user) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-  }
-
+export const GET = withAuth(async (request, { user, supabase }) => {
   const searchParams = request.nextUrl.searchParams
   const unreadOnly = searchParams.get('unread') === 'true'
   const limit = parseInt(searchParams.get('limit') || '20')
@@ -39,21 +32,14 @@ export async function GET(request: NextRequest) {
     .eq('user_id', user.id)
     .is('read_at', null)
 
-  return NextResponse.json({ 
+  return NextResponse.json({
     notifications,
     unread_count: unreadCount || 0
   })
-}
+})
 
 // PATCH /api/notifications - Mark notifications as read
-export async function PATCH(request: NextRequest) {
-  const supabase = await createClient()
-  
-  const { data: { user } } = await supabase.auth.getUser()
-  if (!user) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-  }
-
+export const PATCH = withAuth(async (request, { user, supabase }) => {
   const body = await request.json()
   const { notification_ids, mark_all_read } = body
 
@@ -86,4 +72,4 @@ export async function PATCH(request: NextRequest) {
   }
 
   return NextResponse.json({ error: 'Must provide notification_ids or mark_all_read' }, { status: 400 })
-}
+})

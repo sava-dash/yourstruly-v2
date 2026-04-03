@@ -1,17 +1,10 @@
-import { createClient } from '@/lib/supabase/server'
-import { NextRequest, NextResponse } from 'next/server'
+import { NextResponse } from 'next/server'
+import { withAuth } from '@/lib/api/withAuth'
 
 export const dynamic = 'force-dynamic'
 
 // GET /api/smart-albums - Get smart albums (grouped by people, events, etc.)
-export async function GET(request: NextRequest) {
-  const supabase = await createClient()
-  
-  const { data: { user } } = await supabase.auth.getUser()
-  if (!user) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-  }
-
+export const GET = withAuth(async (request, { user, supabase }) => {
   try {
     const { searchParams } = new URL(request.url)
     const type = searchParams.get('type') || 'people' // people, family, events
@@ -143,4 +136,4 @@ export async function GET(request: NextRequest) {
       { status: 500 }
     )
   }
-}
+})
