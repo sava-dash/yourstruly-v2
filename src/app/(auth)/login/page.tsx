@@ -68,7 +68,7 @@ export default function LoginPage() {
             alt="YoursTruly" 
             className="h-20 w-auto mx-auto mb-2"
           />
-          <p className="text-[#406A56]/70 mt-2">Document your life. Connect generations.</p>
+          <p className="text-[#406A56]/70 mt-2">Live on.</p>
         </div>
 
         {/* Glass card */}

@@ -301,13 +301,14 @@ function MemoryViewer({
           <p className="text-gray-500 mb-4">
             Create your own memory collection with YoursTruly
           </p>
-          <Link 
+          <Link
             href="/signup"
             className="inline-flex items-center gap-2 bg-brand-green text-white px-8 py-3 rounded-full hover:bg-brand-green/90 transition-colors font-medium"
           >
             <Heart className="w-5 h-5" />
             Get Started Free
           </Link>
+          <p className="text-brand-green/40 text-xs mt-4 italic tracking-wide">Live on.</p>
         </div>
       </div>
     </div>
@@ -398,13 +399,14 @@ function WisdomViewer({
           <p className="text-gray-500 mb-4">
             Capture and share your wisdom with YoursTruly
           </p>
-          <Link 
+          <Link
             href="/signup"
             className="inline-flex items-center gap-2 bg-brand-green text-white px-8 py-3 rounded-full hover:bg-brand-green/90 transition-colors font-medium"
           >
             <Heart className="w-5 h-5" />
             Get Started Free
           </Link>
+          <p className="text-brand-green/40 text-xs mt-4 italic tracking-wide">Live on.</p>
         </div>
       </div>
     </div>

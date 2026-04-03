@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation'
 import { Plus, X, Mic, ImagePlus, BookOpen, PenLine } from 'lucide-react'
 
 const ACTIONS = [
-  { icon: Mic, label: 'Voice Memory', href: '/dashboard/memories/voice', color: 'bg-amber-600' },
+  { icon: Mic, label: 'Voice Memory', href: '/dashboard/memories/voice', color: 'bg-[#3D6B52]' },
   { icon: ImagePlus, label: 'Upload Photos', href: '/dashboard/gallery?upload=true', color: 'bg-blue-600' },
   { icon: BookOpen, label: 'Add Wisdom', href: '/dashboard/wisdom?new=true', color: 'bg-purple-600' },
   { icon: PenLine, label: 'Write Memory', href: '/dashboard/memories?new=true', color: 'bg-emerald-600' },
@@ -57,10 +57,10 @@ export default function QuickActionsFAB() {
         onClick={() => setOpen(!open)}
         aria-label={open ? 'Close quick actions' : 'Quick actions'}
         aria-expanded={open}
-        className={`flex h-14 w-14 items-center justify-center rounded-full shadow-lg transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-400 focus-visible:ring-offset-2 ${
+        className={`flex h-14 w-14 items-center justify-center rounded-full shadow-lg transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#3D6B52]/60 focus-visible:ring-offset-2 ${
           open
             ? 'bg-neutral-700 rotate-45 hover:bg-neutral-600'
-            : 'bg-amber-600 hover:bg-amber-500 shadow-amber-900/20'
+            : 'bg-[#3D6B52] hover:bg-[#2F5441] shadow-[#3D6B52]/20'
         }`}
       >
         {open ? <X className="h-6 w-6 text-white" /> : <Plus className="h-6 w-6 text-white" />}

@@ -19,8 +19,6 @@ import {
   Camera,
   MessageSquare,
   Gift,
-  Plane,
-  Bot,
   FolderOpen,
   ChevronDown,
   Menu,
@@ -29,7 +27,6 @@ import {
   Mail,
   BookOpen,
   UsersRound,
-  Wrench,
   ShoppingBag,
   Bell,
 } from 'lucide-react'
@@ -52,7 +49,7 @@ const primaryNav = [
 // My Story dropdown - content about you
 const myStoryItems = [
   { href: '/dashboard/life', label: 'Your Life', icon: UsersRound },
-  { href: '/dashboard/feed', label: 'Feed', icon: BookOpen },
+  { href: '/dashboard/feed', label: 'Timeline', icon: BookOpen },
   { href: '/dashboard/memories', label: 'Memories', icon: Camera },
   { href: '/dashboard/wisdom', label: 'Wisdom', icon: Lightbulb },
   { href: '/dashboard/gallery', label: 'Gallery', icon: FolderOpen },
@@ -63,8 +60,6 @@ const toolsItems = [
   { href: '/dashboard/journalist', label: 'Interviews', icon: MessageSquare },
   { href: '/dashboard/postscripts', label: 'PostScripts', icon: Gift },
   { href: '/dashboard/photobook/create', label: 'Create Book', icon: BookOpen },
-  { href: '/dashboard/avatar', label: 'AI Avatar', icon: Bot, disabled: true },
-  { href: '/dashboard/trips', label: 'Trip Planning', icon: Plane, disabled: true },
 ]
 
 // People dropdown - who you share with
@@ -217,7 +212,7 @@ export default function TopNav({ user, profile }: TopNavProps) {
                     {toolsItems.map((item) => {
                       const Icon = item.icon
                       const isActive = pathname === item.href
-                      const isDisabled = 'disabled' in item && item.disabled
+                      const isDisabled = 'disabled' in item && Boolean(item.disabled)
                       return (
                         <Link
                           key={item.href}
@@ -474,7 +469,7 @@ export default function TopNav({ user, profile }: TopNavProps) {
             {toolsItems.map((item) => {
               const Icon = item.icon
               const isActive = pathname === item.href
-              const isDisabled = 'disabled' in item && item.disabled
+              const isDisabled = 'disabled' in item && Boolean(item.disabled)
               return (
                 <Link
                   key={item.href}

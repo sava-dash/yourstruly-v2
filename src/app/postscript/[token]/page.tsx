@@ -247,6 +247,7 @@ export default function PostScriptRecipientPage({ params }: { params: Promise<{ 
                 year: 'numeric'
               })}
             </p>
+            <p className="text-[#406A56]/50 text-xs mt-3 italic tracking-wide">Live on.</p>
           </div>
         </div>
 

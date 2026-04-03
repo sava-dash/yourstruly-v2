@@ -7,32 +7,19 @@
 @import "../styles/scrapbook.css";
 
 :root {
-  --background: #1a1512;
-  --foreground: #f5f0eb;
-  --yt-warm-dark: #2a1f1a;
-  --yt-warm-mid: #3d2d24;
-  --yt-warm-accent: #c9886d;
-  --yt-warm-glow: #d4a574;
+  --background: #FAF8F4;
+  --foreground: #1A2B23;
 }
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
   --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
 }
 
 body {
-  background: linear-gradient(165deg, 
-    #E8E4D6 0%, 
-    #DDD8C8 20%,
-    #D4CDB8 40%,
-    #C9C0A8 60%,
-    #BEB498 80%,
-    #B3A888 100%
-  );
-  background-attachment: fixed;
-  color: #333;
+  background-color: #FAF8F4;
+  color: #1A2B23;
   font-family: var(--font-inter-tight), 'Inter Tight', Arial, sans-serif;
   min-height: 100vh;
 }
@@ -40,36 +27,6 @@ body {
 html, body {
   min-height: 100vh;
   overflow-x: hidden;
-}
-
-/* Darker gradient overlay for depth */
-body::before {
-  content: '';
-  position: fixed;
-  inset: 0;
-  background: radial-gradient(
-    ellipse 80% 60% at 50% 100%,
-    rgba(195, 95, 51, 0.12) 0%,
-    transparent 50%
-  ),
-  radial-gradient(
-    ellipse 60% 40% at 100% 0%,
-    rgba(64, 106, 86, 0.1) 0%,
-    transparent 50%
-  ),
-  radial-gradient(
-    ellipse 50% 50% at 0% 50%,
-    rgba(74, 53, 82, 0.08) 0%,
-    transparent 50%
-  );
-  pointer-events: none;
-  z-index: 0;
-}
-
-/* Ensure content is above gradient overlay */
-#__next, main, .main-content {
-  position: relative;
-  z-index: 1;
 }
 
 /* Hide Mapbox branding */
@@ -319,10 +276,6 @@ body::before {
   font-family: var(--font-playfair), 'Playfair Display', serif;
 }
 
-.font-patrick {
-  font-family: var(--font-patrick-hand), 'Patrick Hand', cursive;
-}
-
 .font-inter-tight {
   font-family: var(--font-inter-tight), 'Inter Tight', sans-serif;
 }
@@ -342,15 +295,14 @@ body::before {
   overflow: hidden;
 }
 
-/* YoursTruly color variables */
+/* YoursTruly color variables (aliases for unified brand) */
 :root {
-  --yt-green: #406A56;
+  --yt-green: #3D6B52;
   --yt-red: #C35F33;
-  --yt-yellow: #D9C61A;
+  --yt-yellow: #C9A832;
   --yt-blue: #8DACAB;
-  --yt-purple: #4A3552;
-  --yt-cream: #F2F1E5;
-  --yt-warm-bg: #FDF8F3;
+  --yt-cream: #FAF8F4;
+  --yt-warm-bg: #FAF8F4;
 }
 
 /* ============================================

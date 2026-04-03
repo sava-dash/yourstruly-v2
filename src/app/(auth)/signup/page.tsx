@@ -103,7 +103,7 @@ export default function SignupPage() {
             alt="YoursTruly" 
             className="h-20 w-auto mx-auto mb-2"
           />
-          <p className="text-[#406A56]/70 mt-2">Start documenting your legacy today.</p>
+          <p className="text-[#406A56]/70 mt-2">Live on.</p>
         </div>
 
         {/* Card */}

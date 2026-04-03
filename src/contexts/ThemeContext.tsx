@@ -1,8 +1,8 @@
 'use client';
 
-import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import { createContext, useContext, ReactNode } from 'react';
 
-type Theme = 'classic' | 'heroui';
+type Theme = 'classic';
 
 interface ThemeContextType {
   theme: Theme;
@@ -13,39 +13,10 @@ interface ThemeContextType {
 const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
 
 export function ThemeProvider({ children }: { children: ReactNode }) {
-  const [theme, setThemeState] = useState<Theme>('classic');
-  const [mounted, setMounted] = useState(false);
-
-  useEffect(() => {
-    setMounted(true);
-    const stored = localStorage.getItem('app-theme') as Theme;
-    if (stored === 'heroui' || stored === 'classic') {
-      setThemeState(stored);
-    }
-  }, []);
-
-  const setTheme = (newTheme: Theme) => {
-    setThemeState(newTheme);
-    localStorage.setItem('app-theme', newTheme);
-    
-    // Update CSS variables
-    if (newTheme === 'heroui') {
-      document.documentElement.classList.add('theme-heroui');
-      document.documentElement.classList.remove('theme-classic');
-    } else {
-      document.documentElement.classList.add('theme-classic');
-      document.documentElement.classList.remove('theme-heroui');
-    }
-  };
-
-  const toggleTheme = () => {
-    setTheme(theme === 'classic' ? 'heroui' : 'classic');
-  };
-
-  // Prevent flash of wrong theme
-  if (!mounted) {
-    return <>{children}</>;
-  }
+  // Single unified theme — no switching needed
+  const theme: Theme = 'classic';
+  const setTheme = () => {};
+  const toggleTheme = () => {};
 
   return (
     <ThemeContext.Provider value={{ theme, setTheme, toggleTheme }}>

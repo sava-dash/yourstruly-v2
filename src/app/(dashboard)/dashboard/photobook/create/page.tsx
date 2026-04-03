@@ -144,8 +144,7 @@ const FONT_FAMILIES = [
   { value: 'Georgia, serif', label: 'Georgia' },
   { value: 'Helvetica, Arial, sans-serif', label: 'Helvetica' },
   { value: 'var(--font-playfair), Georgia, serif', label: 'Playfair Display' },
-  { value: 'var(--font-dancing-script), cursive', label: 'Dancing Script' },
-  { value: 'var(--font-crimson-text), Georgia, serif', label: 'Crimson Text' },
+  { value: 'var(--font-handwritten), cursive', label: 'Caveat' },
 ]
 
 const FONT_SIZES = [

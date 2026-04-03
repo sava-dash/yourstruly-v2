@@ -7,7 +7,7 @@ export default function NotFound() {
         <h1 className="text-6xl font-bold text-amber-700/50 mb-4">404</h1>
         <h2 className="text-xl font-semibold text-amber-100 mb-2">Page not found</h2>
         <p className="text-neutral-400 mb-6">
-          The page you&apos;re looking for doesn&apos;t exist or has been moved.
+          This page doesn&apos;t exist, but your stories live on.
         </p>
         <Link
           href="/dashboard"

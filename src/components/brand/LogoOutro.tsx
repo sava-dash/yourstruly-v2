@@ -30,7 +30,7 @@ export function LogoOutro({
   duration = 3,
   variant = 'gradient',
   showTagline = true,
-  tagline = 'Preserve your story. Forever.',
+  tagline = 'Live on.',
   onComplete,
 }: LogoOutroProps) {
   const backgrounds = {
