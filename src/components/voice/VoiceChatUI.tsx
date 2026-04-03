@@ -128,27 +128,27 @@ export function VoiceChatUI({
   if (isCountingDown) {
     return (
       <div className={`relative ${className}`}>
-        <div className="bg-white/90 backdrop-blur-xl rounded-2xl border border-[#406A56]/10 shadow-lg p-6 text-center">
+        <div className="bg-white/90 backdrop-blur-xl rounded-2xl border border-[#2D5A3D]/10 shadow-lg p-6 text-center">
           {/* Countdown number */}
           <motion.div
             key={countdown}
             initial={{ scale: 1.5, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
-            className="w-20 h-20 mx-auto mb-4 rounded-full bg-[#406A56] text-white flex items-center justify-center"
+            className="w-20 h-20 mx-auto mb-4 rounded-full bg-[#2D5A3D] text-white flex items-center justify-center"
           >
             <span className="text-4xl font-bold">{countdown}</span>
           </motion.div>
           
           {/* Topic */}
-          <p className="text-[#406A56] font-medium mb-2">
+          <p className="text-[#2D5A3D] font-medium mb-2">
             {topic ? `"${topic}"` : 'Starting...'}
           </p>
-          <p className="text-sm text-[#406A56]/60 mb-4">Get ready to share</p>
+          <p className="text-sm text-[#2D5A3D]/60 mb-4">Get ready to share</p>
           
           {/* Cancel */}
           <button
             onClick={cancelCountdown}
-            className="text-sm text-[#406A56]/50 hover:text-[#406A56] underline"
+            className="text-sm text-[#2D5A3D]/50 hover:text-[#2D5A3D] underline"
           >
             Cancel
           </button>
@@ -160,10 +160,10 @@ export function VoiceChatUI({
   return (
     <div className={`relative ${className}`}>
       {/* Main Voice Chat Container */}
-      <div className="bg-white/80 backdrop-blur-xl rounded-2xl border border-[#406A56]/10 shadow-lg overflow-hidden">
+      <div className="bg-white/80 backdrop-blur-xl rounded-2xl border border-[#2D5A3D]/10 shadow-lg overflow-hidden">
         
         {/* Header - Compact */}
-        <div className="flex items-center justify-between px-4 py-3 border-b border-[#406A56]/10 bg-gradient-to-r from-[#406A56]/5 to-transparent">
+        <div className="flex items-center justify-between px-4 py-3 border-b border-[#2D5A3D]/10 bg-gradient-to-r from-[#2D5A3D]/5 to-transparent">
           <div className="flex items-center gap-2">
             {/* Status indicator */}
             <div className={`
@@ -172,7 +172,7 @@ export function VoiceChatUI({
               ${isActive && 'animate-pulse'}
             `} />
             
-            <span className="text-sm font-medium text-[#406A56]">
+            <span className="text-sm font-medium text-[#2D5A3D]">
               {isCompleted && 'Memory Saved'}
               {isSaving && 'Saving...'}
               {state === 'idle' && 'Ready'}
@@ -188,7 +188,7 @@ export function VoiceChatUI({
 
           {/* Stats when active - compact */}
           {isActive && (
-            <div className="flex items-center gap-3 text-xs text-[#406A56]/70">
+            <div className="flex items-center gap-3 text-xs text-[#2D5A3D]/70">
               <div className="flex items-center gap-1" title="Duration">
                 <Clock size={12} />
                 <span>{formatDuration(sessionDuration)}</span>
@@ -250,19 +250,19 @@ export function VoiceChatUI({
                     initial={{ scale: 1, opacity: 0.5 }}
                     animate={{ scale: 2, opacity: 0 }}
                     transition={{ duration: 1.5, repeat: Infinity }}
-                    className="absolute inset-0 rounded-full bg-[#406A56]"
+                    className="absolute inset-0 rounded-full bg-[#2D5A3D]"
                   />
                   <motion.div
                     initial={{ scale: 1, opacity: 0.3 }}
                     animate={{ scale: 2.3, opacity: 0 }}
                     transition={{ duration: 1.5, repeat: Infinity, delay: 0.3 }}
-                    className="absolute inset-0 rounded-full bg-[#406A56]"
+                    className="absolute inset-0 rounded-full bg-[#2D5A3D]"
                   />
                   <motion.div
                     initial={{ scale: 1, opacity: 0.2 }}
                     animate={{ scale: 2.6, opacity: 0 }}
                     transition={{ duration: 1.5, repeat: Infinity, delay: 0.6 }}
-                    className="absolute inset-0 rounded-full bg-[#406A56]"
+                    className="absolute inset-0 rounded-full bg-[#2D5A3D]"
                   />
                 </>
               )}
@@ -278,14 +278,14 @@ export function VoiceChatUI({
                 ${isConnecting || isSaving
                   ? 'bg-gray-100 text-gray-400 cursor-not-allowed' 
                   : isListening
-                    ? 'bg-[#406A56] text-white shadow-[#406A56]/40'
+                    ? 'bg-[#2D5A3D] text-white shadow-[#2D5A3D]/40'
                     : isAiSpeaking
-                      ? 'bg-[#D9C61A] text-white shadow-[#D9C61A]/40'
+                      ? 'bg-[#C4A235] text-white shadow-[#C4A235]/40'
                       : isActive
-                        ? 'bg-[#406A56]/10 text-[#406A56] hover:bg-[#406A56]/20'
+                        ? 'bg-[#2D5A3D]/10 text-[#2D5A3D] hover:bg-[#2D5A3D]/20'
                         : isCompleted
                           ? 'bg-green-500 text-white shadow-green-500/40'
-                          : 'bg-[#406A56] text-white hover:bg-[#4a7a64] hover:scale-105'
+                          : 'bg-[#2D5A3D] text-white hover:bg-[#234A31] hover:scale-105'
                 }
               `}
               whileTap={{ scale: 0.95 }}
@@ -331,7 +331,7 @@ export function VoiceChatUI({
                   initial={{ opacity: 0, y: 10 }}
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, y: -10 }}
-                  className="text-[#406A56]/70"
+                  className="text-[#2D5A3D]/70"
                 >
                   Connecting to your AI biographer...
                 </motion.p>
@@ -343,8 +343,8 @@ export function VoiceChatUI({
                   exit={{ opacity: 0, y: -10 }}
                   className="flex items-center gap-2 justify-center"
                 >
-                  <Loader2 size={18} className="animate-spin text-[#406A56]" />
-                  <span className="text-[#406A56] font-medium">Saving your memory...</span>
+                  <Loader2 size={18} className="animate-spin text-[#2D5A3D]" />
+                  <span className="text-[#2D5A3D] font-medium">Saving your memory...</span>
                 </motion.div>
               ) : isListening ? (
                 <motion.div
@@ -353,8 +353,8 @@ export function VoiceChatUI({
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, y: -10 }}
                 >
-                  <p className="text-[#406A56] font-semibold text-lg">Listening...</p>
-                  <p className="text-[#406A56]/60 text-sm mt-1">Speak naturally, I'm here to listen</p>
+                  <p className="text-[#2D5A3D] font-semibold text-lg">Listening...</p>
+                  <p className="text-[#2D5A3D]/60 text-sm mt-1">Speak naturally, I'm here to listen</p>
                 </motion.div>
               ) : isThinking ? (
                 <motion.div
@@ -364,8 +364,8 @@ export function VoiceChatUI({
                   exit={{ opacity: 0, y: -10 }}
                   className="flex items-center gap-2 justify-center"
                 >
-                  <Loader2 size={18} className="animate-spin text-[#406A56]" />
-                  <span className="text-[#406A56] font-medium">Thinking about what you shared...</span>
+                  <Loader2 size={18} className="animate-spin text-[#2D5A3D]" />
+                  <span className="text-[#2D5A3D] font-medium">Thinking about what you shared...</span>
                 </motion.div>
               ) : isAiSpeaking ? (
                 <motion.div
@@ -375,13 +375,13 @@ export function VoiceChatUI({
                   exit={{ opacity: 0, y: -10 }}
                   className="flex flex-col items-center gap-3"
                 >
-                  <span className="text-[#D9C61A] font-semibold">Speaking...</span>
+                  <span className="text-[#C4A235] font-semibold">Speaking...</span>
                   {/* Audio wave visualization */}
                   <div className="flex items-end gap-1 h-10">
                     {[...Array(6)].map((_, i) => (
                       <motion.div
                         key={i}
-                        className="w-2 bg-[#D9C61A] rounded-full"
+                        className="w-2 bg-[#C4A235] rounded-full"
                         animate={{
                           height: [12, 32, 16, 40, 20],
                         }}
@@ -401,7 +401,7 @@ export function VoiceChatUI({
                   initial={{ opacity: 0, y: 10 }}
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, y: -10 }}
-                  className="text-[#406A56]/70"
+                  className="text-[#2D5A3D]/70"
                 >
                   {questionCount > 0 
                     ? "I'm listening whenever you're ready to share more"
@@ -415,8 +415,8 @@ export function VoiceChatUI({
                   exit={{ opacity: 0, y: -10 }}
                   className="text-center"
                 >
-                  <p className="text-green-600 font-semibold text-lg">Memory Saved!</p>
-                  <p className="text-[#406A56]/70 text-sm mt-1">
+                  <p className="text-green-600 font-semibold text-lg">Memory saved</p>
+                  <p className="text-[#2D5A3D]/70 text-sm mt-1">
                     Thank you for sharing your story
                   </p>
                 </motion.div>
@@ -428,12 +428,12 @@ export function VoiceChatUI({
                   exit={{ opacity: 0, y: -10 }}
                   className="text-center"
                 >
-                  <p className="text-[#406A56] font-medium">
+                  <p className="text-[#2D5A3D] font-medium">
                     {topic 
                       ? `Let's talk about "${topic}"`
                       : "What's on your mind?"}
                   </p>
-                  <p className="text-[#406A56]/60 text-sm mt-1">
+                  <p className="text-[#2D5A3D]/60 text-sm mt-1">
                     Click the microphone to start sharing your story
                   </p>
                 </motion.div>
@@ -452,21 +452,21 @@ export function VoiceChatUI({
               >
                 {/* User text */}
                 {currentUserText && (
-                  <div className="flex items-start gap-3 p-4 bg-[#406A56]/5 rounded-2xl">
-                    <div className="w-8 h-8 rounded-full bg-[#406A56]/20 flex items-center justify-center shrink-0">
-                      <User size={14} className="text-[#406A56]" />
+                  <div className="flex items-start gap-3 p-4 bg-[#2D5A3D]/5 rounded-2xl">
+                    <div className="w-8 h-8 rounded-full bg-[#2D5A3D]/20 flex items-center justify-center shrink-0">
+                      <User size={14} className="text-[#2D5A3D]" />
                     </div>
-                    <p className="text-[#406A56] leading-relaxed">{currentUserText}</p>
+                    <p className="text-[#2D5A3D] leading-relaxed">{currentUserText}</p>
                   </div>
                 )}
                 
                 {/* AI text */}
                 {currentAiText && (
-                  <div className="flex items-start gap-3 p-4 bg-[#D9C61A]/10 rounded-2xl">
-                    <div className="w-8 h-8 rounded-full bg-[#D9C61A]/30 flex items-center justify-center shrink-0">
-                      <Bot size={14} className="text-[#D9C61A]" />
+                  <div className="flex items-start gap-3 p-4 bg-[#C4A235]/10 rounded-2xl">
+                    <div className="w-8 h-8 rounded-full bg-[#C4A235]/30 flex items-center justify-center shrink-0">
+                      <Bot size={14} className="text-[#C4A235]" />
                     </div>
-                    <p className="text-[#406A56] leading-relaxed">{currentAiText}</p>
+                    <p className="text-[#2D5A3D] leading-relaxed">{currentAiText}</p>
                   </div>
                 )}
               </motion.div>
@@ -484,12 +484,12 @@ export function VoiceChatUI({
               >
                 <button
                   onClick={onSave}
-                  className="flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-[#406A56] to-[#4a7a64] text-white font-medium rounded-full shadow-lg shadow-[#406A56]/25 hover:shadow-xl hover:shadow-[#406A56]/30 transition-all hover:scale-105"
+                  className="flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-[#2D5A3D] to-[#234A31] text-white font-medium rounded-full shadow-lg shadow-[#2D5A3D]/25 hover:shadow-xl hover:shadow-[#2D5A3D]/30 transition-all hover:scale-105"
                 >
                   <Save size={18} />
                   Save This Memory
                 </button>
-                <p className="text-xs text-center text-[#406A56]/50 mt-2">
+                <p className="text-xs text-center text-[#2D5A3D]/50 mt-2">
                   Or say "save it" to save
                 </p>
               </motion.div>
@@ -504,7 +504,7 @@ export function VoiceChatUI({
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -20 }}
                 onClick={onReset}
-                className="mt-6 flex items-center gap-2 px-5 py-2.5 text-[#406A56] bg-[#406A56]/10 hover:bg-[#406A56]/15 rounded-full transition-colors font-medium"
+                className="mt-6 flex items-center gap-2 px-5 py-2.5 text-[#2D5A3D] bg-[#2D5A3D]/10 hover:bg-[#2D5A3D]/15 rounded-full transition-colors font-medium"
               >
                 <RotateCcw size={16} />
                 Start New Memory
@@ -515,10 +515,10 @@ export function VoiceChatUI({
 
         {/* Transcript Panel (Collapsible) */}
         {showTranscript && transcript.length > 0 && (
-          <div className="border-t border-[#406A56]/10">
+          <div className="border-t border-[#2D5A3D]/10">
             <button
               onClick={() => setIsTranscriptOpen(!isTranscriptOpen)}
-              className="w-full flex items-center justify-between px-5 py-3 text-sm text-[#406A56]/70 hover:bg-[#406A56]/5 transition-colors"
+              className="w-full flex items-center justify-between px-5 py-3 text-sm text-[#2D5A3D]/70 hover:bg-[#2D5A3D]/5 transition-colors"
             >
               <div className="flex items-center gap-2">
                 <MessageSquare size={16} />
@@ -546,27 +546,27 @@ export function VoiceChatUI({
                         className={`
                           flex gap-3 p-4 rounded-2xl
                           ${entry.role === 'user' 
-                            ? 'bg-[#406A56]/5 ml-8' 
-                            : 'bg-[#D9C61A]/10 mr-8'
+                            ? 'bg-[#2D5A3D]/5 ml-8' 
+                            : 'bg-[#C4A235]/10 mr-8'
                           }
                         `}
                       >
                         <div className="shrink-0">
                           {entry.role === 'user' ? (
-                            <div className="w-8 h-8 rounded-full bg-[#406A56]/20 flex items-center justify-center">
-                              <User size={14} className="text-[#406A56]" />
+                            <div className="w-8 h-8 rounded-full bg-[#2D5A3D]/20 flex items-center justify-center">
+                              <User size={14} className="text-[#2D5A3D]" />
                             </div>
                           ) : (
-                            <div className="w-8 h-8 rounded-full bg-[#D9C61A]/30 flex items-center justify-center">
-                              <Bot size={14} className="text-[#D9C61A]" />
+                            <div className="w-8 h-8 rounded-full bg-[#C4A235]/30 flex items-center justify-center">
+                              <Bot size={14} className="text-[#C4A235]" />
                             </div>
                           )}
                         </div>
                         <div className="flex-1 min-w-0">
-                          <p className="text-xs text-[#406A56]/50 mb-1 font-medium">
+                          <p className="text-xs text-[#2D5A3D]/50 mb-1 font-medium">
                             {entry.role === 'user' ? 'You' : persona?.name || 'AI Biographer'}
                           </p>
-                          <p className="text-sm text-[#406A56] leading-relaxed">{entry.text}</p>
+                          <p className="text-sm text-[#2D5A3D] leading-relaxed">{entry.text}</p>
                         </div>
                       </motion.div>
                     ))}
@@ -579,8 +579,8 @@ export function VoiceChatUI({
 
         {/* Footer hint */}
         {isActive && (
-          <div className="px-5 py-3 bg-[#406A56]/5 text-center">
-            <p className="text-xs text-[#406A56]/50">
+          <div className="px-5 py-3 bg-[#2D5A3D]/5 text-center">
+            <p className="text-xs text-[#2D5A3D]/50">
               {questionCount >= maxQuestions - 1 
                 ? "Say 'save it' when you're ready to save, or keep sharing"
                 : "Speak naturally - I'll detect when you finish and respond"}

@@ -150,17 +150,17 @@ const QUICK_ACTIONS: Record<string, Array<{ label: string; icon: any; action: st
 
 // Brand colors from YoursTruly brand kit
 const BRAND_COLORS = {
-  green: '#406A56',
+  green: '#2D5A3D',
   greenLight: '#D3E1DF',
-  yellow: '#D9C61A',
-  yellowLight: '#F2F1E5',
+  yellow: '#C4A235',
+  yellowLight: '#F5F3EE',
   blue: '#8DACAB',
   blueLight: '#C5CDD6',
-  red: '#C35F33',
+  red: '#B8562E',
   redLight: '#EBD4CA',
   purple: '#4A3552',
   purpleLight: '#D8D3DA',
-  offWhite: '#F2F1E5',
+  offWhite: '#F5F3EE',
   black: '#000000',
 }
 
@@ -433,7 +433,7 @@ function MasonryTile({
           {(() => {
             const c = getCompleteness(activity)
             if (!c || c.percentage === 100) return null
-            const color = c.percentage >= 80 ? '#22c55e' : c.percentage >= 50 ? '#D9C61A' : '#C35F33'
+            const color = c.percentage >= 80 ? '#22c55e' : c.percentage >= 50 ? '#C4A235' : '#B8562E'
             return (
               <div style={{
                 display: 'flex',
@@ -2019,7 +2019,7 @@ export default function DashboardPage() {
           width: '32px',
           height: '32px',
           border: '3px solid rgba(255,255,255,0.1)',
-          borderTopColor: '#406A56',
+          borderTopColor: '#2D5A3D',
           borderRadius: '50%',
           animation: 'spin 0.8s linear infinite',
         }} />
@@ -2065,7 +2065,7 @@ export default function DashboardPage() {
                     borderRadius: '12px',
                   }}>
                     <span style={{ fontSize: '13px' }}>🔥</span>
-                    <span style={{ fontSize: '13px', fontWeight: '700', color: '#C35F33' }}>{sidebarStreakDays}</span>
+                    <span style={{ fontSize: '13px', fontWeight: '700', color: '#B8562E' }}>{sidebarStreakDays}</span>
                   </div>
                 )}
               </div>
@@ -2112,7 +2112,7 @@ export default function DashboardPage() {
                         height: '100%',
                         borderRadius: '2px',
                         width: `${lvl.progress}%`,
-                        background: 'linear-gradient(90deg, #D9C61A, #E8D84A)',
+                        background: 'linear-gradient(90deg, #C4A235, #E8D84A)',
                         transition: 'width 0.8s ease-out',
                       }} />
                     </div>
@@ -2140,8 +2140,8 @@ export default function DashboardPage() {
                     borderRadius: '3px',
                     width: `${Math.min(sidebarStoragePercentage, 100)}%`,
                     background: sidebarStoragePercentage >= 90
-                      ? 'linear-gradient(90deg, #C35F33, #dc2626)'
-                      : 'linear-gradient(90deg, #406A56, #8DACAB)',
+                      ? 'linear-gradient(90deg, #B8562E, #dc2626)'
+                      : 'linear-gradient(90deg, #2D5A3D, #8DACAB)',
                     transition: 'width 0.8s ease-out',
                   }} />
                 </div>
@@ -2480,12 +2480,12 @@ export default function DashboardPage() {
                 </h2>
                 {sidebarStreakDays > 0 && (
                   <span style={{ display: 'flex', alignItems: 'center', gap: '3px', fontSize: '13px' }}>
-                    🔥 <span style={{ fontWeight: '700', color: '#C35F33' }}>{sidebarStreakDays}</span>
+                    🔥 <span style={{ fontWeight: '700', color: '#B8562E' }}>{sidebarStreakDays}</span>
                   </span>
                 )}
               </div>
               <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '13px', fontWeight: '600' }}>
-                <Sparkles size={14} style={{ color: '#D9C61A' }} />
+                <Sparkles size={14} style={{ color: '#C4A235' }} />
                 {totalXp} XP
               </div>
             </div>
@@ -2923,7 +2923,7 @@ export default function DashboardPage() {
                       style={{
                         width: '16px',
                         height: '16px',
-                        accentColor: '#406A56',
+                        accentColor: '#2D5A3D',
                         cursor: 'pointer',
                       }}
                     />
@@ -3069,7 +3069,7 @@ export default function DashboardPage() {
               <select
                 value={selectedContact}
                 onChange={(e) => setSelectedContact(e.target.value)}
-                className="w-full px-4 py-3 border border-gray-200 rounded-xl mb-6 focus:outline-none focus:ring-2 focus:ring-[#406A56] text-gray-900 font-medium"
+                className="w-full px-4 py-3 border border-gray-200 rounded-xl mb-6 focus:outline-none focus:ring-2 focus:ring-[#2D5A3D] text-gray-900 font-medium"
                 style={{ color: '#1A1A1A' }}
               >
                 <option value="" style={{ color: '#999' }}>Select a contact...</option>
@@ -3090,7 +3090,7 @@ export default function DashboardPage() {
                 <button
                   onClick={handleCreateInterview}
                   disabled={!selectedContact}
-                  className="flex-1 px-6 py-3 bg-[#406A56] text-white font-medium rounded-xl hover:bg-[#4a7a64] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="flex-1 px-6 py-3 bg-[#2D5A3D] text-white font-medium rounded-xl hover:bg-[#234A31] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   Start Interview
                 </button>
@@ -3141,7 +3141,7 @@ export default function DashboardPage() {
                   <div className="mb-6">
                     <div className="w-full bg-gray-200 rounded-full h-3 overflow-hidden">
                       <div 
-                        className="bg-gradient-to-r from-[#406A56] to-[#4a7a64] h-full transition-all duration-300"
+                        className="bg-gradient-to-r from-[#2D5A3D] to-[#234A31] h-full transition-all duration-300"
                         style={{ width: `${uploadProgress}%` }}
                       />
                     </div>
@@ -3157,7 +3157,7 @@ export default function DashboardPage() {
                           type="date"
                           value={memoryMetadata.date}
                           onChange={(e) => setMemoryMetadata({ ...memoryMetadata, date: e.target.value })}
-                          className="w-full px-4 py-2 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#406A56]"
+                          className="w-full px-4 py-2 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#2D5A3D]"
                         />
                       </div>
                       <div>
@@ -3167,7 +3167,7 @@ export default function DashboardPage() {
                           value={memoryMetadata.location}
                           onChange={(e) => setMemoryMetadata({ ...memoryMetadata, location: e.target.value })}
                           placeholder="Where was this taken?"
-                          className="w-full px-4 py-2 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#406A56]"
+                          className="w-full px-4 py-2 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#2D5A3D]"
                         />
                       </div>
                     </div>
@@ -3220,7 +3220,7 @@ export default function DashboardPage() {
                   <div className="flex gap-3">
                     <button
                       onClick={handleAddBackstory}
-                      className="flex-1 px-6 py-3 bg-[#406A56] text-white font-medium rounded-xl hover:bg-[#4a7a64] transition-colors"
+                      className="flex-1 px-6 py-3 bg-[#2D5A3D] text-white font-medium rounded-xl hover:bg-[#234A31] transition-colors"
                     >
                       Add Backstory
                     </button>
@@ -3272,7 +3272,7 @@ export default function DashboardPage() {
               <select
                 value={selectedContact}
                 onChange={(e) => setSelectedContact(e.target.value)}
-                className="w-full px-4 py-3 border border-gray-200 rounded-xl mb-6 focus:outline-none focus:ring-2 focus:ring-[#406A56] text-gray-900 font-medium"
+                className="w-full px-4 py-3 border border-gray-200 rounded-xl mb-6 focus:outline-none focus:ring-2 focus:ring-[#2D5A3D] text-gray-900 font-medium"
                 style={{ color: '#1A1A1A' }}
               >
                 <option value="" style={{ color: '#999' }}>Select a recipient...</option>
@@ -3293,7 +3293,7 @@ export default function DashboardPage() {
                 <button
                   onClick={handleCreatePostscript}
                   disabled={!selectedContact}
-                  className="flex-1 px-6 py-3 bg-[#406A56] text-white font-medium rounded-xl hover:bg-[#4a7a64] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="flex-1 px-6 py-3 bg-[#2D5A3D] text-white font-medium rounded-xl hover:bg-[#234A31] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   Create PostScript
                 </button>

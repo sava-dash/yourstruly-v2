@@ -27,8 +27,8 @@ const CATEGORY_CONFIG: Record<string, { icon: any; color: string; bg: string }> 
   home: { icon: Home, color: 'text-teal-600', bg: 'bg-teal-500/20' },
   graduation: { icon: GraduationCap, color: 'text-indigo-600', bg: 'bg-indigo-500/20' },
   work: { icon: Briefcase, color: 'text-slate-600', bg: 'bg-slate-500/20' },
-  photos: { icon: Camera, color: 'text-[#406A56]', bg: 'bg-[#406A56]/20' },
-  default: { icon: Sparkles, color: 'text-[#406A56]', bg: 'bg-[#406A56]/20' },
+  photos: { icon: Camera, color: 'text-[#2D5A3D]', bg: 'bg-[#2D5A3D]/20' },
+  default: { icon: Sparkles, color: 'text-[#2D5A3D]', bg: 'bg-[#2D5A3D]/20' },
 }
 
 export default function CategoryBadge({ 
@@ -100,7 +100,7 @@ export function CategoryGrid({
               className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
             />
           ) : (
-            <div className="w-full h-full bg-gradient-to-br from-[#406A56]/20 to-[#8DACAB]/30" />
+            <div className="w-full h-full bg-gradient-to-br from-[#2D5A3D]/20 to-[#8DACAB]/30" />
           )}
           
           {/* Overlay gradient */}

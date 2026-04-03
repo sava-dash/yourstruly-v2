@@ -66,7 +66,7 @@ export default function GalleryMap({ media, onSelectMedia, selectedTimeframe }: 
           html: `<div style="
             width: 28px;
             height: 28px;
-            background: linear-gradient(135deg, #C35F33, #E07A4A);
+            background: linear-gradient(135deg, #B8562E, #E07A4A);
             border-radius: 50% 50% 50% 0;
             transform: rotate(-45deg);
             border: 2px solid white;
@@ -225,7 +225,7 @@ export default function GalleryMap({ media, onSelectMedia, selectedTimeframe }: 
                 </p>
               )}
               {selectedMedia.memory?.title && (
-                <p className="text-xs text-[#406A56] mt-1 truncate">
+                <p className="text-xs text-[#2D5A3D] mt-1 truncate">
                   {selectedMedia.memory.title}
                 </p>
               )}

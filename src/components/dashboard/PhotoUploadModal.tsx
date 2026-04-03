@@ -292,7 +292,7 @@ export default function PhotoUploadModal({ isOpen, onClose }: PhotoUploadModalPr
           {uploadState === 'select' && (
             <div
               onClick={() => fileInputRef.current?.click()}
-              className="border-2 border-dashed border-gray-300 rounded-xl p-12 text-center cursor-pointer hover:border-[#406A56] hover:bg-gray-50 transition-all"
+              className="border-2 border-dashed border-gray-300 rounded-xl p-12 text-center cursor-pointer hover:border-[#2D5A3D] hover:bg-gray-50 transition-all"
             >
               <ImageIcon className="w-16 h-16 mx-auto mb-4 text-gray-400" />
               <p className="text-lg font-medium text-gray-700 mb-2">Click to upload a photo</p>
@@ -309,7 +309,7 @@ export default function PhotoUploadModal({ isOpen, onClose }: PhotoUploadModalPr
 
           {uploadState === 'uploading' && (
             <div className="flex flex-col items-center justify-center py-12">
-              <Loader2 className="w-12 h-12 animate-spin text-[#406A56] mb-4" />
+              <Loader2 className="w-12 h-12 animate-spin text-[#2D5A3D] mb-4" />
               <p className="text-lg font-medium text-gray-700">Analyzing photo...</p>
               <p className="text-sm text-gray-500 mt-2">Extracting date, location, and detecting faces</p>
             </div>
@@ -421,7 +421,7 @@ export default function PhotoUploadModal({ isOpen, onClose }: PhotoUploadModalPr
                               handleTagFace(selectedFaceIndex, contact.id, contact.full_name)
                             }
                           }}
-                          className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#406A56] focus:border-[#406A56]"
+                          className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#2D5A3D] focus:border-[#2D5A3D]"
                         >
                           <option value="">Or select from contacts...</option>
                           {contacts.map((contact) => (
@@ -453,7 +453,7 @@ export default function PhotoUploadModal({ isOpen, onClose }: PhotoUploadModalPr
 
           {uploadState === 'creating' && (
             <div className="flex flex-col items-center justify-center py-12">
-              <Loader2 className="w-12 h-12 animate-spin text-[#406A56] mb-4" />
+              <Loader2 className="w-12 h-12 animate-spin text-[#2D5A3D] mb-4" />
               <p className="text-lg font-medium text-gray-700">Creating memory...</p>
             </div>
           )}
@@ -470,7 +470,7 @@ export default function PhotoUploadModal({ isOpen, onClose }: PhotoUploadModalPr
             </button>
             <button
               onClick={handleSave}
-              className="px-6 py-2.5 bg-[#406A56] hover:bg-[#355a48] text-white rounded-lg font-medium transition-colors flex items-center gap-2"
+              className="px-6 py-2.5 bg-[#2D5A3D] hover:bg-[#355a48] text-white rounded-lg font-medium transition-colors flex items-center gap-2"
             >
               <Check size={18} />
               Save Memory

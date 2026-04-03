@@ -194,7 +194,7 @@ function OnboardingPageContent() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-[#FDF8F3] flex items-center justify-center">
+      <div className="min-h-screen bg-[#FAFAF7] flex items-center justify-center">
         <Loader2 className="w-8 h-8 animate-spin text-[#6f6fd2]" />
       </div>
     );
@@ -211,14 +211,14 @@ function OnboardingPageContent() {
       {/* Version toggle button */}
       <button
         onClick={toggleVersion}
-        className="fixed top-4 left-4 z-50 px-4 py-2 bg-white/90 backdrop-blur-sm rounded-full text-xs font-medium text-[#406A56] border border-[#406A56]/20 hover:bg-[#406A56]/10 transition-colors shadow-lg"
+        className="fixed top-4 left-4 z-50 px-4 py-2 bg-white/90 backdrop-blur-sm rounded-full text-xs font-medium text-[#2D5A3D] border border-[#2D5A3D]/20 hover:bg-[#2D5A3D]/10 transition-colors shadow-lg"
       >
         {useHeroUI ? '🎨 HeroUI' : '⚡ Classic'} • Click to switch
       </button>
 
       <Suspense
         fallback={
-          <div className="min-h-screen bg-[#FDF8F3] flex items-center justify-center">
+          <div className="min-h-screen bg-[#FAFAF7] flex items-center justify-center">
             <Loader2 className="w-8 h-8 animate-spin text-[#6f6fd2]" />
           </div>
         }
@@ -246,7 +246,7 @@ export default function OnboardingPage() {
   return (
     <Suspense
       fallback={
-        <div className="min-h-screen bg-[#FDF8F3] flex items-center justify-center">
+        <div className="min-h-screen bg-[#FAFAF7] flex items-center justify-center">
           <Loader2 className="w-8 h-8 animate-spin text-[#6f6fd2]" />
         </div>
       }

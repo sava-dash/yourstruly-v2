@@ -73,7 +73,7 @@ function MessageBubble({
               className="w-9 h-9 rounded-full object-cover"
             />
           ) : (
-            <div className="w-9 h-9 rounded-full bg-gradient-to-br from-[#406A56]/20 to-[#8DACAB]/30 flex items-center justify-center text-xs font-semibold text-[#406A56]">
+            <div className="w-9 h-9 rounded-full bg-gradient-to-br from-[#2D5A3D]/20 to-[#8DACAB]/30 flex items-center justify-center text-xs font-semibold text-[#2D5A3D]">
               {initials}
             </div>
           )
@@ -84,15 +84,15 @@ function MessageBubble({
       <div className={`max-w-[70%] ${isOwn ? 'items-end' : 'items-start'}`}>
         {/* Sender name */}
         {showName && !isOwn && (
-          <p className="text-xs font-semibold text-[#406A56] mb-1 px-1">
+          <p className="text-xs font-semibold text-[#2D5A3D] mb-1 px-1">
             {message.sender.full_name}
           </p>
         )}
 
         {/* Reply preview */}
         {message.reply_to && (
-          <div className={`mb-1 px-3 py-1.5 rounded-lg text-xs bg-[#406A56]/5 border-l-2 border-[#406A56]/30 ${isOwn ? 'ml-auto' : ''}`}>
-            <span className="font-medium text-[#406A56]">{message.reply_to.sender.full_name}</span>
+          <div className={`mb-1 px-3 py-1.5 rounded-lg text-xs bg-[#2D5A3D]/5 border-l-2 border-[#2D5A3D]/30 ${isOwn ? 'ml-auto' : ''}`}>
+            <span className="font-medium text-[#2D5A3D]">{message.reply_to.sender.full_name}</span>
             <p className="text-[#666] truncate">{message.reply_to.content}</p>
           </div>
         )}
@@ -101,8 +101,8 @@ function MessageBubble({
         <div
           className={`rounded-2xl px-4 py-2.5 ${
             isOwn
-              ? 'bg-[#406A56] text-white rounded-br-md'
-              : 'bg-white border border-[#406A56]/10 text-[#2d2d2d] rounded-bl-md'
+              ? 'bg-[#2D5A3D] text-white rounded-br-md'
+              : 'bg-white border border-[#2D5A3D]/10 text-[#2d2d2d] rounded-bl-md'
           }`}
         >
           {/* Image message */}
@@ -134,7 +134,7 @@ function MessageBubble({
             {format(new Date(message.created_at), 'h:mm a')}
           </span>
           {isOwn && (
-            <span className="text-[#406A56]">
+            <span className="text-[#2D5A3D]">
               <CheckCheck size={12} />
             </span>
           )}
@@ -186,10 +186,10 @@ function CircleMessageInput({
   const quickEmojis = ['😊', '❤️', '👍', '😂', '🙏', '✨', '🎉', '💪']
 
   return (
-    <div className="p-4 border-t border-[#406A56]/10 bg-white/50">
+    <div className="p-4 border-t border-[#2D5A3D]/10 bg-white/50">
       {/* Emoji Quick Picker */}
       {showEmojiPicker && (
-        <div className="mb-3 p-2 bg-white rounded-xl border border-[#406A56]/10 shadow-sm">
+        <div className="mb-3 p-2 bg-white rounded-xl border border-[#2D5A3D]/10 shadow-sm">
           <div className="flex items-center justify-between mb-2">
             <span className="text-xs font-medium text-[#666]">Quick Reactions</span>
             <button 
@@ -208,7 +208,7 @@ function CircleMessageInput({
                   setShowEmojiPicker(false)
                   textareaRef.current?.focus()
                 }}
-                className="w-9 h-9 text-xl hover:bg-[#406A56]/10 rounded-lg transition-colors"
+                className="w-9 h-9 text-xl hover:bg-[#2D5A3D]/10 rounded-lg transition-colors"
               >
                 {emoji}
               </button>
@@ -228,14 +228,14 @@ function CircleMessageInput({
             placeholder={placeholder}
             disabled={disabled}
             rows={1}
-            className="w-full px-4 py-2.5 pr-10 bg-[#406A56]/5 border border-[#406A56]/10 rounded-xl text-sm text-[#2d2d2d] placeholder:text-[#999] focus:outline-none focus:border-[#406A56]/30 focus:bg-white transition-all resize-none min-h-[44px] max-h-[120px]"
+            className="w-full px-4 py-2.5 pr-10 bg-[#2D5A3D]/5 border border-[#2D5A3D]/10 rounded-xl text-sm text-[#2d2d2d] placeholder:text-[#999] focus:outline-none focus:border-[#2D5A3D]/30 focus:bg-white transition-all resize-none min-h-[44px] max-h-[120px]"
           />
           
           <button
             onClick={() => setShowEmojiPicker(!showEmojiPicker)}
             className={`absolute right-3 bottom-2.5 p-1 rounded transition-colors ${
               showEmojiPicker
-                ? 'text-[#D9C61A]'
+                ? 'text-[#C4A235]'
                 : 'text-[#999] hover:text-[#666]'
             }`}
           >
@@ -248,8 +248,8 @@ function CircleMessageInput({
           disabled={!message.trim() || disabled}
           className={`flex-shrink-0 w-10 h-10 rounded-xl flex items-center justify-center transition-all ${
             message.trim() && !disabled
-              ? 'bg-[#406A56] text-white hover:bg-[#4a7a64] shadow-sm'
-              : 'bg-[#406A56]/10 text-[#406A56]/40 cursor-not-allowed'
+              ? 'bg-[#2D5A3D] text-white hover:bg-[#234A31] shadow-sm'
+              : 'bg-[#2D5A3D]/10 text-[#2D5A3D]/40 cursor-not-allowed'
           }`}
         >
           <Send size={18} />
@@ -355,10 +355,10 @@ export default function CircleMessageThread({
   return (
     <div className="h-full flex flex-col bg-[#FAF7E8]/30">
       {/* Header */}
-      <div className="flex-shrink-0 px-4 py-3 border-b border-[#406A56]/10 bg-white/60 flex items-center justify-between">
+      <div className="flex-shrink-0 px-4 py-3 border-b border-[#2D5A3D]/10 bg-white/60 flex items-center justify-between">
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-full bg-gradient-to-br from-[#406A56]/20 to-[#D9C61A]/20 flex items-center justify-center">
-            <Users size={18} className="text-[#406A56]" />
+          <div className="w-10 h-10 rounded-full bg-gradient-to-br from-[#2D5A3D]/20 to-[#C4A235]/20 flex items-center justify-center">
+            <Users size={18} className="text-[#2D5A3D]" />
           </div>
           <div>
             <h3 className="font-semibold text-[#2d2d2d]">{circleName}</h3>
@@ -367,7 +367,7 @@ export default function CircleMessageThread({
         </div>
         <button
           onClick={onOpenDetail}
-          className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-[#406A56] hover:bg-[#406A56]/10 rounded-lg transition-colors"
+          className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-[#2D5A3D] hover:bg-[#2D5A3D]/10 rounded-lg transition-colors"
         >
           <ExternalLink size={14} />
           View Circle
@@ -378,12 +378,12 @@ export default function CircleMessageThread({
       <div className="flex-1 overflow-y-auto p-4 space-y-6 min-h-0">
         {loading ? (
           <div className="flex items-center justify-center h-full">
-            <Loader2 size={24} className="animate-spin text-[#406A56]" />
+            <Loader2 size={24} className="animate-spin text-[#2D5A3D]" />
           </div>
         ) : messages.length === 0 ? (
           <div className="flex flex-col items-center justify-center h-full text-center">
-            <div className="w-16 h-16 rounded-full bg-[#406A56]/10 flex items-center justify-center mb-4">
-              <Send size={24} className="text-[#406A56]" />
+            <div className="w-16 h-16 rounded-full bg-[#2D5A3D]/10 flex items-center justify-center mb-4">
+              <Send size={24} className="text-[#2D5A3D]" />
             </div>
             <h3 className="font-semibold text-[#2d2d2d] mb-1">Start the conversation</h3>
             <p className="text-sm text-[#666]">
@@ -395,11 +395,11 @@ export default function CircleMessageThread({
             <div key={groupIndex}>
               {/* Date Separator */}
               <div className="flex items-center gap-4 mb-4">
-                <div className="flex-1 h-px bg-[#406A56]/10" />
+                <div className="flex-1 h-px bg-[#2D5A3D]/10" />
                 <span className="text-xs font-medium text-[#666] bg-[#FAF7E8] px-3 py-1 rounded-full">
                   {formatDateSeparator(date)}
                 </span>
-                <div className="flex-1 h-px bg-[#406A56]/10" />
+                <div className="flex-1 h-px bg-[#2D5A3D]/10" />
               </div>
 
               {/* Messages */}

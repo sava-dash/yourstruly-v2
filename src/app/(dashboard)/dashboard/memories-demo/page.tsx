@@ -174,7 +174,7 @@ export default function MemoriesDemoPage() {
     return (
       <div className="page-container">
         <div className="page-background"><div className="page-blob page-blob-1"/><div className="page-blob page-blob-2"/></div>
-        <div className="loading-container"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#406A56]"/></div>
+        <div className="loading-container"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#2D5A3D]"/></div>
       </div>
     )
   }
@@ -278,7 +278,7 @@ export default function MemoriesDemoPage() {
               <div>
                 <div className="flex items-center gap-2">
                   <h1 className="page-header-title">Memory Gallery</h1>
-                  <span className="px-2 py-0.5 bg-[#D9C61A]/20 text-[#9a8c12] text-xs rounded-full font-medium">DEMO</span>
+                  <span className="px-2 py-0.5 bg-[#C4A235]/20 text-[#9a8c12] text-xs rounded-full font-medium">DEMO</span>
                 </div>
                 <p className="page-header-subtitle">{memories.length} memories · Your life story</p>
               </div>
@@ -295,7 +295,7 @@ export default function MemoriesDemoPage() {
               </button>
               {/* Search */}
               <button onClick={() => setShowSearch(!showSearch)}
-                className="p-2.5 glass-card-page text-[#406A56] rounded-xl hover:shadow-md transition-all">
+                className="p-2.5 glass-card-page text-[#2D5A3D] rounded-xl hover:shadow-md transition-all">
                 <Search size={18}/>
               </button>
             </div>
@@ -343,9 +343,9 @@ export default function MemoriesDemoPage() {
 
         {/* ── TODAY IN YOUR LIFE ─────────────────── */}
         {todayInLife.length > 0 && browseMode === 'timeline' && (
-          <section className="glass-card-page p-5 mb-8 border-l-4 border-[#D9C61A]">
+          <section className="glass-card-page p-5 mb-8 border-l-4 border-[#C4A235]">
             <div className="flex items-center gap-2 mb-4">
-              <Sparkles size={16} className="text-[#D9C61A]"/>
+              <Sparkles size={16} className="text-[#C4A235]"/>
               <h2 className="font-semibold text-[#2d2d2d] text-sm uppercase tracking-wide">Today in Your Life</h2>
             </div>
             <div className="flex gap-4 overflow-x-auto pb-1">
@@ -355,8 +355,8 @@ export default function MemoriesDemoPage() {
                     {coverImage(m) ? (
                       <img src={coverImage(m)} alt="" className="w-full h-28 object-cover"/>
                     ) : (
-                      <div className="w-full h-28 bg-gradient-to-br from-[#406A56]/20 to-[#D9C61A]/20 flex items-center justify-center">
-                        <BookOpen size={24} className="text-[#406A56]/50"/>
+                      <div className="w-full h-28 bg-gradient-to-br from-[#2D5A3D]/20 to-[#C4A235]/20 flex items-center justify-center">
+                        <BookOpen size={24} className="text-[#2D5A3D]/50"/>
                       </div>
                     )}
                     <div className="p-3">
@@ -421,7 +421,7 @@ export default function MemoriesDemoPage() {
                 </h2>
                 {Object.entries(byYear[year]).map(([month, mems]) => (
                   <div key={month} className="mb-8">
-                    <h3 className="text-sm font-semibold text-[#406A56] uppercase tracking-wider mb-4 pl-1">{month}</h3>
+                    <h3 className="text-sm font-semibold text-[#2D5A3D] uppercase tracking-wider mb-4 pl-1">{month}</h3>
                     <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
                       {mems.map(m => <MemoryCard key={m.id} memory={m}/>)}
                     </div>
@@ -438,7 +438,7 @@ export default function MemoriesDemoPage() {
           <div>
             <div className="glass-card-page p-6 mb-8">
               <h2 className="font-semibold text-[#2d2d2d] mb-5 flex items-center gap-2">
-                <Users size={18} className="text-[#406A56]"/> People You've Shared Life With
+                <Users size={18} className="text-[#2D5A3D]"/> People You've Shared Life With
               </h2>
               <div className="flex flex-wrap gap-4">
                 {peopleMock.map(p => (
@@ -465,7 +465,7 @@ export default function MemoriesDemoPage() {
             {/* Relationship insight */}
             <div className="glass-card-page p-5 mb-6 bg-gradient-to-r from-[#4A3552]/5 to-transparent">
               <div className="flex items-start gap-3">
-                <Sparkles size={16} className="text-[#D9C61A] mt-0.5"/>
+                <Sparkles size={16} className="text-[#C4A235] mt-0.5"/>
                 <div>
                   <p className="text-sm font-medium text-[#2d2d2d] mb-1">AI Relationship Insight</p>
                   <p className="text-sm text-gray-500">
@@ -490,11 +490,11 @@ export default function MemoriesDemoPage() {
         {browseMode === 'places' && (
           <div>
             <div className="glass-card-page p-6 mb-6 text-center">
-              <MapPin size={32} className="mx-auto text-[#406A56]/40 mb-3"/>
+              <MapPin size={32} className="mx-auto text-[#2D5A3D]/40 mb-3"/>
               <p className="font-medium text-[#2d2d2d] mb-1">Globe Map View</p>
               <p className="text-sm text-gray-400 mb-4">Interactive pins for every memory with location data</p>
               <Link href="/dashboard/gallery"
-                className="inline-flex items-center gap-2 px-4 py-2 bg-[#406A56] text-white rounded-xl text-sm hover:bg-[#4a7a64] transition-colors">
+                className="inline-flex items-center gap-2 px-4 py-2 bg-[#2D5A3D] text-white rounded-xl text-sm hover:bg-[#234A31] transition-colors">
                 <Map size={14}/> Open Gallery Map
               </Link>
             </div>
@@ -559,7 +559,7 @@ export default function MemoriesDemoPage() {
                 const count = memories.filter(m => m.ai_category?.toLowerCase() === cat.key).length
                 return (
                   <button key={cat.key} onClick={() => setSelectedCategory(selectedCategory === cat.key ? null : cat.key)}
-                    className={`glass-card-page p-5 rounded-xl text-center transition-all hover:shadow-md ${selectedCategory === cat.key ? 'ring-2 ring-[#406A56]' : ''}`}>
+                    className={`glass-card-page p-5 rounded-xl text-center transition-all hover:shadow-md ${selectedCategory === cat.key ? 'ring-2 ring-[#2D5A3D]' : ''}`}>
                     <div className="text-3xl mb-2">{cat.icon}</div>
                     <div className="font-medium text-[#2d2d2d] text-sm">{cat.label}</div>
                     <div className="text-xs text-gray-400 mt-0.5">{count} memories</div>
@@ -609,8 +609,8 @@ function MemoryCard({ memory }: { memory: Memory }) {
           {cover ? (
             <img src={cover} alt="" className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"/>
           ) : (
-            <div className="w-full h-full bg-gradient-to-br from-[#406A56]/10 to-[#D9C61A]/10 flex items-center justify-center">
-              <BookOpen size={24} className="text-[#406A56]/30"/>
+            <div className="w-full h-full bg-gradient-to-br from-[#2D5A3D]/10 to-[#C4A235]/10 flex items-center justify-center">
+              <BookOpen size={24} className="text-[#2D5A3D]/30"/>
             </div>
           )}
           {/* Mood overlay */}
@@ -622,7 +622,7 @@ function MemoryCard({ memory }: { memory: Memory }) {
           {/* Favorite */}
           {memory.is_favorite && (
             <div className="absolute top-2 left-2">
-              <Star size={14} className="text-[#D9C61A] fill-[#D9C61A] drop-shadow"/>
+              <Star size={14} className="text-[#C4A235] fill-[#C4A235] drop-shadow"/>
             </div>
           )}
         </div>
@@ -641,7 +641,7 @@ function MemoryCard({ memory }: { memory: Memory }) {
             )}
           </div>
           {memory.ai_category && (
-            <span className="inline-block mt-2 px-2 py-0.5 bg-[#406A56]/10 text-[#406A56] rounded-full text-[10px]">
+            <span className="inline-block mt-2 px-2 py-0.5 bg-[#2D5A3D]/10 text-[#2D5A3D] rounded-full text-[10px]">
               {memory.ai_category}
             </span>
           )}
@@ -678,17 +678,17 @@ function UnstoriedMoments() {
   if (unstoriedMedia.length === 0) return null
 
   return (
-    <section className="mt-12 glass-card-page p-6 border-l-4 border-[#C35F33]">
+    <section className="mt-12 glass-card-page p-6 border-l-4 border-[#B8562E]">
       <div className="flex items-center justify-between mb-4">
         <div>
           <h2 className="font-semibold text-[#2d2d2d] flex items-center gap-2">
-            <Image size={16} className="text-[#C35F33]"/>
+            <Image size={16} className="text-[#B8562E]"/>
             Unstoried Moments
           </h2>
           <p className="text-sm text-gray-400 mt-0.5">You uploaded these photos but haven't added a story yet</p>
         </div>
         <Link href="/dashboard/gallery"
-          className="flex items-center gap-1.5 text-sm text-[#C35F33] hover:underline font-medium">
+          className="flex items-center gap-1.5 text-sm text-[#B8562E] hover:underline font-medium">
           View all <ArrowRight size={14}/>
         </Link>
       </div>
@@ -703,7 +703,7 @@ function UnstoriedMoments() {
         ))}
       </div>
       <Link href="/dashboard/memories/new"
-        className="mt-4 flex items-center justify-center gap-2 w-full py-2.5 border-2 border-dashed border-[#C35F33]/30 rounded-xl text-[#C35F33] text-sm hover:bg-[#C35F33]/5 transition-colors">
+        className="mt-4 flex items-center justify-center gap-2 w-full py-2.5 border-2 border-dashed border-[#B8562E]/30 rounded-xl text-[#B8562E] text-sm hover:bg-[#B8562E]/5 transition-colors">
         <Plus size={14}/> Create Memory from these photos
       </Link>
     </section>

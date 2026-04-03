@@ -155,13 +155,13 @@ export function AnimatedQuestion({
       {showAvatar && (
         <div className="animated-question-avatar">
           {avatar || (
-            <div className="w-10 h-10 rounded-full bg-[#406A56]/10 flex items-center justify-center">
-              <Sparkles size={20} className="text-[#406A56]" />
+            <div className="w-10 h-10 rounded-full bg-[#2D5A3D]/10 flex items-center justify-center">
+              <Sparkles size={20} className="text-[#2D5A3D]" />
             </div>
           )}
           {isSpeaking && (
             <motion.div
-              className="absolute -bottom-0.5 -right-0.5 w-3 h-3 bg-[#406A56] rounded-full"
+              className="absolute -bottom-0.5 -right-0.5 w-3 h-3 bg-[#2D5A3D] rounded-full"
               animate={{ scale: [1, 1.3, 1] }}
               transition={{ duration: 0.5, repeat: Infinity }}
             />
@@ -173,15 +173,15 @@ export function AnimatedQuestion({
         <p className={`${sizeClasses[size]} font-medium text-[#2d2d2d] leading-relaxed font-playfair`}>
           {isLoading ? (
             <span className="inline-flex items-center gap-1">
-              <span className="inline-block w-2 h-2 bg-[#406A56] rounded-full animate-bounce [animation-delay:-0.3s]" />
-              <span className="inline-block w-2 h-2 bg-[#406A56] rounded-full animate-bounce [animation-delay:-0.15s]" />
-              <span className="inline-block w-2 h-2 bg-[#406A56] rounded-full animate-bounce" />
+              <span className="inline-block w-2 h-2 bg-[#2D5A3D] rounded-full animate-bounce [animation-delay:-0.3s]" />
+              <span className="inline-block w-2 h-2 bg-[#2D5A3D] rounded-full animate-bounce [animation-delay:-0.15s]" />
+              <span className="inline-block w-2 h-2 bg-[#2D5A3D] rounded-full animate-bounce" />
             </span>
           ) : (
             <>
               {displayText}
               {animate && !typingDone && (
-                <span className="inline-block w-0.5 h-[1em] bg-[#406A56] ml-1 animate-pulse align-middle" />
+                <span className="inline-block w-0.5 h-[1em] bg-[#2D5A3D] ml-1 animate-pulse align-middle" />
               )}
             </>
           )}
@@ -194,8 +194,8 @@ export function AnimatedQuestion({
             onClick={handlePlayStop}
             className={`p-2 rounded-lg transition-all ${
               isSpeaking 
-                ? 'bg-[#406A56] text-white' 
-                : 'bg-[#406A56]/10 text-[#406A56] hover:bg-[#406A56]/20'
+                ? 'bg-[#2D5A3D] text-white' 
+                : 'bg-[#2D5A3D]/10 text-[#2D5A3D] hover:bg-[#2D5A3D]/20'
             }`}
             aria-label={isSpeaking ? 'Stop' : 'Play'}
           >
@@ -205,7 +205,7 @@ export function AnimatedQuestion({
             onClick={handleToggleTTS}
             className={`p-2 rounded-lg transition-all ${
               ttsEnabled 
-                ? 'bg-[#406A56]/20 text-[#406A56]' 
+                ? 'bg-[#2D5A3D]/20 text-[#2D5A3D]' 
                 : 'bg-gray-100 text-gray-400 hover:bg-gray-200'
             }`}
             aria-label={ttsEnabled ? 'Auto-speak on' : 'Auto-speak off'}

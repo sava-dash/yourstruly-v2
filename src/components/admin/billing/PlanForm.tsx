@@ -86,7 +86,7 @@ export default function PlanForm({ plan, onClose }: PlanFormProps) {
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50">
       <div className="relative w-full max-w-2xl max-h-[90vh] overflow-y-auto glass bg-white rounded-2xl shadow-2xl">
         {/* Header */}
-        <div className="sticky top-0 flex items-center justify-between px-6 py-4 border-b border-[#C35F33]/10 bg-white/80 backdrop-blur-sm rounded-t-2xl">
+        <div className="sticky top-0 flex items-center justify-between px-6 py-4 border-b border-[#B8562E]/10 bg-white/80 backdrop-blur-sm rounded-t-2xl">
           <h2 className="text-xl font-semibold text-[#2a1f1a]">
             {plan ? 'Edit Plan' : 'Create Plan'}
           </h2>
@@ -114,7 +114,7 @@ export default function PlanForm({ plan, onClose }: PlanFormProps) {
                 value={formData.name}
                 onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                 required
-                className="w-full px-4 py-2 bg-white/80 border border-[#C35F33]/10 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-[#406A56]/20 focus:border-[#406A56]/30"
+                className="w-full px-4 py-2 bg-white/80 border border-[#B8562E]/10 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-[#2D5A3D]/20 focus:border-[#2D5A3D]/30"
                 placeholder="e.g., Premium"
               />
             </div>
@@ -127,7 +127,7 @@ export default function PlanForm({ plan, onClose }: PlanFormProps) {
                 onChange={(e) => setFormData({ ...formData, slug: e.target.value })}
                 required
                 disabled={!!plan}
-                className="w-full px-4 py-2 bg-white/80 border border-[#C35F33]/10 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-[#406A56]/20 focus:border-[#406A56]/30 disabled:bg-gray-100"
+                className="w-full px-4 py-2 bg-white/80 border border-[#B8562E]/10 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-[#2D5A3D]/20 focus:border-[#2D5A3D]/30 disabled:bg-gray-100"
                 placeholder="e.g., premium"
               />
             </div>
@@ -139,7 +139,7 @@ export default function PlanForm({ plan, onClose }: PlanFormProps) {
               type="text"
               value={formData.description}
               onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-              className="w-full px-4 py-2 bg-white/80 border border-[#C35F33]/10 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-[#406A56]/20 focus:border-[#406A56]/30"
+              className="w-full px-4 py-2 bg-white/80 border border-[#B8562E]/10 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-[#2D5A3D]/20 focus:border-[#2D5A3D]/30"
               placeholder="Brief description of the plan"
             />
           </div>
@@ -154,7 +154,7 @@ export default function PlanForm({ plan, onClose }: PlanFormProps) {
                 value={formData.price_cents}
                 onChange={(e) => setFormData({ ...formData, price_cents: parseFloat(e.target.value) })}
                 required
-                className="w-full px-4 py-2 bg-white/80 border border-[#C35F33]/10 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-[#406A56]/20 focus:border-[#406A56]/30"
+                className="w-full px-4 py-2 bg-white/80 border border-[#B8562E]/10 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-[#2D5A3D]/20 focus:border-[#2D5A3D]/30"
               />
             </div>
 
@@ -163,7 +163,7 @@ export default function PlanForm({ plan, onClose }: PlanFormProps) {
               <select
                 value={formData.currency}
                 onChange={(e) => setFormData({ ...formData, currency: e.target.value })}
-                className="w-full px-4 py-2 bg-white/80 border border-[#C35F33]/10 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-[#406A56]/20 focus:border-[#406A56]/30"
+                className="w-full px-4 py-2 bg-white/80 border border-[#B8562E]/10 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-[#2D5A3D]/20 focus:border-[#2D5A3D]/30"
               >
                 <option value="USD">USD</option>
                 <option value="EUR">EUR</option>
@@ -177,7 +177,7 @@ export default function PlanForm({ plan, onClose }: PlanFormProps) {
               <select
                 value={formData.interval}
                 onChange={(e) => setFormData({ ...formData, interval: e.target.value as 'month' | 'year' | 'lifetime' })}
-                className="w-full px-4 py-2 bg-white/80 border border-[#C35F33]/10 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-[#406A56]/20 focus:border-[#406A56]/30"
+                className="w-full px-4 py-2 bg-white/80 border border-[#B8562E]/10 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-[#2D5A3D]/20 focus:border-[#2D5A3D]/30"
               >
                 <option value="month">Monthly</option>
                 <option value="year">Yearly</option>
@@ -192,12 +192,12 @@ export default function PlanForm({ plan, onClose }: PlanFormProps) {
               value={formData.features}
               onChange={(e) => setFormData({ ...formData, features: e.target.value })}
               rows={4}
-              className="w-full px-4 py-2 bg-white/80 border border-[#C35F33]/10 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-[#406A56]/20 focus:border-[#406A56]/30 resize-none"
+              className="w-full px-4 py-2 bg-white/80 border border-[#B8562E]/10 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-[#2D5A3D]/20 focus:border-[#2D5A3D]/30 resize-none"
               placeholder="Unlimited memories&#10;Priority support&#10;Family sharing"
             />
           </div>
 
-          <div className="border-t border-[#C35F33]/10 pt-4">
+          <div className="border-t border-[#B8562E]/10 pt-4">
             <h3 className="text-sm font-medium text-[#2a1f1a] mb-4">Plan Limits</h3>
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
@@ -206,7 +206,7 @@ export default function PlanForm({ plan, onClose }: PlanFormProps) {
                   type="number"
                   value={formData.max_memories}
                   onChange={(e) => setFormData({ ...formData, max_memories: parseInt(e.target.value) })}
-                  className="w-full px-4 py-2 bg-white/80 border border-[#C35F33]/10 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-[#406A56]/20 focus:border-[#406A56]/30"
+                  className="w-full px-4 py-2 bg-white/80 border border-[#B8562E]/10 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-[#2D5A3D]/20 focus:border-[#2D5A3D]/30"
                 />
               </div>
 
@@ -216,7 +216,7 @@ export default function PlanForm({ plan, onClose }: PlanFormProps) {
                   type="number"
                   value={formData.max_voice_clones}
                   onChange={(e) => setFormData({ ...formData, max_voice_clones: parseInt(e.target.value) })}
-                  className="w-full px-4 py-2 bg-white/80 border border-[#C35F33]/10 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-[#406A56]/20 focus:border-[#406A56]/30"
+                  className="w-full px-4 py-2 bg-white/80 border border-[#B8562E]/10 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-[#2D5A3D]/20 focus:border-[#2D5A3D]/30"
                 />
               </div>
 
@@ -226,7 +226,7 @@ export default function PlanForm({ plan, onClose }: PlanFormProps) {
                   type="number"
                   value={formData.max_storage_mb}
                   onChange={(e) => setFormData({ ...formData, max_storage_mb: parseInt(e.target.value) })}
-                  className="w-full px-4 py-2 bg-white/80 border border-[#C35F33]/10 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-[#406A56]/20 focus:border-[#406A56]/30"
+                  className="w-full px-4 py-2 bg-white/80 border border-[#B8562E]/10 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-[#2D5A3D]/20 focus:border-[#2D5A3D]/30"
                 />
               </div>
 
@@ -236,7 +236,7 @@ export default function PlanForm({ plan, onClose }: PlanFormProps) {
                   id="family_sharing"
                   checked={formData.family_sharing}
                   onChange={(e) => setFormData({ ...formData, family_sharing: e.target.checked })}
-                  className="rounded border-[#C35F33]/20 text-[#406A56] focus:ring-[#406A56]/20"
+                  className="rounded border-[#B8562E]/20 text-[#2D5A3D] focus:ring-[#2D5A3D]/20"
                 />
                 <label htmlFor="family_sharing" className="text-sm text-[#2a1f1a]/70">
                   Enable Family Sharing
@@ -245,14 +245,14 @@ export default function PlanForm({ plan, onClose }: PlanFormProps) {
             </div>
           </div>
 
-          <div className="flex items-center gap-6 pt-4 border-t border-[#C35F33]/10">
+          <div className="flex items-center gap-6 pt-4 border-t border-[#B8562E]/10">
             <div className="flex items-center gap-3">
               <input
                 type="checkbox"
                 id="is_active"
                 checked={formData.is_active}
                 onChange={(e) => setFormData({ ...formData, is_active: e.target.checked })}
-                className="rounded border-[#C35F33]/20 text-[#406A56] focus:ring-[#406A56]/20"
+                className="rounded border-[#B8562E]/20 text-[#2D5A3D] focus:ring-[#2D5A3D]/20"
               />
               <label htmlFor="is_active" className="text-sm text-[#2a1f1a]">
                 Active
@@ -265,7 +265,7 @@ export default function PlanForm({ plan, onClose }: PlanFormProps) {
                 id="is_default"
                 checked={formData.is_default}
                 onChange={(e) => setFormData({ ...formData, is_default: e.target.checked })}
-                className="rounded border-[#C35F33]/20 text-[#406A56] focus:ring-[#406A56]/20"
+                className="rounded border-[#B8562E]/20 text-[#2D5A3D] focus:ring-[#2D5A3D]/20"
               />
               <label htmlFor="is_default" className="text-sm text-[#2a1f1a]">
                 Default Plan
@@ -278,14 +278,14 @@ export default function PlanForm({ plan, onClose }: PlanFormProps) {
             <button
               type="button"
               onClick={onClose}
-              className="px-4 py-2 bg-white/80 border border-[#C35F33]/10 rounded-xl text-sm font-medium text-[#2a1f1a] hover:bg-white transition-colors"
+              className="px-4 py-2 bg-white/80 border border-[#B8562E]/10 rounded-xl text-sm font-medium text-[#2a1f1a] hover:bg-white transition-colors"
             >
               Cancel
             </button>
             <button
               type="submit"
               disabled={isLoading}
-              className="flex items-center gap-2 px-4 py-2 bg-[#406A56] text-white rounded-xl text-sm font-medium hover:bg-[#406A56]/90 transition-colors disabled:opacity-50"
+              className="flex items-center gap-2 px-4 py-2 bg-[#2D5A3D] text-white rounded-xl text-sm font-medium hover:bg-[#2D5A3D]/90 transition-colors disabled:opacity-50"
             >
               {isLoading && <Loader2 className="w-4 h-4 animate-spin" />}
               {plan ? 'Update Plan' : 'Create Plan'}

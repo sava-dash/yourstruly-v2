@@ -31,12 +31,12 @@
   --page-padding: 24px;
   
   /* Colors - YT Brand */
-  --yt-offwhite: #F2F1E5;
-  --yt-green: #406A56;
+  --yt-offwhite: #FAFAF7;
+  --yt-green: #2D5A3D;
   --yt-green-light: #D3E1DF;
-  --yt-yellow: #D9C61A;
+  --yt-yellow: #C4A235;
   --yt-yellow-dark: #8a7c08;
-  --yt-red: #C35F33;
+  --yt-red: #B8562E;
   --yt-blue: #8DACAB;
   --yt-purple: #4A3552;
 }
@@ -88,7 +88,7 @@
 .home-blob-1 {
   width: 400px;
   height: 400px;
-  background: linear-gradient(135deg, #D9C61A40, #C35F3330);
+  background: linear-gradient(135deg, #C4A23540, #B8562E30);
   top: -100px;
   right: -100px;
 }
@@ -96,7 +96,7 @@
 .home-blob-2 {
   width: 300px;
   height: 300px;
-  background: linear-gradient(135deg, #406A5640, #8DACAB30);
+  background: linear-gradient(135deg, #2D5A3D40, #8DACAB30);
   bottom: -50px;
   left: -50px;
   animation-delay: -5s;
@@ -105,7 +105,7 @@
 .home-blob-3 {
   width: 250px;
   height: 250px;
-  background: linear-gradient(135deg, #C35F3340, #D9C61A30);
+  background: linear-gradient(135deg, #B8562E40, #C4A23530);
   top: 40%;
   left: 30%;
   animation-delay: -10s;
@@ -256,7 +256,7 @@
   margin: 0 auto 16px;
   border: 3px solid rgba(195, 95, 51, 0.15);
   overflow: hidden;
-  background: linear-gradient(135deg, #FDF8F3, #F5EDE5);
+  background: linear-gradient(135deg, #FAFAF7, #F5EDE5);
   box-shadow: 
     0 4px 16px rgba(195, 95, 51, 0.1),
     inset 0 0 0 1px rgba(255, 255, 255, 0.5);
@@ -339,7 +339,7 @@
 }
 
 .profile-event svg {
-  color: #D9C61A;
+  color: #C4A235;
   flex-shrink: 0;
 }
 
@@ -670,7 +670,7 @@
   width: 36px;
   height: 36px;
   border-radius: 50%;
-  background: linear-gradient(135deg, #D3E1DF, #406A5620);
+  background: linear-gradient(135deg, #D3E1DF, #2D5A3D20);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -836,7 +836,7 @@
 }
 
 .milestone-button:hover {
-  background: #4a7a64;
+  background: #234A31;
 }
 
 /* =============================================================================

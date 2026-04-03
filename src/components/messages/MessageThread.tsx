@@ -95,8 +95,8 @@ export default function MessageThread({
     const element = document.getElementById(`msg-${messageId}`)
     if (element) {
       element.scrollIntoView({ behavior: 'smooth', block: 'center' })
-      element.classList.add('bg-[#D9C61A]/20')
-      setTimeout(() => element.classList.remove('bg-[#D9C61A]/20'), 2000)
+      element.classList.add('bg-[#C4A235]/20')
+      setTimeout(() => element.classList.remove('bg-[#C4A235]/20'), 2000)
     }
   }
 
@@ -115,7 +115,7 @@ export default function MessageThread({
   return (
     <div className="h-full flex flex-col">
       {/* Header */}
-      <div className="flex items-center justify-between p-4 border-b border-[#406A56]/10 bg-white/50 flex-shrink-0">
+      <div className="flex items-center justify-between p-4 border-b border-[#2D5A3D]/10 bg-white/50 flex-shrink-0">
         <div className="flex items-center gap-3">
           {/* Avatar */}
           {conversation.avatarUrl ? (
@@ -127,8 +127,8 @@ export default function MessageThread({
           ) : (
             <div className={`w-11 h-11 rounded-full flex items-center justify-center font-semibold ${
               conversation.type === 'memory-thread'
-                ? 'bg-gradient-to-br from-[#D9C61A]/30 to-[#C35F33]/30 text-[#C35F33]'
-                : 'bg-gradient-to-br from-[#406A56]/20 to-[#8DACAB]/30 text-[#406A56]'
+                ? 'bg-gradient-to-br from-[#C4A235]/30 to-[#B8562E]/30 text-[#B8562E]'
+                : 'bg-gradient-to-br from-[#2D5A3D]/20 to-[#8DACAB]/30 text-[#2D5A3D]'
             }`}>
               {conversation.type === 'memory-thread' ? (
                 <Brain size={20} />
@@ -144,7 +144,7 @@ export default function MessageThread({
               {conversation.type === 'memory-thread' && conversation.linkedMemoryTitle && (
                 <>
                   <span className="flex items-center gap-1">
-                    <Brain size={10} className="text-[#D9C61A]" />
+                    <Brain size={10} className="text-[#C4A235]" />
                     {conversation.linkedMemoryTitle}
                   </span>
                   <span>·</span>
@@ -169,12 +169,12 @@ export default function MessageThread({
         {/* Actions */}
         <div className="flex items-center gap-1">
           <button 
-            className="w-9 h-9 rounded-lg flex items-center justify-center text-[#666] hover:bg-[#406A56]/10 hover:text-[#406A56] transition-colors"
+            className="w-9 h-9 rounded-lg flex items-center justify-center text-[#666] hover:bg-[#2D5A3D]/10 hover:text-[#2D5A3D] transition-colors"
             title="View members & details"
           >
             <Info size={18} />
           </button>
-          <button className="w-9 h-9 rounded-lg flex items-center justify-center text-[#666] hover:bg-[#406A56]/10 hover:text-[#406A56] transition-colors">
+          <button className="w-9 h-9 rounded-lg flex items-center justify-center text-[#666] hover:bg-[#2D5A3D]/10 hover:text-[#2D5A3D] transition-colors">
             <MoreVertical size={18} />
           </button>
         </div>
@@ -198,11 +198,11 @@ export default function MessageThread({
           <div key={groupIndex}>
             {/* Date Separator */}
             <div className="flex items-center gap-4 mb-4">
-              <div className="flex-1 h-px bg-[#406A56]/10" />
+              <div className="flex-1 h-px bg-[#2D5A3D]/10" />
               <span className="text-xs font-medium text-[#666] bg-[#FAF7E8] px-3 py-1 rounded-full">
                 {formatDateSeparator(date)}
               </span>
-              <div className="flex-1 h-px bg-[#406A56]/10" />
+              <div className="flex-1 h-px bg-[#2D5A3D]/10" />
             </div>
 
             {/* Messages */}

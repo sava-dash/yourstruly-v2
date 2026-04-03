@@ -233,7 +233,7 @@ export default function MessagesPage() {
             <div className="flex h-full">
               {/* Conversation List - Left Panel */}
               <div
-                className={`w-full lg:w-[360px] border-r border-[#406A56]/10 bg-[#F2F1E5]/50 flex-shrink-0 flex flex-col ${
+                className={`w-full lg:w-[360px] border-r border-[#2D5A3D]/10 bg-[#F5F3EE]/50 flex-shrink-0 flex flex-col ${
                   activeConversation ? 'hidden lg:flex' : 'flex'
                 }`}
               >
@@ -251,7 +251,7 @@ export default function MessagesPage() {
                     {/* Mobile back button */}
                     <button
                       onClick={() => setActiveConversation(null)}
-                      className="lg:hidden flex items-center gap-2 px-4 py-3 text-[#406A56] bg-white/60 border-b border-[#406A56]/10 flex-shrink-0 hover:bg-white/80 transition-all"
+                      className="lg:hidden flex items-center gap-2 px-4 py-3 text-[#2D5A3D] bg-white/60 border-b border-[#2D5A3D]/10 flex-shrink-0 hover:bg-white/80 transition-all"
                     >
                       <ChevronLeft size={18} />
                       <span className="text-sm font-medium">Back to conversations</span>
@@ -287,7 +287,7 @@ export default function MessagesPage() {
                   </>
                 ) : (
                   /* Empty State */
-                  <div className="flex-1 flex items-center justify-center bg-gradient-to-br from-white/60 to-[#F2F1E5]/40">
+                  <div className="flex-1 flex items-center justify-center bg-gradient-to-br from-white/60 to-[#F5F3EE]/40">
                     <div className="text-center px-8 py-8 bg-white rounded-xl shadow-sm mx-4">
                       <div className="w-20 h-20 rounded-full bg-[#4A3552]/10 flex items-center justify-center mx-auto mb-4">
                         <MessageSquare size={32} className="text-[#4A3552]" />

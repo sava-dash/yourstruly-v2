@@ -65,7 +65,7 @@ export default function AdminLoginForm({ redirect }: AdminLoginFormProps) {
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
       {error && (
-        <div className="p-4 rounded-xl bg-[#C35F33]/10 border border-[#C35F33]/20 text-[#C35F33] text-sm">
+        <div className="p-4 rounded-xl bg-[#B8562E]/10 border border-[#B8562E]/20 text-[#B8562E] text-sm">
           {error}
         </div>
       )}
@@ -81,7 +81,7 @@ export default function AdminLoginForm({ redirect }: AdminLoginFormProps) {
           value={email}
           onChange={(e) => setEmail(e.target.value)}
           required
-          className="w-full px-4 py-3 bg-white/80 border border-[#C35F33]/10 rounded-xl text-[#2a1f1a] placeholder:text-[#2a1f1a]/40 focus:outline-none focus:ring-2 focus:ring-[#406A56]/20 focus:border-[#406A56]/30 transition-all"
+          className="w-full px-4 py-3 bg-white/80 border border-[#B8562E]/10 rounded-xl text-[#2a1f1a] placeholder:text-[#2a1f1a]/40 focus:outline-none focus:ring-2 focus:ring-[#2D5A3D]/20 focus:border-[#2D5A3D]/30 transition-all"
           placeholder="admin@yourstruly.love"
         />
       </div>
@@ -98,7 +98,7 @@ export default function AdminLoginForm({ redirect }: AdminLoginFormProps) {
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             required
-            className="w-full px-4 py-3 bg-white/80 border border-[#C35F33]/10 rounded-xl text-[#2a1f1a] placeholder:text-[#2a1f1a]/40 focus:outline-none focus:ring-2 focus:ring-[#406A56]/20 focus:border-[#406A56]/30 transition-all pr-12"
+            className="w-full px-4 py-3 bg-white/80 border border-[#B8562E]/10 rounded-xl text-[#2a1f1a] placeholder:text-[#2a1f1a]/40 focus:outline-none focus:ring-2 focus:ring-[#2D5A3D]/20 focus:border-[#2D5A3D]/30 transition-all pr-12"
             placeholder="••••••••"
           />
           <button
@@ -118,7 +118,7 @@ export default function AdminLoginForm({ redirect }: AdminLoginFormProps) {
       <button
         type="submit"
         disabled={isLoading}
-        className="w-full py-3 px-4 bg-gradient-to-r from-[#406A56] to-[#4A3552] text-white font-medium rounded-xl hover:shadow-lg hover:shadow-[#406A56]/20 focus:outline-none focus:ring-2 focus:ring-[#406A56]/30 disabled:opacity-50 disabled:cursor-not-allowed transition-all flex items-center justify-center gap-2"
+        className="w-full py-3 px-4 bg-gradient-to-r from-[#2D5A3D] to-[#4A3552] text-white font-medium rounded-xl hover:shadow-lg hover:shadow-[#2D5A3D]/20 focus:outline-none focus:ring-2 focus:ring-[#2D5A3D]/30 disabled:opacity-50 disabled:cursor-not-allowed transition-all flex items-center justify-center gap-2"
       >
         {isLoading ? (
           <>

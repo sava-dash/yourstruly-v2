@@ -391,7 +391,7 @@ function generateInviteEmailTemplate(inviterName: string, inviteUrl: string): st
       font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
       line-height: 1.6;
       color: #333;
-      background-color: #F2F1E5;
+      background-color: #F5F3EE;
       margin: 0;
       padding: 0;
     }
@@ -404,7 +404,7 @@ function generateInviteEmailTemplate(inviterName: string, inviteUrl: string): st
       box-shadow: 0 4px 16px rgba(0,0,0,0.1);
     }
     .header {
-      background: linear-gradient(135deg, #406A56, #4A3552);
+      background: linear-gradient(135deg, #2D5A3D, #4A3552);
       padding: 40px 20px;
       text-align: center;
     }
@@ -424,7 +424,7 @@ function generateInviteEmailTemplate(inviterName: string, inviteUrl: string): st
       margin-bottom: 30px;
     }
     .benefits {
-      background: #F2F1E5;
+      background: #F5F3EE;
       border-radius: 12px;
       padding: 20px;
       margin: 20px 0;
@@ -444,7 +444,7 @@ function generateInviteEmailTemplate(inviterName: string, inviteUrl: string): st
     }
     .button {
       display: inline-block;
-      background: linear-gradient(135deg, #406A56, #2d4f3e);
+      background: linear-gradient(135deg, #2D5A3D, #2d4f3e);
       color: white !important;
       text-decoration: none;
       padding: 16px 32px;
@@ -461,7 +461,7 @@ function generateInviteEmailTemplate(inviterName: string, inviteUrl: string): st
       color: #888;
     }
     .footer a {
-      color: #406A56;
+      color: #2D5A3D;
       text-decoration: none;
     }
   </style>
@@ -496,7 +496,7 @@ function generateInviteEmailTemplate(inviterName: string, inviteUrl: string): st
             
             <p style="text-align: center; font-size: 14px; color: #888; margin-top: 30px;">
               Or copy and paste this link:<br>
-              <a href="${inviteUrl}" style="color: #406A56; word-break: break-all;">${inviteUrl}</a>
+              <a href="${inviteUrl}" style="color: #2D5A3D; word-break: break-all;">${inviteUrl}</a>
             </p>
           </div>
           <div class="footer">

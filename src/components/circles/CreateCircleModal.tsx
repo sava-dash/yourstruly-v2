@@ -31,14 +31,14 @@ export default function CreateCircleModal({ onClose, onSave }: CreateCircleModal
         {/* Header */}
         <div className="flex items-center justify-between mb-6">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[#406A56]/20 to-[#D9C61A]/20 flex items-center justify-center">
-              <Users size={20} className="text-[#406A56]" />
+            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[#2D5A3D]/20 to-[#C4A235]/20 flex items-center justify-center">
+              <Users size={20} className="text-[#2D5A3D]" />
             </div>
             <h2 className="text-xl font-semibold text-[#2d2d2d]">Create Circle</h2>
           </div>
           <button
             onClick={onClose}
-            className="p-2 text-[#406A56]/50 hover:text-[#406A56] hover:bg-[#406A56]/10 rounded-lg transition-colors"
+            className="p-2 text-[#2D5A3D]/50 hover:text-[#2D5A3D] hover:bg-[#2D5A3D]/10 rounded-lg transition-colors"
           >
             <X size={20} />
           </button>
@@ -72,14 +72,14 @@ export default function CreateCircleModal({ onClose, onSave }: CreateCircleModal
             <p className="text-xs text-[#888] mt-1">{description.length}/200</p>
           </div>
 
-          <div className="p-4 bg-[#406A56]/5 rounded-xl">
-            <p className="text-sm text-[#406A56]">
+          <div className="p-4 bg-[#2D5A3D]/5 rounded-xl">
+            <p className="text-sm text-[#2D5A3D]">
               <strong>You'll be the Owner</strong> of this circle and can invite others, manage members, and configure settings.
             </p>
           </div>
 
           {/* Actions */}
-          <div className="flex justify-end gap-3 pt-4 border-t border-[#406A56]/10">
+          <div className="flex justify-end gap-3 pt-4 border-t border-[#2D5A3D]/10">
             <button
               type="button"
               onClick={onClose}

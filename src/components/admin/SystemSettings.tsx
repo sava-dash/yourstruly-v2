@@ -40,7 +40,7 @@ export default function SystemSettings() {
         <button
           onClick={handleSave}
           disabled={isSaving}
-          className="flex items-center gap-2 px-4 py-2 bg-[#406A56] text-white rounded-lg hover:bg-[#406A56]/90 disabled:opacity-50"
+          className="flex items-center gap-2 px-4 py-2 bg-[#2D5A3D] text-white rounded-lg hover:bg-[#2D5A3D]/90 disabled:opacity-50"
         >
           {isSaving ? <RefreshCw className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
           Save Changes
@@ -49,7 +49,7 @@ export default function SystemSettings() {
 
       <div className="space-y-4">
         {settings.map((setting) => (
-          <div key={setting.key} className="p-4 bg-white/60 rounded-xl border border-[#C35F33]/10">
+          <div key={setting.key} className="p-4 bg-white/60 rounded-xl border border-[#B8562E]/10">
             <div className="flex items-start justify-between gap-4">
               <div className="flex-1">
                 <label className="block text-sm font-medium text-[#2a1f1a]">
@@ -62,7 +62,7 @@ export default function SystemSettings() {
                   <select
                     value={setting.value}
                     onChange={(e) => handleChange(setting.key, e.target.value)}
-                    className="w-full px-3 py-2 bg-white border border-[#C35F33]/10 rounded-lg text-sm"
+                    className="w-full px-3 py-2 bg-white border border-[#B8562E]/10 rounded-lg text-sm"
                   >
                     <option value="true">Enabled</option>
                     <option value="false">Disabled</option>
@@ -72,7 +72,7 @@ export default function SystemSettings() {
                     type={setting.type === 'number' ? 'number' : 'text'}
                     value={setting.value}
                     onChange={(e) => handleChange(setting.key, e.target.value)}
-                    className="w-full px-3 py-2 bg-white border border-[#C35F33]/10 rounded-lg text-sm"
+                    className="w-full px-3 py-2 bg-white border border-[#B8562E]/10 rounded-lg text-sm"
                   />
                 )}
               </div>

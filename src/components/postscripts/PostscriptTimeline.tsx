@@ -101,7 +101,7 @@ function TimelineCard({ postscript, isLeft }: TimelineCardProps) {
     <Link href={`/dashboard/postscripts/${postscript.id}`}>
       <div className={`
         group relative bg-white/95 backdrop-blur-sm rounded-2xl shadow-sm border border-gray-100/80
-        hover:shadow-md hover:border-[#C35F33]/20 transition-all duration-200 overflow-hidden
+        hover:shadow-md hover:border-[#B8562E]/20 transition-all duration-200 overflow-hidden
         ${isLeft ? 'mr-auto' : 'ml-auto'}
       `}>
         {/* Image Preview */}
@@ -129,7 +129,7 @@ function TimelineCard({ postscript, isLeft }: TimelineCardProps) {
                   className="w-10 h-10 rounded-full object-cover"
                 />
               ) : (
-                <div className="w-10 h-10 rounded-full bg-gradient-to-br from-[#C35F33] to-[#D9C61A] 
+                <div className="w-10 h-10 rounded-full bg-gradient-to-br from-[#B8562E] to-[#C4A235] 
                                 flex items-center justify-center text-white text-sm font-medium">
                   {initials}
                 </div>
@@ -138,7 +138,7 @@ function TimelineCard({ postscript, isLeft }: TimelineCardProps) {
 
             {/* Content */}
             <div className="flex-1 min-w-0">
-              <h3 className="font-semibold text-gray-900 text-sm leading-tight group-hover:text-[#C35F33] transition-colors line-clamp-2">
+              <h3 className="font-semibold text-gray-900 text-sm leading-tight group-hover:text-[#B8562E] transition-colors line-clamp-2">
                 {postscript.title}
               </h3>
               <p className="text-xs text-gray-500 mt-0.5">
@@ -146,7 +146,7 @@ function TimelineCard({ postscript, isLeft }: TimelineCardProps) {
               </p>
             </div>
             
-            <ChevronRight size={16} className="text-gray-300 group-hover:text-[#C35F33] transition-colors flex-shrink-0" />
+            <ChevronRight size={16} className="text-gray-300 group-hover:text-[#B8562E] transition-colors flex-shrink-0" />
           </div>
 
           {/* Message Preview */}
@@ -200,7 +200,7 @@ function TimelineItem({ postscript, index }: TimelineItemProps) {
     const Icon = postscript.delivery_type === 'event' 
       ? getEventIcon(postscript.delivery_event) 
       : Calendar
-    return <Icon size={12} className="text-[#C35F33]" />
+    return <Icon size={12} className="text-[#B8562E]" />
   }
   
   // Get display date
@@ -267,7 +267,7 @@ function AfterPassingGroup({ postscripts, startIndex }: { postscripts: PostScrip
       <div className="absolute top-0 left-1/2 transform -translate-x-1/2 -translate-y-full mb-2
         px-3 py-1.5 rounded-full bg-white shadow-sm border border-gray-100
         flex items-center gap-1.5 text-xs font-medium text-gray-700 whitespace-nowrap">
-        <Calendar size={12} className="text-[#C35F33]" />
+        <Calendar size={12} className="text-[#B8562E]" />
         <span>After I'm gone</span>
         <span className="ml-1 px-1.5 py-0.5 rounded-full bg-[#8DACAB]/20 text-[#8DACAB] text-[10px]">
           {postscripts.length}
@@ -341,7 +341,7 @@ export default function PostscriptTimeline({ postscripts }: PostscriptTimelinePr
     <div className="relative py-8">
       {/* Vertical center line */}
       <div 
-        className="absolute left-1/2 transform -translate-x-1/2 w-0.5 bg-gradient-to-b from-[#C35F33]/30 via-[#D9C61A]/30 to-[#8DACAB]/30"
+        className="absolute left-1/2 transform -translate-x-1/2 w-0.5 bg-gradient-to-b from-[#B8562E]/30 via-[#C4A235]/30 to-[#8DACAB]/30"
         style={{ top: '2rem', bottom: '2rem' }}
       />
       

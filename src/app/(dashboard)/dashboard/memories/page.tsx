@@ -378,7 +378,7 @@ export default function MemoriesPage() {
             <div className="flex items-center gap-3">
               {/* Search */}
               <div className="relative">
-                <Search size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-[#406A56]/50 z-10 pointer-events-none" />
+                <Search size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-[#2D5A3D]/50 z-10 pointer-events-none" />
                 <input
                   type="text"
                   value={searchQuery}
@@ -389,7 +389,7 @@ export default function MemoriesPage() {
                 {searchQuery && (
                   <button 
                     onClick={() => setSearchQuery('')} 
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-[#406A56]/50 hover:text-[#406A56]"
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-[#2D5A3D]/50 hover:text-[#2D5A3D]"
                     aria-label="Clear search"
                   >
                     <X size={16} />
@@ -402,7 +402,7 @@ export default function MemoriesPage() {
               <div className="hidden sm:flex items-center glass-card-page p-1" role="group" aria-label="View mode">
                 <button
                   onClick={() => setViewMode('timeline')}
-                  className={`p-2 rounded-lg transition-all ${viewMode === 'timeline' ? 'bg-[#406A56] text-white' : 'text-[#406A56]/60 hover:text-[#406A56]'}`}
+                  className={`p-2 rounded-lg transition-all ${viewMode === 'timeline' ? 'bg-[#2D5A3D] text-white' : 'text-[#2D5A3D]/60 hover:text-[#2D5A3D]'}`}
                   aria-label="Timeline View"
                   aria-pressed={viewMode === 'timeline'}
                 >
@@ -410,7 +410,7 @@ export default function MemoriesPage() {
                 </button>
                 <button
                   onClick={() => setViewMode('scrapbook')}
-                  className={`p-2 rounded-lg transition-all ${viewMode === 'scrapbook' ? 'bg-[#406A56] text-white' : 'text-[#406A56]/60 hover:text-[#406A56]'}`}
+                  className={`p-2 rounded-lg transition-all ${viewMode === 'scrapbook' ? 'bg-[#2D5A3D] text-white' : 'text-[#2D5A3D]/60 hover:text-[#2D5A3D]'}`}
                   aria-label="Scrapbook View"
                   aria-pressed={viewMode === 'scrapbook'}
                 >
@@ -418,7 +418,7 @@ export default function MemoriesPage() {
                 </button>
                 <button
                   onClick={() => setViewMode('grid')}
-                  className={`p-2 rounded-lg transition-all ${viewMode === 'grid' ? 'bg-[#406A56] text-white' : 'text-[#406A56]/60 hover:text-[#406A56]'}`}
+                  className={`p-2 rounded-lg transition-all ${viewMode === 'grid' ? 'bg-[#2D5A3D] text-white' : 'text-[#2D5A3D]/60 hover:text-[#2D5A3D]'}`}
                   aria-label="Grid View"
                   aria-pressed={viewMode === 'grid'}
                 >
@@ -426,7 +426,7 @@ export default function MemoriesPage() {
                 </button>
                 <button
                   onClick={() => setViewMode('cards')}
-                  className={`p-2 rounded-lg transition-all ${viewMode === 'cards' ? 'bg-[#406A56] text-white' : 'text-[#406A56]/60 hover:text-[#406A56]'}`}
+                  className={`p-2 rounded-lg transition-all ${viewMode === 'cards' ? 'bg-[#2D5A3D] text-white' : 'text-[#2D5A3D]/60 hover:text-[#2D5A3D]'}`}
                   aria-label="Cards View"
                   aria-pressed={viewMode === 'cards'}
                 >
@@ -470,15 +470,15 @@ export default function MemoriesPage() {
               onClick={() => setTabMode('mine')}
               className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium transition-all ${
                 tabMode === 'mine' 
-                  ? 'bg-[#406A56] text-white' 
-                  : 'bg-white/80 text-[#406A56] hover:bg-white border border-[#406A56]/20'
+                  ? 'bg-[#2D5A3D] text-white' 
+                  : 'bg-white/80 text-[#2D5A3D] hover:bg-white border border-[#2D5A3D]/20'
               }`}
             >
               <ImageIcon size={16} />
               My Memories
               {memories.length > 0 && (
                 <span className={`px-1.5 py-0.5 rounded-full text-xs ${
-                  tabMode === 'mine' ? 'bg-white/20' : 'bg-[#406A56]/10'
+                  tabMode === 'mine' ? 'bg-white/20' : 'bg-[#2D5A3D]/10'
                 }`}>
                   {memories.length}
                 </span>
@@ -488,15 +488,15 @@ export default function MemoriesPage() {
               onClick={() => setTabMode('shared')}
               className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium transition-all ${
                 tabMode === 'shared' 
-                  ? 'bg-[#406A56] text-white' 
-                  : 'bg-white/80 text-[#406A56] hover:bg-white border border-[#406A56]/20'
+                  ? 'bg-[#2D5A3D] text-white' 
+                  : 'bg-white/80 text-[#2D5A3D] hover:bg-white border border-[#2D5A3D]/20'
               }`}
             >
               <Share2 size={16} />
               Shared with Me
               {sharedMemories.length > 0 && (
                 <span className={`px-1.5 py-0.5 rounded-full text-xs ${
-                  tabMode === 'shared' ? 'bg-white/20' : 'bg-[#406A56]/10'
+                  tabMode === 'shared' ? 'bg-white/20' : 'bg-[#2D5A3D]/10'
                 }`}>
                   {sharedMemories.length}
                 </span>
@@ -514,7 +514,7 @@ export default function MemoriesPage() {
                   <select
                     value={browseMode}
                     onChange={(e) => setBrowseMode(e.target.value as BrowseMode)}
-                    className="w-full appearance-none bg-white/90 backdrop-blur-sm border border-[#406A56]/20 rounded-xl px-4 py-2.5 pr-10 text-sm font-medium text-[#406A56] focus:outline-none focus:ring-2 focus:ring-[#406A56]/30 focus:border-[#406A56]/40 cursor-pointer hover:bg-white transition-all"
+                    className="w-full appearance-none bg-white/90 backdrop-blur-sm border border-[#2D5A3D]/20 rounded-xl px-4 py-2.5 pr-10 text-sm font-medium text-[#2D5A3D] focus:outline-none focus:ring-2 focus:ring-[#2D5A3D]/30 focus:border-[#2D5A3D]/40 cursor-pointer hover:bg-white transition-all"
                     aria-label="Browse by"
                   >
                     <option value="all">All Memories</option>
@@ -524,7 +524,7 @@ export default function MemoriesPage() {
                     <option value="timeline">Timeline</option>
                     <option value="map">Map</option>
                   </select>
-                  <ChevronDown size={16} className="absolute right-3 top-1/2 -translate-y-1/2 text-[#406A56]/50 pointer-events-none" />
+                  <ChevronDown size={16} className="absolute right-3 top-1/2 -translate-y-1/2 text-[#2D5A3D]/50 pointer-events-none" />
                 </div>
 
                 {/* Mood Dropdown */}
@@ -532,7 +532,7 @@ export default function MemoriesPage() {
                   <select
                     value={selectedMood || ''}
                     onChange={(e) => handleMoodSelect(e.target.value as MoodType | null || null)}
-                    className="w-full appearance-none bg-white/90 backdrop-blur-sm border border-[#406A56]/20 rounded-xl px-4 py-2.5 pr-10 text-sm font-medium text-[#406A56] focus:outline-none focus:ring-2 focus:ring-[#406A56]/30 focus:border-[#406A56]/40 cursor-pointer hover:bg-white transition-all"
+                    className="w-full appearance-none bg-white/90 backdrop-blur-sm border border-[#2D5A3D]/20 rounded-xl px-4 py-2.5 pr-10 text-sm font-medium text-[#2D5A3D] focus:outline-none focus:ring-2 focus:ring-[#2D5A3D]/30 focus:border-[#2D5A3D]/40 cursor-pointer hover:bg-white transition-all"
                     aria-label="Filter by mood"
                   >
                     <option value="">All Moods</option>
@@ -548,7 +548,7 @@ export default function MemoriesPage() {
                     <option value="melancholy">Melancholy</option>
                     <option value="reflective">Reflective</option>
                   </select>
-                  <ChevronDown size={16} className="absolute right-3 top-1/2 -translate-y-1/2 text-[#406A56]/50 pointer-events-none" />
+                  <ChevronDown size={16} className="absolute right-3 top-1/2 -translate-y-1/2 text-[#2D5A3D]/50 pointer-events-none" />
                 </div>
 
                 {/* Category Dropdown */}
@@ -556,7 +556,7 @@ export default function MemoriesPage() {
                   <select
                     value={selectedCategory || ''}
                     onChange={(e) => setSelectedCategory(e.target.value || null)}
-                    className="w-full appearance-none bg-white/90 backdrop-blur-sm border border-[#406A56]/20 rounded-xl px-4 py-2.5 pr-10 text-sm font-medium text-[#406A56] focus:outline-none focus:ring-2 focus:ring-[#406A56]/30 focus:border-[#406A56]/40 cursor-pointer hover:bg-white transition-all"
+                    className="w-full appearance-none bg-white/90 backdrop-blur-sm border border-[#2D5A3D]/20 rounded-xl px-4 py-2.5 pr-10 text-sm font-medium text-[#2D5A3D] focus:outline-none focus:ring-2 focus:ring-[#2D5A3D]/30 focus:border-[#2D5A3D]/40 cursor-pointer hover:bg-white transition-all"
                     aria-label="Filter by category"
                   >
                     <option value="">All Categories</option>
@@ -567,7 +567,7 @@ export default function MemoriesPage() {
                     <option value="food">Food</option>
                     <option value="everyday">Everyday</option>
                   </select>
-                  <ChevronDown size={16} className="absolute right-3 top-1/2 -translate-y-1/2 text-[#406A56]/50 pointer-events-none" />
+                  <ChevronDown size={16} className="absolute right-3 top-1/2 -translate-y-1/2 text-[#2D5A3D]/50 pointer-events-none" />
                 </div>
 
                 {/* Date Filter */}
@@ -576,7 +576,7 @@ export default function MemoriesPage() {
                     type="date"
                     value={dateFilter.start}
                     onChange={(e) => setDateFilter({ ...dateFilter, start: e.target.value })}
-                    className="w-full bg-white/90 backdrop-blur-sm border border-[#406A56]/20 rounded-xl px-4 py-2.5 text-sm font-medium text-[#406A56] focus:outline-none focus:ring-2 focus:ring-[#406A56]/30 focus:border-[#406A56]/40 cursor-pointer hover:bg-white transition-all"
+                    className="w-full bg-white/90 backdrop-blur-sm border border-[#2D5A3D]/20 rounded-xl px-4 py-2.5 text-sm font-medium text-[#2D5A3D] focus:outline-none focus:ring-2 focus:ring-[#2D5A3D]/30 focus:border-[#2D5A3D]/40 cursor-pointer hover:bg-white transition-all"
                     aria-label="Filter by date"
                   />
                 </div>
@@ -585,7 +585,7 @@ export default function MemoriesPage() {
                 {hasActiveFilters && (
                   <button
                     onClick={clearFilters}
-                    className="flex items-center justify-center gap-1.5 px-4 py-2.5 text-sm font-medium text-[#C35F33] hover:text-white hover:bg-[#C35F33] rounded-xl border border-[#C35F33]/30 hover:border-transparent transition-all"
+                    className="flex items-center justify-center gap-1.5 px-4 py-2.5 text-sm font-medium text-[#B8562E] hover:text-white hover:bg-[#B8562E] rounded-xl border border-[#B8562E]/30 hover:border-transparent transition-all"
                   >
                     <X size={14} />
                     Clear
@@ -630,7 +630,7 @@ export default function MemoriesPage() {
             ) : sharedMemories.length === 0 ? (
               <div className="empty-state">
                 <div className="empty-state-icon">
-                  <Share2 size={32} className="text-[#406A56]/50" />
+                  <Share2 size={32} className="text-[#2D5A3D]/50" />
                 </div>
                 <h3 className="empty-state-title">No shared memories yet</h3>
                 <p className="empty-state-text">
@@ -686,13 +686,13 @@ export default function MemoriesPage() {
           ) : filteredMemories.length === 0 ? (
             <div className="empty-state">
               <div className="empty-state-icon">
-                <ImageIcon size={32} className="text-[#406A56]/50" />
+                <ImageIcon size={32} className="text-[#2D5A3D]/50" />
               </div>
               <h3 className="empty-state-title">
-                {memories.length === 0 ? 'No memories yet' : 'No memories match your filters'}
+                {memories.length === 0 ? 'Your first memory is waiting to be told' : 'No memories match your filters'}
               </h3>
               <p className="empty-state-text">
-                {memories.length === 0 ? 'Start capturing your life\'s moments' : 'Try adjusting your search or filters'}
+                {memories.length === 0 ? 'Every story starts somewhere. Start here.' : 'Try adjusting your search or filters'}
               </p>
               {memories.length === 0 ? (
                 <button

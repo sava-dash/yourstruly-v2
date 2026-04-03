@@ -266,7 +266,7 @@ export default function CreateMemoryModal({ isOpen, onClose, onCreated }: Create
             onDrop={handleDrop}
             onDragOver={(e) => e.preventDefault()}
             onClick={() => fileInputRef.current?.click()}
-            className="border-2 border-dashed border-gray-300 rounded-xl p-8 text-center cursor-pointer hover:border-[#406A56] hover:bg-[#406A56]/5 transition-all"
+            className="border-2 border-dashed border-gray-300 rounded-xl p-8 text-center cursor-pointer hover:border-[#2D5A3D] hover:bg-[#2D5A3D]/5 transition-all"
             role="button"
             tabIndex={0}
             onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') fileInputRef.current?.click(); }}
@@ -298,12 +298,12 @@ export default function CreateMemoryModal({ isOpen, onClose, onCreated }: Create
                   />
                   {file.uploading && (
                     <div className="absolute inset-0 bg-black/60 flex items-center justify-center">
-                      <Loader2 size={24} className="text-[#406A56] animate-spin" />
+                      <Loader2 size={24} className="text-[#2D5A3D] animate-spin" />
                     </div>
                   )}
                   {file.detectingFaces && (
                     <div className="absolute inset-0 bg-black/60 flex flex-col items-center justify-center gap-1">
-                      <Scan size={20} className="text-[#D9C61A] animate-pulse" />
+                      <Scan size={20} className="text-[#C4A235] animate-pulse" />
                       <span className="text-[10px] text-white">Faces...</span>
                     </div>
                   )}
@@ -313,7 +313,7 @@ export default function CreateMemoryModal({ isOpen, onClose, onCreated }: Create
                     </div>
                   )}
                   {file.facesDetected !== undefined && file.facesDetected > 0 && (
-                    <div className="absolute bottom-1 left-1 px-1.5 py-0.5 bg-[#406A56] rounded text-[10px] text-white flex items-center gap-1">
+                    <div className="absolute bottom-1 left-1 px-1.5 py-0.5 bg-[#2D5A3D] rounded text-[10px] text-white flex items-center gap-1">
                       <Users size={10} />
                       {file.facesDetected}
                     </div>
@@ -336,7 +336,7 @@ export default function CreateMemoryModal({ isOpen, onClose, onCreated }: Create
           {files.length > 0 && (
             <button
               onClick={() => setStep(2)}
-              className="w-full mt-4 py-3 bg-[#406A56] hover:bg-[#355a48] text-white rounded-xl font-medium transition-all"
+              className="w-full mt-4 py-3 bg-[#2D5A3D] hover:bg-[#355a48] text-white rounded-xl font-medium transition-all"
             >
               Continue ({files.length} {files.length === 1 ? 'file' : 'files'})
             </button>
@@ -364,8 +364,8 @@ export default function CreateMemoryModal({ isOpen, onClose, onCreated }: Create
 
           {/* AI Suggestions */}
           {aiSuggestions && (
-            <div className="p-3 bg-[#406A56]/10 border border-[#406A56]/30 rounded-xl">
-              <div className="flex items-center gap-2 text-[#406A56] text-sm mb-2">
+            <div className="p-3 bg-[#2D5A3D]/10 border border-[#2D5A3D]/30 rounded-xl">
+              <div className="flex items-center gap-2 text-[#2D5A3D] text-sm mb-2">
                 <Sparkles size={14} />
                 AI Suggestions
               </div>
@@ -374,7 +374,7 @@ export default function CreateMemoryModal({ isOpen, onClose, onCreated }: Create
                   onClick={() => setTitle(aiSuggestions.title!)}
                   className="text-sm text-white/70 hover:text-gray-700"
                 >
-                  Title: "{aiSuggestions.title}" — <span className="text-[#406A56]">use this</span>
+                  Title: "{aiSuggestions.title}" — <span className="text-[#2D5A3D]">use this</span>
                 </button>
               )}
             </div>
@@ -461,10 +461,10 @@ export default function CreateMemoryModal({ isOpen, onClose, onCreated }: Create
               className="w-full flex items-center justify-between p-3 bg-gray-50 rounded-xl hover:bg-gray-100 transition-all"
             >
               <div className="flex items-center gap-3">
-                <Users size={18} className="text-[#406A56]" />
+                <Users size={18} className="text-[#2D5A3D]" />
                 <span className="text-gray-700">Share with Contacts</span>
                 {selectedContacts.size > 0 && (
-                  <span className="px-2 py-0.5 bg-[#406A56]/20 text-[#406A56] text-xs rounded-full">
+                  <span className="px-2 py-0.5 bg-[#2D5A3D]/20 text-[#2D5A3D] text-xs rounded-full">
                     {selectedContacts.size} selected
                   </span>
                 )}
@@ -495,7 +495,7 @@ export default function CreateMemoryModal({ isOpen, onClose, onCreated }: Create
                           type="checkbox"
                           checked={selectedContacts.has(contact.id)}
                           onChange={() => toggleContact(contact.id)}
-                          className="w-4 h-4 rounded border-gray-300 bg-gray-50 text-[#406A56] focus:ring-[#406A56]/50"
+                          className="w-4 h-4 rounded border-gray-300 bg-gray-50 text-[#2D5A3D] focus:ring-[#2D5A3D]/50"
                         />
                         <div>
                           <div className="text-gray-700 text-sm">{contact.full_name}</div>
@@ -522,7 +522,7 @@ export default function CreateMemoryModal({ isOpen, onClose, onCreated }: Create
             <button
               onClick={handleCreate}
               disabled={creating}
-              className="flex-1 py-3 bg-[#406A56] hover:bg-[#355a48] disabled:opacity-50 text-white rounded-xl font-medium transition-all flex items-center justify-center gap-2"
+              className="flex-1 py-3 bg-[#2D5A3D] hover:bg-[#355a48] disabled:opacity-50 text-white rounded-xl font-medium transition-all flex items-center justify-center gap-2"
             >
               {creating ? (
                 <>

@@ -172,7 +172,7 @@ export default function MarketplacePage() {
         </div>
         <button
           onClick={() => setShowAddModal(true)}
-          className="flex items-center gap-2 px-4 py-2 bg-[#406A56] text-white rounded-lg hover:bg-[#355847] transition-colors"
+          className="flex items-center gap-2 px-4 py-2 bg-[#2D5A3D] text-white rounded-lg hover:bg-[#355847] transition-colors"
         >
           <Plus size={18} />
           Add Product
@@ -181,17 +181,17 @@ export default function MarketplacePage() {
 
       {/* Stats */}
       <div className="grid grid-cols-3 gap-4">
-        <div className="p-4 bg-white/60 backdrop-blur-sm rounded-xl border border-[#C35F33]/10">
-          <Package className="w-5 h-5 text-[#406A56]" />
+        <div className="p-4 bg-white/60 backdrop-blur-sm rounded-xl border border-[#B8562E]/10">
+          <Package className="w-5 h-5 text-[#2D5A3D]" />
           <p className="text-2xl font-bold text-[#2a1f1a] mt-2">{stats.total}</p>
           <p className="text-sm text-[#2a1f1a]/60">Total</p>
         </div>
-        <div className="p-4 bg-white/60 backdrop-blur-sm rounded-xl border border-[#C35F33]/10">
+        <div className="p-4 bg-white/60 backdrop-blur-sm rounded-xl border border-[#B8562E]/10">
           <Eye className="w-5 h-5 text-green-600" />
           <p className="text-2xl font-bold text-green-700 mt-2">{stats.active}</p>
           <p className="text-sm text-[#2a1f1a]/60">Active</p>
         </div>
-        <div className="p-4 bg-white/60 backdrop-blur-sm rounded-xl border border-[#C35F33]/10">
+        <div className="p-4 bg-white/60 backdrop-blur-sm rounded-xl border border-[#B8562E]/10">
           <EyeOff className="w-5 h-5 text-gray-400" />
           <p className="text-2xl font-bold text-gray-500 mt-2">{stats.total - stats.active}</p>
           <p className="text-sm text-[#2a1f1a]/60">Inactive</p>
@@ -207,7 +207,7 @@ export default function MarketplacePage() {
             placeholder="Search by name, brand..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full pl-9 pr-4 py-2 bg-white/60 border border-[#C35F33]/10 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#406A56]/30 text-sm"
+            className="w-full pl-9 pr-4 py-2 bg-white/60 border border-[#B8562E]/10 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#2D5A3D]/30 text-sm"
           />
         </div>
         <div className="flex gap-2">
@@ -217,7 +217,7 @@ export default function MarketplacePage() {
               onClick={() => setFilterActive(f)}
               className={`px-4 py-2 rounded-lg capitalize text-sm transition-colors ${
                 filterActive === f
-                  ? 'bg-[#406A56] text-white'
+                  ? 'bg-[#2D5A3D] text-white'
                   : 'bg-white/60 text-[#2a1f1a]/60 hover:bg-white/80'
               }`}
             >
@@ -229,8 +229,8 @@ export default function MarketplacePage() {
 
       {/* Bulk Action Bar */}
       {someSelected && (
-        <div className="flex items-center gap-3 px-4 py-3 bg-[#406A56]/10 border border-[#406A56]/20 rounded-xl">
-          <span className="text-sm font-medium text-[#406A56]">
+        <div className="flex items-center gap-3 px-4 py-3 bg-[#2D5A3D]/10 border border-[#2D5A3D]/20 rounded-xl">
+          <span className="text-sm font-medium text-[#2D5A3D]">
             {selected.size} selected
           </span>
           <div className="flex gap-2 ml-auto">
@@ -263,24 +263,24 @@ export default function MarketplacePage() {
       {/* Table */}
       {loading ? (
         <div className="flex items-center justify-center py-16">
-          <Loader2 className="w-8 h-8 animate-spin text-[#406A56]" />
+          <Loader2 className="w-8 h-8 animate-spin text-[#2D5A3D]" />
         </div>
       ) : products.length === 0 ? (
-        <div className="p-12 bg-white/40 backdrop-blur-sm rounded-xl border border-[#C35F33]/10 text-center">
-          <Package className="w-12 h-12 mx-auto text-[#C35F33]/30" />
+        <div className="p-12 bg-white/40 backdrop-blur-sm rounded-xl border border-[#B8562E]/10 text-center">
+          <Package className="w-12 h-12 mx-auto text-[#B8562E]/30" />
           <h3 className="text-lg font-medium text-[#2a1f1a] mt-4">No Products Found</h3>
           <p className="text-[#2a1f1a]/60 mt-2 text-sm">
             {searchQuery ? 'Try a different search term' : 'No products match this filter'}
           </p>
         </div>
       ) : (
-        <div className="bg-white/60 backdrop-blur-sm rounded-xl border border-[#C35F33]/10 overflow-hidden">
+        <div className="bg-white/60 backdrop-blur-sm rounded-xl border border-[#B8562E]/10 overflow-hidden">
           <table className="w-full">
-            <thead className="bg-[#406A56]/5 border-b border-[#C35F33]/10">
+            <thead className="bg-[#2D5A3D]/5 border-b border-[#B8562E]/10">
               <tr>
                 <th className="p-4 w-10">
-                  <button onClick={toggleSelectAll} className="text-[#2a1f1a]/40 hover:text-[#406A56]">
-                    {allSelected ? <CheckSquare size={18} className="text-[#406A56]" /> : <Square size={18} />}
+                  <button onClick={toggleSelectAll} className="text-[#2a1f1a]/40 hover:text-[#2D5A3D]">
+                    {allSelected ? <CheckSquare size={18} className="text-[#2D5A3D]" /> : <Square size={18} />}
                   </button>
                 </th>
                 <th className="text-left p-4 font-medium text-[#2a1f1a]/80 text-sm">Product</th>
@@ -290,18 +290,18 @@ export default function MarketplacePage() {
                 <th className="text-right p-4 font-medium text-[#2a1f1a]/80 text-sm">Actions</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-[#C35F33]/10">
+            <tbody className="divide-y divide-[#B8562E]/10">
               {products.map((product) => (
                 <tr
                   key={product.id}
                   className={`hover:bg-white/40 transition-colors ${
-                    selected.has(product.id) ? 'bg-[#406A56]/5' : ''
+                    selected.has(product.id) ? 'bg-[#2D5A3D]/5' : ''
                   }`}
                 >
                   <td className="p-4">
-                    <button onClick={() => toggleSelect(product.id)} className="text-[#2a1f1a]/40 hover:text-[#406A56]">
+                    <button onClick={() => toggleSelect(product.id)} className="text-[#2a1f1a]/40 hover:text-[#2D5A3D]">
                       {selected.has(product.id)
-                        ? <CheckSquare size={18} className="text-[#406A56]" />
+                        ? <CheckSquare size={18} className="text-[#2D5A3D]" />
                         : <Square size={18} />}
                     </button>
                   </td>
@@ -314,8 +314,8 @@ export default function MarketplacePage() {
                           className="w-10 h-10 rounded-lg object-cover flex-shrink-0"
                         />
                       ) : (
-                        <div className="w-10 h-10 rounded-lg bg-[#406A56]/10 flex items-center justify-center flex-shrink-0">
-                          <Package className="w-5 h-5 text-[#406A56]/40" />
+                        <div className="w-10 h-10 rounded-lg bg-[#2D5A3D]/10 flex items-center justify-center flex-shrink-0">
+                          <Package className="w-5 h-5 text-[#2D5A3D]/40" />
                         </div>
                       )}
                       <div className="min-w-0">
@@ -339,7 +339,7 @@ export default function MarketplacePage() {
                       {product.occasions?.slice(0, 2).map((occ) => (
                         <span
                           key={occ}
-                          className="px-1.5 py-0.5 bg-[#406A56]/10 text-[#406A56] text-xs rounded-full capitalize"
+                          className="px-1.5 py-0.5 bg-[#2D5A3D]/10 text-[#2D5A3D] text-xs rounded-full capitalize"
                         >
                           {occ}
                         </span>
@@ -354,7 +354,7 @@ export default function MarketplacePage() {
                   <td className="p-4">
                     <div className="flex justify-center">
                       {toggling.has(product.id) ? (
-                        <Loader2 size={20} className="animate-spin text-[#406A56]" />
+                        <Loader2 size={20} className="animate-spin text-[#2D5A3D]" />
                       ) : (
                         <button
                           onClick={() => toggleActive(product)}
@@ -375,7 +375,7 @@ export default function MarketplacePage() {
                     <div className="flex items-center justify-end gap-1">
                       <button
                         onClick={() => setEditingProduct(product)}
-                        className="p-1.5 hover:bg-[#406A56]/10 rounded-lg transition-colors"
+                        className="p-1.5 hover:bg-[#2D5A3D]/10 rounded-lg transition-colors"
                         title="Edit"
                       >
                         <Edit2 size={15} className="text-[#2a1f1a]/50" />
@@ -396,7 +396,7 @@ export default function MarketplacePage() {
 
           {/* Pagination */}
           {totalPages > 1 && (
-            <div className="flex items-center justify-between px-4 py-3 border-t border-[#C35F33]/10 bg-[#406A56]/5">
+            <div className="flex items-center justify-between px-4 py-3 border-t border-[#B8562E]/10 bg-[#2D5A3D]/5">
               <p className="text-sm text-[#2a1f1a]/60">
                 {(page - 1) * PAGE_SIZE + 1}–{Math.min(page * PAGE_SIZE, total)} of {total}
               </p>
@@ -533,7 +533,7 @@ function ProductModal({
                     onChange={e => setForm({ ...form, [f.key]: e.target.value })}
                     rows={3}
                     placeholder={f.placeholder}
-                    className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#406A56]/30 text-sm"
+                    className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#2D5A3D]/30 text-sm"
                   />
                 ) : (
                   <input
@@ -541,7 +541,7 @@ function ProductModal({
                     value={String(form[f.key])}
                     onChange={e => setForm({ ...form, [f.key]: f.type === 'number' ? e.target.value : e.target.value })}
                     placeholder={f.placeholder}
-                    className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#406A56]/30 text-sm"
+                    className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#2D5A3D]/30 text-sm"
                   />
                 )}
               </div>
@@ -558,7 +558,7 @@ function ProductModal({
                     type="checkbox"
                     checked={form[key] as boolean}
                     onChange={e => setForm({ ...form, [key]: e.target.checked })}
-                    className="w-4 h-4 text-[#406A56] rounded"
+                    className="w-4 h-4 text-[#2D5A3D] rounded"
                   />
                   <span className="text-sm text-[#2a1f1a]/80">{label}</span>
                 </label>
@@ -573,7 +573,7 @@ function ProductModal({
             <button
               type="submit"
               disabled={saving}
-              className="px-6 py-2 bg-[#406A56] text-white rounded-lg hover:bg-[#355847] text-sm disabled:opacity-50 flex items-center gap-2"
+              className="px-6 py-2 bg-[#2D5A3D] text-white rounded-lg hover:bg-[#355847] text-sm disabled:opacity-50 flex items-center gap-2"
             >
               {saving && <Loader2 className="w-4 h-4 animate-spin" />}
               {product ? 'Save Changes' : 'Add Product'}

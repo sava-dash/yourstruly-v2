@@ -222,7 +222,7 @@ export default function CoversPage() {
         <div className="flex items-center gap-4">
           <Link
             href="/admin/photobook"
-            className="p-2 rounded-lg hover:bg-white/50 text-[#2a1f1a]/50 hover:text-[#406A56] transition-colors"
+            className="p-2 rounded-lg hover:bg-white/50 text-[#2a1f1a]/50 hover:text-[#2D5A3D] transition-colors"
           >
             <ArrowLeft className="w-5 h-5" />
           </Link>
@@ -233,7 +233,7 @@ export default function CoversPage() {
         </div>
         <button
           onClick={startNew}
-          className="flex items-center gap-2 px-4 py-2 bg-[#406A56] text-white rounded-xl hover:bg-[#4A7A66] transition-colors"
+          className="flex items-center gap-2 px-4 py-2 bg-[#2D5A3D] text-white rounded-xl hover:bg-[#4A7A66] transition-colors"
         >
           <Plus className="w-4 h-4" />
           Add Cover
@@ -246,7 +246,7 @@ export default function CoversPage() {
           onClick={() => setActiveType(null)}
           className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
             activeType === null
-              ? 'bg-[#406A56] text-white'
+              ? 'bg-[#2D5A3D] text-white'
               : 'bg-white/50 text-[#2a1f1a]/70 hover:bg-white/80'
           }`}
         >
@@ -258,7 +258,7 @@ export default function CoversPage() {
             onClick={() => setActiveType(type.value)}
             className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors flex items-center gap-2 ${
               activeType === type.value
-                ? 'bg-[#406A56] text-white'
+                ? 'bg-[#2D5A3D] text-white'
                 : 'bg-white/50 text-[#2a1f1a]/70 hover:bg-white/80'
             }`}
           >
@@ -282,7 +282,7 @@ export default function CoversPage() {
                 type="text"
                 value={formData.name}
                 onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                className="w-full px-3 py-2 rounded-lg border border-[#C35F33]/20 bg-white/50 focus:outline-none focus:ring-2 focus:ring-[#406A56]/50"
+                className="w-full px-3 py-2 rounded-lg border border-[#B8562E]/20 bg-white/50 focus:outline-none focus:ring-2 focus:ring-[#2D5A3D]/50"
                 placeholder="e.g., Classic Title"
               />
             </div>
@@ -292,7 +292,7 @@ export default function CoversPage() {
               <select
                 value={formData.cover_type}
                 onChange={(e) => setFormData({ ...formData, cover_type: e.target.value as 'front' | 'back' | 'spine' })}
-                className="w-full px-3 py-2 rounded-lg border border-[#C35F33]/20 bg-white/50 focus:outline-none focus:ring-2 focus:ring-[#406A56]/50"
+                className="w-full px-3 py-2 rounded-lg border border-[#B8562E]/20 bg-white/50 focus:outline-none focus:ring-2 focus:ring-[#2D5A3D]/50"
               >
                 {COVER_TYPES.map((t) => (
                   <option key={t.value} value={t.value}>{t.label}</option>
@@ -306,7 +306,7 @@ export default function CoversPage() {
                 type="text"
                 value={formData.description || ''}
                 onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                className="w-full px-3 py-2 rounded-lg border border-[#C35F33]/20 bg-white/50 focus:outline-none focus:ring-2 focus:ring-[#406A56]/50"
+                className="w-full px-3 py-2 rounded-lg border border-[#B8562E]/20 bg-white/50 focus:outline-none focus:ring-2 focus:ring-[#2D5A3D]/50"
                 placeholder="Brief description"
               />
             </div>
@@ -317,7 +317,7 @@ export default function CoversPage() {
                 type="text"
                 value={formData.background}
                 onChange={(e) => setFormData({ ...formData, background: e.target.value })}
-                className="w-full px-3 py-2 rounded-lg border border-[#C35F33]/20 bg-white/50 focus:outline-none focus:ring-2 focus:ring-[#406A56]/50"
+                className="w-full px-3 py-2 rounded-lg border border-[#B8562E]/20 bg-white/50 focus:outline-none focus:ring-2 focus:ring-[#2D5A3D]/50"
                 placeholder="#ffffff"
               />
             </div>
@@ -329,7 +329,7 @@ export default function CoversPage() {
                 min="0"
                 value={formData.sort_order}
                 onChange={(e) => setFormData({ ...formData, sort_order: parseInt(e.target.value) || 0 })}
-                className="w-full px-3 py-2 rounded-lg border border-[#C35F33]/20 bg-white/50 focus:outline-none focus:ring-2 focus:ring-[#406A56]/50"
+                className="w-full px-3 py-2 rounded-lg border border-[#B8562E]/20 bg-white/50 focus:outline-none focus:ring-2 focus:ring-[#2D5A3D]/50"
               />
             </div>
             
@@ -342,7 +342,7 @@ export default function CoversPage() {
                 value={elementsJson}
                 onChange={(e) => setElementsJson(e.target.value)}
                 rows={8}
-                className="w-full px-3 py-2 rounded-lg border border-[#C35F33]/20 bg-white/50 focus:outline-none focus:ring-2 focus:ring-[#406A56]/50 font-mono text-sm"
+                className="w-full px-3 py-2 rounded-lg border border-[#B8562E]/20 bg-white/50 focus:outline-none focus:ring-2 focus:ring-[#2D5A3D]/50 font-mono text-sm"
               />
             </div>
             
@@ -355,7 +355,7 @@ export default function CoversPage() {
                 value={placeholdersJson}
                 onChange={(e) => setPlaceholdersJson(e.target.value)}
                 rows={3}
-                className="w-full px-3 py-2 rounded-lg border border-[#C35F33]/20 bg-white/50 focus:outline-none focus:ring-2 focus:ring-[#406A56]/50 font-mono text-sm"
+                className="w-full px-3 py-2 rounded-lg border border-[#B8562E]/20 bg-white/50 focus:outline-none focus:ring-2 focus:ring-[#2D5A3D]/50 font-mono text-sm"
                 placeholder='{"title": "Our Memories"}'
               />
             </div>
@@ -366,7 +366,7 @@ export default function CoversPage() {
                 id="is_enabled"
                 checked={formData.is_enabled}
                 onChange={(e) => setFormData({ ...formData, is_enabled: e.target.checked })}
-                className="w-4 h-4 rounded border-[#C35F33]/20 text-[#406A56] focus:ring-[#406A56]/50"
+                className="w-4 h-4 rounded border-[#B8562E]/20 text-[#2D5A3D] focus:ring-[#2D5A3D]/50"
               />
               <label htmlFor="is_enabled" className="text-sm font-medium text-[#2a1f1a]/70">
                 Enabled
@@ -374,7 +374,7 @@ export default function CoversPage() {
             </div>
           </div>
           
-          <div className="flex justify-end gap-3 mt-6 pt-4 border-t border-[#C35F33]/10">
+          <div className="flex justify-end gap-3 mt-6 pt-4 border-t border-[#B8562E]/10">
             <button
               onClick={cancelEdit}
               className="px-4 py-2 text-[#2a1f1a]/70 hover:text-[#2a1f1a] transition-colors"
@@ -384,7 +384,7 @@ export default function CoversPage() {
             <button
               onClick={handleSave}
               disabled={saving || !formData.name}
-              className="flex items-center gap-2 px-4 py-2 bg-[#406A56] text-white rounded-xl hover:bg-[#4A7A66] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              className="flex items-center gap-2 px-4 py-2 bg-[#2D5A3D] text-white rounded-xl hover:bg-[#4A7A66] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
               Save
@@ -397,16 +397,16 @@ export default function CoversPage() {
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
         {loading ? (
           <div className="col-span-full p-12 text-center">
-            <Loader2 className="w-8 h-8 mx-auto animate-spin text-[#406A56]" />
+            <Loader2 className="w-8 h-8 mx-auto animate-spin text-[#2D5A3D]" />
             <p className="text-[#2a1f1a]/60 mt-2">Loading covers...</p>
           </div>
         ) : filteredCovers.length === 0 ? (
           <div className="col-span-full p-12 text-center glass">
-            <Palette className="w-12 h-12 mx-auto text-[#C35F33]/30" />
+            <Palette className="w-12 h-12 mx-auto text-[#B8562E]/30" />
             <p className="text-[#2a1f1a]/60 mt-4">No cover designs yet</p>
             <button
               onClick={startNew}
-              className="mt-4 text-[#406A56] hover:underline"
+              className="mt-4 text-[#2D5A3D] hover:underline"
             >
               Add your first cover design
             </button>
@@ -419,7 +419,7 @@ export default function CoversPage() {
             >
               {/* Preview */}
               <div 
-                className="aspect-[3/4] rounded-lg mb-4 relative overflow-hidden border border-[#C35F33]/10"
+                className="aspect-[3/4] rounded-lg mb-4 relative overflow-hidden border border-[#B8562E]/10"
                 style={{ background: cover.background }}
               >
                 {/* Render element preview boxes */}
@@ -432,7 +432,7 @@ export default function CoversPage() {
                       top: `${el.position.y}%`,
                       width: `${el.position.width}%`,
                       height: `${el.position.height}%`,
-                      borderColor: el.type === 'photo' ? '#406A56' : el.type === 'text' ? '#C35F33' : '#4A3552',
+                      borderColor: el.type === 'photo' ? '#2D5A3D' : el.type === 'text' ? '#B8562E' : '#4A3552',
                       backgroundColor: el.type === 'photo' ? 'rgba(64, 106, 86, 0.15)' : el.type === 'text' ? 'rgba(195, 95, 51, 0.15)' : 'rgba(74, 53, 82, 0.15)',
                     }}
                   >
@@ -473,15 +473,15 @@ export default function CoversPage() {
               </div>
               
               {/* Actions */}
-              <div className="flex items-center justify-between pt-3 border-t border-[#C35F33]/10">
+              <div className="flex items-center justify-between pt-3 border-t border-[#B8562E]/10">
                 <button
                   onClick={() => toggleEnabled(cover)}
                   className="flex items-center gap-1 text-sm"
                 >
                   {cover.is_enabled ? (
                     <>
-                      <ToggleRight className="w-5 h-5 text-[#406A56]" />
-                      <span className="text-[#406A56]">Enabled</span>
+                      <ToggleRight className="w-5 h-5 text-[#2D5A3D]" />
+                      <span className="text-[#2D5A3D]">Enabled</span>
                     </>
                   ) : (
                     <>
@@ -494,7 +494,7 @@ export default function CoversPage() {
                 <div className="flex gap-1">
                   <button
                     onClick={() => startEdit(cover)}
-                    className="p-2 rounded-lg hover:bg-white/50 text-[#2a1f1a]/50 hover:text-[#406A56] transition-colors"
+                    className="p-2 rounded-lg hover:bg-white/50 text-[#2a1f1a]/50 hover:text-[#2D5A3D] transition-colors"
                     title="Edit"
                   >
                     <Pencil className="w-4 h-4" />
@@ -502,7 +502,7 @@ export default function CoversPage() {
                   
                   <button
                     onClick={() => handleDelete(cover.id)}
-                    className="p-2 rounded-lg hover:bg-white/50 text-[#2a1f1a]/50 hover:text-[#C35F33] transition-colors"
+                    className="p-2 rounded-lg hover:bg-white/50 text-[#2a1f1a]/50 hover:text-[#B8562E] transition-colors"
                     title="Delete"
                   >
                     <Trash2 className="w-4 h-4" />

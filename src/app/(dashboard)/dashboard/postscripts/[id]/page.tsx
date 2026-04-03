@@ -122,7 +122,7 @@ export default function PostScriptDetailPage({ params }: { params: Promise<{ id:
   useEffect(() => {
     const giftPayment = searchParams.get('gift_payment')
     if (giftPayment === 'success') {
-      setGiftMessage({ type: 'success', text: 'Gift added successfully! Payment complete.' })
+      setGiftMessage({ type: 'success', text: 'Gift added. Payment complete.' })
       // Clear URL params
       router.replace(`/dashboard/postscripts/${id}`, { scroll: false })
     } else if (giftPayment === 'cancelled') {
@@ -189,7 +189,7 @@ export default function PostScriptDetailPage({ params }: { params: Promise<{ id:
         </div>
         <div className="relative z-10 flex items-center justify-center min-h-screen">
           <div className="flex flex-col items-center gap-3">
-            <div className="w-10 h-10 border-3 border-[#C35F33] border-t-transparent rounded-full animate-spin" />
+            <div className="w-10 h-10 border-3 border-[#B8562E] border-t-transparent rounded-full animate-spin" />
             <p className="text-gray-600">Loading PostScript...</p>
           </div>
         </div>
@@ -206,15 +206,15 @@ export default function PostScriptDetailPage({ params }: { params: Promise<{ id:
         </div>
         <div className="relative z-10 flex items-center justify-center min-h-screen">
           <div className="glass-card-page p-8 text-center max-w-md">
-            <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-[#C35F33]/10 flex items-center justify-center">
-              <AlertCircle size={32} className="text-[#C35F33]" />
+            <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-[#B8562E]/10 flex items-center justify-center">
+              <AlertCircle size={32} className="text-[#B8562E]" />
             </div>
             <h2 className="text-xl font-bold text-[#2d2d2d] mb-2">PostScript Not Found</h2>
             <p className="text-gray-600 mb-6">{error || 'This PostScript may have been deleted or you don\'t have access to it.'}</p>
             <Link 
               href="/dashboard/postscripts" 
               className="btn-primary inline-flex"
-              style={{ background: '#C35F33' }}
+              style={{ background: '#B8562E' }}
             >
               <ChevronLeft size={18} />
               Back to PostScripts
@@ -253,7 +253,7 @@ export default function PostScriptDetailPage({ params }: { params: Promise<{ id:
     <div className="page-container">
       {/* Warm background */}
       <div className="page-background">
-        <div className="page-blob page-blob-1" style={{ background: 'linear-gradient(135deg, #C35F3340, #D9C61A30)' }} />
+        <div className="page-blob page-blob-1" style={{ background: 'linear-gradient(135deg, #B8562E40, #C4A23530)' }} />
         <div className="page-blob page-blob-2" />
         <div className="page-blob page-blob-3" />
       </div>
@@ -293,8 +293,8 @@ export default function PostScriptDetailPage({ params }: { params: Promise<{ id:
           <div className="flex items-center gap-2">
             <button
               onClick={() => router.push(`/dashboard/postscripts/new?edit=${id}`)}
-              className="p-2.5 bg-white/80 backdrop-blur-sm text-gray-500 hover:text-[#C35F33] 
-                       rounded-xl transition-all border border-gray-200 shadow-sm hover:border-[#C35F33]/30"
+              className="p-2.5 bg-white/80 backdrop-blur-sm text-gray-500 hover:text-[#B8562E] 
+                       rounded-xl transition-all border border-gray-200 shadow-sm hover:border-[#B8562E]/30"
               title="Edit PostScript"
             >
               <Edit2 size={18} />
@@ -313,7 +313,7 @@ export default function PostScriptDetailPage({ params }: { params: Promise<{ id:
         {/* Hero Card with Recipient Info */}
         <div className="glass-card-page-strong overflow-hidden mb-6">
           {/* Coral gradient header */}
-          <div className="bg-gradient-to-br from-[#C35F33] via-[#D97B4A] to-[#D9C61A] p-6 text-white">
+          <div className="bg-gradient-to-br from-[#B8562E] via-[#D97B4A] to-[#C4A235] p-6 text-white">
             <div className="flex items-start gap-4">
               {/* Recipient Avatar */}
               {postscript.recipient?.avatar_url ? (
@@ -351,9 +351,9 @@ export default function PostScriptDetailPage({ params }: { params: Promise<{ id:
           </div>
 
           {/* Delivery Info Bar */}
-          <div className="px-6 py-4 bg-[#F2F1E5]/50 border-b border-gray-100 flex flex-wrap items-center gap-4">
+          <div className="px-6 py-4 bg-[#F5F3EE]/50 border-b border-gray-100 flex flex-wrap items-center gap-4">
             <div className="flex items-center gap-2 text-gray-700">
-              <DeliveryIcon size={16} className="text-[#C35F33]" />
+              <DeliveryIcon size={16} className="text-[#B8562E]" />
               <span className="text-sm font-medium">{getDeliveryText()}</span>
             </div>
             
@@ -365,7 +365,7 @@ export default function PostScriptDetailPage({ params }: { params: Promise<{ id:
             )}
             
             {postscript.requires_confirmation && (
-              <div className="flex items-center gap-1.5 text-[#406A56] text-sm">
+              <div className="flex items-center gap-1.5 text-[#2D5A3D] text-sm">
                 <Users size={14} />
                 <span>Requires confirmation</span>
               </div>
@@ -379,9 +379,9 @@ export default function PostScriptDetailPage({ params }: { params: Promise<{ id:
           <div className="md:col-span-2 space-y-6">
             {/* Message Card */}
             <div className="glass-card-page p-6">
-              <h3 className="text-xs font-semibold text-[#C35F33] uppercase tracking-wider mb-4 flex items-center gap-2">
-                <div className="w-6 h-6 rounded-lg bg-[#C35F33]/10 flex items-center justify-center">
-                  <Mail size={12} className="text-[#C35F33]" />
+              <h3 className="text-xs font-semibold text-[#B8562E] uppercase tracking-wider mb-4 flex items-center gap-2">
+                <div className="w-6 h-6 rounded-lg bg-[#B8562E]/10 flex items-center justify-center">
+                  <Mail size={12} className="text-[#B8562E]" />
                 </div>
                 Message
               </h3>
@@ -397,9 +397,9 @@ export default function PostScriptDetailPage({ params }: { params: Promise<{ id:
             {/* Video Preview */}
             {postscript.video_url && (
               <div className="glass-card-page p-6">
-                <h3 className="text-xs font-semibold text-[#C35F33] uppercase tracking-wider mb-4 flex items-center gap-2">
-                  <div className="w-6 h-6 rounded-lg bg-[#C35F33]/10 flex items-center justify-center">
-                    <Video size={12} className="text-[#C35F33]" />
+                <h3 className="text-xs font-semibold text-[#B8562E] uppercase tracking-wider mb-4 flex items-center gap-2">
+                  <div className="w-6 h-6 rounded-lg bg-[#B8562E]/10 flex items-center justify-center">
+                    <Video size={12} className="text-[#B8562E]" />
                   </div>
                   Video Message
                 </h3>
@@ -415,9 +415,9 @@ export default function PostScriptDetailPage({ params }: { params: Promise<{ id:
             {/* Attachments Grid */}
             {postscript.attachments && postscript.attachments.length > 0 && (
               <div className="glass-card-page p-6">
-                <h3 className="text-xs font-semibold text-[#C35F33] uppercase tracking-wider mb-4 flex items-center gap-2">
-                  <div className="w-6 h-6 rounded-lg bg-[#C35F33]/10 flex items-center justify-center">
-                    <Paperclip size={12} className="text-[#C35F33]" />
+                <h3 className="text-xs font-semibold text-[#B8562E] uppercase tracking-wider mb-4 flex items-center gap-2">
+                  <div className="w-6 h-6 rounded-lg bg-[#B8562E]/10 flex items-center justify-center">
+                    <Paperclip size={12} className="text-[#B8562E]" />
                   </div>
                   Attachments ({postscript.attachments.length})
                 </h3>
@@ -430,7 +430,7 @@ export default function PostScriptDetailPage({ params }: { params: Promise<{ id:
                         href={att.file_url} 
                         target="_blank" 
                         rel="noopener noreferrer"
-                        className="group relative bg-[#F2F1E5] hover:bg-[#E8E7D8] rounded-xl p-3 transition-all border border-transparent hover:border-[#C35F33]/20"
+                        className="group relative bg-[#F5F3EE] hover:bg-[#E8E7D8] rounded-xl p-3 transition-all border border-transparent hover:border-[#B8562E]/20"
                       >
                         {isImage ? (
                           <img 
@@ -440,7 +440,7 @@ export default function PostScriptDetailPage({ params }: { params: Promise<{ id:
                           />
                         ) : (
                           <div className="aspect-square flex flex-col items-center justify-center">
-                            <Paperclip size={24} className="text-[#C35F33]/50 mb-2" />
+                            <Paperclip size={24} className="text-[#B8562E]/50 mb-2" />
                             <span className="text-xs text-gray-600 text-center truncate w-full px-2">
                               {att.file_name || 'File'}
                             </span>
@@ -461,8 +461,8 @@ export default function PostScriptDetailPage({ params }: { params: Promise<{ id:
               <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-4">Recipient</h3>
               <div className="space-y-3">
                 <div className="flex items-center gap-3">
-                  <div className="w-8 h-8 rounded-lg bg-[#C35F33]/10 flex items-center justify-center">
-                    <User size={14} className="text-[#C35F33]" />
+                  <div className="w-8 h-8 rounded-lg bg-[#B8562E]/10 flex items-center justify-center">
+                    <User size={14} className="text-[#B8562E]" />
                   </div>
                   <span className="text-gray-800 font-medium">{postscript.recipient_name}</span>
                 </div>
@@ -489,7 +489,7 @@ export default function PostScriptDetailPage({ params }: { params: Promise<{ id:
             {postscript.has_gift ? (
               <div className="glass-card-page p-5">
                 <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-4 flex items-center gap-2">
-                  <Gift size={12} className="text-[#D9C61A]" />
+                  <Gift size={12} className="text-[#C4A235]" />
                   Gift Included
                 </h3>
                 <div className="space-y-2 text-sm">
@@ -558,8 +558,8 @@ export default function PostScriptDetailPage({ params }: { params: Promise<{ id:
                 }
               }}
               className="w-full flex items-center justify-center gap-2 px-5 py-3 bg-white/90 backdrop-blur-sm 
-                         text-[#C35F33] rounded-xl font-medium hover:bg-white transition-all
-                         border border-[#C35F33]/20 hover:border-[#C35F33]/40 shadow-sm"
+                         text-[#B8562E] rounded-xl font-medium hover:bg-white transition-all
+                         border border-[#B8562E]/20 hover:border-[#B8562E]/40 shadow-sm"
             >
               <Eye size={18} />
               Preview as Recipient

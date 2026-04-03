@@ -10,7 +10,7 @@ const EssenceFingerprint = dynamic(
     ssr: true, // SVG-based, safe for SSR
     loading: () => (
       <div className="relative flex items-center justify-center" style={{ width: 300, height: 300 }}>
-        <div className="w-16 h-16 rounded-full border-2 border-[#406A56]/20 border-t-[#406A56] animate-spin" />
+        <div className="w-16 h-16 rounded-full border-2 border-[#2D5A3D]/20 border-t-[#2D5A3D] animate-spin" />
       </div>
     )
   }

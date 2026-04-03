@@ -39,7 +39,7 @@ interface ActivityItem {
 const ACTIVITY_ICONS: Record<string, { icon: typeof Heart; color: string; bg: string; label: string }> = {
   memory_shared: { icon: Image, color: 'text-amber-600', bg: 'bg-amber-100', label: 'Memories' },
   wisdom_shared: { icon: BookOpen, color: 'text-purple-600', bg: 'bg-purple-100', label: 'Wisdom' },
-  circle_message: { icon: MessageCircle, color: 'text-[#406A56]', bg: 'bg-[#406A56]/10', label: 'Messages' },
+  circle_message: { icon: MessageCircle, color: 'text-[#2D5A3D]', bg: 'bg-[#2D5A3D]/10', label: 'Messages' },
   circle_invite: { icon: Users, color: 'text-blue-600', bg: 'bg-blue-100', label: 'Invites' },
   circle_content: { icon: Heart, color: 'text-rose-600', bg: 'bg-rose-100', label: 'Shared' },
   wisdom_comment: { icon: MessageCircle, color: 'text-purple-600', bg: 'bg-purple-100', label: 'Comments' },
@@ -92,7 +92,7 @@ function ActivityItemCard({ activity, index }: { activity: ActivityItem; index: 
             </div>
           ) : activity.actor ? (
             <div className="relative">
-              <div className="w-12 h-12 rounded-full bg-gradient-to-br from-[#406A56] to-[#4a7a64] flex items-center justify-center text-white font-semibold text-lg shadow-sm">
+              <div className="w-12 h-12 rounded-full bg-gradient-to-br from-[#2D5A3D] to-[#234A31] flex items-center justify-center text-white font-semibold text-lg shadow-sm">
                 {activity.actor.name.charAt(0).toUpperCase()}
               </div>
               <div className={`absolute -bottom-1 -right-1 w-6 h-6 rounded-full ${config.bg} flex items-center justify-center shadow-sm border border-white`}>
@@ -135,7 +135,7 @@ function ActivityItemCard({ activity, index }: { activity: ActivityItem; index: 
         {/* Arrow */}
         <ChevronRight 
           size={20} 
-          className="flex-shrink-0 text-[#406A56]/30 group-hover:text-[#406A56] transition-colors"
+          className="flex-shrink-0 text-[#2D5A3D]/30 group-hover:text-[#2D5A3D] transition-colors"
         />
       </Link>
     </motion.div>
@@ -214,7 +214,7 @@ export default function ActivityPage() {
               >
                 <RefreshCw 
                   size={18} 
-                  className={`text-[#406A56] ${isRefreshing ? 'animate-spin' : ''}`}
+                  className={`text-[#2D5A3D] ${isRefreshing ? 'animate-spin' : ''}`}
                 />
               </button>
             </div>
@@ -251,19 +251,19 @@ export default function ActivityPage() {
                   animate={{ rotate: 360 }}
                   transition={{ duration: 1.5, repeat: Infinity, ease: 'linear' }}
                 >
-                  <Sparkles size={28} className="text-[#D9C61A]" />
+                  <Sparkles size={28} className="text-[#C4A235]" />
                 </motion.div>
                 <span className="loading-text">Loading activity...</span>
               </div>
             ) : error ? (
               <div className="empty-state">
                 <div className="empty-state-icon">
-                  <Bell size={32} className="text-[#406A56]/30" />
+                  <Bell size={32} className="text-[#2D5A3D]/30" />
                 </div>
                 <span className="empty-state-text">{error}</span>
                 <button
                   onClick={() => fetchActivities()}
-                  className="text-sm text-[#406A56] hover:underline"
+                  className="text-sm text-[#2D5A3D] hover:underline"
                 >
                   Try again
                 </button>
@@ -271,7 +271,7 @@ export default function ActivityPage() {
             ) : filteredActivities.length === 0 ? (
               <div className="empty-state">
                 <div className="empty-state-icon">
-                  <Sparkles size={32} className="text-[#406A56]/40" />
+                  <Sparkles size={32} className="text-[#2D5A3D]/40" />
                 </div>
                 <h3 className="empty-state-title">
                   {filter ? 'No activity in this category' : 'No recent activity'}

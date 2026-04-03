@@ -29,7 +29,7 @@ export default function OnThisDayRow() {
 
   return (
     <section className="px-6 pb-4">
-      <div className="rounded-2xl p-4" style={{ background: '#FAF8F4' }}>
+      <div className="rounded-2xl p-4" style={{ background: '#FAFAF7' }}>
         <div className="flex items-center gap-2 mb-3">
           <Calendar size={16} className="text-[#2D5A3D]" />
           <h2 className="text-[#1A1F1C] font-semibold text-base">On This Day</h2>

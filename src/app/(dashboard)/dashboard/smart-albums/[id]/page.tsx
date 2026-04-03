@@ -63,12 +63,12 @@ export default function SmartAlbumDetailPage({ params }: { params: Promise<{ id:
   }
 
   return (
-    <div className="min-h-screen bg-[#FDF8F3] p-6">
+    <div className="min-h-screen bg-[#FAFAF7] p-6">
       {/* Header */}
       <div className="max-w-6xl mx-auto mb-8">
         <Link 
           href="/dashboard/smart-albums"
-          className="inline-flex items-center gap-2 text-[#406A56] hover:text-[#4a7a64] transition-colors mb-4"
+          className="inline-flex items-center gap-2 text-[#2D5A3D] hover:text-[#234A31] transition-colors mb-4"
         >
           <ArrowLeft size={20} />
           Back to Smart Albums
@@ -83,13 +83,13 @@ export default function SmartAlbumDetailPage({ params }: { params: Promise<{ id:
                 className="w-20 h-20 rounded-full object-cover shadow-lg"
               />
             ) : (
-              <div className="w-20 h-20 rounded-full bg-[#406A56]/10 flex items-center justify-center shadow-lg">
-                <User size={32} className="text-[#406A56]" />
+              <div className="w-20 h-20 rounded-full bg-[#2D5A3D]/10 flex items-center justify-center shadow-lg">
+                <User size={32} className="text-[#2D5A3D]" />
               </div>
             )}
             <div>
-              <h1 className="text-4xl font-bold text-[#406A56]">{albumInfo.name}</h1>
-              <p className="text-[#406A56]/70">
+              <h1 className="text-4xl font-bold text-[#2D5A3D]">{albumInfo.name}</h1>
+              <p className="text-[#2D5A3D]/70">
                 {albumInfo.photoCount} {albumInfo.photoCount === 1 ? 'photo' : 'photos'}
               </p>
             </div>
@@ -101,13 +101,13 @@ export default function SmartAlbumDetailPage({ params }: { params: Promise<{ id:
       <div className="max-w-6xl mx-auto">
         {isLoading ? (
           <div className="flex items-center justify-center py-20">
-            <Loader2 size={48} className="text-[#406A56] animate-spin" />
+            <Loader2 size={48} className="text-[#2D5A3D] animate-spin" />
           </div>
         ) : photos.length === 0 ? (
           <div className="text-center py-20">
-            <User size={64} className="mx-auto text-[#406A56]/30 mb-4" />
-            <h3 className="text-xl font-bold text-[#406A56] mb-2">No photos yet</h3>
-            <p className="text-[#406A56]/70">Tag this person in photos to add them here</p>
+            <User size={64} className="mx-auto text-[#2D5A3D]/30 mb-4" />
+            <h3 className="text-xl font-bold text-[#2D5A3D] mb-2">Your photo gallery is waiting</h3>
+            <p className="text-[#2D5A3D]/70">Tag this person in photos to add them here</p>
           </div>
         ) : (
           <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">

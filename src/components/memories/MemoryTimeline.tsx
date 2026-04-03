@@ -62,7 +62,7 @@ export function MemoryTimeline({ memories }: MemoryTimelineProps) {
       {/* Header */}
       <div className="flex items-center justify-between mb-4 px-6">
         <h2 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
-          <Calendar size={20} className="text-[#D9C61A]" />
+          <Calendar size={20} className="text-[#C4A235]" />
           Memory Timeline
         </h2>
         <div className="flex gap-2">
@@ -101,11 +101,11 @@ export function MemoryTimeline({ memories }: MemoryTimelineProps) {
           >
             {/* Year/Month Label */}
             <div className="flex items-center gap-3 mb-3">
-              <div className="w-3 h-3 rounded-full bg-gradient-to-br from-[#406A56] to-[#D9C61A]" />
+              <div className="w-3 h-3 rounded-full bg-gradient-to-br from-[#2D5A3D] to-[#C4A235]" />
               <span className="text-sm font-semibold text-gray-700">
                 {group.month} {group.year}
               </span>
-              <div className="flex-1 h-px bg-gradient-to-r from-[#406A56]/30 to-transparent" />
+              <div className="flex-1 h-px bg-gradient-to-r from-[#2D5A3D]/30 to-transparent" />
             </div>
 
             {/* Memory Cards */}
@@ -130,8 +130,8 @@ export function MemoryTimeline({ memories }: MemoryTimelineProps) {
                         className="w-full h-full object-cover"
                       />
                     ) : (
-                      <div className="w-full h-full bg-gradient-to-br from-[#406A56]/20 to-[#D9C61A]/20 flex items-center justify-center">
-                        <Calendar size={24} className="text-[#406A56]/40" />
+                      <div className="w-full h-full bg-gradient-to-br from-[#2D5A3D]/20 to-[#C4A235]/20 flex items-center justify-center">
+                        <Calendar size={24} className="text-[#2D5A3D]/40" />
                       </div>
                     )}
                     
@@ -146,7 +146,7 @@ export function MemoryTimeline({ memories }: MemoryTimelineProps) {
                     </div>
 
                     {/* Hover glow */}
-                    <div className="absolute inset-0 bg-[#D9C61A]/0 group-hover:bg-[#D9C61A]/10 transition-colors" />
+                    <div className="absolute inset-0 bg-[#C4A235]/0 group-hover:bg-[#C4A235]/10 transition-colors" />
                   </motion.div>
                 </Link>
               ))}
@@ -156,7 +156,7 @@ export function MemoryTimeline({ memories }: MemoryTimelineProps) {
       </div>
 
       {/* Timeline line */}
-      <div className="absolute left-6 right-6 top-[3.75rem] h-0.5 bg-gradient-to-r from-[#406A56]/20 via-[#D9C61A]/30 to-[#C35F33]/20 -z-10" />
+      <div className="absolute left-6 right-6 top-[3.75rem] h-0.5 bg-gradient-to-r from-[#2D5A3D]/20 via-[#C4A235]/30 to-[#B8562E]/20 -z-10" />
     </div>
   )
 }

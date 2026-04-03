@@ -532,8 +532,8 @@ export default function SettingsPage() {
           {/* Account Section */}
           <section className="glass-card-page p-6">
             <div className="flex items-center gap-3 mb-4">
-              <div className="w-10 h-10 rounded-xl bg-[#406A56]/10 flex items-center justify-center">
-                <User size={20} className="text-[#406A56]" />
+              <div className="w-10 h-10 rounded-xl bg-[#2D5A3D]/10 flex items-center justify-center">
+                <User size={20} className="text-[#2D5A3D]" />
               </div>
               <h2 className="text-lg font-semibold text-[#2d2d2d]">Account</h2>
             </div>
@@ -545,7 +545,7 @@ export default function SettingsPage() {
                   type="email"
                   value={email}
                   disabled
-                  className="form-input bg-[#406A56]/5 cursor-not-allowed"
+                  className="form-input bg-[#2D5A3D]/5 cursor-not-allowed"
                 />
                 <p className="text-xs text-[#999] mt-1">Contact support to change email</p>
               </div>
@@ -556,7 +556,7 @@ export default function SettingsPage() {
           <section className="glass-card-page p-6">
             <Link href="/dashboard/settings/subscription" className="flex items-center justify-between group">
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-xl bg-[#D9C61A]/10 flex items-center justify-center">
+                <div className="w-10 h-10 rounded-xl bg-[#C4A235]/10 flex items-center justify-center">
                   <CreditCard size={20} className="text-[#8a7c08]" />
                 </div>
                 <div>
@@ -564,14 +564,14 @@ export default function SettingsPage() {
                   <p className="text-sm text-[#666]">Manage your plan and billing</p>
                 </div>
               </div>
-              <ChevronRight size={20} className="text-[#999] group-hover:text-[#406A56] transition-colors" />
+              <ChevronRight size={20} className="text-[#999] group-hover:text-[#2D5A3D] transition-colors" />
             </Link>
           </section>
 
           {/* Notifications Section */}
           <section className="glass-card-page p-6">
             <div className="flex items-center gap-3 mb-4">
-              <div className="w-10 h-10 rounded-xl bg-[#D9C61A]/10 flex items-center justify-center">
+              <div className="w-10 h-10 rounded-xl bg-[#C4A235]/10 flex items-center justify-center">
                 <Bell size={20} className="text-[#8a7c08]" />
               </div>
               <h2 className="text-lg font-semibold text-[#2d2d2d]">Notifications</h2>
@@ -587,7 +587,7 @@ export default function SettingsPage() {
                   type="checkbox"
                   checked={settings.email_notifications}
                   onChange={(e) => setSettings({ ...settings, email_notifications: e.target.checked })}
-                  className="w-5 h-5 rounded bg-white border-[#406A56]/20 text-[#406A56] focus:ring-[#406A56]"
+                  className="w-5 h-5 rounded bg-white border-[#2D5A3D]/20 text-[#2D5A3D] focus:ring-[#2D5A3D]"
                 />
               </label>
 
@@ -600,7 +600,7 @@ export default function SettingsPage() {
                   type="checkbox"
                   checked={settings.memory_reminders}
                   onChange={(e) => setSettings({ ...settings, memory_reminders: e.target.checked })}
-                  className="w-5 h-5 rounded bg-white border-[#406A56]/20 text-[#406A56] focus:ring-[#406A56]"
+                  className="w-5 h-5 rounded bg-white border-[#2D5A3D]/20 text-[#2D5A3D] focus:ring-[#2D5A3D]"
                 />
               </label>
 
@@ -613,7 +613,7 @@ export default function SettingsPage() {
                   type="checkbox"
                   checked={settings.share_notifications}
                   onChange={(e) => setSettings({ ...settings, share_notifications: e.target.checked })}
-                  className="w-5 h-5 rounded bg-white border-[#406A56]/20 text-[#406A56] focus:ring-[#406A56]"
+                  className="w-5 h-5 rounded bg-white border-[#2D5A3D]/20 text-[#2D5A3D] focus:ring-[#2D5A3D]"
                 />
               </label>
             </div>
@@ -640,7 +640,7 @@ export default function SettingsPage() {
             <div className="space-y-3">
               <button
                 onClick={handleExportData}
-                className="w-full flex items-center justify-center gap-2 py-3 bg-[#406A56]/5 hover:bg-[#406A56]/10 text-[#406A56] rounded-xl transition-colors font-medium"
+                className="w-full flex items-center justify-center gap-2 py-3 bg-[#2D5A3D]/5 hover:bg-[#2D5A3D]/10 text-[#2D5A3D] rounded-xl transition-colors font-medium"
               >
                 <Download size={18} />
                 Export Data (JSON)
@@ -649,7 +649,7 @@ export default function SettingsPage() {
               <button
                 onClick={handleFullExport}
                 disabled={exporting}
-                className="w-full flex items-center justify-center gap-2 py-3 bg-[#406A56] hover:bg-[#355a48] text-white rounded-xl transition-colors font-medium"
+                className="w-full flex items-center justify-center gap-2 py-3 bg-[#2D5A3D] hover:bg-[#234A31] text-white rounded-xl transition-colors font-medium"
               >
                 {exporting ? (
                   <>
@@ -692,7 +692,7 @@ export default function SettingsPage() {
           {/* AI Features Section */}
           <section className="glass-card-page p-6">
             <div className="flex items-center gap-3 mb-4">
-              <div className="w-10 h-10 rounded-xl bg-[#D9C61A]/10 flex items-center justify-center">
+              <div className="w-10 h-10 rounded-xl bg-[#C4A235]/10 flex items-center justify-center">
                 <Sparkles size={20} className="text-[#8a7c08]" />
               </div>
               <h2 className="text-lg font-semibold text-[#2d2d2d]">AI Features</h2>
@@ -738,7 +738,7 @@ export default function SettingsPage() {
             <div className="space-y-3">
               <button
                 onClick={handleSignOut}
-                className="w-full flex items-center justify-center gap-2 py-3 bg-[#406A56]/5 hover:bg-[#406A56]/10 text-[#406A56] rounded-xl transition-colors font-medium"
+                className="w-full flex items-center justify-center gap-2 py-3 bg-[#2D5A3D]/5 hover:bg-[#2D5A3D]/10 text-[#2D5A3D] rounded-xl transition-colors font-medium"
               >
                 <LogOut size={18} />
                 Sign Out
@@ -761,7 +761,7 @@ export default function SettingsPage() {
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
           <div className="bg-white rounded-2xl max-w-md w-full p-6 shadow-xl">
             <div className="flex items-center gap-3 mb-4">
-              <div className="w-10 h-10 rounded-xl bg-[#D9C61A]/10 flex items-center justify-center">
+              <div className="w-10 h-10 rounded-xl bg-[#C4A235]/10 flex items-center justify-center">
                 <AlertTriangle size={20} className="text-[#8a7c08]" />
               </div>
               <h3 className="text-lg font-semibold text-[#2d2d2d]">Confirm Import</h3>
@@ -770,14 +770,14 @@ export default function SettingsPage() {
             <p className="text-[#666] mb-4">
               This will restore data from your backup file. Existing data will not be deleted, but duplicates may be created.
               {importPreview.isZip && (
-                <span className="block mt-2 text-[#406A56] font-medium">
+                <span className="block mt-2 text-[#2D5A3D] font-medium">
                   📦 Full backup with media files detected
                 </span>
               )}
             </p>
 
             {importPreview.data._meta && (
-              <div className="bg-[#406A56]/5 rounded-xl p-3 mb-4 text-sm">
+              <div className="bg-[#2D5A3D]/5 rounded-xl p-3 mb-4 text-sm">
                 <p className="text-[#666]">
                   <span className="font-medium">Exported:</span>{' '}
                   {new Date(importPreview.data._meta.exported_at).toLocaleDateString()}
@@ -817,7 +817,7 @@ export default function SettingsPage() {
               <button
                 onClick={handleImportConfirm}
                 disabled={importing}
-                className="flex-1 py-2.5 px-4 bg-[#406A56] hover:bg-[#355a48] text-white rounded-xl transition-colors font-medium flex items-center justify-center gap-2"
+                className="flex-1 py-2.5 px-4 bg-[#2D5A3D] hover:bg-[#234A31] text-white rounded-xl transition-colors font-medium flex items-center justify-center gap-2"
               >
                 {importing ? (
                   <>

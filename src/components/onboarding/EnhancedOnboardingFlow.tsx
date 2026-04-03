@@ -203,7 +203,7 @@ export function EnhancedOnboardingFlow({ onComplete, onSkipAll }: EnhancedOnboar
   }, [data, onComplete]);
 
   return (
-    <div className="min-h-screen bg-[#FDF8F3] relative overflow-hidden flex items-center justify-center p-4">
+    <div className="min-h-screen bg-[#FAFAF7] relative overflow-hidden flex items-center justify-center p-4">
       <div className="home-background" />
       <div className="home-blob home-blob-1" />
       <div className="home-blob home-blob-2" />
@@ -212,7 +212,7 @@ export function EnhancedOnboardingFlow({ onComplete, onSkipAll }: EnhancedOnboar
       {step !== 'celebration' && step !== 'welcome' && (
         <div className="fixed top-0 left-0 right-0 h-1.5 bg-gray-200/50 z-50">
           <motion.div 
-            className="h-full bg-gradient-to-r from-[#406A56] to-[#8DACAB]"
+            className="h-full bg-gradient-to-r from-[#2D5A3D] to-[#8DACAB]"
             initial={{ width: 0 }}
             animate={{ width: `${progress}%` }}
             transition={{ duration: 0.3 }}
@@ -254,7 +254,7 @@ export function EnhancedOnboardingFlow({ onComplete, onSkipAll }: EnhancedOnboar
               key="interests"
               title="What are you interested in?"
               subtitle="Select or add your interests"
-              icon={<Heart size={28} className="text-[#C35F33]" />}
+              icon={<Heart size={28} className="text-[#B8562E]" />}
               suggestions={INTEREST_SUGGESTIONS}
               selected={data.interests}
               onChange={(interests) => updateData({ interests })}
@@ -268,7 +268,7 @@ export function EnhancedOnboardingFlow({ onComplete, onSkipAll }: EnhancedOnboar
               key="hobbies"
               title="What do you enjoy doing?"
               subtitle="Your hobbies and pastimes"
-              icon={<Palette size={28} className="text-[#D9C61A]" />}
+              icon={<Palette size={28} className="text-[#C4A235]" />}
               suggestions={HOBBY_SUGGESTIONS}
               selected={data.hobbies}
               onChange={(hobbies) => updateData({ hobbies })}
@@ -282,7 +282,7 @@ export function EnhancedOnboardingFlow({ onComplete, onSkipAll }: EnhancedOnboar
               key="skills"
               title="What are your strengths?"
               subtitle="Skills you're proud of"
-              icon={<Briefcase size={28} className="text-[#406A56]" />}
+              icon={<Briefcase size={28} className="text-[#2D5A3D]" />}
               suggestions={SKILL_SUGGESTIONS}
               selected={data.skills}
               onChange={(skills) => updateData({ skills })}
@@ -310,7 +310,7 @@ export function EnhancedOnboardingFlow({ onComplete, onSkipAll }: EnhancedOnboar
               key="life-goals"
               title="What matters most in life?"
               subtitle="Your aspirations and goals"
-              icon={<Target size={28} className="text-[#C35F33]" />}
+              icon={<Target size={28} className="text-[#B8562E]" />}
               suggestions={LIFE_GOAL_SUGGESTIONS}
               selected={data.lifeGoals}
               onChange={(lifeGoals) => updateData({ lifeGoals })}
@@ -324,7 +324,7 @@ export function EnhancedOnboardingFlow({ onComplete, onSkipAll }: EnhancedOnboar
               key="religion"
               title="Faith & Spirituality"
               subtitle="This helps personalize your experience"
-              icon={<Sparkles size={28} className="text-[#D9C61A]" />}
+              icon={<Sparkles size={28} className="text-[#C4A235]" />}
               options={RELIGION_OPTIONS}
               selected={data.religion}
               onChange={(religion) => updateData({ religion })}
@@ -338,7 +338,7 @@ export function EnhancedOnboardingFlow({ onComplete, onSkipAll }: EnhancedOnboar
               key="location"
               title="Where do you call home?"
               subtitle="City, state, or country"
-              icon={<MapPin size={28} className="text-[#406A56]" />}
+              icon={<MapPin size={28} className="text-[#2D5A3D]" />}
               placeholder="e.g., New York, NY"
               value={data.location}
               onChange={(location) => updateData({ location })}
@@ -438,7 +438,7 @@ function WelcomeStep({ onContinue }: { onContinue: () => void }) {
       className="glass-card glass-card-strong p-8 text-center"
     >
       <motion.div
-        className="w-20 h-20 rounded-full bg-gradient-to-br from-[#406A56] to-[#D9C61A] 
+        className="w-20 h-20 rounded-full bg-gradient-to-br from-[#2D5A3D] to-[#C4A235] 
                    flex items-center justify-center mx-auto mb-6"
         animate={{ scale: [1, 1.05, 1] }}
         transition={{ duration: 3, repeat: Infinity }}
@@ -462,7 +462,7 @@ function WelcomeStep({ onContinue }: { onContinue: () => void }) {
       <button
         onClick={onContinue}
         className="w-full flex items-center justify-center gap-2 px-6 py-3 
-                   bg-[#406A56] text-white rounded-xl font-medium
+                   bg-[#2D5A3D] text-white rounded-xl font-medium
                    hover:bg-[#355a48] transition-all"
       >
         Let's Begin
@@ -486,8 +486,8 @@ function NameStep({ value, onChange, onBack, onContinue }: {
       className="glass-card glass-card-strong p-8"
     >
       <div className="text-center mb-6">
-        <div className="w-14 h-14 bg-[#406A56]/10 rounded-full flex items-center justify-center mx-auto mb-4">
-          <User size={28} className="text-[#406A56]" />
+        <div className="w-14 h-14 bg-[#2D5A3D]/10 rounded-full flex items-center justify-center mx-auto mb-4">
+          <User size={28} className="text-[#2D5A3D]" />
         </div>
         <h2 className="text-2xl font-semibold text-[#2d2d2d] font-playfair">What should we call you?</h2>
         <p className="text-gray-500 mt-2 text-sm">This is how you'll appear to family members</p>
@@ -499,20 +499,20 @@ function NameStep({ value, onChange, onBack, onContinue }: {
         onChange={(e) => onChange(e.target.value)}
         className="w-full px-4 py-3 rounded-xl bg-white border border-gray-200 
                    text-[#2d2d2d] placeholder-gray-400 text-center text-lg
-                   focus:outline-none focus:ring-2 focus:ring-[#406A56]/30 mb-6"
+                   focus:outline-none focus:ring-2 focus:ring-[#2D5A3D]/30 mb-6"
         placeholder="Enter your name"
         autoFocus
         onKeyDown={(e) => e.key === 'Enter' && value.trim() && onContinue()}
       />
 
       <div className="flex items-center justify-between">
-        <button onClick={onBack} className="flex items-center gap-2 px-4 py-2 text-gray-500 hover:text-[#406A56]">
+        <button onClick={onBack} className="flex items-center gap-2 px-4 py-2 text-gray-500 hover:text-[#2D5A3D]">
           <ChevronLeft size={18} /> Back
         </button>
         <button
           onClick={onContinue}
           disabled={!value.trim()}
-          className="flex items-center gap-2 px-6 py-2.5 bg-[#406A56] text-white rounded-xl font-medium 
+          className="flex items-center gap-2 px-6 py-2.5 bg-[#2D5A3D] text-white rounded-xl font-medium 
                      hover:bg-[#355a48] disabled:opacity-50 disabled:cursor-not-allowed"
         >
           Continue <ChevronRight size={18} />
@@ -555,7 +555,7 @@ function PillStep({ title, subtitle, icon, suggestions, selected, onChange, onBa
       />
 
       <div className="flex items-center justify-between mt-6 pt-4 border-t border-gray-100">
-        <button onClick={onBack} className="flex items-center gap-2 px-4 py-2 text-gray-500 hover:text-[#406A56]">
+        <button onClick={onBack} className="flex items-center gap-2 px-4 py-2 text-gray-500 hover:text-[#2D5A3D]">
           <ChevronLeft size={18} /> Back
         </button>
         <div className="flex items-center gap-2">
@@ -564,7 +564,7 @@ function PillStep({ title, subtitle, icon, suggestions, selected, onChange, onBa
           </button>
           <button
             onClick={onContinue}
-            className="flex items-center gap-2 px-6 py-2.5 bg-[#406A56] text-white rounded-xl font-medium hover:bg-[#355a48]"
+            className="flex items-center gap-2 px-6 py-2.5 bg-[#2D5A3D] text-white rounded-xl font-medium hover:bg-[#355a48]"
           >
             Continue <ChevronRight size={18} />
           </button>
@@ -606,18 +606,18 @@ function SingleSelectStep({ title, subtitle, icon, options, selected, onChange, 
             onClick={() => onChange(option)}
             className={`w-full flex items-center justify-between p-3 rounded-xl border transition-all text-left text-sm
               ${selected === option
-                ? 'border-[#406A56] bg-[#406A56]/10 text-[#406A56]'
-                : 'border-gray-200 bg-white text-gray-600 hover:border-[#406A56]/30 hover:bg-gray-50'
+                ? 'border-[#2D5A3D] bg-[#2D5A3D]/10 text-[#2D5A3D]'
+                : 'border-gray-200 bg-white text-gray-600 hover:border-[#2D5A3D]/30 hover:bg-gray-50'
               }`}
           >
             <span>{option}</span>
-            {selected === option && <div className="w-2 h-2 rounded-full bg-[#406A56]" />}
+            {selected === option && <div className="w-2 h-2 rounded-full bg-[#2D5A3D]" />}
           </button>
         ))}
       </div>
 
       <div className="flex items-center justify-between mt-6 pt-4 border-t border-gray-100">
-        <button onClick={onBack} className="flex items-center gap-2 px-4 py-2 text-gray-500 hover:text-[#406A56]">
+        <button onClick={onBack} className="flex items-center gap-2 px-4 py-2 text-gray-500 hover:text-[#2D5A3D]">
           <ChevronLeft size={18} /> Back
         </button>
         <div className="flex items-center gap-2">
@@ -626,7 +626,7 @@ function SingleSelectStep({ title, subtitle, icon, options, selected, onChange, 
           </button>
           <button
             onClick={onContinue}
-            className="flex items-center gap-2 px-6 py-2.5 bg-[#406A56] text-white rounded-xl font-medium hover:bg-[#355a48]"
+            className="flex items-center gap-2 px-6 py-2.5 bg-[#2D5A3D] text-white rounded-xl font-medium hover:bg-[#355a48]"
           >
             Continue <ChevronRight size={18} />
           </button>
@@ -668,7 +668,7 @@ function TextInputStep({ title, subtitle, icon, placeholder, value, onChange, on
           onChange={(e) => onChange(e.target.value)}
           className="w-full px-4 py-3 rounded-xl bg-white border border-gray-200 
                      text-[#2d2d2d] placeholder-gray-400 resize-none
-                     focus:outline-none focus:ring-2 focus:ring-[#406A56]/30 mb-4"
+                     focus:outline-none focus:ring-2 focus:ring-[#2D5A3D]/30 mb-4"
           placeholder={placeholder}
           rows={4}
         />
@@ -679,14 +679,14 @@ function TextInputStep({ title, subtitle, icon, placeholder, value, onChange, on
           onChange={(e) => onChange(e.target.value)}
           className="w-full px-4 py-3 rounded-xl bg-white border border-gray-200 
                      text-[#2d2d2d] placeholder-gray-400
-                     focus:outline-none focus:ring-2 focus:ring-[#406A56]/30 mb-4"
+                     focus:outline-none focus:ring-2 focus:ring-[#2D5A3D]/30 mb-4"
           placeholder={placeholder}
           onKeyDown={(e) => e.key === 'Enter' && onContinue()}
         />
       )}
 
       <div className="flex items-center justify-between pt-4 border-t border-gray-100">
-        <button onClick={onBack} className="flex items-center gap-2 px-4 py-2 text-gray-500 hover:text-[#406A56]">
+        <button onClick={onBack} className="flex items-center gap-2 px-4 py-2 text-gray-500 hover:text-[#2D5A3D]">
           <ChevronLeft size={18} /> Back
         </button>
         <div className="flex items-center gap-2">
@@ -695,7 +695,7 @@ function TextInputStep({ title, subtitle, icon, placeholder, value, onChange, on
           </button>
           <button
             onClick={onContinue}
-            className="flex items-center gap-2 px-6 py-2.5 bg-[#406A56] text-white rounded-xl font-medium hover:bg-[#355a48]"
+            className="flex items-center gap-2 px-6 py-2.5 bg-[#2D5A3D] text-white rounded-xl font-medium hover:bg-[#355a48]"
           >
             Continue <ChevronRight size={18} />
           </button>
@@ -741,7 +741,7 @@ function BackgroundStep({ value, onChange, onBack, onContinue }: {
             onClick={() => onChange(option)}
             className={`w-full text-left p-3 rounded-xl text-sm transition-all border
               ${value === option
-                ? 'bg-[#406A56]/10 text-[#406A56] border-[#406A56]/30'
+                ? 'bg-[#2D5A3D]/10 text-[#2D5A3D] border-[#2D5A3D]/30'
                 : 'bg-white text-gray-600 border-gray-200 hover:bg-gray-50'
               }`}
           >
@@ -755,13 +755,13 @@ function BackgroundStep({ value, onChange, onBack, onContinue }: {
         onChange={(e) => onChange(e.target.value)}
         className="w-full px-4 py-3 rounded-xl bg-white border border-gray-200 
                    text-[#2d2d2d] placeholder-gray-400 resize-none
-                   focus:outline-none focus:ring-2 focus:ring-[#406A56]/30 mb-4"
+                   focus:outline-none focus:ring-2 focus:ring-[#2D5A3D]/30 mb-4"
         placeholder="Or share in your own words..."
         rows={3}
       />
 
       <div className="flex items-center justify-between pt-4 border-t border-gray-100">
-        <button onClick={onBack} className="flex items-center gap-2 px-4 py-2 text-gray-500 hover:text-[#406A56]">
+        <button onClick={onBack} className="flex items-center gap-2 px-4 py-2 text-gray-500 hover:text-[#2D5A3D]">
           <ChevronLeft size={18} /> Back
         </button>
         <div className="flex items-center gap-2">
@@ -770,7 +770,7 @@ function BackgroundStep({ value, onChange, onBack, onContinue }: {
           </button>
           <button
             onClick={onContinue}
-            className="flex items-center gap-2 px-6 py-2.5 bg-[#406A56] text-white rounded-xl font-medium hover:bg-[#355a48]"
+            className="flex items-center gap-2 px-6 py-2.5 bg-[#2D5A3D] text-white rounded-xl font-medium hover:bg-[#355a48]"
           >
             Continue <ChevronRight size={18} />
           </button>
@@ -794,11 +794,11 @@ function CelebrationStep({ userName, onComplete }: { userName: string; onComplet
         transition={{ type: 'spring', stiffness: 260, damping: 20 }}
       >
         <motion.div 
-          className="absolute inset-0 rounded-full bg-[#D9C61A]/30 blur-xl"
+          className="absolute inset-0 rounded-full bg-[#C4A235]/30 blur-xl"
           animate={{ scale: [1, 1.2, 1], opacity: [0.5, 0.8, 0.5] }}
           transition={{ duration: 2, repeat: Infinity }}
         />
-        <div className="relative w-20 h-20 rounded-full bg-gradient-to-br from-[#D9C61A] to-[#C35F33] flex items-center justify-center shadow-lg">
+        <div className="relative w-20 h-20 rounded-full bg-gradient-to-br from-[#C4A235] to-[#B8562E] flex items-center justify-center shadow-lg">
           <Trophy size={40} className="text-white" />
         </div>
       </motion.div>
@@ -834,7 +834,7 @@ function CelebrationStep({ userName, onComplete }: { userName: string; onComplet
       <button
         onClick={onComplete}
         className="w-full flex items-center justify-center gap-2 px-6 py-3 
-                   bg-[#406A56] text-white rounded-xl font-medium
+                   bg-[#2D5A3D] text-white rounded-xl font-medium
                    hover:bg-[#355a48] transition-all shadow-md"
       >
         Enter Your Dashboard

@@ -68,7 +68,7 @@ export default async function AdminDashboardPage() {
       change: newUsersToday > 0 ? `+${newUsersToday} today` : 'No new today',
       changeType: newUsersToday > 0 ? 'positive' : 'neutral' as const,
       icon: Users,
-      color: 'from-[#406A56] to-[#4A7A66]',
+      color: 'from-[#2D5A3D] to-[#4A7A66]',
     },
     {
       title: 'Total Memories',
@@ -76,7 +76,7 @@ export default async function AdminDashboardPage() {
       change: 'All time',
       changeType: 'neutral' as const,
       icon: Image,
-      color: 'from-[#C35F33] to-[#D37F53]',
+      color: 'from-[#B8562E] to-[#D37F53]',
     },
     {
       title: 'Contacts',
@@ -128,14 +128,14 @@ export default async function AdminDashboardPage() {
               </div>
               <div className="flex items-center gap-1 mt-4">
                 {stat.changeType === 'positive' && (
-                  <ArrowUpRight className="w-4 h-4 text-[#406A56]" />
+                  <ArrowUpRight className="w-4 h-4 text-[#2D5A3D]" />
                 )}
                 {stat.changeType === 'negative' && (
-                  <ArrowDownRight className="w-4 h-4 text-[#C35F33]" />
+                  <ArrowDownRight className="w-4 h-4 text-[#B8562E]" />
                 )}
                 <span className={`text-sm font-medium ${
-                  stat.changeType === 'positive' ? 'text-[#406A56]' : 
-                  stat.changeType === 'negative' ? 'text-[#C35F33]' : 
+                  stat.changeType === 'positive' ? 'text-[#2D5A3D]' : 
+                  stat.changeType === 'negative' ? 'text-[#B8562E]' : 
                   'text-[#2a1f1a]/60'
                 }`}>
                   {stat.change}
@@ -152,7 +152,7 @@ export default async function AdminDashboardPage() {
         <div className="lg:col-span-2 glass p-6">
           <div className="flex items-center justify-between mb-6">
             <h2 className="text-lg font-semibold text-[#2a1f1a]">Recent Admin Activity</h2>
-            <a href="/admin/settings?tab=audit" className="text-sm text-[#406A56] hover:underline">
+            <a href="/admin/settings?tab=audit" className="text-sm text-[#2D5A3D] hover:underline">
               View all
             </a>
           </div>
@@ -163,8 +163,8 @@ export default async function AdminDashboardPage() {
                 key={adminActivity.admin_email}
                 className="flex items-center gap-4 p-3 rounded-xl hover:bg-white/50 transition-colors"
               >
-                <div className="w-10 h-10 rounded-full bg-gradient-to-br from-[#406A56]/20 to-[#C35F33]/20 flex items-center justify-center">
-                  <span className="text-sm font-semibold text-[#406A56]">
+                <div className="w-10 h-10 rounded-full bg-gradient-to-br from-[#2D5A3D]/20 to-[#B8562E]/20 flex items-center justify-center">
+                  <span className="text-sm font-semibold text-[#2D5A3D]">
                     {adminActivity.admin_email.charAt(0).toUpperCase()}
                   </span>
                 </div>
@@ -217,7 +217,7 @@ export default async function AdminDashboardPage() {
             />
           </div>
 
-          <div className="mt-6 pt-6 border-t border-[#C35F33]/10">
+          <div className="mt-6 pt-6 border-t border-[#B8562E]/10">
             <h3 className="text-sm font-medium text-[#2a1f1a]/60 mb-3">Actions by Type</h3>
             <div className="space-y-2">
               {Object.entries(auditStats.actionsByType)
@@ -257,14 +257,14 @@ function QuickAction({
       href={href}
       className="flex items-center gap-3 p-3 rounded-xl hover:bg-white/80 transition-colors group"
     >
-      <div className="p-2 rounded-lg bg-[#406A56]/10 group-hover:bg-[#406A56]/20 transition-colors">
-        <Icon className="w-4 h-4 text-[#406A56]" />
+      <div className="p-2 rounded-lg bg-[#2D5A3D]/10 group-hover:bg-[#2D5A3D]/20 transition-colors">
+        <Icon className="w-4 h-4 text-[#2D5A3D]" />
       </div>
       <div className="flex-1">
         <p className="text-sm font-medium text-[#2a1f1a]">{label}</p>
         <p className="text-xs text-[#2a1f1a]/50">{description}</p>
       </div>
-      <ArrowUpRight className="w-4 h-4 text-[#2a1f1a]/30 group-hover:text-[#406A56] transition-colors" />
+      <ArrowUpRight className="w-4 h-4 text-[#2a1f1a]/30 group-hover:text-[#2D5A3D] transition-colors" />
     </a>
   );
 }

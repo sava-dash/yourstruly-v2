@@ -45,11 +45,11 @@ export default function MonthlyRecap({ onClose }: MonthlyRecapProps) {
   if (loading || !recap) return null
 
   const stats = [
-    { label: 'Memories', value: recap.memories_count, emoji: '📝', color: '#406A56' },
-    { label: 'Photos', value: recap.photos_count, emoji: '📸', color: '#C35F33' },
-    { label: 'Voice', value: recap.voices_count, emoji: '🎙️', color: '#D9C61A' },
-    { label: 'Wisdom', value: recap.wisdom_count, emoji: '💡', color: '#406A56' },
-    { label: 'Tags', value: recap.tags_count, emoji: '👤', color: '#C35F33' },
+    { label: 'Memories', value: recap.memories_count, emoji: '📝', color: '#2D5A3D' },
+    { label: 'Photos', value: recap.photos_count, emoji: '📸', color: '#B8562E' },
+    { label: 'Voice', value: recap.voices_count, emoji: '🎙️', color: '#C4A235' },
+    { label: 'Wisdom', value: recap.wisdom_count, emoji: '💡', color: '#2D5A3D' },
+    { label: 'Tags', value: recap.tags_count, emoji: '👤', color: '#B8562E' },
   ].filter(s => s.value > 0)
 
   const filteredHighlights = recap.highlights.filter(h => h && h.trim())
@@ -69,7 +69,7 @@ export default function MonthlyRecap({ onClose }: MonthlyRecapProps) {
       onClick={(e) => { if (e.target === e.currentTarget) onClose?.() }}
     >
       <div style={{
-        background: 'linear-gradient(135deg, #406A56 0%, #2d4d3e 100%)',
+        background: 'linear-gradient(135deg, #2D5A3D 0%, #2d4d3e 100%)',
         borderRadius: '20px',
         padding: '24px',
         color: '#fff',
@@ -118,7 +118,7 @@ export default function MonthlyRecap({ onClose }: MonthlyRecapProps) {
           <div style={{
             fontSize: '28px',
             fontWeight: '800',
-            color: '#D9C61A',
+            color: '#C4A235',
           }}>
             {recap.total_items}
             <span style={{ fontSize: '12px', fontWeight: '500', opacity: 0.7, marginLeft: '4px' }}>items</span>

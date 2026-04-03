@@ -77,7 +77,7 @@ export function PhotoTaggingModal({
           </button>
           <button
             onClick={handleDone}
-            className="px-6 py-2 bg-[#406A56] text-white rounded-lg hover:bg-[#4a7a64] transition-colors font-medium"
+            className="px-6 py-2 bg-[#2D5A3D] text-white rounded-lg hover:bg-[#234A31] transition-colors font-medium"
           >
             Done
           </button>

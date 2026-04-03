@@ -236,7 +236,7 @@ export default function OrbitalCarousel({ albums, onAlbumClick }: OrbitalCarouse
             onClick={() => navigateTo(i)}
             className={`w-2 h-2 rounded-full transition-all ${
               i === activeIndex 
-                ? 'bg-[#C35F33] w-6' 
+                ? 'bg-[#B8562E] w-6' 
                 : 'bg-gray-300 hover:bg-gray-400'
             }`}
           />

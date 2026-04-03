@@ -43,8 +43,8 @@ export default function CategorySidebar({
   };
 
   const providerMeta: Record<ProviderType, { name: string; color: string; bgColor: string }> = {
-    flowers: { name: 'Flowers', color: '#C35F33', bgColor: 'bg-[#C35F33]/10' },
-    gifts: { name: 'Gifts', color: '#406A56', bgColor: 'bg-[#406A56]/10' },
+    flowers: { name: 'Flowers', color: '#B8562E', bgColor: 'bg-[#B8562E]/10' },
+    gifts: { name: 'Gifts', color: '#2D5A3D', bgColor: 'bg-[#2D5A3D]/10' },
     prints: { name: 'Prints', color: '#4A3552', bgColor: 'bg-[#4A3552]/10' },
   };
 
@@ -82,7 +82,7 @@ export default function CategorySidebar({
               onClick={() => onSelectCategory(undefined)}
               className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-left transition-all duration-200 mb-2 ${
                 !selectedCategory
-                  ? 'bg-[#406A56] text-white'
+                  ? 'bg-[#2D5A3D] text-white'
                   : 'hover:bg-gray-100 text-gray-700'
               }`}
             >
@@ -166,7 +166,7 @@ export default function CategorySidebar({
 
             {/* Price range filter */}
             <div className="mt-6 pt-4 border-t border-gray-100">
-              <h3 className="font-handwritten text-lg text-[#406A56] mb-3">Price Range</h3>
+              <h3 className="font-handwritten text-lg text-[#2D5A3D] mb-3">Price Range</h3>
               <div className="space-y-2">
                 {[
                   { label: 'Under $25', min: 0, max: 25 },
@@ -181,7 +181,7 @@ export default function CategorySidebar({
                     <input
                       type="radio"
                       name="price-range"
-                      className="w-4 h-4 text-[#406A56] border-gray-300 focus:ring-[#406A56]"
+                      className="w-4 h-4 text-[#2D5A3D] border-gray-300 focus:ring-[#2D5A3D]"
                     />
                     <span className="text-sm text-gray-600">{range.label}</span>
                   </label>
@@ -191,8 +191,8 @@ export default function CategorySidebar({
 
             {/* Sort options */}
             <div className="mt-6 pt-4 border-t border-gray-100">
-              <h3 className="font-handwritten text-lg text-[#406A56] mb-3">Sort By</h3>
-              <select className="w-full px-3 py-2 bg-white border border-gray-200 rounded-lg text-sm text-gray-700 focus:outline-none focus:border-[#406A56]">
+              <h3 className="font-handwritten text-lg text-[#2D5A3D] mb-3">Sort By</h3>
+              <select className="w-full px-3 py-2 bg-white border border-gray-200 rounded-lg text-sm text-gray-700 focus:outline-none focus:border-[#2D5A3D]">
                 <option>Featured</option>
                 <option>Price: Low to High</option>
                 <option>Price: High to Low</option>
@@ -262,8 +262,8 @@ export function CategoryChips({
   });
 
   const providerColors: Record<ProviderType, string> = {
-    flowers: '#C35F33',
-    gifts: '#406A56',
+    flowers: '#B8562E',
+    gifts: '#2D5A3D',
     prints: '#4A3552',
   };
 
@@ -273,8 +273,8 @@ export function CategoryChips({
         onClick={() => onSelectCategory(undefined)}
         className={`flex-shrink-0 px-4 py-2 rounded-full text-sm font-medium transition-all duration-200 ${
           !selectedCategory
-            ? 'bg-[#406A56] text-white'
-            : 'bg-white text-gray-600 border border-gray-200 hover:border-[#406A56]/50'
+            ? 'bg-[#2D5A3D] text-white'
+            : 'bg-white text-gray-600 border border-gray-200 hover:border-[#2D5A3D]/50'
         }`}
       >
         All

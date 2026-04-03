@@ -52,9 +52,9 @@ function ActivityItem({ activity, currentUserId }: { activity: Activity; current
   const getIcon = () => {
     switch (activity.type) {
       case 'memory_shared':
-        return <ImageIcon size={14} className="text-[#C35F33]" />
+        return <ImageIcon size={14} className="text-[#B8562E]" />
       case 'wisdom_shared':
-        return <BookOpen size={14} className="text-[#406A56]" />
+        return <BookOpen size={14} className="text-[#2D5A3D]" />
       case 'poll_created':
       case 'poll_voted':
       case 'poll_closed':
@@ -62,21 +62,21 @@ function ActivityItem({ activity, currentUserId }: { activity: Activity; current
       case 'event_proposed':
       case 'event_confirmed':
       case 'event_voted':
-        return <Calendar size={14} className="text-[#D9C61A]" />
+        return <Calendar size={14} className="text-[#C4A235]" />
       case 'member_joined':
-        return <UserPlus size={14} className="text-[#406A56]" />
+        return <UserPlus size={14} className="text-[#2D5A3D]" />
       case 'member_left':
         return <UserMinus size={14} className="text-red-500" />
       case 'member_promoted':
-        return <Crown size={14} className="text-[#D9C61A]" />
+        return <Crown size={14} className="text-[#C4A235]" />
       case 'member_demoted':
         return <Shield size={14} className="text-[#666]" />
       case 'message_sent':
-        return <MessageCircle size={14} className="text-[#406A56]" />
+        return <MessageCircle size={14} className="text-[#2D5A3D]" />
       case 'content_liked':
         return <Heart size={14} className="text-red-400" />
       case 'content_commented':
-        return <MessageCircle size={14} className="text-[#406A56]" />
+        return <MessageCircle size={14} className="text-[#2D5A3D]" />
       default:
         return <Bell size={14} className="text-[#666]" />
     }
@@ -85,9 +85,9 @@ function ActivityItem({ activity, currentUserId }: { activity: Activity; current
   const getIconBg = () => {
     switch (activity.type) {
       case 'memory_shared':
-        return 'bg-[#C35F33]/10'
+        return 'bg-[#B8562E]/10'
       case 'wisdom_shared':
-        return 'bg-[#406A56]/10'
+        return 'bg-[#2D5A3D]/10'
       case 'poll_created':
       case 'poll_voted':
       case 'poll_closed':
@@ -95,17 +95,17 @@ function ActivityItem({ activity, currentUserId }: { activity: Activity; current
       case 'event_proposed':
       case 'event_confirmed':
       case 'event_voted':
-        return 'bg-[#D9C61A]/10'
+        return 'bg-[#C4A235]/10'
       case 'member_joined':
       case 'member_promoted':
-        return 'bg-[#406A56]/10'
+        return 'bg-[#2D5A3D]/10'
       case 'member_left':
       case 'member_demoted':
         return 'bg-red-100'
       case 'content_liked':
         return 'bg-red-50'
       default:
-        return 'bg-[#406A56]/10'
+        return 'bg-[#2D5A3D]/10'
     }
   }
 
@@ -114,9 +114,9 @@ function ActivityItem({ activity, currentUserId }: { activity: Activity; current
     
     switch (activity.type) {
       case 'memory_shared':
-        return <><strong>{actor}</strong> shared a memory: <span className="text-[#C35F33]">{activity.targetName}</span></>
+        return <><strong>{actor}</strong> shared a memory: <span className="text-[#B8562E]">{activity.targetName}</span></>
       case 'wisdom_shared':
-        return <><strong>{actor}</strong> shared wisdom: <span className="text-[#406A56]">{activity.targetName}</span></>
+        return <><strong>{actor}</strong> shared wisdom: <span className="text-[#2D5A3D]">{activity.targetName}</span></>
       case 'poll_created':
         return <><strong>{actor}</strong> created a poll: <span className="text-[#4A3552]">{activity.targetName}</span></>
       case 'poll_voted':
@@ -140,9 +140,9 @@ function ActivityItem({ activity, currentUserId }: { activity: Activity; current
       case 'message_sent':
         return <><strong>{actor}</strong> sent a message: "{activity.metadata?.preview}"</>
       case 'content_liked':
-        return <><strong>{actor}</strong> liked <span className="text-[#406A56]">{activity.targetName}</span></>
+        return <><strong>{actor}</strong> liked <span className="text-[#2D5A3D]">{activity.targetName}</span></>
       case 'content_commented':
-        return <><strong>{actor}</strong> commented on <span className="text-[#406A56]">{activity.targetName}</span></>
+        return <><strong>{actor}</strong> commented on <span className="text-[#2D5A3D]">{activity.targetName}</span></>
       default:
         return <><strong>{actor}</strong> performed an action</>
     }
@@ -159,7 +159,7 @@ function ActivityItem({ activity, currentUserId }: { activity: Activity; current
   }
 
   return (
-    <div className="flex items-start gap-3 p-3 rounded-xl hover:bg-[#406A56]/5 transition-colors">
+    <div className="flex items-start gap-3 p-3 rounded-xl hover:bg-[#2D5A3D]/5 transition-colors">
       {/* Icon */}
       <div className={`w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 ${getIconBg()}`}>
         {getIcon()}
@@ -190,11 +190,11 @@ function DateSeparator({ date }: { date: Date }) {
 
   return (
     <div className="flex items-center gap-3 py-2">
-      <div className="flex-1 h-px bg-[#406A56]/10" />
+      <div className="flex-1 h-px bg-[#2D5A3D]/10" />
       <span className="text-xs font-medium text-[#666] px-2">
         {formatDateLabel(date)}
       </span>
-      <div className="flex-1 h-px bg-[#406A56]/10" />
+      <div className="flex-1 h-px bg-[#2D5A3D]/10" />
     </div>
   )
 }
@@ -230,8 +230,8 @@ export default function CircleActivity({ activities, currentUserId }: CircleActi
   if (activities.length === 0) {
     return (
       <div className="content-card text-center py-8">
-        <div className="w-12 h-12 rounded-full bg-[#406A56]/10 flex items-center justify-center mx-auto mb-3">
-          <Bell size={20} className="text-[#406A56]" />
+        <div className="w-12 h-12 rounded-full bg-[#2D5A3D]/10 flex items-center justify-center mx-auto mb-3">
+          <Bell size={20} className="text-[#2D5A3D]" />
         </div>
         <p className="text-sm text-[#666]">No recent activity</p>
       </div>
@@ -241,7 +241,7 @@ export default function CircleActivity({ activities, currentUserId }: CircleActi
   return (
     <div className="content-card">
       <div className="flex items-center gap-2 mb-4">
-        <Bell size={18} className="text-[#406A56]" />
+        <Bell size={18} className="text-[#2D5A3D]" />
         <h3 className="font-semibold text-[#2d2d2d]">Recent Activity</h3>
       </div>
       

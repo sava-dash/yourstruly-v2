@@ -54,7 +54,7 @@ export default async function EditPromptPage({ params }: EditPromptPageProps) {
       <div>
         <h1 className="text-2xl font-semibold text-[#2a1f1a]">Edit Engagement Prompt</h1>
         <p className="text-[#2a1f1a]/60 mt-1">
-          Update prompt template: <code className="text-[#406A56]">{id}</code>
+          Update prompt template: <code className="text-[#2D5A3D]">{id}</code>
         </p>
       </div>
 

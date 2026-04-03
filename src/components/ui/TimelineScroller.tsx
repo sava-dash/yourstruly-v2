@@ -80,8 +80,8 @@ export default function TimelineScroller({
   return (
     <div className="relative">
       {/* Gradient fades */}
-      <div className="absolute left-0 top-0 bottom-0 w-12 bg-gradient-to-r from-[#F2F1E5] to-transparent z-10 pointer-events-none" />
-      <div className="absolute right-0 top-0 bottom-0 w-12 bg-gradient-to-l from-[#F2F1E5] to-transparent z-10 pointer-events-none" />
+      <div className="absolute left-0 top-0 bottom-0 w-12 bg-gradient-to-r from-[#F5F3EE] to-transparent z-10 pointer-events-none" />
+      <div className="absolute right-0 top-0 bottom-0 w-12 bg-gradient-to-l from-[#F5F3EE] to-transparent z-10 pointer-events-none" />
       
       {/* Scroll buttons */}
       {canScrollLeft && (
@@ -89,7 +89,7 @@ export default function TimelineScroller({
           onClick={() => scroll('left')}
           className="absolute left-0 top-1/2 -translate-y-1/2 z-20 w-8 h-8 bg-white/80 backdrop-blur-sm rounded-full shadow-md flex items-center justify-center hover:bg-white transition-colors"
         >
-          <ChevronLeft size={18} className="text-[#406A56]" />
+          <ChevronLeft size={18} className="text-[#2D5A3D]" />
         </button>
       )}
       {canScrollRight && (
@@ -97,7 +97,7 @@ export default function TimelineScroller({
           onClick={() => scroll('right')}
           className="absolute right-0 top-1/2 -translate-y-1/2 z-20 w-8 h-8 bg-white/80 backdrop-blur-sm rounded-full shadow-md flex items-center justify-center hover:bg-white transition-colors"
         >
-          <ChevronRight size={18} className="text-[#406A56]" />
+          <ChevronRight size={18} className="text-[#2D5A3D]" />
         </button>
       )}
 
@@ -116,7 +116,7 @@ export default function TimelineScroller({
             <div key={i} className="flex flex-col items-center">
               {/* Year indicator */}
               {showYear && (
-                <span className="text-xs text-[#406A56]/60 font-medium mb-1">
+                <span className="text-xs text-[#2D5A3D]/60 font-medium mb-1">
                   {formatYear(month)}
                 </span>
               )}
@@ -128,8 +128,8 @@ export default function TimelineScroller({
                 className={`
                   relative px-4 py-2 rounded-full text-sm font-medium transition-all
                   ${isSelected(month) 
-                    ? 'bg-[#406A56] text-white shadow-md' 
-                    : 'text-[#406A56]/70 hover:bg-[#406A56]/10'
+                    ? 'bg-[#2D5A3D] text-white shadow-md' 
+                    : 'text-[#2D5A3D]/70 hover:bg-[#2D5A3D]/10'
                   }
                 `}
               >
@@ -137,7 +137,7 @@ export default function TimelineScroller({
                 
                 {/* Current month indicator */}
                 {isCurrentMonth(month) && !isSelected(month) && (
-                  <span className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-1 h-1 bg-[#D9C61A] rounded-full" />
+                  <span className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-1 h-1 bg-[#C4A235] rounded-full" />
                 )}
               </button>
             </div>

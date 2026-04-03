@@ -141,7 +141,7 @@ export default function TornPaper({
  * Use as a decorative divider between sections
  */
 export function TornEdgeDecoration({
-  color = '#F2F1E5',
+  color = '#F5F3EE',
   height = 20,
   position = 'bottom',
   intensity = 8,

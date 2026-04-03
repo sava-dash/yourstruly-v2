@@ -41,7 +41,7 @@ export default function ExplorePage() {
               <ChevronLeft size={20} />
             </Link>
             <div>
-              <p className="text-[#406A56]/60 text-sm">Welcome back,</p>
+              <p className="text-[#2D5A3D]/60 text-sm">Welcome back,</p>
               <h1 className="page-header-title">Good Afternoon</h1>
             </div>
           </div>
@@ -49,7 +49,7 @@ export default function ExplorePage() {
 
         {/* Timeline Scroller */}
         <section className="mb-8">
-          <h2 className="text-lg font-semibold text-[#406A56] mb-4">Browse by Time</h2>
+          <h2 className="text-lg font-semibold text-[#2D5A3D] mb-4">Browse by Time</h2>
           <GlassCard variant="warm" padding="sm">
             <TimelineScroller
               selectedDate={selectedDate}
@@ -57,15 +57,15 @@ export default function ExplorePage() {
               startDate={new Date(2020, 0, 1)}
             />
           </GlassCard>
-          <p className="text-sm text-[#406A56]/60 mt-2 text-center">
+          <p className="text-sm text-[#2D5A3D]/60 mt-2 text-center">
             Viewing: {selectedDate.toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}
           </p>
         </section>
 
         {/* Voice Input */}
         <section className="mb-8">
-          <h2 className="text-lg font-semibold text-[#406A56] mb-4 flex items-center gap-2">
-            <Sparkles size={20} className="text-[#D9C61A]" />
+          <h2 className="text-lg font-semibold text-[#2D5A3D] mb-4 flex items-center gap-2">
+            <Sparkles size={20} className="text-[#C4A235]" />
             Ask YoursTruly
           </h2>
           <VoiceInput
@@ -74,15 +74,15 @@ export default function ExplorePage() {
           />
           {voiceQuery && (
             <GlassCard variant="light" padding="md" className="mt-4">
-              <p className="text-sm text-[#406A56]/60">You asked:</p>
-              <p className="text-[#406A56]">"{voiceQuery}"</p>
+              <p className="text-sm text-[#2D5A3D]/60">You asked:</p>
+              <p className="text-[#2D5A3D]">"{voiceQuery}"</p>
             </GlassCard>
           )}
         </section>
 
         {/* Stats */}
         <section className="mb-8">
-          <h2 className="text-lg font-semibold text-[#406A56] mb-4">Your Memory Stats</h2>
+          <h2 className="text-lg font-semibold text-[#2D5A3D] mb-4">Your Memory Stats</h2>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
             <StatsGlassCard
               icon={<Image size={20} />}
@@ -110,9 +110,9 @@ export default function ExplorePage() {
 
         {/* Categories with badges */}
         <section className="mb-8">
-          <h2 className="text-lg font-semibold text-[#406A56] mb-4">Browse by Category</h2>
+          <h2 className="text-lg font-semibold text-[#2D5A3D] mb-4">Browse by Category</h2>
           {EMPTY_CATEGORIES.length === 0 ? (
-            <p className="text-[#406A56]/60 text-center py-8">Categories will appear as you add memories.</p>
+            <p className="text-[#2D5A3D]/60 text-center py-8">Categories will appear as you add memories.</p>
           ) : (
             <CategoryGrid categories={EMPTY_CATEGORIES} />
           )}
@@ -120,10 +120,10 @@ export default function ExplorePage() {
 
         {/* Recent memories */}
         <section className="mb-8">
-          <h2 className="text-lg font-semibold text-[#406A56] mb-4">Recent Memories</h2>
+          <h2 className="text-lg font-semibold text-[#2D5A3D] mb-4">Recent Memories</h2>
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
             {EMPTY_MEMORIES.length === 0 ? (
-              <p className="text-[#406A56]/60 col-span-full text-center py-8">No memories yet. Start creating!</p>
+              <p className="text-[#2D5A3D]/60 col-span-full text-center py-8">Your first memory is waiting to be told.</p>
             ) : EMPTY_MEMORIES.map((memory) => (
               <PhotoGlassCard
                 key={memory.id}
@@ -138,7 +138,7 @@ export default function ExplorePage() {
 
         {/* Standalone badges demo */}
         <section className="mb-8">
-          <h2 className="text-lg font-semibold text-[#406A56] mb-4">Category Badges</h2>
+          <h2 className="text-lg font-semibold text-[#2D5A3D] mb-4">Category Badges</h2>
           <GlassCard variant="warm" padding="md">
             <div className="flex flex-wrap gap-2">
               <CategoryBadge category="travel" count={625} variant="standalone" />
@@ -155,7 +155,7 @@ export default function ExplorePage() {
       {/* Compact voice button */}
       <div className="fixed bottom-6 right-6 z-20">
         <GlassCard variant="warm" padding="sm" className="flex items-center gap-3">
-          <span className="text-sm text-[#406A56]">Voice search</span>
+          <span className="text-sm text-[#2D5A3D]">Voice search</span>
           <VoiceInputButton onTranscript={handleVoiceInput} />
         </GlassCard>
       </div>

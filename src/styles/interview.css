@@ -5,15 +5,15 @@
 
 /* Color Palette */
 :root {
-  --yt-green: #406A56;
+  --yt-green: #2D5A3D;
   --yt-green-light: #D3E1DF;
   --yt-green-dark: #2d4f3e;
-  --yt-terra: #C35F33;
+  --yt-terra: #B8562E;
   --yt-terra-light: #EBD4CA;
-  --yt-yellow: #D9C61A;
-  --yt-yellow-light: #F2F1E5;
+  --yt-yellow: #C4A235;
+  --yt-yellow-light: #FAFAF7;
   --yt-purple: #4A3552;
-  --yt-offwhite: #F2F1E5;
+  --yt-offwhite: #FAFAF7;
   --yt-offwhite-dark: #E8E7DC;
 }
 
@@ -1105,7 +1105,7 @@
 }
 
 .interview-conversation-question {
-  background: linear-gradient(135deg, #406A56 0%, #4A7C59 100%);
+  background: linear-gradient(135deg, #2D5A3D 0%, #4A7C59 100%);
   border-radius: 20px;
   padding: 24px;
   color: white;
@@ -1160,13 +1160,13 @@
 }
 
 .interview-mode-btn:hover {
-  border-color: #406A56;
-  color: #406A56;
+  border-color: #2D5A3D;
+  color: #2D5A3D;
 }
 
 .interview-mode-btn.active {
-  background: #406A56;
-  border-color: #406A56;
+  background: #2D5A3D;
+  border-color: #2D5A3D;
   color: white;
 }
 
@@ -1202,7 +1202,7 @@
 
 .interview-textarea:focus {
   outline: none;
-  border-color: #406A56;
+  border-color: #2D5A3D;
 }
 
 .interview-text-actions {
@@ -1231,7 +1231,7 @@
   padding: 10px 24px;
   border-radius: 8px;
   border: none;
-  background: #406A56;
+  background: #2D5A3D;
   color: white;
   font-size: 14px;
   font-weight: 500;
@@ -1278,7 +1278,7 @@
   width: 64px;
   height: 64px;
   border-radius: 50%;
-  background: linear-gradient(135deg, #406A56 0%, #4A7C59 100%);
+  background: linear-gradient(135deg, #2D5A3D 0%, #4A7C59 100%);
   color: white;
   display: flex;
   align-items: center;
@@ -1300,7 +1300,7 @@
 
 .interview-page {
   min-height: 100vh;
-  background: linear-gradient(180deg, #F8F6F0 0%, #F2F1E5 100%);
+  background: #FAFAF7;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -1318,7 +1318,7 @@
   width: 40px;
   height: 40px;
   border: 3px solid #e0e0e0;
-  border-top-color: #406A56;
+  border-top-color: #2D5A3D;
   border-radius: 50%;
   animation: spin 1s linear infinite;
 }
@@ -1391,7 +1391,7 @@
 }
 
 .interview-info-item svg {
-  color: #406A56;
+  color: #2D5A3D;
 }
 
 .interview-welcome-instructions {
@@ -1405,7 +1405,7 @@
 .interview-welcome-instructions h3 {
   font-size: 14px;
   font-weight: 600;
-  color: #406A56;
+  color: #2D5A3D;
   margin: 0 0 12px 0;
 }
 
@@ -1429,7 +1429,7 @@
   align-items: center;
   gap: 8px;
   padding: 16px 32px;
-  background: linear-gradient(135deg, #406A56 0%, #4A7C59 100%);
+  background: linear-gradient(135deg, #2D5A3D 0%, #4A7C59 100%);
   color: white;
   border: none;
   border-radius: 12px;
@@ -1454,7 +1454,7 @@
   width: 80px;
   height: 80px;
   border-radius: 50%;
-  background: linear-gradient(135deg, #406A56 0%, #4A7C59 100%);
+  background: linear-gradient(135deg, #2D5A3D 0%, #4A7C59 100%);
   color: white;
   display: flex;
   align-items: center;

@@ -228,12 +228,12 @@ export default function ImmersiveTimeline({ media, initialIndex = 0, onPhotoClic
                   boxShadow: `0 ${8 + stackIndex * 4}px ${20 + stackIndex * 8}px rgba(0,0,0,0.4)`,
                 }}
               >
-                <div className="h-7 bg-[#406A56]/80" />
+                <div className="h-7 bg-[#2D5A3D]/80" />
                 <div className="aspect-[4/3] bg-[#1a1a2e]">
                   
 <img src={photo.file_url} alt="" className="w-full h-full object-cover" loading="eager" />
                 </div>
-                <div className="h-9 bg-[#F2F1E5]/90" />
+                <div className="h-9 bg-[#F5F3EE]/90" />
               </div>
             </motion.div>
           )
@@ -259,7 +259,7 @@ export default function ImmersiveTimeline({ media, initialIndex = 0, onPhotoClic
               }}
             >
               {/* Header */}
-              <div className="h-10 bg-gradient-to-r from-[#406A56] to-[#4a7a64] flex items-center px-4">
+              <div className="h-10 bg-gradient-to-r from-[#2D5A3D] to-[#234A31] flex items-center px-4">
                 <Calendar size={14} className="text-white/70 mr-2" />
                 <span className="text-white text-sm font-medium truncate">
                   {currentPhoto?.memory?.title || 'Memory'}
@@ -280,7 +280,7 @@ export default function ImmersiveTimeline({ media, initialIndex = 0, onPhotoClic
               </div>
               
               {/* Footer */}
-              <div className="px-4 py-2.5 bg-[#F2F1E5] flex items-center justify-between">
+              <div className="px-4 py-2.5 bg-[#F5F3EE] flex items-center justify-between">
                 <span className="text-sm font-medium text-[#2d2d2d]">
                   {currentDate.toLocaleDateString('en-US', { 
                     weekday: 'short',
@@ -290,7 +290,7 @@ export default function ImmersiveTimeline({ media, initialIndex = 0, onPhotoClic
                   })}
                 </span>
                 {currentPhoto?.memory?.location_name && (
-                  <div className="flex items-center gap-1 text-[#406A56]">
+                  <div className="flex items-center gap-1 text-[#2D5A3D]">
                     <MapPin size={12} />
                     <span className="text-xs truncate max-w-[100px]">
                       {currentPhoto.memory.location_name}
@@ -338,7 +338,7 @@ export default function ImmersiveTimeline({ media, initialIndex = 0, onPhotoClic
         {currentIndex > 0 && (
           <button
             onClick={goToNow}
-            className="absolute right-4 flex items-center gap-1 text-[#D9C61A] hover:text-[#e8d52a] text-sm font-medium"
+            className="absolute right-4 flex items-center gap-1 text-[#C4A235] hover:text-[#e8d52a] text-sm font-medium"
           >
             <RotateCcw size={14} />
             Return to Now

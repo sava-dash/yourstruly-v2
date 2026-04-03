@@ -33,17 +33,17 @@ type SortMode = 'newest' | 'oldest' | 'alphabetical';
 // Categories with icons and colors
 const CATEGORIES = [
   { key: 'all', label: 'All Wisdom', icon: Brain, color: '#4A3552' },
-  { key: 'life_lessons', label: 'Life Lessons', icon: Lightbulb, color: '#D9C61A' },
-  { key: 'relationships', label: 'Relationships', icon: Heart, color: '#C35F33' },
-  { key: 'family', label: 'Family', icon: Users, color: '#406A56' },
+  { key: 'life_lessons', label: 'Life Lessons', icon: Lightbulb, color: '#C4A235' },
+  { key: 'relationships', label: 'Relationships', icon: Heart, color: '#B8562E' },
+  { key: 'family', label: 'Family', icon: Users, color: '#2D5A3D' },
   { key: 'career', label: 'Career', icon: Briefcase, color: '#4A3552' },
   { key: 'parenting', label: 'Parenting', icon: Baby, color: '#8DACAB' },
   { key: 'health', label: 'Health', icon: Activity, color: '#5B8A72' },
   { key: 'spirituality', label: 'Spirituality', icon: Moon, color: '#6B5B95' },
   { key: 'creativity', label: 'Creativity', icon: Palette, color: '#E07C52' },
   { key: 'values', label: 'Values', icon: Compass, color: '#3D7068' },
-  { key: 'recipes', label: 'Recipes', icon: Utensils, color: '#C35F33' },
-  { key: 'advice', label: 'Advice', icon: GraduationCap, color: '#D9C61A' },
+  { key: 'recipes', label: 'Recipes', icon: Utensils, color: '#B8562E' },
+  { key: 'advice', label: 'Advice', icon: GraduationCap, color: '#C4A235' },
   { key: 'other', label: 'Other', icon: HelpCircle, color: '#888888' },
 ];
 
@@ -246,7 +246,7 @@ export default function WisdomPage() {
             <div className="flex items-center gap-3">
               {/* Search */}
               <div className="relative">
-                <Search size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-[#406A56]/50 z-10 pointer-events-none" />
+                <Search size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-[#2D5A3D]/50 z-10 pointer-events-none" />
                 <input
                   type="text"
                   value={searchQuery}
@@ -257,7 +257,7 @@ export default function WisdomPage() {
                 {searchQuery && (
                   <button 
                     onClick={() => setSearchQuery('')}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-[#406A56]/50 hover:text-[#406A56]"
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-[#2D5A3D]/50 hover:text-[#2D5A3D]"
                   >
                     <X size={16} />
                   </button>
@@ -276,8 +276,8 @@ export default function WisdomPage() {
                     onClick={() => setViewMode(mode)}
                     className={`p-2 rounded-lg transition-all ${
                       viewMode === mode 
-                        ? 'bg-[#406A56] text-white' 
-                        : 'text-[#406A56]/60 hover:text-[#406A56]'
+                        ? 'bg-[#2D5A3D] text-white' 
+                        : 'text-[#2D5A3D]/60 hover:text-[#2D5A3D]'
                     }`}
                     title={label}
                   >
@@ -331,8 +331,8 @@ export default function WisdomPage() {
                   onClick={() => toggleTag(tag)}
                   className={`px-3 py-1.5 text-xs rounded-full transition-all ${
                     selectedTags.includes(tag)
-                      ? 'bg-[#406A56] text-white'
-                      : 'glass-card-page text-gray-600 hover:text-[#406A56]'
+                      ? 'bg-[#2D5A3D] text-white'
+                      : 'glass-card-page text-gray-600 hover:text-[#2D5A3D]'
                   }`}
                 >
                   <Tag size={10} className="inline mr-1" />
@@ -356,9 +356,9 @@ export default function WisdomPage() {
               </span>
             )}
             {selectedTags.map(tag => (
-              <span key={tag} className="flex items-center gap-1 px-3 py-1.5 bg-[#406A56]/10 text-[#406A56] rounded-full text-sm">
+              <span key={tag} className="flex items-center gap-1 px-3 py-1.5 bg-[#2D5A3D]/10 text-[#2D5A3D] rounded-full text-sm">
                 {tag}
-                <button onClick={() => toggleTag(tag)} className="ml-1 hover:text-[#406A56]/70">
+                <button onClick={() => toggleTag(tag)} className="ml-1 hover:text-[#2D5A3D]/70">
                   <X size={14} />
                 </button>
               </span>
@@ -400,13 +400,13 @@ export default function WisdomPage() {
         {filteredEntries.length === 0 ? (
           <div className="text-center py-16">
             <Brain size={48} className="mx-auto text-gray-300 mb-4" />
-            <h3 className="text-lg font-medium text-gray-600 mb-2">No wisdom found</h3>
+            <h3 className="text-lg font-medium text-gray-600 mb-2">What would you tell your future self?</h3>
             <p className="text-gray-500 mb-4">
-              {searchQuery ? 'Try a different search term' : 'Start capturing your wisdom'}
+              {searchQuery ? 'Try a different search term' : 'Start capturing what you know.'}
             </p>
             <Link
               href="/dashboard/wisdom/new"
-              className="inline-flex items-center gap-2 px-4 py-2 bg-[#406A56] text-white rounded-xl hover:bg-[#345745]"
+              className="inline-flex items-center gap-2 px-4 py-2 bg-[#2D5A3D] text-white rounded-xl hover:bg-[#234A31]"
             >
               <Plus size={18} />
               Add Your First Wisdom
@@ -544,7 +544,7 @@ function WisdomCard({
             {entry.audio_url && (
               <button
                 onClick={(e) => { e.preventDefault(); onAudioPlay(entry.id, entry.audio_url!); }}
-                className="p-2 rounded-full bg-[#406A56]/10 text-[#406A56] hover:bg-[#406A56]/20 transition-colors"
+                className="p-2 rounded-full bg-[#2D5A3D]/10 text-[#2D5A3D] hover:bg-[#2D5A3D]/20 transition-colors"
               >
                 {isPlaying ? <Pause size={16} /> : <Play size={16} />}
               </button>

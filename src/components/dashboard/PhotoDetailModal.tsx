@@ -186,7 +186,7 @@ export default function PhotoDetailModal({
 
             <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
               <label style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                <Calendar size={18} color="#406A56" />
+                <Calendar size={18} color="#2D5A3D" />
                 <input
                   type="date"
                   value={date}
@@ -203,7 +203,7 @@ export default function PhotoDetailModal({
               </label>
 
               <label style={{ display: 'flex', alignItems: 'center', gap: 10, position: 'relative' }}>
-                <MapPin size={18} color="#406A56" />
+                <MapPin size={18} color="#2D5A3D" />
                 <input
                   type="text"
                   value={location}
@@ -256,7 +256,7 @@ export default function PhotoDetailModal({
                         onMouseEnter={(e) => { e.currentTarget.style.background = 'rgba(64,106,86,0.06)' }}
                         onMouseLeave={(e) => { e.currentTarget.style.background = 'none' }}
                       >
-                        <MapPin size={14} color="#406A56" />
+                        <MapPin size={14} color="#2D5A3D" />
                         {s.place_name}
                       </button>
                     ))}
@@ -274,7 +274,7 @@ export default function PhotoDetailModal({
                   padding: '12px 20px',
                   borderRadius: 12,
                   border: 'none',
-                  background: (date || location) ? '#406A56' : 'rgba(0,0,0,0.08)',
+                  background: (date || location) ? '#2D5A3D' : 'rgba(0,0,0,0.08)',
                   color: (date || location) ? '#fff' : '#999',
                   fontSize: 15,
                   fontWeight: 600,
@@ -332,7 +332,7 @@ export default function PhotoDetailModal({
                     padding: '10px 24px',
                     borderRadius: 12,
                     border: 'none',
-                    background: '#C35F33',
+                    background: '#B8562E',
                     color: '#fff',
                     fontSize: 14,
                     fontWeight: 600,

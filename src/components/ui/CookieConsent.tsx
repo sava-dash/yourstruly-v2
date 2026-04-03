@@ -50,8 +50,8 @@ export default function CookieConsent({
       <div className="max-w-4xl mx-auto">
         <div className="bg-white rounded-2xl shadow-2xl border border-gray-100 p-6 flex flex-col sm:flex-row items-start sm:items-center gap-4">
           {/* Icon */}
-          <div className="flex-shrink-0 w-12 h-12 bg-[#406A56]/10 rounded-xl flex items-center justify-center">
-            <Cookie className="w-6 h-6 text-[#406A56]" />
+          <div className="flex-shrink-0 w-12 h-12 bg-[#2D5A3D]/10 rounded-xl flex items-center justify-center">
+            <Cookie className="w-6 h-6 text-[#2D5A3D]" />
           </div>
 
           {/* Text */}
@@ -60,7 +60,7 @@ export default function CookieConsent({
             <p className="text-sm text-[#666] leading-relaxed">
               We use cookies to improve your experience, analyze site traffic, and personalize content. 
               By clicking "Accept", you consent to our use of cookies. 
-              <Link href={privacyUrl} className="text-[#406A56] hover:underline ml-1">
+              <Link href={privacyUrl} className="text-[#2D5A3D] hover:underline ml-1">
                 Learn more
               </Link>
             </p>
@@ -76,7 +76,7 @@ export default function CookieConsent({
             </button>
             <button
               onClick={handleAccept}
-              className="flex-1 sm:flex-none px-6 py-2.5 text-sm font-medium text-white bg-[#406A56] hover:bg-[#355847] rounded-xl transition-colors shadow-sm"
+              className="flex-1 sm:flex-none px-6 py-2.5 text-sm font-medium text-white bg-[#2D5A3D] hover:bg-[#355847] rounded-xl transition-colors shadow-sm"
             >
               Accept
             </button>
@@ -141,7 +141,7 @@ export function CookieConsentMinimal({ privacyUrl = '/privacy' }: CookieConsentP
       <div className="bg-[#2d2d2d] text-white rounded-xl p-4 shadow-xl">
         <p className="text-sm mb-3">
           We use cookies to enhance your experience.{' '}
-          <Link href={privacyUrl} className="underline hover:text-[#C35F33]">
+          <Link href={privacyUrl} className="underline hover:text-[#B8562E]">
             Privacy Policy
           </Link>
         </p>
@@ -154,7 +154,7 @@ export function CookieConsentMinimal({ privacyUrl = '/privacy' }: CookieConsentP
           </button>
           <button
             onClick={handleAccept}
-            className="flex-1 px-3 py-2 text-sm bg-[#406A56] hover:bg-[#4a7a64] rounded-lg transition-colors font-medium"
+            className="flex-1 px-3 py-2 text-sm bg-[#2D5A3D] hover:bg-[#234A31] rounded-lg transition-colors font-medium"
           >
             Accept
           </button>

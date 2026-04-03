@@ -9,7 +9,7 @@
 export const ESSENCE_LAYERS = {
   temperament: {
     name: 'Temperament',
-    color: '#406A56',
+    color: '#2D5A3D',
     dimensions: [
       'openness', 'conscientiousness', 'extraversion', 'agreeableness',
       'emotionalVolatility', 'riskTolerance', 'dominance', 'impulseRegulation'
@@ -17,7 +17,7 @@ export const ESSENCE_LAYERS = {
   },
   motivation: {
     name: 'Motivation', 
-    color: '#D9C61A',
+    color: '#C4A235',
     dimensions: [
       'power', 'achievement', 'belonging', 'autonomy', 'security',
       'meaning', 'status', 'novelty', 'stability', 'impact'
@@ -25,7 +25,7 @@ export const ESSENCE_LAYERS = {
   },
   cognitiveStyle: {
     name: 'Cognitive Style',
-    color: '#C35F33',
+    color: '#B8562E',
     dimensions: [
       'analytical', 'intuitive', 'systems', 'narrative', 'futureOriented',
       'presentFocused', 'abstract', 'concrete', 'certaintySeeking', 'exploratory'

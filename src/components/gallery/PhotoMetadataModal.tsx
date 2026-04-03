@@ -154,7 +154,7 @@ export default function PhotoMetadataModal({ media, onClose, onSave }: Props) {
             {/* Date & Time */}
             <div>
               <label className="flex items-center gap-2 text-sm font-semibold text-[#1a1a1a] mb-2">
-                <Calendar size={16} className="text-[#406A56]" />
+                <Calendar size={16} className="text-[#2D5A3D]" />
                 When was this taken?
               </label>
               <div className="flex gap-2">
@@ -162,13 +162,13 @@ export default function PhotoMetadataModal({ media, onClose, onSave }: Props) {
                   type="date"
                   value={date}
                   onChange={(e) => setDate(e.target.value)}
-                  className="flex-1 px-3 py-2.5 rounded-lg border border-gray-300 focus:border-[#406A56] focus:ring-2 focus:ring-[#406A56]/20 outline-none text-[#1a1a1a] font-medium"
+                  className="flex-1 px-3 py-2.5 rounded-lg border border-gray-300 focus:border-[#2D5A3D] focus:ring-2 focus:ring-[#2D5A3D]/20 outline-none text-[#1a1a1a] font-medium"
                 />
                 <input
                   type="time"
                   value={time}
                   onChange={(e) => setTime(e.target.value)}
-                  className="w-28 px-3 py-2.5 rounded-lg border border-gray-300 focus:border-[#406A56] focus:ring-2 focus:ring-[#406A56]/20 outline-none text-[#1a1a1a] font-medium"
+                  className="w-28 px-3 py-2.5 rounded-lg border border-gray-300 focus:border-[#2D5A3D] focus:ring-2 focus:ring-[#2D5A3D]/20 outline-none text-[#1a1a1a] font-medium"
                 />
               </div>
             </div>
@@ -176,7 +176,7 @@ export default function PhotoMetadataModal({ media, onClose, onSave }: Props) {
             {/* Location Search */}
             <div className="relative">
               <label className="flex items-center gap-2 text-sm font-semibold text-[#1a1a1a] mb-2">
-                <MapPin size={16} className="text-[#406A56]" />
+                <MapPin size={16} className="text-[#2D5A3D]" />
                 Where was this taken?
               </label>
               <div className="relative">
@@ -190,7 +190,7 @@ export default function PhotoMetadataModal({ media, onClose, onSave }: Props) {
                   }}
                   onFocus={() => locationResults.length > 0 && setShowResults(true)}
                   aria-label="Search" placeholder="Search for a place..."
-                  className="w-full px-3 py-2.5 pl-10 rounded-lg border border-gray-300 focus:border-[#406A56] focus:ring-2 focus:ring-[#406A56]/20 outline-none text-[#1a1a1a] font-medium placeholder:text-gray-400 placeholder:font-normal"
+                  className="w-full px-3 py-2.5 pl-10 rounded-lg border border-gray-300 focus:border-[#2D5A3D] focus:ring-2 focus:ring-[#2D5A3D]/20 outline-none text-[#1a1a1a] font-medium placeholder:text-gray-400 placeholder:font-normal"
                 />
                 <div className="absolute left-3 top-1/2 -translate-y-1/2">
                   {searching ? (
@@ -201,7 +201,7 @@ export default function PhotoMetadataModal({ media, onClose, onSave }: Props) {
                 </div>
                 {selectedLocation && (
                   <div className="absolute right-3 top-1/2 -translate-y-1/2">
-                    <Check size={16} className="text-[#406A56]" />
+                    <Check size={16} className="text-[#2D5A3D]" />
                   </div>
                 )}
               </div>
@@ -213,7 +213,7 @@ export default function PhotoMetadataModal({ media, onClose, onSave }: Props) {
                     <button
                       key={i}
                       onClick={() => handleSelectLocation(result)}
-                      className="w-full px-3 py-2.5 text-left hover:bg-[#406A56]/10 transition-colors border-b border-gray-100 last:border-0"
+                      className="w-full px-3 py-2.5 text-left hover:bg-[#2D5A3D]/10 transition-colors border-b border-gray-100 last:border-0"
                     >
                       <p className="text-sm font-medium text-[#1a1a1a] truncate">
                         {result.display_name.split(',').slice(0, 2).join(',')}
@@ -227,7 +227,7 @@ export default function PhotoMetadataModal({ media, onClose, onSave }: Props) {
               )}
 
               {selectedLocation && (
-                <p className="text-xs text-[#406A56] mt-1.5 font-medium">
+                <p className="text-xs text-[#2D5A3D] mt-1.5 font-medium">
                   ✓ Location selected
                 </p>
               )}
@@ -245,7 +245,7 @@ export default function PhotoMetadataModal({ media, onClose, onSave }: Props) {
             <button
               onClick={handleSave}
               disabled={saving || (!date && !selectedLocation)}
-              className="flex-1 px-4 py-2.5 rounded-xl bg-[#406A56] text-white hover:bg-[#355a48] transition-colors font-semibold disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+              className="flex-1 px-4 py-2.5 rounded-xl bg-[#2D5A3D] text-white hover:bg-[#355a48] transition-colors font-semibold disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
             >
               {saving ? (
                 <Loader2 size={18} className="animate-spin" />

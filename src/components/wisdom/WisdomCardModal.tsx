@@ -190,7 +190,7 @@ export default function WisdomCardModal({
           {/* Header */}
           <div className="flex items-center justify-between p-5 border-b border-gray-100">
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[#4A3552] to-[#D9C61A] flex items-center justify-center">
+              <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[#4A3552] to-[#C4A235] flex items-center justify-center">
                 <ImageIcon size={20} className="text-white" />
               </div>
               <div>
@@ -296,7 +296,7 @@ export default function WisdomCardModal({
                     <button
                       onClick={handleCopyToClipboard}
                       disabled={isExporting}
-                      className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-[#F2F1E5] hover:bg-[#e8e7db] text-[#2d2d2d] rounded-xl font-medium transition-colors disabled:opacity-50"
+                      className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-[#F5F3EE] hover:bg-[#e8e7db] text-[#2d2d2d] rounded-xl font-medium transition-colors disabled:opacity-50"
                     >
                       {copied ? (
                         <>
@@ -339,7 +339,7 @@ export default function WisdomCardModal({
                 </AnimatePresence>
 
                 {/* Tips */}
-                <div className="p-4 bg-[#F2F1E5] rounded-xl">
+                <div className="p-4 bg-[#F5F3EE] rounded-xl">
                   <p className="text-sm text-[#4A3552]">
                     <strong>💡 Tip:</strong> These cards are sized perfectly for Instagram Stories (1080×1920). Share your wisdom with the world!
                   </p>
@@ -373,7 +373,7 @@ function CardContent({ template, text, userName, userPhoto }: CardContentProps) 
       return (
         <div className={`${baseStyles} bg-white`}>
           {/* Subtle decorative elements */}
-          <div className="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-[#4A3552] via-[#D9C61A] to-[#C35F33]" />
+          <div className="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-[#4A3552] via-[#C4A235] to-[#B8562E]" />
           
           {/* Quote mark */}
           <div className="absolute top-20 left-10 opacity-10">
@@ -408,7 +408,7 @@ function CardContent({ template, text, userName, userPhoto }: CardContentProps) 
 
           {/* Branding */}
           <div className="absolute bottom-8 flex items-center gap-2 opacity-50">
-            <div className="w-6 h-6 rounded-full bg-gradient-to-br from-[#4A3552] to-[#D9C61A]" />
+            <div className="w-6 h-6 rounded-full bg-gradient-to-br from-[#4A3552] to-[#C4A235]" />
             <span className="text-sm text-gray-500" style={{ fontFamily: 'var(--font-inter-tight), sans-serif' }}>
               YoursTruly
             </span>
@@ -421,7 +421,7 @@ function CardContent({ template, text, userName, userPhoto }: CardContentProps) 
         <div 
           className={`${baseStyles}`}
           style={{ 
-            background: 'linear-gradient(180deg, #FDF8F3 0%, #F5EDE4 50%, #EDE3D6 100%)'
+            background: 'linear-gradient(180deg, #FAFAF7 0%, #F5EDE4 50%, #EDE3D6 100%)'
           }}
         >
           {/* Paper texture overlay */}
@@ -433,13 +433,13 @@ function CardContent({ template, text, userName, userPhoto }: CardContentProps) 
           />
 
           {/* Decorative corner flourishes */}
-          <div className="absolute top-8 left-8 w-16 h-16 border-l-4 border-t-4 border-[#C35F33]/30 rounded-tl-xl" />
-          <div className="absolute bottom-8 right-8 w-16 h-16 border-r-4 border-b-4 border-[#C35F33]/30 rounded-br-xl" />
+          <div className="absolute top-8 left-8 w-16 h-16 border-l-4 border-t-4 border-[#B8562E]/30 rounded-tl-xl" />
+          <div className="absolute bottom-8 right-8 w-16 h-16 border-r-4 border-b-4 border-[#B8562E]/30 rounded-br-xl" />
 
           {/* Content */}
           <div className="relative z-10 text-center max-w-[400px]">
             {/* Decorative quote */}
-            <div className="text-[#C35F33] text-6xl mb-4" style={{ fontFamily: 'Georgia, serif' }}>
+            <div className="text-[#B8562E] text-6xl mb-4" style={{ fontFamily: 'Georgia, serif' }}>
               ❝
             </div>
 
@@ -454,12 +454,12 @@ function CardContent({ template, text, userName, userPhoto }: CardContentProps) 
               {text}
             </p>
 
-            <div className="text-[#C35F33] text-6xl mb-6" style={{ fontFamily: 'Georgia, serif' }}>
+            <div className="text-[#B8562E] text-6xl mb-6" style={{ fontFamily: 'Georgia, serif' }}>
               ❞
             </div>
 
             <p 
-              className="text-[#C35F33] text-xl font-medium"
+              className="text-[#B8562E] text-xl font-medium"
               style={{ fontFamily: 'var(--font-handwritten), cursive' }}
             >
               — {userName}
@@ -468,7 +468,7 @@ function CardContent({ template, text, userName, userPhoto }: CardContentProps) 
 
           {/* Branding */}
           <div className="absolute bottom-8 flex items-center gap-2">
-            <div className="w-5 h-5 rounded-full bg-[#C35F33]" />
+            <div className="w-5 h-5 rounded-full bg-[#B8562E]" />
             <span 
               className="text-sm text-[#8a7a6a]"
               style={{ fontFamily: 'var(--font-inter-tight), sans-serif' }}
@@ -488,13 +488,13 @@ function CardContent({ template, text, userName, userPhoto }: CardContentProps) 
           }}
         >
           {/* Geometric accents */}
-          <div className="absolute top-0 right-0 w-64 h-64 bg-[#D9C61A]/20 rounded-full -translate-y-1/2 translate-x-1/2" />
-          <div className="absolute bottom-0 left-0 w-48 h-48 bg-[#C35F33]/20 rounded-full translate-y-1/2 -translate-x-1/2" />
+          <div className="absolute top-0 right-0 w-64 h-64 bg-[#C4A235]/20 rounded-full -translate-y-1/2 translate-x-1/2" />
+          <div className="absolute bottom-0 left-0 w-48 h-48 bg-[#B8562E]/20 rounded-full translate-y-1/2 -translate-x-1/2" />
 
           {/* Content */}
           <div className="relative z-10 text-center max-w-[420px]">
             {/* Quote marks */}
-            <div className="text-[#D9C61A] text-8xl leading-none mb-2" style={{ fontFamily: 'Georgia, serif' }}>
+            <div className="text-[#C4A235] text-8xl leading-none mb-2" style={{ fontFamily: 'Georgia, serif' }}>
               "
             </div>
 
@@ -511,21 +511,21 @@ function CardContent({ template, text, userName, userPhoto }: CardContentProps) 
             </p>
 
             <div className="flex items-center justify-center gap-4">
-              <div className="w-16 h-1 bg-[#D9C61A]" />
+              <div className="w-16 h-1 bg-[#C4A235]" />
               <p 
-                className="text-[#D9C61A] text-xl font-bold uppercase tracking-wider"
+                className="text-[#C4A235] text-xl font-bold uppercase tracking-wider"
                 style={{ fontFamily: 'var(--font-inter-tight), sans-serif' }}
               >
                 {userName}
               </p>
-              <div className="w-16 h-1 bg-[#D9C61A]" />
+              <div className="w-16 h-1 bg-[#C4A235]" />
             </div>
           </div>
 
           {/* Branding */}
           <div className="absolute bottom-8 flex items-center gap-2">
             <div className="w-6 h-6 rounded-full bg-white/20 flex items-center justify-center">
-              <div className="w-3 h-3 rounded-full bg-[#D9C61A]" />
+              <div className="w-3 h-3 rounded-full bg-[#C4A235]" />
             </div>
             <span className="text-sm text-white/70" style={{ fontFamily: 'var(--font-inter-tight), sans-serif' }}>
               YoursTruly
@@ -549,7 +549,7 @@ function CardContent({ template, text, userName, userPhoto }: CardContentProps) 
             <div 
               className="absolute inset-0"
               style={{
-                background: 'linear-gradient(135deg, #406A56 0%, #4A3552 50%, #C35F33 100%)'
+                background: 'linear-gradient(135deg, #2D5A3D 0%, #4A3552 50%, #B8562E 100%)'
               }}
             />
           )}
@@ -591,7 +591,7 @@ function CardContent({ template, text, userName, userPhoto }: CardContentProps) 
           {/* Branding */}
           <div className="absolute bottom-8 flex items-center gap-2">
             <div className="w-5 h-5 rounded-full bg-white/30 flex items-center justify-center">
-              <div className="w-2.5 h-2.5 rounded-full bg-[#D9C61A]" />
+              <div className="w-2.5 h-2.5 rounded-full bg-[#C4A235]" />
             </div>
             <span className="text-sm text-white/60" style={{ fontFamily: 'var(--font-inter-tight), sans-serif' }}>
               YoursTruly

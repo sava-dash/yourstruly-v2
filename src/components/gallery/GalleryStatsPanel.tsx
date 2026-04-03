@@ -107,12 +107,12 @@ export default function GalleryStatsPanel({
             className="flex-1 flex flex-col overflow-hidden"
           >
             {/* Preview Header */}
-            <div className="flex items-center justify-between p-4 border-b border-[#406A56]/10">
+            <div className="flex items-center justify-between p-4 border-b border-[#2D5A3D]/10">
               <div className="min-w-0 flex-1">
                 {currentPreview?.memory?.id ? (
                   <Link 
                     href={`/dashboard/memories/${currentPreview.memory.id}`}
-                    className="text-[#2d2d2d] font-semibold truncate hover:text-[#406A56] transition-colors block"
+                    className="text-[#2d2d2d] font-semibold truncate hover:text-[#2D5A3D] transition-colors block"
                   >
                     {currentPreview.memory.title || 'Photo'}
                   </Link>
@@ -123,7 +123,7 @@ export default function GalleryStatsPanel({
                 )}
                 {currentPreview?.memory?.location_name && (
                   <p className="text-[#666] text-sm flex items-center gap-1 truncate mt-0.5">
-                    <MapPin size={12} className="text-[#406A56]" />
+                    <MapPin size={12} className="text-[#2D5A3D]" />
                     {currentPreview.memory.location_name}
                   </p>
                 )}
@@ -131,16 +131,16 @@ export default function GalleryStatsPanel({
               
               {/* Photo counter */}
               {previewList.length > 1 && (
-                <span className="text-xs text-[#666] bg-[#406A56]/10 px-2 py-1 rounded-full mr-2 flex-shrink-0">
+                <span className="text-xs text-[#666] bg-[#2D5A3D]/10 px-2 py-1 rounded-full mr-2 flex-shrink-0">
                   {currentIndex + 1} of {previewList.length}
                 </span>
               )}
               
               <button
                 onClick={onClose}
-                className="p-2 bg-[#406A56]/10 hover:bg-[#406A56]/20 rounded-lg transition-colors flex-shrink-0"
+                className="p-2 bg-[#2D5A3D]/10 hover:bg-[#2D5A3D]/20 rounded-lg transition-colors flex-shrink-0"
               >
-                <X size={18} className="text-[#406A56]" />
+                <X size={18} className="text-[#2D5A3D]" />
               </button>
             </div>
 
@@ -187,7 +187,7 @@ export default function GalleryStatsPanel({
 
             {/* Thumbnail Strip */}
             {previewList.length > 1 && (
-              <div className="p-3 border-t border-[#406A56]/10 bg-white/50">
+              <div className="p-3 border-t border-[#2D5A3D]/10 bg-white/50">
                 <div className="flex gap-2 overflow-x-auto scrollbar-hide">
                   {previewList.map((item, idx) => (
                     <button
@@ -195,7 +195,7 @@ export default function GalleryStatsPanel({
                       onClick={() => setCurrentIndex(idx)}
                       className={`flex-shrink-0 w-12 h-12 rounded-lg overflow-hidden transition-all ${
                         idx === currentIndex 
-                          ? 'ring-2 ring-[#406A56] shadow-md' 
+                          ? 'ring-2 ring-[#2D5A3D] shadow-md' 
                           : 'opacity-60 hover:opacity-100'
                       }`}
                     >
@@ -220,21 +220,21 @@ export default function GalleryStatsPanel({
 
             {/* Stats Grid */}
             <div className="grid grid-cols-2 gap-3 mb-5">
-              <div className="bg-[#406A56]/10 rounded-xl p-4">
-                <div className="flex items-center gap-2 text-[#406A56] mb-1">
+              <div className="bg-[#2D5A3D]/10 rounded-xl p-4">
+                <div className="flex items-center gap-2 text-[#2D5A3D] mb-1">
                   <ImageIcon size={16} />
                 </div>
                 <p className="text-2xl font-bold text-[#2d2d2d]">{stats.totalPhotos}</p>
                 <p className="text-xs text-[#666]">Photos</p>
               </div>
-              <div className="bg-[#C35F33]/10 rounded-xl p-4">
-                <div className="flex items-center gap-2 text-[#C35F33] mb-1">
+              <div className="bg-[#B8562E]/10 rounded-xl p-4">
+                <div className="flex items-center gap-2 text-[#B8562E] mb-1">
                   <Video size={16} />
                 </div>
                 <p className="text-2xl font-bold text-[#2d2d2d]">{stats.totalVideos}</p>
                 <p className="text-xs text-[#666]">Videos</p>
               </div>
-              <div className="bg-[#D9C61A]/10 rounded-xl p-4">
+              <div className="bg-[#C4A235]/10 rounded-xl p-4">
                 <div className="flex items-center gap-2 text-[#8a7c08] mb-1">
                   <MapPin size={16} />
                 </div>
@@ -264,7 +264,7 @@ export default function GalleryStatsPanel({
                       className="flex items-center justify-between bg-white/50 rounded-lg px-3 py-2"
                     >
                       <span className="text-[#2d2d2d] text-sm truncate">{location}</span>
-                      <span className="text-[#406A56] text-xs font-semibold bg-[#406A56]/10 px-2 py-0.5 rounded">{count}</span>
+                      <span className="text-[#2D5A3D] text-xs font-semibold bg-[#2D5A3D]/10 px-2 py-0.5 rounded">{count}</span>
                     </div>
                   ))}
                 </div>
@@ -272,8 +272,8 @@ export default function GalleryStatsPanel({
             )}
 
             {/* Tip */}
-            <div className="mt-4 bg-[#406A56]/10 rounded-xl p-3 text-center">
-              <p className="text-[#406A56] text-sm">
+            <div className="mt-4 bg-[#2D5A3D]/10 rounded-xl p-3 text-center">
+              <p className="text-[#2D5A3D] text-sm">
                 Click markers on the globe to preview photos
               </p>
             </div>

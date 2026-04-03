@@ -74,7 +74,7 @@ export default function PersonalityQuiz({ isOpen, onClose, onComplete }: Persona
       <div className="modal-content-page max-w-2xl p-0 overflow-hidden">
         {/* Header with gradient */}
         <div className="quiz-header">
-          <div className="absolute inset-0 bg-gradient-to-br from-[#406A56] via-[#5A8A72] to-[#8DACAB]" />
+          <div className="absolute inset-0 bg-gradient-to-br from-[#2D5A3D] via-[#5A8A72] to-[#8DACAB]" />
           <div className="absolute inset-0 bg-[url('/patterns/topography.svg')] opacity-10" />
           <div className="relative z-10 p-6 text-white">
             <div className="flex items-center justify-between mb-4">
@@ -125,15 +125,15 @@ export default function PersonalityQuiz({ isOpen, onClose, onComplete }: Persona
                     onClick={() => handleAnswer(option.score)}
                     className={`w-full p-4 rounded-xl border-2 text-left transition-all duration-200 group
                       ${answers[question.id] === option.score 
-                        ? 'border-[#406A56] bg-[#406A56]/5' 
-                        : 'border-transparent bg-[#406A56]/5 hover:bg-[#406A56]/10 hover:border-[#406A56]/30'
+                        ? 'border-[#2D5A3D] bg-[#2D5A3D]/5' 
+                        : 'border-transparent bg-[#2D5A3D]/5 hover:bg-[#2D5A3D]/10 hover:border-[#2D5A3D]/30'
                       }`}
                   >
                     <div className="flex items-center gap-4">
                       <div className={`w-6 h-6 rounded-full border-2 flex items-center justify-center flex-shrink-0 transition-all
                         ${answers[question.id] === option.score 
-                          ? 'border-[#406A56] bg-[#406A56]' 
-                          : 'border-gray-300 group-hover:border-[#406A56]/50'
+                          ? 'border-[#2D5A3D] bg-[#2D5A3D]' 
+                          : 'border-gray-300 group-hover:border-[#2D5A3D]/50'
                         }`}
                       >
                         {answers[question.id] === option.score && (
@@ -147,14 +147,14 @@ export default function PersonalityQuiz({ isOpen, onClose, onComplete }: Persona
               </div>
 
               {/* Navigation */}
-              <div className="flex justify-between mt-8 pt-4 border-t border-[#406A56]/10">
+              <div className="flex justify-between mt-8 pt-4 border-t border-[#2D5A3D]/10">
                 <button
                   onClick={handleBack}
                   disabled={currentQuestion === 0}
                   className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all
                     ${currentQuestion === 0 
                       ? 'text-gray-300 cursor-not-allowed' 
-                      : 'text-[#406A56] hover:bg-[#406A56]/10'
+                      : 'text-[#2D5A3D] hover:bg-[#2D5A3D]/10'
                     }`}
                 >
                   <ChevronLeft size={18} />
@@ -169,14 +169,14 @@ export default function PersonalityQuiz({ isOpen, onClose, onComplete }: Persona
             // Results view
             <div className="text-center">
               {/* Result badge */}
-              <div className="inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-[#D9C61A]/20 to-[#C35F33]/20 rounded-full mb-4">
-                <Sparkles size={16} className="text-[#C35F33]" />
-                <span className="text-[#C35F33] font-medium">Quiz Complete!</span>
+              <div className="inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-[#C4A235]/20 to-[#B8562E]/20 rounded-full mb-4">
+                <Sparkles size={16} className="text-[#B8562E]" />
+                <span className="text-[#B8562E] font-medium">Quiz Complete!</span>
               </div>
 
               {/* Personality Type */}
               <div className="mb-6">
-                <h3 className="text-3xl font-bold text-[#406A56] mb-2">
+                <h3 className="text-3xl font-bold text-[#2D5A3D] mb-2">
                   {result?.personalityType}
                 </h3>
                 <p className="text-gray-600 max-w-md mx-auto">
@@ -191,7 +191,7 @@ export default function PersonalityQuiz({ isOpen, onClose, onComplete }: Persona
                   {result?.traits.map(trait => (
                     <span 
                       key={trait}
-                      className="px-3 py-1.5 bg-[#406A56]/10 text-[#406A56] rounded-full text-sm font-medium"
+                      className="px-3 py-1.5 bg-[#2D5A3D]/10 text-[#2D5A3D] rounded-full text-sm font-medium"
                     >
                       {trait}
                     </span>
@@ -200,13 +200,13 @@ export default function PersonalityQuiz({ isOpen, onClose, onComplete }: Persona
               </div>
 
               {/* Strengths */}
-              <div className="mb-8 bg-[#406A56]/5 rounded-xl p-5">
+              <div className="mb-8 bg-[#2D5A3D]/5 rounded-xl p-5">
                 <h4 className="text-sm font-medium text-gray-500 mb-3">Your Strengths</h4>
                 <div className="flex flex-wrap justify-center gap-2">
                   {result?.strengths.map(strength => (
                     <span 
                       key={strength}
-                      className="px-3 py-1.5 bg-white text-[#406A56] rounded-lg text-sm border border-[#406A56]/20"
+                      className="px-3 py-1.5 bg-white text-[#2D5A3D] rounded-lg text-sm border border-[#2D5A3D]/20"
                     >
                       ✦ {strength}
                     </span>
@@ -225,7 +225,7 @@ export default function PersonalityQuiz({ isOpen, onClose, onComplete }: Persona
                 </button>
                 <button
                   onClick={handleSaveResults}
-                  className="flex items-center gap-2 px-6 py-2.5 rounded-xl bg-[#406A56] text-white font-medium hover:bg-[#4a7a64] transition-colors"
+                  className="flex items-center gap-2 px-6 py-2.5 rounded-xl bg-[#2D5A3D] text-white font-medium hover:bg-[#234A31] transition-colors"
                 >
                   <Check size={16} />
                   Save to Profile

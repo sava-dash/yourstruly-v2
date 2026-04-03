@@ -81,7 +81,7 @@ export function CardChain({ row, onCardSave, onAddCard, onMediaUploaded }: CardC
         style={{
           flexShrink: 0, width: `${CARD_W}px`, height: `${CARD_H}px`,
           borderRadius: '24px', overflow: 'hidden', background: '#FFFFFF',
-          border: '1px solid #DDE5E0',
+          border: '1px solid #DDE3DF',
           boxShadow: '0 4px 20px rgba(0,0,0,0.08)',
           display: 'flex', flexDirection: 'column', scrollSnapAlign: 'start',
         }}
@@ -101,7 +101,7 @@ export function CardChain({ row, onCardSave, onAddCard, onMediaUploaded }: CardC
         style={{
           flexShrink: 0, width: '280px', height: `${CARD_H}px`,
           borderRadius: '24px', overflow: 'hidden', background: 'rgba(255,255,255,0.5)',
-          border: '2px dashed #DDE5E0',
+          border: '2px dashed #DDE3DF',
           display: 'flex', flexDirection: 'column',
         }}
       >

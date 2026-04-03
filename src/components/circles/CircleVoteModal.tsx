@@ -41,15 +41,15 @@ export default function CircleVoteModal({
       case 'promote':
         return {
           icon: ArrowUp,
-          color: 'text-[#406A56]',
-          bgColor: 'bg-[#406A56]/10',
+          color: 'text-[#2D5A3D]',
+          bgColor: 'bg-[#2D5A3D]/10',
           label: 'Promote to Admin'
         }
       case 'demote':
         return {
           icon: ArrowDown,
-          color: 'text-[#C35F33]',
-          bgColor: 'bg-[#C35F33]/10',
+          color: 'text-[#B8562E]',
+          bgColor: 'bg-[#B8562E]/10',
           label: 'Demote to Member'
         }
       case 'remove':
@@ -73,7 +73,7 @@ export default function CircleVoteModal({
     switch (status) {
       case 'active':
         return (
-          <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full text-sm font-medium bg-[#D9C61A]/20 text-[#8a7c08]">
+          <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full text-sm font-medium bg-[#C4A235]/20 text-[#8a7c08]">
             <Clock size={14} />
             Voting Open
           </span>
@@ -136,7 +136,7 @@ export default function CircleVoteModal({
           </div>
           <button
             onClick={onClose}
-            className="p-2 text-[#406A56]/50 hover:text-[#406A56] hover:bg-[#406A56]/10 rounded-lg transition-colors"
+            className="p-2 text-[#2D5A3D]/50 hover:text-[#2D5A3D] hover:bg-[#2D5A3D]/10 rounded-lg transition-colors"
           >
             <X size={20} />
           </button>
@@ -152,7 +152,7 @@ export default function CircleVoteModal({
 
         {/* Description */}
         {vote.description && (
-          <div className="p-4 bg-[#406A56]/5 rounded-xl mb-6">
+          <div className="p-4 bg-[#2D5A3D]/5 rounded-xl mb-6">
             <p className="text-sm text-[#2d2d2d]">{vote.description}</p>
           </div>
         )}
@@ -169,7 +169,7 @@ export default function CircleVoteModal({
           {/* Progress bar */}
           <div className="h-3 bg-gray-100 rounded-full overflow-hidden mb-2">
             <div
-              className="h-full bg-gradient-to-r from-[#406A56] to-[#8DACAB] transition-all duration-300"
+              className="h-full bg-gradient-to-r from-[#2D5A3D] to-[#8DACAB] transition-all duration-300"
               style={{ width: `${Math.min(progressToPass, 100)}%` }}
             />
           </div>
@@ -189,7 +189,7 @@ export default function CircleVoteModal({
 
         {/* Your Vote Status */}
         {vote.has_voted && vote.my_vote && (
-          <div className="p-4 bg-[#D9C61A]/10 rounded-xl mb-6">
+          <div className="p-4 bg-[#C4A235]/10 rounded-xl mb-6">
             <p className="text-sm text-[#2d2d2d]">
               You voted: <strong>{vote.my_vote === 'yes' ? '👍 Yes' : '👎 No'}</strong>
             </p>
@@ -230,7 +230,7 @@ export default function CircleVoteModal({
         )}
 
         {/* Close Button */}
-        <div className="flex justify-end mt-6 pt-4 border-t border-[#406A56]/10">
+        <div className="flex justify-end mt-6 pt-4 border-t border-[#2D5A3D]/10">
           <button onClick={onClose} className="btn-secondary">
             Close
           </button>

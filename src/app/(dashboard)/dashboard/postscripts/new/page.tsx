@@ -412,8 +412,8 @@ export default function NewPostScriptPage() {
     return (
       <div className="space-y-6">
         <div className="text-center mb-8">
-          <div className="w-16 h-16 rounded-full bg-[#C35F33]/10 flex items-center justify-center mx-auto mb-4">
-            <Users size={32} className="text-[#C35F33]" />
+          <div className="w-16 h-16 rounded-full bg-[#B8562E]/10 flex items-center justify-center mx-auto mb-4">
+            <Users size={32} className="text-[#B8562E]" />
           </div>
           <h2 className="text-xl font-bold text-gray-900">Who is this message for?</h2>
           <p className="text-gray-600 mt-1">Select a contact, circle, or enter details manually</p>
@@ -421,12 +421,12 @@ export default function NewPostScriptPage() {
 
         {/* Selected Recipient */}
         {hasSelection && (
-          <div className="bg-[#C35F33]/5 border border-[#C35F33]/20 rounded-2xl p-4 flex items-center justify-between">
+          <div className="bg-[#B8562E]/5 border border-[#B8562E]/20 rounded-2xl p-4 flex items-center justify-between">
             <div className="flex items-center gap-3">
               <div className={`w-10 h-10 rounded-full flex items-center justify-center font-medium
                 ${form.circle_id 
                   ? 'bg-[#8DACAB] text-white' 
-                  : 'bg-[#C35F33] text-white'}`}>
+                  : 'bg-[#B8562E] text-white'}`}>
                 {form.circle_id ? <Users size={20} /> : form.recipient_name.slice(0, 2).toUpperCase()}
               </div>
               <div>
@@ -474,7 +474,7 @@ export default function NewPostScriptPage() {
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 className="w-full pl-11 pr-4 py-3 bg-white border border-gray-200 rounded-xl 
-                         focus:ring-2 focus:ring-[#C35F33]/20 focus:border-[#C35F33] outline-none text-gray-900 placeholder:text-gray-400"
+                         focus:ring-2 focus:ring-[#B8562E]/20 focus:border-[#B8562E] outline-none text-gray-900 placeholder:text-gray-400"
               />
             </div>
 
@@ -491,9 +491,9 @@ export default function NewPostScriptPage() {
                       key={contact.id}
                       onClick={() => selectContact(contact)}
                       className="w-full flex items-center gap-3 p-3 bg-white border border-gray-200 
-                               rounded-xl hover:border-[#C35F33] hover:bg-[#C35F33]/5 transition-all text-left"
+                               rounded-xl hover:border-[#B8562E] hover:bg-[#B8562E]/5 transition-all text-left"
                     >
-                      <div className="w-10 h-10 rounded-full bg-[#C35F33]/10 text-[#C35F33] flex items-center justify-center font-semibold">
+                      <div className="w-10 h-10 rounded-full bg-[#B8562E]/10 text-[#B8562E] flex items-center justify-center font-semibold">
                         {contact.full_name.slice(0, 2).toUpperCase()}
                       </div>
                       <div className="flex-1">
@@ -512,8 +512,8 @@ export default function NewPostScriptPage() {
                 {circles.length === 0 ? (
                   <div className="text-center py-6">
                     <Users size={32} className="mx-auto text-gray-300 mb-2" />
-                    <p className="text-gray-400 text-sm">No circles yet</p>
-                    <p className="text-gray-400 text-xs mt-1">Create a circle to send messages to groups</p>
+                    <p className="text-gray-400 text-sm">Create a circle first</p>
+                    <p className="text-gray-400 text-xs mt-1">Circles let you send messages to groups</p>
                   </div>
                 ) : (
                   circles
@@ -551,7 +551,7 @@ export default function NewPostScriptPage() {
                       onChange={(e) => setForm({ ...form, recipient_name: e.target.value })}
                       placeholder="Enter recipient name"
                       className="w-full px-4 py-3 bg-white border border-gray-200 rounded-xl 
-                               focus:ring-2 focus:ring-[#C35F33]/20 focus:border-[#C35F33] outline-none text-gray-900 placeholder:text-gray-400"
+                               focus:ring-2 focus:ring-[#B8562E]/20 focus:border-[#B8562E] outline-none text-gray-900 placeholder:text-gray-400"
                     />
                   </div>
                   <div className="grid grid-cols-2 gap-4">
@@ -565,7 +565,7 @@ export default function NewPostScriptPage() {
                           onChange={(e) => setForm({ ...form, recipient_email: e.target.value })}
                           placeholder="email@example.com"
                           className="w-full pl-10 pr-4 py-3 bg-white border border-gray-200 rounded-xl 
-                                   focus:ring-2 focus:ring-[#C35F33]/20 focus:border-[#C35F33] outline-none text-gray-900 placeholder:text-gray-400"
+                                   focus:ring-2 focus:ring-[#B8562E]/20 focus:border-[#B8562E] outline-none text-gray-900 placeholder:text-gray-400"
                         />
                       </div>
                     </div>
@@ -579,7 +579,7 @@ export default function NewPostScriptPage() {
                           onChange={(e) => setForm({ ...form, recipient_phone: e.target.value })}
                           placeholder="+1234567890"
                           className="w-full pl-10 pr-4 py-3 bg-white border border-gray-200 rounded-xl 
-                                   focus:ring-2 focus:ring-[#C35F33]/20 focus:border-[#C35F33] outline-none text-gray-900 placeholder:text-gray-400"
+                                   focus:ring-2 focus:ring-[#B8562E]/20 focus:border-[#B8562E] outline-none text-gray-900 placeholder:text-gray-400"
                         />
                       </div>
                     </div>
@@ -598,8 +598,8 @@ export default function NewPostScriptPage() {
     return (
       <div className="space-y-6">
         <div className="text-center mb-8">
-          <div className="w-16 h-16 rounded-full bg-[#D9C61A]/20 flex items-center justify-center mx-auto mb-4">
-            <Calendar size={32} className="text-[#D9C61A]" />
+          <div className="w-16 h-16 rounded-full bg-[#C4A235]/20 flex items-center justify-center mx-auto mb-4">
+            <Calendar size={32} className="text-[#C4A235]" />
           </div>
           <h2 className="text-xl font-bold text-gray-900">When should this be delivered?</h2>
           <p className="text-gray-600 mt-1">Choose a specific date or life event</p>
@@ -641,7 +641,7 @@ export default function NewPostScriptPage() {
                 onChange={(e) => setForm({ ...form, delivery_date: e.target.value })}
                 min={new Date().toISOString().split('T')[0]}
                 className="w-full px-4 py-3 bg-white border border-gray-200 rounded-xl 
-                         focus:ring-2 focus:ring-[#C35F33]/20 focus:border-[#C35F33] outline-none text-gray-900 placeholder:text-gray-400"
+                         focus:ring-2 focus:ring-[#B8562E]/20 focus:border-[#B8562E] outline-none text-gray-900 placeholder:text-gray-400"
               />
             </div>
             <label className="flex items-center gap-3 p-4 bg-gray-50 rounded-xl cursor-pointer">
@@ -649,7 +649,7 @@ export default function NewPostScriptPage() {
                 type="checkbox"
                 checked={form.delivery_recurring}
                 onChange={(e) => setForm({ ...form, delivery_recurring: e.target.checked })}
-                className="w-5 h-5 rounded text-[#C35F33] focus:ring-[#C35F33]"
+                className="w-5 h-5 rounded text-[#B8562E] focus:ring-[#B8562E]"
               />
               <div>
                 <p className="font-medium text-gray-900">Repeat annually</p>
@@ -670,12 +670,12 @@ export default function NewPostScriptPage() {
                   onClick={() => setForm({ ...form, delivery_event: event.key })}
                   className={`p-4 rounded-xl border-2 text-center transition-all
                     ${form.delivery_event === event.key 
-                      ? 'border-[#C35F33] bg-[#C35F33]/5' 
+                      ? 'border-[#B8562E] bg-[#B8562E]/5' 
                       : 'border-gray-100 hover:border-gray-200'}`}
                 >
                   <div className={`w-10 h-10 mx-auto mb-2 rounded-full flex items-center justify-center
                     ${form.delivery_event === event.key 
-                      ? 'bg-[#C35F33]/10 text-[#C35F33]' 
+                      ? 'bg-[#B8562E]/10 text-[#B8562E]' 
                       : 'bg-gray-100 text-gray-500'}`}>
                     <EventIcon size={20} />
                   </div>
@@ -720,7 +720,7 @@ export default function NewPostScriptPage() {
               onChange={(e) => setForm({ ...form, title: e.target.value })}
               placeholder="e.g., Happy 18th Birthday!"
               className="w-full px-4 py-3 bg-white border border-gray-200 rounded-xl 
-                       focus:ring-2 focus:ring-[#C35F33]/20 focus:border-[#C35F33] outline-none text-gray-900 placeholder:text-gray-400"
+                       focus:ring-2 focus:ring-[#B8562E]/20 focus:border-[#B8562E] outline-none text-gray-900 placeholder:text-gray-400"
             />
           </div>
 
@@ -732,7 +732,7 @@ export default function NewPostScriptPage() {
               placeholder="Write from the heart..."
               rows={8}
               className="w-full px-4 py-3 bg-white border border-gray-200 rounded-xl 
-                       focus:ring-2 focus:ring-[#C35F33]/20 focus:border-[#C35F33] outline-none resize-none text-gray-900 placeholder:text-gray-400"
+                       focus:ring-2 focus:ring-[#B8562E]/20 focus:border-[#B8562E] outline-none resize-none text-gray-900 placeholder:text-gray-400"
             />
           </div>
 
@@ -741,7 +741,7 @@ export default function NewPostScriptPage() {
             {/* Photos Tile */}
             <div className="h-36">
               <label className="text-sm font-medium text-gray-700 mb-2 flex items-center gap-1.5">
-                <ImagePlus size={14} className="text-[#C35F33]" />
+                <ImagePlus size={14} className="text-[#B8562E]" />
                 Attach Photos <span className="text-gray-400 font-normal">(max 5)</span>
               </label>
               
@@ -762,7 +762,7 @@ export default function NewPostScriptPage() {
                     ))}
                     {form.attachments.length < 5 && (
                       <label className="h-full aspect-square flex-shrink-0 rounded-lg border-2 border-dashed border-gray-300 
-                                       hover:border-[#C35F33] hover:bg-[#C35F33]/5 
+                                       hover:border-[#B8562E] hover:bg-[#B8562E]/5 
                                        flex flex-col items-center justify-center cursor-pointer transition-all">
                         <input
                           type="file"
@@ -778,7 +778,7 @@ export default function NewPostScriptPage() {
                 </div>
               ) : (
                 <label className="h-[calc(100%-28px)] rounded-xl border-2 border-dashed border-gray-300 
-                                 hover:border-[#C35F33] hover:bg-[#C35F33]/5 
+                                 hover:border-[#B8562E] hover:bg-[#B8562E]/5 
                                  flex flex-col items-center justify-center cursor-pointer transition-all">
                   <input
                     type="file"
@@ -796,12 +796,12 @@ export default function NewPostScriptPage() {
             {/* Gift Tile */}
             <div className="h-36">
               <label className="text-sm font-medium text-gray-700 mb-2 flex items-center gap-1.5">
-                <Gift size={14} className="text-[#D9C61A]" />
+                <Gift size={14} className="text-[#C4A235]" />
                 Add Gift <span className="text-gray-400 font-normal">(optional)</span>
               </label>
               
               {form.gift ? (
-                <div className="relative h-[calc(100%-28px)] rounded-xl overflow-hidden bg-gradient-to-br from-[#C35F33]/10 to-[#D9C61A]/10 border border-[#C35F33]/20 p-3">
+                <div className="relative h-[calc(100%-28px)] rounded-xl overflow-hidden bg-gradient-to-br from-[#B8562E]/10 to-[#C4A235]/10 border border-[#B8562E]/20 p-3">
                   <div className="flex items-center gap-3 h-full">
                     <img 
                       src={form.gift.image_url} 
@@ -810,7 +810,7 @@ export default function NewPostScriptPage() {
                     />
                     <div className="flex-1 min-w-0">
                       <p className="font-medium text-gray-900 text-sm truncate">{form.gift.name}</p>
-                      <p className="text-[#C35F33] font-semibold">${form.gift.price.toFixed(2)}</p>
+                      <p className="text-[#B8562E] font-semibold">${form.gift.price.toFixed(2)}</p>
                       <p className="text-xs text-gray-500">{form.gift.provider}</p>
                     </div>
                   </div>
@@ -825,7 +825,7 @@ export default function NewPostScriptPage() {
                 <button
                   onClick={() => setShowGiftModal(true)}
                   className="w-full h-[calc(100%-28px)] rounded-xl border-2 border-dashed border-gray-300 
-                           hover:border-[#C35F33] hover:bg-[#C35F33]/5 
+                           hover:border-[#B8562E] hover:bg-[#B8562E]/5 
                            flex flex-col items-center justify-center cursor-pointer transition-all"
                 >
                   <Gift size={28} className="text-gray-400 mb-1" />
@@ -837,18 +837,18 @@ export default function NewPostScriptPage() {
             {/* Memories Tile */}
             <div className="h-36">
               <label className="text-sm font-medium text-gray-700 mb-2 flex items-center gap-1.5">
-                <Sparkles size={14} className="text-[#406A56]" />
+                <Sparkles size={14} className="text-[#2D5A3D]" />
                 Attach Memories <span className="text-gray-400 font-normal">(optional)</span>
               </label>
               
               {form.memories.length > 0 ? (
-                <div className="relative h-[calc(100%-28px)] rounded-xl overflow-hidden bg-gradient-to-br from-[#406A56]/10 to-[#8DACAB]/10 border border-[#406A56]/20 p-3">
+                <div className="relative h-[calc(100%-28px)] rounded-xl overflow-hidden bg-gradient-to-br from-[#2D5A3D]/10 to-[#8DACAB]/10 border border-[#2D5A3D]/20 p-3">
                   <div className="flex flex-col h-full justify-center">
                     <p className="font-medium text-gray-900 text-sm">{form.memories.length} memor{form.memories.length === 1 ? 'y' : 'ies'} attached</p>
                     <p className="text-xs text-gray-500 line-clamp-1">{form.memories.map(m => m.title).join(', ')}</p>
                     <button
                       onClick={() => setShowMemoryModal(true)}
-                      className="mt-2 text-xs text-[#406A56] hover:underline"
+                      className="mt-2 text-xs text-[#2D5A3D] hover:underline"
                     >
                       Edit selection
                     </button>
@@ -864,7 +864,7 @@ export default function NewPostScriptPage() {
                 <button
                   onClick={() => setShowMemoryModal(true)}
                   className="w-full h-[calc(100%-28px)] rounded-xl border-2 border-dashed border-gray-300 
-                           hover:border-[#406A56] hover:bg-[#406A56]/5 
+                           hover:border-[#2D5A3D] hover:bg-[#2D5A3D]/5 
                            flex flex-col items-center justify-center cursor-pointer transition-all"
                 >
                   <Sparkles size={28} className="text-gray-400 mb-1" />
@@ -881,7 +881,7 @@ export default function NewPostScriptPage() {
               </label>
               
               {form.wisdom.length > 0 ? (
-                <div className="relative h-[calc(100%-28px)] rounded-xl overflow-hidden bg-gradient-to-br from-[#8DACAB]/10 to-[#D9C61A]/10 border border-[#8DACAB]/20 p-3">
+                <div className="relative h-[calc(100%-28px)] rounded-xl overflow-hidden bg-gradient-to-br from-[#8DACAB]/10 to-[#C4A235]/10 border border-[#8DACAB]/20 p-3">
                   <div className="flex flex-col h-full justify-center">
                     <p className="font-medium text-gray-900 text-sm">{form.wisdom.length} wisdom entr{form.wisdom.length === 1 ? 'y' : 'ies'} attached</p>
                     <p className="text-xs text-gray-500 line-clamp-1">{form.wisdom.map(w => w.title).join(', ')}</p>
@@ -920,7 +920,7 @@ export default function NewPostScriptPage() {
             </label>
             
             {audioPreview ? (
-              <div className="bg-[#C35F33]/5 border border-[#C35F33]/20 rounded-xl p-4">
+              <div className="bg-[#B8562E]/5 border border-[#B8562E]/20 rounded-xl p-4">
                 <div className="flex items-center gap-4">
                   <audio src={audioPreview} controls className="flex-1 h-10" />
                   <button
@@ -937,7 +937,7 @@ export default function NewPostScriptPage() {
                 className={`w-full py-4 rounded-xl border-2 border-dashed flex flex-col items-center justify-center gap-2 transition-all
                   ${isRecording 
                     ? 'border-red-400 bg-red-50 text-red-600' 
-                    : 'border-gray-300 hover:border-[#C35F33] hover:bg-[#C35F33]/5 text-gray-500'
+                    : 'border-gray-300 hover:border-[#B8562E] hover:bg-[#B8562E]/5 text-gray-500'
                   }`}
               >
                 {isRecording ? (
@@ -1001,8 +1001,8 @@ export default function NewPostScriptPage() {
             <p className="text-xs text-gray-500 uppercase tracking-wider mb-1">Delivery</p>
             <div className="flex items-center gap-2">
               {form.delivery_type === 'event' && EventIcon && (
-                <div className="w-8 h-8 rounded-full bg-[#C35F33]/10 flex items-center justify-center">
-                  <EventIcon size={16} className="text-[#C35F33]" />
+                <div className="w-8 h-8 rounded-full bg-[#B8562E]/10 flex items-center justify-center">
+                  <EventIcon size={16} className="text-[#B8562E]" />
                 </div>
               )}
               <p className="font-medium text-gray-900">
@@ -1016,7 +1016,7 @@ export default function NewPostScriptPage() {
               </p>
             </div>
             {form.delivery_recurring && (
-              <p className="text-sm text-amber-600 flex items-center gap-1 mt-1">
+              <p className="text-sm text-[#2D5A3D] flex items-center gap-1 mt-1">
                 <Calendar size={14} />
                 Repeats annually
               </p>
@@ -1034,7 +1034,7 @@ export default function NewPostScriptPage() {
           {form.gift && (
             <div className="p-4">
               <p className="text-xs text-gray-500 uppercase tracking-wider mb-2">Gift Included</p>
-              <div className="flex items-center gap-3 bg-gradient-to-r from-[#C35F33]/5 to-[#D9C61A]/5 rounded-xl p-3">
+              <div className="flex items-center gap-3 bg-gradient-to-r from-[#B8562E]/5 to-[#C4A235]/5 rounded-xl p-3">
                 <img 
                   src={form.gift.image_url} 
                   alt={form.gift.name}
@@ -1042,9 +1042,9 @@ export default function NewPostScriptPage() {
                 />
                 <div>
                   <p className="font-medium text-gray-900">{form.gift.name}</p>
-                  <p className="text-[#C35F33] font-semibold">${form.gift.price.toFixed(2)}</p>
+                  <p className="text-[#B8562E] font-semibold">${form.gift.price.toFixed(2)}</p>
                 </div>
-                <Gift size={20} className="text-[#C35F33] ml-auto" />
+                <Gift size={20} className="text-[#B8562E] ml-auto" />
               </div>
             </div>
           )}
@@ -1055,8 +1055,8 @@ export default function NewPostScriptPage() {
               <p className="text-xs text-gray-500 uppercase tracking-wider mb-2">Memories Attached</p>
               <div className="flex flex-wrap gap-2">
                 {form.memories.map(m => (
-                  <div key={m.id} className="flex items-center gap-2 bg-[#406A56]/5 border border-[#406A56]/20 rounded-lg px-3 py-2">
-                    <Sparkles size={14} className="text-[#406A56]" />
+                  <div key={m.id} className="flex items-center gap-2 bg-[#2D5A3D]/5 border border-[#2D5A3D]/20 rounded-lg px-3 py-2">
+                    <Sparkles size={14} className="text-[#2D5A3D]" />
                     <span className="text-sm text-gray-700">{m.title}</span>
                   </div>
                 ))}
@@ -1176,7 +1176,7 @@ export default function NewPostScriptPage() {
             <div 
               key={s.id}
               className={`flex-1 h-1 rounded-full transition-colors
-                ${s.id <= step ? 'bg-[#C35F33]' : 'bg-gray-200'}`}
+                ${s.id <= step ? 'bg-[#B8562E]' : 'bg-gray-200'}`}
             />
           ))}
         </div>
@@ -1190,7 +1190,7 @@ export default function NewPostScriptPage() {
         </div>
 
         {/* Navigation */}
-        <div className="fixed bottom-0 left-0 right-0 bg-[#FDF8F3]/98 backdrop-blur-sm border-t border-[#C35F33]/10 p-4">
+        <div className="fixed bottom-0 left-0 right-0 bg-[#FAFAF7]/98 backdrop-blur-sm border-t border-[#B8562E]/10 p-4">
           <div className="max-w-lg mx-auto flex gap-3">
             {step > 1 && (
               <button
@@ -1206,7 +1206,7 @@ export default function NewPostScriptPage() {
               <button
                 onClick={() => setStep(step + 1)}
                 disabled={!canProceed()}
-                className="flex-1 py-3 px-6 bg-[#C35F33] text-white rounded-xl font-medium 
+                className="flex-1 py-3 px-6 bg-[#B8562E] text-white rounded-xl font-medium 
                          hover:bg-[#A84E2A] transition-colors disabled:opacity-50 disabled:cursor-not-allowed
                          flex items-center justify-center gap-2"
               >
@@ -1226,7 +1226,7 @@ export default function NewPostScriptPage() {
                 <button
                   onClick={() => handleSave('scheduled')}
                   disabled={saving}
-                  className="flex-1 py-3 px-6 bg-[#C35F33] text-white rounded-xl font-medium 
+                  className="flex-1 py-3 px-6 bg-[#B8562E] text-white rounded-xl font-medium 
                            hover:bg-[#A84E2A] transition-colors disabled:opacity-50
                            flex items-center justify-center gap-2"
                 >

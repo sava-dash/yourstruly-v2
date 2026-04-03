@@ -307,7 +307,7 @@ export default function PhotoPreviewPanel({ media, allMedia, onClose, onNavigate
 
         {/* Tagging Mode Banner */}
         {taggingMode && (
-          <div className="absolute top-20 left-1/2 -translate-x-1/2 z-20 bg-[#406A56] text-white px-4 py-2 rounded-full text-sm font-medium shadow-lg">
+          <div className="absolute top-20 left-1/2 -translate-x-1/2 z-20 bg-[#2D5A3D] text-white px-4 py-2 rounded-full text-sm font-medium shadow-lg">
             Click on a face to tag • Press ESC to cancel
           </div>
         )}
@@ -334,7 +334,7 @@ export default function PhotoPreviewPanel({ media, allMedia, onClose, onNavigate
               {faces.filter(f => f.box_left !== undefined && f.contact_name && f.contact_name !== 'Unknown').map(face => (
                 <div
                   key={face.id}
-                  className="absolute border-2 border-[#406A56] rounded-lg pointer-events-none"
+                  className="absolute border-2 border-[#2D5A3D] rounded-lg pointer-events-none"
                   style={{
                     left: `${face.box_left}%`,
                     top: `${face.box_top}%`,
@@ -342,7 +342,7 @@ export default function PhotoPreviewPanel({ media, allMedia, onClose, onNavigate
                     height: `${face.box_height}%`
                   }}
                 >
-                  <span className="absolute -bottom-6 left-1/2 -translate-x-1/2 bg-[#406A56] text-white text-xs px-2 py-0.5 rounded whitespace-nowrap">
+                  <span className="absolute -bottom-6 left-1/2 -translate-x-1/2 bg-[#2D5A3D] text-white text-xs px-2 py-0.5 rounded whitespace-nowrap">
                     {face.contact_name}
                   </span>
                 </div>
@@ -374,7 +374,7 @@ export default function PhotoPreviewPanel({ media, allMedia, onClose, onNavigate
                       aria-label="Search" placeholder="Search contacts..."
                       value={contactSearch}
                       onChange={(e) => setContactSearch(e.target.value)}
-                      className="w-full pl-9 pr-3 py-2 rounded-lg border border-gray-200 text-sm focus:outline-none focus:border-[#406A56]"
+                      className="w-full pl-9 pr-3 py-2 rounded-lg border border-gray-200 text-sm focus:outline-none focus:border-[#2D5A3D]"
                       autoFocus
                     />
                   </div>
@@ -384,9 +384,9 @@ export default function PhotoPreviewPanel({ media, allMedia, onClose, onNavigate
                   {userProfile && (
                     <button
                       onClick={() => handleSelectContact('me')}
-                      className="w-full px-4 py-2.5 text-left hover:bg-[#406A56]/10 flex items-center gap-3 border-b border-gray-100"
+                      className="w-full px-4 py-2.5 text-left hover:bg-[#2D5A3D]/10 flex items-center gap-3 border-b border-gray-100"
                     >
-                      <div className="w-8 h-8 rounded-full bg-[#406A56] flex items-center justify-center text-white text-sm font-medium">
+                      <div className="w-8 h-8 rounded-full bg-[#2D5A3D] flex items-center justify-center text-white text-sm font-medium">
                         Me
                       </div>
                       <span className="font-medium text-[#1a1a1a]">{userProfile.full_name} (Me)</span>
@@ -397,7 +397,7 @@ export default function PhotoPreviewPanel({ media, allMedia, onClose, onNavigate
                     <button
                       key={contact.id}
                       onClick={() => handleSelectContact(contact)}
-                      className="w-full px-4 py-2.5 text-left hover:bg-[#406A56]/10 flex items-center gap-3"
+                      className="w-full px-4 py-2.5 text-left hover:bg-[#2D5A3D]/10 flex items-center gap-3"
                     >
                       <div className="w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center text-gray-600 text-sm font-medium">
                         {contact.full_name.charAt(0)}
@@ -427,10 +427,10 @@ export default function PhotoPreviewPanel({ media, allMedia, onClose, onNavigate
                 <div className="flex items-center gap-2">
                   <button
                     onClick={() => onEdit(media)}
-                    className="p-2 rounded-lg bg-[#406A56]/10 hover:bg-[#406A56]/20 transition-colors"
+                    className="p-2 rounded-lg bg-[#2D5A3D]/10 hover:bg-[#2D5A3D]/20 transition-colors"
                     title="Edit date & location"
                   >
-                    <Edit2 size={16} className="text-[#406A56]" />
+                    <Edit2 size={16} className="text-[#2D5A3D]" />
                   </button>
                   <button
                     onClick={onClose}
@@ -445,7 +445,7 @@ export default function PhotoPreviewPanel({ media, allMedia, onClose, onNavigate
               {/* Timestamp */}
               <div className="mb-5">
                 <div className="flex items-center gap-2 text-sm font-medium text-[#1a1a1a] mb-1">
-                  <Calendar size={14} className="text-[#406A56]" />
+                  <Calendar size={14} className="text-[#2D5A3D]" />
                   Date
                 </div>
                 {media.taken_at ? (
@@ -465,7 +465,7 @@ export default function PhotoPreviewPanel({ media, allMedia, onClose, onNavigate
               {/* Location */}
               <div className="mb-5">
                 <div className="flex items-center gap-2 text-sm font-medium text-[#1a1a1a] mb-1">
-                  <MapPin size={14} className="text-[#406A56]" />
+                  <MapPin size={14} className="text-[#2D5A3D]" />
                   Location
                 </div>
                 {locationName ? (
@@ -479,15 +479,15 @@ export default function PhotoPreviewPanel({ media, allMedia, onClose, onNavigate
               <div className="mb-5">
                 <div className="flex items-center justify-between mb-2">
                   <div className="flex items-center gap-2 text-sm font-medium text-[#1a1a1a]">
-                    <Users size={14} className="text-[#406A56]" />
+                    <Users size={14} className="text-[#2D5A3D]" />
                     People
                   </div>
                   <button
                     onClick={() => setTaggingMode(!taggingMode)}
                     className={`flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-medium transition-colors ${
                       taggingMode 
-                        ? 'bg-[#406A56] text-white' 
-                        : 'bg-[#406A56]/10 text-[#406A56] hover:bg-[#406A56]/20'
+                        ? 'bg-[#2D5A3D] text-white' 
+                        : 'bg-[#2D5A3D]/10 text-[#2D5A3D] hover:bg-[#2D5A3D]/20'
                     }`}
                   >
                     <UserPlus size={12} />
@@ -501,7 +501,7 @@ export default function PhotoPreviewPanel({ media, allMedia, onClose, onNavigate
                       {namedFaces.map(face => (
                         <span
                           key={face.id}
-                          className="px-2.5 py-1 rounded-full text-xs font-medium bg-[#406A56]/10 text-[#406A56]"
+                          className="px-2.5 py-1 rounded-full text-xs font-medium bg-[#2D5A3D]/10 text-[#2D5A3D]"
                         >
                           {face.contact_name}
                         </span>
@@ -519,7 +519,7 @@ export default function PhotoPreviewPanel({ media, allMedia, onClose, onNavigate
               {/* Related Memories & Wisdom */}
               <div>
                 <div className="flex items-center gap-2 text-sm font-medium text-[#1a1a1a] mb-3">
-                  <BookOpen size={14} className="text-[#406A56]" />
+                  <BookOpen size={14} className="text-[#2D5A3D]" />
                   Appears In
                 </div>
                 
@@ -533,7 +533,7 @@ export default function PhotoPreviewPanel({ media, allMedia, onClose, onNavigate
                       >
                         <div className="flex items-center gap-2 mb-1">
                           {item.type === 'memory' ? (
-                            <BookOpen size={12} className="text-[#406A56]" />
+                            <BookOpen size={12} className="text-[#2D5A3D]" />
                           ) : (
                             <Lightbulb size={12} className="text-amber-500" />
                           )}

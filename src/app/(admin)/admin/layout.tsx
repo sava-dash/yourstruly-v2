@@ -16,12 +16,12 @@ export default async function AdminLayout({
   }
 
   return (
-    <div className="min-h-screen bg-[#FDF8F3]">
+    <div className="min-h-screen bg-[#FAFAF7]">
       {/* Background gradient overlay */}
       <div className="fixed inset-0 pointer-events-none z-0">
-        <div className="absolute inset-0 bg-gradient-to-br from-[#FDF8F3] via-[#F5EDE5] to-[#FDF8F3]" />
-        <div className="absolute top-0 right-0 w-1/2 h-1/2 bg-gradient-radial from-[#406A56]/5 to-transparent" />
-        <div className="absolute bottom-0 left-0 w-1/2 h-1/2 bg-gradient-radial from-[#C35F33]/5 to-transparent" />
+        <div className="absolute inset-0 bg-gradient-to-br from-[#FAFAF7] via-[#F5EDE5] to-[#FAFAF7]" />
+        <div className="absolute top-0 right-0 w-1/2 h-1/2 bg-gradient-radial from-[#2D5A3D]/5 to-transparent" />
+        <div className="absolute bottom-0 left-0 w-1/2 h-1/2 bg-gradient-radial from-[#B8562E]/5 to-transparent" />
       </div>
 
       <div className="relative z-10 flex h-screen">

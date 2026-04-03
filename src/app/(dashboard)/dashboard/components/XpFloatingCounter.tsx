@@ -16,7 +16,7 @@ export function XpFloatingCounter({ show, amount }: XpFloatingCounterProps) {
           initial={{ opacity: 0, y: 20, scale: 0.8 }}
           animate={{ opacity: 1, y: 0, scale: 1 }}
           exit={{ opacity: 0, y: -20, scale: 0.8 }}
-          className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-50 flex items-center gap-2 px-6 py-3 rounded-full bg-gradient-to-r from-[#D9C61A] to-[#C35F33] text-white font-bold shadow-2xl"
+          className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-50 flex items-center gap-2 px-6 py-3 rounded-full bg-gradient-to-r from-[#C4A235] to-[#B8562E] text-white font-bold shadow-2xl"
         >
           <motion.div
             animate={{ rotate: [0, 360] }}

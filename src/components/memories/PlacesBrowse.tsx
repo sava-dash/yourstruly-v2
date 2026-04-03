@@ -121,14 +121,14 @@ export function PlacesBrowse({ memories }: PlacesBrowseProps) {
             <ChevronLeft size={20} />
           </button>
           <div className="flex items-center gap-3">
-            <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-[#406A56] to-[#5A8A72] flex items-center justify-center shadow-md">
+            <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-[#2D5A3D] to-[#5A8A72] flex items-center justify-center shadow-md">
               <MapPin size={24} className="text-white" />
             </div>
             <div>
               <h2 className="text-xl font-bold text-[#2d2d2d]">
                 Memories in {selectedLocation.name}
               </h2>
-              <p className="text-sm text-[#406A56]">
+              <p className="text-sm text-[#2D5A3D]">
                 {selectedLocation.memories.length} memories
               </p>
             </div>
@@ -163,13 +163,13 @@ export function PlacesBrowse({ memories }: PlacesBrowseProps) {
       <div className="flex items-center justify-between mb-6 flex-wrap gap-4">
         <div className="flex items-center gap-4">
           <div className="glass-card-page px-4 py-2 flex items-center gap-2">
-            <Globe size={18} className="text-[#406A56]" />
+            <Globe size={18} className="text-[#2D5A3D]" />
             <span className="text-sm font-medium text-[#2d2d2d]">
               {uniqueCountries} {uniqueCountries === 1 ? 'country' : 'countries'}
             </span>
           </div>
           <div className="glass-card-page px-4 py-2 flex items-center gap-2">
-            <MapPin size={18} className="text-[#D9C61A]" />
+            <MapPin size={18} className="text-[#C4A235]" />
             <span className="text-sm font-medium text-[#2d2d2d]">
               {locationGroups.length} {locationGroups.length === 1 ? 'place' : 'places'}
             </span>
@@ -181,7 +181,7 @@ export function PlacesBrowse({ memories }: PlacesBrowseProps) {
           <button
             onClick={() => setGroupBy('country')}
             className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-all flex items-center gap-1.5 ${
-              groupBy === 'country' ? 'bg-[#406A56] text-white' : 'text-[#406A56]/60 hover:text-[#406A56]'
+              groupBy === 'country' ? 'bg-[#2D5A3D] text-white' : 'text-[#2D5A3D]/60 hover:text-[#2D5A3D]'
             }`}
           >
             <Globe size={14} />
@@ -190,7 +190,7 @@ export function PlacesBrowse({ memories }: PlacesBrowseProps) {
           <button
             onClick={() => setGroupBy('city')}
             className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-all flex items-center gap-1.5 ${
-              groupBy === 'city' ? 'bg-[#406A56] text-white' : 'text-[#406A56]/60 hover:text-[#406A56]'
+              groupBy === 'city' ? 'bg-[#2D5A3D] text-white' : 'text-[#2D5A3D]/60 hover:text-[#2D5A3D]'
             }`}
           >
             <Building2 size={14} />
@@ -202,7 +202,7 @@ export function PlacesBrowse({ memories }: PlacesBrowseProps) {
       {locationGroups.length === 0 ? (
         <div className="empty-state">
           <div className="empty-state-icon">
-            <Map size={32} className="text-[#406A56]/50" />
+            <Map size={32} className="text-[#2D5A3D]/50" />
           </div>
           <h3 className="empty-state-title">No locations tagged yet</h3>
           <p className="empty-state-text">
@@ -234,9 +234,9 @@ export function PlacesBrowse({ memories }: PlacesBrowseProps) {
                              group-hover:scale-105 transition-transform duration-500"
                 />
               ) : (
-                <div className="absolute inset-0 bg-gradient-to-br from-[#406A56]/20 to-[#D9C61A]/20 
+                <div className="absolute inset-0 bg-gradient-to-br from-[#2D5A3D]/20 to-[#C4A235]/20 
                                 flex items-center justify-center">
-                  <MapPin size={32} className="text-[#406A56]/30" />
+                  <MapPin size={32} className="text-[#2D5A3D]/30" />
                 </div>
               )}
               
@@ -261,7 +261,7 @@ export function PlacesBrowse({ memories }: PlacesBrowseProps) {
               </div>
               
               {/* Hover glow */}
-              <div className="absolute inset-0 bg-[#D9C61A]/0 group-hover:bg-[#D9C61A]/10 transition-colors" />
+              <div className="absolute inset-0 bg-[#C4A235]/0 group-hover:bg-[#C4A235]/10 transition-colors" />
             </motion.button>
           ))}
         </motion.div>
@@ -270,7 +270,7 @@ export function PlacesBrowse({ memories }: PlacesBrowseProps) {
       {/* Unlocated memories section */}
       {memoriesWithoutLocation.length > 0 && (
         <div className="mt-8">
-          <div className="flex items-center gap-2 text-sm text-[#406A56]/60 mb-4">
+          <div className="flex items-center gap-2 text-sm text-[#2D5A3D]/60 mb-4">
             <Map size={16} />
             <span>{memoriesWithoutLocation.length} memories without location</span>
           </div>

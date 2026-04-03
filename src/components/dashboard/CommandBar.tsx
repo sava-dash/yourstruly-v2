@@ -143,9 +143,9 @@ export default function CommandBar() {
           <div className="mx-auto px-4" style={{ maxWidth: 776, width: '100%' }}>
             <div className="glass-modal rounded-refined-lg overflow-hidden">
               {/* Chat Header */}
-              <div className="flex items-center justify-between px-4 py-3 border-b border-[#C35F33]/10">
+              <div className="flex items-center justify-between px-4 py-3 border-b border-[#B8562E]/10">
                 <div className="flex items-center gap-2 text-gray-600 text-sm">
-                  <Sparkles size={14} className="text-[#C35F33]" />
+                  <Sparkles size={14} className="text-[#B8562E]" />
                   AI Assistant
                 </div>
                 <div className="flex items-center gap-3">
@@ -170,14 +170,14 @@ export default function CommandBar() {
               <div className="max-h-80 overflow-y-auto p-4 space-y-4">
                 {messages.length === 0 ? (
                   <div className="text-center py-6">
-                    <Sparkles size={28} className="mx-auto text-[#C35F33]/50 mb-3" />
+                    <Sparkles size={28} className="mx-auto text-[#B8562E]/50 mb-3" />
                     <p className="text-gray-500 text-sm mb-4">What's on your mind?</p>
                     <div className="flex flex-wrap justify-center gap-2">
                       {QUICK_PROMPTS.map((prompt) => (
                         <button
                           key={prompt}
                           onClick={() => handleQuickPrompt(prompt)}
-                          className="px-3 py-1.5 bg-[#C35F33]/5 hover:bg-[#C35F33]/10 text-gray-600 text-sm rounded-lg transition-colors border border-[#C35F33]/10"
+                          className="px-3 py-1.5 bg-[#B8562E]/5 hover:bg-[#B8562E]/10 text-gray-600 text-sm rounded-lg transition-colors border border-[#B8562E]/10"
                         >
                           {prompt}
                         </button>
@@ -193,20 +193,20 @@ export default function CommandBar() {
                       <div
                         className={`max-w-[85%] px-4 py-2.5 rounded-2xl ${
                           msg.role === 'user'
-                            ? 'bg-gradient-to-r from-[#C35F33] to-[#D9C61A] text-white'
-                            : 'bg-[#FDF8F3] text-gray-800 border border-[#C35F33]/10'
+                            ? 'bg-gradient-to-r from-[#B8562E] to-[#C4A235] text-white'
+                            : 'bg-[#FAFAF7] text-gray-800 border border-[#B8562E]/10'
                         }`}
                       >
                         <p className="text-sm whitespace-pre-wrap leading-relaxed">{msg.content}</p>
                         {/* Show sources for assistant messages */}
                         {msg.role === 'assistant' && msg.sources && msg.sources.length > 0 && (
-                          <div className="mt-2 pt-2 border-t border-[#C35F33]/10">
+                          <div className="mt-2 pt-2 border-t border-[#B8562E]/10">
                             <p className="text-xs text-gray-400 mb-1">Based on:</p>
                             <div className="flex flex-wrap gap-1">
                               {msg.sources.slice(0, 3).map((source, j) => (
                                 <span 
                                   key={j}
-                                  className="px-2 py-0.5 bg-[#C35F33]/5 rounded text-xs text-gray-500"
+                                  className="px-2 py-0.5 bg-[#B8562E]/5 rounded text-xs text-gray-500"
                                 >
                                   {source.type === 'memory' ? '📸' : source.type === 'contact' ? '👤' : source.type === 'pet' ? '🐾' : '📝'} {source.title}
                                 </span>
@@ -220,9 +220,9 @@ export default function CommandBar() {
                 )}
                 {isLoading && (
                   <div className="flex justify-start">
-                    <div className="bg-[#FDF8F3] px-4 py-3 rounded-2xl border border-[#C35F33]/10">
+                    <div className="bg-[#FAFAF7] px-4 py-3 rounded-2xl border border-[#B8562E]/10">
                       <div className="flex items-center gap-2">
-                        <Loader2 size={14} className="animate-spin text-[#C35F33]" />
+                        <Loader2 size={14} className="animate-spin text-[#B8562E]" />
                         <span className="text-gray-500 text-sm">Thinking...</span>
                       </div>
                     </div>
@@ -242,7 +242,7 @@ export default function CommandBar() {
           <div className="flex items-center gap-3 px-4 py-3 glass rounded-refined-lg card-shadow-md">
             <button 
               onClick={() => setIsExpanded(!isExpanded)}
-              className="text-gray-400 hover:text-[#C35F33] transition-colors flex-shrink-0"
+              className="text-gray-400 hover:text-[#B8562E] transition-colors flex-shrink-0"
             >
               {isExpanded ? <ChevronDown size={20} /> : <ChevronUp size={20} />}
             </button>
@@ -267,7 +267,7 @@ export default function CommandBar() {
               className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-sm transition-all ${
                 isListening 
                   ? 'bg-red-500 text-white animate-pulse' 
-                  : 'bg-[#C35F33]/10 text-[#C35F33] hover:bg-[#C35F33]/20'
+                  : 'bg-[#B8562E]/10 text-[#B8562E] hover:bg-[#B8562E]/20'
               }`}
             >
               <Mic size={14} />
@@ -277,7 +277,7 @@ export default function CommandBar() {
             <button 
               onClick={handleSubmit}
               disabled={isLoading || !input.trim()}
-              className="w-9 h-9 bg-gradient-to-r from-[#C35F33] to-[#D9C61A] rounded-xl flex items-center justify-center text-white disabled:opacity-50 transition-all hover:shadow-lg hover:shadow-[#C35F33]/25"
+              className="w-9 h-9 bg-gradient-to-r from-[#B8562E] to-[#C4A235] rounded-xl flex items-center justify-center text-white disabled:opacity-50 transition-all hover:shadow-lg hover:shadow-[#B8562E]/25"
             >
               {isLoading ? (
                 <Loader2 size={16} className="animate-spin" />

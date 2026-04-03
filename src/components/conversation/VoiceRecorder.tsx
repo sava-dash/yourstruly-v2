@@ -631,7 +631,7 @@ export function VoiceRecorder({
           animate={{ opacity: isRecording ? 1 : 0.6 }}
         >
           {countdown !== null ? (
-            <span className="text-[#406A56] font-medium">Get ready...</span>
+            <span className="text-[#2D5A3D] font-medium">Get ready...</span>
           ) : isRecording ? (
             <>
               <span className="voice-recorder-timer-dot" />

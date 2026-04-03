@@ -87,7 +87,7 @@ const TORN_PATHS: Record<EdgeVariant, { viewBox: string; path: string }> = {
 export default function TornPaperEdge({
   variant = 4,
   position = 'bottom',
-  color = '#F2F1E5',
+  color = '#F5F3EE',
   height = 20,
   className = '',
   flip = false,
@@ -170,7 +170,7 @@ export function BrandTornEdge({
 export function TornPaperDivider({
   variant = 4,
   topColor = '#FFFEF9',
-  bottomColor = '#F2F1E5',
+  bottomColor = '#F5F3EE',
   height = 24,
   className = '',
 }: {

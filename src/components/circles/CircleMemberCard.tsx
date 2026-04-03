@@ -39,14 +39,14 @@ export default function CircleMemberCard({
     switch (role) {
       case 'owner':
         return (
-          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium bg-[#D9C61A]/20 text-[#8a7c08]">
+          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium bg-[#C4A235]/20 text-[#8a7c08]">
             <Crown size={12} />
             Owner
           </span>
         )
       case 'admin':
         return (
-          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium bg-[#406A56]/15 text-[#406A56]">
+          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium bg-[#2D5A3D]/15 text-[#2D5A3D]">
             <Shield size={12} />
             Admin
           </span>
@@ -70,7 +70,7 @@ export default function CircleMemberCard({
   }
 
   return (
-    <div className="flex items-center justify-between p-4 bg-white border border-[#406A56]/10 rounded-xl hover:bg-[#406A56]/[0.02] transition-colors">
+    <div className="flex items-center justify-between p-4 bg-white border border-[#2D5A3D]/10 rounded-xl hover:bg-[#2D5A3D]/[0.02] transition-colors">
       <div className="flex items-center gap-3">
         {/* Avatar */}
         {member.avatar_url ? (
@@ -80,7 +80,7 @@ export default function CircleMemberCard({
             className="w-12 h-12 rounded-full object-cover"
           />
         ) : (
-          <div className="w-12 h-12 rounded-full bg-gradient-to-br from-[#406A56] to-[#8DACAB] flex items-center justify-center text-white font-semibold text-lg">
+          <div className="w-12 h-12 rounded-full bg-gradient-to-br from-[#2D5A3D] to-[#8DACAB] flex items-center justify-center text-white font-semibold text-lg">
             {member.full_name.charAt(0)}
           </div>
         )}
@@ -104,7 +104,7 @@ export default function CircleMemberCard({
         <div className="relative">
           <button
             onClick={() => setShowMenu(!showMenu)}
-            className="p-2 text-[#406A56]/50 hover:text-[#406A56] hover:bg-[#406A56]/10 rounded-lg transition-colors"
+            className="p-2 text-[#2D5A3D]/50 hover:text-[#2D5A3D] hover:bg-[#2D5A3D]/10 rounded-lg transition-colors"
           >
             <MoreVertical size={18} />
           </button>
@@ -115,14 +115,14 @@ export default function CircleMemberCard({
                 className="fixed inset-0 z-10"
                 onClick={() => setShowMenu(false)}
               />
-              <div className="absolute right-0 top-full mt-1 w-48 bg-white rounded-xl shadow-lg border border-[#406A56]/10 py-1 z-20">
+              <div className="absolute right-0 top-full mt-1 w-48 bg-white rounded-xl shadow-lg border border-[#2D5A3D]/10 py-1 z-20">
                 {member.role === 'member' && (
                   <button
                     onClick={() => {
                       onInitiateVote(member.id, 'promote')
                       setShowMenu(false)
                     }}
-                    className="w-full flex items-center gap-2 px-4 py-2 text-sm text-[#406A56] hover:bg-[#406A56]/5 transition-colors"
+                    className="w-full flex items-center gap-2 px-4 py-2 text-sm text-[#2D5A3D] hover:bg-[#2D5A3D]/5 transition-colors"
                   >
                     <ArrowUp size={16} />
                     Initiate Promote Vote
@@ -134,7 +134,7 @@ export default function CircleMemberCard({
                       onInitiateVote(member.id, 'demote')
                       setShowMenu(false)
                     }}
-                    className="w-full flex items-center gap-2 px-4 py-2 text-sm text-[#C35F33] hover:bg-[#C35F33]/5 transition-colors"
+                    className="w-full flex items-center gap-2 px-4 py-2 text-sm text-[#B8562E] hover:bg-[#B8562E]/5 transition-colors"
                   >
                     <ArrowDown size={16} />
                     Initiate Demote Vote

@@ -190,7 +190,7 @@ export default function DigitizeModal({ isOpen, onClose, onComplete }: DigitizeM
         {/* Header */}
         <div className="flex items-center justify-between p-4 border-b border-white/40 bg-white/50">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-[#D9C61A]/20 flex items-center justify-center">
+            <div className="w-10 h-10 rounded-xl bg-[#C4A235]/20 flex items-center justify-center">
               <Scan className="w-5 h-5 text-[#8a7c08]" />
             </div>
             <div>
@@ -231,10 +231,10 @@ export default function DigitizeModal({ isOpen, onClose, onComplete }: DigitizeM
                 {/* Camera option */}
                 <button
                   onClick={() => cameraInputRef.current?.click()}
-                  className="flex flex-col items-center gap-3 p-6 rounded-xl border-2 border-dashed border-[#406A56]/30 hover:border-[#406A56] hover:bg-[#406A56]/5 transition-all"
+                  className="flex flex-col items-center gap-3 p-6 rounded-xl border-2 border-dashed border-[#2D5A3D]/30 hover:border-[#2D5A3D] hover:bg-[#2D5A3D]/5 transition-all"
                 >
-                  <div className="w-14 h-14 rounded-full bg-[#406A56]/10 flex items-center justify-center">
-                    <Camera className="w-7 h-7 text-[#406A56]" />
+                  <div className="w-14 h-14 rounded-full bg-[#2D5A3D]/10 flex items-center justify-center">
+                    <Camera className="w-7 h-7 text-[#2D5A3D]" />
                   </div>
                   <div className="text-center">
                     <p className="font-medium text-[#2d2d2d]">Take Photo</p>
@@ -253,9 +253,9 @@ export default function DigitizeModal({ isOpen, onClose, onComplete }: DigitizeM
                 {/* Upload option */}
                 <button
                   onClick={() => fileInputRef.current?.click()}
-                  className="flex flex-col items-center gap-3 p-6 rounded-xl border-2 border-dashed border-[#D9C61A]/30 hover:border-[#D9C61A] hover:bg-[#D9C61A]/5 transition-all"
+                  className="flex flex-col items-center gap-3 p-6 rounded-xl border-2 border-dashed border-[#C4A235]/30 hover:border-[#C4A235] hover:bg-[#C4A235]/5 transition-all"
                 >
-                  <div className="w-14 h-14 rounded-full bg-[#D9C61A]/10 flex items-center justify-center">
+                  <div className="w-14 h-14 rounded-full bg-[#C4A235]/10 flex items-center justify-center">
                     <Upload className="w-7 h-7 text-[#8a7c08]" />
                   </div>
                   <div className="text-center">
@@ -275,13 +275,13 @@ export default function DigitizeModal({ isOpen, onClose, onComplete }: DigitizeM
               {/* Options */}
               <div className="flex items-center justify-between p-3 bg-gray-50 rounded-xl">
                 <div className="flex items-center gap-2">
-                  <Sparkles className="w-4 h-4 text-[#D9C61A]" />
+                  <Sparkles className="w-4 h-4 text-[#C4A235]" />
                   <span className="text-sm text-[#2d2d2d]">Use AI for detection</span>
                 </div>
                 <button
                   onClick={() => setUseAI(!useAI)}
                   className={`w-10 h-6 rounded-full transition-colors ${
-                    useAI ? 'bg-[#406A56]' : 'bg-gray-300'
+                    useAI ? 'bg-[#2D5A3D]' : 'bg-gray-300'
                   }`}
                 >
                   <div className={`w-4 h-4 bg-white rounded-full shadow transition-transform mx-1 ${
@@ -354,7 +354,7 @@ export default function DigitizeModal({ isOpen, onClose, onComplete }: DigitizeM
                         setSelectedPhotos(new Set(detectedPhotos.map(p => p.id)))
                       }
                     }}
-                    className="text-sm text-[#406A56] hover:underline"
+                    className="text-sm text-[#2D5A3D] hover:underline"
                   >
                     {selectedPhotos.size === detectedPhotos.length ? 'Deselect all' : 'Select all'}
                   </button>
@@ -366,7 +366,7 @@ export default function DigitizeModal({ isOpen, onClose, onComplete }: DigitizeM
                     <p>No photos detected</p>
                     <button
                       onClick={() => setStep('capture')}
-                      className="mt-2 text-sm text-[#406A56] hover:underline"
+                      className="mt-2 text-sm text-[#2D5A3D] hover:underline"
                     >
                       Try a different image
                     </button>
@@ -379,7 +379,7 @@ export default function DigitizeModal({ isOpen, onClose, onComplete }: DigitizeM
                         onClick={() => togglePhotoSelection(photo.id)}
                         className={`relative aspect-square rounded-xl overflow-hidden border-2 transition-all ${
                           selectedPhotos.has(photo.id)
-                            ? 'border-[#406A56] ring-2 ring-[#406A56]/20'
+                            ? 'border-[#2D5A3D] ring-2 ring-[#2D5A3D]/20'
                             : 'border-transparent hover:border-gray-300'
                         }`}
                       >
@@ -395,7 +395,7 @@ export default function DigitizeModal({ isOpen, onClose, onComplete }: DigitizeM
                           </div>
                         )}
                         {selectedPhotos.has(photo.id) && (
-                          <div className="absolute top-2 right-2 w-6 h-6 bg-[#406A56] rounded-full flex items-center justify-center">
+                          <div className="absolute top-2 right-2 w-6 h-6 bg-[#2D5A3D] rounded-full flex items-center justify-center">
                             <Check className="w-4 h-4 text-white" />
                           </div>
                         )}
@@ -423,7 +423,7 @@ export default function DigitizeModal({ isOpen, onClose, onComplete }: DigitizeM
                   <button
                     onClick={() => setEnhance(!enhance)}
                     className={`w-10 h-6 rounded-full transition-colors ${
-                      enhance ? 'bg-[#406A56]' : 'bg-gray-300'
+                      enhance ? 'bg-[#2D5A3D]' : 'bg-gray-300'
                     }`}
                   >
                     <div className={`w-4 h-4 bg-white rounded-full shadow transition-transform mx-1 ${
@@ -438,8 +438,8 @@ export default function DigitizeModal({ isOpen, onClose, onComplete }: DigitizeM
           {/* Step: Processing */}
           {step === 'process' && (
             <div className="py-8 text-center">
-              <div className="w-20 h-20 mx-auto mb-4 rounded-full bg-[#406A56]/10 flex items-center justify-center">
-                <Loader2 className="w-10 h-10 text-[#406A56] animate-spin" />
+              <div className="w-20 h-20 mx-auto mb-4 rounded-full bg-[#2D5A3D]/10 flex items-center justify-center">
+                <Loader2 className="w-10 h-10 text-[#2D5A3D] animate-spin" />
               </div>
               <h3 className="font-semibold text-[#2d2d2d] mb-1">Processing your photos</h3>
               <p className="text-sm text-[#666]">
@@ -485,7 +485,7 @@ export default function DigitizeModal({ isOpen, onClose, onComplete }: DigitizeM
               <button
                 onClick={processPhotos}
                 disabled={selectedPhotos.size === 0}
-                className="flex items-center gap-2 px-5 py-2.5 bg-[#406A56] text-white rounded-xl hover:bg-[#355a48] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                className="flex items-center gap-2 px-5 py-2.5 bg-[#2D5A3D] text-white rounded-xl hover:bg-[#355a48] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 Save {selectedPhotos.size} photo{selectedPhotos.size !== 1 ? 's' : ''}
                 <ChevronRight className="w-4 h-4" />
@@ -498,7 +498,7 @@ export default function DigitizeModal({ isOpen, onClose, onComplete }: DigitizeM
               <div />
               <button
                 onClick={handleComplete}
-                className="flex items-center gap-2 px-5 py-2.5 bg-[#406A56] text-white rounded-xl hover:bg-[#355a48] transition-colors"
+                className="flex items-center gap-2 px-5 py-2.5 bg-[#2D5A3D] text-white rounded-xl hover:bg-[#355a48] transition-colors"
               >
                 View in Gallery
                 <ChevronRight className="w-4 h-4" />

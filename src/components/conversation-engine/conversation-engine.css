@@ -34,7 +34,7 @@
 }
 
 .ce-bubble-user {
-  background: #406A56;
+  background: #2D5A3D;
   color: white;
   border-bottom-right-radius: 6px;
 }
@@ -95,7 +95,7 @@
   display: flex;
   align-items: center;
   gap: 8px;
-  color: #406A56;
+  color: #2D5A3D;
   font-size: 13px;
   font-weight: 600;
 }
@@ -105,7 +105,7 @@
   align-items: center;
   gap: 6px;
   padding: 8px 16px;
-  background: #406A56;
+  background: #2D5A3D;
   color: white;
   border: none;
   border-radius: 10px;
@@ -127,7 +127,7 @@
 .ce-saved-toast {
   text-align: center;
   padding: 8px;
-  color: #406A56;
+  color: #2D5A3D;
   font-size: 13px;
   font-weight: 600;
 }
@@ -137,7 +137,7 @@
   font-size: 14px;
   color: #2d2d2d;
   background: rgba(64, 106, 86, 0.06);
-  border-left: 3px solid #406A56;
+  border-left: 3px solid #2D5A3D;
   margin: 0 16px;
   border-radius: 0 8px 8px 0;
   min-height: 36px;
@@ -150,13 +150,13 @@
 }
 
 .ce-live-interim {
-  color: #406A56;
+  color: #2D5A3D;
   font-style: italic;
   opacity: 0.8;
 }
 
 .ce-live-listening {
-  color: #406A56;
+  color: #2D5A3D;
   font-style: italic;
   opacity: 0.6;
 }
@@ -189,7 +189,7 @@
 
 .ce-textarea:focus {
   outline: none;
-  border-color: #406A56;
+  border-color: #2D5A3D;
   box-shadow: 0 0 0 3px rgba(64, 106, 86, 0.08);
 }
 
@@ -219,7 +219,7 @@
 
 .ce-icon-btn:hover {
   background: rgba(64, 106, 86, 0.12);
-  color: #406A56;
+  color: #2D5A3D;
 }
 
 .ce-icon-btn:disabled {
@@ -251,7 +251,7 @@
   justify-content: center;
   border: none;
   border-radius: 12px;
-  background: #406A56;
+  background: #2D5A3D;
   color: white;
   cursor: pointer;
   transition: all 0.15s;
@@ -291,7 +291,7 @@
   align-items: center;
   gap: 6px;
   padding: 8px 20px;
-  background: linear-gradient(135deg, #406A56, #8DACAB);
+  background: linear-gradient(135deg, #2D5A3D, #8DACAB);
   color: white;
   border: none;
   border-radius: 12px;

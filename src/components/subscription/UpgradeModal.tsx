@@ -50,10 +50,10 @@ export function UpgradeModal({ plan, isOpen, onClose, onConfirm }: UpgradeModalP
         </div>
 
         <div className="mb-6">
-          <div className="bg-[#406A56]/5 rounded-xl p-4 mb-4">
+          <div className="bg-[#2D5A3D]/5 rounded-xl p-4 mb-4">
             <div className="flex items-center justify-between">
               <span className="font-medium text-[#2d2d2d]">{plan.name}</span>
-              <span className="text-2xl font-bold text-[#406A56]">
+              <span className="text-2xl font-bold text-[#2D5A3D]">
                 ${plan.price_monthly}/mo
               </span>
             </div>
@@ -80,7 +80,7 @@ export function UpgradeModal({ plan, isOpen, onClose, onConfirm }: UpgradeModalP
           <button
             onClick={handleConfirm}
             disabled={loading}
-            className="flex-1 py-3 px-4 bg-[#406A56] text-white font-semibold rounded-xl hover:bg-[#4a7a64] transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
+            className="flex-1 py-3 px-4 bg-[#2D5A3D] text-white font-semibold rounded-xl hover:bg-[#234A31] transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
           >
             {loading ? (
               <Loader2 size={18} className="animate-spin" />

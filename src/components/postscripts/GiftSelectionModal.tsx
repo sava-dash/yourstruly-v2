@@ -305,9 +305,9 @@ export function GiftSelectionModal({
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
       <div className="bg-white rounded-2xl w-full max-w-4xl max-h-[90vh] overflow-hidden flex flex-col shadow-2xl">
         {/* Header */}
-        <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100 bg-gradient-to-r from-[#C35F33]/5 to-transparent">
+        <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100 bg-gradient-to-r from-[#B8562E]/5 to-transparent">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-[#C35F33] flex items-center justify-center">
+            <div className="w-10 h-10 rounded-xl bg-[#B8562E] flex items-center justify-center">
               <Gift className="w-5 h-5 text-white" />
             </div>
             <div>
@@ -376,12 +376,12 @@ export function GiftSelectionModal({
                       setShowFlowersOnly(false)
                       setStep('browse')
                     }}
-                    className="group text-left p-6 rounded-2xl border-2 border-gray-200 hover:border-[#C35F33]/50 
-                             hover:bg-[#C35F33]/5 transition-all"
+                    className="group text-left p-6 rounded-2xl border-2 border-gray-200 hover:border-[#B8562E]/50 
+                             hover:bg-[#B8562E]/5 transition-all"
                   >
-                    <div className="w-14 h-14 rounded-xl bg-[#C35F33]/10 flex items-center justify-center mb-4
-                                  group-hover:bg-[#C35F33]/20 transition-colors">
-                      <ShoppingBag className="w-7 h-7 text-[#C35F33]" />
+                    <div className="w-14 h-14 rounded-xl bg-[#B8562E]/10 flex items-center justify-center mb-4
+                                  group-hover:bg-[#B8562E]/20 transition-colors">
+                      <ShoppingBag className="w-7 h-7 text-[#B8562E]" />
                     </div>
                     <h3 className="font-semibold text-lg text-gray-900 mb-2">Choose a Gift</h3>
                     <p className="text-sm text-gray-500">
@@ -398,21 +398,21 @@ export function GiftSelectionModal({
                   }}
                   className={`group text-left p-6 rounded-2xl border-2 transition-all
                     ${!isNearTermDelivery 
-                      ? 'border-[#406A56] bg-[#406A56]/5 hover:bg-[#406A56]/10' 
-                      : 'border-gray-200 hover:border-[#406A56]/50 hover:bg-[#406A56]/5'
+                      ? 'border-[#2D5A3D] bg-[#2D5A3D]/5 hover:bg-[#2D5A3D]/10' 
+                      : 'border-gray-200 hover:border-[#2D5A3D]/50 hover:bg-[#2D5A3D]/5'
                     }`}
                 >
                   <div className={`w-14 h-14 rounded-xl flex items-center justify-center mb-4 transition-colors
                     ${!isNearTermDelivery 
-                      ? 'bg-[#406A56]/20 group-hover:bg-[#406A56]/30' 
-                      : 'bg-[#406A56]/10 group-hover:bg-[#406A56]/20'
+                      ? 'bg-[#2D5A3D]/20 group-hover:bg-[#2D5A3D]/30' 
+                      : 'bg-[#2D5A3D]/10 group-hover:bg-[#2D5A3D]/20'
                     }`}>
-                    <DollarSign className="w-7 h-7 text-[#406A56]" />
+                    <DollarSign className="w-7 h-7 text-[#2D5A3D]" />
                   </div>
                   <div className="flex items-center gap-2 mb-2">
                     <h3 className="font-semibold text-lg text-gray-900">Gift of Choice</h3>
                     {!isNearTermDelivery && (
-                      <span className="px-2 py-0.5 bg-[#406A56] text-white text-xs rounded-full">
+                      <span className="px-2 py-0.5 bg-[#2D5A3D] text-white text-xs rounded-full">
                         Recommended
                       </span>
                     )}
@@ -421,7 +421,7 @@ export function GiftSelectionModal({
                     Set an amount and let them choose their perfect gift from hundreds of options.
                   </p>
                   {!isNearTermDelivery && (
-                    <p className="text-xs text-[#406A56] mt-2">
+                    <p className="text-xs text-[#2D5A3D] mt-2">
                       ✓ Best for future delivery — gifts may change over time
                     </p>
                   )}
@@ -434,8 +434,8 @@ export function GiftSelectionModal({
           {step === 'flex_amount' && (
             <div className="space-y-6 max-w-xl mx-auto">
               <div className="text-center mb-8">
-                <div className="w-16 h-16 rounded-2xl bg-[#406A56]/10 flex items-center justify-center mx-auto mb-4">
-                  <DollarSign className="w-8 h-8 text-[#406A56]" />
+                <div className="w-16 h-16 rounded-2xl bg-[#2D5A3D]/10 flex items-center justify-center mx-auto mb-4">
+                  <DollarSign className="w-8 h-8 text-[#2D5A3D]" />
                 </div>
                 <h3 className="text-xl font-semibold text-gray-900 mb-2">
                   How much would you like to give?
@@ -453,7 +453,7 @@ export function GiftSelectionModal({
                     onClick={() => setFlexAmount(amount.value)}
                     className={`relative p-4 rounded-xl border-2 text-center transition-all
                       ${flexAmount === amount.value
-                        ? 'border-[#406A56] bg-[#406A56]/10'
+                        ? 'border-[#2D5A3D] bg-[#2D5A3D]/10'
                         : 'border-gray-200 hover:border-gray-300'
                       }`}
                   >
@@ -463,7 +463,7 @@ export function GiftSelectionModal({
                         Popular
                       </span>
                     )}
-                    <span className={`text-lg font-bold ${flexAmount === amount.value ? 'text-[#406A56]' : 'text-gray-900'}`}>
+                    <span className={`text-lg font-bold ${flexAmount === amount.value ? 'text-[#2D5A3D]' : 'text-gray-900'}`}>
                       {amount.label}
                     </span>
                   </button>
@@ -484,17 +484,17 @@ export function GiftSelectionModal({
                     value={flexAmount}
                     onChange={(e) => setFlexAmount(Math.max(15, parseInt(e.target.value) || 15))}
                     className="w-full pl-8 pr-4 py-3 bg-gray-50 border border-gray-200 rounded-xl
-                             focus:ring-2 focus:ring-[#406A56]/20 focus:border-[#406A56] outline-none"
+                             focus:ring-2 focus:ring-[#2D5A3D]/20 focus:border-[#2D5A3D] outline-none"
                   />
                 </div>
                 <p className="text-xs text-gray-400 mt-1">Minimum $15</p>
               </div>
 
               {/* Preview Card */}
-              <div className="p-4 bg-gradient-to-br from-[#406A56]/10 to-[#406A56]/5 rounded-xl">
+              <div className="p-4 bg-gradient-to-br from-[#2D5A3D]/10 to-[#2D5A3D]/5 rounded-xl">
                 <div className="flex items-center gap-4">
                   <div className="w-16 h-16 bg-white rounded-lg flex items-center justify-center shadow-sm">
-                    <Gift className="w-8 h-8 text-[#406A56]" />
+                    <Gift className="w-8 h-8 text-[#2D5A3D]" />
                   </div>
                   <div className="flex-1">
                     <p className="font-semibold text-gray-900">Gift of Choice - {formatPrice(flexAmount)}</p>
@@ -507,7 +507,7 @@ export function GiftSelectionModal({
 
               <button
                 onClick={() => setStep('choose_type')}
-                className="text-[#C35F33] hover:underline text-sm"
+                className="text-[#B8562E] hover:underline text-sm"
               >
                 ← Choose a different gift type
               </button>
@@ -534,7 +534,7 @@ export function GiftSelectionModal({
                   onClick={() => setShowFlowersOnly(false)}
                   className={`px-4 py-2 rounded-full text-sm font-medium transition-all flex items-center gap-2
                     ${!showFlowersOnly 
-                      ? 'bg-[#C35F33]/10 text-[#C35F33] border-2 border-[#C35F33]/30' 
+                      ? 'bg-[#B8562E]/10 text-[#B8562E] border-2 border-[#B8562E]/30' 
                       : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
                     }`}
                 >
@@ -552,7 +552,7 @@ export function GiftSelectionModal({
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   className="w-full pl-12 pr-4 py-3 bg-gray-50 border border-gray-200 rounded-xl
-                           focus:ring-2 focus:ring-[#C35F33]/20 focus:border-[#C35F33] outline-none"
+                           focus:ring-2 focus:ring-[#B8562E]/20 focus:border-[#B8562E] outline-none"
                 />
               </div>
 
@@ -567,7 +567,7 @@ export function GiftSelectionModal({
                         onClick={() => setSelectedCategory(cat.id)}
                         className={`px-4 py-2 rounded-full text-sm font-medium whitespace-nowrap transition-all flex items-center gap-2
                           ${isSelected 
-                            ? 'bg-[#C35F33] text-white shadow-md' 
+                            ? 'bg-[#B8562E] text-white shadow-md' 
                             : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
                           }`}
                       >
@@ -589,7 +589,7 @@ export function GiftSelectionModal({
                       onClick={() => setSelectedPriceRange(range.key)}
                       className={`px-3 py-1.5 rounded-full text-xs font-medium whitespace-nowrap transition-all
                         ${isSelected 
-                          ? 'bg-[#406A56] text-white' 
+                          ? 'bg-[#2D5A3D] text-white' 
                           : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
                         }`}
                     >
@@ -607,7 +607,7 @@ export function GiftSelectionModal({
                 {searchQuery && (
                   <button
                     onClick={() => setSearchQuery('')}
-                    className="text-[#C35F33] hover:underline"
+                    className="text-[#B8562E] hover:underline"
                   >
                     Clear search
                   </button>
@@ -627,7 +627,7 @@ export function GiftSelectionModal({
               {/* Products Grid */}
               {isLoading ? (
                 <div className="flex items-center justify-center py-12">
-                  <Loader2 className="w-8 h-8 animate-spin text-[#C35F33]" />
+                  <Loader2 className="w-8 h-8 animate-spin text-[#B8562E]" />
                 </div>
               ) : (
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -636,7 +636,7 @@ export function GiftSelectionModal({
                       key={product.id}
                       onClick={() => handleProductSelect(product)}
                       className="group text-left bg-white border border-gray-200 rounded-xl overflow-hidden
-                               hover:border-[#C35F33]/50 hover:shadow-lg transition-all"
+                               hover:border-[#B8562E]/50 hover:shadow-lg transition-all"
                     >
                       <div className="aspect-square bg-gray-100 relative overflow-hidden">
                         <img
@@ -662,7 +662,7 @@ export function GiftSelectionModal({
                         )}
                         <p className="text-sm text-gray-500 mb-3 line-clamp-2">{product.description}</p>
                         <div className="flex items-center justify-between">
-                          <span className="text-lg font-bold text-[#C35F33]">
+                          <span className="text-lg font-bold text-[#B8562E]">
                             {formatPrice(product.price, product.currency)}
                           </span>
                           <span className="text-xs text-gray-400 flex items-center gap-1">
@@ -688,7 +688,7 @@ export function GiftSelectionModal({
                       setSelectedCategory('all')
                       setSelectedPriceRange('all')
                     }}
-                    className="mt-4 text-[#C35F33] hover:underline text-sm"
+                    className="mt-4 text-[#B8562E] hover:underline text-sm"
                   >
                     Clear all filters
                   </button>
@@ -697,7 +697,7 @@ export function GiftSelectionModal({
 
               <button
                 onClick={() => setStep('choose_type')}
-                className="text-[#C35F33] hover:underline text-sm"
+                className="text-[#B8562E] hover:underline text-sm"
               >
                 ← Choose a different gift type
               </button>
@@ -720,7 +720,7 @@ export function GiftSelectionModal({
                     <p className="text-xs text-gray-400">{selectedProduct.brandName}</p>
                   )}
                   <p className="text-sm text-gray-500 mb-2">{selectedProduct.description}</p>
-                  <span className="text-lg font-bold text-[#C35F33]">
+                  <span className="text-lg font-bold text-[#B8562E]">
                     {formatPrice(selectedProduct.price, selectedProduct.currency)}
                   </span>
                 </div>
@@ -761,12 +761,12 @@ export function GiftSelectionModal({
                           onClick={() => setDeliveryTiming(option.key as typeof deliveryTiming)}
                           className={`w-full flex items-center gap-4 p-4 rounded-xl border-2 text-left transition-all
                             ${deliveryTiming === option.key
-                              ? 'border-[#C35F33] bg-[#C35F33]/5'
+                              ? 'border-[#B8562E] bg-[#B8562E]/5'
                               : 'border-gray-200 hover:border-gray-300'
                             }`}
                         >
                           <div className={`w-10 h-10 rounded-lg flex items-center justify-center
-                                         ${deliveryTiming === option.key ? 'bg-[#C35F33] text-white' : 'bg-gray-100 text-gray-500'}`}>
+                                         ${deliveryTiming === option.key ? 'bg-[#B8562E] text-white' : 'bg-gray-100 text-gray-500'}`}>
                             <Icon className="w-5 h-5" />
                           </div>
                           <div className="flex-1">
@@ -774,7 +774,7 @@ export function GiftSelectionModal({
                             <p className="text-sm text-gray-500">{option.description}</p>
                           </div>
                           {deliveryTiming === option.key && (
-                            <CheckCircle2 className="w-5 h-5 text-[#C35F33]" />
+                            <CheckCircle2 className="w-5 h-5 text-[#B8562E]" />
                           )}
                         </button>
                       )
@@ -796,7 +796,7 @@ export function GiftSelectionModal({
                     onChange={(e) => setGiftDeliveryDate(e.target.value)}
                     min={new Date().toISOString().split('T')[0]}
                     className="w-full px-4 py-2 bg-white border border-gray-200 rounded-lg
-                             focus:ring-2 focus:ring-[#C35F33]/20 focus:border-[#C35F33] outline-none"
+                             focus:ring-2 focus:ring-[#B8562E]/20 focus:border-[#B8562E] outline-none"
                   />
                 </div>
               )}
@@ -816,7 +816,7 @@ export function GiftSelectionModal({
                           onClick={() => setDeliveryEvent(event.key)}
                           className={`p-3 rounded-lg border text-left transition-all
                             ${deliveryEvent === event.key
-                              ? 'border-[#C35F33] bg-[#C35F33]/10'
+                              ? 'border-[#B8562E] bg-[#B8562E]/10'
                               : 'border-gray-200 bg-white hover:border-gray-300'
                             }`}
                         >
@@ -836,7 +836,7 @@ export function GiftSelectionModal({
                         value={deliveryOffsetDays}
                         onChange={(e) => setDeliveryOffsetDays(Number(e.target.value))}
                         className="px-4 py-2 bg-white border border-gray-200 rounded-lg
-                                 focus:ring-2 focus:ring-[#C35F33]/20 focus:border-[#C35F33] outline-none"
+                                 focus:ring-2 focus:ring-[#B8562E]/20 focus:border-[#B8562E] outline-none"
                       >
                         <option value={0}>On the day</option>
                         <option value={-1}>1 day before</option>
@@ -856,7 +856,7 @@ export function GiftSelectionModal({
               {/* Back Button */}
               <button
                 onClick={() => setStep('browse')}
-                className="text-[#C35F33] hover:underline text-sm"
+                className="text-[#B8562E] hover:underline text-sm"
               >
                 ← Choose a different gift
               </button>
@@ -880,7 +880,7 @@ export function GiftSelectionModal({
           {step === 'browse' && (
             <div className="flex items-center justify-between">
               <p className="text-sm text-gray-500">
-                Powered by <span className="font-medium text-[#C35F33]">Goody</span>
+                Powered by <span className="font-medium text-[#B8562E]">Goody</span>
               </p>
               <a 
                 href="https://www.ongoody.com" 
@@ -898,7 +898,7 @@ export function GiftSelectionModal({
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm text-gray-500">Total</p>
-                <p className="text-2xl font-bold text-[#406A56]">
+                <p className="text-2xl font-bold text-[#2D5A3D]">
                   {formatPrice(flexAmount)}
                 </p>
               </div>
@@ -912,7 +912,7 @@ export function GiftSelectionModal({
                 <button
                   onClick={handleConfirm}
                   disabled={isLoading || flexAmount < 15}
-                  className="px-6 py-2 bg-[#406A56] text-white rounded-lg font-medium
+                  className="px-6 py-2 bg-[#2D5A3D] text-white rounded-lg font-medium
                            hover:bg-[#355A48] transition-colors disabled:opacity-50 disabled:cursor-not-allowed
                            flex items-center gap-2"
                 >
@@ -936,7 +936,7 @@ export function GiftSelectionModal({
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm text-gray-500">Total</p>
-                <p className="text-2xl font-bold text-[#C35F33]">
+                <p className="text-2xl font-bold text-[#B8562E]">
                   {formatPrice(selectedProduct.price * quantity, selectedProduct.currency)}
                 </p>
               </div>
@@ -951,7 +951,7 @@ export function GiftSelectionModal({
                   onClick={handleConfirm}
                   disabled={isLoading || (deliveryTiming === 'specific_date' && !giftDeliveryDate) || 
                            (deliveryTiming === 'relative_event' && !deliveryEvent)}
-                  className="px-6 py-2 bg-[#C35F33] text-white rounded-lg font-medium
+                  className="px-6 py-2 bg-[#B8562E] text-white rounded-lg font-medium
                            hover:bg-[#A84E2A] transition-colors disabled:opacity-50 disabled:cursor-not-allowed
                            flex items-center gap-2"
                 >

@@ -22,8 +22,8 @@ export default function ProductCard({
   isFavorite = false,
 }: ProductCardProps) {
   const providerColors = {
-    flowers: 'bg-[#C35F33]/10 text-[#C35F33] border-[#C35F33]/20',
-    gifts: 'bg-[#406A56]/10 text-[#406A56] border-[#406A56]/20',
+    flowers: 'bg-[#B8562E]/10 text-[#B8562E] border-[#B8562E]/20',
+    gifts: 'bg-[#2D5A3D]/10 text-[#2D5A3D] border-[#2D5A3D]/20',
     prints: 'bg-[#4A3552]/10 text-[#4A3552] border-[#4A3552]/20',
   };
 
@@ -61,7 +61,7 @@ export default function ProductCard({
           }}
         >
           {/* Tape decoration */}
-          <div className="absolute -top-3 left-1/2 -translate-x-1/2 w-16 h-6 bg-[#F2F1E5]/80 rotate-1 opacity-60" 
+          <div className="absolute -top-3 left-1/2 -translate-x-1/2 w-16 h-6 bg-[#F5F3EE]/80 rotate-1 opacity-60" 
             style={{ 
               backgroundImage: 'repeating-linear-gradient(90deg, transparent, transparent 4px, rgba(0,0,0,0.03) 4px, rgba(0,0,0,0.03) 8px)',
               boxShadow: '0 1px 2px rgba(0,0,0,0.1)',
@@ -81,18 +81,18 @@ export default function ProductCard({
             {/* Badges */}
             <div className="absolute top-2 left-2 flex flex-col gap-1">
               {product.isNew && (
-                <span className="px-2 py-0.5 bg-[#406A56] text-white text-xs font-handwritten rounded-sm">
+                <span className="px-2 py-0.5 bg-[#2D5A3D] text-white text-xs font-handwritten rounded-sm">
                   New!
                 </span>
               )}
               {product.isBestseller && (
-                <span className="px-2 py-0.5 bg-[#D9C61A] text-[#2d2d2d] text-xs font-handwritten rounded-sm flex items-center gap-1">
+                <span className="px-2 py-0.5 bg-[#C4A235] text-[#2d2d2d] text-xs font-handwritten rounded-sm flex items-center gap-1">
                   <Sparkles size={10} />
                   Bestseller
                 </span>
               )}
               {product.originalPrice && (
-                <span className="px-2 py-0.5 bg-[#C35F33] text-white text-xs font-handwritten rounded-sm flex items-center gap-1">
+                <span className="px-2 py-0.5 bg-[#B8562E] text-white text-xs font-handwritten rounded-sm flex items-center gap-1">
                   <BadgePercent size={10} />
                   Sale
                 </span>
@@ -104,8 +104,8 @@ export default function ProductCard({
               onClick={handleToggleFavorite}
               className={`absolute top-2 right-2 p-1.5 rounded-full transition-all duration-200 ${
                 isFavorite 
-                  ? 'bg-[#C35F33] text-white' 
-                  : 'bg-white/80 text-gray-400 hover:text-[#C35F33]'
+                  ? 'bg-[#B8562E] text-white' 
+                  : 'bg-white/80 text-gray-400 hover:text-[#B8562E]'
               }`}
             >
               <Heart size={14} fill={isFavorite ? 'currentColor' : 'none'} />
@@ -125,7 +125,7 @@ export default function ProductCard({
               {product.name}
             </h3>
             <div className="flex items-center justify-center gap-2">
-              <span className="text-lg font-bold text-[#406A56]">
+              <span className="text-lg font-bold text-[#2D5A3D]">
                 ${product.price.toFixed(2)}
               </span>
               {product.originalPrice && (
@@ -139,7 +139,7 @@ export default function ProductCard({
           {/* Add to cart button */}
           <motion.button
             onClick={handleAddToCart}
-            className="absolute bottom-3 left-3 right-3 flex items-center justify-center gap-2 py-2 bg-[#406A56] text-white rounded-lg text-sm font-medium opacity-0 group-hover:opacity-100 transition-opacity duration-200"
+            className="absolute bottom-3 left-3 right-3 flex items-center justify-center gap-2 py-2 bg-[#2D5A3D] text-white rounded-lg text-sm font-medium opacity-0 group-hover:opacity-100 transition-opacity duration-200"
             whileTap={{ scale: 0.98 }}
           >
             <ShoppingBag size={14} />
@@ -154,7 +154,7 @@ export default function ProductCard({
     return (
       <Link href={`/marketplace/${product.provider}/${product.id}`}>
         <motion.div
-          className="group flex gap-3 p-3 bg-white rounded-xl border border-[#406A56]/10 hover:border-[#406A56]/30 transition-all duration-200"
+          className="group flex gap-3 p-3 bg-white rounded-xl border border-[#2D5A3D]/10 hover:border-[#2D5A3D]/30 transition-all duration-200"
           whileHover={{ y: -2, boxShadow: '0 4px 12px rgba(64, 106, 86, 0.08)' }}
         >
           {/* Thumbnail */}
@@ -182,7 +182,7 @@ export default function ProductCard({
               <button
                 onClick={handleToggleFavorite}
                 className={`p-1 rounded-full transition-colors ${
-                  isFavorite ? 'text-[#C35F33]' : 'text-gray-300 hover:text-[#C35F33]'
+                  isFavorite ? 'text-[#B8562E]' : 'text-gray-300 hover:text-[#B8562E]'
                 }`}
               >
                 <Heart size={14} fill={isFavorite ? 'currentColor' : 'none'} />
@@ -190,10 +190,10 @@ export default function ProductCard({
             </div>
             
             <div className="flex items-center justify-between mt-1">
-              <span className="font-bold text-[#406A56]">${product.price.toFixed(2)}</span>
+              <span className="font-bold text-[#2D5A3D]">${product.price.toFixed(2)}</span>
               <button
                 onClick={handleAddToCart}
-                className="p-1.5 text-[#406A56] hover:bg-[#406A56]/10 rounded-lg transition-colors"
+                className="p-1.5 text-[#2D5A3D] hover:bg-[#2D5A3D]/10 rounded-lg transition-colors"
               >
                 <ShoppingBag size={14} />
               </button>
@@ -208,7 +208,7 @@ export default function ProductCard({
   return (
     <Link href={`/marketplace/${product.provider}/${product.id}`}>
       <motion.div
-        className="group bg-white rounded-2xl border border-[#406A56]/10 overflow-hidden hover:border-[#406A56]/30 transition-all duration-200"
+        className="group bg-white rounded-2xl border border-[#2D5A3D]/10 overflow-hidden hover:border-[#2D5A3D]/30 transition-all duration-200"
         whileHover={{ y: -4, boxShadow: '0 12px 24px rgba(64, 106, 86, 0.1)' }}
       >
         {/* Image */}
@@ -224,18 +224,18 @@ export default function ProductCard({
           {/* Badges */}
           <div className="absolute top-3 left-3 flex flex-col gap-1">
             {product.isNew && (
-              <span className="px-2 py-0.5 bg-[#406A56] text-white text-xs font-handwritten rounded-full">
+              <span className="px-2 py-0.5 bg-[#2D5A3D] text-white text-xs font-handwritten rounded-full">
                 New!
               </span>
             )}
             {product.isBestseller && (
-              <span className="px-2 py-0.5 bg-[#D9C61A] text-[#2d2d2d] text-xs font-handwritten rounded-full flex items-center gap-1">
+              <span className="px-2 py-0.5 bg-[#C4A235] text-[#2d2d2d] text-xs font-handwritten rounded-full flex items-center gap-1">
                 <Sparkles size={10} />
                 Bestseller
               </span>
             )}
             {product.originalPrice && (
-              <span className="px-2 py-0.5 bg-[#C35F33] text-white text-xs font-handwritten rounded-full flex items-center gap-1">
+              <span className="px-2 py-0.5 bg-[#B8562E] text-white text-xs font-handwritten rounded-full flex items-center gap-1">
                 <BadgePercent size={10} />
                 Sale
               </span>
@@ -247,8 +247,8 @@ export default function ProductCard({
             onClick={handleToggleFavorite}
             className={`absolute top-3 right-3 p-2 rounded-full transition-all duration-200 ${
               isFavorite 
-                ? 'bg-[#C35F33] text-white' 
-                : 'bg-white/90 text-gray-400 hover:text-[#C35F33] opacity-0 group-hover:opacity-100'
+                ? 'bg-[#B8562E] text-white' 
+                : 'bg-white/90 text-gray-400 hover:text-[#B8562E] opacity-0 group-hover:opacity-100'
             }`}
           >
             <Heart size={16} fill={isFavorite ? 'currentColor' : 'none'} />
@@ -286,7 +286,7 @@ export default function ProductCard({
 
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
-              <span className="text-xl font-bold text-[#406A56]">
+              <span className="text-xl font-bold text-[#2D5A3D]">
                 ${product.price.toFixed(2)}
               </span>
               {product.originalPrice && (
@@ -298,7 +298,7 @@ export default function ProductCard({
             
             {product.rating && (
               <div className="flex items-center gap-1 text-sm text-gray-500">
-                <Star size={14} className="text-[#D9C61A] fill-[#D9C61A]" />
+                <Star size={14} className="text-[#C4A235] fill-[#C4A235]" />
                 <span>{product.rating}</span>
                 <span className="text-gray-400">({product.reviewCount})</span>
               </div>

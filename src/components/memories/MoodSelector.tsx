@@ -179,7 +179,7 @@ export default function MoodSelector({
           <button
             onClick={resetToAI}
             disabled={saving}
-            className="flex items-center gap-1 text-xs text-[#406A56]/60 hover:text-[#406A56] transition-colors"
+            className="flex items-center gap-1 text-xs text-[#2D5A3D]/60 hover:text-[#2D5A3D] transition-colors"
           >
             <Sparkles size={12} />
             Reset to AI

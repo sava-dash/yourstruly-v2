@@ -186,7 +186,7 @@ export function EngagementSection({
               background: 'rgba(64, 106, 86, 0.08)',
               borderRadius: '12px',
             }}>
-              <Sparkles size={16} style={{ color: '#406A56' }} />
+              <Sparkles size={16} style={{ color: '#2D5A3D' }} />
               <div>
                 <div style={{ fontSize: '16px', fontWeight: '700', color: '#2d2d2d' }}>{totalXp}</div>
                 <div style={{ fontSize: '10px', color: '#888' }}>XP</div>
@@ -214,7 +214,7 @@ export function EngagementSection({
           {streakDays >= 3 && (
             <div style={{
               fontSize: '11px',
-              color: '#C35F33',
+              color: '#B8562E',
               padding: '6px 10px',
               borderRadius: '8px',
               textAlign: 'center',

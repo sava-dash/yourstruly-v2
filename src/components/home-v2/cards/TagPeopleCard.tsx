@@ -38,11 +38,11 @@ export function TagPeopleCard({ photoUrl, photoId, data, onSave, saved }: TagPeo
   return (
     <div className="h-full flex flex-col">
       <div className="flex items-center justify-between px-5 pt-4 pb-2">
-        <h3 className="text-xs font-semibold uppercase tracking-wider text-[#5C6D64] flex items-center gap-1.5">
+        <h3 className="text-xs font-semibold uppercase tracking-wider text-[#5A6660] flex items-center gap-1.5">
           <Users size={12} /> Tag People
         </h3>
         {xpEarned > 0 && (
-          <span className="text-xs text-[#C35F33]">+{xpEarned} XP</span>
+          <span className="text-xs text-[#B8562E]">+{xpEarned} XP</span>
         )}
       </div>
 

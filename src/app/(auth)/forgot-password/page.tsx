@@ -32,7 +32,7 @@ export default function ForgotPasswordPage() {
 
   if (submitted) {
     return (
-      <div className="min-h-screen bg-[#FDF8F3] relative overflow-hidden flex items-center justify-center p-4">
+      <div className="min-h-screen bg-[#FAFAF7] relative overflow-hidden flex items-center justify-center p-4">
         <div className="home-background" />
         <div className="home-blob home-blob-1" />
         <div className="home-blob home-blob-2" />
@@ -48,8 +48,8 @@ export default function ForgotPasswordPage() {
           </div>
 
           <div className="bg-white/90 backdrop-blur-xl p-8 rounded-2xl shadow-xl border border-white/50 text-center">
-            <div className="w-16 h-16 bg-[#406A56]/10 rounded-full flex items-center justify-center mx-auto mb-4">
-              <CheckCircle2 className="w-8 h-8 text-[#406A56]" />
+            <div className="w-16 h-16 bg-[#2D5A3D]/10 rounded-full flex items-center justify-center mx-auto mb-4">
+              <CheckCircle2 className="w-8 h-8 text-[#2D5A3D]" />
             </div>
             <h2 className="text-2xl font-semibold text-[#2d2d2d] mb-2">Check your email</h2>
             <p className="text-gray-600 mb-6">
@@ -60,7 +60,7 @@ export default function ForgotPasswordPage() {
             </p>
             <Link
               href="/login"
-              className="inline-flex items-center gap-2 text-[#406A56] hover:text-[#355a48] font-medium"
+              className="inline-flex items-center gap-2 text-[#2D5A3D] hover:text-[#355a48] font-medium"
             >
               <ArrowLeft className="w-4 h-4" />
               Back to login
@@ -72,7 +72,7 @@ export default function ForgotPasswordPage() {
   }
 
   return (
-    <div className="min-h-screen bg-[#FDF8F3] relative overflow-hidden flex items-center justify-center p-4">
+    <div className="min-h-screen bg-[#FAFAF7] relative overflow-hidden flex items-center justify-center p-4">
       <div className="home-background" />
       <div className="home-blob home-blob-1" />
       <div className="home-blob home-blob-2" />
@@ -90,7 +90,7 @@ export default function ForgotPasswordPage() {
         <div className="bg-white/90 backdrop-blur-xl p-8 rounded-2xl shadow-xl border border-white/50">
           <Link
             href="/login"
-            className="inline-flex items-center gap-2 text-sm text-gray-500 hover:text-[#406A56] mb-4"
+            className="inline-flex items-center gap-2 text-sm text-gray-500 hover:text-[#2D5A3D] mb-4"
           >
             <ArrowLeft className="w-4 h-4" />
             Back to login
@@ -118,7 +118,7 @@ export default function ForgotPasswordPage() {
                   type="email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  className="w-full pl-10 pr-4 py-3 rounded-xl bg-white/50 border border-[#406A56]/20 text-[#2d2d2d] placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#406A56]/30 focus:border-[#406A56]/40 transition-all"
+                  className="w-full pl-10 pr-4 py-3 rounded-xl bg-white/50 border border-[#2D5A3D]/20 text-[#2d2d2d] placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#2D5A3D]/30 focus:border-[#2D5A3D]/40 transition-all"
                   placeholder="you@example.com"
                   required
                   aria-required="true"
@@ -137,7 +137,7 @@ export default function ForgotPasswordPage() {
             <button
               type="submit"
               disabled={loading}
-              className="w-full py-3.5 bg-[#406A56] hover:bg-[#355a48] text-white font-semibold rounded-xl transition-all disabled:opacity-50 flex items-center justify-center gap-2"
+              className="w-full py-3.5 bg-[#2D5A3D] hover:bg-[#355a48] text-white font-semibold rounded-xl transition-all disabled:opacity-50 flex items-center justify-center gap-2"
             >
               {loading ? (
                 <>

@@ -453,7 +453,7 @@ export function InterviewConversation({
             animate={{ rotate: 360 }}
             transition={{ duration: 1, repeat: Infinity, ease: 'linear' }}
           >
-            <Sparkles size={48} className="text-[#406A56]" />
+            <Sparkles size={48} className="text-[#2D5A3D]" />
           </motion.div>
           <p>Thinking of a follow-up question...</p>
         </div>
@@ -515,7 +515,7 @@ export function InterviewConversation({
             />
             <button
               onClick={() => fileInputRef.current?.click()}
-              className="flex items-center gap-2 px-4 py-2 border border-dashed border-gray-300 rounded-lg text-sm text-gray-600 hover:border-[#406A56] hover:text-[#406A56] transition-colors"
+              className="flex items-center gap-2 px-4 py-2 border border-dashed border-gray-300 rounded-lg text-sm text-gray-600 hover:border-[#2D5A3D] hover:text-[#2D5A3D] transition-colors"
             >
               <Upload size={16} />
               Choose Files
@@ -540,7 +540,7 @@ export function InterviewConversation({
             animate={{ rotate: 360 }}
             transition={{ duration: 1, repeat: Infinity, ease: 'linear' }}
           >
-            <Loader2 size={48} className="text-[#406A56]" />
+            <Loader2 size={48} className="text-[#2D5A3D]" />
           </motion.div>
           <p>Saving your responses...</p>
         </div>
@@ -561,7 +561,7 @@ export function InterviewConversation({
           >
             <Check size={32} />
           </motion.div>
-          <h2>Responses Saved!</h2>
+          <h2>Responses saved</h2>
           <p>{exchanges.length} responses captured</p>
         </motion.div>
       )}

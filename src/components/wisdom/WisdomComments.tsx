@@ -146,7 +146,7 @@ export default function WisdomComments({ wisdomId }: WisdomCommentsProps) {
 
               {/* Content */}
               <div className="flex-1 min-w-0">
-                <div className="bg-[#F2F1E5] rounded-2xl rounded-tl-sm px-4 py-3">
+                <div className="bg-[#F5F3EE] rounded-2xl rounded-tl-sm px-4 py-3">
                   <div className="flex items-center gap-2 mb-1">
                     <span className="font-medium text-[#2d2d2d] text-sm">
                       {comment.contact_name}
@@ -199,7 +199,7 @@ export default function WisdomComments({ wisdomId }: WisdomCommentsProps) {
           value={newComment}
           onChange={e => setNewComment(e.target.value)}
           placeholder="Add a comment..."
-          className="flex-1 px-4 py-2.5 bg-[#F2F1E5] border border-gray-200 rounded-xl text-[#2d2d2d] placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#4A3552]/30 focus:border-[#4A3552] transition-all text-sm"
+          className="flex-1 px-4 py-2.5 bg-[#F5F3EE] border border-gray-200 rounded-xl text-[#2d2d2d] placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#4A3552]/30 focus:border-[#4A3552] transition-all text-sm"
         />
         <button
           type="submit"

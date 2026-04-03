@@ -26,7 +26,7 @@ function VerifyEmailContent() {
   };
 
   return (
-    <div className="min-h-screen bg-[#FDF8F3] relative overflow-hidden flex items-center justify-center p-4">
+    <div className="min-h-screen bg-[#FAFAF7] relative overflow-hidden flex items-center justify-center p-4">
       <div className="home-background" />
       <div className="home-blob home-blob-1" />
       <div className="home-blob home-blob-2" />
@@ -42,8 +42,8 @@ function VerifyEmailContent() {
         </div>
 
         <div className="bg-white/90 backdrop-blur-xl p-8 rounded-2xl shadow-xl border border-white/50 text-center">
-          <div className="w-20 h-20 bg-[#D9C61A]/10 rounded-full flex items-center justify-center mx-auto mb-6">
-            <Mail className="w-10 h-10 text-[#D9C61A]" />
+          <div className="w-20 h-20 bg-[#C4A235]/10 rounded-full flex items-center justify-center mx-auto mb-6">
+            <Mail className="w-10 h-10 text-[#C4A235]" />
           </div>
 
           <h2 className="text-2xl font-semibold text-[#2d2d2d] mb-3">Verify your email</h2>
@@ -51,7 +51,7 @@ function VerifyEmailContent() {
           <p className="text-gray-600 mb-2">
             We&apos;ve sent a verification link to
           </p>
-          <p className="font-semibold text-[#406A56] mb-6">
+          <p className="font-semibold text-[#2D5A3D] mb-6">
             {email || 'your email address'}
           </p>
 
@@ -64,7 +64,7 @@ function VerifyEmailContent() {
             <button
               onClick={handleResend}
               disabled={resending || resent || !email}
-              className="w-full py-3 bg-[#406A56]/10 text-[#406A56] font-semibold rounded-xl hover:bg-[#406A56]/20 transition-all disabled:opacity-50 flex items-center justify-center gap-2"
+              className="w-full py-3 bg-[#2D5A3D]/10 text-[#2D5A3D] font-semibold rounded-xl hover:bg-[#2D5A3D]/20 transition-all disabled:opacity-50 flex items-center justify-center gap-2"
             >
               {resending ? (
                 <>
@@ -83,7 +83,7 @@ function VerifyEmailContent() {
 
             <a
               href="/login"
-              className="inline-flex items-center gap-2 text-gray-500 hover:text-[#406A56] font-medium"
+              className="inline-flex items-center gap-2 text-gray-500 hover:text-[#2D5A3D] font-medium"
             >
               <ArrowLeft className="w-4 h-4" />
               Back to login
@@ -98,8 +98,8 @@ function VerifyEmailContent() {
 export default function VerifyEmailPage() {
   return (
     <Suspense fallback={
-      <div className="min-h-screen bg-[#FDF8F3] flex items-center justify-center">
-        <Loader2 className="w-8 h-8 animate-spin text-[#406A56]" />
+      <div className="min-h-screen bg-[#FAFAF7] flex items-center justify-center">
+        <Loader2 className="w-8 h-8 animate-spin text-[#2D5A3D]" />
       </div>
     }>
       <VerifyEmailContent />

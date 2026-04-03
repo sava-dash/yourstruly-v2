@@ -17,22 +17,22 @@ const providers = [
     name: 'Flowers',
     description: 'Fresh bouquets',
     icon: Flower2,
-    color: '#C35F33',
-    bgColor: 'bg-[#C35F33]/10',
-    borderColor: 'border-[#C35F33]/30',
-    hoverBg: 'hover:bg-[#C35F33]/20',
-    activeBg: 'bg-[#C35F33]',
+    color: '#B8562E',
+    bgColor: 'bg-[#B8562E]/10',
+    borderColor: 'border-[#B8562E]/30',
+    hoverBg: 'hover:bg-[#B8562E]/20',
+    activeBg: 'bg-[#B8562E]',
   },
   {
     id: 'gifts' as ProviderType,
     name: 'Gifts',
     description: 'Thoughtful presents',
     icon: Gift,
-    color: '#406A56',
-    bgColor: 'bg-[#406A56]/10',
-    borderColor: 'border-[#406A56]/30',
-    hoverBg: 'hover:bg-[#406A56]/20',
-    activeBg: 'bg-[#406A56]',
+    color: '#2D5A3D',
+    bgColor: 'bg-[#2D5A3D]/10',
+    borderColor: 'border-[#2D5A3D]/30',
+    hoverBg: 'hover:bg-[#2D5A3D]/20',
+    activeBg: 'bg-[#2D5A3D]',
   },
   {
     id: 'prints' as ProviderType,
@@ -157,7 +157,7 @@ export default function ProviderTabs({
         className={`px-4 py-2 rounded-full text-sm font-medium transition-all duration-200 border ${
           activeProvider === 'all'
             ? 'bg-[#2d2d2d] text-white border-[#2d2d2d]'
-            : 'bg-white text-gray-600 border-gray-200 hover:border-[#406A56]/50'
+            : 'bg-white text-gray-600 border-gray-200 hover:border-[#2D5A3D]/50'
         }`}
       >
         All Items

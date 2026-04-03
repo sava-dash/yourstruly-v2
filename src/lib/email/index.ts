@@ -178,11 +178,11 @@ function circleInviteFallback(data: CircleInviteEmailData): { subject: string; h
         </head>
         <body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px;">
           <div style="text-align: center; margin-bottom: 30px;">
-            <h1 style="color: #406A56; margin: 0;">YoursTruly</h1>
+            <h1 style="color: #2D5A3D; margin: 0;">YoursTruly</h1>
             <p style="color: #666; margin: 5px 0 0 0;">Preserve Your Legacy</p>
           </div>
           
-          <div style="background: linear-gradient(135deg, #406A56 0%, #5a8a6a 100%); color: white; padding: 30px; border-radius: 12px; text-align: center; margin-bottom: 30px;">
+          <div style="background: linear-gradient(135deg, #2D5A3D 0%, #5a8a6a 100%); color: white; padding: 30px; border-radius: 12px; text-align: center; margin-bottom: 30px;">
             <h2 style="margin: 0 0 10px 0;">You're Invited! 🎉</h2>
             <p style="margin: 0; font-size: 18px;">
               <strong>${data.inviterName}</strong> wants you to join their circle
@@ -197,7 +197,7 @@ function circleInviteFallback(data: CircleInviteEmailData): { subject: string; h
           </div>
           
           <div style="text-align: center; margin-bottom: 30px;">
-            <a href="${inviteUrl}" style="display: inline-block; background: #406A56; color: white; padding: 14px 32px; text-decoration: none; border-radius: 8px; font-weight: 600; font-size: 16px;">
+            <a href="${inviteUrl}" style="display: inline-block; background: #2D5A3D; color: white; padding: 14px 32px; text-decoration: none; border-radius: 8px; font-weight: 600; font-size: 16px;">
               Accept Invitation
             </a>
           </div>
@@ -211,7 +211,7 @@ function circleInviteFallback(data: CircleInviteEmailData): { subject: string; h
           
           <p style="color: #94a3b8; font-size: 12px; text-align: center;">
             If you didn't expect this invitation, you can safely ignore this email.<br>
-            <a href="${APP_URL}" style="color: #406A56;">YoursTruly</a> - Preserve your legacy for generations to come.
+            <a href="${APP_URL}" style="color: #2D5A3D;">YoursTruly</a> - Preserve your legacy for generations to come.
           </p>
         </body>
       </html>
@@ -246,7 +246,7 @@ function deathClaimReceivedFallback(data: DeathClaimReceivedEmailData): { subjec
         </head>
         <body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px;">
           <div style="text-align: center; margin-bottom: 30px;">
-            <h1 style="color: #406A56; margin: 0;">YoursTruly</h1>
+            <h1 style="color: #2D5A3D; margin: 0;">YoursTruly</h1>
           </div>
           
           <div style="background: #fef3c7; border: 1px solid #f59e0b; padding: 20px; border-radius: 8px; margin-bottom: 24px;">
@@ -289,7 +289,7 @@ function deathClaimReceivedFallback(data: DeathClaimReceivedEmailData): { subjec
           <hr style="border: none; border-top: 1px solid #e2e8f0; margin: 30px 0;">
           
           <p style="color: #94a3b8; font-size: 12px; text-align: center;">
-            <a href="${APP_URL}" style="color: #406A56;">YoursTruly</a> - Preserve your legacy for generations to come.
+            <a href="${APP_URL}" style="color: #2D5A3D;">YoursTruly</a> - Preserve your legacy for generations to come.
           </p>
         </body>
       </html>
@@ -331,11 +331,11 @@ function welcomeFallback(data: WelcomeEmailData): { subject: string; html: strin
         </head>
         <body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px;">
           <div style="text-align: center; margin-bottom: 30px;">
-            <h1 style="color: #406A56; margin: 0;">YoursTruly</h1>
+            <h1 style="color: #2D5A3D; margin: 0;">YoursTruly</h1>
             <p style="color: #666; margin: 5px 0 0 0;">Preserve Your Legacy</p>
           </div>
           
-          <div style="background: linear-gradient(135deg, #406A56 0%, #5a8a6a 100%); color: white; padding: 30px; border-radius: 12px; text-align: center; margin-bottom: 30px;">
+          <div style="background: linear-gradient(135deg, #2D5A3D 0%, #5a8a6a 100%); color: white; padding: 30px; border-radius: 12px; text-align: center; margin-bottom: 30px;">
             <h2 style="margin: 0 0 10px 0;">Welcome, ${data.userName}! 🎉</h2>
             <p style="margin: 0; font-size: 16px;">
               Your journey to preserve your legacy begins today.
@@ -355,7 +355,7 @@ function welcomeFallback(data: WelcomeEmailData): { subject: string; html: strin
           </div>
           
           <div style="text-align: center; margin: 30px 0;">
-            <a href="${dashboardUrl}" style="display: inline-block; background: #406A56; color: white; padding: 14px 32px; text-decoration: none; border-radius: 8px; font-weight: 600;">
+            <a href="${dashboardUrl}" style="display: inline-block; background: #2D5A3D; color: white; padding: 14px 32px; text-decoration: none; border-radius: 8px; font-weight: 600;">
               Go to Dashboard
             </a>
           </div>
@@ -367,7 +367,7 @@ function welcomeFallback(data: WelcomeEmailData): { subject: string; html: strin
           <hr style="border: none; border-top: 1px solid #e2e8f0; margin: 30px 0;">
           
           <p style="color: #94a3b8; font-size: 12px; text-align: center;">
-            <a href="${APP_URL}" style="color: #406A56;">YoursTruly</a> - Preserve your legacy for generations to come.
+            <a href="${APP_URL}" style="color: #2D5A3D;">YoursTruly</a> - Preserve your legacy for generations to come.
           </p>
         </body>
       </html>
@@ -406,10 +406,10 @@ function postscriptDeliveredFallback(data: PostscriptDeliveredEmailData): { subj
         </head>
         <body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px;">
           <div style="text-align: center; margin-bottom: 30px;">
-            <h1 style="color: #406A56; margin: 0;">YoursTruly</h1>
+            <h1 style="color: #2D5A3D; margin: 0;">YoursTruly</h1>
           </div>
           
-          <div style="background: linear-gradient(135deg, #C35F33 0%, #e07a4d 100%); color: white; padding: 30px; border-radius: 12px; text-align: center; margin-bottom: 30px;">
+          <div style="background: linear-gradient(135deg, #B8562E 0%, #e07a4d 100%); color: white; padding: 30px; border-radius: 12px; text-align: center; margin-bottom: 30px;">
             <h2 style="margin: 0 0 10px 0;">A Message For You 💌</h2>
             <p style="margin: 0; font-size: 16px;">
               <strong>${data.senderName}</strong> left you something special
@@ -424,7 +424,7 @@ function postscriptDeliveredFallback(data: PostscriptDeliveredEmailData): { subj
           </p>
           
           <div style="text-align: center; margin: 30px 0;">
-            <a href="${postscriptUrl}" style="display: inline-block; background: #C35F33; color: white; padding: 14px 32px; text-decoration: none; border-radius: 8px; font-weight: 600;">
+            <a href="${postscriptUrl}" style="display: inline-block; background: #B8562E; color: white; padding: 14px 32px; text-decoration: none; border-radius: 8px; font-weight: 600;">
               Open Your Message
             </a>
           </div>
@@ -436,7 +436,7 @@ function postscriptDeliveredFallback(data: PostscriptDeliveredEmailData): { subj
           <hr style="border: none; border-top: 1px solid #e2e8f0; margin: 30px 0;">
           
           <p style="color: #94a3b8; font-size: 12px; text-align: center;">
-            <a href="${APP_URL}" style="color: #406A56;">YoursTruly</a> - Preserve your legacy for generations to come.
+            <a href="${APP_URL}" style="color: #2D5A3D;">YoursTruly</a> - Preserve your legacy for generations to come.
           </p>
         </body>
       </html>
@@ -493,7 +493,7 @@ function deathClaimStatusTemplate(data: DeathClaimStatusEmailData): { subject: s
       </p>
       ${data.accessLink ? `
         <div style="text-align: center; margin: 24px 0;">
-          <a href="${data.accessLink}" style="display: inline-block; background: #406A56; color: white; padding: 14px 32px; text-decoration: none; border-radius: 8px; font-weight: 600;">
+          <a href="${data.accessLink}" style="display: inline-block; background: #2D5A3D; color: white; padding: 14px 32px; text-decoration: none; border-radius: 8px; font-weight: 600;">
             Access Memorial Account
           </a>
         </div>
@@ -556,7 +556,7 @@ function deathClaimStatusTemplate(data: DeathClaimStatusEmailData): { subject: s
         </head>
         <body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px;">
           <div style="text-align: center; margin-bottom: 30px;">
-            <h1 style="color: #406A56; margin: 0;">YoursTruly</h1>
+            <h1 style="color: #2D5A3D; margin: 0;">YoursTruly</h1>
           </div>
           
           <div style="background: ${config.bgColor}; border: 1px solid ${config.borderColor}; padding: 20px; border-radius: 8px; margin-bottom: 24px;">
@@ -577,7 +577,7 @@ function deathClaimStatusTemplate(data: DeathClaimStatusEmailData): { subject: s
           <hr style="border: none; border-top: 1px solid #e2e8f0; margin: 30px 0;">
           
           <p style="color: #94a3b8; font-size: 12px; text-align: center;">
-            <a href="${APP_URL}" style="color: #406A56;">YoursTruly</a> - Preserve your legacy for generations to come.
+            <a href="${APP_URL}" style="color: #2D5A3D;">YoursTruly</a> - Preserve your legacy for generations to come.
           </p>
         </body>
       </html>
@@ -803,7 +803,7 @@ export async function sendAdminNotificationEmail(data: AdminNotificationEmailDat
           </head>
           <body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px;">
             <div style="text-align: center; margin-bottom: 20px;">
-              <h1 style="color: #406A56; margin: 0;">YoursTruly Admin</h1>
+              <h1 style="color: #2D5A3D; margin: 0;">YoursTruly Admin</h1>
             </div>
             <div style="white-space: pre-wrap;">${data.content}</div>
             <hr style="border: none; border-top: 1px solid #e2e8f0; margin: 30px 0;">

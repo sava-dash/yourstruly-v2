@@ -182,8 +182,8 @@ export default function GalleryUpload({ onUploadComplete }: GalleryUploadProps) 
         onDragLeave={() => setIsDragging(false)}
         className={`flex items-center gap-3 p-3 rounded-xl border-2 border-dashed transition-all cursor-pointer ${
           isDragging 
-            ? 'border-[#D9C61A] bg-[#D9C61A]/10' 
-            : 'border-[#406A56]/30 bg-white/50 hover:border-[#406A56]/50'
+            ? 'border-[#C4A235] bg-[#C4A235]/10' 
+            : 'border-[#2D5A3D]/30 bg-white/50 hover:border-[#2D5A3D]/50'
         }`}
         onClick={() => fileInputRef.current?.click()}
       >
@@ -196,8 +196,8 @@ export default function GalleryUpload({ onUploadComplete }: GalleryUploadProps) 
           className="hidden"
         />
         
-        <div className="w-10 h-10 rounded-lg bg-[#406A56]/10 flex items-center justify-center flex-shrink-0">
-          <Plus size={20} className="text-[#406A56]" />
+        <div className="w-10 h-10 rounded-lg bg-[#2D5A3D]/10 flex items-center justify-center flex-shrink-0">
+          <Plus size={20} className="text-[#2D5A3D]" />
         </div>
         
         <div className="flex-1 min-w-0">
@@ -209,13 +209,13 @@ export default function GalleryUpload({ onUploadComplete }: GalleryUploadProps) 
 
         {files.length > 0 && (
           <div className="flex items-center gap-2 flex-shrink-0">
-            <span className="text-xs text-[#666] bg-[#406A56]/10 px-2 py-1 rounded">
+            <span className="text-xs text-[#666] bg-[#2D5A3D]/10 px-2 py-1 rounded">
               {completedCount}/{files.length}
             </span>
             {pendingCount > 0 && !isUploading && (
               <button
                 onClick={(e) => { e.stopPropagation(); uploadFiles() }}
-                className="px-3 py-1.5 bg-[#406A56] text-white text-xs font-medium rounded-lg hover:bg-[#355a48] transition-colors flex items-center gap-1"
+                className="px-3 py-1.5 bg-[#2D5A3D] text-white text-xs font-medium rounded-lg hover:bg-[#355a48] transition-colors flex items-center gap-1"
               >
                 <Upload size={12} />
                 Upload
@@ -232,7 +232,7 @@ export default function GalleryUpload({ onUploadComplete }: GalleryUploadProps) 
             <div className="flex items-center gap-3 text-xs text-[#666]">
               <span>{files.length} files</span>
               {hasGPS > 0 && (
-                <span className="flex items-center gap-1 text-[#406A56]">
+                <span className="flex items-center gap-1 text-[#2D5A3D]">
                   <MapPin size={10} /> {hasGPS} with GPS
                 </span>
               )}
@@ -274,7 +274,7 @@ export default function GalleryUpload({ onUploadComplete }: GalleryUploadProps) 
                   </button>
                 )}
                 {f.exif?.lat && (
-                  <div className="absolute bottom-0.5 left-0.5 w-3 h-3 bg-[#D9C61A] rounded-full flex items-center justify-center">
+                  <div className="absolute bottom-0.5 left-0.5 w-3 h-3 bg-[#C4A235] rounded-full flex items-center justify-center">
                     <MapPin size={6} className="text-white" />
                   </div>
                 )}

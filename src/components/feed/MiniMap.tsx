@@ -29,7 +29,7 @@ export default function MiniMap({ lat, lng, location }: MiniMapProps) {
       })
 
       // Add marker
-      new mapboxgl.Marker({ color: '#C35F33' })
+      new mapboxgl.Marker({ color: '#B8562E' })
         .setLngLat([lng, lat])
         .addTo(map.current)
     }

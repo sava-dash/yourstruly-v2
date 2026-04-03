@@ -202,10 +202,10 @@ export default function ShareMemoryModal({ isOpen, onClose, memoryId, memoryTitl
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 aria-label="Search" placeholder="Search by name or email..."
-                className="w-full pl-10 pr-4 py-3 bg-[#F2F1E5] border border-gray-200 rounded-xl text-[#2d2d2d] placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#406A56]/30 focus:border-[#406A56] transition-all"
+                className="w-full pl-10 pr-4 py-3 bg-[#F5F3EE] border border-gray-200 rounded-xl text-[#2d2d2d] placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#2D5A3D]/30 focus:border-[#2D5A3D] transition-all"
               />
               {isSearching && (
-                <Loader2 size={18} className="absolute right-3 top-1/2 -translate-y-1/2 text-[#406A56] animate-spin" />
+                <Loader2 size={18} className="absolute right-3 top-1/2 -translate-y-1/2 text-[#2D5A3D] animate-spin" />
               )}
             </div>
 
@@ -217,9 +217,9 @@ export default function ShareMemoryModal({ isOpen, onClose, memoryId, memoryTitl
                     key={contact.id}
                     onClick={() => handleAddContact(contact)}
                     disabled={addingUser === contact.id}
-                    className="w-full flex items-center gap-3 p-3 hover:bg-[#F2F1E5] transition-colors text-left disabled:opacity-50"
+                    className="w-full flex items-center gap-3 p-3 hover:bg-[#F5F3EE] transition-colors text-left disabled:opacity-50"
                   >
-                    <div className="w-10 h-10 rounded-full bg-gradient-to-br from-[#406A56] to-[#5A8A72] flex items-center justify-center text-white text-sm font-medium">
+                    <div className="w-10 h-10 rounded-full bg-gradient-to-br from-[#2D5A3D] to-[#5A8A72] flex items-center justify-center text-white text-sm font-medium">
                       {getInitials(contact.name)}
                     </div>
                     <div className="flex-1 min-w-0">
@@ -227,14 +227,14 @@ export default function ShareMemoryModal({ isOpen, onClose, memoryId, memoryTitl
                       <div className="text-gray-500 text-sm truncate">{contact.email || contact.phone}</div>
                     </div>
                     {contact.relationship_type && (
-                      <span className="px-2 py-1 bg-[#406A56]/10 text-[#406A56] text-xs rounded-full">
+                      <span className="px-2 py-1 bg-[#2D5A3D]/10 text-[#2D5A3D] text-xs rounded-full">
                         {contact.relationship_type}
                       </span>
                     )}
                     {addingUser === contact.id ? (
-                      <Loader2 size={18} className="text-[#406A56] animate-spin" />
+                      <Loader2 size={18} className="text-[#2D5A3D] animate-spin" />
                     ) : (
-                      <UserPlus size={18} className="text-[#406A56]" />
+                      <UserPlus size={18} className="text-[#2D5A3D]" />
                     )}
                   </button>
                 ))}
@@ -269,7 +269,7 @@ export default function ShareMemoryModal({ isOpen, onClose, memoryId, memoryTitl
             <div className="relative">
               <button
                 onClick={() => setShowPermissionDropdown(!showPermissionDropdown)}
-                className="w-full flex items-center justify-between px-4 py-3 bg-[#F2F1E5] border border-gray-200 rounded-xl text-[#2d2d2d] focus:outline-none focus:ring-2 focus:ring-[#406A56]/30 focus:border-[#406A56] transition-all"
+                className="w-full flex items-center justify-between px-4 py-3 bg-[#F5F3EE] border border-gray-200 rounded-xl text-[#2d2d2d] focus:outline-none focus:ring-2 focus:ring-[#2D5A3D]/30 focus:border-[#2D5A3D] transition-all"
               >
                 <span className="flex items-center gap-2">
                   <span className="font-medium capitalize">{selectedPermission}</span>
@@ -284,13 +284,13 @@ export default function ShareMemoryModal({ isOpen, onClose, memoryId, memoryTitl
                 <div className="absolute top-full left-0 right-0 mt-1 bg-white rounded-xl border border-gray-200 shadow-lg z-10 overflow-hidden">
                   <button
                     onClick={() => { setSelectedPermission('contributor'); setShowPermissionDropdown(false); }}
-                    className="w-full flex items-center gap-3 p-3 hover:bg-[#F2F1E5] transition-colors text-left"
+                    className="w-full flex items-center gap-3 p-3 hover:bg-[#F5F3EE] transition-colors text-left"
                   >
                     <div className="flex-1">
                       <div className="text-[#2d2d2d] font-medium">Contributor</div>
                       <div className="text-gray-500 text-sm">Can add photos, comments, moments, and quotes</div>
                     </div>
-                    {selectedPermission === 'contributor' && <Check size={18} className="text-[#406A56]" />}
+                    {selectedPermission === 'contributor' && <Check size={18} className="text-[#2D5A3D]" />}
                   </button>
                 </div>
               )}
@@ -300,7 +300,7 @@ export default function ShareMemoryModal({ isOpen, onClose, memoryId, memoryTitl
           {/* Current Shares */}
           {loadingShares ? (
             <div className="flex items-center justify-center py-8">
-              <Loader2 size={24} className="text-[#406A56] animate-spin" />
+              <Loader2 size={24} className="text-[#2D5A3D] animate-spin" />
             </div>
           ) : shares.length > 0 ? (
             <div>
@@ -313,7 +313,7 @@ export default function ShareMemoryModal({ isOpen, onClose, memoryId, memoryTitl
                     key={share.id}
                     className="flex items-center gap-3 p-3 bg-white rounded-xl border border-gray-200 group"
                   >
-                    <div className="w-10 h-10 rounded-full bg-gradient-to-br from-[#D9C61A] to-[#C35F33] flex items-center justify-center text-white text-sm font-medium">
+                    <div className="w-10 h-10 rounded-full bg-gradient-to-br from-[#C4A235] to-[#B8562E] flex items-center justify-center text-white text-sm font-medium">
                       {getInitials(share.contact.name)}
                     </div>
                     <div className="flex-1 min-w-0">
@@ -322,10 +322,10 @@ export default function ShareMemoryModal({ isOpen, onClose, memoryId, memoryTitl
                       </div>
                       <div className="flex items-center gap-2 text-sm">
                         {share.contact.relationship_type && (
-                          <span className="text-[#406A56]">{share.contact.relationship_type}</span>
+                          <span className="text-[#2D5A3D]">{share.contact.relationship_type}</span>
                         )}
                         {share.can_add_media && (
-                          <span className="px-2 py-0.5 bg-[#D9C61A]/20 text-[#8a7c08] text-xs rounded-full">
+                          <span className="px-2 py-0.5 bg-[#C4A235]/20 text-[#8a7c08] text-xs rounded-full">
                             Contributor
                           </span>
                         )}
@@ -354,7 +354,7 @@ export default function ShareMemoryModal({ isOpen, onClose, memoryId, memoryTitl
         <div className="p-5 border-t border-gray-200 flex justify-end">
           <button
             onClick={onClose}
-            className="px-6 py-2.5 bg-[#406A56] hover:bg-[#4a7a64] text-white rounded-xl font-medium transition-colors"
+            className="px-6 py-2.5 bg-[#2D5A3D] hover:bg-[#234A31] text-white rounded-xl font-medium transition-colors"
           >
             Done
           </button>

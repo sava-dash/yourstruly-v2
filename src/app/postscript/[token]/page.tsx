@@ -98,11 +98,11 @@ export default function PostScriptRecipientPage({ params }: { params: Promise<{ 
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-[#FDF8F3] relative overflow-hidden flex items-center justify-center">
+      <div className="min-h-screen bg-[#FAFAF7] relative overflow-hidden flex items-center justify-center">
         <div className="home-background" />
-        <div className="animate-pulse text-[#406A56]">
+        <div className="animate-pulse text-[#2D5A3D]">
           <Heart className="w-12 h-12 mx-auto mb-4 animate-bounce" />
-          <p className="text-lg">Loading your special message...</p>
+          <p className="text-lg">Gathering your message...</p>
         </div>
       </div>
     )
@@ -111,15 +111,15 @@ export default function PostScriptRecipientPage({ params }: { params: Promise<{ 
   if (error || !postscript) {
     return (
       <div className="min-h-screen flex items-center justify-center p-4" style={{
-        background: 'linear-gradient(135deg, #F2F1E5 0%, #E8E4D6 50%, #DED8C8 100%)'
+        background: 'linear-gradient(135deg, #F5F3EE 0%, #E8E4D6 50%, #DED8C8 100%)'
       }}>
         <div className="bg-white/90 backdrop-blur-xl rounded-2xl p-8 max-w-md text-center shadow-xl border border-white/50">
-          <Heart className="w-12 h-12 mx-auto mb-4 text-[#C35F33]" />
-          <h1 className="text-xl font-semibold text-[#2d2d2d] mb-2">Oops!</h1>
+          <Heart className="w-12 h-12 mx-auto mb-4 text-[#B8562E]" />
+          <h1 className="text-xl font-semibold text-[#2d2d2d] mb-2">We couldn&apos;t load this message</h1>
           <p className="text-gray-600 mb-6">{error || 'This PostScript was not found.'}</p>
           <Link 
             href="/" 
-            className="inline-flex items-center gap-2 px-6 py-3 bg-[#406A56] text-white rounded-xl hover:bg-[#4a7a64] transition-colors"
+            className="inline-flex items-center gap-2 px-6 py-3 bg-[#2D5A3D] text-white rounded-xl hover:bg-[#234A31] transition-colors"
           >
             Go to YoursTruly
           </Link>
@@ -153,7 +153,7 @@ export default function PostScriptRecipientPage({ params }: { params: Promise<{ 
 
   // Show full content after envelope is opened
   return (
-    <div className="min-h-screen bg-[#FDF8F3] relative overflow-hidden">
+    <div className="min-h-screen bg-[#FAFAF7] relative overflow-hidden">
       <div className="home-background" />
       <div className="home-blob home-blob-1" />
       <div className="home-blob home-blob-2" />
@@ -161,12 +161,12 @@ export default function PostScriptRecipientPage({ params }: { params: Promise<{ 
       <div className="relative z-10 max-w-2xl mx-auto p-4 py-12">
         {/* Header */}
         <div className="text-center mb-8">
-          <div className="w-16 h-16 rounded-full bg-[#406A56]/20 flex items-center justify-center mx-auto mb-4 overflow-hidden">
+          <div className="w-16 h-16 rounded-full bg-[#2D5A3D]/20 flex items-center justify-center mx-auto mb-4 overflow-hidden">
             {postscript.sender_avatar ? (
               <img src={postscript.sender_avatar}
                 alt="" className="w-full h-full object-cover" />
             ) : (
-              <User className="w-8 h-8 text-[#406A56]" />
+              <User className="w-8 h-8 text-[#2D5A3D]" />
             )}
           </div>
           <p className="text-gray-500">A PostScript from</p>
@@ -187,7 +187,7 @@ export default function PostScriptRecipientPage({ params }: { params: Promise<{ 
           {postscript.video_url && (
             <div className="mt-8">
               <h3 className="text-lg font-medium text-[#2d2d2d] mb-3 flex items-center gap-2">
-                <Video className="w-5 h-5 text-[#406A56]" />
+                <Video className="w-5 h-5 text-[#2D5A3D]" />
                 Video Message
               </h3>
               <video 
@@ -202,7 +202,7 @@ export default function PostScriptRecipientPage({ params }: { params: Promise<{ 
           {postscript.attachments && postscript.attachments.length > 0 && (
             <div className="mt-8">
               <h3 className="text-lg font-medium text-[#2d2d2d] mb-3 flex items-center gap-2">
-                <Paperclip className="w-5 h-5 text-[#406A56]" />
+                <Paperclip className="w-5 h-5 text-[#2D5A3D]" />
                 Attachments
               </h3>
               <div className="space-y-2">
@@ -212,7 +212,7 @@ export default function PostScriptRecipientPage({ params }: { params: Promise<{ 
                     href={att.file_url}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="block p-3 bg-[#406A56]/5 rounded-lg hover:bg-[#406A56]/10 transition-colors"
+                    className="block p-3 bg-[#2D5A3D]/5 rounded-lg hover:bg-[#2D5A3D]/10 transition-colors"
                   >
                     {att.file_name}
                   </a>
@@ -223,9 +223,9 @@ export default function PostScriptRecipientPage({ params }: { params: Promise<{ 
 
           {/* Gift */}
           {postscript.has_gift && (
-            <div className="mt-8 p-6 bg-gradient-to-r from-[#D9C61A]/10 to-[#406A56]/10 rounded-xl">
+            <div className="mt-8 p-6 bg-gradient-to-r from-[#C4A235]/10 to-[#2D5A3D]/10 rounded-xl">
               <h3 className="text-lg font-medium text-[#2d2d2d] mb-2 flex items-center gap-2">
-                <Gift className="w-5 h-5 text-[#D9C61A]" />
+                <Gift className="w-5 h-5 text-[#C4A235]" />
                 A Gift For You
               </h3>
               {postscript.gift_type && (
@@ -238,7 +238,7 @@ export default function PostScriptRecipientPage({ params }: { params: Promise<{ 
           )}
 
           {/* Footer */}
-          <div className="mt-8 pt-6 border-t border-[#406A56]/10 text-center">
+          <div className="mt-8 pt-6 border-t border-[#2D5A3D]/10 text-center">
             <p className="text-gray-400 text-sm flex items-center justify-center gap-2">
               <Calendar className="w-4 h-4" />
               Delivered on {new Date(postscript.delivery_date).toLocaleDateString('en-US', {
@@ -247,7 +247,7 @@ export default function PostScriptRecipientPage({ params }: { params: Promise<{ 
                 year: 'numeric'
               })}
             </p>
-            <p className="text-[#406A56]/50 text-xs mt-3 italic tracking-wide">Live on.</p>
+            <p className="text-[#2D5A3D]/50 text-xs mt-3 italic tracking-wide">Live on.</p>
           </div>
         </div>
 
@@ -256,7 +256,7 @@ export default function PostScriptRecipientPage({ params }: { params: Promise<{ 
           <p className="text-gray-500 mb-4">Want to create your own PostScripts?</p>
           <Link 
             href="/signup"
-            className="inline-flex items-center gap-2 px-6 py-3 bg-[#406A56] text-white rounded-xl font-medium hover:bg-[#355a48] transition-colors"
+            className="inline-flex items-center gap-2 px-6 py-3 bg-[#2D5A3D] text-white rounded-xl font-medium hover:bg-[#355a48] transition-colors"
           >
             <Heart className="w-4 h-4" />
             Start Your Legacy

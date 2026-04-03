@@ -193,14 +193,14 @@ export function TimelineBrowse({ memories }: TimelineBrowseProps) {
             <ChevronLeft size={20} />
           </button>
           <div className="flex items-center gap-3">
-            <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-[#D9C61A] to-[#C35F33] flex items-center justify-center shadow-md">
+            <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-[#C4A235] to-[#B8562E] flex items-center justify-center shadow-md">
               <Calendar size={24} className="text-white" />
             </div>
             <div>
               <h2 className="text-xl font-bold text-[#2d2d2d]">
                 {MONTHS[selectedMonth]} {selectedYear}
               </h2>
-              <p className="text-sm text-[#406A56]">
+              <p className="text-sm text-[#2D5A3D]">
                 {monthMemories.length} memories
               </p>
             </div>
@@ -242,7 +242,7 @@ export function TimelineBrowse({ memories }: TimelineBrowseProps) {
           </button>
           <div>
             <h2 className="text-xl font-bold text-[#2d2d2d]">{selectedYear}</h2>
-            <p className="text-sm text-[#406A56]">{getBreadcrumb()}</p>
+            <p className="text-sm text-[#2D5A3D]">{getBreadcrumb()}</p>
           </div>
         </div>
 
@@ -283,7 +283,7 @@ export function TimelineBrowse({ memories }: TimelineBrowseProps) {
                 ) : (
                   <div className={`absolute inset-0 ${
                     count > 0
-                      ? 'bg-gradient-to-br from-[#406A56]/30 to-[#D9C61A]/30'
+                      ? 'bg-gradient-to-br from-[#2D5A3D]/30 to-[#C4A235]/30'
                       : 'bg-gray-200/50'
                   }`} />
                 )}
@@ -296,10 +296,10 @@ export function TimelineBrowse({ memories }: TimelineBrowseProps) {
                   <div 
                     className={`absolute top-2 right-2 w-4 h-4 rounded-full ${
                       getDensityClass(count, maxMonthCount) === 'density-high' 
-                        ? 'bg-[#D9C61A]'
+                        ? 'bg-[#C4A235]'
                         : getDensityClass(count, maxMonthCount) === 'density-medium'
-                        ? 'bg-[#D9C61A]/70'
-                        : 'bg-[#D9C61A]/40'
+                        ? 'bg-[#C4A235]/70'
+                        : 'bg-[#C4A235]/40'
                     }`}
                     style={{
                       transform: `scale(${0.5 + (count / maxMonthCount) * 0.5})`
@@ -341,7 +341,7 @@ export function TimelineBrowse({ memories }: TimelineBrowseProps) {
           </button>
           <div>
             <h2 className="text-xl font-bold text-[#2d2d2d]">The {selectedDecade}s</h2>
-            <p className="text-sm text-[#406A56]">
+            <p className="text-sm text-[#2D5A3D]">
               {getDecadeCount(selectedDecade)} memories across {years.length} years
             </p>
           </div>
@@ -383,7 +383,7 @@ export function TimelineBrowse({ memories }: TimelineBrowseProps) {
                 ) : (
                   <div className={`absolute inset-0 ${
                     count > 0
-                      ? 'bg-gradient-to-br from-[#406A56]/30 to-[#D9C61A]/30'
+                      ? 'bg-gradient-to-br from-[#2D5A3D]/30 to-[#C4A235]/30'
                       : 'bg-gray-200/50'
                   }`} />
                 )}
@@ -396,9 +396,9 @@ export function TimelineBrowse({ memories }: TimelineBrowseProps) {
                   <div 
                     className={`absolute top-2 right-2 px-2 py-0.5 rounded-full text-xs font-bold
                                 ${getDensityClass(count, maxYearCount) === 'density-high' 
-                                  ? 'bg-[#D9C61A] text-[#2d2d2d]'
+                                  ? 'bg-[#C4A235] text-[#2d2d2d]'
                                   : getDensityClass(count, maxYearCount) === 'density-medium'
-                                  ? 'bg-[#D9C61A]/80 text-[#2d2d2d]'
+                                  ? 'bg-[#C4A235]/80 text-[#2d2d2d]'
                                   : 'bg-white/60 text-[#2d2d2d]'
                                 }`}
                   >
@@ -425,12 +425,12 @@ export function TimelineBrowse({ memories }: TimelineBrowseProps) {
     <div>
       {/* Header */}
       <div className="flex items-center gap-3 mb-6">
-        <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[#D9C61A] to-[#C35F33] flex items-center justify-center">
+        <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[#C4A235] to-[#B8562E] flex items-center justify-center">
           <Clock size={20} className="text-white" />
         </div>
         <div>
           <h2 className="text-lg font-bold text-[#2d2d2d]">Your Timeline</h2>
-          <p className="text-sm text-[#406A56]">
+          <p className="text-sm text-[#2D5A3D]">
             Explore {memories.length} memories across {sortedDecades.length} {sortedDecades.length === 1 ? 'decade' : 'decades'}
           </p>
         </div>
@@ -439,7 +439,7 @@ export function TimelineBrowse({ memories }: TimelineBrowseProps) {
       {sortedDecades.length === 0 ? (
         <div className="empty-state">
           <div className="empty-state-icon">
-            <Calendar size={32} className="text-[#406A56]/50" />
+            <Calendar size={32} className="text-[#2D5A3D]/50" />
           </div>
           <h3 className="empty-state-title">No dated memories yet</h3>
           <p className="empty-state-text">
@@ -476,7 +476,7 @@ export function TimelineBrowse({ memories }: TimelineBrowseProps) {
                     unoptimized
                   />
                 ) : (
-                  <div className="absolute inset-0 bg-gradient-to-br from-[#406A56]/40 to-[#D9C61A]/40" />
+                  <div className="absolute inset-0 bg-gradient-to-br from-[#2D5A3D]/40 to-[#C4A235]/40" />
                 )}
                 
                 {/* Overlay */}
@@ -485,7 +485,7 @@ export function TimelineBrowse({ memories }: TimelineBrowseProps) {
                 {/* Density bar */}
                 <div className="absolute top-0 left-0 right-0 h-1.5 bg-black/20">
                   <div 
-                    className="h-full bg-[#D9C61A] transition-all"
+                    className="h-full bg-[#C4A235] transition-all"
                     style={{ width: `${(count / maxDecadeCount) * 100}%` }}
                   />
                 </div>
@@ -507,7 +507,7 @@ export function TimelineBrowse({ memories }: TimelineBrowseProps) {
                 </div>
                 
                 {/* Hover glow */}
-                <div className="absolute inset-0 bg-[#D9C61A]/0 group-hover:bg-[#D9C61A]/10 transition-colors" />
+                <div className="absolute inset-0 bg-[#C4A235]/0 group-hover:bg-[#C4A235]/10 transition-colors" />
               </motion.button>
             )
           })}

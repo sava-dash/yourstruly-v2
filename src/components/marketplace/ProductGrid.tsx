@@ -55,7 +55,7 @@ export default function ProductGrid({
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ delay: i * 0.05 }}
-            className="bg-white rounded-2xl border border-[#406A56]/10 overflow-hidden"
+            className="bg-white rounded-2xl border border-[#2D5A3D]/10 overflow-hidden"
           >
             {/* Image skeleton */}
             <div className="aspect-[4/3] bg-gray-200 animate-pulse" />
@@ -84,8 +84,8 @@ export default function ProductGrid({
         animate={{ opacity: 1, y: 0 }}
         className="flex flex-col items-center justify-center py-16 px-4"
       >
-        <div className="w-20 h-20 rounded-full bg-[#406A56]/10 flex items-center justify-center mb-4">
-          <SearchX size={32} className="text-[#406A56]" />
+        <div className="w-20 h-20 rounded-full bg-[#2D5A3D]/10 flex items-center justify-center mb-4">
+          <SearchX size={32} className="text-[#2D5A3D]" />
         </div>
         <h3 className="font-playfair text-xl font-semibold text-[#2d2d2d] mb-2">
           {emptyState?.title || 'No products found'}
@@ -185,7 +185,7 @@ export function ProductList({
     return (
       <div className="space-y-3">
         {Array.from({ length: 5 }).map((_, i) => (
-          <div key={i} className="flex gap-3 p-3 bg-white rounded-xl border border-[#406A56]/10">
+          <div key={i} className="flex gap-3 p-3 bg-white rounded-xl border border-[#2D5A3D]/10">
             <div className="w-20 h-20 bg-gray-200 rounded-lg animate-pulse flex-shrink-0" />
             <div className="flex-1 space-y-2 py-1">
               <div className="h-4 bg-gray-200 rounded animate-pulse w-1/3" />

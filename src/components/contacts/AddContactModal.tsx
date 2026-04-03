@@ -107,13 +107,13 @@ export function AddContactModal({ onClose, onSave }: AddContactModalProps) {
         initial={{ scale: 0.9, opacity: 0 }}
         animate={{ scale: 1, opacity: 1 }}
         exit={{ scale: 0.9, opacity: 0 }}
-        className="bg-[#F2F1E5] rounded-2xl p-6 max-w-lg w-full max-h-[90vh] overflow-y-auto"
+        className="bg-[#F5F3EE] rounded-2xl p-6 max-w-lg w-full max-h-[90vh] overflow-y-auto"
         onClick={(e) => e.stopPropagation()}
       >
         <div className="flex items-center justify-between mb-6">
           <h2 className="text-xl font-bold text-[#2d2d2d]">Add Contact</h2>
-          <button onClick={onClose} className="p-2 hover:bg-[#406A56]/10 rounded-lg">
-            <X size={20} className="text-[#406A56]" />
+          <button onClick={onClose} className="p-2 hover:bg-[#2D5A3D]/10 rounded-lg">
+            <X size={20} className="text-[#2D5A3D]" />
           </button>
         </div>
         
@@ -123,7 +123,7 @@ export function AddContactModal({ onClose, onSave }: AddContactModalProps) {
             <input 
               value={form.full_name} 
               onChange={e => setForm({ ...form, full_name: e.target.value })} 
-              className="w-full p-3 bg-white border border-[#406A56]/20 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#406A56]/30" 
+              className="w-full p-3 bg-white border border-[#2D5A3D]/20 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#2D5A3D]/30" 
               placeholder="John Doe" 
             />
           </div>
@@ -133,7 +133,7 @@ export function AddContactModal({ onClose, onSave }: AddContactModalProps) {
             <select 
               value={form.relationship_type} 
               onChange={e => setForm({ ...form, relationship_type: e.target.value })} 
-              className="w-full p-3 bg-white border border-[#406A56]/20 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#406A56]/30"
+              className="w-full p-3 bg-white border border-[#2D5A3D]/20 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#2D5A3D]/30"
             >
               <option value="">Select...</option>
               {RELATIONSHIP_OPTIONS.map(group => (
@@ -150,7 +150,7 @@ export function AddContactModal({ onClose, onSave }: AddContactModalProps) {
               <input 
                 value={form.nickname} 
                 onChange={e => setForm({ ...form, nickname: e.target.value })} 
-                className="w-full p-3 bg-white border border-[#406A56]/20 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#406A56]/30" 
+                className="w-full p-3 bg-white border border-[#2D5A3D]/20 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#2D5A3D]/30" 
               />
             </div>
             <div>
@@ -159,7 +159,7 @@ export function AddContactModal({ onClose, onSave }: AddContactModalProps) {
                 type="date" 
                 value={form.date_of_birth} 
                 onChange={e => setForm({ ...form, date_of_birth: e.target.value })} 
-                className="w-full p-3 bg-white border border-[#406A56]/20 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#406A56]/30" 
+                className="w-full p-3 bg-white border border-[#2D5A3D]/20 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#2D5A3D]/30" 
               />
             </div>
           </div>
@@ -171,7 +171,7 @@ export function AddContactModal({ onClose, onSave }: AddContactModalProps) {
                 type="email" 
                 value={form.email} 
                 onChange={e => setForm({ ...form, email: e.target.value })} 
-                className="w-full p-3 bg-white border border-[#406A56]/20 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#406A56]/30" 
+                className="w-full p-3 bg-white border border-[#2D5A3D]/20 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#2D5A3D]/30" 
                 placeholder="email@example.com" 
               />
             </div>
@@ -181,7 +181,7 @@ export function AddContactModal({ onClose, onSave }: AddContactModalProps) {
                 type="tel" 
                 value={form.phone} 
                 onChange={e => setForm({ ...form, phone: e.target.value })} 
-                className="w-full p-3 bg-white border border-[#406A56]/20 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#406A56]/30" 
+                className="w-full p-3 bg-white border border-[#2D5A3D]/20 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#2D5A3D]/30" 
                 placeholder="(555) 123-4567" 
               />
             </div>
@@ -192,14 +192,14 @@ export function AddContactModal({ onClose, onSave }: AddContactModalProps) {
             <input 
               value={form.address} 
               onChange={e => setForm({ ...form, address: e.target.value })} 
-              className="w-full p-3 bg-white border border-[#406A56]/20 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#406A56]/30 mb-3" 
+              className="w-full p-3 bg-white border border-[#2D5A3D]/20 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#2D5A3D]/30 mb-3" 
               placeholder="123 Main Street, Apt 4" 
             />
             <div className="grid grid-cols-4 gap-3">
-              <input value={form.city} onChange={e => setForm({ ...form, city: e.target.value })} className="w-full p-3 bg-white border border-[#406A56]/20 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#406A56]/30" placeholder="City" />
-              <input value={form.state} onChange={e => setForm({ ...form, state: e.target.value })} className="w-full p-3 bg-white border border-[#406A56]/20 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#406A56]/30" placeholder="State" />
-              <input value={form.zipcode} onChange={e => setForm({ ...form, zipcode: e.target.value })} className="w-full p-3 bg-white border border-[#406A56]/20 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#406A56]/30" placeholder="Zip" />
-              <input value={form.country} onChange={e => setForm({ ...form, country: e.target.value })} className="w-full p-3 bg-white border border-[#406A56]/20 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#406A56]/30" placeholder="Country" />
+              <input value={form.city} onChange={e => setForm({ ...form, city: e.target.value })} className="w-full p-3 bg-white border border-[#2D5A3D]/20 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#2D5A3D]/30" placeholder="City" />
+              <input value={form.state} onChange={e => setForm({ ...form, state: e.target.value })} className="w-full p-3 bg-white border border-[#2D5A3D]/20 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#2D5A3D]/30" placeholder="State" />
+              <input value={form.zipcode} onChange={e => setForm({ ...form, zipcode: e.target.value })} className="w-full p-3 bg-white border border-[#2D5A3D]/20 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#2D5A3D]/30" placeholder="Zip" />
+              <input value={form.country} onChange={e => setForm({ ...form, country: e.target.value })} className="w-full p-3 bg-white border border-[#2D5A3D]/20 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#2D5A3D]/30" placeholder="Country" />
             </div>
           </div>
           
@@ -208,20 +208,20 @@ export function AddContactModal({ onClose, onSave }: AddContactModalProps) {
             <textarea 
               value={form.notes} 
               onChange={e => setForm({ ...form, notes: e.target.value })} 
-              className="w-full p-3 bg-white border border-[#406A56]/20 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#406A56]/30 resize-none" 
+              className="w-full p-3 bg-white border border-[#2D5A3D]/20 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#2D5A3D]/30 resize-none" 
               rows={2} 
             />
           </div>
         </div>
         
-        <div className="flex justify-end gap-3 mt-6 pt-4 border-t border-[#406A56]/10">
-          <button onClick={onClose} className="px-4 py-2.5 border border-[#406A56]/20 rounded-xl text-[#406A56] font-medium hover:bg-[#406A56]/5">
+        <div className="flex justify-end gap-3 mt-6 pt-4 border-t border-[#2D5A3D]/10">
+          <button onClick={onClose} className="px-4 py-2.5 border border-[#2D5A3D]/20 rounded-xl text-[#2D5A3D] font-medium hover:bg-[#2D5A3D]/5">
             Cancel
           </button>
           <button 
             onClick={handleSave} 
             disabled={saving || !form.full_name || !form.relationship_type} 
-            className="px-4 py-2.5 bg-[#406A56] text-white rounded-xl font-medium hover:bg-[#4a7a64] disabled:opacity-50"
+            className="px-4 py-2.5 bg-[#2D5A3D] text-white rounded-xl font-medium hover:bg-[#234A31] disabled:opacity-50"
           >
             {saving ? 'Saving...' : 'Save'}
           </button>

@@ -78,7 +78,7 @@ export default function UsersTable({
       return (
         <span className={`inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium ${
           isActive 
-            ? 'bg-[#406A56]/10 text-[#406A56]' 
+            ? 'bg-[#2D5A3D]/10 text-[#2D5A3D]' 
             : 'bg-gray-100 text-gray-600'
         }`}>
           <Crown className="w-3 h-3" />
@@ -90,7 +90,7 @@ export default function UsersTable({
     return (
       <span className={`inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium ${
         isActive 
-          ? 'bg-[#D9C61A]/10 text-[#8B7C00]' 
+          ? 'bg-[#C4A235]/10 text-[#8B7C00]' 
           : 'bg-gray-100 text-gray-600'
       }`}>
         {sub.tier.charAt(0).toUpperCase() + sub.tier.slice(1)}
@@ -103,13 +103,13 @@ export default function UsersTable({
       <div className="overflow-x-auto">
         <table className="w-full">
           <thead>
-            <tr className="border-b border-[#C35F33]/10">
+            <tr className="border-b border-[#B8562E]/10">
               <th className="px-4 py-4 text-left">
                 <input
                   type="checkbox"
                   checked={selectedUsers.size === users.length && users.length > 0}
                   onChange={toggleSelectAll}
-                  className="rounded border-[#C35F33]/20 text-[#406A56] focus:ring-[#406A56]/20"
+                  className="rounded border-[#B8562E]/20 text-[#2D5A3D] focus:ring-[#2D5A3D]/20"
                 />
               </th>
               <th className="px-4 py-4 text-left text-sm font-medium text-[#2a1f1a]/60">User</th>
@@ -119,7 +119,7 @@ export default function UsersTable({
               <th className="px-4 py-4 text-right text-sm font-medium text-[#2a1f1a]/60">Actions</th>
             </tr>
           </thead>
-          <tbody className="divide-y divide-[#C35F33]/5">
+          <tbody className="divide-y divide-[#B8562E]/5">
             {users.map((user) => (
               <tr key={user.id} className="hover:bg-white/50 transition-colors">
                 <td className="px-4 py-4">
@@ -127,7 +127,7 @@ export default function UsersTable({
                     type="checkbox"
                     checked={selectedUsers.has(user.id)}
                     onChange={() => toggleSelectUser(user.id)}
-                    className="rounded border-[#C35F33]/20 text-[#406A56] focus:ring-[#406A56]/20"
+                    className="rounded border-[#B8562E]/20 text-[#2D5A3D] focus:ring-[#2D5A3D]/20"
                   />
                 </td>
                 <td className="px-4 py-4">
@@ -139,8 +139,8 @@ export default function UsersTable({
                         className="w-10 h-10 rounded-full object-cover"
                       />
                     ) : (
-                      <div className="w-10 h-10 rounded-full bg-gradient-to-br from-[#406A56]/20 to-[#C35F33]/20 flex items-center justify-center">
-                        <span className="text-sm font-medium text-[#406A56]">
+                      <div className="w-10 h-10 rounded-full bg-gradient-to-br from-[#2D5A3D]/20 to-[#B8562E]/20 flex items-center justify-center">
+                        <span className="text-sm font-medium text-[#2D5A3D]">
                           {(user.full_name || user.email || 'U').charAt(0).toUpperCase()}
                         </span>
                       </div>
@@ -160,7 +160,7 @@ export default function UsersTable({
                   {formatDistanceToNow(new Date(user.created_at), { addSuffix: true })}
                 </td>
                 <td className="px-4 py-4">
-                  <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-[#406A56]/10 text-[#406A56]">
+                  <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-[#2D5A3D]/10 text-[#2D5A3D]">
                     Active
                   </span>
                 </td>
@@ -179,23 +179,23 @@ export default function UsersTable({
                           className="fixed inset-0 z-10" 
                           onClick={() => setDropdownOpen(null)}
                         />
-                        <div className="absolute right-0 mt-1 w-48 bg-white rounded-xl shadow-lg border border-[#C35F33]/10 z-20 py-1">
+                        <div className="absolute right-0 mt-1 w-48 bg-white rounded-xl shadow-lg border border-[#B8562E]/10 z-20 py-1">
                           <Link
                             href={`/admin/users/${user.id}`}
-                            className="flex items-center gap-2 px-4 py-2 text-sm text-[#2a1f1a] hover:bg-[#406A56]/5"
+                            className="flex items-center gap-2 px-4 py-2 text-sm text-[#2a1f1a] hover:bg-[#2D5A3D]/5"
                           >
                             <Eye className="w-4 h-4" />
                             View Details
                           </Link>
                           <Link
                             href={`/admin/users/${user.id}/edit`}
-                            className="flex items-center gap-2 px-4 py-2 text-sm text-[#2a1f1a] hover:bg-[#406A56]/5"
+                            className="flex items-center gap-2 px-4 py-2 text-sm text-[#2a1f1a] hover:bg-[#2D5A3D]/5"
                           >
                             <Edit className="w-4 h-4" />
                             Edit User
                           </Link>
-                          <hr className="my-1 border-[#C35F33]/10" />
-                          <button className="flex items-center gap-2 px-4 py-2 text-sm text-[#C35F33] hover:bg-[#C35F33]/5 w-full text-left">
+                          <hr className="my-1 border-[#B8562E]/10" />
+                          <button className="flex items-center gap-2 px-4 py-2 text-sm text-[#B8562E] hover:bg-[#B8562E]/5 w-full text-left">
                             <Ban className="w-4 h-4" />
                             Suspend
                           </button>
@@ -215,14 +215,14 @@ export default function UsersTable({
       </div>
 
       {/* Pagination */}
-      <div className="flex items-center justify-between px-4 py-4 border-t border-[#C35F33]/10">
+      <div className="flex items-center justify-between px-4 py-4 border-t border-[#B8562E]/10">
         <p className="text-sm text-[#2a1f1a]/60">
           Showing {users.length} of {totalCount} users
         </p>
         <div className="flex items-center gap-2">
           <Link
             href={`/admin/users?page=${Math.max(1, currentPage - 1)}`}
-            className={`p-2 rounded-lg border border-[#C35F33]/10 hover:bg-white/80 transition-colors ${
+            className={`p-2 rounded-lg border border-[#B8562E]/10 hover:bg-white/80 transition-colors ${
               currentPage === 1 ? 'opacity-50 pointer-events-none' : ''
             }`}
           >
@@ -233,7 +233,7 @@ export default function UsersTable({
           </span>
           <Link
             href={`/admin/users?page=${Math.min(totalPages, currentPage + 1)}`}
-            className={`p-2 rounded-lg border border-[#C35F33]/10 hover:bg-white/80 transition-colors ${
+            className={`p-2 rounded-lg border border-[#B8562E]/10 hover:bg-white/80 transition-colors ${
               currentPage === totalPages || totalPages === 0 ? 'opacity-50 pointer-events-none' : ''
             }`}
           >

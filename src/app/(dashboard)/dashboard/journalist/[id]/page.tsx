@@ -238,7 +238,7 @@ export default function SessionDetailPage({ params }: { params: Promise<{ id: st
     return (
       <div className="page-container">
         <div className="page-background"><div className="page-blob page-blob-1"/><div className="page-blob page-blob-2"/></div>
-        <div className="loading-container"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#406A56]"/></div>
+        <div className="loading-container"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#2D5A3D]"/></div>
       </div>
     )
   }
@@ -249,15 +249,15 @@ export default function SessionDetailPage({ params }: { params: Promise<{ id: st
         <div className="page-background"><div className="page-blob page-blob-1"/></div>
         <div className="flex flex-col items-center justify-center min-h-[50vh] text-center">
           <p className="text-gray-500 mb-4">Interview not found</p>
-          <Link href="/dashboard/journalist" className="text-[#406A56] hover:underline">← Back</Link>
+          <Link href="/dashboard/journalist" className="text-[#2D5A3D] hover:underline">← Back</Link>
         </div>
       </div>
     )
   }
 
   const statusColors: Record<string, string> = {
-    completed: 'bg-[#406A56]/10 text-[#406A56]',
-    sent: 'bg-[#D9C61A]/10 text-[#9a8c12]',
+    completed: 'bg-[#2D5A3D]/10 text-[#2D5A3D]',
+    sent: 'bg-[#C4A235]/10 text-[#9a8c12]',
     pending: 'bg-gray-100 text-gray-500',
   }
 
@@ -292,11 +292,11 @@ export default function SessionDetailPage({ params }: { params: Promise<{ id: st
 
             <div className="flex items-center gap-2">
               <button onClick={openFollowupModal}
-                className="flex items-center gap-2 px-4 py-2.5 bg-[#406A56] hover:bg-[#4a7a64] text-white rounded-xl transition-all text-sm font-medium">
+                className="flex items-center gap-2 px-4 py-2.5 bg-[#2D5A3D] hover:bg-[#234A31] text-white rounded-xl transition-all text-sm font-medium">
                 <Plus size={16}/> Ask More
               </button>
               <button onClick={copyLink}
-                className="flex items-center gap-2 px-4 py-2.5 glass-card-page hover:shadow-md text-[#406A56] rounded-xl transition-all text-sm font-medium">
+                className="flex items-center gap-2 px-4 py-2.5 glass-card-page hover:shadow-md text-[#2D5A3D] rounded-xl transition-all text-sm font-medium">
                 {copied ? <Check size={16}/> : <Copy size={16}/>}
                 {copied ? 'Copied!' : 'Copy Link'}
               </button>
@@ -359,7 +359,7 @@ export default function SessionDetailPage({ params }: { params: Promise<{ id: st
                 {/* Response bubble */}
                 {response ? (
                   <div className="flex items-start gap-3 pl-8">
-                    <div className="w-8 h-8 rounded-full bg-gradient-to-br from-[#406A56] to-[#5A8A72] flex items-center justify-center flex-shrink-0 mt-1 text-white text-sm font-semibold">
+                    <div className="w-8 h-8 rounded-full bg-gradient-to-br from-[#2D5A3D] to-[#5A8A72] flex items-center justify-center flex-shrink-0 mt-1 text-white text-sm font-semibold">
                       {session.contact?.full_name?.charAt(0) || '?'}
                     </div>
                     <div className="flex-1">
@@ -367,12 +367,12 @@ export default function SessionDetailPage({ params }: { params: Promise<{ id: st
                         
                         {/* Audio player */}
                         {response.audio_url && (
-                          <div className="px-5 py-4 border-b border-gray-100 bg-gradient-to-r from-[#406A56]/5 to-transparent">
+                          <div className="px-5 py-4 border-b border-gray-100 bg-gradient-to-r from-[#2D5A3D]/5 to-transparent">
                             <div className="flex items-center gap-3">
-                              <div className="w-8 h-8 rounded-full bg-[#406A56]/10 flex items-center justify-center">
-                                <Volume2 size={14} className="text-[#406A56]"/>
+                              <div className="w-8 h-8 rounded-full bg-[#2D5A3D]/10 flex items-center justify-center">
+                                <Volume2 size={14} className="text-[#2D5A3D]"/>
                               </div>
-                              <audio controls src={response.audio_url} className="flex-1 h-8" style={{ accentColor: '#406A56' }}/>
+                              <audio controls src={response.audio_url} className="flex-1 h-8" style={{ accentColor: '#2D5A3D' }}/>
                               {response.duration > 0 && (
                                 <span className="text-xs text-gray-400 whitespace-nowrap">{formatDuration(response.duration)}</span>
                               )}
@@ -398,10 +398,10 @@ export default function SessionDetailPage({ params }: { params: Promise<{ id: st
 
                         {/* Smart Tags + AI Summary */}
                         {(response.ai_summary || response.ai_category) && (
-                          <div className="px-5 py-3 bg-[#F2F1E5]/60 border-t border-gray-100 flex flex-wrap items-center gap-2">
-                            <Sparkles size={12} className="text-[#D9C61A]"/>
+                          <div className="px-5 py-3 bg-[#F5F3EE]/60 border-t border-gray-100 flex flex-wrap items-center gap-2">
+                            <Sparkles size={12} className="text-[#C4A235]"/>
                             {response.ai_category && (
-                              <span className="px-2.5 py-1 bg-[#406A56]/10 text-[#406A56] rounded-full text-xs capitalize">
+                              <span className="px-2.5 py-1 bg-[#2D5A3D]/10 text-[#2D5A3D] rounded-full text-xs capitalize">
                                 {response.ai_category}
                               </span>
                             )}
@@ -436,7 +436,7 @@ export default function SessionDetailPage({ params }: { params: Promise<{ id: st
             <p className="text-sm text-gray-600 font-mono truncate">{getInterviewLink()}</p>
           </div>
           <a href={getInterviewLink()} target="_blank" rel="noopener noreferrer"
-            className="flex items-center gap-1.5 px-3 py-2 bg-[#406A56]/10 text-[#406A56] rounded-lg text-sm flex-shrink-0 hover:bg-[#406A56]/20 transition-colors">
+            className="flex items-center gap-1.5 px-3 py-2 bg-[#2D5A3D]/10 text-[#2D5A3D] rounded-lg text-sm flex-shrink-0 hover:bg-[#2D5A3D]/20 transition-colors">
             <ExternalLink size={14}/> Open
           </a>
         </div>
@@ -449,7 +449,7 @@ export default function SessionDetailPage({ params }: { params: Promise<{ id: st
             className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-50 p-4"
             onClick={() => setShowFollowupModal(false)}>
             <motion.div initial={{ scale: 0.95, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.95, opacity: 0 }}
-              className="bg-[#F2F1E5] rounded-2xl max-w-lg w-full max-h-[80vh] overflow-hidden shadow-xl"
+              className="bg-[#F5F3EE] rounded-2xl max-w-lg w-full max-h-[80vh] overflow-hidden shadow-xl"
               onClick={e => e.stopPropagation()}>
               <div className="flex justify-between items-center px-6 py-4 border-b border-[#E8E7DC]">
                 <h3 className="text-lg font-semibold text-[#2d2d2d]">Ask a Follow-up</h3>
@@ -462,14 +462,14 @@ export default function SessionDetailPage({ params }: { params: Promise<{ id: st
                   onChange={e => { setCustomQuestion(e.target.value); setSelectedQuestion(null) }}
                   placeholder="Write your own question…"
                   rows={2}
-                  className="w-full px-4 py-3 bg-white border border-gray-200 rounded-xl text-[#2d2d2d] placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#406A56] resize-none mb-4"/>
+                  className="w-full px-4 py-3 bg-white border border-gray-200 rounded-xl text-[#2d2d2d] placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#2D5A3D] resize-none mb-4"/>
                 <div className="flex items-center gap-3 mb-4">
                   <div className="flex-1 h-px bg-gray-200"/><span className="text-gray-400 text-xs">or browse</span><div className="flex-1 h-px bg-gray-200"/>
                 </div>
                 <div className="flex gap-2 overflow-x-auto pb-2 mb-4">
                   {CATEGORIES.map(cat => (
                     <button key={cat.id} onClick={() => { setSelectedCategory(cat.id); setCustomQuestion('') }}
-                      className={`flex items-center gap-1.5 px-3 py-2 rounded-full whitespace-nowrap text-sm transition-all ${selectedCategory === cat.id ? 'bg-[#406A56] text-white' : 'bg-white text-gray-700 hover:bg-gray-100'}`}>
+                      className={`flex items-center gap-1.5 px-3 py-2 rounded-full whitespace-nowrap text-sm transition-all ${selectedCategory === cat.id ? 'bg-[#2D5A3D] text-white' : 'bg-white text-gray-700 hover:bg-gray-100'}`}>
                       {cat.emoji} {cat.label}
                     </button>
                   ))}
@@ -478,7 +478,7 @@ export default function SessionDetailPage({ params }: { params: Promise<{ id: st
                   <div className="space-y-2 max-h-40 overflow-y-auto">
                     {questionBank.filter(q => q.category === selectedCategory).slice(0, 8).map(q => (
                       <button key={q.id} onClick={() => { setSelectedQuestion(q.id); setCustomQuestion('') }}
-                        className={`w-full text-left px-4 py-3 rounded-xl text-sm transition-all ${selectedQuestion === q.id ? 'bg-[#406A56]/10 ring-2 ring-[#406A56] text-[#2d2d2d]' : 'bg-white text-gray-700 hover:bg-gray-50'}`}>
+                        className={`w-full text-left px-4 py-3 rounded-xl text-sm transition-all ${selectedQuestion === q.id ? 'bg-[#2D5A3D]/10 ring-2 ring-[#2D5A3D] text-[#2d2d2d]' : 'bg-white text-gray-700 hover:bg-gray-50'}`}>
                         {q.question_text}
                       </button>
                     ))}
@@ -491,7 +491,7 @@ export default function SessionDetailPage({ params }: { params: Promise<{ id: st
               <div className="flex justify-end gap-3 px-6 py-4 border-t border-[#E8E7DC]">
                 <button onClick={() => setShowFollowupModal(false)} className="px-4 py-2.5 text-gray-500 hover:text-gray-700">Cancel</button>
                 <button onClick={sendFollowupQuestion} disabled={sendingFollowup || (!selectedQuestion && !customQuestion.trim())}
-                  className="flex items-center gap-2 px-5 py-2.5 bg-[#406A56] hover:bg-[#4a7a64] disabled:opacity-50 text-white rounded-xl transition-all">
+                  className="flex items-center gap-2 px-5 py-2.5 bg-[#2D5A3D] hover:bg-[#234A31] disabled:opacity-50 text-white rounded-xl transition-all">
                   {sendingFollowup ? <><RefreshCw size={16} className="animate-spin"/> Sending…</> : <><Send size={16}/> Send</>}
                 </button>
               </div>

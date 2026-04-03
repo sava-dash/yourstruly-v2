@@ -258,7 +258,7 @@ export default function ContactDetailPage({ params }: { params: Promise<{ id: st
         <div className="relative z-10 flex items-center justify-center min-h-screen">
           <div className="text-center">
             <p className="text-gray-500 mb-4">Contact not found</p>
-            <Link href="/dashboard/contacts" className="text-[#406A56] hover:underline">
+            <Link href="/dashboard/contacts" className="text-[#2D5A3D] hover:underline">
               Back to contacts
             </Link>
           </div>
@@ -297,13 +297,13 @@ export default function ContactDetailPage({ params }: { params: Promise<{ id: st
                     className="w-16 h-16 rounded-full object-cover border-2 border-white shadow-md"
                   />
                 ) : (
-                  <div className="w-16 h-16 rounded-full bg-gradient-to-br from-[#406A56] to-[#8DACAB] flex items-center justify-center text-white text-2xl font-medium shadow-md">
+                  <div className="w-16 h-16 rounded-full bg-gradient-to-br from-[#2D5A3D] to-[#8DACAB] flex items-center justify-center text-white text-2xl font-medium shadow-md">
                     {contact.full_name.charAt(0)}
                   </div>
                 )}
                 <div>
                   <h1 className="text-2xl font-bold text-gray-900">{contact.full_name}</h1>
-                  <p className="text-[#406A56] text-sm capitalize font-medium">{contact.relationship_type?.replace('_', ' ')}</p>
+                  <p className="text-[#2D5A3D] text-sm capitalize font-medium">{contact.relationship_type?.replace('_', ' ')}</p>
                 </div>
               </div>
             </div>
@@ -311,7 +311,7 @@ export default function ContactDetailPage({ params }: { params: Promise<{ id: st
             <div className="flex items-center gap-2">
               <button
                 onClick={() => setShowEditModal(true)}
-                className="p-2.5 bg-white/80 backdrop-blur-sm text-gray-500 hover:text-[#406A56] rounded-xl transition-all border border-gray-200"
+                className="p-2.5 bg-white/80 backdrop-blur-sm text-gray-500 hover:text-[#2D5A3D] rounded-xl transition-all border border-gray-200"
               >
                 <Edit2 size={18} />
               </button>
@@ -333,21 +333,21 @@ export default function ContactDetailPage({ params }: { params: Promise<{ id: st
               
               {contact.email && (
                 <div className="flex items-center gap-3 text-gray-600">
-                  <Mail size={16} className="text-[#406A56]" />
-                  <a href={`mailto:${contact.email}`} className="text-sm hover:text-[#406A56]">{contact.email}</a>
+                  <Mail size={16} className="text-[#2D5A3D]" />
+                  <a href={`mailto:${contact.email}`} className="text-sm hover:text-[#2D5A3D]">{contact.email}</a>
                 </div>
               )}
               
               {contact.phone && (
                 <div className="flex items-center gap-3 text-gray-600">
-                  <Phone size={16} className="text-[#406A56]" />
-                  <a href={`tel:${contact.phone}`} className="text-sm hover:text-[#406A56]">{contact.phone}</a>
+                  <Phone size={16} className="text-[#2D5A3D]" />
+                  <a href={`tel:${contact.phone}`} className="text-sm hover:text-[#2D5A3D]">{contact.phone}</a>
                 </div>
               )}
               
               {contact.date_of_birth && (
                 <div className="flex items-center gap-3 text-gray-600">
-                  <Calendar size={16} className="text-[#406A56]" />
+                  <Calendar size={16} className="text-[#2D5A3D]" />
                   <span className="text-sm">
                     {formatDate(contact.date_of_birth)}
                     {age && ` (${age} years old)`}
@@ -357,7 +357,7 @@ export default function ContactDetailPage({ params }: { params: Promise<{ id: st
               
               {(contact.address || contact.city) && (
                 <div className="flex items-start gap-3 text-gray-600">
-                  <MapPin size={16} className="text-[#406A56] mt-0.5" />
+                  <MapPin size={16} className="text-[#2D5A3D] mt-0.5" />
                   <span className="text-sm">
                     {[contact.address, contact.city, contact.state, contact.zipcode, contact.country].filter(Boolean).join(', ')}
                   </span>
@@ -385,9 +385,9 @@ export default function ContactDetailPage({ params }: { params: Promise<{ id: st
                 </Link>
                 <Link
                   href={`/dashboard/postscripts/new?contact=${id}`}
-                  className="flex items-center gap-3 p-3 bg-[#C35F33]/5 hover:bg-[#C35F33]/10 rounded-xl transition-colors"
+                  className="flex items-center gap-3 p-3 bg-[#B8562E]/5 hover:bg-[#B8562E]/10 rounded-xl transition-colors"
                 >
-                  <Gift size={18} className="text-[#C35F33]" />
+                  <Gift size={18} className="text-[#B8562E]" />
                   <span className="text-gray-700 text-sm font-medium">Send Future Message</span>
                 </Link>
               </div>
@@ -400,7 +400,7 @@ export default function ContactDetailPage({ params }: { params: Promise<{ id: st
             <div className="bg-white/90 backdrop-blur-sm rounded-2xl p-5 border border-gray-100 shadow-sm">
               <div className="flex items-center justify-between mb-4">
                 <h3 className="text-gray-900 font-semibold flex items-center gap-2">
-                  <Camera size={18} className="text-[#D9C61A]" />
+                  <Camera size={18} className="text-[#C4A235]" />
                   Photos with {contact.full_name.split(' ')[0]}
                 </h3>
                 <div className="flex items-center gap-2">
@@ -413,7 +413,7 @@ export default function ContactDetailPage({ params }: { params: Promise<{ id: st
                       className="hidden"
                       disabled={uploading}
                     />
-                    <Upload size={16} className={`${uploading ? 'text-gray-300' : 'text-[#406A56]'}`} />
+                    <Upload size={16} className={`${uploading ? 'text-gray-300' : 'text-[#2D5A3D]'}`} />
                   </label>
                 </div>
               </div>
@@ -425,7 +425,7 @@ export default function ContactDetailPage({ params }: { params: Promise<{ id: st
                   </div>
                   <p className="text-gray-500 text-sm mb-2">No tagged photos yet</p>
                   <p className="text-gray-400 text-xs mb-4">Tag {contact.full_name.split(' ')[0]} in your memories to see photos here</p>
-                  <label className="inline-flex items-center gap-2 px-4 py-2 bg-[#406A56]/10 text-[#406A56] rounded-lg cursor-pointer hover:bg-[#406A56]/20 transition-colors text-sm font-medium">
+                  <label className="inline-flex items-center gap-2 px-4 py-2 bg-[#2D5A3D]/10 text-[#2D5A3D] rounded-lg cursor-pointer hover:bg-[#2D5A3D]/20 transition-colors text-sm font-medium">
                     <input
                       type="file"
                       accept="image/*"
@@ -443,7 +443,7 @@ export default function ContactDetailPage({ params }: { params: Promise<{ id: st
                     <Link 
                       key={photo.id} 
                       href={`/dashboard/memories/${photo.memory_id}`}
-                      className="aspect-square rounded-xl overflow-hidden hover:ring-2 hover:ring-[#406A56] transition-all"
+                      className="aspect-square rounded-xl overflow-hidden hover:ring-2 hover:ring-[#2D5A3D] transition-all"
                     >
                       <img 
                         src={photo.file_url} 
@@ -465,12 +465,12 @@ export default function ContactDetailPage({ params }: { params: Promise<{ id: st
             <div className="bg-white/90 backdrop-blur-sm rounded-2xl p-5 border border-gray-100 shadow-sm">
               <div className="flex items-center justify-between mb-4">
                 <h3 className="text-gray-900 font-semibold flex items-center gap-2">
-                  <Gift size={18} className="text-[#C35F33]" />
+                  <Gift size={18} className="text-[#B8562E]" />
                   Future Messages
                 </h3>
                 <Link 
                   href={`/dashboard/postscripts/new?contact=${id}`}
-                  className="text-sm text-[#C35F33] hover:underline flex items-center gap-1"
+                  className="text-sm text-[#B8562E] hover:underline flex items-center gap-1"
                 >
                   <Plus size={14} /> Create
                 </Link>
@@ -580,7 +580,7 @@ function ContactModal({ contact, onClose, onSave }: { contact: Contact; onClose:
       <div className="modal-content-page">
         <div className="flex items-center justify-between mb-6">
           <h2 className="text-xl font-semibold text-[#2d2d2d]">Edit Contact</h2>
-          <button onClick={onClose} className="p-2 text-[#406A56]/50 hover:text-[#406A56] hover:bg-[#406A56]/10 rounded-lg" aria-label="Close"><X size={20} /></button>
+          <button onClick={onClose} className="p-2 text-[#2D5A3D]/50 hover:text-[#2D5A3D] hover:bg-[#2D5A3D]/10 rounded-lg" aria-label="Close"><X size={20} /></button>
         </div>
         <div className="space-y-4">
           <div>
@@ -633,7 +633,7 @@ function ContactModal({ contact, onClose, onSave }: { contact: Contact; onClose:
             <textarea value={form.notes} onChange={e => setForm({ ...form, notes: e.target.value })} className="form-textarea" rows={2} />
           </div>
         </div>
-        <div className="flex justify-end gap-3 mt-6 pt-4 border-t border-[#406A56]/10">
+        <div className="flex justify-end gap-3 mt-6 pt-4 border-t border-[#2D5A3D]/10">
           <button onClick={onClose} className="btn-secondary">Cancel</button>
           <button onClick={handleSave} disabled={saving || !form.full_name || !form.relationship_type} className="btn-primary">
             {saving ? 'Saving...' : 'Save'}

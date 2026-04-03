@@ -220,7 +220,7 @@ export default function ContactsWidget() {
             ))}
           </div>
         ) : (
-          <p className="text-center text-gray-500 py-8">No contacts yet. Add your first contact above!</p>
+          <p className="text-center text-gray-500 py-8">Who matters most to you? Start here.</p>
         )}
 
         {/* Import Button */}

@@ -60,7 +60,7 @@ export default function TornEdgeFilter({
         }
 
         .torn-filter-btn:hover {
-          color: #406A56;
+          color: #2D5A3D;
         }
 
         .torn-filter-btn:hover .torn-filter-text {
@@ -73,7 +73,7 @@ export default function TornEdgeFilter({
         }
 
         .torn-filter-btn-active {
-          color: #406A56;
+          color: #2D5A3D;
           font-weight: 600;
         }
 
@@ -114,8 +114,8 @@ export function TornEdgeFilterPill({
               relative px-4 py-2 rounded-full text-sm font-medium
               transition-all duration-300 ease-out
               ${isActive 
-                ? 'bg-[#406A56] text-white shadow-md' 
-                : 'bg-white/60 text-[#666] border border-[#406A56]/10 hover:bg-white hover:border-[#406A56]/20 hover:text-[#406A56]'
+                ? 'bg-[#2D5A3D] text-white shadow-md' 
+                : 'bg-white/60 text-[#666] border border-[#2D5A3D]/10 hover:bg-white hover:border-[#2D5A3D]/20 hover:text-[#2D5A3D]'
               }
             `}
           >

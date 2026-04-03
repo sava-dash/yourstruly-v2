@@ -203,7 +203,7 @@ function TourOverlay({ step, stepIdx, total, onNext, onPrev, onClose }: {
           <p style={{ fontSize: 14, color: '#666', lineHeight: 1.6 }}>{step.content}</p>
           {/* Progress */}
           <div style={{ marginTop: 16, height: 4, borderRadius: 2, background: 'rgba(64,106,86,0.12)', overflow: 'hidden' }}>
-            <div style={{ height: '100%', width: `${((stepIdx + 1) / total) * 100}%`, background: '#406A56', borderRadius: 2, transition: 'width 0.3s' }} />
+            <div style={{ height: '100%', width: `${((stepIdx + 1) / total) * 100}%`, background: '#2D5A3D', borderRadius: 2, transition: 'width 0.3s' }} />
           </div>
           {/* Buttons */}
           <div style={{ marginTop: 14, display: 'flex', alignItems: 'center', gap: 8 }}>
@@ -218,7 +218,7 @@ function TourOverlay({ step, stepIdx, total, onNext, onPrev, onClose }: {
             )}
             <button onClick={onNext} style={{
               padding: '8px 20px', border: 'none', borderRadius: 12,
-              background: '#406A56', color: '#fff', fontSize: 14, fontWeight: 600, cursor: 'pointer',
+              background: '#2D5A3D', color: '#fff', fontSize: 14, fontWeight: 600, cursor: 'pointer',
             }}>
               {isLast ? 'Got it!' : 'Next'}
             </button>
@@ -304,7 +304,7 @@ export function DashboardTourTrigger() {
   return (
     <button
       onClick={() => (window as any).__startDashboardTour?.()}
-      className="w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm text-gray-600 hover:bg-[#C35F33]/5 hover:text-[#C35F33] transition-all"
+      className="w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm text-gray-600 hover:bg-[#B8562E]/5 hover:text-[#B8562E] transition-all"
     >
       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
         <circle cx="12" cy="12" r="10" />

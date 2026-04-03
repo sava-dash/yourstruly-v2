@@ -29,8 +29,8 @@ export function QuickMemoryModal({ isOpen, onClose }: QuickMemoryModalProps) {
           >
             <div className="p-4 border-b border-gray-100 flex items-center justify-between">
               <div>
-                <h2 className="text-lg font-semibold text-[#406A56]">Quick Memory</h2>
-                <p className="text-sm text-[#406A56]/60">Share a story through voice</p>
+                <h2 className="text-lg font-semibold text-[#2D5A3D]">Quick Memory</h2>
+                <p className="text-sm text-[#2D5A3D]/60">Share a story through voice</p>
               </div>
               <button
                 onClick={onClose}

@@ -317,8 +317,8 @@ export function HeartfeltQuestion({ userProfile, onComplete, onSkip }: Heartfelt
   return (
     <div className="glass-card glass-card-strong p-8 max-w-2xl mx-auto relative overflow-hidden">
       {/* Background decoration */}
-      <div className="absolute top-0 right-0 w-64 h-64 bg-gradient-to-br from-[#406A56]/5 to-transparent rounded-full blur-3xl pointer-events-none" />
-      <div className="absolute bottom-0 left-0 w-48 h-48 bg-gradient-to-tr from-[#D9C61A]/5 to-transparent rounded-full blur-3xl pointer-events-none" />
+      <div className="absolute top-0 right-0 w-64 h-64 bg-gradient-to-br from-[#2D5A3D]/5 to-transparent rounded-full blur-3xl pointer-events-none" />
+      <div className="absolute bottom-0 left-0 w-48 h-48 bg-gradient-to-tr from-[#C4A235]/5 to-transparent rounded-full blur-3xl pointer-events-none" />
 
       <div className="relative z-10">
         {/* Header */}
@@ -327,8 +327,8 @@ export function HeartfeltQuestion({ userProfile, onComplete, onSkip }: Heartfelt
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
         >
-          <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-[#406A56]/10 mb-4">
-            <BookOpen size={28} className="text-[#406A56]" />
+          <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-[#2D5A3D]/10 mb-4">
+            <BookOpen size={28} className="text-[#2D5A3D]" />
           </div>
           <h2 className="text-2xl font-semibold text-[#2d2d2d] mb-2 font-playfair">
             A Question Just for You
@@ -348,7 +348,7 @@ export function HeartfeltQuestion({ userProfile, onComplete, onSkip }: Heartfelt
               exit={{ opacity: 0 }}
             >
               <motion.div
-                className="w-12 h-12 border-4 border-[#406A56]/20 border-t-[#406A56] rounded-full"
+                className="w-12 h-12 border-4 border-[#2D5A3D]/20 border-t-[#2D5A3D] rounded-full"
                 animate={{ rotate: 360 }}
                 transition={{ duration: 1, repeat: Infinity, ease: 'linear' }}
               />
@@ -369,7 +369,7 @@ export function HeartfeltQuestion({ userProfile, onComplete, onSkip }: Heartfelt
                 animate={{ opacity: 1, scale: 1 }}
                 transition={{ delay: 0.2 }}
               >
-                <span className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-[#406A56]/10 text-[#406A56] text-sm font-medium">
+                <span className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-[#2D5A3D]/10 text-[#2D5A3D] text-sm font-medium">
                   {config.icon}
                   {config.label}
                 </span>
@@ -402,8 +402,8 @@ export function HeartfeltQuestion({ userProfile, onComplete, onSkip }: Heartfelt
                         onClick={() => setInputMode('text')}
                         className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium transition-all ${
                           inputMode === 'text'
-                            ? 'bg-[#406A56] text-white'
-                            : 'bg-[#406A56]/10 text-[#406A56] hover:bg-[#406A56]/20'
+                            ? 'bg-[#2D5A3D] text-white'
+                            : 'bg-[#2D5A3D]/10 text-[#2D5A3D] hover:bg-[#2D5A3D]/20'
                         }`}
                       >
                         <Keyboard size={16} />
@@ -413,8 +413,8 @@ export function HeartfeltQuestion({ userProfile, onComplete, onSkip }: Heartfelt
                         onClick={() => setInputMode('voice')}
                         className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium transition-all ${
                           inputMode === 'voice'
-                            ? 'bg-[#406A56] text-white'
-                            : 'bg-[#406A56]/10 text-[#406A56] hover:bg-[#406A56]/20'
+                            ? 'bg-[#2D5A3D] text-white'
+                            : 'bg-[#2D5A3D]/10 text-[#2D5A3D] hover:bg-[#2D5A3D]/20'
                         }`}
                       >
                         <Mic size={16} />
@@ -424,8 +424,8 @@ export function HeartfeltQuestion({ userProfile, onComplete, onSkip }: Heartfelt
                         onClick={() => setInputMode('video')}
                         className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium transition-all ${
                           inputMode === 'video'
-                            ? 'bg-[#406A56] text-white'
-                            : 'bg-[#406A56]/10 text-[#406A56] hover:bg-[#406A56]/20'
+                            ? 'bg-[#2D5A3D] text-white'
+                            : 'bg-[#2D5A3D]/10 text-[#2D5A3D] hover:bg-[#2D5A3D]/20'
                         }`}
                       >
                         <Video size={16} />
@@ -451,9 +451,9 @@ export function HeartfeltQuestion({ userProfile, onComplete, onSkip }: Heartfelt
                               ? "Your recording is saved. Optionally add a description..."
                               : "Share your thoughts... This becomes your first memory."
                           }
-                          className="w-full p-4 rounded-xl bg-white/80 border border-[#406A56]/20 
+                          className="w-full p-4 rounded-xl bg-white/80 border border-[#2D5A3D]/20 
                                      text-[#2d2d2d] placeholder-gray-400 resize-none
-                                     focus:outline-none focus:ring-2 focus:ring-[#406A56]/30 focus:border-[#406A56]/40
+                                     focus:outline-none focus:ring-2 focus:ring-[#2D5A3D]/30 focus:border-[#2D5A3D]/40
                                      transition-all"
                           rows={5}
                           autoFocus
@@ -463,7 +463,7 @@ export function HeartfeltQuestion({ userProfile, onComplete, onSkip }: Heartfelt
                         {mediaUrl && mediaType === 'video' && (
                           <div className="mt-3 relative">
                             <div className="flex items-center justify-between mb-2">
-                              <span className="text-sm text-[#406A56] flex items-center gap-1">
+                              <span className="text-sm text-[#2D5A3D] flex items-center gap-1">
                                 <Video size={14} />
                                 Video response attached
                               </span>
@@ -487,9 +487,9 @@ export function HeartfeltQuestion({ userProfile, onComplete, onSkip }: Heartfelt
                         )}
                         
                         {mediaUrl && mediaType === 'audio' && (
-                          <div className="mt-3 p-3 bg-[#406A56]/5 rounded-xl">
+                          <div className="mt-3 p-3 bg-[#2D5A3D]/5 rounded-xl">
                             <div className="flex items-center justify-between">
-                              <span className="text-sm text-[#406A56] flex items-center gap-2">
+                              <span className="text-sm text-[#2D5A3D] flex items-center gap-2">
                                 <Mic size={14} />
                                 Voice response attached
                               </span>
@@ -531,7 +531,7 @@ export function HeartfeltQuestion({ userProfile, onComplete, onSkip }: Heartfelt
                             onClick={handleSubmit}
                             disabled={!canSubmit}
                             className="ml-auto flex items-center gap-2 px-6 py-2.5 
-                                       bg-[#406A56] text-white rounded-xl font-medium
+                                       bg-[#2D5A3D] text-white rounded-xl font-medium
                                        hover:bg-[#355a48] disabled:opacity-50 disabled:cursor-not-allowed
                                        transition-all"
                           >
@@ -550,12 +550,12 @@ export function HeartfeltQuestion({ userProfile, onComplete, onSkip }: Heartfelt
                     {(inputMode === 'voice' || inputMode === 'video') && (
                       <Suspense fallback={
                         <div className="flex justify-center py-8">
-                          <Loader2 className="w-8 h-8 animate-spin text-[#406A56]" />
+                          <Loader2 className="w-8 h-8 animate-spin text-[#2D5A3D]" />
                         </div>
                       }>
                         {isTranscribing ? (
                           <div className="flex flex-col items-center py-8">
-                            <Loader2 className="w-8 h-8 animate-spin text-[#406A56] mb-4" />
+                            <Loader2 className="w-8 h-8 animate-spin text-[#2D5A3D] mb-4" />
                             <p className="text-gray-500">Transcribing your response...</p>
                           </div>
                         ) : (
@@ -563,7 +563,7 @@ export function HeartfeltQuestion({ userProfile, onComplete, onSkip }: Heartfelt
                             {/* Back to text button */}
                             <button
                               onClick={() => setInputMode('text')}
-                              className="text-sm text-[#406A56]/60 hover:text-[#406A56] flex items-center gap-1 mb-4"
+                              className="text-sm text-[#2D5A3D]/60 hover:text-[#2D5A3D] flex items-center gap-1 mb-4"
                             >
                               ← Back to text input
                             </button>

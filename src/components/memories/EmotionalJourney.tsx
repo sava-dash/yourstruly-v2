@@ -97,27 +97,27 @@ export default function EmotionalJourney({ userId }: EmotionalJourneyProps) {
           </div>
           <div className="text-left">
             <h3 className="text-[#2d2d2d] font-medium">Emotional Journey</h3>
-            <p className="text-[#406A56]/60 text-sm">{total} memories with mood tags</p>
+            <p className="text-[#2D5A3D]/60 text-sm">{total} memories with mood tags</p>
           </div>
         </div>
         {expanded ? (
-          <ChevronUp size={20} className="text-[#406A56]/50" />
+          <ChevronUp size={20} className="text-[#2D5A3D]/50" />
         ) : (
-          <ChevronDown size={20} className="text-[#406A56]/50" />
+          <ChevronDown size={20} className="text-[#2D5A3D]/50" />
         )}
       </button>
 
       {/* Expanded Content */}
       {expanded && (
-        <div className="px-4 pb-4 border-t border-[#406A56]/10">
+        <div className="px-4 pb-4 border-t border-[#2D5A3D]/10">
           {/* View Toggle */}
           <div className="flex items-center gap-2 my-3">
             <button
               onClick={() => setView('bar')}
               className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-all ${
                 view === 'bar'
-                  ? 'bg-[#406A56] text-white'
-                  : 'text-[#406A56]/60 hover:text-[#406A56] hover:bg-[#406A56]/10'
+                  ? 'bg-[#2D5A3D] text-white'
+                  : 'text-[#2D5A3D]/60 hover:text-[#2D5A3D] hover:bg-[#2D5A3D]/10'
               }`}
             >
               Distribution
@@ -126,8 +126,8 @@ export default function EmotionalJourney({ userId }: EmotionalJourneyProps) {
               onClick={() => setView('timeline')}
               className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-all ${
                 view === 'timeline'
-                  ? 'bg-[#406A56] text-white'
-                  : 'text-[#406A56]/60 hover:text-[#406A56] hover:bg-[#406A56]/10'
+                  ? 'bg-[#2D5A3D] text-white'
+                  : 'text-[#2D5A3D]/60 hover:text-[#2D5A3D] hover:bg-[#2D5A3D]/10'
               }`}
             >
               Timeline
@@ -148,11 +148,11 @@ export default function EmotionalJourney({ userId }: EmotionalJourneyProps) {
                         <span className="w-3 h-3 rounded-full" style={{ backgroundColor: moodDef.color }} />
                         <span className="text-[#2d2d2d]">{moodDef.label}</span>
                       </span>
-                      <span className="text-[#406A56]/60">
+                      <span className="text-[#2D5A3D]/60">
                         {item.count} ({item.percentage}%)
                       </span>
                     </div>
-                    <div className="h-2 bg-[#406A56]/10 rounded-full overflow-hidden">
+                    <div className="h-2 bg-[#2D5A3D]/10 rounded-full overflow-hidden">
                       <div
                         className="h-full rounded-full transition-all duration-500"
                         style={{
@@ -176,12 +176,12 @@ export default function EmotionalJourney({ userId }: EmotionalJourneyProps) {
                 return (
                   <div key={period.period} className="flex items-center gap-3">
                     {/* Month */}
-                    <div className="w-20 text-sm text-[#406A56]/60 flex-shrink-0">
+                    <div className="w-20 text-sm text-[#2D5A3D]/60 flex-shrink-0">
                       {formatMonth(period.period)}
                     </div>
 
                     {/* Mood Stack */}
-                    <div className="flex-1 flex h-6 rounded-lg overflow-hidden bg-[#406A56]/5">
+                    <div className="flex-1 flex h-6 rounded-lg overflow-hidden bg-[#2D5A3D]/5">
                       {Object.entries(period.moods)
                         .sort(([, a], [, b]) => b - a)
                         .map(([mood, count]) => {
@@ -217,7 +217,7 @@ export default function EmotionalJourney({ userId }: EmotionalJourneyProps) {
               })}
 
               {journey.length === 0 && (
-                <p className="text-[#406A56]/50 text-sm text-center py-4">
+                <p className="text-[#2D5A3D]/50 text-sm text-center py-4">
                   Add dates to your memories to see your emotional journey over time
                 </p>
               )}
@@ -225,12 +225,12 @@ export default function EmotionalJourney({ userId }: EmotionalJourneyProps) {
           )}
 
           {/* Mood Legend (compact) */}
-          <div className="mt-4 pt-3 border-t border-[#406A56]/10">
+          <div className="mt-4 pt-3 border-t border-[#2D5A3D]/10">
             <div className="flex flex-wrap gap-2">
               {Object.entries(MOOD_DEFINITIONS).map(([mood, def]) => (
                 <div
                   key={mood}
-                  className="flex items-center gap-1 text-xs text-[#406A56]/60"
+                  className="flex items-center gap-1 text-xs text-[#2D5A3D]/60"
                 >
                   <div
                     className="w-2 h-2 rounded-full"

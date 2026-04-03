@@ -532,9 +532,9 @@ const positioning = {
 };
 
 function FeatureCell({ value }: { value: boolean | string }) {
-  if (value === true) return <CheckCircle className="w-5 h-5 text-[#406A56] mx-auto" />;
-  if (value === false) return <XCircle className="w-5 h-5 text-[#C35F33]/40 mx-auto" />;
-  if (value === 'soon') return <span className="text-xs text-[#D9C61A] font-medium">Soon</span>;
+  if (value === true) return <CheckCircle className="w-5 h-5 text-[#2D5A3D] mx-auto" />;
+  if (value === false) return <XCircle className="w-5 h-5 text-[#B8562E]/40 mx-auto" />;
+  if (value === 'soon') return <span className="text-xs text-[#C4A235] font-medium">Soon</span>;
   if (value === 'limited') return <span className="text-xs text-[#8DACAB]">Limited</span>;
   return <Minus className="w-5 h-5 text-gray-300 mx-auto" />;
 }
@@ -544,7 +544,7 @@ function CompetitorCard({ id, data }: { id: string; data: typeof competitorDetai
   const [activeTab, setActiveTab] = useState<'pricing' | 'features' | 'faqs' | 'security' | 'ease' | 'visuals'>('pricing');
 
   return (
-    <div className="bg-white rounded-2xl shadow-sm border border-[#C35F33]/10 overflow-hidden hover:shadow-lg transition-all duration-300">
+    <div className="bg-white rounded-2xl shadow-sm border border-[#B8562E]/10 overflow-hidden hover:shadow-lg transition-all duration-300">
       {/* Header */}
       <div 
         className="p-6 cursor-pointer"
@@ -565,7 +565,7 @@ function CompetitorCard({ id, data }: { id: string; data: typeof competitorDetai
           </div>
           <div className="flex items-center gap-4">
             <div className="text-right">
-              <p className="text-lg font-bold text-[#406A56]">{data.pricing.main}</p>
+              <p className="text-lg font-bold text-[#2D5A3D]">{data.pricing.main}</p>
               <p className="text-xs text-[#2a1f1a]/50">{data.website}</p>
             </div>
             {expanded ? (
@@ -579,9 +579,9 @@ function CompetitorCard({ id, data }: { id: string; data: typeof competitorDetai
 
       {/* Expanded Content */}
       {expanded && (
-        <div className="border-t border-[#C35F33]/10">
+        <div className="border-t border-[#B8562E]/10">
           {/* Tabs */}
-          <div className="flex overflow-x-auto border-b border-[#C35F33]/10 bg-[#F2F1E5]/50">
+          <div className="flex overflow-x-auto border-b border-[#B8562E]/10 bg-[#F5F3EE]/50">
             {[
               { id: 'pricing', label: 'Pricing', icon: DollarSign },
               { id: 'features', label: 'Features', icon: Layout },
@@ -595,7 +595,7 @@ function CompetitorCard({ id, data }: { id: string; data: typeof competitorDetai
                 onClick={() => setActiveTab(tab.id as typeof activeTab)}
                 className={`flex items-center gap-2 px-4 py-3 text-sm font-medium whitespace-nowrap transition-colors ${
                   activeTab === tab.id
-                    ? 'text-[#406A56] border-b-2 border-[#406A56] bg-white'
+                    ? 'text-[#2D5A3D] border-b-2 border-[#2D5A3D] bg-white'
                     : 'text-[#2a1f1a]/60 hover:text-[#2a1f1a]'
                 }`}
               >
@@ -613,16 +613,16 @@ function CompetitorCard({ id, data }: { id: string; data: typeof competitorDetai
                 {data.pricing.tiers && data.pricing.tiers.length > 0 ? (
                   <div className="grid md:grid-cols-3 gap-4">
                     {data.pricing.tiers.map((tier: PricingTier, idx: number) => (
-                      <div key={tier.name} className={`rounded-xl p-4 ${idx === 1 ? 'bg-[#406A56]/10 border-2 border-[#406A56]' : 'bg-[#F2F1E5]'}`}>
+                      <div key={tier.name} className={`rounded-xl p-4 ${idx === 1 ? 'bg-[#2D5A3D]/10 border-2 border-[#2D5A3D]' : 'bg-[#F5F3EE]'}`}>
                         <h4 className="font-bold text-[#2a1f1a]">{tier.name}</h4>
-                        <p className="text-2xl font-bold text-[#406A56] mt-1">{tier.price}</p>
+                        <p className="text-2xl font-bold text-[#2D5A3D] mt-1">{tier.price}</p>
                         {tier.upfront && tier.upfront !== '$0' && (
-                          <p className="text-xs text-[#C35F33]">+ {tier.upfront} upfront</p>
+                          <p className="text-xs text-[#B8562E]">+ {tier.upfront} upfront</p>
                         )}
                         <ul className="mt-3 space-y-1">
                           {tier.features.map((f: string, i: number) => (
                             <li key={i} className="text-sm text-[#2a1f1a]/70 flex items-start gap-2">
-                              <CheckCircle className="w-4 h-4 text-[#406A56] mt-0.5 flex-shrink-0" />
+                              <CheckCircle className="w-4 h-4 text-[#2D5A3D] mt-0.5 flex-shrink-0" />
                               {f}
                             </li>
                           ))}
@@ -634,13 +634,13 @@ function CompetitorCard({ id, data }: { id: string; data: typeof competitorDetai
                   <>
                     <div>
                       <h4 className="font-semibold text-[#2a1f1a] mb-3 flex items-center gap-2">
-                        <CheckCircle className="w-5 h-5 text-[#406A56]" />
+                        <CheckCircle className="w-5 h-5 text-[#2D5A3D]" />
                         What's Included
                       </h4>
                       <ul className="grid md:grid-cols-2 gap-2">
                         {(data.pricing.includes || []).map((item: string, i: number) => (
                           <li key={i} className="text-sm text-[#2a1f1a]/70 flex items-start gap-2">
-                            <span className="text-[#406A56]">•</span>
+                            <span className="text-[#2D5A3D]">•</span>
                             {item}
                           </li>
                         ))}
@@ -649,7 +649,7 @@ function CompetitorCard({ id, data }: { id: string; data: typeof competitorDetai
                     {data.pricing.extras && data.pricing.extras.length > 0 && (
                       <div>
                         <h4 className="font-semibold text-[#2a1f1a] mb-3 flex items-center gap-2">
-                          <DollarSign className="w-5 h-5 text-[#C35F33]" />
+                          <DollarSign className="w-5 h-5 text-[#B8562E]" />
                           Additional Costs
                         </h4>
                         <ul className="space-y-1">
@@ -662,7 +662,7 @@ function CompetitorCard({ id, data }: { id: string; data: typeof competitorDetai
                   </>
                 )}
                 {data.pricing.freeTrial && (
-                  <div className="bg-[#D9C61A]/10 rounded-lg p-3">
+                  <div className="bg-[#C4A235]/10 rounded-lg p-3">
                     <p className="text-sm font-medium text-[#2a1f1a]">
                       🎁 {data.pricing.freeTrial}
                     </p>
@@ -692,15 +692,15 @@ function CompetitorCard({ id, data }: { id: string; data: typeof competitorDetai
                     <div 
                       key={key} 
                       className={`flex items-center gap-3 p-3 rounded-lg ${
-                        value === true ? 'bg-[#406A56]/10' : value === false ? 'bg-[#C35F33]/5' : 'bg-[#D9C61A]/10'
+                        value === true ? 'bg-[#2D5A3D]/10' : value === false ? 'bg-[#B8562E]/5' : 'bg-[#C4A235]/10'
                       }`}
                     >
-                      <info.icon className={`w-5 h-5 ${value === true ? 'text-[#406A56]' : value === false ? 'text-[#C35F33]/50' : 'text-[#D9C61A]'}`} />
+                      <info.icon className={`w-5 h-5 ${value === true ? 'text-[#2D5A3D]' : value === false ? 'text-[#B8562E]/50' : 'text-[#C4A235]'}`} />
                       <span className="text-sm text-[#2a1f1a]">{info.label}</span>
                       <span className="ml-auto">
-                        {value === true && <CheckCircle className="w-5 h-5 text-[#406A56]" />}
-                        {value === false && <XCircle className="w-5 h-5 text-[#C35F33]/50" />}
-                        {typeof value === 'string' && <span className="text-xs text-[#D9C61A] font-medium">{value}</span>}
+                        {value === true && <CheckCircle className="w-5 h-5 text-[#2D5A3D]" />}
+                        {value === false && <XCircle className="w-5 h-5 text-[#B8562E]/50" />}
+                        {typeof value === 'string' && <span className="text-xs text-[#C4A235] font-medium">{value}</span>}
                       </span>
                     </div>
                   );
@@ -712,7 +712,7 @@ function CompetitorCard({ id, data }: { id: string; data: typeof competitorDetai
             {activeTab === 'faqs' && (
               <div className="space-y-4">
                 {data.faqs.map((faq: { q: string; a: string }, i: number) => (
-                  <div key={i} className="bg-[#F2F1E5] rounded-lg p-4">
+                  <div key={i} className="bg-[#F5F3EE] rounded-lg p-4">
                     <h4 className="font-semibold text-[#2a1f1a] mb-2">{faq.q}</h4>
                     <p className="text-sm text-[#2a1f1a]/70">{faq.a}</p>
                   </div>
@@ -723,18 +723,18 @@ function CompetitorCard({ id, data }: { id: string; data: typeof competitorDetai
             {/* Security Tab */}
             {activeTab === 'security' && (
               <div className="space-y-4">
-                <blockquote className="border-l-4 border-[#406A56] pl-4 py-2 bg-[#406A56]/5 rounded-r-lg">
+                <blockquote className="border-l-4 border-[#2D5A3D] pl-4 py-2 bg-[#2D5A3D]/5 rounded-r-lg">
                   <p className="text-sm italic text-[#2a1f1a]/80">{data.security.quote}</p>
                 </blockquote>
                 <div>
                   <h4 className="font-semibold text-[#2a1f1a] mb-3 flex items-center gap-2">
-                    <Lock className="w-5 h-5 text-[#406A56]" />
+                    <Lock className="w-5 h-5 text-[#2D5A3D]" />
                     Security Highlights
                   </h4>
                   <ul className="grid md:grid-cols-2 gap-2">
                     {data.security.highlights.map((item: string, i: number) => (
                       <li key={i} className="text-sm text-[#2a1f1a]/70 flex items-start gap-2">
-                        <Shield className="w-4 h-4 text-[#406A56] mt-0.5 flex-shrink-0" />
+                        <Shield className="w-4 h-4 text-[#2D5A3D] mt-0.5 flex-shrink-0" />
                         {item}
                       </li>
                     ))}
@@ -779,18 +779,18 @@ function CompetitorCard({ id, data }: { id: string; data: typeof competitorDetai
                       key={item.key}
                       className={`p-3 rounded-lg text-center ${
                         data.visuals[item.key as keyof typeof data.visuals] 
-                          ? 'bg-[#406A56]/10' 
+                          ? 'bg-[#2D5A3D]/10' 
                           : 'bg-gray-100'
                       }`}
                     >
                       <item.icon className={`w-6 h-6 mx-auto mb-2 ${
                         data.visuals[item.key as keyof typeof data.visuals]
-                          ? 'text-[#406A56]'
+                          ? 'text-[#2D5A3D]'
                           : 'text-gray-400'
                       }`} />
                       <p className="text-xs text-[#2a1f1a]/70">{item.label}</p>
                       {data.visuals[item.key as keyof typeof data.visuals] ? (
-                        <CheckCircle className="w-4 h-4 text-[#406A56] mx-auto mt-1" />
+                        <CheckCircle className="w-4 h-4 text-[#2D5A3D] mx-auto mt-1" />
                       ) : (
                         <XCircle className="w-4 h-4 text-gray-300 mx-auto mt-1" />
                       )}
@@ -798,7 +798,7 @@ function CompetitorCard({ id, data }: { id: string; data: typeof competitorDetai
                   ))}
                 </div>
                 {data.visuals.founderNote && (
-                  <div className="bg-[#F2F1E5] rounded-lg p-3">
+                  <div className="bg-[#F5F3EE] rounded-lg p-3">
                     <p className="text-sm text-[#2a1f1a]/70">
                       <strong>Note:</strong> {data.visuals.founderNote}
                     </p>
@@ -817,9 +817,9 @@ export default function CompetitorAnalysisPage() {
   const [showAllCards, setShowAllCards] = useState(false);
 
   return (
-    <div className="min-h-screen bg-[#F2F1E5]">
+    <div className="min-h-screen bg-[#F5F3EE]">
       {/* Hero */}
-      <div className="bg-gradient-to-br from-[#406A56] via-[#4A3552] to-[#2a1f1a] text-white py-20 px-4">
+      <div className="bg-gradient-to-br from-[#2D5A3D] via-[#4A3552] to-[#2a1f1a] text-white py-20 px-4">
         <div className="max-w-5xl mx-auto text-center">
           <h1 className="text-4xl md:text-5xl font-bold mb-6">
             How We Compare
@@ -846,10 +846,10 @@ export default function CompetitorAnalysisPage() {
             {uniqueAdvantages.map((advantage) => (
               <div 
                 key={advantage.title}
-                className="bg-white rounded-2xl p-6 shadow-sm border border-[#C35F33]/10 hover:shadow-lg transition-shadow"
+                className="bg-white rounded-2xl p-6 shadow-sm border border-[#B8562E]/10 hover:shadow-lg transition-shadow"
               >
                 <div className="flex items-start gap-4">
-                  <div className="p-3 rounded-xl bg-gradient-to-br from-[#406A56] to-[#4A3552]">
+                  <div className="p-3 rounded-xl bg-gradient-to-br from-[#2D5A3D] to-[#4A3552]">
                     <advantage.icon className="w-6 h-6 text-white" />
                   </div>
                   <div>
@@ -859,7 +859,7 @@ export default function CompetitorAnalysisPage() {
                     <p className="text-[#2a1f1a]/70 text-sm mb-3">
                       {advantage.description}
                     </p>
-                    <p className="text-xs text-[#406A56] font-medium">
+                    <p className="text-xs text-[#2D5A3D] font-medium">
                       Competitors with this: {advantage.competitors}
                     </p>
                   </div>
@@ -876,7 +876,7 @@ export default function CompetitorAnalysisPage() {
           </h2>
           
           <div className="overflow-x-auto">
-            <table className="w-full bg-white rounded-2xl shadow-sm border border-[#C35F33]/10 overflow-hidden">
+            <table className="w-full bg-white rounded-2xl shadow-sm border border-[#B8562E]/10 overflow-hidden">
               <thead>
                 <tr className="bg-[#2a1f1a] text-white">
                   <th className="text-left px-6 py-4 font-semibold">Platform</th>
@@ -884,7 +884,7 @@ export default function CompetitorAnalysisPage() {
                   {features.map((f) => (
                     <th key={f.key} className="text-center px-4 py-4 font-semibold text-sm">
                       {f.name}
-                      {f.ytAdvantage && <Star className="w-3 h-3 inline ml-1 text-[#D9C61A]" />}
+                      {f.ytAdvantage && <Star className="w-3 h-3 inline ml-1 text-[#C4A235]" />}
                     </th>
                   ))}
                 </tr>
@@ -893,16 +893,16 @@ export default function CompetitorAnalysisPage() {
                 {competitors.map((comp, idx) => (
                   <tr 
                     key={comp.name}
-                    className={`border-t border-[#C35F33]/10 ${
+                    className={`border-t border-[#B8562E]/10 ${
                       comp.highlight 
-                        ? 'bg-gradient-to-r from-[#406A56]/10 to-[#4A3552]/10 font-medium' 
-                        : idx % 2 === 0 ? 'bg-white' : 'bg-[#F2F1E5]/50'
+                        ? 'bg-gradient-to-r from-[#2D5A3D]/10 to-[#4A3552]/10 font-medium' 
+                        : idx % 2 === 0 ? 'bg-white' : 'bg-[#F5F3EE]/50'
                     }`}
                   >
                     <td className="px-6 py-4">
-                      <span className={comp.highlight ? 'text-[#406A56] font-bold' : 'text-[#2a1f1a]'}>
+                      <span className={comp.highlight ? 'text-[#2D5A3D] font-bold' : 'text-[#2a1f1a]'}>
                         {comp.name}
-                        {comp.highlight && <span className="ml-2 text-xs bg-[#406A56] text-white px-2 py-0.5 rounded-full">Us</span>}
+                        {comp.highlight && <span className="ml-2 text-xs bg-[#2D5A3D] text-white px-2 py-0.5 rounded-full">Us</span>}
                       </span>
                     </td>
                     <td className="text-center px-4 py-4 text-sm text-[#2a1f1a]/70">
@@ -921,7 +921,7 @@ export default function CompetitorAnalysisPage() {
           </div>
           
           <p className="text-center text-sm text-[#2a1f1a]/50 mt-4">
-            <Star className="w-3 h-3 inline text-[#D9C61A] mr-1" />
+            <Star className="w-3 h-3 inline text-[#C4A235] mr-1" />
             = YoursTruly unique advantage
           </p>
         </section>
@@ -971,25 +971,25 @@ export default function CompetitorAnalysisPage() {
                 key={tier.tier}
                 className={`rounded-2xl p-6 ${
                   idx === 2 
-                    ? 'bg-gradient-to-br from-[#406A56] to-[#4A3552] text-white ring-4 ring-[#D9C61A]' 
-                    : 'bg-white border border-[#C35F33]/10'
+                    ? 'bg-gradient-to-br from-[#2D5A3D] to-[#4A3552] text-white ring-4 ring-[#C4A235]' 
+                    : 'bg-white border border-[#B8562E]/10'
                 }`}
               >
                 {idx === 2 && (
-                  <span className="text-xs bg-[#D9C61A] text-[#2a1f1a] px-2 py-1 rounded-full font-medium mb-3 inline-block">
+                  <span className="text-xs bg-[#C4A235] text-[#2a1f1a] px-2 py-1 rounded-full font-medium mb-3 inline-block">
                     Most Popular
                   </span>
                 )}
                 <h3 className={`text-lg font-bold mb-1 ${idx === 2 ? 'text-white' : 'text-[#2a1f1a]'}`}>
                   {tier.tier}
                 </h3>
-                <p className={`text-3xl font-bold mb-4 ${idx === 2 ? 'text-white' : 'text-[#406A56]'}`}>
+                <p className={`text-3xl font-bold mb-4 ${idx === 2 ? 'text-white' : 'text-[#2D5A3D]'}`}>
                   {tier.price}
                 </p>
                 <ul className="space-y-2">
                   {tier.features.map((f) => (
                     <li key={f} className={`text-sm flex items-start gap-2 ${idx === 2 ? 'text-white/90' : 'text-[#2a1f1a]/70'}`}>
-                      <CheckCircle className={`w-4 h-4 mt-0.5 flex-shrink-0 ${idx === 2 ? 'text-[#D9C61A]' : 'text-[#406A56]'}`} />
+                      <CheckCircle className={`w-4 h-4 mt-0.5 flex-shrink-0 ${idx === 2 ? 'text-[#C4A235]' : 'text-[#2D5A3D]'}`} />
                       {f}
                     </li>
                   ))}
@@ -1000,13 +1000,13 @@ export default function CompetitorAnalysisPage() {
         </section>
 
         {/* Key Takeaways */}
-        <section className="mb-20 bg-white rounded-3xl p-8 shadow-sm border border-[#C35F33]/10">
+        <section className="mb-20 bg-white rounded-3xl p-8 shadow-sm border border-[#B8562E]/10">
           <h2 className="text-2xl font-bold text-[#2a1f1a] mb-6 text-center">
             Key Competitive Insights
           </h2>
           <div className="grid md:grid-cols-2 gap-6">
             <div className="space-y-4">
-              <h3 className="font-semibold text-[#406A56] flex items-center gap-2">
+              <h3 className="font-semibold text-[#2D5A3D] flex items-center gap-2">
                 <TrendingUp className="w-5 h-5" />
                 Market Trends
               </h3>
@@ -1019,7 +1019,7 @@ export default function CompetitorAnalysisPage() {
               </ul>
             </div>
             <div className="space-y-4">
-              <h3 className="font-semibold text-[#C35F33] flex items-center gap-2">
+              <h3 className="font-semibold text-[#B8562E] flex items-center gap-2">
                 <Target className="w-5 h-5" />
                 Opportunity Gaps
               </h3>
@@ -1035,7 +1035,7 @@ export default function CompetitorAnalysisPage() {
         </section>
 
         {/* CTA */}
-        <section className="text-center bg-gradient-to-br from-[#406A56] to-[#4A3552] rounded-3xl p-12 text-white">
+        <section className="text-center bg-gradient-to-br from-[#2D5A3D] to-[#4A3552] rounded-3xl p-12 text-white">
           <h2 className="text-3xl font-bold mb-4">
             Ready to Preserve Your Legacy?
           </h2>
@@ -1044,7 +1044,7 @@ export default function CompetitorAnalysisPage() {
           </p>
           <a 
             href="/signup"
-            className="inline-block bg-white text-[#406A56] font-semibold px-8 py-4 rounded-xl hover:shadow-lg transition-shadow"
+            className="inline-block bg-white text-[#2D5A3D] font-semibold px-8 py-4 rounded-xl hover:shadow-lg transition-shadow"
           >
             Start Free Today
           </a>

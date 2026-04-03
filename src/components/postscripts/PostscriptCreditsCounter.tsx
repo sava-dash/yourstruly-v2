@@ -69,11 +69,11 @@ export default function PostscriptCreditsCounter({
                       hover:bg-white/90 transition-colors cursor-pointer group ${className}`}
           title="Click for details"
         >
-          <Send size={14} className="text-[#C35F33]" />
+          <Send size={14} className="text-[#B8562E]" />
           <span className={`text-sm font-medium ${remaining <= 0 ? 'text-red-500' : 'text-gray-700'}`}>
             {remaining} remaining
           </span>
-          {isPremium && <Crown size={12} className="text-[#D9C61A]" />}
+          {isPremium && <Crown size={12} className="text-[#C4A235]" />}
           <Info size={12} className="text-gray-400 opacity-0 group-hover:opacity-100 transition-opacity" />
         </button>
 
@@ -102,11 +102,11 @@ export default function PostscriptCreditsCounter({
     <div className={`glass-card p-4 rounded-xl ${className}`}>
       <div className="flex items-center justify-between mb-2">
         <div className="flex items-center gap-2">
-          <Send size={18} className="text-[#C35F33]" />
+          <Send size={18} className="text-[#B8562E]" />
           <span className="font-semibold text-gray-800">Postscript Credits</span>
         </div>
         {isPremium && (
-          <span className="flex items-center gap-1 px-2 py-0.5 bg-[#D9C61A]/20 rounded-full text-xs text-[#8a7a0d]">
+          <span className="flex items-center gap-1 px-2 py-0.5 bg-[#C4A235]/20 rounded-full text-xs text-[#8a7a0d]">
             <Crown size={12} />
             Premium
           </span>
@@ -130,7 +130,7 @@ export default function PostscriptCreditsCounter({
       <div className="mt-4 pt-4 border-t border-gray-100">
         <button
           onClick={() => setShowModal(true)}
-          className="w-full py-2 text-sm text-[#C35F33] font-medium hover:bg-[#C35F33]/5 rounded-lg transition-colors"
+          className="w-full py-2 text-sm text-[#B8562E] font-medium hover:bg-[#B8562E]/5 rounded-lg transition-colors"
         >
           Get More Credits
         </button>
@@ -189,7 +189,7 @@ function CreditModal({
         {/* Content */}
         <div className="p-4 space-y-4">
           {/* Current balance */}
-          <div className="text-center py-4 bg-gradient-to-br from-[#C35F33]/5 to-[#D9C61A]/5 rounded-xl">
+          <div className="text-center py-4 bg-gradient-to-br from-[#B8562E]/5 to-[#C4A235]/5 rounded-xl">
             <div className="text-4xl font-bold text-gray-900">{credits.total_credits}</div>
             <p className="text-sm text-gray-600">credits remaining</p>
             {credits.is_premium && (
@@ -244,7 +244,7 @@ function CreditModal({
           {/* Purchase bundles */}
           <div className="space-y-2">
             <div className="flex items-center gap-2 mb-2">
-              <ShoppingBag size={18} className="text-[#C35F33]" />
+              <ShoppingBag size={18} className="text-[#B8562E]" />
               <span className="font-medium text-gray-800">Purchase Credits</span>
             </div>
             
@@ -253,7 +253,7 @@ function CreditModal({
               onClick={() => onPurchase('1_pack')}
               disabled={actionLoading === '1_pack'}
               className="w-full flex items-center justify-between p-4 border border-gray-200 
-                         rounded-xl hover:border-[#C35F33] hover:bg-[#C35F33]/5 transition-colors
+                         rounded-xl hover:border-[#B8562E] hover:bg-[#B8562E]/5 transition-colors
                          disabled:opacity-50"
             >
               <div className="text-left">
@@ -262,7 +262,7 @@ function CreditModal({
               </div>
               <div className="flex items-center gap-2">
                 {actionLoading === '1_pack' && <Loader2 size={14} className="animate-spin" />}
-                <span className="text-lg font-bold text-[#C35F33]">$5</span>
+                <span className="text-lg font-bold text-[#B8562E]">$5</span>
               </div>
             </button>
 
@@ -270,11 +270,11 @@ function CreditModal({
             <button
               onClick={() => onPurchase('5_pack')}
               disabled={actionLoading === '5_pack'}
-              className="w-full flex items-center justify-between p-4 border-2 border-[#C35F33] 
-                         rounded-xl bg-[#C35F33]/5 hover:bg-[#C35F33]/10 transition-colors
+              className="w-full flex items-center justify-between p-4 border-2 border-[#B8562E] 
+                         rounded-xl bg-[#B8562E]/5 hover:bg-[#B8562E]/10 transition-colors
                          disabled:opacity-50 relative"
             >
-              <div className="absolute -top-2 -right-2 px-2 py-0.5 bg-[#D9C61A] text-[#5a4e0a] 
+              <div className="absolute -top-2 -right-2 px-2 py-0.5 bg-[#C4A235] text-[#5a4e0a] 
                               text-xs font-bold rounded-full">
                 SAVE $5
               </div>
@@ -284,16 +284,16 @@ function CreditModal({
               </div>
               <div className="flex items-center gap-2">
                 {actionLoading === '5_pack' && <Loader2 size={14} className="animate-spin" />}
-                <span className="text-lg font-bold text-[#C35F33]">$20</span>
+                <span className="text-lg font-bold text-[#B8562E]">$20</span>
               </div>
             </button>
           </div>
 
           {/* Premium upsell */}
           {!credits.is_premium && (
-            <div className="p-4 bg-gradient-to-r from-[#D9C61A]/10 to-[#C35F33]/10 rounded-xl">
+            <div className="p-4 bg-gradient-to-r from-[#C4A235]/10 to-[#B8562E]/10 rounded-xl">
               <div className="flex items-center gap-2 mb-2">
-                <Crown size={18} className="text-[#D9C61A]" />
+                <Crown size={18} className="text-[#C4A235]" />
                 <span className="font-medium text-gray-800">Go Premium</span>
               </div>
               <p className="text-sm text-gray-600 mb-3">
@@ -302,7 +302,7 @@ function CreditModal({
               <Link
                 href="/dashboard/settings/subscription"
                 className="inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r 
-                           from-[#D9C61A] to-[#C35F33] text-white rounded-lg font-medium 
+                           from-[#C4A235] to-[#B8562E] text-white rounded-lg font-medium 
                            text-sm hover:opacity-90 transition-opacity"
               >
                 <Crown size={14} />

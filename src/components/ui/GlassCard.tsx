@@ -22,8 +22,8 @@ export default function GlassCard({
 }: GlassCardProps) {
   const variantClasses = {
     light: 'bg-white/60 backdrop-blur-xl border-white/40',
-    warm: 'bg-[#F2F1E5]/70 backdrop-blur-xl border-[#D9C61A]/20',
-    dark: 'bg-[#406A56]/80 backdrop-blur-xl border-[#406A56]/40 text-white',
+    warm: 'bg-[#F5F3EE]/70 backdrop-blur-xl border-[#C4A235]/20',
+    dark: 'bg-[#2D5A3D]/80 backdrop-blur-xl border-[#2D5A3D]/40 text-white',
   }
 
   const paddingClasses = {
@@ -69,12 +69,12 @@ export function StatsGlassCard({ icon, label, value, trend }: StatsGlassCardProp
   return (
     <GlassCard variant="warm" padding="md" hover>
       <div className="flex items-start gap-3">
-        <div className="w-10 h-10 rounded-xl bg-[#406A56]/10 flex items-center justify-center text-[#406A56]">
+        <div className="w-10 h-10 rounded-xl bg-[#2D5A3D]/10 flex items-center justify-center text-[#2D5A3D]">
           {icon}
         </div>
         <div className="flex-1">
-          <p className="text-sm text-[#406A56]/60">{label}</p>
-          <p className="text-2xl font-bold text-[#406A56]">{value}</p>
+          <p className="text-sm text-[#2D5A3D]/60">{label}</p>
+          <p className="text-2xl font-bold text-[#2D5A3D]">{value}</p>
           {trend && (
             <p className={`text-xs mt-1 ${trend.value >= 0 ? 'text-green-600' : 'text-red-500'}`}>
               {trend.value >= 0 ? '↑' : '↓'} {Math.abs(trend.value)}% {trend.label}
@@ -113,8 +113,8 @@ export function PhotoGlassCard({ imageUrl, title, date, category, onClick }: Pho
         )}
       </div>
       <div className="p-4">
-        <h3 className="font-semibold text-[#406A56] truncate">{title}</h3>
-        <p className="text-sm text-[#406A56]/60">{date}</p>
+        <h3 className="font-semibold text-[#2D5A3D] truncate">{title}</h3>
+        <p className="text-sm text-[#2D5A3D]/60">{date}</p>
       </div>
     </GlassCard>
   )
@@ -135,13 +135,13 @@ export function AIChatGlassCard({ message, isAI = true }: AIChatGlassCardProps) 
     >
       {isAI && (
         <div className="flex items-center gap-2 mb-2">
-          <div className="w-6 h-6 rounded-full bg-[#406A56] flex items-center justify-center">
+          <div className="w-6 h-6 rounded-full bg-[#2D5A3D] flex items-center justify-center">
             <span className="text-white text-xs">YT</span>
           </div>
-          <span className="text-xs text-[#406A56]/60">YoursTruly AI</span>
+          <span className="text-xs text-[#2D5A3D]/60">YoursTruly AI</span>
         </div>
       )}
-      <p className={`text-sm ${isAI ? 'text-[#406A56]' : 'text-[#406A56]/80'}`}>
+      <p className={`text-sm ${isAI ? 'text-[#2D5A3D]' : 'text-[#2D5A3D]/80'}`}>
         {message}
       </p>
     </GlassCard>

@@ -372,12 +372,12 @@ export default function ContactsPage() {
         <section className="mb-10">
           <div className="section-header">
             <div className="section-title">
-              <div className="section-title-icon bg-[#406A56]/10">
-                <Users size={18} className="text-[#406A56]" />
+              <div className="section-title-icon bg-[#2D5A3D]/10">
+                <Users size={18} className="text-[#2D5A3D]" />
               </div>
               <div>
                 <span className="text-[#2d2d2d]">People</span>
-                <span className="text-[#406A56]/60 text-sm font-normal ml-2">({filteredContacts.length} of {contacts.length})</span>
+                <span className="text-[#2D5A3D]/60 text-sm font-normal ml-2">({filteredContacts.length} of {contacts.length})</span>
               </div>
             </div>
             <div className="flex items-center gap-2">
@@ -396,7 +396,7 @@ export default function ContactsPage() {
           <div className="flex flex-col sm:flex-row gap-3 mb-5">
             {/* Search Bar */}
             <div className="relative flex-1 max-w-md">
-              <Search size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-[#406A56]/50" />
+              <Search size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-[#2D5A3D]/50" />
               <input
                 type="text"
                 aria-label="Search" placeholder="Search contacts..."
@@ -421,8 +421,8 @@ export default function ContactsPage() {
                 
 <img src={getCategoryIcon('contact')} alt="" className="w-12 h-12 opacity-50" />
               </div>
-              <h3 className="empty-state-title mb-2">No contacts yet</h3>
-              <p className="empty-state-text mb-4">Add people to your life story</p>
+              <h3 className="empty-state-title mb-2">Who matters most to you?</h3>
+              <p className="empty-state-text mb-4">Start here. Add the people in your story.</p>
               <button
                 onClick={() => { setEditingContact(null); setShowContactModal(true) }}
                 className="btn-primary"
@@ -434,12 +434,12 @@ export default function ContactsPage() {
           ) : filteredContacts.length === 0 ? (
             <div className="empty-state">
               <div className="empty-state-icon">
-                <Search size={32} className="text-[#406A56]/50" />
+                <Search size={32} className="text-[#2D5A3D]/50" />
               </div>
               <p className="empty-state-text mb-2">No contacts match your search</p>
               <button
                 onClick={() => { setSearchQuery(''); setSelectedCategory(null) }}
-                className="text-[#406A56] hover:text-[#4a7a64] text-sm font-medium"
+                className="text-[#2D5A3D] hover:text-[#234A31] text-sm font-medium"
               >
                 Clear filters
               </button>
@@ -478,10 +478,10 @@ export default function ContactsPage() {
                         </div>
                       </div>
                       <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity" onClick={(e) => e.stopPropagation()}>
-                        <button onClick={() => { setEditingContact(contact); setShowContactModal(true) }} className="p-2 text-[#406A56]/50 hover:text-[#406A56] hover:bg-[#406A56]/10 rounded-lg transition-colors">
+                        <button onClick={() => { setEditingContact(contact); setShowContactModal(true) }} className="p-2 text-[#2D5A3D]/50 hover:text-[#2D5A3D] hover:bg-[#2D5A3D]/10 rounded-lg transition-colors">
                           <Edit2 size={15} />
                         </button>
-                        <button onClick={() => handleDeleteContact(contact.id)} className="p-2 text-[#406A56]/50 hover:text-[#C35F33] hover:bg-[#C35F33]/10 rounded-lg transition-colors">
+                        <button onClick={() => handleDeleteContact(contact.id)} className="p-2 text-[#2D5A3D]/50 hover:text-[#B8562E] hover:bg-[#B8562E]/10 rounded-lg transition-colors">
                           <Trash2 size={15} />
                         </button>
                       </div>
@@ -489,25 +489,25 @@ export default function ContactsPage() {
                     <div className="contact-details">
                       {contact.date_of_birth && (
                         <div className="contact-detail-row">
-                          <Calendar size={14} className="text-[#406A56]" />
+                          <Calendar size={14} className="text-[#2D5A3D]" />
                           <span>{formatDateNoTimezone(contact.date_of_birth, 'short')}</span>
                         </div>
                       )}
                       {contact.email && (
                         <div className="contact-detail-row">
-                          <Mail size={14} className="text-[#406A56]" />
+                          <Mail size={14} className="text-[#2D5A3D]" />
                           <span className="truncate">{contact.email}</span>
                         </div>
                       )}
                       {contact.phone && (
                         <div className="contact-detail-row">
-                          <Phone size={14} className="text-[#406A56]" />
+                          <Phone size={14} className="text-[#2D5A3D]" />
                           <span>{contact.phone}</span>
                         </div>
                       )}
                       {(contact.city || contact.country) && (
                         <div className="contact-detail-row">
-                          <MapPin size={14} className="text-[#406A56]" />
+                          <MapPin size={14} className="text-[#2D5A3D]" />
                           <span>{[contact.city, contact.state, contact.country].filter(Boolean).join(', ')}</span>
                         </div>
                       )}
@@ -524,12 +524,12 @@ export default function ContactsPage() {
           <section>
             <div className="section-header">
               <div className="section-title">
-                <div className="section-title-icon bg-[#C35F33]/10">
-                  <Heart size={18} className="text-[#C35F33]" />
+                <div className="section-title-icon bg-[#B8562E]/10">
+                  <Heart size={18} className="text-[#B8562E]" />
                 </div>
                 <div>
                   <span className="text-[#2d2d2d]">Pets</span>
-                  <span className="text-[#406A56]/60 text-sm font-normal ml-2">({pets.length})</span>
+                  <span className="text-[#2D5A3D]/60 text-sm font-normal ml-2">({pets.length})</span>
                 </div>
               </div>
               <button
@@ -562,19 +562,19 @@ export default function ContactsPage() {
                     <div className="bubble-content">
                       <div className="flex items-start justify-between mb-4">
                         <div className="flex items-center gap-3">
-                          <div className="w-11 h-11 rounded-full bg-gradient-to-br from-[#C35F33] to-[#D87A55] flex items-center justify-center text-white font-semibold">
+                          <div className="w-11 h-11 rounded-full bg-gradient-to-br from-[#B8562E] to-[#D87A55] flex items-center justify-center text-white font-semibold">
                             {pet.name.charAt(0)}
                           </div>
                           <div>
                             <h3 className="text-[#2d2d2d] font-semibold">{pet.name}</h3>
-                            <p className="text-[#C35F33] text-sm">{pet.species}{pet.breed ? ` - ${pet.breed}` : ''}</p>
+                            <p className="text-[#B8562E] text-sm">{pet.species}{pet.breed ? ` - ${pet.breed}` : ''}</p>
                           </div>
                         </div>
                         <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity" onClick={(e) => e.stopPropagation()}>
-                          <button onClick={() => { setEditingPet(pet); setShowPetModal(true) }} className="p-2 text-[#406A56]/50 hover:text-[#406A56] hover:bg-[#406A56]/10 rounded-lg transition-colors">
+                          <button onClick={() => { setEditingPet(pet); setShowPetModal(true) }} className="p-2 text-[#2D5A3D]/50 hover:text-[#2D5A3D] hover:bg-[#2D5A3D]/10 rounded-lg transition-colors">
                             <Edit2 size={14} />
                           </button>
-                          <button onClick={() => handleDeletePet(pet.id)} className="p-2 text-[#406A56]/50 hover:text-[#C35F33] hover:bg-[#C35F33]/10 rounded-lg transition-colors">
+                          <button onClick={() => handleDeletePet(pet.id)} className="p-2 text-[#2D5A3D]/50 hover:text-[#B8562E] hover:bg-[#B8562E]/10 rounded-lg transition-colors">
                             <Trash2 size={14} />
                           </button>
                         </div>
@@ -676,7 +676,7 @@ function ContactModal({ contact, onClose, onSave }: { contact: Contact | null; o
       <div className="modal-content-page">
         <div className="flex items-center justify-between mb-6">
           <h2 className="text-xl font-semibold text-[#2d2d2d]">{contact ? 'Edit Contact' : 'Add Contact'}</h2>
-          <button onClick={onClose} className="p-2 text-[#406A56]/50 hover:text-[#406A56] hover:bg-[#406A56]/10 rounded-lg" aria-label="Close"><X size={20} /></button>
+          <button onClick={onClose} className="p-2 text-[#2D5A3D]/50 hover:text-[#2D5A3D] hover:bg-[#2D5A3D]/10 rounded-lg" aria-label="Close"><X size={20} /></button>
         </div>
         <div className="space-y-4">
           <div>
@@ -729,7 +729,7 @@ function ContactModal({ contact, onClose, onSave }: { contact: Contact | null; o
             <textarea value={form.notes} onChange={e => setForm({ ...form, notes: e.target.value })} className="form-textarea" rows={2} />
           </div>
         </div>
-        <div className="flex justify-end gap-3 mt-6 pt-4 border-t border-[#406A56]/10">
+        <div className="flex justify-end gap-3 mt-6 pt-4 border-t border-[#2D5A3D]/10">
           <button onClick={onClose} className="btn-secondary">Cancel</button>
           <button onClick={handleSave} disabled={saving || !form.full_name || !form.relationship_type} className="btn-primary">
             {saving ? 'Saving...' : 'Save'}
@@ -796,7 +796,7 @@ function PetModal({ pet, onClose, onSave }: { pet: Pet | null; onClose: () => vo
       <div className="modal-content-page">
         <div className="flex items-center justify-between mb-6">
           <h2 className="text-xl font-semibold text-[#2d2d2d]">{pet ? 'Edit Pet' : 'Add Pet'}</h2>
-          <button onClick={onClose} className="p-2 text-[#406A56]/50 hover:text-[#406A56] hover:bg-[#406A56]/10 rounded-lg" aria-label="Close"><X size={20} /></button>
+          <button onClick={onClose} className="p-2 text-[#2D5A3D]/50 hover:text-[#2D5A3D] hover:bg-[#2D5A3D]/10 rounded-lg" aria-label="Close"><X size={20} /></button>
         </div>
         <div className="space-y-4">
           <div className="grid grid-cols-2 gap-4">
@@ -840,8 +840,8 @@ function PetModal({ pet, onClose, onSave }: { pet: Pet | null; onClose: () => vo
             <label className="block text-sm text-[#666] mb-1.5">Medical Notes</label>
             <textarea value={form.medical_notes} onChange={e => setForm({ ...form, medical_notes: e.target.value })} className="form-textarea" rows={2} placeholder="Allergies, medications, vet info..." />
           </div>
-          <div className="p-4 bg-[#406A56]/10 rounded-xl space-y-3">
-            <h4 className="text-sm font-medium text-[#406A56]">Emergency Caretaker</h4>
+          <div className="p-4 bg-[#2D5A3D]/10 rounded-xl space-y-3">
+            <h4 className="text-sm font-medium text-[#2D5A3D]">Emergency Caretaker</h4>
             <p className="text-xs text-gray-500">Who should take care of this pet if something happens to you?</p>
             <div className="grid grid-cols-2 gap-4">
               <div>
@@ -856,7 +856,7 @@ function PetModal({ pet, onClose, onSave }: { pet: Pet | null; onClose: () => vo
           </div>
           <div className="p-4 bg-[#4A3552]/5 rounded-xl">
             <label className="flex items-center gap-3 cursor-pointer">
-              <input type="checkbox" checked={form.is_deceased} onChange={e => setForm({ ...form, is_deceased: e.target.checked })} className="w-5 h-5 rounded border-[#406A56]/20 bg-white text-[#406A56] focus:ring-[#406A56]" />
+              <input type="checkbox" checked={form.is_deceased} onChange={e => setForm({ ...form, is_deceased: e.target.checked })} className="w-5 h-5 rounded border-[#2D5A3D]/20 bg-white text-[#2D5A3D] focus:ring-[#2D5A3D]" />
               <span className="text-[#666]">This pet has passed away</span>
             </label>
             {form.is_deceased && (
@@ -867,7 +867,7 @@ function PetModal({ pet, onClose, onSave }: { pet: Pet | null; onClose: () => vo
             )}
           </div>
         </div>
-        <div className="flex justify-end gap-3 mt-6 pt-4 border-t border-[#406A56]/10">
+        <div className="flex justify-end gap-3 mt-6 pt-4 border-t border-[#2D5A3D]/10">
           <button onClick={onClose} className="btn-secondary">Cancel</button>
           <button onClick={handleSave} disabled={saving || !form.name || !form.species} className="btn-accent">
             {saving ? 'Saving...' : 'Save'}

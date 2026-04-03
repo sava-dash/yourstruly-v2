@@ -15,7 +15,7 @@ const Card = forwardRef<HTMLDivElement, CardProps>(({
   const variantClasses = {
     default: 'bg-white border border-gray-200',
     glass: 'bg-white/80 backdrop-blur-xl border border-white/50',
-    warm: 'bg-[#F2F1E5] border border-[#406A56]/10',
+    warm: 'bg-[#F5F3EE] border border-[#2D5A3D]/10',
   }
 
   return (

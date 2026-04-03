@@ -28,18 +28,18 @@ export default async function AdminLoginPage({
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center p-4 bg-[#FDF8F3]">
+    <div className="min-h-screen flex items-center justify-center p-4 bg-[#FAFAF7]">
       {/* Background gradients */}
       <div className="fixed inset-0 pointer-events-none">
-        <div className="absolute inset-0 bg-gradient-to-br from-[#FDF8F3] via-[#F5EDE5] to-[#FDF8F3]" />
-        <div className="absolute top-0 right-0 w-1/2 h-1/2 bg-gradient-radial from-[#406A56]/5 to-transparent" />
-        <div className="absolute bottom-0 left-0 w-1/2 h-1/2 bg-gradient-radial from-[#C35F33]/5 to-transparent" />
+        <div className="absolute inset-0 bg-gradient-to-br from-[#FAFAF7] via-[#F5EDE5] to-[#FAFAF7]" />
+        <div className="absolute top-0 right-0 w-1/2 h-1/2 bg-gradient-radial from-[#2D5A3D]/5 to-transparent" />
+        <div className="absolute bottom-0 left-0 w-1/2 h-1/2 bg-gradient-radial from-[#B8562E]/5 to-transparent" />
       </div>
 
       <div className="relative z-10 w-full max-w-md">
         {/* Logo */}
         <div className="text-center mb-8">
-          <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-[#406A56] to-[#4A3552] flex items-center justify-center mx-auto mb-4 shadow-xl">
+          <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-[#2D5A3D] to-[#4A3552] flex items-center justify-center mx-auto mb-4 shadow-xl">
             <svg
               className="w-8 h-8 text-white"
               fill="none"
@@ -61,7 +61,7 @@ export default async function AdminLoginPage({
         {/* Login Form */}
         <div className="glass-modal p-8">
           {params.error && (
-            <div className="mb-6 p-4 rounded-xl bg-[#C35F33]/10 border border-[#C35F33]/20 text-[#C35F33] text-sm">
+            <div className="mb-6 p-4 rounded-xl bg-[#B8562E]/10 border border-[#B8562E]/20 text-[#B8562E] text-sm">
               {params.error === 'access_denied' 
                 ? 'You do not have admin access.' 
                 : params.error === 'invalid_credentials'

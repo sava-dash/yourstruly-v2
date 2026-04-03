@@ -515,7 +515,7 @@ function MapboxGlobeReveal({
       type: 'line',
       source: sourceId,
       paint: {
-        'line-color': '#D9C61A',
+        'line-color': '#C4A235',
         'line-width': 36,
         'line-opacity': 0.12,
         'line-blur': 16,
@@ -527,7 +527,7 @@ function MapboxGlobeReveal({
       type: 'line',
       source: sourceId,
       paint: {
-        'line-color': '#D9C61A',
+        'line-color': '#C4A235',
         'line-width': 18,
         'line-opacity': 0.35,
         'line-blur': 6,
@@ -645,7 +645,7 @@ function MapboxGlobeReveal({
           <div class="marker-pulse marker-pulse-2"></div>
           <div class="marker-pin">
             <svg width="28" height="34" viewBox="0 0 28 34" fill="none">
-              <path d="M14 0C6.268 0 0 6.268 0 14c0 10.5 14 20 14 20S28 24.5 28 14C28 6.268 21.732 0 14 0z" fill="#C35F33"/>
+              <path d="M14 0C6.268 0 0 6.268 0 14c0 10.5 14 20 14 20S28 24.5 28 14C28 6.268 21.732 0 14 0z" fill="#B8562E"/>
               <circle cx="14" cy="13" r="5.5" fill="white"/>
             </svg>
           </div>
@@ -992,7 +992,7 @@ function MapboxGlobeReveal({
             <div class="marker-pulse marker-pulse-2"></div>
             <div class="marker-pin">
               <svg width="28" height="34" viewBox="0 0 28 34" fill="none">
-                <path d="M14 0C6.268 0 0 6.268 0 14c0 10.5 14 20 14 20S28 24.5 28 14C28 6.268 21.732 0 14 0z" fill="#406A56"/>
+                <path d="M14 0C6.268 0 0 6.268 0 14c0 10.5 14 20 14 20S28 24.5 28 14C28 6.268 21.732 0 14 0z" fill="#2D5A3D"/>
                 <circle cx="14" cy="13" r="5.5" fill="white"/>
               </svg>
             </div>
@@ -1098,7 +1098,7 @@ function MapboxGlobeReveal({
                   animate={{ opacity: 1 }}
                   transition={{ delay: 1.2 }}
                 >
-                  <MapPin size={14} color="#406A56" />
+                  <MapPin size={14} color="#2D5A3D" />
                   <span>{location}</span>
                 </motion.div>
               </div>
@@ -1156,7 +1156,7 @@ function MapboxGlobeReveal({
                       color: '#2d2d2d',
                       outline: 'none',
                     }}
-                    onFocus={(e) => { e.target.style.borderColor = '#406A56'; }}
+                    onFocus={(e) => { e.target.style.borderColor = '#2D5A3D'; }}
                     onBlur={(e) => { e.target.style.borderColor = 'rgba(0,0,0,0.1)'; }}
                   />
                   {/* Suggestions dropdown */}
@@ -1197,7 +1197,7 @@ function MapboxGlobeReveal({
                           onMouseEnter={(e) => { e.currentTarget.style.background = 'rgba(64,106,86,0.06)'; }}
                           onMouseLeave={(e) => { e.currentTarget.style.background = 'none'; }}
                         >
-                          <MapPin size={14} color="#406A56" />
+                          <MapPin size={14} color="#2D5A3D" />
                           {s.place_name}
                         </button>
                       ))}
@@ -1223,7 +1223,7 @@ function MapboxGlobeReveal({
                     outline: 'none',
                     marginTop: '8px',
                   }}
-                  onFocus={(e) => { e.target.style.borderColor = '#406A56'; }}
+                  onFocus={(e) => { e.target.style.borderColor = '#2D5A3D'; }}
                   onBlur={(e) => { e.target.style.borderColor = 'rgba(0,0,0,0.1)'; }}
                 />
 
@@ -1260,7 +1260,7 @@ function MapboxGlobeReveal({
                         padding: '12px',
                         border: 'none',
                         background: 'none',
-                        color: placesAdded.length > 0 ? '#406A56' : 'rgba(45,45,45,0.5)',
+                        color: placesAdded.length > 0 ? '#2D5A3D' : 'rgba(45,45,45,0.5)',
                         fontSize: '15px',
                         fontWeight: 600,
                         cursor: 'pointer',
@@ -1669,7 +1669,7 @@ function MapboxGlobeReveal({
                   lineHeight: '1.5',
                   minHeight: '70px',
                 }}
-                onFocus={(e) => { e.target.style.borderColor = '#406A56'; }}
+                onFocus={(e) => { e.target.style.borderColor = '#2D5A3D'; }}
                 onBlur={(e) => { e.target.style.borderColor = 'rgba(0,0,0,0.1)'; }}
               />
             </div>
@@ -1727,7 +1727,7 @@ function MapboxGlobeReveal({
                 }}
                 onClick={() => photoInputRef.current?.click()}
                 style={{
-                  border: `2px dashed ${isDraggingPhotos ? '#406A56' : 'rgba(0,0,0,0.15)'}`,
+                  border: `2px dashed ${isDraggingPhotos ? '#2D5A3D' : 'rgba(0,0,0,0.15)'}`,
                   borderRadius: '16px',
                   padding: '24px',
                   textAlign: 'center',
@@ -1737,7 +1737,7 @@ function MapboxGlobeReveal({
                   marginBottom: '12px',
                 }}
               >
-                <Camera size={28} color="#406A56" style={{ margin: '0 auto 8px' }} />
+                <Camera size={28} color="#2D5A3D" style={{ margin: '0 auto 8px' }} />
                 <p style={{ fontSize: '14px', fontWeight: 600, color: '#2d2d2d', margin: 0 }}>
                   {uploadedPhotos.length === 0 ? 'Drop photos here or click to browse' : 'Add more photos'}
                 </p>
@@ -1796,7 +1796,7 @@ function MapboxGlobeReveal({
                       {photo.status === 'done' && (
                         <div style={{
                           position: 'absolute', bottom: 4, right: 4, width: 20, height: 20,
-                          borderRadius: '50%', background: '#406A56',
+                          borderRadius: '50%', background: '#2D5A3D',
                           display: 'flex', alignItems: 'center', justifyContent: 'center',
                         }}>
                           <Check size={12} color="white" />
@@ -2083,7 +2083,7 @@ function MapboxGlobeReveal({
           height: 48px;
           border-radius: 50%;
           border: 3px solid rgba(64, 106, 86, 0.3);
-          border-top-color: #406A56;
+          border-top-color: #2D5A3D;
           animation: spin 1s linear infinite;
         }
 
@@ -2117,7 +2117,7 @@ function MapboxGlobeReveal({
           width: 8px;
           height: 8px;
           border-radius: 50%;
-          background: #D9C61A;
+          background: #C4A235;
           animation: statusPulse 1.2s ease-in-out infinite;
         }
 
@@ -2151,7 +2151,7 @@ function MapboxGlobeReveal({
 
         .globe-welcome-bar {
           height: 4px;
-          background: linear-gradient(90deg, #406A56, #8DACAB, #C35F33);
+          background: linear-gradient(90deg, #2D5A3D, #8DACAB, #B8562E);
         }
 
         .globe-welcome-body {
@@ -2161,7 +2161,7 @@ function MapboxGlobeReveal({
         .globe-welcome-greeting {
           font-size: 14px;
           font-weight: 600;
-          color: #406A56;
+          color: #2D5A3D;
           margin: 0 0 6px;
           letter-spacing: 0.1px;
         }
@@ -2194,7 +2194,7 @@ function MapboxGlobeReveal({
           gap: 8px;
           padding: 16px 24px;
           margin: 0 24px 20px;
-          background: #406A56;
+          background: #2D5A3D;
           border: none;
           border-radius: 16px;
           color: white;
@@ -2406,7 +2406,7 @@ function MapboxGlobeReveal({
           background: rgba(64,106,86,0.04);
         }
         .why-here-selected {
-          border-color: #406A56;
+          border-color: #2D5A3D;
           background: rgba(64,106,86,0.08);
         }
         .why-here-emoji {
@@ -2418,7 +2418,7 @@ function MapboxGlobeReveal({
           line-height: 1.4;
         }
         .why-here-check {
-          color: #406A56;
+          color: #2D5A3D;
           flex-shrink: 0;
         }
 
@@ -2492,9 +2492,9 @@ function MapboxGlobeReveal({
         }
 
         .globe-pill.selected {
-          border-color: #406A56;
+          border-color: #2D5A3D;
           background: rgba(64, 106, 86, 0.1);
-          color: #406A56;
+          color: #2D5A3D;
           font-weight: 600;
         }
 
@@ -2529,7 +2529,7 @@ function MapboxGlobeReveal({
         }
 
         .globe-custom-input:focus {
-          border-color: #406A56;
+          border-color: #2D5A3D;
         }
 
         .globe-custom-add-btn {
@@ -2537,7 +2537,7 @@ function MapboxGlobeReveal({
           height: 40px;
           border-radius: 12px;
           border: none;
-          background: #406A56;
+          background: #2D5A3D;
           color: white;
           font-size: 20px;
           font-weight: 600;
@@ -2550,7 +2550,7 @@ function MapboxGlobeReveal({
         }
 
         .globe-custom-add-btn:hover {
-          background: #4a7a64;
+          background: #234A31;
         }
 
         .globe-custom-add-btn:disabled {
@@ -2636,7 +2636,7 @@ function MapboxGlobeReveal({
           min-width: 0;
         }
         .contact-add-input:focus {
-          border-color: #406A56;
+          border-color: #2D5A3D;
         }
         .contact-add-name {
           flex: 1 1 40%;
@@ -2652,7 +2652,7 @@ function MapboxGlobeReveal({
           height: 40px;
           border-radius: 12px;
           border: none;
-          background: #406A56;
+          background: #2D5A3D;
           color: white;
           font-size: 22px;
           font-weight: 600;
@@ -2664,7 +2664,7 @@ function MapboxGlobeReveal({
           transition: background 0.2s;
         }
         .contact-add-btn:hover {
-          background: #4a7a64;
+          background: #234A31;
         }
         .contact-add-btn:disabled {
           opacity: 0.4;
@@ -2745,7 +2745,7 @@ function MapboxGlobeReveal({
           border-radius: 100px;
           font-size: 11px;
           font-weight: 500;
-          color: #406A56;
+          color: #2D5A3D;
         }
 
         .summary-pill-more {
@@ -3207,9 +3207,9 @@ export function QuickOnboardingFlow({
           min-height: 100dvh;
           background: linear-gradient(
             135deg,
-            #fdf8f3 0%,
+            #FAFAF7 0%,
             #f5ede5 50%,
-            #fdf8f3 100%
+            #FAFAF7 100%
           );
           position: relative;
           overflow-x: hidden;
@@ -3250,15 +3250,15 @@ export function QuickOnboardingFlow({
         }
 
         .step-dot.step-current {
-          border-color: #406A56;
-          color: #406A56;
+          border-color: #2D5A3D;
+          color: #2D5A3D;
           background: rgba(64, 106, 86, 0.08);
           box-shadow: 0 0 0 3px rgba(64, 106, 86, 0.1);
         }
 
         .step-dot.step-completed {
-          border-color: #406A56;
-          background: #406A56;
+          border-color: #2D5A3D;
+          background: #2D5A3D;
           color: white;
         }
 
@@ -3274,7 +3274,7 @@ export function QuickOnboardingFlow({
         }
 
         .step-line-done {
-          background: #406A56;
+          background: #2D5A3D;
         }
 
         @media (max-width: 480px) {
@@ -3415,7 +3415,7 @@ const SHARED = `
   .yt-input::placeholder { color: rgba(45,45,45,0.25); }
   .yt-input:focus {
     outline: none;
-    border-color: #406A56;
+    border-color: #2D5A3D;
     box-shadow: 0 0 0 3px rgba(64, 106, 86, 0.1);
   }
   .primary-btn {
@@ -3424,7 +3424,7 @@ const SHARED = `
     justify-content: center;
     gap: 8px;
     padding: 16px 28px;
-    background: #406A56;
+    background: #2D5A3D;
     border: none;
     border-radius: 16px;
     color: white;
@@ -3456,8 +3456,8 @@ const SHARED = `
     transition: border-color 0.2s, color 0.2s;
   }
   .back-btn:hover {
-    border-color: #406A56;
-    color: #406A56;
+    border-color: #2D5A3D;
+    color: #2D5A3D;
   }
   .btn-row {
     display: flex;
@@ -3728,7 +3728,7 @@ function BirthInfoStep({
         }
         .bday-select:focus {
           outline: none;
-          border-color: #406A56;
+          border-color: #2D5A3D;
           box-shadow: 0 0 0 3px rgba(64, 106, 86, 0.1);
         }
         .bday-input {
@@ -3746,7 +3746,7 @@ function BirthInfoStep({
         .bday-input::placeholder { color: rgba(45, 45, 45, 0.3); }
         .bday-input:focus {
           outline: none;
-          border-color: #406A56;
+          border-color: #2D5A3D;
           box-shadow: 0 0 0 3px rgba(64, 106, 86, 0.1);
         }
         .bday-day { width: 70px; flex: none; }
@@ -3783,7 +3783,7 @@ function BirthInfoStep({
         }
         .suggestion-item:hover {
           background: rgba(64, 106, 86, 0.08);
-          color: #406A56;
+          color: #2D5A3D;
         }
         .suggestion-item + .suggestion-item {
           border-top: 1px solid rgba(64, 106, 86, 0.06);
@@ -3859,7 +3859,7 @@ function AboutYouStep({
         {/* Interests section */}
         <div className="pill-section">
           <div className="section-header">
-            <span className="section-dot" style={{ background: '#406A56' }} />
+            <span className="section-dot" style={{ background: '#2D5A3D' }} />
             <span className="section-label">Your Interests</span>
             <span className="section-count">
               {allInterests.filter((p) => selected.has(p.label)).length > 0
@@ -3908,7 +3908,7 @@ function AboutYouStep({
         {/* Traits section */}
         <div className="pill-section">
           <div className="section-header">
-            <span className="section-dot" style={{ background: '#406A56' }} />
+            <span className="section-dot" style={{ background: '#2D5A3D' }} />
             <span className="section-label">Who You Are</span>
             <span className="section-count">
               {allTraits.filter((p) => selected.has(p.label)).length > 0
@@ -4010,7 +4010,7 @@ function AboutYouStep({
         .section-count {
           font-size: 11px;
           font-weight: 600;
-          color: #406A56;
+          color: #2D5A3D;
           margin-left: auto;
         }
         .pill-section {
@@ -4043,20 +4043,20 @@ function AboutYouStep({
         }
         .pill-emoji { font-size: 14px; line-height: 1; flex-shrink: 0; }
         .pill:hover {
-          border-color: #406A56;
-          color: #406A56;
+          border-color: #2D5A3D;
+          color: #2D5A3D;
           background: rgba(64, 106, 86, 0.03);
         }
         .pill-selected {
           background: rgba(64, 106, 86, 0.09);
-          border-color: #406A56;
-          color: #406A56;
+          border-color: #2D5A3D;
+          color: #2D5A3D;
           font-weight: 600;
         }
         .pill-selected-trait {
           background: rgba(64, 106, 86, 0.09);
-          border-color: #406A56;
-          color: #406A56;
+          border-color: #2D5A3D;
+          color: #2D5A3D;
         }
         /* Custom add row */
         .custom-add-row {
@@ -4078,7 +4078,7 @@ function AboutYouStep({
         .custom-input::placeholder { color: rgba(45, 45, 45, 0.3); }
         .custom-input:focus {
           outline: none;
-          border-color: #406A56;
+          border-color: #2D5A3D;
           box-shadow: 0 0 0 2px rgba(64, 106, 86, 0.1);
         }
         .custom-add-btn {
@@ -4086,7 +4086,7 @@ function AboutYouStep({
           background: rgba(64, 106, 86, 0.08);
           border: 1.5px solid rgba(64, 106, 86, 0.2);
           border-radius: 100px;
-          color: #406A56;
+          color: #2D5A3D;
           font-size: 13px;
           font-weight: 600;
           cursor: pointer;
@@ -4096,7 +4096,7 @@ function AboutYouStep({
         }
         .custom-add-btn:hover:not(:disabled) {
           background: rgba(64, 106, 86, 0.14);
-          border-color: #406A56;
+          border-color: #2D5A3D;
         }
         .custom-add-btn:disabled {
           opacity: 0.35;
@@ -4105,17 +4105,17 @@ function AboutYouStep({
         .custom-add-btn-trait {
           background: rgba(64, 106, 86, 0.07);
           border-color: rgba(64, 106, 86, 0.2);
-          color: #406A56;
+          color: #2D5A3D;
         }
         .custom-add-btn-trait:hover:not(:disabled) {
           background: rgba(64, 106, 86, 0.13);
-          border-color: #406A56;
+          border-color: #2D5A3D;
         }
         /* Sticky nav */
         .about-nav {
           position: sticky;
           bottom: 0;
-          background: linear-gradient(to bottom, transparent, #fdf8f3 30%);
+          background: linear-gradient(to bottom, transparent, #FAFAF7 30%);
           padding-top: 20px;
           margin-top: auto;
         }
@@ -4139,8 +4139,8 @@ function AboutYouStep({
           transition: border-color 0.2s, color 0.2s;
         }
         .nav-back-btn:hover {
-          border-color: #406A56;
-          color: #406A56;
+          border-color: #2D5A3D;
+          color: #2D5A3D;
         }
         .nav-right {
           flex: 1;
@@ -4155,7 +4155,7 @@ function AboutYouStep({
           gap: 8px;
           width: 100%;
           padding: 15px 20px;
-          background: #406A56;
+          background: #2D5A3D;
           border: none;
           border-radius: 14px;
           color: white;
@@ -4285,7 +4285,7 @@ function ReligionStep({
 
       {/* Trust badge */}
       <div className="trust-badge">
-        <Shield size={14} color="#406A56" />
+        <Shield size={14} color="#2D5A3D" />
         <span>Your beliefs are private and never shared.</span>
       </div>
 
@@ -4325,13 +4325,13 @@ function ReligionStep({
           box-shadow: 0 1px 4px rgba(64, 106, 86, 0.06);
         }
         .religion-btn:hover {
-          border-color: #406A56;
-          color: #406A56;
+          border-color: #2D5A3D;
+          color: #2D5A3D;
         }
         .religion-selected {
           background: rgba(64, 106, 86, 0.08);
-          border-color: #406A56;
-          color: #406A56;
+          border-color: #2D5A3D;
+          color: #2D5A3D;
           font-weight: 600;
         }
         .other-input-wrap {
@@ -4342,7 +4342,7 @@ function ReligionStep({
           width: 100%;
           padding: 14px 16px;
           background: white;
-          border: 1.5px solid #406A56;
+          border: 1.5px solid #2D5A3D;
           border-radius: 14px;
           color: #2d2d2d;
           font-size: 15px;
@@ -4373,7 +4373,7 @@ function ReligionStep({
         .religion-nav {
           position: sticky;
           bottom: 0;
-          background: linear-gradient(to bottom, transparent, #fdf8f3 30%);
+          background: linear-gradient(to bottom, transparent, #FAFAF7 30%);
           padding-top: 16px;
           padding-bottom: 4px;
         }
@@ -4396,7 +4396,7 @@ function ReligionStep({
           flex-shrink: 0;
           transition: border-color 0.2s, color 0.2s;
         }
-        .nav-back:hover { border-color: #406A56; color: #406A56; }
+        .nav-back:hover { border-color: #2D5A3D; color: #2D5A3D; }
         .nav-continue {
           flex: 1;
           display: flex;
@@ -4404,7 +4404,7 @@ function ReligionStep({
           justify-content: center;
           gap: 8px;
           padding: 15px 20px;
-          background: #406A56;
+          background: #2D5A3D;
           border: none;
           border-radius: 14px;
           color: white;
@@ -4453,7 +4453,7 @@ function ReadyStep({
           width: 100,
           height: 100,
           borderRadius: '50%',
-          background: 'linear-gradient(135deg, #406A56, #8DACAB)',
+          background: 'linear-gradient(135deg, #2D5A3D, #8DACAB)',
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
@@ -4502,7 +4502,7 @@ function ReadyStep({
           alignItems: 'center',
           gap: 10,
           padding: '20px 44px',
-          background: '#406A56',
+          background: '#2D5A3D',
           border: 'none',
           borderRadius: 20,
           color: 'white',
@@ -4734,8 +4734,8 @@ function ThreeColAboutYou({
           border-radius: 50%;
           flex-shrink: 0;
         }
-        .col-dot-green { background: #406A56; }
-        .col-dot-rust { background: #406A56; }
+        .col-dot-green { background: #2D5A3D; }
+        .col-dot-rust { background: #2D5A3D; }
 
         .col-title {
           font-size: 11px;
@@ -4749,9 +4749,9 @@ function ThreeColAboutYou({
         .col-count {
           font-size: 11px;
           font-weight: 600;
-          color: #406A56;
+          color: #2D5A3D;
         }
-        .col-count-rust { color: #406A56; }
+        .col-count-rust { color: #2D5A3D; }
 
         .pill-grid-3col {
           display: grid;
@@ -4781,22 +4781,22 @@ function ThreeColAboutYou({
         }
 
         .pill3:hover {
-          border-color: #406A56;
-          color: #406A56;
+          border-color: #2D5A3D;
+          color: #2D5A3D;
           background: rgba(64, 106, 86, 0.04);
         }
 
         .pill3-sel {
           background: rgba(64, 106, 86, 0.09);
-          border-color: #406A56;
-          color: #406A56;
+          border-color: #2D5A3D;
+          color: #2D5A3D;
           font-weight: 600;
         }
 
         .pill3-sel-rust {
           background: rgba(64, 106, 86, 0.09);
-          border-color: #406A56;
-          color: #406A56;
+          border-color: #2D5A3D;
+          color: #2D5A3D;
         }
 
         .pill3-emoji { font-size: 18px; line-height: 1; }
@@ -4829,7 +4829,7 @@ function ThreeColAboutYou({
         .custom-inp::placeholder { color: rgba(45, 45, 45, 0.28); }
         .custom-inp:focus {
           outline: none;
-          border-color: #406A56;
+          border-color: #2D5A3D;
           box-shadow: 0 0 0 2px rgba(64, 106, 86, 0.09);
         }
 
@@ -4848,7 +4848,7 @@ function ThreeColAboutYou({
         .custom-btn-green {
           background: rgba(64, 106, 86, 0.08);
           border: 1.5px solid rgba(64, 106, 86, 0.2);
-          color: #406A56;
+          color: #2D5A3D;
         }
         .custom-btn-green:hover:not(:disabled) {
           background: rgba(64, 106, 86, 0.14);
@@ -4857,7 +4857,7 @@ function ThreeColAboutYou({
         .custom-btn-rust {
           background: rgba(64, 106, 86, 0.07);
           border: 1.5px solid rgba(64, 106, 86, 0.2);
-          color: #406A56;
+          color: #2D5A3D;
         }
         .custom-btn-rust:hover:not(:disabled) {
           background: rgba(64, 106, 86, 0.13);
@@ -4884,7 +4884,7 @@ function ThreeColAboutYou({
           flex-shrink: 0;
           transition: border-color 0.15s, color 0.15s;
         }
-        .col3-back:hover { border-color: #406A56; color: #406A56; }
+        .col3-back:hover { border-color: #2D5A3D; color: #2D5A3D; }
 
         .col3-continue {
           flex: 1;
@@ -4893,7 +4893,7 @@ function ThreeColAboutYou({
           justify-content: center;
           gap: 6px;
           padding: 13px 16px;
-          background: #406A56;
+          background: #2D5A3D;
           border: none;
           border-radius: 12px;
           color: white;
@@ -5058,20 +5058,20 @@ function WhyHereStep({
           position: relative;
         }
         .why-option:hover {
-          border-color: #406A56;
-          color: #406A56;
+          border-color: #2D5A3D;
+          color: #2D5A3D;
           background: rgba(64, 106, 86, 0.02);
         }
         .why-selected {
           background: rgba(64, 106, 86, 0.07);
-          border-color: #406A56;
-          color: #406A56;
+          border-color: #2D5A3D;
+          color: #2D5A3D;
           font-weight: 500;
         }
         .why-emoji { font-size: 18px; flex-shrink: 0; }
         .why-text { flex: 1; line-height: 1.4; }
         :global(.why-check) {
-          color: #406A56;
+          color: #2D5A3D;
           flex-shrink: 0;
         }
         .why-or {
@@ -5104,14 +5104,14 @@ function WhyHereStep({
         .why-textarea::placeholder { color: rgba(45, 45, 45, 0.28); }
         .why-textarea:focus {
           outline: none;
-          border-color: #406A56;
+          border-color: #2D5A3D;
           box-shadow: 0 0 0 3px rgba(64, 106, 86, 0.09);
         }
         /* Reuse nav styles */
         .why-nav {
           position: sticky;
           bottom: 0;
-          background: linear-gradient(to bottom, transparent, #fdf8f3 30%);
+          background: linear-gradient(to bottom, transparent, #FAFAF7 30%);
           padding-top: 16px;
           padding-bottom: 4px;
           display: flex;
@@ -5133,7 +5133,7 @@ function WhyHereStep({
           flex-shrink: 0;
           transition: border-color 0.2s, color 0.2s;
         }
-        .nav-back-btn:hover { border-color: #406A56; color: #406A56; }
+        .nav-back-btn:hover { border-color: #2D5A3D; color: #2D5A3D; }
         .nav-right { flex: 1; }
         .nav-continue-btn {
           display: flex;
@@ -5142,7 +5142,7 @@ function WhyHereStep({
           gap: 8px;
           width: 100%;
           padding: 15px 20px;
-          background: #406A56;
+          background: #2D5A3D;
           border: none;
           border-radius: 14px;
           color: white;

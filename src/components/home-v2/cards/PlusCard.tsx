@@ -32,29 +32,29 @@ export function PlusCard({ onAdd, category }: PlusCardProps) {
       {!showMenu ? (
         <button
           onClick={() => setShowMenu(true)}
-          className="w-16 h-16 rounded-2xl border-2 border-dashed border-[#DDE5E0] hover:border-[#3D6B52]/40 hover:bg-[#E8F0EC] flex items-center justify-center transition-colors group"
+          className="w-16 h-16 rounded-2xl border-2 border-dashed border-[#DDE3DF] hover:border-[#3D6B52]/40 hover:bg-[#E6F0EA] flex items-center justify-center transition-colors group"
         >
-          <Plus size={24} className="text-[#94A39C] group-hover:text-[#3D6B52]" />
+          <Plus size={24} className="text-[#94A09A] group-hover:text-[#3D6B52]" />
         </button>
       ) : (
         <div className="w-full space-y-1.5">
-          <p className="text-[10px] text-[#94A39C] uppercase tracking-wider text-center mb-2">Add to this memory</p>
+          <p className="text-[10px] text-[#94A09A] uppercase tracking-wider text-center mb-2">Add to this memory</p>
           {options.map(opt => (
             <button
               key={opt.type}
               onClick={() => { onAdd(opt.type); setShowMenu(false) }}
-              className="w-full flex items-center gap-3 px-3 py-2 rounded-xl hover:bg-[#E8F0EC] transition-colors text-left"
+              className="w-full flex items-center gap-3 px-3 py-2 rounded-xl hover:bg-[#E6F0EA] transition-colors text-left"
             >
               <opt.icon size={14} className="text-[#2D5A3D] flex-shrink-0" />
               <div>
-                <p className="text-xs text-[#1A2B23] font-medium">{opt.label}</p>
-                <p className="text-[10px] text-[#94A39C]">{opt.description}</p>
+                <p className="text-xs text-[#1A1F1C] font-medium">{opt.label}</p>
+                <p className="text-[10px] text-[#94A09A]">{opt.description}</p>
               </div>
             </button>
           ))}
           <button
             onClick={() => setShowMenu(false)}
-            className="w-full text-center text-[10px] text-[#94A39C] hover:text-[#5C6D64] py-1"
+            className="w-full text-center text-[10px] text-[#94A09A] hover:text-[#5A6660] py-1"
           >
             Cancel
           </button>

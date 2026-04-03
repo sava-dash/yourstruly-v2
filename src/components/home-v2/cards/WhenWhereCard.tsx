@@ -69,12 +69,12 @@ export function WhenWhereCard({ data, onSave, saved }: WhenWhereCardProps) {
     return (
       <div className="h-full flex flex-col p-5 gap-4">
         <div className="flex items-center justify-between">
-          <h3 className="text-xs font-semibold uppercase tracking-wider text-[#5C6D64] flex items-center gap-1.5">
+          <h3 className="text-xs font-semibold uppercase tracking-wider text-[#5A6660] flex items-center gap-1.5">
             <MapPin size={12} /> When & Where
           </h3>
           <button
             onClick={() => setEditing(true)}
-            className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-[#F5F1EA] hover:bg-[#E8F0EC] text-[#5C6D64] hover:text-[#1A2B23] text-xs transition-colors"
+            className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-[#F5F1EA] hover:bg-[#E6F0EA] text-[#5A6660] hover:text-[#1A1F1C] text-xs transition-colors"
           >
             <Pencil size={11} /> Edit
           </button>
@@ -95,13 +95,13 @@ export function WhenWhereCard({ data, onSave, saved }: WhenWhereCardProps) {
           </div>
         ) : (
           <div className="flex-1 flex flex-col justify-center items-center gap-3">
-            <div className="w-12 h-12 rounded-full bg-[#E8F0EC] flex items-center justify-center">
+            <div className="w-12 h-12 rounded-full bg-[#E6F0EA] flex items-center justify-center">
               <MapPin size={20} className="text-[#3D6B52]" />
             </div>
             <div className="text-center">
-              {location && <p className="text-[#1A2B23] text-sm font-medium">{location}</p>}
-              {date && <p className="text-[#94A39C] text-xs mt-1">{date}</p>}
-              {!location && !date && <p className="text-[#94A39C] text-sm">No location set</p>}
+              {location && <p className="text-[#1A1F1C] text-sm font-medium">{location}</p>}
+              {date && <p className="text-[#94A09A] text-xs mt-1">{date}</p>}
+              {!location && !date && <p className="text-[#94A09A] text-sm">No location set</p>}
             </div>
           </div>
         )}
@@ -117,13 +117,13 @@ export function WhenWhereCard({ data, onSave, saved }: WhenWhereCardProps) {
   return (
     <div className="h-full flex flex-col p-5 gap-4">
       <div className="flex items-center justify-between">
-        <h3 className="text-xs font-semibold uppercase tracking-wider text-[#5C6D64] flex items-center gap-1.5">
+        <h3 className="text-xs font-semibold uppercase tracking-wider text-[#5A6660] flex items-center gap-1.5">
           <MapPin size={12} /> When & Where
         </h3>
         {saved && (
           <button
             onClick={() => setEditing(false)}
-            className="text-xs text-[#94A39C] hover:text-[#5C6D64] transition-colors"
+            className="text-xs text-[#94A09A] hover:text-[#5A6660] transition-colors"
           >
             Cancel
           </button>
@@ -133,7 +133,7 @@ export function WhenWhereCard({ data, onSave, saved }: WhenWhereCardProps) {
       <div className="relative flex-1 flex flex-col gap-3">
         {/* Location */}
         <div>
-          <label className="text-[10px] font-semibold uppercase tracking-wider text-[#94A39C] mb-1.5 block">
+          <label className="text-[10px] font-semibold uppercase tracking-wider text-[#94A09A] mb-1.5 block">
             Where was this?
           </label>
           <div className="relative">
@@ -142,17 +142,17 @@ export function WhenWhereCard({ data, onSave, saved }: WhenWhereCardProps) {
               value={location}
               onChange={(e) => handleLocationChange(e.target.value)}
               placeholder="City, place, or address..."
-              className="w-full px-3 py-3 bg-[#FAF8F4] rounded-xl border border-[#DDE5E0] text-[#1A2B23] text-sm focus:outline-none focus:ring-2 focus:ring-[#3D6B52]/30 focus:border-[#3D6B52]/50 placeholder-[#94A39C]"
+              className="w-full px-3 py-3 bg-[#FAFAF7] rounded-xl border border-[#DDE3DF] text-[#1A1F1C] text-sm focus:outline-none focus:ring-2 focus:ring-[#3D6B52]/30 focus:border-[#3D6B52]/50 placeholder-[#94A09A]"
             />
             {suggestions.length > 0 && (
-              <div className="absolute top-full left-0 right-0 mt-1 bg-white rounded-xl shadow-lg border border-[#DDE5E0] z-20 overflow-hidden">
+              <div className="absolute top-full left-0 right-0 mt-1 bg-white rounded-xl shadow-lg border border-[#DDE3DF] z-20 overflow-hidden">
                 {suggestions.map(s => (
                   <button
                     key={s.id}
                     onClick={() => selectSuggestion(s)}
-                    className="w-full px-3 py-2.5 text-left text-sm text-[#1A2B23] hover:bg-[#E8F0EC] flex items-center gap-2"
+                    className="w-full px-3 py-2.5 text-left text-sm text-[#1A1F1C] hover:bg-[#E6F0EA] flex items-center gap-2"
                   >
-                    <MapPin size={12} className="text-[#94A39C] flex-shrink-0" />
+                    <MapPin size={12} className="text-[#94A09A] flex-shrink-0" />
                     {s.place_name}
                   </button>
                 ))}
@@ -163,7 +163,7 @@ export function WhenWhereCard({ data, onSave, saved }: WhenWhereCardProps) {
 
         {/* Date */}
         <div>
-          <label className="text-[10px] font-semibold uppercase tracking-wider text-[#94A39C] mb-1.5 block">
+          <label className="text-[10px] font-semibold uppercase tracking-wider text-[#94A09A] mb-1.5 block">
             When was this taken?
           </label>
           <input
@@ -171,7 +171,7 @@ export function WhenWhereCard({ data, onSave, saved }: WhenWhereCardProps) {
             value={date}
             onChange={(e) => setDate(e.target.value)}
             placeholder="e.g. Summer 2019, March 2020..."
-            className="w-full px-3 py-3 bg-[#FAF8F4] rounded-xl border border-[#DDE5E0] text-[#1A2B23] text-sm focus:outline-none focus:ring-2 focus:ring-[#3D6B52]/30 focus:border-[#3D6B52]/50 placeholder-[#94A39C]"
+            className="w-full px-3 py-3 bg-[#FAFAF7] rounded-xl border border-[#DDE3DF] text-[#1A1F1C] text-sm focus:outline-none focus:ring-2 focus:ring-[#3D6B52]/30 focus:border-[#3D6B52]/50 placeholder-[#94A09A]"
           />
         </div>
 
@@ -187,7 +187,7 @@ export function WhenWhereCard({ data, onSave, saved }: WhenWhereCardProps) {
         )}
       </div>
 
-      <p className="text-center text-xs text-[#C35F33]">🎉 Earn +15 XP</p>
+      <p className="text-center text-xs text-[#B8562E]">🎉 Earn +15 XP</p>
 
       <button
         onClick={handleSave}

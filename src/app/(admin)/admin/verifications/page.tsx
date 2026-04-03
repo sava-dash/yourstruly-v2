@@ -125,7 +125,7 @@ export default async function VerificationsPage({
             href={tab.key ? `/admin/verifications?status=${tab.key}` : '/admin/verifications'}
             className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
               status === tab.key || (!status && !tab.key)
-                ? 'bg-[#406A56] text-white'
+                ? 'bg-[#2D5A3D] text-white'
                 : 'text-[#2a1f1a]/60 hover:text-[#2a1f1a] hover:bg-white/50'
             }`}
           >
@@ -161,7 +161,7 @@ export default async function VerificationsPage({
               >
                 <div className="flex items-start gap-4">
                   {/* Avatar/Icon */}
-                  <div className="w-12 h-12 rounded-full bg-gradient-to-br from-[#406A56]/20 to-[#C35F33]/20 flex items-center justify-center flex-shrink-0">
+                  <div className="w-12 h-12 rounded-full bg-gradient-to-br from-[#2D5A3D]/20 to-[#B8562E]/20 flex items-center justify-center flex-shrink-0">
                     {verification.profiles?.avatar_url ? (
                       <img 
                         src={verification.profiles.avatar_url} 
@@ -169,7 +169,7 @@ export default async function VerificationsPage({
                         className="w-full h-full rounded-full object-cover"
                       />
                     ) : (
-                      <User className="w-6 h-6 text-[#406A56]" />
+                      <User className="w-6 h-6 text-[#2D5A3D]" />
                     )}
                   </div>
 
@@ -177,7 +177,7 @@ export default async function VerificationsPage({
                   <div className="flex-1 min-w-0">
                     <div className="flex items-start justify-between gap-4">
                       <div>
-                        <h3 className="font-semibold text-[#2a1f1a] group-hover:text-[#406A56] transition-colors">
+                        <h3 className="font-semibold text-[#2a1f1a] group-hover:text-[#2D5A3D] transition-colors">
                           {verification.deceased_name}
                         </h3>
                         <p className="text-sm text-[#2a1f1a]/60">
@@ -189,7 +189,7 @@ export default async function VerificationsPage({
                           <StatusIcon className="w-3 h-3 inline mr-1" />
                           {statusConfig.label}
                         </span>
-                        <ArrowRight className="w-4 h-4 text-[#2a1f1a]/30 group-hover:text-[#406A56] group-hover:translate-x-1 transition-all" />
+                        <ArrowRight className="w-4 h-4 text-[#2a1f1a]/30 group-hover:text-[#2D5A3D] group-hover:translate-x-1 transition-all" />
                       </div>
                     </div>
 
@@ -211,7 +211,7 @@ export default async function VerificationsPage({
                         </span>
                       )}
                       {verification.profiles && (
-                        <span className="text-[#406A56]">
+                        <span className="text-[#2D5A3D]">
                           ✓ Linked to profile
                         </span>
                       )}

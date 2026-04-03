@@ -244,7 +244,7 @@ export function TimelineScrubber({ memories, onJumpTo, currentScrollDate }: Time
       >
         {/* Background track */}
         <div className="absolute left-1/2 -translate-x-1/2 w-1 h-full 
-                        bg-[#406A56]/10 rounded-full backdrop-blur-sm" />
+                        bg-[#2D5A3D]/10 rounded-full backdrop-blur-sm" />
 
         {/* Density visualization */}
         {markers.map((marker, idx) => {
@@ -254,7 +254,7 @@ export function TimelineScrubber({ memories, onJumpTo, currentScrollDate }: Time
             <div
               key={`${marker.year}-${marker.month}`}
               className="absolute left-1/2 -translate-x-1/2 w-1 rounded-full
-                         bg-[#406A56]/30"
+                         bg-[#2D5A3D]/30"
               style={{
                 top: `${marker.position * 100}%`,
                 height: '2px',
@@ -273,11 +273,11 @@ export function TimelineScrubber({ memories, onJumpTo, currentScrollDate }: Time
             style={{ top: `${marker.position * 100}%`, transform: 'translateY(-50%)' }}
           >
             <span className={`text-[10px] font-bold whitespace-nowrap
-                             ${isDragging ? 'text-[#406A56]' : 'text-[#406A56]/60'}
+                             ${isDragging ? 'text-[#2D5A3D]' : 'text-[#2D5A3D]/60'}
                              transition-colors`}>
               {marker.year}
             </span>
-            <div className="w-2 h-px bg-[#406A56]/30" />
+            <div className="w-2 h-px bg-[#2D5A3D]/30" />
           </div>
         ))}
 
@@ -293,14 +293,14 @@ export function TimelineScrubber({ memories, onJumpTo, currentScrollDate }: Time
         >
           {/* Outer glow */}
           <div className={`absolute -inset-2 rounded-full 
-                          ${isDragging ? 'bg-[#406A56]/20' : 'bg-transparent'}
+                          ${isDragging ? 'bg-[#2D5A3D]/20' : 'bg-transparent'}
                           transition-colors`} />
           
           {/* Main indicator */}
           <div className={`w-4 h-4 rounded-full shadow-lg
                           ${isDragging 
-                            ? 'bg-[#406A56] ring-4 ring-[#406A56]/30' 
-                            : 'bg-[#406A56]/80 ring-2 ring-white'}
+                            ? 'bg-[#2D5A3D] ring-4 ring-[#2D5A3D]/30' 
+                            : 'bg-[#2D5A3D]/80 ring-2 ring-white'}
                           transition-all duration-200`}>
             {/* Inner dot */}
             <div className="absolute inset-1 rounded-full bg-white/80" />
@@ -316,7 +316,7 @@ export function TimelineScrubber({ memories, onJumpTo, currentScrollDate }: Time
               exit={{ opacity: 0, x: 10 }}
               className="absolute right-full mr-4 
                          px-3 py-1.5 rounded-lg
-                         bg-[#406A56] text-white text-sm font-medium
+                         bg-[#2D5A3D] text-white text-sm font-medium
                          shadow-lg whitespace-nowrap pointer-events-none"
               style={{ 
                 top: `${displayPosition * 100}%`, 
@@ -326,24 +326,24 @@ export function TimelineScrubber({ memories, onJumpTo, currentScrollDate }: Time
               {formatTooltipDate(hoveredDate)}
               {/* Arrow */}
               <div className="absolute right-0 top-1/2 -translate-y-1/2 translate-x-full
-                              border-8 border-transparent border-l-[#406A56]" />
+                              border-8 border-transparent border-l-[#2D5A3D]" />
             </motion.div>
           )}
         </AnimatePresence>
 
         {/* Hover hint line */}
         <div className={`absolute inset-0 
-                        ${isDragging ? '' : 'group-hover:bg-[#406A56]/5'}
+                        ${isDragging ? '' : 'group-hover:bg-[#2D5A3D]/5'}
                         rounded-lg transition-colors`} />
       </div>
 
       {/* Top label (newest) */}
-      <div className="absolute -top-6 text-[9px] text-[#406A56]/50 font-medium uppercase tracking-wider">
+      <div className="absolute -top-6 text-[9px] text-[#2D5A3D]/50 font-medium uppercase tracking-wider">
         Now
       </div>
 
       {/* Bottom label (oldest) */}
-      <div className="absolute -bottom-6 text-[9px] text-[#406A56]/50 font-medium uppercase tracking-wider">
+      <div className="absolute -bottom-6 text-[9px] text-[#2D5A3D]/50 font-medium uppercase tracking-wider">
         {dateRange?.oldest.getFullYear()}
       </div>
     </div>

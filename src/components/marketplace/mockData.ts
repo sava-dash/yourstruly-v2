@@ -15,7 +15,7 @@ export const providerConfigs: ProviderConfig[] = [
     name: 'Flowers',
     description: 'Fresh bouquets & arrangements for every occasion',
     icon: 'Flower2',
-    color: '#C35F33',
+    color: '#B8562E',
     categories: [
       { id: 'birthday', name: 'Birthday', slug: 'birthday', provider: 'flowers', productCount: 156 },
       { id: 'anniversary', name: 'Anniversary', slug: 'anniversary', provider: 'flowers', productCount: 89 },
@@ -32,7 +32,7 @@ export const providerConfigs: ProviderConfig[] = [
     name: 'Gifts',
     description: 'Thoughtful gifts for everyone on your list',
     icon: 'Gift',
-    color: '#406A56',
+    color: '#2D5A3D',
     categories: [
       { id: 'sports', name: 'Sports', slug: 'sports', provider: 'gifts', productCount: 234 },
       { id: 'toys-kids', name: 'Toys & Kids', slug: 'toys-kids', provider: 'gifts', productCount: 189 },

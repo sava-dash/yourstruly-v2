@@ -124,7 +124,7 @@ export function FaceManager({ isOpen, onClose, face, onUpdated }: FaceManagerPro
             <div className="font-medium text-[#2d2d2d]">
               {face.name || 'Unknown Person'}
             </div>
-            <div className="text-sm text-[#406A56]">
+            <div className="text-sm text-[#2D5A3D]">
               {face.face_count} photos • {face.memory_count} memories
             </div>
           </div>
@@ -136,7 +136,7 @@ export function FaceManager({ isOpen, onClose, face, onUpdated }: FaceManagerPro
             onClick={() => setMode('edit')}
             className={`flex-1 py-3 text-sm font-medium border-b-2 transition-colors
                        ${mode === 'edit' 
-                         ? 'border-[#406A56] text-[#406A56]' 
+                         ? 'border-[#2D5A3D] text-[#2D5A3D]' 
                          : 'border-transparent text-gray-500 hover:text-gray-700'}`}
           >
             Rename
@@ -145,7 +145,7 @@ export function FaceManager({ isOpen, onClose, face, onUpdated }: FaceManagerPro
             onClick={() => setMode('link')}
             className={`flex-1 py-3 text-sm font-medium border-b-2 transition-colors
                        ${mode === 'link' 
-                         ? 'border-[#406A56] text-[#406A56]' 
+                         ? 'border-[#2D5A3D] text-[#2D5A3D]' 
                          : 'border-transparent text-gray-500 hover:text-gray-700'}`}
           >
             Link Contact
@@ -154,7 +154,7 @@ export function FaceManager({ isOpen, onClose, face, onUpdated }: FaceManagerPro
             onClick={() => setMode('merge')}
             className={`flex-1 py-3 text-sm font-medium border-b-2 transition-colors
                        ${mode === 'merge' 
-                         ? 'border-[#406A56] text-[#406A56]' 
+                         ? 'border-[#2D5A3D] text-[#2D5A3D]' 
                          : 'border-transparent text-gray-500 hover:text-gray-700'}`}
           >
             Merge
@@ -224,7 +224,7 @@ function EditNameForm({ name, setName, saving, error, onSave }: EditNameFormProp
           onChange={(e) => setName(e.target.value)}
           placeholder="Enter name..."
           className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 
-                     focus:ring-[#406A56] focus:border-transparent"
+                     focus:ring-[#2D5A3D] focus:border-transparent"
           autoFocus
         />
       </div>
@@ -239,7 +239,7 @@ function EditNameForm({ name, setName, saving, error, onSave }: EditNameFormProp
       <button
         onClick={onSave}
         disabled={saving || !name.trim()}
-        className="w-full py-2.5 bg-[#406A56] text-white rounded-lg font-medium
+        className="w-full py-2.5 bg-[#2D5A3D] text-white rounded-lg font-medium
                    hover:bg-[#355a48] disabled:opacity-50 disabled:cursor-not-allowed
                    flex items-center justify-center gap-2 transition-colors"
       >
@@ -310,7 +310,7 @@ function LinkContactForm({ faceId, currentContactId, onLinked }: LinkContactForm
   if (loading) {
     return (
       <div className="flex items-center justify-center py-8">
-        <Loader2 className="w-6 h-6 animate-spin text-[#406A56]" />
+        <Loader2 className="w-6 h-6 animate-spin text-[#2D5A3D]" />
       </div>
     )
   }
@@ -326,7 +326,7 @@ function LinkContactForm({ faceId, currentContactId, onLinked }: LinkContactForm
           onChange={(e) => setSearch(e.target.value)}
           placeholder="Search contacts..."
           className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 
-                     focus:ring-[#406A56] focus:border-transparent"
+                     focus:ring-[#2D5A3D] focus:border-transparent"
         />
       </div>
 
@@ -343,7 +343,7 @@ function LinkContactForm({ faceId, currentContactId, onLinked }: LinkContactForm
               onClick={() => setSelectedId(contact.id)}
               className={`w-full flex items-center gap-3 p-3 rounded-lg transition-colors
                          ${selectedId === contact.id 
-                           ? 'bg-[#406A56]/10 border border-[#406A56]' 
+                           ? 'bg-[#2D5A3D]/10 border border-[#2D5A3D]' 
                            : 'hover:bg-gray-50 border border-transparent'}`}
             >
               {contact.avatar_url ? (
@@ -353,7 +353,7 @@ function LinkContactForm({ faceId, currentContactId, onLinked }: LinkContactForm
                   className="w-10 h-10 rounded-full object-cover"
                 />
               ) : (
-                <div className="w-10 h-10 rounded-full bg-gradient-to-br from-[#406A56] to-[#5A8A72] 
+                <div className="w-10 h-10 rounded-full bg-gradient-to-br from-[#2D5A3D] to-[#5A8A72] 
                                 flex items-center justify-center text-white font-medium">
                   {contact.full_name.charAt(0)}
                 </div>
@@ -367,7 +367,7 @@ function LinkContactForm({ faceId, currentContactId, onLinked }: LinkContactForm
                 )}
               </div>
               {selectedId === contact.id && (
-                <Check size={20} className="text-[#406A56]" />
+                <Check size={20} className="text-[#2D5A3D]" />
               )}
             </button>
           ))
@@ -378,7 +378,7 @@ function LinkContactForm({ faceId, currentContactId, onLinked }: LinkContactForm
       <button
         onClick={handleLink}
         disabled={linking || !selectedId}
-        className="w-full py-2.5 bg-[#406A56] text-white rounded-lg font-medium
+        className="w-full py-2.5 bg-[#2D5A3D] text-white rounded-lg font-medium
                    hover:bg-[#355a48] disabled:opacity-50 disabled:cursor-not-allowed
                    flex items-center justify-center gap-2 transition-colors"
       >
@@ -435,7 +435,7 @@ function MergeFacesForm({ faceId, faceName, onMerged }: MergeFacesFormProps) {
   if (loading) {
     return (
       <div className="flex items-center justify-center py-8">
-        <Loader2 className="w-6 h-6 animate-spin text-[#406A56]" />
+        <Loader2 className="w-6 h-6 animate-spin text-[#2D5A3D]" />
       </div>
     )
   }
@@ -460,7 +460,7 @@ function MergeFacesForm({ faceId, faceName, onMerged }: MergeFacesFormProps) {
               onClick={() => setSelectedId(face.id)}
               className={`w-full flex items-center gap-3 p-3 rounded-lg transition-colors
                          ${selectedId === face.id 
-                           ? 'bg-[#406A56]/10 border border-[#406A56]' 
+                           ? 'bg-[#2D5A3D]/10 border border-[#2D5A3D]' 
                            : 'hover:bg-gray-50 border border-transparent'}`}
             >
               {face.thumbnail_url ? (
@@ -484,7 +484,7 @@ function MergeFacesForm({ faceId, faceName, onMerged }: MergeFacesFormProps) {
                 </div>
               </div>
               {selectedId === face.id && (
-                <Check size={20} className="text-[#406A56]" />
+                <Check size={20} className="text-[#2D5A3D]" />
               )}
             </button>
           ))
@@ -495,7 +495,7 @@ function MergeFacesForm({ faceId, faceName, onMerged }: MergeFacesFormProps) {
       <button
         onClick={handleMerge}
         disabled={merging || !selectedId}
-        className="w-full py-2.5 bg-[#406A56] text-white rounded-lg font-medium
+        className="w-full py-2.5 bg-[#2D5A3D] text-white rounded-lg font-medium
                    hover:bg-[#355a48] disabled:opacity-50 disabled:cursor-not-allowed
                    flex items-center justify-center gap-2 transition-colors"
       >

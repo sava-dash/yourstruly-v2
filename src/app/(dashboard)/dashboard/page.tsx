@@ -215,7 +215,7 @@ export default function HomeV2Page() {
   const lvl = getXpLevel(totalXp, gamificationConfig?.xpLevels)
 
   return (
-    <div className="feed-page" data-theme="light" style={{ background: '#FAF8F4', color: '#1A2B23' }}>
+    <div className="feed-page" data-theme="light" style={{ background: '#FAFAF7', color: '#1A1F1C' }}>
       {/* ── Mobile sidebar toggle ── */}
       <button
         onClick={() => setSidebarOpen(true)}
@@ -224,9 +224,9 @@ export default function HomeV2Page() {
           display: 'none', /* shown via media query */
           position: 'fixed', top: '62px', left: '12px', zIndex: 20,
           width: '36px', height: '36px', borderRadius: '10px',
-          background: 'rgba(0,0,0,0.04)', border: '1px solid #DDE5E0',
+          background: 'rgba(0,0,0,0.04)', border: '1px solid #DDE3DF',
           alignItems: 'center', justifyContent: 'center', cursor: 'pointer',
-          color: '#5C6D64',
+          color: '#5A6660',
         }}
       >
         <Menu size={18} />
@@ -267,7 +267,7 @@ export default function HomeV2Page() {
             display: 'none', /* shown via media query */
             alignSelf: 'flex-end', padding: '4px',
             background: 'rgba(0,0,0,0.04)', borderRadius: '8px',
-            border: 'none', color: '#5C6D64', cursor: 'pointer',
+            border: 'none', color: '#5A6660', cursor: 'pointer',
           }}
         >
           <X size={18} />
@@ -278,7 +278,7 @@ export default function HomeV2Page() {
             {currentStreakDays > 0 && (
               <div style={{ display: 'flex', alignItems: 'center', gap: '3px', padding: '3px 8px', background: 'linear-gradient(90deg, rgba(217,198,26,0.15), rgba(195,95,51,0.15))', borderRadius: '12px' }}>
                 <span style={{ fontSize: '13px' }}>🔥</span>
-                <span style={{ fontSize: '13px', fontWeight: '700', color: '#C35F33' }}>{currentStreakDays}</span>
+                <span style={{ fontSize: '13px', fontWeight: '700', color: '#B8562E' }}>{currentStreakDays}</span>
               </div>
             )}
           </div>
@@ -303,10 +303,10 @@ export default function HomeV2Page() {
           <div style={{ marginBottom: '12px' }}>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '4px' }}>
               <span className="profile-card-name" style={{ fontSize: '12px', fontWeight: '700' }}>{lvl.emoji} {lvl.title}</span>
-              {lvl.nextLevel && <span style={{ fontSize: '10px', color: '#94A39C' }}>{lvl.xpToNext} XP to {lvl.nextLevel.title}</span>}
+              {lvl.nextLevel && <span style={{ fontSize: '10px', color: '#94A09A' }}>{lvl.xpToNext} XP to {lvl.nextLevel.title}</span>}
             </div>
             <div style={{ height: '4px', background: 'rgba(217,198,26,0.15)', borderRadius: '2px', overflow: 'hidden' }}>
-              <div style={{ height: '100%', borderRadius: '2px', width: `${lvl.progress}%`, background: 'linear-gradient(90deg, #D9C61A, #E8D84A)', transition: 'width 0.8s ease-out' }} />
+              <div style={{ height: '100%', borderRadius: '2px', width: `${lvl.progress}%`, background: 'linear-gradient(90deg, #C4A235, #E8D84A)', transition: 'width 0.8s ease-out' }} />
             </div>
           </div>
           <BadgeDisplay />
@@ -316,7 +316,7 @@ export default function HomeV2Page() {
               <span className="profile-storage-value">{storageUsed < 0.1 ? `${(storageUsed * 1024).toFixed(0)} MB` : `${storageUsed.toFixed(1)} GB`} / {storageLimit.toFixed(0)} GB</span>
             </div>
             <div className="profile-storage-track">
-              <div style={{ height: '100%', borderRadius: '3px', width: `${Math.min(storagePercentage, 100)}%`, background: storagePercentage >= 90 ? 'linear-gradient(90deg, #C35F33, #dc2626)' : 'linear-gradient(90deg, #406A56, #8DACAB)', transition: 'width 0.8s ease-out' }} />
+              <div style={{ height: '100%', borderRadius: '3px', width: `${Math.min(storagePercentage, 100)}%`, background: storagePercentage >= 90 ? 'linear-gradient(90deg, #B8562E, #dc2626)' : 'linear-gradient(90deg, #2D5A3D, #8DACAB)', transition: 'width 0.8s ease-out' }} />
             </div>
           </div>
         </div>
@@ -329,8 +329,8 @@ export default function HomeV2Page() {
         <div style={{ display: 'flex', justifyContent: 'flex-end', padding: '8px 24px 0' }}>
           <button onClick={() => shuffle()} style={{
             display: 'flex', alignItems: 'center', gap: '6px', padding: '8px 16px',
-            borderRadius: '12px', background: 'white', border: '1px solid #DDE5E0',
-            color: '#5C6D64', fontSize: '13px', cursor: 'pointer',
+            borderRadius: '12px', background: 'white', border: '1px solid #DDE3DF',
+            color: '#5A6660', fontSize: '13px', cursor: 'pointer',
           }}>
             <RefreshCw size={14} /> Shuffle
           </button>
@@ -433,23 +433,23 @@ export default function HomeV2Page() {
             background: rgba(255,255,255,0.92);
             backdrop-filter: blur(12px);
             box-shadow: 0 2px 12px rgba(0,0,0,0.06);
-            border: 1px solid #DDE5E0;
+            border: 1px solid #DDE3DF;
           }
           .feed-page[data-theme="light"] .profile-card-name { color: #3D6B52; }
           .feed-page[data-theme="light"] .profile-stat-value { font-size: 22px; font-weight: 700; color: #3D6B52; }
-          .feed-page[data-theme="light"] .profile-stat-label { font-size: 9px; color: #94A39C; text-transform: uppercase; letter-spacing: 0.5px; font-weight: 600; }
-          .feed-page[data-theme="light"] .profile-stat-bordered { border-left: 1px solid #DDE5E0; border-right: 1px solid #DDE5E0; }
-          .feed-page[data-theme="light"] .profile-stat-bordered-r { border-right: 1px solid #DDE5E0; }
-          .feed-page[data-theme="light"] .profile-stat-xp { font-size: 22px; font-weight: 700; color: #D9C61A; }
+          .feed-page[data-theme="light"] .profile-stat-label { font-size: 9px; color: #94A09A; text-transform: uppercase; letter-spacing: 0.5px; font-weight: 600; }
+          .feed-page[data-theme="light"] .profile-stat-bordered { border-left: 1px solid #DDE3DF; border-right: 1px solid #DDE3DF; }
+          .feed-page[data-theme="light"] .profile-stat-bordered-r { border-right: 1px solid #DDE3DF; }
+          .feed-page[data-theme="light"] .profile-stat-xp { font-size: 22px; font-weight: 700; color: #C4A235; }
           .feed-page[data-theme="light"] .profile-stat-label-xp { font-size: 9px; color: rgba(217,198,26,0.6); text-transform: uppercase; letter-spacing: 0.5px; font-weight: 600; display: flex; align-items: center; justify-content: center; gap: 2px; }
-          .feed-page[data-theme="light"] .profile-storage { border-top: 1px solid #DDE5E0; padding-top: 10px; }
-          .feed-page[data-theme="light"] .profile-storage-label { font-size: 10px; font-weight: 600; color: #94A39C; text-transform: uppercase; letter-spacing: 0.5px; }
-          .feed-page[data-theme="light"] .profile-storage-value { font-size: 10px; color: #5C6D64; }
+          .feed-page[data-theme="light"] .profile-storage { border-top: 1px solid #DDE3DF; padding-top: 10px; }
+          .feed-page[data-theme="light"] .profile-storage-label { font-size: 10px; font-weight: 600; color: #94A09A; text-transform: uppercase; letter-spacing: 0.5px; }
+          .feed-page[data-theme="light"] .profile-storage-value { font-size: 10px; color: #5A6660; }
           .feed-page[data-theme="light"] .profile-storage-track { height: 6px; background: #F5F1EA; border-radius: 3px; overflow: hidden; }
 
           /* ── Desktop layout ── */
           .home-v2-main { margin-left: 280px; }
-          .dashboard-sidebar { background: #FAF8F4; border-right: 1px solid #DDE5E0; }
+          .dashboard-sidebar { background: #FAFAF7; border-right: 1px solid #DDE3DF; }
           aside::-webkit-scrollbar { width: 4px; }
           aside::-webkit-scrollbar-track { background: transparent; }
           aside::-webkit-scrollbar-thumb { background: rgba(0,0,0,0.1); border-radius: 2px; }
@@ -471,7 +471,7 @@ export default function HomeV2Page() {
             .dashboard-sidebar {
               transform: translateX(-100%);
               transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-              background: #FAF8F4;
+              background: #FAFAF7;
               box-shadow: none;
             }
             .dashboard-sidebar.sidebar-open {
@@ -498,7 +498,7 @@ export default function HomeV2Page() {
             .dashboard-sidebar {
               transform: translateX(-100%);
               transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-              background: #FAF8F4;
+              background: #FAFAF7;
             }
             .dashboard-sidebar.sidebar-open {
               transform: translateX(0);
@@ -540,7 +540,7 @@ function PromptCard({ row, onClick, isExpanded, index }: {
         borderRadius: '24px',
         overflow: 'hidden',
         background: '#FFFFFF',
-        border: isExpanded ? '1px solid #DDE5E0' : '1px solid #DDE5E0',
+        border: isExpanded ? '1px solid #DDE3DF' : '1px solid #DDE3DF',
         boxShadow: isExpanded
           ? '0 20px 60px rgba(0,0,0,0.12)'
           : '0 4px 20px rgba(0,0,0,0.08)',
@@ -605,14 +605,14 @@ function PromptCard({ row, onClick, isExpanded, index }: {
           <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '16px' }}>
             <div style={{
               width: '40px', height: '40px', borderRadius: '50%',
-              background: '#E8F0EC',
+              background: '#E6F0EA',
               display: 'flex', alignItems: 'center', justifyContent: 'center',
             }}>
               <Icon size={18} color="#3D6B52" />
             </div>
             <span style={{
               fontSize: '11px', fontWeight: 600,
-              color: '#94A39C',
+              color: '#94A09A',
               textTransform: 'uppercase', letterSpacing: '0.08em',
             }}>
               {meta.label}
@@ -623,9 +623,9 @@ function PromptCard({ row, onClick, isExpanded, index }: {
                 animate={{ opacity: 1, scale: 1 }}
                 style={{
                   marginLeft: 'auto', width: '34px', height: '34px', borderRadius: '50%',
-                  background: '#F5F1EA', border: '1px solid #DDE5E0',
+                  background: '#F5F1EA', border: '1px solid #DDE3DF',
                   display: 'flex', alignItems: 'center', justifyContent: 'center',
-                  cursor: 'pointer', color: '#5C6D64',
+                  cursor: 'pointer', color: '#5A6660',
                 }}
                 onClick={(e) => { e.stopPropagation(); onClick() }}
               >
@@ -637,14 +637,14 @@ function PromptCard({ row, onClick, isExpanded, index }: {
 
         <p style={{
           fontSize: hasPhoto ? '22px' : '24px',
-          fontWeight: 700, color: '#1A2B23',
+          fontWeight: 700, color: '#1A1F1C',
           lineHeight: 1.3, margin: 0,
         }}>
           {row.promptText}
         </p>
 
         {row.contactName && (
-          <p style={{ fontSize: '13px', color: '#94A39C', margin: '8px 0 0' }}>
+          <p style={{ fontSize: '13px', color: '#94A09A', margin: '8px 0 0' }}>
             About {row.contactName}
           </p>
         )}
@@ -652,14 +652,14 @@ function PromptCard({ row, onClick, isExpanded, index }: {
         <div style={{
           display: 'flex', alignItems: 'center', justifyContent: 'center',
           gap: '10px', marginTop: 'auto', paddingTop: '24px',
-          fontSize: '12px', color: '#94A39C',
+          fontSize: '12px', color: '#94A09A',
         }}>
           <span>{meta.hint}</span>
           <span style={{ width: '3px', height: '3px', borderRadius: '50%', background: '#DDE3DF' }} />
           <span>{meta.time}</span>
           {!isExpanded && (
             <>
-              <span style={{ width: '3px', height: '3px', borderRadius: '50%', background: '#DDE5E0' }} />
+              <span style={{ width: '3px', height: '3px', borderRadius: '50%', background: '#DDE3DF' }} />
               <span>Tap to start</span>
             </>
           )}

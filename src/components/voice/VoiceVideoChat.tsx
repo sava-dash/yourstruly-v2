@@ -471,10 +471,10 @@ export function VoiceVideoChat({
   // Show loading while checking browser support
   if (isSupported === null) {
     return (
-      <div className={`p-6 bg-white/80 backdrop-blur-sm border border-[#406A56]/10 rounded-2xl text-center ${className}`}>
+      <div className={`p-6 bg-white/80 backdrop-blur-sm border border-[#2D5A3D]/10 rounded-2xl text-center ${className}`}>
         <div className="animate-pulse">
-          <div className="w-16 h-16 mx-auto rounded-full bg-[#406A56]/20" />
-          <p className="text-[#406A56]/60 mt-4">Initializing voice chat...</p>
+          <div className="w-16 h-16 mx-auto rounded-full bg-[#2D5A3D]/20" />
+          <p className="text-[#2D5A3D]/60 mt-4">Initializing voice chat...</p>
         </div>
       </div>
     )
@@ -522,16 +522,16 @@ export function VoiceVideoChat({
       </AnimatePresence>
 
       {/* Main voice chat UI */}
-      <div className="p-6 bg-white/80 backdrop-blur-sm border border-[#406A56]/10 rounded-2xl">
+      <div className="p-6 bg-white/80 backdrop-blur-sm border border-[#2D5A3D]/10 rounded-2xl">
         {/* Video controls */}
         {videoSupported && (
-          <div className="flex items-center gap-2 mb-4 pb-4 border-b border-[#406A56]/10">
+          <div className="flex items-center gap-2 mb-4 pb-4 border-b border-[#2D5A3D]/10">
             <button
               onClick={handleToggleVideo}
               className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${
                 videoActive
-                  ? 'bg-[#406A56] text-white'
-                  : 'bg-[#406A56]/10 text-[#406A56] hover:bg-[#406A56]/20'
+                  ? 'bg-[#2D5A3D] text-white'
+                  : 'bg-[#2D5A3D]/10 text-[#2D5A3D] hover:bg-[#2D5A3D]/20'
               }`}
             >
               {videoActive ? <Camera className="w-4 h-4" /> : <VideoOff className="w-4 h-4" />}
@@ -541,14 +541,14 @@ export function VoiceVideoChat({
             {videoActive && (
               <button
                 onClick={() => setShowVideoPreview(!showVideoPreview)}
-                className="px-3 py-1.5 rounded-lg text-sm font-medium bg-[#406A56]/10 text-[#406A56] hover:bg-[#406A56]/20 transition-colors"
+                className="px-3 py-1.5 rounded-lg text-sm font-medium bg-[#2D5A3D]/10 text-[#2D5A3D] hover:bg-[#2D5A3D]/20 transition-colors"
               >
                 {showVideoPreview ? 'Hide Preview' : 'Show Preview'}
               </button>
             )}
 
             {isUploadingVideo && (
-              <div className="flex items-center gap-2 text-sm text-[#406A56]/60">
+              <div className="flex items-center gap-2 text-sm text-[#2D5A3D]/60">
                 <Loader2 className="w-4 h-4 animate-spin" />
                 Uploading video...
               </div>

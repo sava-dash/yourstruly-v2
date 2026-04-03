@@ -50,9 +50,9 @@ export default function MemberAvatarStack({
   // Generate a consistent color based on the name
   const getAvatarColor = (name: string | null) => {
     const colors = [
-      'from-[#406A56] to-[#5a8a70]',
-      'from-[#D9C61A] to-[#e8d84a]',
-      'from-[#C35F33] to-[#d87a55]',
+      'from-[#2D5A3D] to-[#5a8a70]',
+      'from-[#C4A235] to-[#e8d84a]',
+      'from-[#B8562E] to-[#d87a55]',
       'from-[#4A3552] to-[#6a4a78]',
       'from-[#8DACAB] to-[#a8c4c3]',
     ]

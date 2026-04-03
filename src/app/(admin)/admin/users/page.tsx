@@ -65,11 +65,11 @@ export default async function UsersPage({ searchParams }: UsersPageProps) {
           </p>
         </div>
         <div className="flex items-center gap-3">
-          <button className="flex items-center gap-2 px-4 py-2 bg-white/80 border border-[#C35F33]/10 rounded-xl text-sm font-medium text-[#2a1f1a] hover:bg-white transition-colors">
+          <button className="flex items-center gap-2 px-4 py-2 bg-white/80 border border-[#B8562E]/10 rounded-xl text-sm font-medium text-[#2a1f1a] hover:bg-white transition-colors">
             <Download className="w-4 h-4" />
             Export
           </button>
-          <button className="flex items-center gap-2 px-4 py-2 bg-[#406A56] text-white rounded-xl text-sm font-medium hover:bg-[#406A56]/90 transition-colors">
+          <button className="flex items-center gap-2 px-4 py-2 bg-[#2D5A3D] text-white rounded-xl text-sm font-medium hover:bg-[#2D5A3D]/90 transition-colors">
             <UserPlus className="w-4 h-4" />
             Add User
           </button>
@@ -88,7 +88,7 @@ export default async function UsersPage({ searchParams }: UsersPageProps) {
                 name="search"
                 defaultValue={search}
                 aria-label="Search" placeholder="Search by name or email..."
-                className="w-full pl-10 pr-4 py-2 bg-white/80 border border-[#C35F33]/10 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-[#406A56]/20 focus:border-[#406A56]/30 transition-all placeholder:text-[#2a1f1a]/40"
+                className="w-full pl-10 pr-4 py-2 bg-white/80 border border-[#B8562E]/10 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-[#2D5A3D]/20 focus:border-[#2D5A3D]/30 transition-all placeholder:text-[#2a1f1a]/40"
               />
             </div>
           </div>
@@ -99,7 +99,7 @@ export default async function UsersPage({ searchParams }: UsersPageProps) {
             <select
               name="status"
               defaultValue={status}
-              className="px-3 py-2 bg-white/80 border border-[#C35F33]/10 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-[#406A56]/20 focus:border-[#406A56]/30 transition-all"
+              className="px-3 py-2 bg-white/80 border border-[#B8562E]/10 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-[#2D5A3D]/20 focus:border-[#2D5A3D]/30 transition-all"
             >
               <option value="all">All Status</option>
               <option value="active">Active</option>
@@ -111,7 +111,7 @@ export default async function UsersPage({ searchParams }: UsersPageProps) {
           <select
             name="subscription"
             defaultValue={subscription}
-            className="px-3 py-2 bg-white/80 border border-[#C35F33]/10 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-[#406A56]/20 focus:border-[#406A56]/30 transition-all"
+            className="px-3 py-2 bg-white/80 border border-[#B8562E]/10 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-[#2D5A3D]/20 focus:border-[#2D5A3D]/30 transition-all"
           >
             <option value="all">All Plans</option>
             <option value="free">Free</option>
@@ -121,7 +121,7 @@ export default async function UsersPage({ searchParams }: UsersPageProps) {
 
           <button
             type="submit"
-            className="px-4 py-2 bg-[#406A56]/10 text-[#406A56] rounded-xl text-sm font-medium hover:bg-[#406A56]/20 transition-colors"
+            className="px-4 py-2 bg-[#2D5A3D]/10 text-[#2D5A3D] rounded-xl text-sm font-medium hover:bg-[#2D5A3D]/20 transition-colors"
           >
             Apply Filters
           </button>

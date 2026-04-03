@@ -263,7 +263,7 @@ export default function GroupStoryTimePage({ params }: { params: Promise<{ group
                       <div className="flex items-center gap-2">
                         <button
                           onClick={() => shareViaEmail(session.access_token, getContact(session).full_name || 'there')}
-                          className="flex items-center gap-1.5 px-3 py-1.5 bg-[#406A56]/80 hover:bg-[#406A56] text-white text-sm rounded-lg transition-all"
+                          className="flex items-center gap-1.5 px-3 py-1.5 bg-[#2D5A3D]/80 hover:bg-[#2D5A3D] text-white text-sm rounded-lg transition-all"
                           title="Share via Email"
                         >
                           <Mail size={14} />
@@ -271,7 +271,7 @@ export default function GroupStoryTimePage({ params }: { params: Promise<{ group
                         </button>
                         <button
                           onClick={() => shareViaSMS(session.id, session.access_token, (getContact(session) as any)?.phone, getContact(session)?.full_name)}
-                          className="flex items-center gap-1.5 px-3 py-1.5 bg-[#406A56]/80 hover:bg-[#406A56] text-white text-sm rounded-lg transition-all"
+                          className="flex items-center gap-1.5 px-3 py-1.5 bg-[#2D5A3D]/80 hover:bg-[#2D5A3D] text-white text-sm rounded-lg transition-all"
                           title="Share via SMS"
                         >
                           <MessageSquare size={14} />
@@ -332,7 +332,7 @@ export default function GroupStoryTimePage({ params }: { params: Promise<{ group
                 key={i}
                 onClick={() => setCurrentIndex(i)}
                 className={`flex-1 h-1 rounded-full transition-all ${
-                  i === currentIndex ? 'bg-[#406A56]' : 'bg-white/20'
+                  i === currentIndex ? 'bg-[#2D5A3D]' : 'bg-white/20'
                 }`}
               />
             ))}
@@ -350,7 +350,7 @@ export default function GroupStoryTimePage({ params }: { params: Promise<{ group
                 onClick={() => setCurrentIndex(i)}
                 className={`flex items-center gap-2 px-3 py-2 rounded-full whitespace-nowrap transition-all ${
                   i === currentIndex 
-                    ? 'bg-[#406A56] text-white' 
+                    ? 'bg-[#2D5A3D] text-white' 
                     : 'bg-white/10 text-white/70 hover:bg-white/20'
                 }`}
               >
@@ -396,7 +396,7 @@ function ResponseCard({
       <div className="p-6">
         {/* Participant */}
         <div className="flex items-center gap-3 mb-4">
-          <div className="w-12 h-12 rounded-full bg-[#406A56]/30 flex items-center justify-center">
+          <div className="w-12 h-12 rounded-full bg-[#2D5A3D]/30 flex items-center justify-center">
             <span className="text-white font-semibold text-lg">
               {participant?.full_name?.charAt(0) || '?'}
             </span>

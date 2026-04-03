@@ -23,7 +23,7 @@
 .page-background {
   position: fixed;
   inset: 0;
-  background-color: #F2F1E5;
+  background-color: #FAFAF7;
   overflow: hidden;
   z-index: 0;
 }
@@ -40,7 +40,7 @@
 .page-blob-1 {
   width: 400px;
   height: 400px;
-  background: linear-gradient(135deg, #D9C61A40, #C35F3330);
+  background: linear-gradient(135deg, #C4A23540, #B8562E30);
   top: -100px;
   right: -100px;
 }
@@ -48,7 +48,7 @@
 .page-blob-2 {
   width: 300px;
   height: 300px;
-  background: linear-gradient(135deg, #406A5640, #8DACAB30);
+  background: linear-gradient(135deg, #2D5A3D40, #8DACAB30);
   bottom: -50px;
   left: -50px;
 }
@@ -56,7 +56,7 @@
 .page-blob-3 {
   width: 250px;
   height: 250px;
-  background: linear-gradient(135deg, #C35F3340, #D9C61A30);
+  background: linear-gradient(135deg, #B8562E40, #C4A23530);
   top: 40%;
   left: 30%;
 }
@@ -109,7 +109,7 @@
 
 /* Scrapbook card variant - cream with subtle texture */
 .card-scrapbook-page {
-  background: #F2F1E5;
+  background: #FAFAF7;
   border-radius: 4px;
   box-shadow: 
     0 2px 8px rgba(0, 0, 0, 0.06),
@@ -156,7 +156,7 @@
   backdrop-filter: blur(8px);
   border: 1px solid rgba(64, 106, 86, 0.1);
   border-radius: 12px;
-  color: #406A56;
+  color: #2D5A3D;
   transition: all 0.2s ease;
 }
 
@@ -174,7 +174,7 @@
 
 .page-header-subtitle {
   font-size: 14px;
-  color: #406A56;
+  color: #2D5A3D;
   margin: 4px 0 0;
 }
 
@@ -221,7 +221,7 @@
   align-items: center;
   gap: 8px;
   padding: 10px 20px;
-  background: #406A56;
+  background: #2D5A3D;
   color: white;
   font-size: 14px;
   font-weight: 500;
@@ -232,7 +232,7 @@
 }
 
 .btn-primary:hover {
-  background: #4a7a64;
+  background: #234A31;
   transform: translateY(-1px);
   box-shadow: 0 4px 12px rgba(64, 106, 86, 0.3);
 }
@@ -249,7 +249,7 @@
   gap: 8px;
   padding: 10px 20px;
   background: rgba(64, 106, 86, 0.1);
-  color: #406A56;
+  color: #2D5A3D;
   font-size: 14px;
   font-weight: 500;
   border: 1px solid rgba(64, 106, 86, 0.2);
@@ -268,7 +268,7 @@
   align-items: center;
   gap: 8px;
   padding: 10px 20px;
-  background: #D9C61A;
+  background: #C4A235;
   color: #2d2d2d;
   font-size: 14px;
   font-weight: 600;
@@ -368,13 +368,13 @@
 }
 
 .filter-btn-active {
-  background: #406A56;
-  border-color: #406A56;
+  background: #2D5A3D;
+  border-color: #2D5A3D;
   color: white;
 }
 
 .filter-btn-active:hover {
-  background: #4a7a64;
+  background: #234A31;
 }
 
 /* =============================================================================
@@ -408,7 +408,7 @@
 .empty-state-title {
   font-size: 18px;
   font-weight: 600;
-  color: #406A56;
+  color: #2D5A3D;
   margin: 0 0 8px;
 }
 
@@ -458,18 +458,18 @@
   width: 44px;
   height: 44px;
   border-radius: 50%;
-  background: linear-gradient(135deg, #D3E1DF, #406A5620);
+  background: linear-gradient(135deg, #D3E1DF, #2D5A3D20);
   display: flex;
   align-items: center;
   justify-content: center;
   font-weight: 600;
-  color: #406A56;
+  color: #2D5A3D;
   font-size: 16px;
   flex-shrink: 0;
 }
 
 .avatar-circle-initials {
-  background: linear-gradient(135deg, #406A56, #5A8A72);
+  background: linear-gradient(135deg, #2D5A3D, #5A8A72);
   color: white;
 }
 
@@ -488,7 +488,7 @@
 
 .status-badge-green {
   background: rgba(64, 106, 86, 0.15);
-  color: #406A56;
+  color: #2D5A3D;
 }
 
 .status-badge-amber {
@@ -503,7 +503,7 @@
 
 .status-badge-red {
   background: rgba(195, 95, 51, 0.15);
-  color: #C35F33;
+  color: #B8562E;
 }
 
 /* =============================================================================
@@ -605,7 +605,7 @@
   width: 44px;
   height: 44px;
   border-radius: 14px;
-  background: linear-gradient(135deg, #406A56, #5a8a6e);
+  background: linear-gradient(135deg, #2D5A3D, #5a8a6e);
   color: white;
   display: flex;
   align-items: center;
@@ -634,11 +634,11 @@
 
 .contact-badge-green {
   background: rgba(64, 106, 86, 0.1);
-  color: #406A56;
+  color: #2D5A3D;
 }
 .contact-badge-orange {
   background: rgba(195, 95, 51, 0.1);
-  color: #C35F33;
+  color: #B8562E;
 }
 .contact-badge-blue {
   background: rgba(59, 130, 246, 0.1);
@@ -697,7 +697,7 @@
 }
 
 .loading-text {
-  color: #406A56;
+  color: #2D5A3D;
   font-size: 14px;
 }
 

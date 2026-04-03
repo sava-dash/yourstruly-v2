@@ -130,7 +130,7 @@ export default function DraggableWidget({
       <div className={`
         transition-all duration-200
         ${isDragging ? 'ring-2 ring-amber-500/50 ring-offset-2 ring-offset-transparent rounded-2xl' : ''}
-        ${locked ? 'ring-1 ring-[#F2F1E5]/20 rounded-2xl' : ''}
+        ${locked ? 'ring-1 ring-[#F5F3EE]/20 rounded-2xl' : ''}
       `}>
         {children}
       </div>

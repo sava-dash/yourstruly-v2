@@ -122,12 +122,12 @@ export function ReviewForm({ verificationId, hasLinkedProfile }: ReviewFormProps
 
         {/* Transfer Access Option (only for approve with linked profile) */}
         {action === 'approve' && hasLinkedProfile && (
-          <label className="flex items-center gap-3 p-3 rounded-xl bg-[#406A56]/5 border border-[#406A56]/20 cursor-pointer">
+          <label className="flex items-center gap-3 p-3 rounded-xl bg-[#2D5A3D]/5 border border-[#2D5A3D]/20 cursor-pointer">
             <input
               type="checkbox"
               checked={transferAccess}
               onChange={(e) => setTransferAccess(e.target.checked)}
-              className="w-4 h-4 rounded border-[#2a1f1a]/30 text-[#406A56] focus:ring-[#406A56]"
+              className="w-4 h-4 rounded border-[#2a1f1a]/30 text-[#2D5A3D] focus:ring-[#2D5A3D]"
             />
             <div>
               <p className="font-medium text-[#2a1f1a] text-sm">Transfer access to claimant</p>
@@ -155,7 +155,7 @@ export function ReviewForm({ verificationId, hasLinkedProfile }: ReviewFormProps
             }
             required={action === 'reject'}
             rows={3}
-            className="w-full px-4 py-2 rounded-xl border border-[#2a1f1a]/10 bg-white/50 focus:outline-none focus:ring-2 focus:ring-[#406A56]/20 focus:border-[#406A56]/30 resize-none"
+            className="w-full px-4 py-2 rounded-xl border border-[#2a1f1a]/10 bg-white/50 focus:outline-none focus:ring-2 focus:ring-[#2D5A3D]/20 focus:border-[#2D5A3D]/30 resize-none"
           />
         </div>
 

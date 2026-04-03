@@ -10,10 +10,10 @@ interface ScrapbookSectionProps {
 }
 
 const colorStyles = {
-  cream: 'bg-[#F2F1E5] text-gray-800',
+  cream: 'bg-[#F5F3EE] text-gray-800',
   purple: 'bg-[#4A3552] text-white',
-  terracotta: 'bg-[#C35F33] text-white',
-  green: 'bg-[#406A56] text-white',
+  terracotta: 'bg-[#B8562E] text-white',
+  green: 'bg-[#2D5A3D] text-white',
 }
 
 export function ScrapbookSection({ 
@@ -44,10 +44,10 @@ interface AccentBarProps {
 }
 
 const accentColors = {
-  yellow: 'bg-[#D9C61A] text-black',
+  yellow: 'bg-[#C4A235] text-black',
   blue: 'bg-[#8DACAB] text-black',
-  green: 'bg-[#406A56] text-white',
-  terracotta: 'bg-[#C35F33] text-white',
+  green: 'bg-[#2D5A3D] text-white',
+  terracotta: 'bg-[#B8562E] text-white',
 }
 
 export function AccentBar({ children, color = 'yellow', className }: AccentBarProps) {
@@ -72,7 +72,7 @@ interface StepNumberProps {
 export function StepNumber({ number, className }: StepNumberProps) {
   return (
     <span className={cn(
-      'inline-flex items-center justify-center w-7 h-7 bg-[#D9C61A] text-black font-bold text-sm rounded-full',
+      'inline-flex items-center justify-center w-7 h-7 bg-[#C4A235] text-black font-bold text-sm rounded-full',
       className
     )}>
       {number}
@@ -96,7 +96,7 @@ export function ScrapbookCard({
 }: ScrapbookCardProps) {
   return (
     <div className={cn(
-      'bg-[#F2F1E5] rounded-sm p-5 shadow-md relative',
+      'bg-[#F5F3EE] rounded-sm p-5 shadow-md relative',
       withTape && 'card-taped',
       className
     )}>

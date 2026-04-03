@@ -122,7 +122,7 @@ export function SeatManagement({
   if (isLoading) {
     return (
       <div className="flex items-center justify-center py-12">
-        <Loader2 className="w-8 h-8 animate-spin text-[#406A56]" />
+        <Loader2 className="w-8 h-8 animate-spin text-[#2D5A3D]" />
       </div>
     )
   }
@@ -132,8 +132,8 @@ export function SeatManagement({
       {/* Header with seat count */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div className="flex items-center gap-3">
-          <div className="w-12 h-12 rounded-full bg-[#406A56]/10 flex items-center justify-center">
-            <Users className="w-6 h-6 text-[#406A56]" />
+          <div className="w-12 h-12 rounded-full bg-[#2D5A3D]/10 flex items-center justify-center">
+            <Users className="w-6 h-6 text-[#2D5A3D]" />
           </div>
           <div>
             <h3 className="text-lg font-semibold text-[#2d2d2d]">Family Seats</h3>
@@ -154,14 +154,14 @@ export function SeatManagement({
       {/* Seat Progress Bar */}
       <div className="bg-gray-100 rounded-full h-3 overflow-hidden">
         <div 
-          className="h-full bg-gradient-to-r from-[#406A56] to-[#4A3552] transition-all duration-300"
+          className="h-full bg-gradient-to-r from-[#2D5A3D] to-[#4A3552] transition-all duration-300"
           style={{ width: `${(usedSeats / maxSeats) * 100}%` }}
         />
       </div>
 
       {/* Cost Breakdown */}
       {isPremium && (
-        <div className="bg-[#F2F1E5] rounded-xl p-4">
+        <div className="bg-[#F5F3EE] rounded-xl p-4">
           <h4 className="font-medium text-[#2d2d2d] mb-3">Monthly Cost Breakdown</h4>
           <div className="space-y-2 text-sm">
             <div className="flex justify-between">
@@ -174,9 +174,9 @@ export function SeatManagement({
                 <span className="font-medium">{formatCents(costs.additional)}</span>
               </div>
             )}
-            <div className="border-t border-[#406A56]/20 pt-2 flex justify-between">
+            <div className="border-t border-[#2D5A3D]/20 pt-2 flex justify-between">
               <span className="font-semibold text-[#2d2d2d]">Total</span>
-              <span className="font-semibold text-[#406A56]">{formatCents(costs.total)}/mo</span>
+              <span className="font-semibold text-[#2D5A3D]">{formatCents(costs.total)}/mo</span>
             </div>
           </div>
           <p className="text-xs text-gray-500 mt-3">
@@ -190,12 +190,12 @@ export function SeatManagement({
         {activeSeats.map((seat) => (
           <div 
             key={seat.id}
-            className="flex items-center justify-between p-4 bg-white rounded-xl border border-gray-200 hover:border-[#406A56]/30 transition-colors"
+            className="flex items-center justify-between p-4 bg-white rounded-xl border border-gray-200 hover:border-[#2D5A3D]/30 transition-colors"
           >
             <div className="flex items-center gap-4">
               {/* Avatar or Status Icon */}
               {seat.status === 'active' && seat.user ? (
-                <div className="w-12 h-12 rounded-full bg-[#406A56]/10 flex items-center justify-center overflow-hidden">
+                <div className="w-12 h-12 rounded-full bg-[#2D5A3D]/10 flex items-center justify-center overflow-hidden">
                   {seat.user.avatar_url ? (
                     <img 
                       src={seat.user.avatar_url} 
@@ -203,7 +203,7 @@ export function SeatManagement({
                       className="w-full h-full object-cover"
                     />
                   ) : (
-                    <span className="text-lg font-semibold text-[#406A56]">
+                    <span className="text-lg font-semibold text-[#2D5A3D]">
                       {(seat.user.full_name || seat.user.email)?.[0]?.toUpperCase()}
                     </span>
                   )}
@@ -223,7 +223,7 @@ export function SeatManagement({
                       : seat.email}
                   </span>
                   {seat.seat_number === 1 && (
-                    <span className="px-2 py-0.5 bg-[#406A56] text-white text-xs rounded-full">
+                    <span className="px-2 py-0.5 bg-[#2D5A3D] text-white text-xs rounded-full">
                       Owner
                     </span>
                   )}
@@ -239,7 +239,7 @@ export function SeatManagement({
                       <CheckCircle2 className="w-3 h-3 text-green-500" />
                       <span>Active • Seat {seat.seat_number}</span>
                       {seat.seat_number > 2 && (
-                        <span className="text-[#406A56]">
+                        <span className="text-[#2D5A3D]">
                           (+{formatCents(getSeatCost(seat.seat_number))}/mo)
                         </span>
                       )}
@@ -378,7 +378,7 @@ export function SeatManagement({
                   setInviteError('')
                 }}
                 placeholder="email@example.com"
-                className="w-full pl-10 pr-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#406A56]/50"
+                className="w-full pl-10 pr-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#2D5A3D]/50"
                 onKeyDown={(e) => e.key === 'Enter' && handleInvite()}
               />
             </div>
@@ -389,10 +389,10 @@ export function SeatManagement({
 
           {/* Cost preview */}
           {usedSeats >= 2 && (
-            <div className="bg-[#F2F1E5] rounded-lg p-3 text-sm">
+            <div className="bg-[#F5F3EE] rounded-lg p-3 text-sm">
               <p className="text-gray-600">
                 Adding this seat will cost{' '}
-                <span className="font-semibold text-[#406A56]">
+                <span className="font-semibold text-[#2D5A3D]">
                   +{formatCents(getSeatCost(usedSeats + 1))}/mo
                 </span>
               </p>

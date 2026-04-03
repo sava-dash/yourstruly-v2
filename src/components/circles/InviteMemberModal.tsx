@@ -170,7 +170,7 @@ export default function InviteMemberModal({
           </div>
           <button
             onClick={onClose}
-            className="p-2 text-[#406A56]/50 hover:text-[#406A56] hover:bg-[#406A56]/10 rounded-lg transition-colors"
+            className="p-2 text-[#2D5A3D]/50 hover:text-[#2D5A3D] hover:bg-[#2D5A3D]/10 rounded-lg transition-colors"
           >
             <X size={20} />
           </button>
@@ -180,7 +180,7 @@ export default function InviteMemberModal({
         <div className="mb-6">
           <label className="block text-sm font-medium text-[#2d2d2d] mb-2">Search YoursTruly Users</label>
           <div className="relative">
-            <Search size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-[#406A56]/50" />
+            <Search size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-[#2D5A3D]/50" />
             <input
               type="text"
               value={searchQuery}
@@ -192,14 +192,14 @@ export default function InviteMemberModal({
 
           {/* Search Results */}
           {searchResults.length > 0 && (
-            <div className="mt-2 border border-[#406A56]/10 rounded-xl overflow-hidden">
+            <div className="mt-2 border border-[#2D5A3D]/10 rounded-xl overflow-hidden">
               {searchResults.map(user => (
                 <button
                   key={user.id}
                   onClick={() => user.isYTUser ? onInviteUser(user.id) : onGenerateLink()}
-                  className="w-full flex items-center gap-3 p-3 hover:bg-[#406A56]/5 transition-colors text-left"
+                  className="w-full flex items-center gap-3 p-3 hover:bg-[#2D5A3D]/5 transition-colors text-left"
                 >
-                  <div className="w-10 h-10 rounded-full bg-gradient-to-br from-[#406A56] to-[#8DACAB] flex items-center justify-center text-white font-medium">
+                  <div className="w-10 h-10 rounded-full bg-gradient-to-br from-[#2D5A3D] to-[#8DACAB] flex items-center justify-center text-white font-medium">
                     {user.full_name.charAt(0)}
                   </div>
                   <div className="flex-1 min-w-0">
@@ -207,7 +207,7 @@ export default function InviteMemberModal({
                     <p className="text-xs text-[#666] truncate">{user.email}</p>
                   </div>
                   {user.isYTUser ? (
-                    <span className="text-xs text-[#406A56] bg-[#406A56]/10 px-2 py-0.5 rounded-full">YT User</span>
+                    <span className="text-xs text-[#2D5A3D] bg-[#2D5A3D]/10 px-2 py-0.5 rounded-full">YT User</span>
                   ) : (
                     <span className="text-xs text-[#888] bg-gray-100 px-2 py-0.5 rounded-full">Send Link</span>
                   )}
@@ -240,7 +240,7 @@ export default function InviteMemberModal({
             return (
               <div className="mt-3">
                 <p className="text-xs text-[#888] uppercase tracking-wide mb-2">Your Contacts</p>
-                <div className="border border-[#406A56]/10 rounded-xl overflow-hidden max-h-48 overflow-y-auto">
+                <div className="border border-[#2D5A3D]/10 rounded-xl overflow-hidden max-h-48 overflow-y-auto">
                   {loadingContacts ? (
                     <p className="text-sm text-[#666] p-3">Loading contacts...</p>
                   ) : (
@@ -251,9 +251,9 @@ export default function InviteMemberModal({
                           // Generate invite link for this specific contact
                           onGenerateLink({ name: contact.full_name, email: contact.email })
                         }}
-                        className="w-full flex items-center gap-3 p-3 hover:bg-[#406A56]/5 transition-colors text-left border-b border-[#406A56]/5 last:border-b-0"
+                        className="w-full flex items-center gap-3 p-3 hover:bg-[#2D5A3D]/5 transition-colors text-left border-b border-[#2D5A3D]/5 last:border-b-0"
                       >
-                        <div className="w-10 h-10 rounded-full bg-gradient-to-br from-[#406A56] to-[#8DACAB] flex items-center justify-center text-white font-medium overflow-hidden">
+                        <div className="w-10 h-10 rounded-full bg-gradient-to-br from-[#2D5A3D] to-[#8DACAB] flex items-center justify-center text-white font-medium overflow-hidden">
                           {contact.avatar_url ? (
                             <img src={contact.avatar_url}
                 alt="" className="w-full h-full object-cover" />
@@ -278,16 +278,16 @@ export default function InviteMemberModal({
         </div>
 
         {/* Generate Invite Link */}
-        <div className="p-4 bg-[#406A56]/5 rounded-xl mb-6">
+        <div className="p-4 bg-[#2D5A3D]/5 rounded-xl mb-6">
           <div className="flex items-center justify-between mb-2">
             <div className="flex items-center gap-2">
-              <LinkIcon size={16} className="text-[#406A56]" />
+              <LinkIcon size={16} className="text-[#2D5A3D]" />
               <span className="text-sm font-medium text-[#2d2d2d]">Invite Link</span>
             </div>
             <button
               onClick={handleGenerateLink}
               disabled={generatingLink}
-              className="text-sm text-[#406A56] hover:underline font-medium"
+              className="text-sm text-[#2D5A3D] hover:underline font-medium"
             >
               {generatingLink ? 'Generating...' : 'Generate New Link'}
             </button>
@@ -301,26 +301,26 @@ export default function InviteMemberModal({
         {pendingInvites.length > 0 && (
           <div>
             <h3 className="text-sm font-medium text-[#2d2d2d] mb-3 flex items-center gap-2">
-              <Clock size={14} className="text-[#D9C61A]" />
+              <Clock size={14} className="text-[#C4A235]" />
               Pending Invites ({pendingInvites.length})
             </h3>
             <div className="space-y-2 max-h-48 overflow-y-auto">
               {pendingInvites.map(invite => (
                 <div
                   key={invite.id}
-                  className="flex items-center justify-between p-3 bg-white border border-[#406A56]/10 rounded-xl"
+                  className="flex items-center justify-between p-3 bg-white border border-[#2D5A3D]/10 rounded-xl"
                 >
                   <div className="flex items-center gap-3 flex-1 min-w-0">
                     {/* Avatar/Icon based on type */}
-                    <div className="w-8 h-8 rounded-full bg-gradient-to-br from-[#406A56]/20 to-[#8DACAB]/20 flex items-center justify-center flex-shrink-0">
+                    <div className="w-8 h-8 rounded-full bg-gradient-to-br from-[#2D5A3D]/20 to-[#8DACAB]/20 flex items-center justify-center flex-shrink-0">
                       {invite.invitee_name ? (
-                        <span className="text-xs font-medium text-[#406A56]">
+                        <span className="text-xs font-medium text-[#2D5A3D]">
                           {invite.invitee_name.charAt(0).toUpperCase()}
                         </span>
                       ) : invite.email ? (
-                        <User size={14} className="text-[#406A56]" />
+                        <User size={14} className="text-[#2D5A3D]" />
                       ) : (
-                        <LinkIcon size={14} className="text-[#406A56]" />
+                        <LinkIcon size={14} className="text-[#2D5A3D]" />
                       )}
                     </div>
                     <div className="flex-1 min-w-0">
@@ -330,13 +330,13 @@ export default function InviteMemberModal({
                           {invite.invite_link && (
                             <button
                               onClick={() => handleCopyLink(invite.invite_link!)}
-                              className="p-1 hover:bg-[#406A56]/10 rounded transition-colors"
+                              className="p-1 hover:bg-[#2D5A3D]/10 rounded transition-colors"
                               title="Copy invite link"
                             >
                               {copiedLink === invite.invite_link ? (
                                 <Check size={14} className="text-green-600" />
                               ) : (
-                                <Copy size={14} className="text-[#406A56]" />
+                                <Copy size={14} className="text-[#2D5A3D]" />
                               )}
                             </button>
                           )}
@@ -348,13 +348,13 @@ export default function InviteMemberModal({
                           <p className="text-sm text-[#2d2d2d]">Generic invite link</p>
                           <button
                             onClick={() => handleCopyLink(invite.invite_link!)}
-                            className="p-1 hover:bg-[#406A56]/10 rounded transition-colors"
+                            className="p-1 hover:bg-[#2D5A3D]/10 rounded transition-colors"
                             title="Copy link"
                           >
                             {copiedLink === invite.invite_link ? (
                               <Check size={14} className="text-green-600" />
                             ) : (
-                              <Copy size={14} className="text-[#406A56]" />
+                              <Copy size={14} className="text-[#2D5A3D]" />
                             )}
                           </button>
                         </div>
@@ -366,7 +366,7 @@ export default function InviteMemberModal({
                   </div>
                   <button
                     onClick={() => onCancelInvite(invite.id)}
-                    className="text-xs text-[#C35F33] hover:underline ml-2"
+                    className="text-xs text-[#B8562E] hover:underline ml-2"
                   >
                     Cancel
                   </button>
@@ -377,7 +377,7 @@ export default function InviteMemberModal({
         )}
 
         {/* Close Button */}
-        <div className="flex justify-end mt-6 pt-4 border-t border-[#406A56]/10">
+        <div className="flex justify-end mt-6 pt-4 border-t border-[#2D5A3D]/10">
           <button onClick={onClose} className="btn-secondary">
             Done
           </button>

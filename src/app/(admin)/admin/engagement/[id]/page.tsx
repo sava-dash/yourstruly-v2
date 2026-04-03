@@ -52,13 +52,13 @@ export default async function PreviewPromptPage({ params }: PreviewPromptPagePro
           <div>
             <h1 className="text-2xl font-semibold text-[#2a1f1a]">Prompt Preview</h1>
             <p className="text-[#2a1f1a]/60 mt-1">
-              <code className="text-[#406A56]">{template.id}</code>
+              <code className="text-[#2D5A3D]">{template.id}</code>
             </p>
           </div>
         </div>
         <Link
           href={`/admin/engagement/${id}/edit`}
-          className="flex items-center gap-2 px-4 py-2 bg-[#406A56] text-white rounded-xl text-sm font-medium hover:bg-[#406A56]/90 transition-colors"
+          className="flex items-center gap-2 px-4 py-2 bg-[#2D5A3D] text-white rounded-xl text-sm font-medium hover:bg-[#2D5A3D]/90 transition-colors"
         >
           <Edit className="w-4 h-4" />
           Edit Prompt
@@ -72,9 +72,9 @@ export default async function PreviewPromptPage({ params }: PreviewPromptPagePro
           <div className="glass p-6">
             <h3 className="text-lg font-semibold text-[#2a1f1a] mb-4">How It Looks</h3>
             
-            <div className="p-6 rounded-xl bg-gradient-to-br from-[#406A56]/5 to-[#C35F33]/5 border border-[#406A56]/10">
+            <div className="p-6 rounded-xl bg-gradient-to-br from-[#2D5A3D]/5 to-[#B8562E]/5 border border-[#2D5A3D]/10">
               <div className="flex items-start gap-4">
-                <div className="w-12 h-12 rounded-full bg-gradient-to-br from-[#406A56] to-[#C35F33] flex items-center justify-center flex-shrink-0">
+                <div className="w-12 h-12 rounded-full bg-gradient-to-br from-[#2D5A3D] to-[#B8562E] flex items-center justify-center flex-shrink-0">
                   <MessageSquare className="w-6 h-6 text-white" />
                 </div>
                 <div className="flex-1">
@@ -82,7 +82,7 @@ export default async function PreviewPromptPage({ params }: PreviewPromptPagePro
                     {template.prompt_text}
                   </p>
                   <div className="flex items-center gap-3 mt-4">
-                    <button className="px-4 py-2 rounded-xl bg-[#406A56] text-white text-sm font-medium">
+                    <button className="px-4 py-2 rounded-xl bg-[#2D5A3D] text-white text-sm font-medium">
                       Answer
                     </button>
                     <button className="px-4 py-2 rounded-xl bg-white/50 text-[#2a1f1a]/60 text-sm font-medium">
@@ -161,11 +161,11 @@ export default async function PreviewPromptPage({ params }: PreviewPromptPagePro
             <div className="flex items-center gap-3">
               {template.is_active ? (
                 <>
-                  <div className="p-2 rounded-full bg-[#406A56]/10">
-                    <CheckCircle className="w-5 h-5 text-[#406A56]" />
+                  <div className="p-2 rounded-full bg-[#2D5A3D]/10">
+                    <CheckCircle className="w-5 h-5 text-[#2D5A3D]" />
                   </div>
                   <div>
-                    <p className="font-medium text-[#406A56]">Active</p>
+                    <p className="font-medium text-[#2D5A3D]">Active</p>
                     <p className="text-xs text-[#2a1f1a]/50">Shown to users</p>
                   </div>
                 </>
@@ -190,7 +190,7 @@ export default async function PreviewPromptPage({ params }: PreviewPromptPagePro
             <div className="space-y-4">
               {template.target_interest && (
                 <div className="flex items-center gap-3">
-                  <Target className="w-4 h-4 text-[#406A56]" />
+                  <Target className="w-4 h-4 text-[#2D5A3D]" />
                   <div>
                     <p className="text-xs text-[#2a1f1a]/40">Interest</p>
                     <p className="text-sm text-[#2a1f1a] capitalize">{template.target_interest}</p>
@@ -200,7 +200,7 @@ export default async function PreviewPromptPage({ params }: PreviewPromptPagePro
               
               {template.target_skill && (
                 <div className="flex items-center gap-3">
-                  <Target className="w-4 h-4 text-[#406A56]" />
+                  <Target className="w-4 h-4 text-[#2D5A3D]" />
                   <div>
                     <p className="text-xs text-[#2a1f1a]/40">Skill</p>
                     <p className="text-sm text-[#2a1f1a] capitalize">{template.target_skill.replace(/_/g, ' ')}</p>
@@ -210,7 +210,7 @@ export default async function PreviewPromptPage({ params }: PreviewPromptPagePro
               
               {template.target_religion && (
                 <div className="flex items-center gap-3">
-                  <Target className="w-4 h-4 text-[#406A56]" />
+                  <Target className="w-4 h-4 text-[#2D5A3D]" />
                   <div>
                     <p className="text-xs text-[#2a1f1a]/40">Religion</p>
                     <p className="text-sm text-[#2a1f1a] capitalize">{template.target_religion}</p>
@@ -232,14 +232,14 @@ export default async function PreviewPromptPage({ params }: PreviewPromptPagePro
               <div className="space-y-4">
                 {template.seasonal_months && template.seasonal_months.length > 0 && (
                   <div className="flex items-start gap-3">
-                    <Calendar className="w-4 h-4 text-[#406A56] mt-0.5" />
+                    <Calendar className="w-4 h-4 text-[#2D5A3D] mt-0.5" />
                     <div>
                       <p className="text-xs text-[#2a1f1a]/40">Seasonal Months</p>
                       <div className="flex flex-wrap gap-1 mt-1">
                         {template.seasonal_months.map((month: number) => (
                           <span
                             key={month}
-                            className="px-2 py-0.5 rounded-full bg-[#406A56]/10 text-[#406A56] text-xs"
+                            className="px-2 py-0.5 rounded-full bg-[#2D5A3D]/10 text-[#2D5A3D] text-xs"
                           >
                             {['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'][month - 1]}
                           </span>
@@ -251,7 +251,7 @@ export default async function PreviewPromptPage({ params }: PreviewPromptPagePro
                 
                 {template.anniversary_based && (
                   <div className="flex items-center gap-3">
-                    <Clock className="w-4 h-4 text-[#406A56]" />
+                    <Clock className="w-4 h-4 text-[#2D5A3D]" />
                     <div>
                       <p className="text-xs text-[#2a1f1a]/40">Anniversary Based</p>
                       <p className="text-sm text-[#2a1f1a]">Shown on memory anniversaries</p>

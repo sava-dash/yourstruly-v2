@@ -71,7 +71,7 @@ export default function MessageBubble({
         <span 
           key={i} 
           className={`font-semibold ${
-            message.isOwn ? 'text-[#D9C61A]' : 'text-[#406A56]'
+            message.isOwn ? 'text-[#C4A235]' : 'text-[#2D5A3D]'
           }`}
         >
           @{mention.userName}
@@ -103,7 +103,7 @@ export default function MessageBubble({
     >
       {/* Pinned indicator */}
       {message.isPinned && (
-        <div className="absolute -top-4 left-12 flex items-center gap-1 text-[10px] text-[#C35F33]">
+        <div className="absolute -top-4 left-12 flex items-center gap-1 text-[10px] text-[#B8562E]">
           <Pin size={10} />
           <span className="font-medium">Pinned</span>
         </div>
@@ -119,7 +119,7 @@ export default function MessageBubble({
               className="w-9 h-9 rounded-full object-cover"
             />
           ) : (
-            <div className="w-9 h-9 rounded-full bg-gradient-to-br from-[#406A56]/20 to-[#8DACAB]/30 flex items-center justify-center text-xs font-semibold text-[#406A56]">
+            <div className="w-9 h-9 rounded-full bg-gradient-to-br from-[#2D5A3D]/20 to-[#8DACAB]/30 flex items-center justify-center text-xs font-semibold text-[#2D5A3D]">
               {initials}
             </div>
           )
@@ -130,7 +130,7 @@ export default function MessageBubble({
       <div className={`max-w-[70%] ${message.isOwn ? 'items-end' : 'items-start'}`}>
         {/* Sender name */}
         {showName && !message.isOwn && (
-          <p className="text-xs font-semibold text-[#406A56] mb-1 px-1">
+          <p className="text-xs font-semibold text-[#2D5A3D] mb-1 px-1">
             {message.senderName}
           </p>
         )}
@@ -140,7 +140,7 @@ export default function MessageBubble({
           <div className={`mb-1 px-3 py-1.5 rounded-lg text-xs border-l-2 ${
             message.isOwn 
               ? 'bg-white/10 border-white/30 text-white/80'
-              : 'bg-[#406A56]/5 border-[#406A56]/30 text-[#666]'
+              : 'bg-[#2D5A3D]/5 border-[#2D5A3D]/30 text-[#666]'
           }`}>
             <span className="font-semibold">{message.replyTo.senderName}</span>
             <p className="truncate opacity-80">{message.replyTo.content}</p>
@@ -150,33 +150,33 @@ export default function MessageBubble({
         {/* Bubble */}
         <div
           className={`relative rounded-2xl px-4 py-2.5 ${
-            message.isPinned ? 'ring-2 ring-[#C35F33]/30' : ''
+            message.isPinned ? 'ring-2 ring-[#B8562E]/30' : ''
           } ${
             message.isOwn
-              ? 'bg-[#406A56] text-white rounded-br-md'
-              : 'bg-white border border-[#406A56]/10 text-[#2d2d2d] rounded-bl-md'
+              ? 'bg-[#2D5A3D] text-white rounded-br-md'
+              : 'bg-white border border-[#2D5A3D]/10 text-[#2d2d2d] rounded-bl-md'
           }`}
         >
           {/* Action buttons - appear on hover */}
-          <div className={`absolute top-1 ${message.isOwn ? '-left-24' : '-right-24'} hidden group-hover:flex items-center gap-0.5 bg-white rounded-lg shadow-lg border border-[#406A56]/10 p-0.5`}>
+          <div className={`absolute top-1 ${message.isOwn ? '-left-24' : '-right-24'} hidden group-hover:flex items-center gap-0.5 bg-white rounded-lg shadow-lg border border-[#2D5A3D]/10 p-0.5`}>
             <button
               onClick={() => setShowReactions(!showReactions)}
-              className="p-1.5 rounded-md hover:bg-[#406A56]/10 text-[#666] hover:text-[#406A56] transition-colors"
+              className="p-1.5 rounded-md hover:bg-[#2D5A3D]/10 text-[#666] hover:text-[#2D5A3D] transition-colors"
               title="React"
             >
               <Smile size={14} />
             </button>
             <button
               onClick={() => onReply?.(message)}
-              className="p-1.5 rounded-md hover:bg-[#406A56]/10 text-[#666] hover:text-[#406A56] transition-colors"
+              className="p-1.5 rounded-md hover:bg-[#2D5A3D]/10 text-[#666] hover:text-[#2D5A3D] transition-colors"
               title="Reply"
             >
               <Reply size={14} />
             </button>
             <button
               onClick={() => onPin?.(message.id)}
-              className={`p-1.5 rounded-md hover:bg-[#406A56]/10 transition-colors ${
-                message.isPinned ? 'text-[#C35F33]' : 'text-[#666] hover:text-[#406A56]'
+              className={`p-1.5 rounded-md hover:bg-[#2D5A3D]/10 transition-colors ${
+                message.isPinned ? 'text-[#B8562E]' : 'text-[#666] hover:text-[#2D5A3D]'
               }`}
               title={message.isPinned ? 'Unpin' : 'Pin'}
             >
@@ -184,7 +184,7 @@ export default function MessageBubble({
             </button>
             <button
               onClick={() => setShowMenu(!showMenu)}
-              className="p-1.5 rounded-md hover:bg-[#406A56]/10 text-[#666] hover:text-[#406A56] transition-colors"
+              className="p-1.5 rounded-md hover:bg-[#2D5A3D]/10 text-[#666] hover:text-[#2D5A3D] transition-colors"
               title="More"
             >
               <MoreHorizontal size={14} />
@@ -193,12 +193,12 @@ export default function MessageBubble({
 
           {/* Quick reactions picker */}
           {showReactions && (
-            <div className={`absolute bottom-full mb-1 ${message.isOwn ? 'right-0' : 'left-0'} flex items-center gap-0.5 bg-white rounded-full shadow-lg border border-[#406A56]/10 px-2 py-1`}>
+            <div className={`absolute bottom-full mb-1 ${message.isOwn ? 'right-0' : 'left-0'} flex items-center gap-0.5 bg-white rounded-full shadow-lg border border-[#2D5A3D]/10 px-2 py-1`}>
               {QUICK_REACTIONS.map(emoji => (
                 <button
                   key={emoji}
                   onClick={() => handleReactionClick(emoji)}
-                  className="w-8 h-8 text-lg hover:scale-125 hover:bg-[#406A56]/10 rounded-full transition-all"
+                  className="w-8 h-8 text-lg hover:scale-125 hover:bg-[#2D5A3D]/10 rounded-full transition-all"
                 >
                   {emoji}
                 </button>
@@ -236,7 +236,7 @@ export default function MessageBubble({
                 <div 
                   key={attachment.id}
                   className={`flex items-center gap-2 p-2 rounded-lg ${
-                    message.isOwn ? 'bg-white/10' : 'bg-[#406A56]/5'
+                    message.isOwn ? 'bg-white/10' : 'bg-[#2D5A3D]/5'
                   }`}
                 >
                   {attachment.type === 'image' && attachment.thumbnailUrl ? (
@@ -247,9 +247,9 @@ export default function MessageBubble({
                     />
                   ) : (
                     <div className={`w-10 h-10 rounded flex items-center justify-center ${
-                      message.isOwn ? 'bg-white/20' : 'bg-[#406A56]/10'
+                      message.isOwn ? 'bg-white/20' : 'bg-[#2D5A3D]/10'
                     }`}>
-                      <FileIcon size={18} className={message.isOwn ? 'text-white' : 'text-[#406A56]'} />
+                      <FileIcon size={18} className={message.isOwn ? 'text-white' : 'text-[#2D5A3D]'} />
                     </div>
                   )}
                   <div className="flex-1 min-w-0">
@@ -265,7 +265,7 @@ export default function MessageBubble({
                   <button className={`p-1.5 rounded-lg ${
                     message.isOwn 
                       ? 'hover:bg-white/20 text-white' 
-                      : 'hover:bg-[#406A56]/10 text-[#406A56]'
+                      : 'hover:bg-[#2D5A3D]/10 text-[#2D5A3D]'
                   }`}>
                     <Download size={14} />
                   </button>
@@ -280,7 +280,7 @@ export default function MessageBubble({
               <button className={`w-8 h-8 rounded-full flex items-center justify-center ${
                 message.isOwn 
                   ? 'bg-white/20 text-white hover:bg-white/30' 
-                  : 'bg-[#406A56]/10 text-[#406A56] hover:bg-[#406A56]/20'
+                  : 'bg-[#2D5A3D]/10 text-[#2D5A3D] hover:bg-[#2D5A3D]/20'
               } transition-colors`}>
                 <Mic size={14} />
               </button>
@@ -291,7 +291,7 @@ export default function MessageBubble({
                     <div
                       key={i}
                       className={`w-1 rounded-full ${
-                        message.isOwn ? 'bg-white/40' : 'bg-[#406A56]/30'
+                        message.isOwn ? 'bg-white/40' : 'bg-[#2D5A3D]/30'
                       }`}
                       style={{ height: `${Math.random() * 100}%`, minHeight: '4px' }}
                     />
@@ -324,16 +324,16 @@ export default function MessageBubble({
                         option.userVoted
                           ? message.isOwn 
                             ? 'bg-white/30 ring-2 ring-white/50' 
-                            : 'bg-[#406A56]/20 ring-2 ring-[#406A56]/50'
+                            : 'bg-[#2D5A3D]/20 ring-2 ring-[#2D5A3D]/50'
                           : message.isOwn 
                             ? 'bg-white/10 hover:bg-white/20' 
-                            : 'bg-[#406A56]/5 hover:bg-[#406A56]/10'
+                            : 'bg-[#2D5A3D]/5 hover:bg-[#2D5A3D]/10'
                       }`}
                     >
                       {/* Progress bar */}
                       <div 
                         className={`absolute inset-y-0 left-0 ${
-                          message.isOwn ? 'bg-white/20' : 'bg-[#406A56]/10'
+                          message.isOwn ? 'bg-white/20' : 'bg-[#2D5A3D]/10'
                         }`}
                         style={{ width: `${percentage}%` }}
                       />
@@ -373,14 +373,14 @@ export default function MessageBubble({
                       key={slot.id}
                       className={`w-full rounded-lg p-2.5 text-left transition-all ${
                         isFinalized
-                          ? 'bg-[#D9C61A]/30 ring-2 ring-[#D9C61A]'
+                          ? 'bg-[#C4A235]/30 ring-2 ring-[#C4A235]'
                           : slot.userVoted
                             ? message.isOwn 
                               ? 'bg-white/30 ring-2 ring-white/50' 
-                              : 'bg-[#406A56]/20 ring-2 ring-[#406A56]/50'
+                              : 'bg-[#2D5A3D]/20 ring-2 ring-[#2D5A3D]/50'
                             : message.isOwn 
                               ? 'bg-white/10 hover:bg-white/20' 
-                              : 'bg-[#406A56]/5 hover:bg-[#406A56]/10'
+                              : 'bg-[#2D5A3D]/5 hover:bg-[#2D5A3D]/10'
                       }`}
                     >
                       <div className="flex items-center justify-between">
@@ -389,8 +389,8 @@ export default function MessageBubble({
                         </span>
                         <span className={`text-[10px] px-1.5 py-0.5 rounded-full ${
                           isFinalized
-                            ? 'bg-[#D9C61A] text-[#2d2d2d]'
-                            : message.isOwn ? 'bg-white/20' : 'bg-[#406A56]/10'
+                            ? 'bg-[#C4A235] text-[#2d2d2d]'
+                            : message.isOwn ? 'bg-white/20' : 'bg-[#2D5A3D]/10'
                         }`}>
                           {isFinalized ? '✓ Confirmed' : `${slot.votes} available`}
                         </span>
@@ -412,8 +412,8 @@ export default function MessageBubble({
                 onClick={() => handleReactionClick(reaction.emoji)}
                 className={`flex items-center gap-1 px-2 py-0.5 rounded-full text-xs transition-colors ${
                   reaction.userReacted
-                    ? 'bg-[#406A56]/20 border border-[#406A56]/30'
-                    : 'bg-white border border-[#406A56]/10 hover:border-[#406A56]/30'
+                    ? 'bg-[#2D5A3D]/20 border border-[#2D5A3D]/30'
+                    : 'bg-white border border-[#2D5A3D]/10 hover:border-[#2D5A3D]/30'
                 }`}
               >
                 <span>{reaction.emoji}</span>
@@ -431,7 +431,7 @@ export default function MessageBubble({
             {format(message.timestamp, 'h:mm a')}
           </span>
           {message.isOwn && message.status && (
-            <span className="text-[#406A56]">
+            <span className="text-[#2D5A3D]">
               {message.status === 'read' ? (
                 <CheckCheck size={12} />
               ) : (

@@ -225,7 +225,7 @@
 .timeline-ruler-range-text {
   font-weight: 600;
   font-size: 13px;
-  color: #406A56;
+  color: #2D5A3D;
   background: rgba(64, 106, 86, 0.1);
   padding: 4px 10px;
   border-radius: 8px;
@@ -339,7 +339,7 @@
 }
 
 .timeline-ruler-label.selected .timeline-ruler-year {
-  color: #406A56;
+  color: #2D5A3D;
   font-weight: 700;
 }
 
@@ -348,7 +348,7 @@
 }
 
 .timeline-ruler-label.selected.has-photos .timeline-ruler-year {
-  color: #406A56;
+  color: #2D5A3D;
 }
 
 /* Photo count dots */
@@ -361,14 +361,14 @@
 .timeline-ruler-dot {
   width: 4px;
   height: 4px;
-  background: #406A56;
+  background: #2D5A3D;
   border-radius: 50%;
   opacity: 0.5;
 }
 
 .timeline-ruler-label.selected .timeline-ruler-dot {
   opacity: 1;
-  background: #406A56;
+  background: #2D5A3D;
 }
 
 /* Selection Range */
@@ -381,7 +381,7 @@
     rgba(64, 106, 86, 0.15) 0%,
     rgba(64, 106, 86, 0.25) 100%
   );
-  border: 2px solid #406A56;
+  border: 2px solid #2D5A3D;
   border-radius: 8px;
   display: flex;
   align-items: stretch;
@@ -430,7 +430,7 @@
 .timeline-ruler-handle-grip {
   width: 8px;
   height: 32px;
-  background: #406A56;
+  background: #2D5A3D;
   border-radius: 4px;
   box-shadow: 0 2px 8px rgba(64, 106, 86, 0.3);
   transition: all 0.15s ease;

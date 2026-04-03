@@ -1549,7 +1549,7 @@ textarea:focus-visible {
   align-items: center;
   gap: 8px;
   font-weight: 500;
-  color: #406A56;
+  color: #2D5A3D;
   margin-bottom: 4px;
 }
 
@@ -1613,12 +1613,12 @@ textarea:focus-visible {
   justify-content: center;
   gap: 4px;
   cursor: pointer;
-  color: #406A56;
+  color: #2D5A3D;
   transition: all 0.2s;
 }
 
 .review-photo-add:hover {
-  border-color: #406A56;
+  border-color: #2D5A3D;
   background: rgba(74, 124, 89, 0.05);
 }
 
@@ -1674,7 +1674,7 @@ textarea:focus-visible {
   width: 24px;
   height: 24px;
   border-radius: 50%;
-  background: linear-gradient(135deg, #406A56, #8DACAB);
+  background: linear-gradient(135deg, #2D5A3D, #8DACAB);
   overflow: hidden;
   display: flex;
   align-items: center;
@@ -1711,7 +1711,7 @@ textarea:focus-visible {
 
 .review-tagged-remove:hover {
   background: rgba(195, 95, 51, 0.2);
-  color: #C35F33;
+  color: #B8562E;
 }
 
 .review-contact-search {
@@ -1744,7 +1744,7 @@ textarea:focus-visible {
 
 .review-search-input:focus {
   outline: none;
-  border-color: #406A56;
+  border-color: #2D5A3D;
   background: #fff;
   box-shadow: 0 0 0 3px rgba(64, 106, 86, 0.1);
 }
@@ -1756,7 +1756,7 @@ textarea:focus-visible {
 .review-search-loading {
   position: absolute;
   right: 12px;
-  color: #406A56;
+  color: #2D5A3D;
 }
 
 .review-contact-dropdown {
@@ -1805,7 +1805,7 @@ textarea:focus-visible {
   width: 36px;
   height: 36px;
   border-radius: 50%;
-  background: linear-gradient(135deg, #406A56, #8DACAB);
+  background: linear-gradient(135deg, #2D5A3D, #8DACAB);
   overflow: hidden;
   display: flex;
   align-items: center;
@@ -1845,7 +1845,7 @@ textarea:focus-visible {
 }
 
 .review-contact-option-add {
-  color: #406A56;
+  color: #2D5A3D;
   opacity: 0;
   transition: opacity 0.15s;
 }

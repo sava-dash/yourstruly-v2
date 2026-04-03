@@ -10,7 +10,7 @@ interface TapeDecorationProps {
 }
 
 const TAPE_COLORS = {
-  cream: 'from-[#F2F1E5]/80 to-[#E8E5D5]/60',
+  cream: 'from-[#F5F3EE]/80 to-[#E8E5D5]/60',
   yellow: 'from-yellow-200/80 to-yellow-100/60',
   blue: 'from-blue-200/80 to-blue-100/60',
   pink: 'from-pink-200/80 to-pink-100/60',

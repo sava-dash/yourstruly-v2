@@ -380,7 +380,7 @@ export function HeartfeltConversation({
         >
           {isMuted ? <VolumeX size={18} /> : <Volume2 size={18} />}
         </button>
-        <div className="inline-flex items-center justify-center w-14 h-14 rounded-full bg-gradient-to-br from-[#406A56] to-[#8DACAB] mb-3">
+        <div className="inline-flex items-center justify-center w-14 h-14 rounded-full bg-gradient-to-br from-[#2D5A3D] to-[#8DACAB] mb-3">
           <Heart size={24} className="text-white" />
         </div>
         <h2 className="text-xl font-semibold text-[#2d2d2d] font-playfair">
@@ -420,7 +420,7 @@ export function HeartfeltConversation({
                   <div
                     className={`max-w-[85%] rounded-2xl px-4 py-3 ${
                       message.role === 'user'
-                        ? 'bg-[#406A56] text-white rounded-br-md'
+                        ? 'bg-[#2D5A3D] text-white rounded-br-md'
                         : 'bg-white border border-gray-100 text-[#2d2d2d] rounded-bl-md shadow-sm'
                     }`}
                   >
@@ -443,9 +443,9 @@ export function HeartfeltConversation({
                   <div className="bg-white border border-gray-100 rounded-2xl rounded-bl-md px-4 py-3 shadow-sm">
                     <div className="flex items-center gap-2">
                       <div className="flex gap-1">
-                        <span className="w-2 h-2 bg-[#406A56]/40 rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
-                        <span className="w-2 h-2 bg-[#406A56]/40 rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
-                        <span className="w-2 h-2 bg-[#406A56]/40 rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
+                        <span className="w-2 h-2 bg-[#2D5A3D]/40 rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
+                        <span className="w-2 h-2 bg-[#2D5A3D]/40 rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
+                        <span className="w-2 h-2 bg-[#2D5A3D]/40 rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
                       </div>
                     </div>
                   </div>
@@ -463,11 +463,11 @@ export function HeartfeltConversation({
         <motion.div
           initial={{ opacity: 0, y: -10 }}
           animate={{ opacity: 1, y: 0 }}
-          className="mb-4 p-4 bg-gradient-to-r from-[#406A56]/10 to-[#8DACAB]/10 rounded-xl border border-[#406A56]/20"
+          className="mb-4 p-4 bg-gradient-to-r from-[#2D5A3D]/10 to-[#8DACAB]/10 rounded-xl border border-[#2D5A3D]/20"
         >
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
-              <CheckCircle className="w-5 h-5 text-[#406A56]" />
+              <CheckCircle className="w-5 h-5 text-[#2D5A3D]" />
               <div>
                 <p className="text-sm font-medium text-[#2d2d2d]">Great conversation!</p>
                 <p className="text-xs text-gray-500">You can save now or keep exploring</p>
@@ -475,7 +475,7 @@ export function HeartfeltConversation({
             </div>
             <button
               onClick={handleComplete}
-              className="flex items-center gap-2 px-4 py-2 bg-[#406A56] text-white rounded-lg text-sm font-medium hover:bg-[#355a48] transition-all"
+              className="flex items-center gap-2 px-4 py-2 bg-[#2D5A3D] text-white rounded-lg text-sm font-medium hover:bg-[#355a48] transition-all"
             >
               <Sparkles size={14} />
               Save & Continue
@@ -497,7 +497,7 @@ export function HeartfeltConversation({
                 placeholder="Share your thoughts..."
                 className="w-full px-4 py-3 rounded-xl bg-white border border-gray-200 
                          text-[#2d2d2d] placeholder-gray-400 resize-none
-                         focus:outline-none focus:ring-2 focus:ring-[#406A56]/30"
+                         focus:outline-none focus:ring-2 focus:ring-[#2D5A3D]/30"
                 rows={2}
                 disabled={isSending}
               />
@@ -527,7 +527,7 @@ export function HeartfeltConversation({
             <button
               onClick={handleSend}
               disabled={!input.trim() || isSending}
-              className="px-4 py-3 bg-[#406A56] text-white rounded-xl 
+              className="px-4 py-3 bg-[#2D5A3D] text-white rounded-xl 
                        hover:bg-[#355a48] disabled:opacity-50 disabled:cursor-not-allowed
                        transition-all self-end"
             >
@@ -559,7 +559,7 @@ export function HeartfeltConversation({
                   disabled={!canComplete}
                   className={`flex items-center gap-2 px-5 py-2.5 rounded-xl font-medium transition-all
                     ${canComplete 
-                      ? 'bg-gradient-to-r from-[#406A56] to-[#8DACAB] text-white hover:shadow-lg' 
+                      ? 'bg-gradient-to-r from-[#2D5A3D] to-[#8DACAB] text-white hover:shadow-lg' 
                       : 'bg-gray-100 text-gray-400 cursor-not-allowed'
                     }`}
                 >

@@ -69,7 +69,7 @@ function EventLocationMap({ location }: { location: string }) {
         attributionControl: false
       })
 
-      new mapboxgl.default.Marker({ color: '#406A56' })
+      new mapboxgl.default.Marker({ color: '#2D5A3D' })
         .setLngLat(coordinates)
         .addTo(mapRef.current)
     })
@@ -86,8 +86,8 @@ function EventLocationMap({ location }: { location: string }) {
 
   if (loading) {
     return (
-      <div className="w-full h-24 bg-[#406A56]/5 rounded-xl flex items-center justify-center">
-        <div className="w-4 h-4 border-2 border-[#406A56]/30 border-t-[#406A56] rounded-full animate-spin" />
+      <div className="w-full h-24 bg-[#2D5A3D]/5 rounded-xl flex items-center justify-center">
+        <div className="w-4 h-4 border-2 border-[#2D5A3D]/30 border-t-[#2D5A3D] rounded-full animate-spin" />
       </div>
     )
   }
@@ -106,11 +106,11 @@ function EventLocationMap({ location }: { location: string }) {
       >
         <div 
           ref={mapContainerRef}
-          className="w-full h-28 bg-[#406A56]/5 rounded-xl overflow-hidden relative 
+          className="w-full h-28 bg-[#2D5A3D]/5 rounded-xl overflow-hidden relative 
             [&_.mapboxgl-ctrl]:!hidden [&_.mapboxgl-ctrl-logo]:!hidden [&_.mapboxgl-ctrl-attrib]:!hidden
-            ring-1 ring-[#406A56]/10 group-hover:ring-[#406A56]/30 transition-all"
+            ring-1 ring-[#2D5A3D]/10 group-hover:ring-[#2D5A3D]/30 transition-all"
         />
-        <div className="flex items-center gap-1.5 mt-2 text-xs text-[#406A56] group-hover:text-[#4a7a64]">
+        <div className="flex items-center gap-1.5 mt-2 text-xs text-[#2D5A3D] group-hover:text-[#234A31]">
           <ExternalLink size={12} />
           <span>Open in Google Maps</span>
         </div>
@@ -205,7 +205,7 @@ function CreateEventModal({
       <div className="bg-white rounded-2xl p-6 w-full max-w-lg max-h-[90vh] overflow-y-auto">
         <div className="flex items-center justify-between mb-6">
           <h2 className="text-xl font-bold text-[#2d2d2d]">Propose Event</h2>
-          <button onClick={onClose} className="p-2 hover:bg-[#406A56]/10 rounded-lg">
+          <button onClick={onClose} className="p-2 hover:bg-[#2D5A3D]/10 rounded-lg">
             <X size={20} className="text-[#666]" />
           </button>
         </div>
@@ -252,7 +252,7 @@ function CreateEventModal({
               <label className="text-sm text-[#666]">Proposed Times *</label>
               <button
                 onClick={addSlot}
-                className="text-sm text-[#406A56] hover:text-[#4a7a64] flex items-center gap-1"
+                className="text-sm text-[#2D5A3D] hover:text-[#234A31] flex items-center gap-1"
               >
                 <Plus size={14} />
                 Add Option
@@ -261,26 +261,26 @@ function CreateEventModal({
             
             <div className="space-y-3">
               {slots.map((slot, index) => (
-                <div key={index} className="flex flex-wrap items-center gap-2 p-3 bg-[#406A56]/5 rounded-xl">
+                <div key={index} className="flex flex-wrap items-center gap-2 p-3 bg-[#2D5A3D]/5 rounded-xl">
                   <input
                     type="date"
                     value={format(slot.date, 'yyyy-MM-dd')}
                     onChange={e => updateSlot(index, { date: new Date(e.target.value) })}
-                    className="flex-1 min-w-[140px] px-3 py-2 bg-white border border-[#406A56]/10 rounded-lg text-sm text-[#2d2d2d]"
+                    className="flex-1 min-w-[140px] px-3 py-2 bg-white border border-[#2D5A3D]/10 rounded-lg text-sm text-[#2d2d2d]"
                   />
                   <div className="flex items-center gap-2">
                     <input
                       type="time"
                       value={slot.startTime}
                       onChange={e => updateSlot(index, { startTime: e.target.value })}
-                      className="w-32 px-3 py-2 bg-white border border-[#406A56]/10 rounded-lg text-sm text-[#2d2d2d]"
+                      className="w-32 px-3 py-2 bg-white border border-[#2D5A3D]/10 rounded-lg text-sm text-[#2d2d2d]"
                     />
                     <span className="text-[#2d2d2d] font-medium">to</span>
                     <input
                       type="time"
                       value={slot.endTime}
                       onChange={e => updateSlot(index, { endTime: e.target.value })}
-                      className="w-32 px-3 py-2 bg-white border border-[#406A56]/10 rounded-lg text-sm text-[#2d2d2d]"
+                      className="w-32 px-3 py-2 bg-white border border-[#2D5A3D]/10 rounded-lg text-sm text-[#2d2d2d]"
                     />
                   </div>
                   {slots.length > 1 && (
@@ -376,7 +376,7 @@ function EventCard({
       {event.location && (
         <>
           <div className="flex items-center gap-2.5 text-sm text-[#2d2d2d] mb-3">
-            <MapPin size={14} className="text-[#406A56] flex-shrink-0" />
+            <MapPin size={14} className="text-[#2D5A3D] flex-shrink-0" />
             <span>{event.location}</span>
           </div>
           <EventLocationMap location={event.location} />
@@ -385,8 +385,8 @@ function EventCard({
 
       {/* Time Slots */}
       {event.status === 'confirmed' && event.finalSlot ? (
-        <div className="p-4 bg-[#406A56]/10 rounded-xl">
-          <div className="flex items-center gap-3 text-[#406A56] font-semibold">
+        <div className="p-4 bg-[#2D5A3D]/10 rounded-xl">
+          <div className="flex items-center gap-3 text-[#2D5A3D] font-semibold">
             <CalendarCheck size={18} className="flex-shrink-0" />
             <span className="text-[#2d2d2d]">{formatSlot(event.finalSlot)}</span>
           </div>
@@ -403,15 +403,15 @@ function EventCard({
                 key={index}
                 className={`p-3 rounded-xl border ${
                   myVote?.available 
-                    ? 'bg-[#406A56]/5 border-[#406A56]/30' 
+                    ? 'bg-[#2D5A3D]/5 border-[#2D5A3D]/30' 
                     : myVote?.available === false
                     ? 'bg-red-50 border-red-200'
-                    : 'bg-white border-[#406A56]/10'
+                    : 'bg-white border-[#2D5A3D]/10'
                 }`}
               >
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-3">
-                    <Clock size={16} className="text-[#406A56] flex-shrink-0" />
+                    <Clock size={16} className="text-[#2D5A3D] flex-shrink-0" />
                     <span className="text-sm font-semibold text-[#2d2d2d]">
                       {formatSlot(slot)}
                     </span>
@@ -458,7 +458,7 @@ function EventCard({
                     {isAdmin && event.status === 'voting' && votes.available > 0 && (
                       <button
                         onClick={() => onConfirm(index)}
-                        className="ml-2 px-3 py-1.5 bg-[#406A56] text-white text-xs font-medium rounded-lg hover:bg-[#4a7a64]"
+                        className="ml-2 px-3 py-1.5 bg-[#2D5A3D] text-white text-xs font-medium rounded-lg hover:bg-[#234A31]"
                       >
                         Confirm
                       </button>
@@ -472,7 +472,7 @@ function EventCard({
       )}
 
       {/* Responses */}
-      <div className="mt-4 pt-4 border-t border-[#406A56]/10">
+      <div className="mt-4 pt-4 border-t border-[#2D5A3D]/10">
         <div className="flex items-center gap-2 text-xs text-[#666]">
           <Users size={12} />
           {event.responses.length} responded · Proposed by {event.proposedByName}
@@ -507,8 +507,8 @@ function MiniCalendar({
   }
 
   const getEventColor = (event: ScheduledEvent) => {
-    if (event.status === 'confirmed') return 'bg-[#406A56]'
-    if (event.status === 'voting') return 'bg-[#D9C61A]'
+    if (event.status === 'confirmed') return 'bg-[#2D5A3D]'
+    if (event.status === 'voting') return 'bg-[#C4A235]'
     return 'bg-gray-400'
   }
 
@@ -519,13 +519,13 @@ function MiniCalendar({
         <div className="flex gap-1">
           <button
             onClick={() => setCurrentDate(addDays(currentDate, -7))}
-            className="p-1.5 hover:bg-[#406A56]/10 rounded-lg"
+            className="p-1.5 hover:bg-[#2D5A3D]/10 rounded-lg"
           >
             <ChevronLeft size={16} className="text-[#666]" />
           </button>
           <button
             onClick={() => setCurrentDate(addDays(currentDate, 7))}
-            className="p-1.5 hover:bg-[#406A56]/10 rounded-lg"
+            className="p-1.5 hover:bg-[#2D5A3D]/10 rounded-lg"
           >
             <ChevronRight size={16} className="text-[#666]" />
           </button>
@@ -542,7 +542,7 @@ function MiniCalendar({
                 {format(day, 'EEE')}
               </div>
               <div className={`text-sm font-semibold mt-0.5 ${
-                isToday ? 'text-[#406A56]' : 'text-[#2d2d2d]'
+                isToday ? 'text-[#2D5A3D]' : 'text-[#2d2d2d]'
               }`}>
                 {format(day, 'd')}
               </div>
@@ -561,7 +561,7 @@ function MiniCalendar({
             <div 
               key={i} 
               className={`rounded-lg p-1 min-h-[60px] ${
-                isToday ? 'bg-[#406A56]/10 ring-2 ring-[#406A56]/30' : 'bg-[#f8f8f8]'
+                isToday ? 'bg-[#2D5A3D]/10 ring-2 ring-[#2D5A3D]/30' : 'bg-[#f8f8f8]'
               }`}
             >
               {dayEvents.length > 0 ? (
@@ -596,13 +596,13 @@ function MiniCalendar({
       </div>
 
       {/* Legend */}
-      <div className="flex items-center gap-4 mt-3 pt-3 border-t border-[#406A56]/10">
+      <div className="flex items-center gap-4 mt-3 pt-3 border-t border-[#2D5A3D]/10">
         <div className="flex items-center gap-1.5">
-          <div className="w-2.5 h-2.5 rounded-sm bg-[#406A56]" />
+          <div className="w-2.5 h-2.5 rounded-sm bg-[#2D5A3D]" />
           <span className="text-[10px] text-[#666]">Confirmed</span>
         </div>
         <div className="flex items-center gap-1.5">
-          <div className="w-2.5 h-2.5 rounded-sm bg-[#D9C61A]" />
+          <div className="w-2.5 h-2.5 rounded-sm bg-[#C4A235]" />
           <span className="text-[10px] text-[#666]">Voting</span>
         </div>
       </div>
@@ -672,7 +672,7 @@ export default function CircleScheduling({
       {/* Header */}
       <div className="section-header mb-4">
         <div className="section-title">
-          <div className="section-title-icon bg-[#D9C61A]/10">
+          <div className="section-title-icon bg-[#C4A235]/10">
             <Calendar size={18} className="text-[#8a7c08]" />
           </div>
           <span>Scheduling</span>
@@ -712,7 +712,7 @@ export default function CircleScheduling({
       {filteredEvents.length === 0 ? (
         <div className="empty-state">
           <div className="empty-state-icon">
-            <Calendar size={32} className="text-[#406A56]" />
+            <Calendar size={32} className="text-[#2D5A3D]" />
           </div>
           <h3 className="empty-state-title">No Events Yet</h3>
           <p className="empty-state-text">
@@ -731,7 +731,7 @@ export default function CircleScheduling({
               id={`event-${event.id}`}
               className={`transition-all duration-500 ${
                 highlightedEventId === event.id 
-                  ? 'ring-2 ring-[#D9C61A] ring-offset-2 rounded-2xl' 
+                  ? 'ring-2 ring-[#C4A235] ring-offset-2 rounded-2xl' 
                   : ''
               }`}
             >

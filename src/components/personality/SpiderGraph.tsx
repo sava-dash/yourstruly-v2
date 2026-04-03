@@ -115,7 +115,7 @@ export function SpiderGraph({ traits, size = 200, animated = true }: SpiderGraph
         <defs>
           <linearGradient id="spiderGradient" x1="0%" y1="0%" x2="100%" y2="100%">
             <stop offset="0%" stopColor="#4A3552" />
-            <stop offset="100%" stopColor="#D9C61A" />
+            <stop offset="100%" stopColor="#C4A235" />
           </linearGradient>
         </defs>
       </svg>

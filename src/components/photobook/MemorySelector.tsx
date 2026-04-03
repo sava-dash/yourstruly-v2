@@ -486,7 +486,7 @@ export default function MemorySelector({
   return (
     <div className="flex flex-col h-full max-h-[80vh]">
       {/* Header */}
-      <div className="flex-shrink-0 space-y-4 p-4 border-b border-[#406A56]/10">
+      <div className="flex-shrink-0 space-y-4 p-4 border-b border-[#2D5A3D]/10">
         {/* Tabs */}
         <div className="flex items-center gap-2 overflow-x-auto pb-2">
           {availableTabs.map(tab => {
@@ -504,15 +504,15 @@ export default function MemorySelector({
                 onClick={() => setActiveTab(tab.key)}
                 className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-medium transition-all whitespace-nowrap ${
                   activeTab === tab.key
-                    ? 'bg-[#406A56] text-white shadow-lg shadow-[#406A56]/20'
-                    : 'bg-white/60 text-[#406A56] hover:bg-white border border-[#406A56]/20'
+                    ? 'bg-[#2D5A3D] text-white shadow-lg shadow-[#2D5A3D]/20'
+                    : 'bg-white/60 text-[#2D5A3D] hover:bg-white border border-[#2D5A3D]/20'
                 }`}
               >
                 <Icon size={16} />
                 {tab.label}
                 {count > 0 && (
                   <span className={`px-1.5 py-0.5 rounded-full text-xs ${
-                    activeTab === tab.key ? 'bg-white/20' : 'bg-[#406A56]/10'
+                    activeTab === tab.key ? 'bg-white/20' : 'bg-[#2D5A3D]/10'
                   }`}>
                     {count}
                   </span>
@@ -526,18 +526,18 @@ export default function MemorySelector({
         <div className="flex items-center gap-3">
           {/* Search */}
           <div className="relative flex-1">
-            <Search size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-[#406A56]/50 pointer-events-none" />
+            <Search size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-[#2D5A3D]/50 pointer-events-none" />
             <input
               type="text"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               aria-label="Search" placeholder="Search by title, content, or tags..."
-              className="w-full pl-10 pr-10 py-2.5 rounded-xl bg-white/80 border border-[#406A56]/20 text-[#2d2d2d] placeholder:text-[#999] focus:outline-none focus:ring-2 focus:ring-[#406A56]/30 transition-all"
+              className="w-full pl-10 pr-10 py-2.5 rounded-xl bg-white/80 border border-[#2D5A3D]/20 text-[#2d2d2d] placeholder:text-[#999] focus:outline-none focus:ring-2 focus:ring-[#2D5A3D]/30 transition-all"
             />
             {searchQuery && (
               <button
                 onClick={() => setSearchQuery('')}
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-[#406A56]/50 hover:text-[#406A56]"
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-[#2D5A3D]/50 hover:text-[#2D5A3D]"
               >
                 <X size={16} />
               </button>
@@ -549,8 +549,8 @@ export default function MemorySelector({
             onClick={() => setShowFilters(!showFilters)}
             className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-medium transition-all ${
               showFilters || hasActiveFilters
-                ? 'bg-[#C35F33] text-white'
-                : 'bg-white/80 text-[#406A56] hover:bg-white border border-[#406A56]/20'
+                ? 'bg-[#B8562E] text-white'
+                : 'bg-white/80 text-[#2D5A3D] hover:bg-white border border-[#2D5A3D]/20'
             }`}
           >
             <Filter size={16} />
@@ -573,7 +573,7 @@ export default function MemorySelector({
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 pt-2">
                 {/* Date Range */}
                 <div className="space-y-1">
-                  <label className="text-xs font-medium text-[#406A56]/70 flex items-center gap-1">
+                  <label className="text-xs font-medium text-[#2D5A3D]/70 flex items-center gap-1">
                     <Calendar size={12} />
                     Date Range
                   </label>
@@ -582,21 +582,21 @@ export default function MemorySelector({
                       type="date"
                       value={dateRange.start}
                       onChange={(e) => setDateRange({ ...dateRange, start: e.target.value })}
-                      className="flex-1 px-3 py-2 rounded-lg bg-white/80 border border-[#406A56]/20 text-sm text-[#2d2d2d] focus:outline-none focus:ring-2 focus:ring-[#406A56]/30"
+                      className="flex-1 px-3 py-2 rounded-lg bg-white/80 border border-[#2D5A3D]/20 text-sm text-[#2d2d2d] focus:outline-none focus:ring-2 focus:ring-[#2D5A3D]/30"
                     />
-                    <span className="text-[#406A56]/50 text-sm">to</span>
+                    <span className="text-[#2D5A3D]/50 text-sm">to</span>
                     <input
                       type="date"
                       value={dateRange.end}
                       onChange={(e) => setDateRange({ ...dateRange, end: e.target.value })}
-                      className="flex-1 px-3 py-2 rounded-lg bg-white/80 border border-[#406A56]/20 text-sm text-[#2d2d2d] focus:outline-none focus:ring-2 focus:ring-[#406A56]/30"
+                      className="flex-1 px-3 py-2 rounded-lg bg-white/80 border border-[#2D5A3D]/20 text-sm text-[#2d2d2d] focus:outline-none focus:ring-2 focus:ring-[#2D5A3D]/30"
                     />
                   </div>
                 </div>
                 
                 {/* Category (for Wisdom) */}
                 <div className="space-y-1">
-                  <label className="text-xs font-medium text-[#406A56]/70 flex items-center gap-1">
+                  <label className="text-xs font-medium text-[#2D5A3D]/70 flex items-center gap-1">
                     <BookOpen size={12} />
                     Category
                   </label>
@@ -604,7 +604,7 @@ export default function MemorySelector({
                     <select
                       value={selectedCategory || ''}
                       onChange={(e) => setSelectedCategory(e.target.value || null)}
-                      className="w-full px-3 py-2 rounded-lg bg-white/80 border border-[#406A56]/20 text-sm text-[#2d2d2d] appearance-none focus:outline-none focus:ring-2 focus:ring-[#406A56]/30"
+                      className="w-full px-3 py-2 rounded-lg bg-white/80 border border-[#2D5A3D]/20 text-sm text-[#2d2d2d] appearance-none focus:outline-none focus:ring-2 focus:ring-[#2D5A3D]/30"
                     >
                       <option value="">All categories</option>
                       {WISDOM_CATEGORIES.map(cat => (
@@ -613,13 +613,13 @@ export default function MemorySelector({
                         </option>
                       ))}
                     </select>
-                    <ChevronDown size={14} className="absolute right-3 top-1/2 -translate-y-1/2 text-[#406A56]/50 pointer-events-none" />
+                    <ChevronDown size={14} className="absolute right-3 top-1/2 -translate-y-1/2 text-[#2D5A3D]/50 pointer-events-none" />
                   </div>
                 </div>
                 
                 {/* Person Filter */}
                 <div className="space-y-1">
-                  <label className="text-xs font-medium text-[#406A56]/70 flex items-center gap-1">
+                  <label className="text-xs font-medium text-[#2D5A3D]/70 flex items-center gap-1">
                     <Users size={12} />
                     Tagged Person
                   </label>
@@ -627,7 +627,7 @@ export default function MemorySelector({
                     <select
                       value={selectedContactId || ''}
                       onChange={(e) => setSelectedContactId(e.target.value || null)}
-                      className="w-full px-3 py-2 rounded-lg bg-white/80 border border-[#406A56]/20 text-sm text-[#2d2d2d] appearance-none focus:outline-none focus:ring-2 focus:ring-[#406A56]/30"
+                      className="w-full px-3 py-2 rounded-lg bg-white/80 border border-[#2D5A3D]/20 text-sm text-[#2d2d2d] appearance-none focus:outline-none focus:ring-2 focus:ring-[#2D5A3D]/30"
                     >
                       <option value="">All people</option>
                       {contacts.map(contact => (
@@ -636,7 +636,7 @@ export default function MemorySelector({
                         </option>
                       ))}
                     </select>
-                    <ChevronDown size={14} className="absolute right-3 top-1/2 -translate-y-1/2 text-[#406A56]/50 pointer-events-none" />
+                    <ChevronDown size={14} className="absolute right-3 top-1/2 -translate-y-1/2 text-[#2D5A3D]/50 pointer-events-none" />
                   </div>
                 </div>
                 
@@ -645,7 +645,7 @@ export default function MemorySelector({
                   {hasActiveFilters && (
                     <button
                       onClick={clearFilters}
-                      className="text-[#C35F33] hover:text-[#a84d28] text-sm font-medium"
+                      className="text-[#B8562E] hover:text-[#a84d28] text-sm font-medium"
                     >
                       Clear all filters
                     </button>
@@ -661,22 +661,22 @@ export default function MemorySelector({
           <div className="flex items-center gap-3">
             <button
               onClick={selectAll}
-              className="flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm text-[#406A56] hover:bg-[#406A56]/10 transition-colors"
+              className="flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm text-[#2D5A3D] hover:bg-[#2D5A3D]/10 transition-colors"
             >
               <CheckSquare size={14} />
               Select All
             </button>
             <button
               onClick={deselectAll}
-              className="flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm text-[#406A56] hover:bg-[#406A56]/10 transition-colors"
+              className="flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm text-[#2D5A3D] hover:bg-[#2D5A3D]/10 transition-colors"
             >
               <Square size={14} />
               Deselect All
             </button>
           </div>
           
-          <div className="flex items-center gap-2 text-sm text-[#406A56]/70">
-            <Sparkles size={14} className="text-[#D9C61A]" />
+          <div className="flex items-center gap-2 text-sm text-[#2D5A3D]/70">
+            <Sparkles size={14} className="text-[#C4A235]" />
             <span>
               {selectedCount} selected
               {maxSelections && ` / ${maxSelections} max`}
@@ -697,7 +697,7 @@ export default function MemorySelector({
         {/* Drag selection box */}
         {isDragging && dragStart && dragEnd && (
           <div
-            className="fixed border-2 border-[#406A56] bg-[#406A56]/10 rounded-lg pointer-events-none z-50"
+            className="fixed border-2 border-[#2D5A3D] bg-[#2D5A3D]/10 rounded-lg pointer-events-none z-50"
             style={{
               left: Math.min(dragStart.x, dragEnd.x),
               top: Math.min(dragStart.y, dragEnd.y),
@@ -710,19 +710,19 @@ export default function MemorySelector({
         {loading ? (
           <div className="flex items-center justify-center h-64">
             <div className="flex flex-col items-center gap-3">
-              <div className="w-10 h-10 border-3 border-[#406A56] border-t-transparent rounded-full animate-spin" />
-              <p className="text-[#406A56]/60 text-sm">Loading content...</p>
+              <div className="w-10 h-10 border-3 border-[#2D5A3D] border-t-transparent rounded-full animate-spin" />
+              <p className="text-[#2D5A3D]/60 text-sm">Loading content...</p>
             </div>
           </div>
         ) : filteredItems.length === 0 ? (
           <div className="flex flex-col items-center justify-center h-64 text-center">
-            <div className="w-16 h-16 rounded-2xl bg-[#406A56]/10 flex items-center justify-center mb-4">
-              <ImageIcon size={32} className="text-[#406A56]/40" />
+            <div className="w-16 h-16 rounded-2xl bg-[#2D5A3D]/10 flex items-center justify-center mb-4">
+              <ImageIcon size={32} className="text-[#2D5A3D]/40" />
             </div>
             <h3 className="text-lg font-semibold text-[#2d2d2d] mb-2">
               {hasActiveFilters ? 'No matching items' : 'No content yet'}
             </h3>
-            <p className="text-[#406A56]/60 text-sm max-w-xs">
+            <p className="text-[#2D5A3D]/60 text-sm max-w-xs">
               {hasActiveFilters
                 ? 'Try adjusting your filters to find what you\'re looking for'
                 : 'Add memories and wisdom entries to select them for your photobook'
@@ -731,7 +731,7 @@ export default function MemorySelector({
             {hasActiveFilters && (
               <button
                 onClick={clearFilters}
-                className="mt-4 px-4 py-2 rounded-xl bg-[#406A56] text-white text-sm font-medium hover:bg-[#365a49] transition-colors"
+                className="mt-4 px-4 py-2 rounded-xl bg-[#2D5A3D] text-white text-sm font-medium hover:bg-[#365a49] transition-colors"
               >
                 Clear filters
               </button>
@@ -756,8 +756,8 @@ export default function MemorySelector({
                   onMouseLeave={() => setPreviewItem(null)}
                   className={`group relative aspect-square rounded-xl overflow-hidden cursor-pointer transition-all duration-200 ${
                     isSelected
-                      ? 'ring-3 ring-[#406A56] ring-offset-2 scale-[0.98]'
-                      : 'hover:ring-2 hover:ring-[#406A56]/30 hover:scale-[1.02]'
+                      ? 'ring-3 ring-[#2D5A3D] ring-offset-2 scale-[0.98]'
+                      : 'hover:ring-2 hover:ring-[#2D5A3D]/30 hover:scale-[1.02]'
                   }`}
                 >
                   {/* Thumbnail */}
@@ -772,14 +772,14 @@ export default function MemorySelector({
                     <div className={`w-full h-full flex items-center justify-center ${
                       item.memory_type === 'wisdom'
                         ? 'bg-gradient-to-br from-amber-100 to-orange-100'
-                        : 'bg-gradient-to-br from-[#406A56]/10 to-[#8DACAB]/20'
+                        : 'bg-gradient-to-br from-[#2D5A3D]/10 to-[#8DACAB]/20'
                     }`}>
                       {item.memory_type === 'wisdom' ? (
                         <BookOpen size={32} className="text-amber-500/50" />
                       ) : item.audio_url ? (
-                        <Mic size={32} className="text-[#406A56]/50" />
+                        <Mic size={32} className="text-[#2D5A3D]/50" />
                       ) : (
-                        <ImageIcon size={32} className="text-[#406A56]/50" />
+                        <ImageIcon size={32} className="text-[#2D5A3D]/50" />
                       )}
                     </div>
                   )}
@@ -787,7 +787,7 @@ export default function MemorySelector({
                   {/* Overlay */}
                   <div className={`absolute inset-0 transition-opacity ${
                     isSelected
-                      ? 'bg-[#406A56]/20'
+                      ? 'bg-[#2D5A3D]/20'
                       : 'bg-black/0 group-hover:bg-black/10'
                   }`} />
                   
@@ -797,8 +797,8 @@ export default function MemorySelector({
                   }`}>
                     <div className={`w-6 h-6 rounded-lg flex items-center justify-center transition-colors ${
                       isSelected
-                        ? 'bg-[#406A56] text-white'
-                        : 'bg-white/90 border border-[#406A56]/30 text-transparent'
+                        ? 'bg-[#2D5A3D] text-white'
+                        : 'bg-white/90 border border-[#2D5A3D]/30 text-transparent'
                     }`}>
                       <Check size={14} strokeWidth={3} />
                     </div>
@@ -829,7 +829,7 @@ export default function MemorySelector({
                     }}
                     className="absolute bottom-2 right-2 w-7 h-7 rounded-lg bg-white/90 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all hover:bg-white"
                   >
-                    <Eye size={14} className="text-[#406A56]" />
+                    <Eye size={14} className="text-[#2D5A3D]" />
                   </button>
                 </div>
               )
@@ -840,7 +840,7 @@ export default function MemorySelector({
       
       {/* Selected Summary Footer */}
       {selectedCount > 0 && (
-        <div className="flex-shrink-0 p-4 border-t border-[#406A56]/10 bg-white/80 backdrop-blur-sm">
+        <div className="flex-shrink-0 p-4 border-t border-[#2D5A3D]/10 bg-white/80 backdrop-blur-sm">
           <div className="flex items-center justify-between gap-4">
             <div className="flex items-center gap-3 overflow-x-auto pb-1">
               {/* Selected Thumbnails */}
@@ -859,7 +859,7 @@ export default function MemorySelector({
                           
 <img src={coverUrl} alt="" className="w-full h-full object-cover" />
                         ) : (
-                          <div className="w-full h-full bg-[#406A56]/10 flex items-center justify-center">
+                          <div className="w-full h-full bg-[#2D5A3D]/10 flex items-center justify-center">
                             {getTypeIcon(item)}
                           </div>
                         )}
@@ -867,7 +867,7 @@ export default function MemorySelector({
                     )
                   })}
                 {selectedCount > 6 && (
-                  <div className="w-10 h-10 rounded-lg border-2 border-white bg-[#406A56] flex items-center justify-center flex-shrink-0">
+                  <div className="w-10 h-10 rounded-lg border-2 border-white bg-[#2D5A3D] flex items-center justify-center flex-shrink-0">
                     <span className="text-white text-xs font-bold">+{selectedCount - 6}</span>
                   </div>
                 )}
@@ -875,7 +875,7 @@ export default function MemorySelector({
               
               <div className="text-sm">
                 <span className="font-semibold text-[#2d2d2d]">{selectedCount} items</span>
-                <span className="text-[#406A56]/60 ml-2">selected</span>
+                <span className="text-[#2D5A3D]/60 ml-2">selected</span>
               </div>
             </div>
             
@@ -883,14 +883,14 @@ export default function MemorySelector({
             <div className="flex items-center gap-2">
               <button
                 onClick={() => setSelectedItemIds(new Set())}
-                className="px-4 py-2 rounded-xl text-sm font-medium text-[#C35F33] hover:bg-[#C35F33]/10 transition-colors"
+                className="px-4 py-2 rounded-xl text-sm font-medium text-[#B8562E] hover:bg-[#B8562E]/10 transition-colors"
               >
                 Clear
               </button>
               {onClose && (
                 <button
                   onClick={onClose}
-                  className="px-6 py-2 rounded-xl bg-[#406A56] text-white text-sm font-medium hover:bg-[#365a49] transition-colors"
+                  className="px-6 py-2 rounded-xl bg-[#2D5A3D] text-white text-sm font-medium hover:bg-[#365a49] transition-colors"
                 >
                   Done
                 </button>
@@ -930,12 +930,12 @@ export default function MemorySelector({
                 <div className={`aspect-video flex items-center justify-center ${
                   previewItem.memory_type === 'wisdom'
                     ? 'bg-gradient-to-br from-amber-100 to-orange-100'
-                    : 'bg-gradient-to-br from-[#406A56]/10 to-[#8DACAB]/20'
+                    : 'bg-gradient-to-br from-[#2D5A3D]/10 to-[#8DACAB]/20'
                 }`}>
                   {previewItem.memory_type === 'wisdom' ? (
                     <BookOpen size={48} className="text-amber-500/50" />
                   ) : (
-                    <Mic size={48} className="text-[#406A56]/50" />
+                    <Mic size={48} className="text-[#2D5A3D]/50" />
                   )}
                 </div>
               )}
@@ -946,19 +946,19 @@ export default function MemorySelector({
                   <h3 className="text-lg font-semibold text-[#2d2d2d]">
                     {previewItem.title || 'Untitled'}
                   </h3>
-                  <span className="flex items-center gap-1 px-2 py-1 rounded-lg bg-[#406A56]/10 text-xs text-[#406A56]">
+                  <span className="flex items-center gap-1 px-2 py-1 rounded-lg bg-[#2D5A3D]/10 text-xs text-[#2D5A3D]">
                     {getTypeIcon(previewItem)}
                     <span className="capitalize">{getItemType(previewItem)}</span>
                   </span>
                 </div>
                 
                 {previewItem.description && (
-                  <p className="text-sm text-[#406A56]/70 line-clamp-3 mb-3">
+                  <p className="text-sm text-[#2D5A3D]/70 line-clamp-3 mb-3">
                     {previewItem.description}
                   </p>
                 )}
                 
-                <div className="flex items-center gap-3 text-xs text-[#406A56]/60">
+                <div className="flex items-center gap-3 text-xs text-[#2D5A3D]/60">
                   {previewItem.memory_date && (
                     <span className="flex items-center gap-1">
                       <Calendar size={12} />
@@ -966,7 +966,7 @@ export default function MemorySelector({
                     </span>
                   )}
                   {previewItem.ai_category && (
-                    <span className="px-2 py-0.5 rounded-full bg-[#D9C61A]/20 text-[#2d2d2d]">
+                    <span className="px-2 py-0.5 rounded-full bg-[#C4A235]/20 text-[#2d2d2d]">
                       {previewItem.ai_category}
                     </span>
                   )}
@@ -980,8 +980,8 @@ export default function MemorySelector({
                   }}
                   className={`w-full mt-4 py-2.5 rounded-xl text-sm font-medium transition-colors ${
                     selectedItemIds.has(previewItem.id)
-                      ? 'bg-[#C35F33] text-white hover:bg-[#a84d28]'
-                      : 'bg-[#406A56] text-white hover:bg-[#365a49]'
+                      ? 'bg-[#B8562E] text-white hover:bg-[#a84d28]'
+                      : 'bg-[#2D5A3D] text-white hover:bg-[#365a49]'
                   }`}
                 >
                   {selectedItemIds.has(previewItem.id) ? 'Remove from Selection' : 'Add to Selection'}

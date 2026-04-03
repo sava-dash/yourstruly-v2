@@ -124,7 +124,7 @@ export default function AlbumsPage() {
           <div className="flex flex-wrap items-center gap-4 mt-6">
             {/* Search */}
             <div className="relative flex-1 min-w-[200px] max-w-md">
-              <Search size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-[#406A56]/50" />
+              <Search size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-[#2D5A3D]/50" />
               <input
                 type="text"
                 value={searchQuery}
@@ -136,7 +136,7 @@ export default function AlbumsPage() {
 
             {/* Theme Filter */}
             <div className="flex items-center gap-2">
-              <Filter size={16} className="text-[#406A56]/50" />
+              <Filter size={16} className="text-[#2D5A3D]/50" />
               <select
                 value={themeFilter}
                 onChange={e => setThemeFilter(e.target.value as AlbumTheme | 'all')}
@@ -162,7 +162,7 @@ export default function AlbumsPage() {
           ) : filteredAlbums.length === 0 ? (
             <div className="empty-state">
               <div className="empty-state-icon">
-                <Sparkles size={32} className="text-[#D9C61A]" />
+                <Sparkles size={32} className="text-[#C4A235]" />
               </div>
               {searchQuery || themeFilter !== 'all' ? (
                 <>

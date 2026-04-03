@@ -22,8 +22,8 @@ export default function MoodFilterChips({
         onClick={() => onMoodSelect(null)}
         className={`flex-shrink-0 px-3 py-1.5 rounded-full text-sm font-medium transition-all ${
           selectedMood === null
-            ? 'bg-[#406A56] text-white'
-            : 'bg-white/80 text-[#406A56] hover:bg-white border border-[#406A56]/20'
+            ? 'bg-[#2D5A3D] text-white'
+            : 'bg-white/80 text-[#2D5A3D] hover:bg-white border border-[#2D5A3D]/20'
         }`}
       >
         All Moods
@@ -42,7 +42,7 @@ export default function MoodFilterChips({
             className={`flex-shrink-0 flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-medium transition-all ${
               isSelected
                 ? 'text-white'
-                : 'bg-white/80 hover:bg-white border border-[#406A56]/20'
+                : 'bg-white/80 hover:bg-white border border-[#2D5A3D]/20'
             }`}
             style={{
               backgroundColor: isSelected ? def.color : undefined,

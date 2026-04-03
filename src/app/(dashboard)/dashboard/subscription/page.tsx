@@ -406,7 +406,7 @@ export default function SubscriptionPage() {
                   padding: '12px 20px',
                   border: 'none',
                   borderRadius: 8,
-                  background: '#406A56',
+                  background: '#2D5A3D',
                   color: 'white',
                   fontWeight: 600,
                   cursor: 'pointer',

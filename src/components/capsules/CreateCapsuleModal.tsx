@@ -172,7 +172,7 @@ export default function CreateAlbumModal({ isOpen, onClose, onSave, editAlbum }:
         onClick={e => e.stopPropagation()}
       >
         {/* Header */}
-        <div className="flex items-center justify-between p-5 border-b border-[#406A56]/10">
+        <div className="flex items-center justify-between p-5 border-b border-[#2D5A3D]/10">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-amber-500/20 to-orange-500/20 flex items-center justify-center">
               <Sparkles size={20} className="text-amber-600" />
@@ -210,7 +210,7 @@ export default function CreateAlbumModal({ isOpen, onClose, onSave, editAlbum }:
                     value={name}
                     onChange={e => setName(e.target.value)}
                     placeholder="My Summer Adventures..."
-                    className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-[#406A56] focus:ring-2 focus:ring-[#406A56]/20 outline-none transition-all"
+                    className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-[#2D5A3D] focus:ring-2 focus:ring-[#2D5A3D]/20 outline-none transition-all"
                   />
                 </div>
 
@@ -222,7 +222,7 @@ export default function CreateAlbumModal({ isOpen, onClose, onSave, editAlbum }:
                     onChange={e => setDescription(e.target.value)}
                     placeholder="A collection of memories from..."
                     rows={3}
-                    className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-[#406A56] focus:ring-2 focus:ring-[#406A56]/20 outline-none transition-all resize-none"
+                    className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-[#2D5A3D] focus:ring-2 focus:ring-[#2D5A3D]/20 outline-none transition-all resize-none"
                   />
                 </div>
 
@@ -236,7 +236,7 @@ export default function CreateAlbumModal({ isOpen, onClose, onSave, editAlbum }:
                         onClick={() => setTheme(t.value)}
                         className={`p-4 rounded-xl border-2 transition-all flex flex-col items-center gap-2 ${
                           theme === t.value 
-                            ? 'border-[#406A56] bg-[#406A56]/5' 
+                            ? 'border-[#2D5A3D] bg-[#2D5A3D]/5' 
                             : 'border-gray-200 hover:border-gray-300'
                         }`}
                       >
@@ -290,7 +290,7 @@ export default function CreateAlbumModal({ isOpen, onClose, onSave, editAlbum }:
                           <Reorder.Item 
                             key={memory.id} 
                             value={memory.id}
-                            className="flex items-center gap-3 p-3 bg-[#406A56]/5 rounded-xl cursor-grab active:cursor-grabbing group"
+                            className="flex items-center gap-3 p-3 bg-[#2D5A3D]/5 rounded-xl cursor-grab active:cursor-grabbing group"
                           >
                             <GripVertical size={16} className="text-gray-400" />
                             <div className="w-12 h-12 rounded-lg overflow-hidden flex-shrink-0 bg-gray-100">
@@ -334,7 +334,7 @@ export default function CreateAlbumModal({ isOpen, onClose, onSave, editAlbum }:
                     value={searchQuery}
                     onChange={e => setSearchQuery(e.target.value)}
                     aria-label="Search" placeholder="Search memories..."
-                    className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-gray-200 focus:border-[#406A56] focus:ring-2 focus:ring-[#406A56]/20 outline-none transition-all text-sm"
+                    className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-gray-200 focus:border-[#2D5A3D] focus:ring-2 focus:ring-[#2D5A3D]/20 outline-none transition-all text-sm"
                   />
                 </div>
 
@@ -358,7 +358,7 @@ export default function CreateAlbumModal({ isOpen, onClose, onSave, editAlbum }:
                             key={memory.id}
                             onClick={() => toggleMemory(memory.id)}
                             className={`relative aspect-square rounded-xl overflow-hidden group transition-all ${
-                              isSelected ? 'ring-2 ring-[#406A56] ring-offset-2' : 'hover:ring-2 hover:ring-gray-300'
+                              isSelected ? 'ring-2 ring-[#2D5A3D] ring-offset-2' : 'hover:ring-2 hover:ring-gray-300'
                             }`}
                           >
                             {coverMedia ? (
@@ -372,12 +372,12 @@ export default function CreateAlbumModal({ isOpen, onClose, onSave, editAlbum }:
                             
                             {/* Overlay */}
                             <div className={`absolute inset-0 transition-all ${
-                              isSelected ? 'bg-[#406A56]/40' : 'bg-black/0 group-hover:bg-black/20'
+                              isSelected ? 'bg-[#2D5A3D]/40' : 'bg-black/0 group-hover:bg-black/20'
                             }`} />
                             
                             {/* Selection indicator */}
                             {isSelected && (
-                              <div className="absolute top-2 right-2 w-6 h-6 rounded-full bg-[#406A56] flex items-center justify-center">
+                              <div className="absolute top-2 right-2 w-6 h-6 rounded-full bg-[#2D5A3D] flex items-center justify-center">
                                 <Check size={14} className="text-white" />
                               </div>
                             )}
@@ -398,7 +398,7 @@ export default function CreateAlbumModal({ isOpen, onClose, onSave, editAlbum }:
         </div>
 
         {/* Footer */}
-        <div className="p-5 border-t border-[#406A56]/10 flex items-center justify-between">
+        <div className="p-5 border-t border-[#2D5A3D]/10 flex items-center justify-between">
           <div>
             {step === 'memories' && (
               <button
@@ -420,7 +420,7 @@ export default function CreateAlbumModal({ isOpen, onClose, onSave, editAlbum }:
               <button
                 onClick={() => setStep('memories')}
                 disabled={!name.trim()}
-                className="px-6 py-2.5 bg-[#406A56] hover:bg-[#4a7a64] text-white rounded-xl font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                className="px-6 py-2.5 bg-[#2D5A3D] hover:bg-[#234A31] text-white rounded-xl font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 Next: Select Memories →
               </button>
@@ -428,7 +428,7 @@ export default function CreateAlbumModal({ isOpen, onClose, onSave, editAlbum }:
               <button
                 onClick={handleSave}
                 disabled={loading || selectedMemoryIds.length === 0}
-                className="px-6 py-2.5 bg-[#406A56] hover:bg-[#4a7a64] text-white rounded-xl font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+                className="px-6 py-2.5 bg-[#2D5A3D] hover:bg-[#234A31] text-white rounded-xl font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
               >
                 {loading ? (
                   <>

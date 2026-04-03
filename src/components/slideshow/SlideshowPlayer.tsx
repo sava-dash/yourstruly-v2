@@ -412,19 +412,19 @@ export default function SlideshowPlayer({
           // Final logo slide
           // Brand gradient background
           const gradient = ctx.createLinearGradient(0, 0, canvas.width, canvas.height)
-          gradient.addColorStop(0, '#F2F1E5')
+          gradient.addColorStop(0, '#F5F3EE')
           gradient.addColorStop(0.5, '#E8E4D6')
           gradient.addColorStop(1, '#DED8C8')
           ctx.fillStyle = gradient
           ctx.fillRect(0, 0, canvas.width, canvas.height)
 
           // Draw logo text (since we can't easily load SVG)
-          ctx.fillStyle = '#406A56'
+          ctx.fillStyle = '#2D5A3D'
           ctx.font = 'italic bold 72px Georgia, serif'
           ctx.textAlign = 'center'
           ctx.fillText('YoursTruly', canvas.width / 2, canvas.height / 2 - 20)
           
-          ctx.fillStyle = '#406A56'
+          ctx.fillStyle = '#2D5A3D'
           ctx.globalAlpha = 0.6
           ctx.font = '28px sans-serif'
           ctx.fillText('Document Your Life', canvas.width / 2, canvas.height / 2 + 40)
@@ -494,7 +494,7 @@ export default function SlideshowPlayer({
         exit={{ opacity: 0 }}
         className="fixed inset-0 z-50 bg-black flex flex-col items-center justify-center"
       >
-        <p className="text-white/60 text-lg mb-4">No photos in this album</p>
+        <p className="text-white/60 text-lg mb-4">This album has no photos yet</p>
         <button
           onClick={onClose}
           className="px-6 py-2 rounded-full bg-white/10 hover:bg-white/20 text-white transition-colors"
@@ -534,7 +534,7 @@ export default function SlideshowPlayer({
           </p>
           <div className="w-64 h-2 bg-white/20 rounded-full overflow-hidden">
             <div 
-              className="h-full bg-[#406A56] transition-all duration-300"
+              className="h-full bg-[#2D5A3D] transition-all duration-300"
               style={{ width: `${exportProgress}%` }}
             />
           </div>
@@ -578,21 +578,21 @@ export default function SlideshowPlayer({
               transition={{ duration: 0.5 }}
               className="absolute inset-0 flex flex-col items-center justify-center"
               style={{
-                background: 'linear-gradient(135deg, #F2F1E5 0%, #E8E4D6 50%, #DED8C8 100%)'
+                background: 'linear-gradient(135deg, #F5F3EE 0%, #E8E4D6 50%, #DED8C8 100%)'
               }}
             >
               <div className="text-center">
                 <h1 
                   className="text-6xl md:text-7xl font-bold italic mb-4"
                   style={{ 
-                    color: '#406A56',
+                    color: '#2D5A3D',
                     fontFamily: 'Georgia, serif'
                   }}
                 >
                   YoursTruly
                 </h1>
-                <p className="text-xl text-[#406A56]/60 mb-2">Document Your Life</p>
-                <p className="text-sm text-[#406A56]/40">yourstruly.love</p>
+                <p className="text-xl text-[#2D5A3D]/60 mb-2">Document Your Life</p>
+                <p className="text-sm text-[#2D5A3D]/40">yourstruly.love</p>
               </div>
             </motion.div>
           ) : (
@@ -675,7 +675,7 @@ export default function SlideshowPlayer({
                     }}
                     className={`w-full flex items-center justify-between p-3 rounded-lg transition-colors ${
                       selectedTrack.id === track.id
-                        ? 'bg-[#406A56] text-white'
+                        ? 'bg-[#2D5A3D] text-white'
                         : 'bg-white/5 hover:bg-white/10 text-white/80'
                     }`}
                   >
@@ -757,7 +757,7 @@ export default function SlideshowPlayer({
           <button
             onClick={() => setShowMusicPicker(true)}
             className={`p-2 rounded-full hover:bg-white/10 transition-colors ${
-              selectedTrack.id !== 'none' ? 'text-[#406A56]' : 'text-white'
+              selectedTrack.id !== 'none' ? 'text-[#2D5A3D]' : 'text-white'
             }`}
             title="Select music"
           >
@@ -838,7 +838,7 @@ export function PlayButtonOverlay({
         flex items-center justify-center
         shadow-lg hover:scale-110 transition-transform
       `}>
-        <Play size={iconSizes[size]} className="text-[#406A56] ml-1" />
+        <Play size={iconSizes[size]} className="text-[#2D5A3D] ml-1" />
       </div>
     </button>
   )

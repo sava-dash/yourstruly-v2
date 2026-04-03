@@ -89,10 +89,10 @@ export default function ProductDetailPage() {
   // Loading state
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-[#F2F1E5] flex items-center justify-center">
+      <div className="min-h-screen bg-[#F5F3EE] flex items-center justify-center">
         <div className="text-center">
-          <Loader2 className="w-8 h-8 animate-spin text-[#406A56] mx-auto mb-4" />
-          <p className="text-[#406A56]/60">Loading product...</p>
+          <Loader2 className="w-8 h-8 animate-spin text-[#2D5A3D] mx-auto mb-4" />
+          <p className="text-[#2D5A3D]/60">Loading product...</p>
         </div>
       </div>
     );
@@ -101,7 +101,7 @@ export default function ProductDetailPage() {
   // Error state
   if (error || !product) {
     return (
-      <div className="min-h-screen bg-[#F2F1E5] flex items-center justify-center">
+      <div className="min-h-screen bg-[#F5F3EE] flex items-center justify-center">
         <div className="text-center">
           <h1 className="font-playfair text-2xl font-bold text-[#2d2d2d] mb-2">
             Product Not Found
@@ -109,7 +109,7 @@ export default function ProductDetailPage() {
           <p className="text-gray-500 mb-4">The product you&apos;re looking for doesn&apos;t exist.</p>
           <Link 
             href="/marketplace"
-            className="inline-flex items-center gap-2 px-6 py-2 bg-[#406A56] text-white rounded-xl font-medium"
+            className="inline-flex items-center gap-2 px-6 py-2 bg-[#2D5A3D] text-white rounded-xl font-medium"
           >
             <ArrowLeft size={18} />
             Back to Marketplace
@@ -156,7 +156,7 @@ export default function ProductDetailPage() {
   const providerInfo: Record<string, { name: string; color: string; icon: string; delivery: string }> = {
     floristone: { 
       name: 'Fresh Flowers', 
-      color: '#C35F33',
+      color: '#B8562E',
       icon: '🌸',
       delivery: 'Same-day delivery available'
     },
@@ -168,7 +168,7 @@ export default function ProductDetailPage() {
     },
     goody: { 
       name: 'Curated Gifts', 
-      color: '#406A56',
+      color: '#2D5A3D',
       icon: '🎁',
       delivery: 'Ships within 1-2 business days'
     },
@@ -177,23 +177,23 @@ export default function ProductDetailPage() {
   const info = providerInfo[product.provider] || providerInfo.goody;
 
   return (
-    <div className="min-h-screen bg-[#F2F1E5]">
+    <div className="min-h-screen bg-[#F5F3EE]">
       {/* Navigation */}
-      <div className="bg-white/80 backdrop-blur-sm sticky top-0 z-10 border-b border-[#406A56]/10">
+      <div className="bg-white/80 backdrop-blur-sm sticky top-0 z-10 border-b border-[#2D5A3D]/10">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
           <div className="flex items-center justify-between">
             <button
               onClick={() => router.back()}
-              className="flex items-center gap-2 text-[#406A56] hover:text-[#4a7a64] transition-colors"
+              className="flex items-center gap-2 text-[#2D5A3D] hover:text-[#234A31] transition-colors"
             >
               <ArrowLeft size={20} />
               <span className="font-medium">Back</span>
             </button>
             
             <Link href="/marketplace/cart" className="relative p-2">
-              <ShoppingBag size={24} className="text-[#406A56]" />
+              <ShoppingBag size={24} className="text-[#2D5A3D]" />
               {cartCount > 0 && (
-                <span className="absolute -top-1 -right-1 w-5 h-5 bg-[#C35F33] text-white text-xs rounded-full flex items-center justify-center">
+                <span className="absolute -top-1 -right-1 w-5 h-5 bg-[#B8562E] text-white text-xs rounded-full flex items-center justify-center">
                   {cartCount}
                 </span>
               )}
@@ -238,13 +238,13 @@ export default function ProductDetailPage() {
               {/* Badges */}
               <div className="absolute top-4 left-4 flex flex-col gap-2">
                 {product.isBestseller && (
-                  <span className="px-3 py-1 bg-[#D9C61A] text-[#2d2d2d] text-sm font-medium rounded-full flex items-center gap-1">
+                  <span className="px-3 py-1 bg-[#C4A235] text-[#2d2d2d] text-sm font-medium rounded-full flex items-center gap-1">
                     <Sparkles size={14} />
                     Bestseller
                   </span>
                 )}
                 {discount && (
-                  <span className="px-3 py-1 bg-[#C35F33] text-white text-sm font-medium rounded-full">
+                  <span className="px-3 py-1 bg-[#B8562E] text-white text-sm font-medium rounded-full">
                     {discount}% OFF
                   </span>
                 )}
@@ -271,8 +271,8 @@ export default function ProductDetailPage() {
                     onClick={() => setSelectedImage(i)}
                     className={`relative w-20 h-20 flex-shrink-0 rounded-lg overflow-hidden border-2 transition-all ${
                       selectedImage === i 
-                        ? 'border-[#406A56] shadow-md' 
-                        : 'border-transparent hover:border-[#406A56]/30'
+                        ? 'border-[#2D5A3D] shadow-md' 
+                        : 'border-transparent hover:border-[#2D5A3D]/30'
                     }`}
                   >
                     <Image src={img} alt="" fill className="object-cover" />
@@ -307,11 +307,11 @@ export default function ProductDetailPage() {
                     <Star
                       key={i}
                       size={16}
-                      className={i < Math.floor(product.rating!) ? 'fill-[#D9C61A] text-[#D9C61A]' : 'text-gray-300'}
+                      className={i < Math.floor(product.rating!) ? 'fill-[#C4A235] text-[#C4A235]' : 'text-gray-300'}
                     />
                   ))}
                 </div>
-                <span className="text-sm text-[#406A56]/70">
+                <span className="text-sm text-[#2D5A3D]/70">
                   {product.rating} ({product.reviewCount} reviews)
                 </span>
               </div>
@@ -319,7 +319,7 @@ export default function ProductDetailPage() {
             
             {/* Price */}
             <div className="flex items-baseline gap-3">
-              <span className="text-3xl font-bold text-[#406A56]">
+              <span className="text-3xl font-bold text-[#2D5A3D]">
                 ${currentPrice.toFixed(2)}
               </span>
               {product.originalPrice && (
@@ -330,14 +330,14 @@ export default function ProductDetailPage() {
             </div>
             
             {/* Description */}
-            <p className="text-[#406A56]/80 leading-relaxed">
+            <p className="text-[#2D5A3D]/80 leading-relaxed">
               {product.description}
             </p>
             
             {/* Variants */}
             {product.variants && product.variants.length > 0 && (
               <div className="space-y-3">
-                <label className="text-sm font-medium text-[#406A56]">
+                <label className="text-sm font-medium text-[#2D5A3D]">
                   Select Option:
                 </label>
                 <div className="flex flex-wrap gap-2">
@@ -347,13 +347,13 @@ export default function ProductDetailPage() {
                       onClick={() => setSelectedVariant(variant)}
                       className={`px-4 py-2 rounded-lg border-2 text-sm font-medium transition-all ${
                         selectedVariant?.id === variant.id
-                          ? 'border-[#406A56] bg-[#406A56]/10 text-[#406A56]'
-                          : 'border-gray-200 hover:border-[#406A56]/30 text-gray-700'
+                          ? 'border-[#2D5A3D] bg-[#2D5A3D]/10 text-[#2D5A3D]'
+                          : 'border-gray-200 hover:border-[#2D5A3D]/30 text-gray-700'
                       }`}
                     >
                       {variant.name}
                       {variant.price !== product.price && (
-                        <span className="ml-2 text-[#406A56]">
+                        <span className="ml-2 text-[#2D5A3D]">
                           ${variant.price.toFixed(2)}
                         </span>
                       )}
@@ -365,18 +365,18 @@ export default function ProductDetailPage() {
             
             {/* Quantity */}
             <div className="flex items-center gap-4">
-              <label className="text-sm font-medium text-[#406A56]">Quantity:</label>
-              <div className="flex items-center gap-2 bg-white rounded-lg border border-[#406A56]/20 p-1">
+              <label className="text-sm font-medium text-[#2D5A3D]">Quantity:</label>
+              <div className="flex items-center gap-2 bg-white rounded-lg border border-[#2D5A3D]/20 p-1">
                 <button
                   onClick={() => setQuantity(q => Math.max(1, q - 1))}
-                  className="p-2 hover:bg-[#406A56]/10 rounded-lg transition-colors"
+                  className="p-2 hover:bg-[#2D5A3D]/10 rounded-lg transition-colors"
                 >
                   <Minus size={16} />
                 </button>
                 <span className="w-10 text-center font-medium">{quantity}</span>
                 <button
                   onClick={() => setQuantity(q => q + 1)}
-                  className="p-2 hover:bg-[#406A56]/10 rounded-lg transition-colors"
+                  className="p-2 hover:bg-[#2D5A3D]/10 rounded-lg transition-colors"
                 >
                   <Plus size={16} />
                 </button>
@@ -391,7 +391,7 @@ export default function ProductDetailPage() {
                 className={`flex-1 py-4 rounded-xl font-semibold flex items-center justify-center gap-2 transition-all ${
                   addedToCart
                     ? 'bg-green-500 text-white'
-                    : 'bg-[#406A56] text-white hover:bg-[#4a7a64]'
+                    : 'bg-[#2D5A3D] text-white hover:bg-[#234A31]'
                 } disabled:opacity-70`}
               >
                 {isAddingToCart ? (
@@ -411,7 +411,7 @@ export default function ProductDetailPage() {
               
               <button
                 onClick={handleSendAsGift}
-                className="px-6 py-4 border-2 border-[#406A56] text-[#406A56] rounded-xl font-semibold flex items-center gap-2 hover:bg-[#406A56]/5 transition-colors"
+                className="px-6 py-4 border-2 border-[#2D5A3D] text-[#2D5A3D] rounded-xl font-semibold flex items-center gap-2 hover:bg-[#2D5A3D]/5 transition-colors"
               >
                 <Gift size={20} />
                 Send as Gift
@@ -419,18 +419,18 @@ export default function ProductDetailPage() {
             </div>
             
             {/* Shipping Info */}
-            <div className="grid grid-cols-3 gap-4 pt-6 border-t border-[#406A56]/10">
+            <div className="grid grid-cols-3 gap-4 pt-6 border-t border-[#2D5A3D]/10">
               <div className="text-center">
-                <Truck size={24} className="mx-auto text-[#406A56] mb-2" />
-                <p className="text-xs text-[#406A56]/70">{info.delivery}</p>
+                <Truck size={24} className="mx-auto text-[#2D5A3D] mb-2" />
+                <p className="text-xs text-[#2D5A3D]/70">{info.delivery}</p>
               </div>
               <div className="text-center">
-                <Shield size={24} className="mx-auto text-[#406A56] mb-2" />
-                <p className="text-xs text-[#406A56]/70">Quality Guaranteed</p>
+                <Shield size={24} className="mx-auto text-[#2D5A3D] mb-2" />
+                <p className="text-xs text-[#2D5A3D]/70">Quality Guaranteed</p>
               </div>
               <div className="text-center">
-                <RotateCcw size={24} className="mx-auto text-[#406A56] mb-2" />
-                <p className="text-xs text-[#406A56]/70">Easy Returns</p>
+                <RotateCcw size={24} className="mx-auto text-[#2D5A3D] mb-2" />
+                <p className="text-xs text-[#2D5A3D]/70">Easy Returns</p>
               </div>
             </div>
           </div>

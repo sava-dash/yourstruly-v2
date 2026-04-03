@@ -125,7 +125,7 @@ export default function AdminSubscriptionsPage() {
               padding: '10px 20px',
               border: 'none',
               borderRadius: 8,
-              background: '#406A56',
+              background: '#2D5A3D',
               color: 'white',
               fontWeight: 600,
               cursor: 'pointer',
@@ -151,7 +151,7 @@ export default function AdminSubscriptionsPage() {
               padding: '10px 20px',
               border: 'none',
               borderRadius: 8,
-              background: activeTab === tab.id ? '#406A56' : '#f3f4f6',
+              background: activeTab === tab.id ? '#2D5A3D' : '#f3f4f6',
               color: activeTab === tab.id ? 'white' : '#666',
               fontWeight: 500,
               cursor: 'pointer'
@@ -335,7 +335,7 @@ function StatCard({ label, value, highlight }: { label: string; value: string | 
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       style={{
-        background: highlight ? 'linear-gradient(135deg, #406A56, #345544)' : 'white',
+        background: highlight ? 'linear-gradient(135deg, #2D5A3D, #345544)' : 'white',
         borderRadius: 16,
         padding: 24,
         color: highlight ? 'white' : '#333'

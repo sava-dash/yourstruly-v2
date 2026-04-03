@@ -67,15 +67,15 @@ function formatDate(dateStr: string) {
 // ── Themes ─────────────────────────────────────────────────────────────────────
 
 const TEXT_CARD_THEMES: Record<string, { bg: string; accent: string; text: string }> = {
-  family:      { bg: 'linear-gradient(135deg, #FDF8F3 0%, #F5EDE4 100%)', accent: '#C35F33', text: '#3d2d20' },
-  travel:      { bg: 'linear-gradient(135deg, #EDF6F4 0%, #D4EDE8 100%)', accent: '#406A56', text: '#1d3028' },
+  family:      { bg: 'linear-gradient(135deg, #FAFAF7 0%, #F5EDE4 100%)', accent: '#B8562E', text: '#3d2d20' },
+  travel:      { bg: 'linear-gradient(135deg, #EDF6F4 0%, #D4EDE8 100%)', accent: '#2D5A3D', text: '#1d3028' },
   celebration: { bg: 'linear-gradient(135deg, #FFFBEA 0%, #FFF3B0 100%)', accent: '#8a7c08', text: '#3d3000' },
   career:      { bg: 'linear-gradient(135deg, #F0EDF8 0%, #E4DCF0 100%)', accent: '#4A3552', text: '#241a30' },
   nature:      { bg: 'linear-gradient(135deg, #EDF6EE 0%, #D4EBDA 100%)', accent: '#2d6a34', text: '#1a3a1e' },
-  food:        { bg: 'linear-gradient(135deg, #FFF0EA 0%, #FFE0D0 100%)', accent: '#C35F33', text: '#4d2010' },
+  food:        { bg: 'linear-gradient(135deg, #FFF0EA 0%, #FFE0D0 100%)', accent: '#B8562E', text: '#4d2010' },
   friends:     { bg: 'linear-gradient(135deg, #FFF0F8 0%, #FFD9EE 100%)', accent: '#9b3569', text: '#4d1535' },
   everyday:    { bg: 'linear-gradient(135deg, #F5F5F0 0%, #EAEAE0 100%)', accent: '#555545', text: '#333320' },
-  default:     { bg: 'linear-gradient(135deg, #FDF8F3 0%, #F0EBE2 100%)', accent: '#C35F33', text: '#3d2d20' },
+  default:     { bg: 'linear-gradient(135deg, #FAFAF7 0%, #F0EBE2 100%)', accent: '#B8562E', text: '#3d2d20' },
 }
 
 const MOOD_THEMES: Record<string, { bg: string; accent: string; text: string }> = {
@@ -91,7 +91,7 @@ const MOOD_THEMES: Record<string, { bg: string; accent: string; text: string }> 
 
 const INTERVIEW_THEME = {
   bg: 'linear-gradient(135deg, #1a1a2e 0%, #16213e 80%, #0f3460 100%)',
-  accent: '#D9C61A',
+  accent: '#C4A235',
   text: '#ffffff',
   sub: 'rgba(255,255,255,0.55)',
 }
@@ -125,8 +125,8 @@ function InterviewCard({ memory }: { memory: Memory }) {
 
         {/* Mic badge */}
         <div className="relative z-10 flex items-center gap-1.5">
-          <div className="w-5 h-5 rounded-full bg-[#D9C61A]/20 flex items-center justify-center">
-            <Mic size={10} className="text-[#D9C61A]" />
+          <div className="w-5 h-5 rounded-full bg-[#C4A235]/20 flex items-center justify-center">
+            <Mic size={10} className="text-[#C4A235]" />
           </div>
           <span className="text-[9px] font-bold uppercase tracking-widest" style={{ color: INTERVIEW_THEME.accent }}>
             Interview
@@ -157,7 +157,7 @@ function InterviewCard({ memory }: { memory: Memory }) {
         </div>
 
         {/* Gold bottom bar */}
-        <div className="absolute bottom-0 left-0 right-0 h-[2px]" style={{ background: 'linear-gradient(90deg, #D9C61A, #C35F33)' }} />
+        <div className="absolute bottom-0 left-0 right-0 h-[2px]" style={{ background: 'linear-gradient(90deg, #C4A235, #B8562E)' }} />
       </div>
     </Link>
   )

@@ -33,12 +33,12 @@ interface LifeStoryEngineProps {
 }
 
 const CHAPTER_COLORS = [
-  { bg: 'linear-gradient(135deg, #FDF8F3 0%, #F5EDE4 100%)', accent: '#C35F33', bar: '#C35F33' },
-  { bg: 'linear-gradient(135deg, #EDF6F4 0%, #D4EDE8 100%)', accent: '#406A56', bar: '#406A56' },
-  { bg: 'linear-gradient(135deg, #FFFBEA 0%, #FFF3B0 100%)', accent: '#8a7c08', bar: '#D9C61A' },
+  { bg: 'linear-gradient(135deg, #FAFAF7 0%, #F5EDE4 100%)', accent: '#B8562E', bar: '#B8562E' },
+  { bg: 'linear-gradient(135deg, #EDF6F4 0%, #D4EDE8 100%)', accent: '#2D5A3D', bar: '#2D5A3D' },
+  { bg: 'linear-gradient(135deg, #FFFBEA 0%, #FFF3B0 100%)', accent: '#8a7c08', bar: '#C4A235' },
   { bg: 'linear-gradient(135deg, #F0EDF8 0%, #E4DCF0 100%)', accent: '#4A3552', bar: '#4A3552' },
   { bg: 'linear-gradient(135deg, #EDF6EE 0%, #D4EBDA 100%)', accent: '#2d6a34', bar: '#2d6a34' },
-  { bg: 'linear-gradient(135deg, #FFF0EA 0%, #FFE0D0 100%)', accent: '#9b3030', bar: '#C35F33' },
+  { bg: 'linear-gradient(135deg, #FFF0EA 0%, #FFE0D0 100%)', accent: '#9b3030', bar: '#B8562E' },
 ]
 
 export default function LifeStoryEngine({ slideItems = [] }: LifeStoryEngineProps) {
@@ -108,7 +108,7 @@ export default function LifeStoryEngine({ slideItems = [] }: LifeStoryEngineProp
         <div className="relative z-10 flex items-center justify-between">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-xl bg-white/10 flex items-center justify-center">
-              <BookOpen size={20} className="text-[#D9C61A]" />
+              <BookOpen size={20} className="text-[#C4A235]" />
             </div>
             <div>
               <h2 className="text-white font-bold text-lg leading-tight">The Life Story Engine</h2>
@@ -120,7 +120,7 @@ export default function LifeStoryEngine({ slideItems = [] }: LifeStoryEngineProp
             {photoSlides.length > 0 && (
               <button
                 onClick={(e) => { e.stopPropagation(); setShowSlideshow(true) }}
-                className="flex items-center gap-2 px-4 py-2 bg-[#D9C61A] text-[#1a1a2e] rounded-xl font-bold text-sm hover:bg-[#f0d820] transition-colors shadow-lg"
+                className="flex items-center gap-2 px-4 py-2 bg-[#C4A235] text-[#1a1a2e] rounded-xl font-bold text-sm hover:bg-[#f0d820] transition-colors shadow-lg"
               >
                 <Play size={16} className="fill-current" />
                 Play My Life
@@ -148,14 +148,14 @@ export default function LifeStoryEngine({ slideItems = [] }: LifeStoryEngineProp
             <div className="p-5 space-y-6">
               {loading ? (
                 <div className="flex items-center justify-center py-8">
-                  <Loader2 size={24} className="animate-spin text-[#406A56]" />
+                  <Loader2 size={24} className="animate-spin text-[#2D5A3D]" />
                   <span className="ml-2 text-[#666] text-sm">Loading your life story...</span>
                 </div>
               ) : !profile ? (
                 /* ── No profile yet ── */
                 <div className="text-center py-8">
                   <div className="w-16 h-16 mx-auto mb-4 rounded-2xl bg-gradient-to-br from-[#1a1a2e] to-[#0f3460] flex items-center justify-center">
-                    <Sparkles size={28} className="text-[#D9C61A]" />
+                    <Sparkles size={28} className="text-[#C4A235]" />
                   </div>
                   <h3 className="text-lg font-bold text-[#2d2d2d] mb-2">Generate Your Life Story</h3>
                   <p className="text-sm text-[#666] mb-6 max-w-sm mx-auto">
@@ -179,9 +179,9 @@ export default function LifeStoryEngine({ slideItems = [] }: LifeStoryEngineProp
                   {/* ── Biography ── */}
                   {profile.personalitySummary && (
                     <section>
-                      <h3 className="text-sm font-bold text-[#406A56] uppercase tracking-widest mb-3">Your Biography</h3>
+                      <h3 className="text-sm font-bold text-[#2D5A3D] uppercase tracking-widest mb-3">Your Biography</h3>
                       <div className="glass-card-page p-4 relative overflow-hidden">
-                        <div className="absolute top-2 left-3 text-6xl text-[#406A56]/10 font-serif leading-none select-none">❝</div>
+                        <div className="absolute top-2 left-3 text-6xl text-[#2D5A3D]/10 font-serif leading-none select-none">❝</div>
                         <p className="text-[#2d2d2d] text-sm leading-relaxed relative z-10 pl-2">
                           {profile.personalitySummary}
                         </p>
@@ -192,7 +192,7 @@ export default function LifeStoryEngine({ slideItems = [] }: LifeStoryEngineProp
                   {/* ── Life Chapters ── */}
                   {profile.lifeChapters && profile.lifeChapters.length > 0 && (
                     <section>
-                      <h3 className="text-sm font-bold text-[#406A56] uppercase tracking-widest mb-3">Life Chapters</h3>
+                      <h3 className="text-sm font-bold text-[#2D5A3D] uppercase tracking-widest mb-3">Life Chapters</h3>
                       <div className="space-y-3">
                         {profile.lifeChapters.map((chapter, i) => {
                           const theme = CHAPTER_COLORS[i % CHAPTER_COLORS.length]
@@ -252,12 +252,12 @@ export default function LifeStoryEngine({ slideItems = [] }: LifeStoryEngineProp
                   {/* ── Core Values ── */}
                   {profile.coreValues && profile.coreValues.length > 0 && (
                     <section>
-                      <h3 className="text-sm font-bold text-[#406A56] uppercase tracking-widest mb-3">Your Core Values</h3>
+                      <h3 className="text-sm font-bold text-[#2D5A3D] uppercase tracking-widest mb-3">Your Core Values</h3>
                       <div className="flex flex-wrap gap-2">
                         {profile.coreValues.map((val, i) => (
                           <span
                             key={i}
-                            className="px-3 py-1.5 rounded-xl text-sm font-medium bg-[#406A56]/10 text-[#406A56] border border-[#406A56]/20"
+                            className="px-3 py-1.5 rounded-xl text-sm font-medium bg-[#2D5A3D]/10 text-[#2D5A3D] border border-[#2D5A3D]/20"
                           >
                             {val}
                           </span>
@@ -271,7 +271,7 @@ export default function LifeStoryEngine({ slideItems = [] }: LifeStoryEngineProp
                     <button
                       onClick={handleGenerate}
                       disabled={computing}
-                      className="flex items-center gap-1.5 text-xs text-[#406A56]/60 hover:text-[#406A56] transition-colors"
+                      className="flex items-center gap-1.5 text-xs text-[#2D5A3D]/60 hover:text-[#2D5A3D] transition-colors"
                     >
                       {computing ? (
                         <Loader2 size={12} className="animate-spin" />

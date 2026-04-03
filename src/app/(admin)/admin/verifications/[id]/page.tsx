@@ -135,7 +135,7 @@ export default async function VerificationDetailPage({ params }: VerificationDet
           {/* Deceased Information Card */}
           <div className="glass p-6">
             <h2 className="text-lg font-semibold text-[#2a1f1a] mb-4 flex items-center gap-2">
-              <User className="w-5 h-5 text-[#406A56]" />
+              <User className="w-5 h-5 text-[#2D5A3D]" />
               Deceased Information
             </h2>
             
@@ -165,7 +165,7 @@ export default async function VerificationDetailPage({ params }: VerificationDet
           {verification.profiles && (
             <div className="glass p-6">
               <h2 className="text-lg font-semibold text-[#2a1f1a] mb-4 flex items-center gap-2">
-                <Eye className="w-5 h-5 text-[#406A56]" />
+                <Eye className="w-5 h-5 text-[#2D5A3D]" />
                 Profile Comparison
               </h2>
               
@@ -216,7 +216,7 @@ export default async function VerificationDetailPage({ params }: VerificationDet
           {aiData && Object.keys(aiData).length > 0 && !aiData.error && (
             <div className="glass p-6">
               <h2 className="text-lg font-semibold text-[#2a1f1a] mb-4 flex items-center gap-2">
-                <Brain className="w-5 h-5 text-[#406A56]" />
+                <Brain className="w-5 h-5 text-[#2D5A3D]" />
                 AI Extraction Results
                 {confidenceInfo && (
                   <span className={`ml-auto px-2 py-1 rounded-lg text-xs font-medium ${
@@ -280,7 +280,7 @@ export default async function VerificationDetailPage({ params }: VerificationDet
           {documentSignedUrl && (
             <div className="glass p-6">
               <h2 className="text-lg font-semibold text-[#2a1f1a] mb-4 flex items-center gap-2">
-                <FileText className="w-5 h-5 text-[#406A56]" />
+                <FileText className="w-5 h-5 text-[#2D5A3D]" />
                 Uploaded Document
               </h2>
               <DocumentViewer 
@@ -298,7 +298,7 @@ export default async function VerificationDetailPage({ params }: VerificationDet
                 href={verification.obituary_url}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="flex items-center gap-2 text-[#406A56] hover:underline"
+                className="flex items-center gap-2 text-[#2D5A3D] hover:underline"
               >
                 <ExternalLink className="w-4 h-4" />
                 {verification.obituary_url}
@@ -315,7 +315,7 @@ export default async function VerificationDetailPage({ params }: VerificationDet
             
             <div className="space-y-4">
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-full bg-gradient-to-br from-[#C35F33] to-[#406A56] flex items-center justify-center text-white font-medium">
+                <div className="w-10 h-10 rounded-full bg-gradient-to-br from-[#B8562E] to-[#2D5A3D] flex items-center justify-center text-white font-medium">
                   {verification.claimant_name.charAt(0).toUpperCase()}
                 </div>
                 <div>
@@ -331,14 +331,14 @@ export default async function VerificationDetailPage({ params }: VerificationDet
               <div className="space-y-2 text-sm">
                 <div className="flex items-center gap-2 text-[#2a1f1a]/70">
                   <Mail className="w-4 h-4" />
-                  <a href={`mailto:${verification.claimant_email}`} className="hover:text-[#406A56]">
+                  <a href={`mailto:${verification.claimant_email}`} className="hover:text-[#2D5A3D]">
                     {verification.claimant_email}
                   </a>
                 </div>
                 {verification.claimant_phone && (
                   <div className="flex items-center gap-2 text-[#2a1f1a]/70">
                     <Phone className="w-4 h-4" />
-                    <a href={`tel:${verification.claimant_phone}`} className="hover:text-[#406A56]">
+                    <a href={`tel:${verification.claimant_phone}`} className="hover:text-[#2D5A3D]">
                       {verification.claimant_phone}
                     </a>
                   </div>
@@ -374,7 +374,7 @@ export default async function VerificationDetailPage({ params }: VerificationDet
           {/* Metadata */}
           <div className="glass p-6">
             <h2 className="text-lg font-semibold text-[#2a1f1a] mb-4 flex items-center gap-2">
-              <Shield className="w-5 h-5 text-[#406A56]" />
+              <Shield className="w-5 h-5 text-[#2D5A3D]" />
               Metadata
             </h2>
             

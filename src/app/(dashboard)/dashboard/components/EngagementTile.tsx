@@ -26,9 +26,9 @@ const TYPE_ICONS: Record<string, any> = {
 }
 
 const TYPE_COLORS: Record<string, string> = {
-  yellow: '#D9C61A',
-  green: '#406A56',
-  red: '#C35F33',
+  yellow: '#C4A235',
+  green: '#2D5A3D',
+  red: '#B8562E',
   blue: '#8DACAB',
   purple: '#4A3552',
 }
@@ -41,7 +41,7 @@ export function EngagementTile({ nextPrompt, totalWaiting, onOpen }: EngagementT
 
   const config = nextPrompt ? TYPE_CONFIG[nextPrompt.type] : null
   const Icon = nextPrompt ? (TYPE_ICONS[nextPrompt.type] || Sparkles) : Sparkles
-  const color = config ? TYPE_COLORS[config.color] || '#C35F33' : '#C35F33'
+  const color = config ? TYPE_COLORS[config.color] || '#B8562E' : '#B8562E'
   const promptText = nextPrompt?.promptText || 'Continue your story'
 
   return (

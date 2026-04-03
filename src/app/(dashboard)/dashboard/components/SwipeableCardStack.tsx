@@ -133,13 +133,13 @@ export function SwipeableCardStack({
         <div className="w-20 h-20 bg-gradient-to-br from-amber-400 to-orange-500 rounded-full flex items-center justify-center mb-6">
           <Sparkles size={40} className="text-white" />
         </div>
-        <h3 className="text-2xl font-semibold text-[#406A56] mb-2">All caught up!</h3>
-        <p className="text-[#406A56]/60 mb-6 max-w-sm">
+        <h3 className="text-2xl font-semibold text-[#2D5A3D] mb-2">All caught up!</h3>
+        <p className="text-[#2D5A3D]/60 mb-6 max-w-sm">
           You've gone through all your prompts. Shuffle to get more.
         </p>
         <button
           onClick={onNeedMorePrompts}
-          className="flex items-center gap-2 px-6 py-3 bg-[#406A56] text-white rounded-full hover:bg-[#4a7a64] transition-colors font-medium"
+          className="flex items-center gap-2 px-6 py-3 bg-[#2D5A3D] text-white rounded-full hover:bg-[#234A31] transition-colors font-medium"
         >
           <Sparkles size={18} />
           Get More Prompts
@@ -183,7 +183,7 @@ export function SwipeableCardStack({
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
-          color: canGoBack ? '#406A56' : '#ccc',
+          color: canGoBack ? '#2D5A3D' : '#ccc',
           transition: 'all 0.2s',
         }}
         onMouseEnter={(e) => { if (canGoBack) e.currentTarget.style.background = 'rgba(64,106,86,0.2)' }}
@@ -215,7 +215,7 @@ export function SwipeableCardStack({
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
-          color: canGoForward ? '#406A56' : '#ccc',
+          color: canGoForward ? '#2D5A3D' : '#ccc',
           transition: 'all 0.2s',
         }}
         onMouseEnter={(e) => { if (canGoForward) e.currentTarget.style.background = 'rgba(64,106,86,0.2)' }}
@@ -899,7 +899,7 @@ function FlippableCard({
             <div className="flex-1 p-6 flex flex-col justify-center">
               {isContact && prompt.contactName && (
                 <div className="flex items-center gap-3 mb-4">
-                  <div className="w-11 h-11 rounded-full bg-gradient-to-br from-[#406A56] to-[#8DACAB] flex items-center justify-center text-white font-medium text-lg">
+                  <div className="w-11 h-11 rounded-full bg-gradient-to-br from-[#2D5A3D] to-[#8DACAB] flex items-center justify-center text-white font-medium text-lg">
                     {prompt.contactName.charAt(0).toUpperCase()}
                   </div>
                   <div>
@@ -989,8 +989,8 @@ function FlippableCard({
                     className="absolute pointer-events-none"
                     style={{ left: `${face.x}%`, top: `${face.y}%`, transform: 'translate(-50%, -50%)' }}
                   >
-                    <div className="w-10 h-10 rounded-full border-2 border-[#406A56] bg-[#406A56]/20" />
-                    <span className="absolute top-full left-1/2 -translate-x-1/2 mt-1 bg-[#406A56] text-white text-[10px] px-2 py-0.5 rounded-full whitespace-nowrap font-medium">
+                    <div className="w-10 h-10 rounded-full border-2 border-[#2D5A3D] bg-[#2D5A3D]/20" />
+                    <span className="absolute top-full left-1/2 -translate-x-1/2 mt-1 bg-[#2D5A3D] text-white text-[10px] px-2 py-0.5 rounded-full whitespace-nowrap font-medium">
                       {face.name}
                     </span>
                   </div>
@@ -1027,7 +1027,7 @@ function FlippableCard({
                           placeholder="Search contacts..."
                           value={contactSearch}
                           onChange={(e) => setContactSearch(e.target.value)}
-                          className="w-full pl-8 pr-2 py-1.5 rounded-lg border border-gray-200 text-sm focus:outline-none focus:border-[#406A56] text-gray-800"
+                          className="w-full pl-8 pr-2 py-1.5 rounded-lg border border-gray-200 text-sm focus:outline-none focus:border-[#2D5A3D] text-gray-800"
                           autoFocus
                         />
                       </div>
@@ -1039,7 +1039,7 @@ function FlippableCard({
                           <button
                             key={contact.id}
                             onClick={() => handleSelectContact(contact)}
-                            className="w-full px-3 py-2 text-left hover:bg-[#406A56]/10 flex items-center gap-2"
+                            className="w-full px-3 py-2 text-left hover:bg-[#2D5A3D]/10 flex items-center gap-2"
                           >
                             <div className="w-7 h-7 rounded-full bg-gray-200 flex items-center justify-center text-gray-600 text-xs font-medium flex-shrink-0">
                               {contact.full_name.charAt(0)}
@@ -1060,7 +1060,7 @@ function FlippableCard({
                 <span className="text-xs text-gray-500">Tap on faces to tag</span>
                 <button
                   onClick={(e) => { e.stopPropagation(); onDismiss() }}
-                  className="px-4 py-1.5 bg-[#406A56] text-white rounded-full text-sm font-medium"
+                  className="px-4 py-1.5 bg-[#2D5A3D] text-white rounded-full text-sm font-medium"
                 >
                   {taggedFaces.length > 0 ? `Done · ${taggedFaces.length} tagged` : 'Skip'}
                 </button>
@@ -1100,8 +1100,8 @@ function FlippableCard({
                 {/* Tagged faces overlay */}
                 {taggedFaces.map(face => (
                   <div key={face.id} className="absolute pointer-events-none" style={{ left: `${face.x}%`, top: `${face.y}%`, transform: 'translate(-50%, -50%)' }}>
-                    <div className="w-8 h-8 rounded-full border-2 border-[#406A56] bg-[#406A56]/20" />
-                    <span className="absolute top-full left-1/2 -translate-x-1/2 mt-0.5 bg-[#406A56] text-white text-[9px] px-1.5 py-0.5 rounded-full whitespace-nowrap font-medium">{face.name}</span>
+                    <div className="w-8 h-8 rounded-full border-2 border-[#2D5A3D] bg-[#2D5A3D]/20" />
+                    <span className="absolute top-full left-1/2 -translate-x-1/2 mt-0.5 bg-[#2D5A3D] text-white text-[9px] px-1.5 py-0.5 rounded-full whitespace-nowrap font-medium">{face.name}</span>
                   </div>
                 ))}
                 {/* Current tap pin (tag mode) */}
@@ -1116,12 +1116,12 @@ function FlippableCard({
                     <div className="p-2 border-b border-gray-100">
                       <div className="relative">
                         <Search size={14} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-gray-400" />
-                        <input type="text" placeholder="Search contacts..." value={contactSearch} onChange={(e) => setContactSearch(e.target.value)} className="w-full pl-8 pr-2 py-1.5 rounded-lg border border-gray-200 text-sm focus:outline-none focus:border-[#406A56] text-gray-800" autoFocus />
+                        <input type="text" placeholder="Search contacts..." value={contactSearch} onChange={(e) => setContactSearch(e.target.value)} className="w-full pl-8 pr-2 py-1.5 rounded-lg border border-gray-200 text-sm focus:outline-none focus:border-[#2D5A3D] text-gray-800" autoFocus />
                       </div>
                     </div>
                     <div className="max-h-[160px] overflow-y-auto">
                       {contacts.filter(c => c.full_name.toLowerCase().includes(contactSearch.toLowerCase())).map(contact => (
-                        <button key={contact.id} onClick={() => handleSelectContact(contact)} className="w-full px-3 py-2 text-left hover:bg-[#406A56]/10 flex items-center gap-2">
+                        <button key={contact.id} onClick={() => handleSelectContact(contact)} className="w-full px-3 py-2 text-left hover:bg-[#2D5A3D]/10 flex items-center gap-2">
                           <div className="w-6 h-6 rounded-full bg-gray-200 flex items-center justify-center text-gray-600 text-xs font-medium flex-shrink-0">{contact.full_name.charAt(0)}</div>
                           <span className="text-sm text-gray-800 truncate">{contact.full_name}</span>
                         </button>
@@ -1152,14 +1152,14 @@ function FlippableCard({
                     onClick={(e) => { e.stopPropagation(); setPhotoTab(tab.key) }}
                     className={`flex-1 py-2.5 text-xs font-medium transition-colors ${
                       photoTab === tab.key
-                        ? 'text-[#406A56] border-b-2 border-[#406A56]'
+                        ? 'text-[#2D5A3D] border-b-2 border-[#2D5A3D]'
                         : 'text-gray-400 hover:text-gray-600'
                     }`}
                   >
                     {tab.label}
-                    {tab.key === 'details' && (locationInput || dateInput) && <span className="ml-1 w-1.5 h-1.5 bg-[#406A56] rounded-full inline-block" />}
-                    {tab.key === 'tag' && taggedFaces.length > 0 && <span className="ml-1 w-1.5 h-1.5 bg-[#406A56] rounded-full inline-block" />}
-                    {tab.key === 'story' && (backstoryText || videoUrl) && <span className="ml-1 w-1.5 h-1.5 bg-[#406A56] rounded-full inline-block" />}
+                    {tab.key === 'details' && (locationInput || dateInput) && <span className="ml-1 w-1.5 h-1.5 bg-[#2D5A3D] rounded-full inline-block" />}
+                    {tab.key === 'tag' && taggedFaces.length > 0 && <span className="ml-1 w-1.5 h-1.5 bg-[#2D5A3D] rounded-full inline-block" />}
+                    {tab.key === 'story' && (backstoryText || videoUrl) && <span className="ml-1 w-1.5 h-1.5 bg-[#2D5A3D] rounded-full inline-block" />}
                   </button>
                 ))}
               </div>
@@ -1170,11 +1170,11 @@ function FlippableCard({
                   <div className="flex flex-col gap-3">
                     <div className="relative">
                       <label className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1 block">Where was this?</label>
-                      <input type="text" value={locationInput} onChange={(e) => handleLocationChange(e.target.value)} placeholder="City, place, or address..." className="w-full px-3 py-2.5 bg-gray-50 rounded-xl border border-gray-200 text-gray-800 text-sm focus:outline-none focus:ring-2 focus:ring-[#406A56]/30 focus:border-[#406A56]" autoFocus={isFlipped && photoTab === 'details'} />
+                      <input type="text" value={locationInput} onChange={(e) => handleLocationChange(e.target.value)} placeholder="City, place, or address..." className="w-full px-3 py-2.5 bg-gray-50 rounded-xl border border-gray-200 text-gray-800 text-sm focus:outline-none focus:ring-2 focus:ring-[#2D5A3D]/30 focus:border-[#2D5A3D]" autoFocus={isFlipped && photoTab === 'details'} />
                       {locationSuggestions.length > 0 && (
                         <div className="absolute top-full left-0 right-0 mt-1 bg-white rounded-xl shadow-lg border border-gray-100 z-20 overflow-hidden">
                           {locationSuggestions.map(s => (
-                            <button key={s.id} onClick={() => { setLocationInput(s.place_name); setLocationSuggestions([]) }} className="w-full px-4 py-2.5 text-left text-sm text-gray-700 hover:bg-[#406A56]/10 flex items-center gap-2">
+                            <button key={s.id} onClick={() => { setLocationInput(s.place_name); setLocationSuggestions([]) }} className="w-full px-4 py-2.5 text-left text-sm text-gray-700 hover:bg-[#2D5A3D]/10 flex items-center gap-2">
                               <span className="text-gray-400">📍</span>{s.place_name}
                             </button>
                           ))}
@@ -1183,7 +1183,7 @@ function FlippableCard({
                     </div>
                     <div>
                       <label className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1 block">When was this taken?</label>
-                      <input type="text" value={dateInput} onChange={(e) => setDateInput(e.target.value)} placeholder="e.g. Summer 2019, March 2020..." className="w-full px-3 py-2.5 bg-gray-50 rounded-xl border border-gray-200 text-gray-800 text-sm focus:outline-none focus:ring-2 focus:ring-[#406A56]/30 focus:border-[#406A56]" />
+                      <input type="text" value={dateInput} onChange={(e) => setDateInput(e.target.value)} placeholder="e.g. Summer 2019, March 2020..." className="w-full px-3 py-2.5 bg-gray-50 rounded-xl border border-gray-200 text-gray-800 text-sm focus:outline-none focus:ring-2 focus:ring-[#2D5A3D]/30 focus:border-[#2D5A3D]" />
                     </div>
                   </div>
                 )}
@@ -1193,10 +1193,10 @@ function FlippableCard({
                     {taggedFaces.length > 0 && (
                       <div className="flex flex-wrap gap-2">
                         {taggedFaces.map(face => (
-                          <span key={face.id} className="flex items-center gap-1.5 px-3 py-1.5 bg-[#406A56]/10 text-[#406A56] rounded-full text-sm font-medium">
-                            <span className="w-5 h-5 rounded-full bg-[#406A56]/20 flex items-center justify-center text-[10px] font-bold">{face.name.charAt(0)}</span>
+                          <span key={face.id} className="flex items-center gap-1.5 px-3 py-1.5 bg-[#2D5A3D]/10 text-[#2D5A3D] rounded-full text-sm font-medium">
+                            <span className="w-5 h-5 rounded-full bg-[#2D5A3D]/20 flex items-center justify-center text-[10px] font-bold">{face.name.charAt(0)}</span>
                             {face.name}
-                            <button onClick={(e) => { e.stopPropagation(); setTaggedFaces(prev => prev.filter(f => f.id !== face.id)) }} className="ml-0.5 text-[#406A56]/50 hover:text-[#406A56]">
+                            <button onClick={(e) => { e.stopPropagation(); setTaggedFaces(prev => prev.filter(f => f.id !== face.id)) }} className="ml-0.5 text-[#2D5A3D]/50 hover:text-[#2D5A3D]">
                               <X size={12} />
                             </button>
                           </span>
@@ -1212,7 +1212,7 @@ function FlippableCard({
                       value={backstoryText}
                       onChange={(e) => setBackstoryText(e.target.value)}
                       placeholder="What's the story behind this photo? What was happening that day?"
-                      className="w-full flex-1 min-h-[100px] px-3 py-2.5 bg-gray-50 rounded-xl border border-gray-200 text-gray-800 text-sm focus:outline-none focus:ring-2 focus:ring-[#406A56]/30 focus:border-[#406A56] resize-none"
+                      className="w-full flex-1 min-h-[100px] px-3 py-2.5 bg-gray-50 rounded-xl border border-gray-200 text-gray-800 text-sm focus:outline-none focus:ring-2 focus:ring-[#2D5A3D]/30 focus:border-[#2D5A3D] resize-none"
                       autoFocus={isFlipped && photoTab === 'story'}
                     />
                     {/* Voice + Video recording buttons */}
@@ -1250,7 +1250,7 @@ function FlippableCard({
                 <button
                   onClick={handleSaveBackstory}
                   disabled={(!locationInput.trim() && !dateInput.trim() && !backstoryText.trim() && taggedFaces.length === 0) || isSavingBackstory}
-                  className="flex items-center justify-center gap-2 w-full py-2.5 bg-[#406A56] text-white rounded-xl font-medium disabled:opacity-50 disabled:cursor-not-allowed hover:bg-[#4a7a64] transition-colors"
+                  className="flex items-center justify-center gap-2 w-full py-2.5 bg-[#2D5A3D] text-white rounded-xl font-medium disabled:opacity-50 disabled:cursor-not-allowed hover:bg-[#234A31] transition-colors"
                 >
                   <Send size={16} />
                   {isSavingBackstory ? 'Saving...' : 'Save Details'}
@@ -1331,15 +1331,15 @@ function FlippableCard({
                     }`}>
                       {config.label}
                     </span>
-                    <p className="text-[#406A56] font-semibold text-base">{getPromptText(prompt)}</p>
+                    <p className="text-[#2D5A3D] font-semibold text-base">{getPromptText(prompt)}</p>
                   </div>
                 )}
 
                 {/* Past exchanges */}
                 {exchanges.map((ex, i) => (
                   <div key={i} className="mb-3">
-                    <div className="bg-[#406A56]/5 rounded-2xl rounded-bl-sm px-3.5 py-2.5 mb-1.5">
-                      <p className="text-sm text-[#406A56] font-medium">{ex.question}</p>
+                    <div className="bg-[#2D5A3D]/5 rounded-2xl rounded-bl-sm px-3.5 py-2.5 mb-1.5">
+                      <p className="text-sm text-[#2D5A3D] font-medium">{ex.question}</p>
                     </div>
                     <div className="bg-gray-100 rounded-2xl rounded-br-sm px-3.5 py-2.5 ml-6">
                       <p className="text-sm text-gray-800">{ex.response}</p>
@@ -1349,8 +1349,8 @@ function FlippableCard({
 
                 {/* Current follow-up question */}
                 {currentQuestion && !showSavePrompt && (
-                  <div className="bg-[#406A56]/5 rounded-2xl rounded-bl-sm px-3.5 py-2.5 mb-2">
-                    <p className="text-sm text-[#406A56] font-medium">{currentQuestion}</p>
+                  <div className="bg-[#2D5A3D]/5 rounded-2xl rounded-bl-sm px-3.5 py-2.5 mb-2">
+                    <p className="text-sm text-[#2D5A3D] font-medium">{currentQuestion}</p>
                   </div>
                 )}
 
@@ -1379,7 +1379,7 @@ function FlippableCard({
                       <button
                         onClick={handleSaveMemory}
                         disabled={isSubmitting}
-                        className="flex-1 py-2 px-3 rounded-xl bg-[#406A56] text-white text-sm font-medium hover:bg-[#4a7a64] disabled:opacity-50"
+                        className="flex-1 py-2 px-3 rounded-xl bg-[#2D5A3D] text-white text-sm font-medium hover:bg-[#234A31] disabled:opacity-50"
                       >
                         {isSubmitting ? 'Saving...' : '✨ Save Memory'}
                       </button>
@@ -1423,7 +1423,7 @@ function FlippableCard({
                       onKeyDown={(e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleSubmit() } }}
                       placeholder="Share your thoughts..."
                       rows={2}
-                      className="w-full p-3 bg-gray-50 rounded-2xl border-0 resize-none focus:outline-none focus:ring-2 focus:ring-[#406A56]/30 text-gray-800 text-sm placeholder-gray-400"
+                      className="w-full p-3 bg-gray-50 rounded-2xl border-0 resize-none focus:outline-none focus:ring-2 focus:ring-[#2D5A3D]/30 text-gray-800 text-sm placeholder-gray-400"
                       style={interimText ? { color: 'transparent', caretColor: '#1f2937' } : undefined}
                       autoFocus={isFlipped}
                     />
@@ -1479,7 +1479,7 @@ function FlippableCard({
                     <button
                       onClick={handleSubmit}
                       disabled={!responseText.trim() || isSubmitting}
-                      className="w-11 h-11 rounded-full bg-[#406A56] text-white flex items-center justify-center disabled:opacity-40 hover:bg-[#4a7a64] transition-colors flex-shrink-0"
+                      className="w-11 h-11 rounded-full bg-[#2D5A3D] text-white flex items-center justify-center disabled:opacity-40 hover:bg-[#234A31] transition-colors flex-shrink-0"
                     >
                       <Send size={16} />
                     </button>
@@ -1655,7 +1655,7 @@ function RecipeCardBack({
               onClick={() => setActiveSection(i)}
               style={{
                 flex: 1, padding: '8px 4px', borderRadius: '10px', border: 'none',
-                background: activeSection === i ? '#406A56' : 'rgba(0,0,0,0.04)',
+                background: activeSection === i ? '#2D5A3D' : 'rgba(0,0,0,0.04)',
                 color: activeSection === i ? 'white' : '#888',
                 fontSize: '12px', fontWeight: 600, cursor: 'pointer',
                 transition: 'all 0.15s',
@@ -1771,7 +1771,7 @@ function RecipeCardBack({
                 borderRadius: '10px',
               }}>
                 <span style={{ flex: 1, fontSize: '14px', color: '#333' }}>
-                  {ing.amount && <span style={{ fontWeight: 600, color: '#406A56' }}>{ing.amount} </span>}
+                  {ing.amount && <span style={{ fontWeight: 600, color: '#2D5A3D' }}>{ing.amount} </span>}
                   {ing.name}
                 </span>
                 <button onClick={() => removeIngredient(i)} style={{
@@ -1807,7 +1807,7 @@ function RecipeCardBack({
               />
               <button onClick={addIngredient} disabled={!newIngName.trim()} style={{
                 padding: '10px 14px', borderRadius: '10px', border: 'none',
-                background: newIngName.trim() ? '#406A56' : 'rgba(0,0,0,0.05)',
+                background: newIngName.trim() ? '#2D5A3D' : 'rgba(0,0,0,0.05)',
                 color: newIngName.trim() ? 'white' : '#ccc',
                 fontSize: '13px', fontWeight: 600, cursor: 'pointer',
               }}>+</button>
@@ -1892,8 +1892,8 @@ function RecipeCardBack({
                 {DIFFICULTY_OPTIONS.map(d => (
                   <button key={d} onClick={() => setDifficulty(d)} style={{
                     flex: 1, padding: '8px', borderRadius: '10px',
-                    border: `2px solid ${difficulty === d ? '#406A56' : 'rgba(0,0,0,0.08)'}`,
-                    background: difficulty === d ? '#406A56' : 'transparent',
+                    border: `2px solid ${difficulty === d ? '#2D5A3D' : 'rgba(0,0,0,0.08)'}`,
+                    background: difficulty === d ? '#2D5A3D' : 'transparent',
                     color: difficulty === d ? 'white' : '#666',
                     fontSize: '13px', fontWeight: 600, cursor: 'pointer',
                     transition: 'all 0.15s',
@@ -1911,8 +1911,8 @@ function RecipeCardBack({
                 {CUISINE_OPTIONS.map(c => (
                   <button key={c} onClick={() => setCuisine(c)} style={{
                     padding: '6px 12px', borderRadius: '100px',
-                    border: `1.5px solid ${cuisine === c ? '#406A56' : 'rgba(0,0,0,0.1)'}`,
-                    background: cuisine === c ? '#406A56' : 'transparent',
+                    border: `1.5px solid ${cuisine === c ? '#2D5A3D' : 'rgba(0,0,0,0.1)'}`,
+                    background: cuisine === c ? '#2D5A3D' : 'transparent',
                     color: cuisine === c ? 'white' : '#666',
                     fontSize: '12px', fontWeight: 500, cursor: 'pointer',
                     transition: 'all 0.15s',
@@ -1930,8 +1930,8 @@ function RecipeCardBack({
                 {OCCASION_OPTIONS.map(o => (
                   <button key={o} onClick={() => setOccasion(o)} style={{
                     padding: '6px 12px', borderRadius: '100px',
-                    border: `1.5px solid ${occasion === o ? '#C35F33' : 'rgba(0,0,0,0.1)'}`,
-                    background: occasion === o ? '#C35F33' : 'transparent',
+                    border: `1.5px solid ${occasion === o ? '#B8562E' : 'rgba(0,0,0,0.1)'}`,
+                    background: occasion === o ? '#B8562E' : 'transparent',
                     color: occasion === o ? 'white' : '#666',
                     fontSize: '12px', fontWeight: 500, cursor: 'pointer',
                     transition: 'all 0.15s',
@@ -1954,7 +1954,7 @@ function RecipeCardBack({
         {activeSection < 3 ? (
           <button onClick={() => setActiveSection(prev => prev + 1)} style={{
             flex: 2, padding: '12px', borderRadius: '14px', border: 'none',
-            background: '#406A56', color: 'white', fontSize: '14px',
+            background: '#2D5A3D', color: 'white', fontSize: '14px',
             fontWeight: 600, cursor: 'pointer',
           }}>
             Next →
@@ -1962,7 +1962,7 @@ function RecipeCardBack({
         ) : (
           <button onClick={handleSave} disabled={!recipeName.trim() || isSubmitting} style={{
             flex: 2, padding: '12px', borderRadius: '14px', border: 'none',
-            background: '#406A56', color: 'white', fontSize: '14px',
+            background: '#2D5A3D', color: 'white', fontSize: '14px',
             fontWeight: 600, cursor: 'pointer',
             opacity: (!recipeName.trim() || isSubmitting) ? 0.5 : 1,
           }}>
@@ -2029,7 +2029,7 @@ function ContactFieldBack({
         {prompt.contactName && (
           <div style={{
             width: '64px', height: '64px', borderRadius: '50%',
-            background: 'linear-gradient(135deg, #406A56, #8DACAB)',
+            background: 'linear-gradient(135deg, #2D5A3D, #8DACAB)',
             display: 'flex', alignItems: 'center', justifyContent: 'center',
             color: 'white', fontSize: '28px', fontWeight: 600, marginBottom: '16px',
           }}>
@@ -2076,7 +2076,7 @@ function ContactFieldBack({
           disabled={!value.trim() || isSubmitting}
           style={{
             flex: 2, padding: '12px', borderRadius: '14px',
-            border: 'none', background: '#406A56', color: 'white',
+            border: 'none', background: '#2D5A3D', color: 'white',
             fontSize: '14px', fontWeight: 600, cursor: 'pointer',
             opacity: (!value.trim() || isSubmitting) ? 0.5 : 1,
           }}
@@ -2210,8 +2210,8 @@ function PillSelectionBack({
             style={{
               padding: '8px 16px',
               borderRadius: '100px',
-              border: `2px solid ${selected.has(opt) ? '#406A56' : 'rgba(0,0,0,0.1)'}`,
-              background: selected.has(opt) ? '#406A56' : 'white',
+              border: `2px solid ${selected.has(opt) ? '#2D5A3D' : 'rgba(0,0,0,0.1)'}`,
+              background: selected.has(opt) ? '#2D5A3D' : 'white',
               color: selected.has(opt) ? 'white' : '#444',
               fontSize: '14px',
               fontWeight: selected.has(opt) ? 600 : 500,
@@ -2258,7 +2258,7 @@ function PillSelectionBack({
           disabled={selected.size === 0 || isSubmitting}
           style={{
             flex: 2, padding: '12px', borderRadius: '14px',
-            border: 'none', background: '#406A56', color: 'white',
+            border: 'none', background: '#2D5A3D', color: 'white',
             fontSize: '14px', fontWeight: 600, cursor: 'pointer',
             opacity: (selected.size === 0 || isSubmitting) ? 0.5 : 1,
           }}
@@ -2419,7 +2419,7 @@ function FavoritesListBack({
                 onClick={() => addItem(inputValue)}
                 style={{
                   padding: '10px 16px', borderRadius: '12px', border: 'none',
-                  background: '#406A56', color: 'white', fontSize: '13px',
+                  background: '#2D5A3D', color: 'white', fontSize: '13px',
                   fontWeight: 600, cursor: 'pointer', whiteSpace: 'nowrap',
                 }}
               >
@@ -2454,7 +2454,7 @@ function FavoritesListBack({
                   onMouseEnter={(e) => { e.currentTarget.style.background = 'rgba(64,106,86,0.06)' }}
                   onMouseLeave={(e) => { e.currentTarget.style.background = 'transparent' }}
                 >
-                  <span style={{ color: '#406A56', fontWeight: 600 }}>+</span> {s}
+                  <span style={{ color: '#2D5A3D', fontWeight: 600 }}>+</span> {s}
                 </button>
               ))}
             </div>
@@ -2470,7 +2470,7 @@ function FavoritesListBack({
                 style={{
                   display: 'flex', alignItems: 'center', gap: '6px',
                   padding: '6px 12px', borderRadius: '100px',
-                  background: '#406A56', color: 'white',
+                  background: '#2D5A3D', color: 'white',
                   fontSize: '13px', fontWeight: 500,
                 }}
               >
@@ -2516,7 +2516,7 @@ function FavoritesListBack({
           disabled={items.length === 0 || isSubmitting}
           style={{
             flex: 2, padding: '12px', borderRadius: '14px',
-            border: 'none', background: '#406A56', color: 'white',
+            border: 'none', background: '#2D5A3D', color: 'white',
             fontSize: '14px', fontWeight: 600, cursor: 'pointer',
             opacity: (items.length === 0 || isSubmitting) ? 0.5 : 1,
           }}
@@ -2574,8 +2574,8 @@ function BinaryChoiceBack({
                 borderRadius: '20px',
                 border: 'none',
                 background: i === 0
-                  ? 'linear-gradient(135deg, #406A56, #5a9a7a)'
-                  : 'linear-gradient(135deg, #C35F33, #e08a60)',
+                  ? 'linear-gradient(135deg, #2D5A3D, #5a9a7a)'
+                  : 'linear-gradient(135deg, #B8562E, #e08a60)',
                 color: 'white',
                 fontSize: '16px',
                 fontWeight: 700,

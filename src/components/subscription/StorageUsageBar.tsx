@@ -26,8 +26,8 @@ export function StorageUsageBar({
 
   // Calculate segment widths for breakdown bar
   const segments = [
-    { type: 'video', bytes: by_type.video, color: '#C35F33', icon: Video, label: 'Videos' },
-    { type: 'image', bytes: by_type.image, color: '#406A56', icon: Image, label: 'Photos' },
+    { type: 'video', bytes: by_type.video, color: '#B8562E', icon: Video, label: 'Videos' },
+    { type: 'image', bytes: by_type.image, color: '#2D5A3D', icon: Image, label: 'Photos' },
     { type: 'audio', bytes: by_type.audio, color: '#4A3552', icon: Mic, label: 'Audio' },
     { type: 'document', bytes: by_type.document, color: '#8DACAB', icon: FileText, label: 'Documents' },
   ].filter(s => s.bytes > 0)
@@ -35,7 +35,7 @@ export function StorageUsageBar({
   const getBarColor = () => {
     if (isCritical) return '#dc2626' // red-600
     if (isWarning) return '#f59e0b' // amber-500
-    return '#406A56' // brand green
+    return '#2D5A3D' // brand green
   }
 
   if (compact) {

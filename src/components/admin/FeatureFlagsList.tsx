@@ -64,7 +64,7 @@ export default function FeatureFlagsList({ flags }: FeatureFlagsListProps) {
         </div>
         <button
           onClick={() => setIsCreating(true)}
-          className="flex items-center gap-2 px-4 py-2 bg-[#406A56] text-white rounded-xl text-sm font-medium hover:bg-[#406A56]/90 transition-colors"
+          className="flex items-center gap-2 px-4 py-2 bg-[#2D5A3D] text-white rounded-xl text-sm font-medium hover:bg-[#2D5A3D]/90 transition-colors"
         >
           <Plus className="w-4 h-4" />
           New Flag
@@ -83,7 +83,7 @@ export default function FeatureFlagsList({ flags }: FeatureFlagsListProps) {
                 <div className="flex items-center gap-2">
                   <h3 className="font-semibold text-[#2a1f1a]">{flag.name}</h3>
                   {flag.enabled ? (
-                    <span className="px-2 py-0.5 rounded-full text-xs font-medium bg-[#406A56]/10 text-[#406A56]">
+                    <span className="px-2 py-0.5 rounded-full text-xs font-medium bg-[#2D5A3D]/10 text-[#2D5A3D]">
                       Enabled
                     </span>
                   ) : (
@@ -93,7 +93,7 @@ export default function FeatureFlagsList({ flags }: FeatureFlagsListProps) {
                   )}
                 </div>
                 <p className="text-sm text-[#2a1f1a]/60 mt-1">{flag.description}</p>
-                <code className="text-xs text-[#406A56] bg-[#406A56]/5 px-2 py-1 rounded mt-2 inline-block">
+                <code className="text-xs text-[#2D5A3D] bg-[#2D5A3D]/5 px-2 py-1 rounded mt-2 inline-block">
                   {flag.key}
                 </code>
               </div>
@@ -104,7 +104,7 @@ export default function FeatureFlagsList({ flags }: FeatureFlagsListProps) {
                   className="p-2 rounded-lg hover:bg-white/80 transition-colors"
                 >
                   {flag.enabled ? (
-                    <ToggleRight className="w-6 h-6 text-[#406A56]" />
+                    <ToggleRight className="w-6 h-6 text-[#2D5A3D]" />
                   ) : (
                     <ToggleLeft className="w-6 h-6 text-[#2a1f1a]/30" />
                   )}
@@ -124,13 +124,13 @@ export default function FeatureFlagsList({ flags }: FeatureFlagsListProps) {
                         className="fixed inset-0 z-10" 
                         onClick={() => setDropdownOpen(null)}
                       />
-                      <div className="absolute right-0 mt-1 w-40 bg-white rounded-xl shadow-lg border border-[#C35F33]/10 z-20 py-1">
+                      <div className="absolute right-0 mt-1 w-40 bg-white rounded-xl shadow-lg border border-[#B8562E]/10 z-20 py-1">
                         <button
                           onClick={() => {
                             setEditingFlag(flag);
                             setDropdownOpen(null);
                           }}
-                          className="flex items-center gap-2 px-4 py-2 text-sm text-[#2a1f1a] hover:bg-[#406A56]/5 w-full text-left"
+                          className="flex items-center gap-2 px-4 py-2 text-sm text-[#2a1f1a] hover:bg-[#2D5A3D]/5 w-full text-left"
                         >
                           <Edit2 className="w-4 h-4" />
                           Edit
@@ -146,7 +146,7 @@ export default function FeatureFlagsList({ flags }: FeatureFlagsListProps) {
               </div>
             </div>
 
-            <div className="flex items-center gap-4 mt-4 pt-4 border-t border-[#C35F33]/10">
+            <div className="flex items-center gap-4 mt-4 pt-4 border-t border-[#B8562E]/10">
               <div className="flex items-center gap-1.5 text-sm text-[#2a1f1a]/60">
                 {getTargetingIcon(flag.targeting_type)}
                 <span className="capitalize">{flag.targeting_type}</span>
@@ -156,7 +156,7 @@ export default function FeatureFlagsList({ flags }: FeatureFlagsListProps) {
                 <div className="flex items-center gap-2">
                   <div className="w-24 h-2 bg-gray-100 rounded-full overflow-hidden">
                     <div
-                      className="h-full bg-[#406A56] rounded-full"
+                      className="h-full bg-[#2D5A3D] rounded-full"
                       style={{ width: `${flag.rollout_percentage}%` }}
                     />
                   </div>
@@ -175,7 +175,7 @@ export default function FeatureFlagsList({ flags }: FeatureFlagsListProps) {
           <p className="text-[#2a1f1a]/40">No feature flags configured yet</p>
           <button
             onClick={() => setIsCreating(true)}
-            className="mt-4 text-[#406A56] hover:underline text-sm"
+            className="mt-4 text-[#2D5A3D] hover:underline text-sm"
           >
             Create your first feature flag
           </button>

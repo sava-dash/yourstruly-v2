@@ -103,7 +103,7 @@ export default function PromptTemplatesTable({
               aria-label="Search" placeholder="Search prompts..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full pl-10 pr-4 py-2 rounded-xl border border-[#C35F33]/20 bg-white/50 focus:outline-none focus:ring-2 focus:ring-[#406A56]/20 text-sm"
+              className="w-full pl-10 pr-4 py-2 rounded-xl border border-[#B8562E]/20 bg-white/50 focus:outline-none focus:ring-2 focus:ring-[#2D5A3D]/20 text-sm"
             />
           </div>
           
@@ -113,7 +113,7 @@ export default function PromptTemplatesTable({
               <select
                 value={typeFilter}
                 onChange={(e) => setTypeFilter(e.target.value)}
-                className="pl-10 pr-8 py-2 rounded-xl border border-[#C35F33]/20 bg-white/50 focus:outline-none focus:ring-2 focus:ring-[#406A56]/20 text-sm appearance-none cursor-pointer"
+                className="pl-10 pr-8 py-2 rounded-xl border border-[#B8562E]/20 bg-white/50 focus:outline-none focus:ring-2 focus:ring-[#2D5A3D]/20 text-sm appearance-none cursor-pointer"
               >
                 <option value="all">All Types</option>
                 {PROMPT_TYPES.map((type) => (
@@ -127,7 +127,7 @@ export default function PromptTemplatesTable({
             <select
               value={statusFilter}
               onChange={(e) => setStatusFilter(e.target.value)}
-              className="px-4 py-2 rounded-xl border border-[#C35F33]/20 bg-white/50 focus:outline-none focus:ring-2 focus:ring-[#406A56]/20 text-sm cursor-pointer"
+              className="px-4 py-2 rounded-xl border border-[#B8562E]/20 bg-white/50 focus:outline-none focus:ring-2 focus:ring-[#2D5A3D]/20 text-sm cursor-pointer"
             >
               <option value="all">All Status</option>
               <option value="active">Active</option>
@@ -136,7 +136,7 @@ export default function PromptTemplatesTable({
 
             <Link
               href="/admin/engagement/new"
-              className="flex items-center gap-2 px-4 py-2 bg-[#406A56] text-white rounded-xl text-sm font-medium hover:bg-[#406A56]/90 transition-colors"
+              className="flex items-center gap-2 px-4 py-2 bg-[#2D5A3D] text-white rounded-xl text-sm font-medium hover:bg-[#2D5A3D]/90 transition-colors"
             >
               <Plus className="w-4 h-4" />
               New Prompt
@@ -150,7 +150,7 @@ export default function PromptTemplatesTable({
         <div className="overflow-x-auto">
           <table className="w-full">
             <thead>
-              <tr className="border-b border-[#C35F33]/10">
+              <tr className="border-b border-[#B8562E]/10">
                 <th className="px-4 py-4 text-left text-sm font-medium text-[#2a1f1a]/60">Prompt</th>
                 <th className="px-4 py-4 text-left text-sm font-medium text-[#2a1f1a]/60">Type</th>
                 <th className="px-4 py-4 text-left text-sm font-medium text-[#2a1f1a]/60">Category</th>
@@ -160,19 +160,19 @@ export default function PromptTemplatesTable({
                 <th className="px-4 py-4 text-right text-sm font-medium text-[#2a1f1a]/60">Actions</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-[#C35F33]/5">
+            <tbody className="divide-y divide-[#B8562E]/5">
               {filteredTemplates.map((template) => (
                 <tr key={template.id} className="hover:bg-white/50 transition-colors">
                   <td className="px-4 py-4">
                     <div className="flex items-start gap-3">
-                      <div className="p-2 rounded-lg bg-[#406A56]/10">
-                        <MessageSquare className="w-4 h-4 text-[#406A56]" />
+                      <div className="p-2 rounded-lg bg-[#2D5A3D]/10">
+                        <MessageSquare className="w-4 h-4 text-[#2D5A3D]" />
                       </div>
                       <div className="flex-1 min-w-0">
                         <p className="text-sm font-medium text-[#2a1f1a] line-clamp-1">
                           {template.prompt_text}
                         </p>
-                        <code className="text-xs text-[#406A56]/70">{template.id}</code>
+                        <code className="text-xs text-[#2D5A3D]/70">{template.id}</code>
                       </div>
                     </div>
                   </td>
@@ -197,10 +197,10 @@ export default function PromptTemplatesTable({
                         style={{
                           backgroundColor:
                             template.priority_boost >= 10
-                              ? '#C35F33'
+                              ? '#B8562E'
                               : template.priority_boost >= 5
-                              ? '#D9C61A'
-                              : '#406A56',
+                              ? '#C4A235'
+                              : '#2D5A3D',
                         }}
                       />
                       <span className="text-sm text-[#2a1f1a]/70">
@@ -210,7 +210,7 @@ export default function PromptTemplatesTable({
                   </td>
                   <td className="px-4 py-4">
                     {template.is_active ? (
-                      <span className="inline-flex items-center gap-1 text-sm text-[#406A56]">
+                      <span className="inline-flex items-center gap-1 text-sm text-[#2D5A3D]">
                         <CheckCircle className="w-4 h-4" />
                         Active
                       </span>
@@ -241,22 +241,22 @@ export default function PromptTemplatesTable({
                             className="fixed inset-0 z-10"
                             onClick={() => setDropdownOpen(null)}
                           />
-                          <div className="absolute right-0 mt-1 w-48 bg-white rounded-xl shadow-lg border border-[#C35F33]/10 z-20 py-1">
+                          <div className="absolute right-0 mt-1 w-48 bg-white rounded-xl shadow-lg border border-[#B8562E]/10 z-20 py-1">
                             <Link
                               href={`/admin/engagement/${template.id}`}
-                              className="flex items-center gap-2 px-4 py-2 text-sm text-[#2a1f1a] hover:bg-[#406A56]/5"
+                              className="flex items-center gap-2 px-4 py-2 text-sm text-[#2a1f1a] hover:bg-[#2D5A3D]/5"
                             >
                               <Eye className="w-4 h-4" />
                               Preview
                             </Link>
                             <Link
                               href={`/admin/engagement/${template.id}/edit`}
-                              className="flex items-center gap-2 px-4 py-2 text-sm text-[#2a1f1a] hover:bg-[#406A56]/5"
+                              className="flex items-center gap-2 px-4 py-2 text-sm text-[#2a1f1a] hover:bg-[#2D5A3D]/5"
                             >
                               <Edit className="w-4 h-4" />
                               Edit
                             </Link>
-                            <hr className="my-1 border-[#C35F33]/10" />
+                            <hr className="my-1 border-[#B8562E]/10" />
                             <button
                               onClick={() => {
                                 setDeleteConfirm(template.id);
@@ -290,14 +290,14 @@ export default function PromptTemplatesTable({
 
         {/* Pagination */}
         {filteredTemplates.length > 0 && (
-          <div className="flex items-center justify-between px-4 py-4 border-t border-[#C35F33]/10">
+          <div className="flex items-center justify-between px-4 py-4 border-t border-[#B8562E]/10">
             <p className="text-sm text-[#2a1f1a]/60">
               Showing {filteredTemplates.length} of {totalCount} prompts
             </p>
             <div className="flex items-center gap-2">
               <Link
                 href={`/admin/engagement?page=${Math.max(1, currentPage - 1)}`}
-                className={`p-2 rounded-lg border border-[#C35F33]/10 hover:bg-white/80 transition-colors ${
+                className={`p-2 rounded-lg border border-[#B8562E]/10 hover:bg-white/80 transition-colors ${
                   currentPage === 1 ? 'opacity-50 pointer-events-none' : ''
                 }`}
               >
@@ -308,7 +308,7 @@ export default function PromptTemplatesTable({
               </span>
               <Link
                 href={`/admin/engagement?page=${Math.min(totalPages, currentPage + 1)}`}
-                className={`p-2 rounded-lg border border-[#C35F33]/10 hover:bg-white/80 transition-colors ${
+                className={`p-2 rounded-lg border border-[#B8562E]/10 hover:bg-white/80 transition-colors ${
                   currentPage === totalPages || totalPages === 0 ? 'opacity-50 pointer-events-none' : ''
                 }`}
               >

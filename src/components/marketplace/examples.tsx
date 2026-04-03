@@ -27,7 +27,7 @@ export function PostScriptGiftStep() {
       <h2 className="font-playfair text-2xl font-bold mb-4">Add a Gift</h2>
       
       {selectedGift ? (
-        <div className="bg-white p-4 rounded-xl border border-[#406A56]/20">
+        <div className="bg-white p-4 rounded-xl border border-[#2D5A3D]/20">
           <div className="flex items-center gap-4">
             <img 
               src={selectedGift.thumbnail} 
@@ -36,11 +36,11 @@ export function PostScriptGiftStep() {
             />
             <div>
               <h3 className="font-semibold">{selectedGift.name}</h3>
-              <p className="text-[#406A56] font-bold">${selectedGift.price.toFixed(2)}</p>
+              <p className="text-[#2D5A3D] font-bold">${selectedGift.price.toFixed(2)}</p>
             </div>
             <button 
               onClick={() => setIsModalOpen(true)}
-              className="ml-auto px-4 py-2 text-[#406A56] hover:bg-[#406A56]/10 rounded-lg"
+              className="ml-auto px-4 py-2 text-[#2D5A3D] hover:bg-[#2D5A3D]/10 rounded-lg"
             >
               Change
             </button>
@@ -49,7 +49,7 @@ export function PostScriptGiftStep() {
       ) : (
         <button
           onClick={() => setIsModalOpen(true)}
-          className="w-full py-12 border-2 border-dashed border-[#406A56]/30 rounded-xl text-[#406A56] hover:bg-[#406A56]/5 transition-colors"
+          className="w-full py-12 border-2 border-dashed border-[#2D5A3D]/30 rounded-xl text-[#2D5A3D] hover:bg-[#2D5A3D]/5 transition-colors"
         >
           <span className="font-handwritten text-xl">+ Select a Gift</span>
         </button>
@@ -94,7 +94,7 @@ export function PostScriptEditorCompact() {
         />
       </div>
 
-      <button className="w-full py-3 bg-[#406A56] text-white rounded-xl font-semibold">
+      <button className="w-full py-3 bg-[#2D5A3D] text-white rounded-xl font-semibold">
         Save PostScript
       </button>
     </div>

@@ -57,7 +57,7 @@ interface AnalyticsDashboardProps {
   dateRange: { from: string; to: string };
 }
 
-const COLORS = ['#406A56', '#C35F33', '#D9C61A', '#8DACAB', '#4A3552'];
+const COLORS = ['#2D5A3D', '#B8562E', '#C4A235', '#8DACAB', '#4A3552'];
 
 export default function AnalyticsDashboard({ data, dateRange }: AnalyticsDashboardProps) {
   const [selectedMetric, setSelectedMetric] = useState<'users' | 'engagement' | 'content'>('users');
@@ -73,7 +73,7 @@ export default function AnalyticsDashboard({ data, dateRange }: AnalyticsDashboa
       change: userRatio,
       changeType: 'neutral' as const,
       icon: Activity,
-      color: '#406A56',
+      color: '#2D5A3D',
     },
     {
       title: 'Monthly Active Users',
@@ -81,7 +81,7 @@ export default function AnalyticsDashboard({ data, dateRange }: AnalyticsDashboa
       change: data.newUsers > 0 ? `+${data.newUsers} new` : null,
       changeType: data.newUsers > 0 ? 'positive' as const : 'neutral' as const,
       icon: Users,
-      color: '#C35F33',
+      color: '#B8562E',
     },
     {
       title: 'Tiles Completed',
@@ -89,7 +89,7 @@ export default function AnalyticsDashboard({ data, dateRange }: AnalyticsDashboa
       change: engagementPct,
       changeType: 'neutral' as const,
       icon: MousePointerClick,
-      color: '#D9C61A',
+      color: '#C4A235',
     },
     {
       title: 'Total XP Earned',
@@ -131,9 +131,9 @@ export default function AnalyticsDashboard({ data, dateRange }: AnalyticsDashboa
               </div>
               {stat.change && (
                 <div className="flex items-center gap-1 mt-3">
-                  {stat.changeType === 'positive' && <TrendingUp className="w-3 h-3 text-[#406A56]" />}
+                  {stat.changeType === 'positive' && <TrendingUp className="w-3 h-3 text-[#2D5A3D]" />}
                   <span className={`text-xs font-medium ${
-                    stat.changeType === 'positive' ? 'text-[#406A56]' : 'text-[#2a1f1a]/50'
+                    stat.changeType === 'positive' ? 'text-[#2D5A3D]' : 'text-[#2a1f1a]/50'
                   }`}>{stat.change}</span>
                 </div>
               )}
@@ -156,7 +156,7 @@ export default function AnalyticsDashboard({ data, dateRange }: AnalyticsDashboa
                 onClick={() => setSelectedMetric('users')}
                 className={`px-3 py-1.5 text-xs font-medium rounded-lg transition-colors ${
                   selectedMetric === 'users'
-                    ? 'bg-[#406A56] text-white'
+                    ? 'bg-[#2D5A3D] text-white'
                     : 'bg-white/50 text-[#2a1f1a]/60 hover:bg-white/80'
                 }`}
               >
@@ -166,7 +166,7 @@ export default function AnalyticsDashboard({ data, dateRange }: AnalyticsDashboa
                 onClick={() => setSelectedMetric('engagement')}
                 className={`px-3 py-1.5 text-xs font-medium rounded-lg transition-colors ${
                   selectedMetric === 'engagement'
-                    ? 'bg-[#406A56] text-white'
+                    ? 'bg-[#2D5A3D] text-white'
                     : 'bg-white/50 text-[#2a1f1a]/60 hover:bg-white/80'
                 }`}
               >
@@ -180,12 +180,12 @@ export default function AnalyticsDashboard({ data, dateRange }: AnalyticsDashboa
               <AreaChart data={data.dailyStats}>
                 <defs>
                   <linearGradient id="colorActive" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="#406A56" stopOpacity={0.3} />
-                    <stop offset="95%" stopColor="#406A56" stopOpacity={0} />
+                    <stop offset="5%" stopColor="#2D5A3D" stopOpacity={0.3} />
+                    <stop offset="95%" stopColor="#2D5A3D" stopOpacity={0} />
                   </linearGradient>
                   <linearGradient id="colorNew" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="#C35F33" stopOpacity={0.3} />
-                    <stop offset="95%" stopColor="#C35F33" stopOpacity={0} />
+                    <stop offset="5%" stopColor="#B8562E" stopOpacity={0.3} />
+                    <stop offset="95%" stopColor="#B8562E" stopOpacity={0} />
                   </linearGradient>
                 </defs>
                 <CartesianGrid strokeDasharray="3 3" stroke="rgba(0,0,0,0.05)" />
@@ -210,7 +210,7 @@ export default function AnalyticsDashboard({ data, dateRange }: AnalyticsDashboa
                     <Area
                       type="monotone"
                       dataKey="active_users"
-                      stroke="#406A56"
+                      stroke="#2D5A3D"
                       strokeWidth={2}
                       fillOpacity={1}
                       fill="url(#colorActive)"
@@ -219,7 +219,7 @@ export default function AnalyticsDashboard({ data, dateRange }: AnalyticsDashboa
                     <Area
                       type="monotone"
                       dataKey="new_users"
-                      stroke="#C35F33"
+                      stroke="#B8562E"
                       strokeWidth={2}
                       fillOpacity={1}
                       fill="url(#colorNew)"
@@ -231,7 +231,7 @@ export default function AnalyticsDashboard({ data, dateRange }: AnalyticsDashboa
                     <Area
                       type="monotone"
                       dataKey="engagement_responses"
-                      stroke="#D9C61A"
+                      stroke="#C4A235"
                       strokeWidth={2}
                       fillOpacity={1}
                       fill="url(#colorNew)"
@@ -306,8 +306,8 @@ export default function AnalyticsDashboard({ data, dateRange }: AnalyticsDashboa
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         <div className="glass p-5">
           <div className="flex items-center gap-3 mb-4">
-            <div className="p-2 rounded-lg bg-[#406A56]/10">
-              <Target className="w-5 h-5 text-[#406A56]" />
+            <div className="p-2 rounded-lg bg-[#2D5A3D]/10">
+              <Target className="w-5 h-5 text-[#2D5A3D]" />
             </div>
             <div>
               <p className="text-sm font-medium text-[#2a1f1a]/60">Engagement Rate</p>
@@ -316,7 +316,7 @@ export default function AnalyticsDashboard({ data, dateRange }: AnalyticsDashboa
           </div>
           <div className="w-full h-2 bg-gray-100 rounded-full overflow-hidden">
             <div
-              className="h-full bg-[#406A56] rounded-full transition-all"
+              className="h-full bg-[#2D5A3D] rounded-full transition-all"
               style={{ width: `${data.engagementRate}%` }}
             />
           </div>
@@ -324,8 +324,8 @@ export default function AnalyticsDashboard({ data, dateRange }: AnalyticsDashboa
 
         <div className="glass p-5">
           <div className="flex items-center gap-3 mb-4">
-            <div className="p-2 rounded-lg bg-[#C35F33]/10">
-              <Calendar className="w-5 h-5 text-[#C35F33]" />
+            <div className="p-2 rounded-lg bg-[#B8562E]/10">
+              <Calendar className="w-5 h-5 text-[#B8562E]" />
             </div>
             <div>
               <p className="text-sm font-medium text-[#2a1f1a]/60">Total Memories</p>
@@ -337,7 +337,7 @@ export default function AnalyticsDashboard({ data, dateRange }: AnalyticsDashboa
 
         <div className="glass p-5">
           <div className="flex items-center gap-3 mb-4">
-            <div className="p-2 rounded-lg bg-[#D9C61A]/10">
+            <div className="p-2 rounded-lg bg-[#C4A235]/10">
               <Clock className="w-5 h-5 text-[#8B7C00]" />
             </div>
             <div>

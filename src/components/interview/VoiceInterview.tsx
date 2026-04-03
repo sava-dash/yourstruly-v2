@@ -98,18 +98,18 @@ Be warm and encouraging. This is about preserving precious memories.`,
   return (
     <div className="min-h-screen bg-gradient-to-b from-[#F9F7F3] to-white">
       {/* Header */}
-      <div className="sticky top-0 z-10 backdrop-blur-lg bg-white/80 border-b border-[#406A56]/10">
+      <div className="sticky top-0 z-10 backdrop-blur-lg bg-white/80 border-b border-[#2D5A3D]/10">
         <div className="max-w-2xl mx-auto px-4 py-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-full bg-gradient-to-br from-[#406A56] to-[#4a7a64] flex items-center justify-center shadow-md">
+              <div className="w-10 h-10 rounded-full bg-gradient-to-br from-[#2D5A3D] to-[#234A31] flex items-center justify-center shadow-md">
                 <Users size={20} className="text-white" />
               </div>
               <div>
-                <h1 className="font-semibold text-[#406A56]">
+                <h1 className="font-semibold text-[#2D5A3D]">
                   Interview about {contactName}
                 </h1>
-                <p className="text-sm text-[#406A56]/60">
+                <p className="text-sm text-[#2D5A3D]/60">
                   Share your memories through voice
                 </p>
               </div>
@@ -121,8 +121,8 @@ Be warm and encouraging. This is about preserving precious memories.`,
                 onClick={() => setVideoEnabled(!videoEnabled)}
                 className={`p-2 rounded-full transition-colors ${
                   videoEnabled 
-                    ? 'bg-[#406A56] text-white' 
-                    : 'bg-[#406A56]/10 text-[#406A56] hover:bg-[#406A56]/20'
+                    ? 'bg-[#2D5A3D] text-white' 
+                    : 'bg-[#2D5A3D]/10 text-[#2D5A3D] hover:bg-[#2D5A3D]/20'
                 }`}
                 title={videoEnabled ? 'Disable video' : 'Enable video'}
               >
@@ -131,7 +131,7 @@ Be warm and encouraging. This is about preserving precious memories.`,
               
               <button
                 onClick={onClose}
-                className="p-2 text-[#406A56]/60 hover:text-[#406A56] hover:bg-[#406A56]/10 rounded-full transition-colors"
+                className="p-2 text-[#2D5A3D]/60 hover:text-[#2D5A3D] hover:bg-[#2D5A3D]/10 rounded-full transition-colors"
               >
                 <X size={20} />
               </button>
@@ -145,13 +145,13 @@ Be warm and encouraging. This is about preserving precious memories.`,
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="mb-6 p-5 bg-white rounded-2xl shadow-md border border-[#406A56]/10"
+          className="mb-6 p-5 bg-white rounded-2xl shadow-md border border-[#2D5A3D]/10"
         >
-          <div className="flex items-center gap-2 text-sm text-[#406A56]/60 mb-2">
+          <div className="flex items-center gap-2 text-sm text-[#2D5A3D]/60 mb-2">
             <ChevronRight size={14} />
             <span>Question</span>
           </div>
-          <p className="text-[#406A56] font-medium text-lg leading-relaxed">
+          <p className="text-[#2D5A3D] font-medium text-lg leading-relaxed">
             {question.question_text}
           </p>
         </motion.div>
@@ -173,25 +173,25 @@ Be warm and encouraging. This is about preserving precious memories.`,
         />
 
         {/* Tips */}
-        <div className="mt-8 p-5 bg-white/60 backdrop-blur-sm rounded-2xl border border-[#406A56]/10">
-          <h3 className="text-sm font-semibold text-[#406A56] mb-3 uppercase tracking-wide">
+        <div className="mt-8 p-5 bg-white/60 backdrop-blur-sm rounded-2xl border border-[#2D5A3D]/10">
+          <h3 className="text-sm font-semibold text-[#2D5A3D] mb-3 uppercase tracking-wide">
             Tips for Your Interview
           </h3>
-          <ul className="space-y-2 text-sm text-[#406A56]/70">
+          <ul className="space-y-2 text-sm text-[#2D5A3D]/70">
             <li className="flex items-start gap-2">
-              <span className="text-[#D9C61A]">•</span>
+              <span className="text-[#C4A235]">•</span>
               Share specific memories and stories
             </li>
             <li className="flex items-start gap-2">
-              <span className="text-[#D9C61A]">•</span>
+              <span className="text-[#C4A235]">•</span>
               Include details about when and where things happened
             </li>
             <li className="flex items-start gap-2">
-              <span className="text-[#D9C61A]">•</span>
+              <span className="text-[#C4A235]">•</span>
               Describe how moments made you feel
             </li>
             <li className="flex items-start gap-2">
-              <span className="text-[#D9C61A]">•</span>
+              <span className="text-[#C4A235]">•</span>
               The AI will guide you with follow-up questions
             </li>
           </ul>
@@ -216,8 +216,8 @@ Be warm and encouraging. This is about preserving precious memories.`,
               <div className="w-20 h-20 mx-auto mb-4 rounded-full bg-green-500 flex items-center justify-center shadow-lg shadow-green-500/30">
                 <Sparkles size={36} className="text-white" />
               </div>
-              <h3 className="text-xl font-bold text-[#406A56]">Response Saved!</h3>
-              <p className="text-[#406A56]/70 mt-2">
+              <h3 className="text-xl font-bold text-[#2D5A3D]">Response saved</h3>
+              <p className="text-[#2D5A3D]/70 mt-2">
                 Thank you for sharing about {contactName}
               </p>
             </motion.div>

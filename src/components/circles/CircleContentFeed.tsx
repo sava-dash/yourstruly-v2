@@ -94,8 +94,8 @@ function ContentCard({
             <div className="absolute bottom-3 left-4">
               <span className={`text-xs font-medium px-2 py-1 rounded-full ${
                 content.type === 'memory'
-                  ? 'bg-[#C35F33]/80 text-white'
-                  : 'bg-[#406A56]/80 text-white'
+                  ? 'bg-[#B8562E]/80 text-white'
+                  : 'bg-[#2D5A3D]/80 text-white'
               }`}>
                 {content.type === 'memory' ? 'Memory' : 'Wisdom'}
               </span>
@@ -104,19 +104,19 @@ function ContentCard({
         ) : (
           <div className={`relative h-32 -mx-5 -mt-5 mb-4 flex items-center justify-center rounded-t-2xl ${
             content.type === 'memory'
-              ? 'bg-gradient-to-br from-[#C35F33]/20 to-[#D9C61A]/20'
-              : 'bg-gradient-to-br from-[#406A56]/20 to-[#8DACAB]/20'
+              ? 'bg-gradient-to-br from-[#B8562E]/20 to-[#C4A235]/20'
+              : 'bg-gradient-to-br from-[#2D5A3D]/20 to-[#8DACAB]/20'
           }`}>
             {content.type === 'memory' ? (
-              <ImageIcon size={32} className="text-[#C35F33]/50" />
+              <ImageIcon size={32} className="text-[#B8562E]/50" />
             ) : (
-              <BookOpen size={32} className="text-[#406A56]/50" />
+              <BookOpen size={32} className="text-[#2D5A3D]/50" />
             )}
             <div className="absolute bottom-3 left-4">
               <span className={`text-xs font-medium px-2 py-1 rounded-full ${
                 content.type === 'memory'
-                  ? 'bg-[#C35F33]/80 text-white'
-                  : 'bg-[#406A56]/80 text-white'
+                  ? 'bg-[#B8562E]/80 text-white'
+                  : 'bg-[#2D5A3D]/80 text-white'
               }`}>
                 {content.type === 'memory' ? 'Memory' : 'Wisdom'}
               </span>
@@ -131,9 +131,9 @@ function ContentCard({
         )}
 
         {/* Footer */}
-        <div className="flex items-center justify-between pt-3 border-t border-[#406A56]/10">
+        <div className="flex items-center justify-between pt-3 border-t border-[#2D5A3D]/10">
           <div className="flex items-center gap-2">
-            <div className="w-6 h-6 rounded-full bg-gradient-to-br from-[#406A56]/20 to-[#8DACAB]/30 flex items-center justify-center text-[8px] font-semibold text-[#406A56]">
+            <div className="w-6 h-6 rounded-full bg-gradient-to-br from-[#2D5A3D]/20 to-[#8DACAB]/30 flex items-center justify-center text-[8px] font-semibold text-[#2D5A3D]">
               {initials}
             </div>
             <span className="text-xs text-[#666]">{isMe ? 'You' : content.sharedByName.split(' ')[0]}</span>
@@ -174,14 +174,14 @@ function ContentCard({
             onClick={onView}
             className={`w-24 h-24 rounded-xl flex items-center justify-center flex-shrink-0 cursor-pointer ${
               content.type === 'memory'
-                ? 'bg-[#C35F33]/10'
-                : 'bg-[#406A56]/10'
+                ? 'bg-[#B8562E]/10'
+                : 'bg-[#2D5A3D]/10'
             }`}
           >
             {content.type === 'memory' ? (
-              <ImageIcon size={24} className="text-[#C35F33]" />
+              <ImageIcon size={24} className="text-[#B8562E]" />
             ) : (
-              <BookOpen size={24} className="text-[#406A56]" />
+              <BookOpen size={24} className="text-[#2D5A3D]" />
             )}
           </div>
         )}
@@ -192,17 +192,17 @@ function ContentCard({
             <div>
               <h3 
                 onClick={onView}
-                className="font-semibold text-[#2d2d2d] hover:text-[#406A56] cursor-pointer line-clamp-1"
+                className="font-semibold text-[#2d2d2d] hover:text-[#2D5A3D] cursor-pointer line-clamp-1"
               >
                 {content.title}
               </h3>
               <span className={`text-xs font-medium ${
-                content.type === 'memory' ? 'text-[#C35F33]' : 'text-[#406A56]'
+                content.type === 'memory' ? 'text-[#B8562E]' : 'text-[#2D5A3D]'
               }`}>
                 {content.type === 'memory' ? 'Memory' : 'Wisdom'}
               </span>
             </div>
-            <button className="p-1.5 hover:bg-[#406A56]/10 rounded-lg flex-shrink-0">
+            <button className="p-1.5 hover:bg-[#2D5A3D]/10 rounded-lg flex-shrink-0">
               <MoreVertical size={16} className="text-[#666]" />
             </button>
           </div>
@@ -230,20 +230,20 @@ function ContentCard({
                 className={`p-2 rounded-lg transition-colors ${
                   content.hasLiked 
                     ? 'text-red-400 bg-red-50' 
-                    : 'text-[#666] hover:bg-[#406A56]/10'
+                    : 'text-[#666] hover:bg-[#2D5A3D]/10'
                 }`}
               >
                 <Heart size={14} className={content.hasLiked ? 'fill-current' : ''} />
               </button>
               <button 
                 onClick={(e) => { e.stopPropagation(); onComment(); }}
-                className="p-2 text-[#666] hover:bg-[#406A56]/10 rounded-lg"
+                className="p-2 text-[#666] hover:bg-[#2D5A3D]/10 rounded-lg"
               >
                 <MessageCircle size={14} />
               </button>
               <button 
                 onClick={onView}
-                className="p-2 text-[#666] hover:bg-[#406A56]/10 rounded-lg"
+                className="p-2 text-[#666] hover:bg-[#2D5A3D]/10 rounded-lg"
               >
                 <Eye size={14} />
               </button>
@@ -298,11 +298,11 @@ export default function CircleContentFeed({
         </div>
         <div className="flex items-center gap-2">
           {/* View Toggle */}
-          <div className="flex bg-[#406A56]/5 rounded-lg p-1">
+          <div className="flex bg-[#2D5A3D]/5 rounded-lg p-1">
             <button
               onClick={() => setViewMode('list')}
               className={`p-1.5 rounded-md transition-colors ${
-                viewMode === 'list' ? 'bg-white shadow-sm text-[#406A56]' : 'text-[#666]'
+                viewMode === 'list' ? 'bg-white shadow-sm text-[#2D5A3D]' : 'text-[#666]'
               }`}
             >
               <List size={16} />
@@ -310,7 +310,7 @@ export default function CircleContentFeed({
             <button
               onClick={() => setViewMode('grid')}
               className={`p-1.5 rounded-md transition-colors ${
-                viewMode === 'grid' ? 'bg-white shadow-sm text-[#406A56]' : 'text-[#666]'
+                viewMode === 'grid' ? 'bg-white shadow-sm text-[#2D5A3D]' : 'text-[#666]'
               }`}
             >
               <Grid size={16} />
@@ -321,7 +321,7 @@ export default function CircleContentFeed({
           <button
             onClick={() => setShowFilters(!showFilters)}
             className={`p-2 rounded-lg transition-colors ${
-              showFilters ? 'bg-[#406A56] text-white' : 'bg-[#406A56]/10 text-[#406A56]'
+              showFilters ? 'bg-[#2D5A3D] text-white' : 'bg-[#2D5A3D]/10 text-[#2D5A3D]'
             }`}
           >
             <Filter size={16} />
@@ -404,7 +404,7 @@ export default function CircleContentFeed({
       {filteredContent.length === 0 ? (
         <div className="empty-state">
           <div className="empty-state-icon">
-            <FileText size={32} className="text-[#406A56]" />
+            <FileText size={32} className="text-[#2D5A3D]" />
           </div>
           <h3 className="empty-state-title">No Content Yet</h3>
           <p className="empty-state-text">

@@ -98,9 +98,9 @@ export default function AcceptInvitePage() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-[#F2F1E5] flex items-center justify-center p-4">
+      <div className="min-h-screen bg-[#F5F3EE] flex items-center justify-center p-4">
         <div className="text-center">
-          <Loader2 className="w-12 h-12 animate-spin text-[#406A56] mx-auto mb-4" />
+          <Loader2 className="w-12 h-12 animate-spin text-[#2D5A3D] mx-auto mb-4" />
           <p className="text-gray-600">Validating invite...</p>
         </div>
       </div>
@@ -109,7 +109,7 @@ export default function AcceptInvitePage() {
 
   if (error) {
     return (
-      <div className="min-h-screen bg-[#F2F1E5] flex items-center justify-center p-4">
+      <div className="min-h-screen bg-[#F5F3EE] flex items-center justify-center p-4">
         <div className="max-w-md w-full bg-white rounded-2xl shadow-lg p-8 text-center">
           <div className="w-16 h-16 rounded-full bg-red-100 flex items-center justify-center mx-auto mb-4">
             <AlertCircle className="w-8 h-8 text-red-500" />
@@ -126,12 +126,12 @@ export default function AcceptInvitePage() {
 
   if (isAccepted) {
     return (
-      <div className="min-h-screen bg-[#F2F1E5] flex items-center justify-center p-4">
+      <div className="min-h-screen bg-[#F5F3EE] flex items-center justify-center p-4">
         <div className="max-w-md w-full bg-white rounded-2xl shadow-lg p-8 text-center">
           <div className="w-16 h-16 rounded-full bg-green-100 flex items-center justify-center mx-auto mb-4">
             <CheckCircle2 className="w-8 h-8 text-green-500" />
           </div>
-          <h1 className="text-2xl font-bold text-[#2d2d2d] mb-2">Welcome to the Family!</h1>
+          <h1 className="text-2xl font-bold text-[#2d2d2d] mb-2">Welcome. You&apos;ve joined the circle.</h1>
           <p className="text-gray-600 mb-6">
             You now have access to all Premium features through {invite?.inviter?.full_name || invite?.inviter?.email}&apos;s subscription.
           </p>
@@ -144,16 +144,16 @@ export default function AcceptInvitePage() {
   }
 
   return (
-    <div className="min-h-screen bg-[#F2F1E5] flex items-center justify-center p-4">
+    <div className="min-h-screen bg-[#F5F3EE] flex items-center justify-center p-4">
       <div className="max-w-md w-full">
         {/* Main Card */}
         <div className="bg-white rounded-2xl shadow-lg overflow-hidden">
           {/* Header */}
-          <div className="bg-gradient-to-r from-[#406A56] to-[#4A3552] p-8 text-center">
+          <div className="bg-gradient-to-r from-[#2D5A3D] to-[#4A3552] p-8 text-center">
             <div className="w-16 h-16 rounded-full bg-white/20 flex items-center justify-center mx-auto mb-4">
               <Gift className="w-8 h-8 text-white" />
             </div>
-            <h1 className="text-2xl font-bold text-white mb-2">You&apos;re Invited!</h1>
+            <h1 className="text-2xl font-bold text-white mb-2">You&apos;ve been invited</h1>
             <p className="text-white/80">
               Join {invite?.inviter?.full_name || invite?.inviter?.email}&apos;s YoursTruly family
             </p>
@@ -166,30 +166,30 @@ export default function AcceptInvitePage() {
               <h2 className="font-semibold text-[#2d2d2d] mb-3">You&apos;ll get access to:</h2>
               <ul className="space-y-2 text-gray-600">
                 <li className="flex items-center gap-2">
-                  <CheckCircle2 className="w-4 h-4 text-[#406A56]" />
+                  <CheckCircle2 className="w-4 h-4 text-[#2D5A3D]" />
                   AI Chat with family digital essences
                 </li>
                 <li className="flex items-center gap-2">
-                  <CheckCircle2 className="w-4 h-4 text-[#406A56]" />
+                  <CheckCircle2 className="w-4 h-4 text-[#2D5A3D]" />
                   Create and share video memories
                 </li>
                 <li className="flex items-center gap-2">
-                  <CheckCircle2 className="w-4 h-4 text-[#406A56]" />
+                  <CheckCircle2 className="w-4 h-4 text-[#2D5A3D]" />
                   Send interview questions to loved ones
                 </li>
                 <li className="flex items-center gap-2">
-                  <CheckCircle2 className="w-4 h-4 text-[#406A56]" />
+                  <CheckCircle2 className="w-4 h-4 text-[#2D5A3D]" />
                   20% off all marketplace items
                 </li>
                 <li className="flex items-center gap-2">
-                  <CheckCircle2 className="w-4 h-4 text-[#406A56]" />
+                  <CheckCircle2 className="w-4 h-4 text-[#2D5A3D]" />
                   100GB cloud storage
                 </li>
               </ul>
             </div>
 
             {/* Invite email notice */}
-            <div className="bg-[#F2F1E5] rounded-xl p-4 mb-6">
+            <div className="bg-[#F5F3EE] rounded-xl p-4 mb-6">
               <p className="text-sm text-gray-600">
                 This invite was sent to <strong>{invite?.email}</strong>
               </p>
@@ -250,7 +250,7 @@ export default function AcceptInvitePage() {
 
         {/* Footer */}
         <p className="text-center text-sm text-gray-500 mt-6">
-          Powered by <Link href="/" className="text-[#406A56] hover:underline">YoursTruly</Link> - Preserving family stories for generations
+          Powered by <Link href="/" className="text-[#2D5A3D] hover:underline">YoursTruly</Link> - Preserving family stories for generations
         </p>
       </div>
     </div>

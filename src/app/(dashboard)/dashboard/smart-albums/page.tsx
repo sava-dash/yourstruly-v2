@@ -55,19 +55,19 @@ export default function SmartAlbumsPage() {
   ]
 
   return (
-    <div className="min-h-screen bg-[#FDF8F3] p-6">
+    <div className="min-h-screen bg-[#FAFAF7] p-6">
       {/* Header */}
       <div className="max-w-6xl mx-auto mb-8">
         <Link 
           href="/dashboard"
-          className="inline-flex items-center gap-2 text-[#406A56] hover:text-[#4a7a64] transition-colors mb-4"
+          className="inline-flex items-center gap-2 text-[#2D5A3D] hover:text-[#234A31] transition-colors mb-4"
         >
           <ArrowLeft size={20} />
           Back to Dashboard
         </Link>
         
-        <h1 className="text-4xl font-bold text-[#406A56] mb-2">Smart Albums</h1>
-        <p className="text-[#406A56]/70">Photos automatically organized by people, family, and events</p>
+        <h1 className="text-4xl font-bold text-[#2D5A3D] mb-2">Smart Albums</h1>
+        <p className="text-[#2D5A3D]/70">Photos automatically organized by people, family, and events</p>
       </div>
 
       {/* Album Type Selector */}
@@ -81,8 +81,8 @@ export default function SmartAlbumsPage() {
                 onClick={() => setAlbumType(type.id as any)}
                 className={`flex items-center gap-2 px-4 py-2 rounded-xl font-medium transition-all ${
                   albumType === type.id
-                    ? 'bg-[#406A56] text-white'
-                    : 'bg-white text-[#406A56] hover:bg-[#406A56]/10'
+                    ? 'bg-[#2D5A3D] text-white'
+                    : 'bg-white text-[#2D5A3D] hover:bg-[#2D5A3D]/10'
                 }`}
               >
                 <Icon size={18} />
@@ -97,20 +97,20 @@ export default function SmartAlbumsPage() {
       <div className="max-w-6xl mx-auto">
         {isLoading ? (
           <div className="flex items-center justify-center py-20">
-            <Loader2 size={48} className="text-[#406A56] animate-spin" />
+            <Loader2 size={48} className="text-[#2D5A3D] animate-spin" />
           </div>
         ) : albums.length === 0 ? (
           <div className="text-center py-20">
-            <User size={64} className="mx-auto text-[#406A56]/30 mb-4" />
-            <h3 className="text-xl font-bold text-[#406A56] mb-2">No albums yet</h3>
-            <p className="text-[#406A56]/70 mb-4">
+            <User size={64} className="mx-auto text-[#2D5A3D]/30 mb-4" />
+            <h3 className="text-xl font-bold text-[#2D5A3D] mb-2">No albums yet</h3>
+            <p className="text-[#2D5A3D]/70 mb-4">
               {albumType === 'people' && 'Tag people in your photos to create smart albums'}
               {albumType === 'family' && 'Tag family members in your photos'}
               {albumType === 'events' && 'Event detection coming soon'}
             </p>
             <Link
               href="/dashboard/gallery"
-              className="inline-block px-6 py-3 bg-[#406A56] text-white rounded-xl hover:bg-[#4a7a64] transition-colors"
+              className="inline-block px-6 py-3 bg-[#2D5A3D] text-white rounded-xl hover:bg-[#234A31] transition-colors"
             >
               Go to Gallery
             </Link>
@@ -153,16 +153,16 @@ export default function SmartAlbumsPage() {
                           className="w-10 h-10 rounded-full object-cover"
                         />
                       ) : (
-                        <div className="w-10 h-10 rounded-full bg-[#406A56]/10 flex items-center justify-center">
-                          <User size={20} className="text-[#406A56]" />
+                        <div className="w-10 h-10 rounded-full bg-[#2D5A3D]/10 flex items-center justify-center">
+                          <User size={20} className="text-[#2D5A3D]" />
                         </div>
                       )}
                       <div>
-                        <h3 className="font-bold text-[#406A56]">
+                        <h3 className="font-bold text-[#2D5A3D]">
                           {album.contactName || album.albumName}
                         </h3>
                         {album.relationship && (
-                          <p className="text-xs text-[#406A56]/60 capitalize">
+                          <p className="text-xs text-[#2D5A3D]/60 capitalize">
                             {album.relationship}
                           </p>
                         )}

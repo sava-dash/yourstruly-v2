@@ -52,8 +52,8 @@ export default function VoiceMemoryPage() {
             onClick={() => setEnableVideo(!enableVideo)}
             className={`flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium transition-colors ${
               enableVideo
-                ? 'bg-[#406A56] text-white'
-                : 'bg-[#406A56]/10 text-[#406A56] hover:bg-[#406A56]/20'
+                ? 'bg-[#2D5A3D] text-white'
+                : 'bg-[#2D5A3D]/10 text-[#2D5A3D] hover:bg-[#2D5A3D]/20'
             }`}
           >
             {enableVideo ? <Video size={16} /> : <VideoOff size={16} />}
@@ -79,30 +79,30 @@ export default function VoiceMemoryPage() {
           />
 
           {/* Tips */}
-          <div className="mt-8 p-5 bg-white/60 backdrop-blur-sm rounded-2xl border border-[#406A56]/10">
-            <h3 className="text-sm font-semibold text-[#406A56] mb-3 uppercase tracking-wide">
+          <div className="mt-8 p-5 bg-white/60 backdrop-blur-sm rounded-2xl border border-[#2D5A3D]/10">
+            <h3 className="text-sm font-semibold text-[#2D5A3D] mb-3 uppercase tracking-wide">
               Tips for a Great Memory
             </h3>
-            <ul className="space-y-2 text-sm text-[#406A56]/70">
+            <ul className="space-y-2 text-sm text-[#2D5A3D]/70">
               <li className="flex items-start gap-2">
-                <span className="text-[#D9C61A]">•</span>
+                <span className="text-[#C4A235]">•</span>
                 Speak naturally — the AI will ask follow-up questions
               </li>
               <li className="flex items-start gap-2">
-                <span className="text-[#D9C61A]">•</span>
+                <span className="text-[#C4A235]">•</span>
                 Include details like names, dates, and places
               </li>
               <li className="flex items-start gap-2">
-                <span className="text-[#D9C61A]">•</span>
+                <span className="text-[#C4A235]">•</span>
                 Say "save it" when you're ready to save your memory
               </li>
               <li className="flex items-start gap-2">
-                <span className="text-[#D9C61A]">•</span>
+                <span className="text-[#C4A235]">•</span>
                 After ~5 exchanges, the AI will offer to save or continue
               </li>
               {enableVideo && (
                 <li className="flex items-start gap-2">
-                  <span className="text-[#D9C61A]">•</span>
+                  <span className="text-[#C4A235]">•</span>
                   Your video will be saved along with your story
                 </li>
               )}

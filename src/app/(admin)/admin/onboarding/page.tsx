@@ -198,8 +198,8 @@ export default function OnboardingAdminPage() {
               style={{
                 display: 'flex', alignItems: 'center', gap: '6px',
                 padding: '10px 16px', borderRadius: '12px',
-                border: '1px solid #406A56', background: 'rgba(64,106,86,0.08)',
-                cursor: 'pointer', fontSize: '14px', fontWeight: 500, color: '#406A56',
+                border: '1px solid #2D5A3D', background: 'rgba(64,106,86,0.08)',
+                cursor: 'pointer', fontSize: '14px', fontWeight: 500, color: '#2D5A3D',
                 opacity: seeding ? 0.6 : 1,
               }}
             >
@@ -223,7 +223,7 @@ export default function OnboardingAdminPage() {
               style={{
                 display: 'flex', alignItems: 'center', gap: '6px',
                 padding: '10px 20px', borderRadius: '12px',
-                border: 'none', background: '#406A56', color: 'white',
+                border: 'none', background: '#2D5A3D', color: 'white',
                 cursor: 'pointer', fontSize: '14px', fontWeight: 600,
               }}
             >
@@ -274,7 +274,7 @@ export default function OnboardingAdminPage() {
                     <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '6px' }}>
                       <code style={{
                         fontSize: '12px', padding: '2px 8px', borderRadius: '6px',
-                        background: 'rgba(64,106,86,0.08)', color: '#406A56', fontWeight: 500,
+                        background: 'rgba(64,106,86,0.08)', color: '#2D5A3D', fontWeight: 500,
                       }}>
                         {shortKey}
                       </code>
@@ -289,7 +289,7 @@ export default function OnboardingAdminPage() {
                         rows={3}
                         style={{
                           width: '100%', padding: '10px 12px', borderRadius: '10px',
-                          border: `1.5px solid ${isEdited ? '#406A56' : 'rgba(0,0,0,0.1)'}`,
+                          border: `1.5px solid ${isEdited ? '#2D5A3D' : 'rgba(0,0,0,0.1)'}`,
                           background: isEdited ? 'rgba(64,106,86,0.03)' : 'rgba(0,0,0,0.02)',
                           fontSize: '14px', color: '#2d2d2d', outline: 'none',
                           resize: 'vertical', fontFamily: 'inherit',
@@ -302,7 +302,7 @@ export default function OnboardingAdminPage() {
                         onChange={(e) => setEdited(prev => ({ ...prev, [item.id]: e.target.value }))}
                         style={{
                           width: '100%', padding: '10px 12px', borderRadius: '10px',
-                          border: `1.5px solid ${isEdited ? '#406A56' : 'rgba(0,0,0,0.1)'}`,
+                          border: `1.5px solid ${isEdited ? '#2D5A3D' : 'rgba(0,0,0,0.1)'}`,
                           background: isEdited ? 'rgba(64,106,86,0.03)' : 'rgba(0,0,0,0.02)',
                           fontSize: '14px', color: '#2d2d2d', outline: 'none',
                         }}
@@ -311,14 +311,14 @@ export default function OnboardingAdminPage() {
                   </div>
                   <div style={{ flexShrink: 0, paddingTop: '24px' }}>
                     {isSaved ? (
-                      <Check size={20} color="#406A56" />
+                      <Check size={20} color="#2D5A3D" />
                     ) : isEdited ? (
                       <button
                         onClick={() => handleSave(item.id)}
                         disabled={isSaving}
                         style={{
                           padding: '6px 12px', borderRadius: '8px',
-                          border: 'none', background: '#406A56', color: 'white',
+                          border: 'none', background: '#2D5A3D', color: 'white',
                           fontSize: '13px', fontWeight: 600, cursor: 'pointer',
                           opacity: isSaving ? 0.5 : 1,
                         }}

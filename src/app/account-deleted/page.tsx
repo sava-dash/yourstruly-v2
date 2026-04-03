@@ -5,8 +5,8 @@ export default function AccountDeletedPage() {
   return (
     <div className="min-h-screen bg-gradient-to-b from-gray-50 to-gray-100 flex items-center justify-center p-6">
       <div className="max-w-md w-full text-center">
-        <div className="w-16 h-16 rounded-full bg-[#406A56]/10 flex items-center justify-center mx-auto mb-6">
-          <Heart className="w-8 h-8 text-[#406A56]" />
+        <div className="w-16 h-16 rounded-full bg-[#2D5A3D]/10 flex items-center justify-center mx-auto mb-6">
+          <Heart className="w-8 h-8 text-[#2D5A3D]" />
         </div>
         
         <h1 className="text-2xl font-bold text-gray-800 mb-4">
@@ -26,14 +26,14 @@ export default function AccountDeletedPage() {
         <div className="space-y-3">
           <Link
             href="/"
-            className="block w-full py-3 bg-[#406A56] hover:bg-[#355a48] text-white rounded-xl font-medium transition-colors"
+            className="block w-full py-3 bg-[#2D5A3D] hover:bg-[#355a48] text-white rounded-xl font-medium transition-colors"
           >
             Return to Homepage
           </Link>
           
           <p className="text-sm text-gray-500">
             Questions? Contact{' '}
-            <a href="mailto:support@yourstruly.love" className="text-[#406A56] hover:underline">
+            <a href="mailto:support@yourstruly.love" className="text-[#2D5A3D] hover:underline">
               support@yourstruly.love
             </a>
           </p>

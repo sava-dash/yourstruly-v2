@@ -29,9 +29,9 @@ const ENTITY_ICONS: Record<string, React.ElementType> = {
 };
 
 const ACTION_COLORS: Record<string, string> = {
-  create: 'bg-[#406A56]/10 text-[#406A56]',
-  update: 'bg-[#D9C61A]/10 text-[#8B7C00]',
-  delete: 'bg-[#C35F33]/10 text-[#C35F33]',
+  create: 'bg-[#2D5A3D]/10 text-[#2D5A3D]',
+  update: 'bg-[#C4A235]/10 text-[#8B7C00]',
+  delete: 'bg-[#B8562E]/10 text-[#B8562E]',
   login: 'bg-blue-100 text-blue-700',
   logout: 'bg-gray-100 text-gray-600',
   suspend: 'bg-red-100 text-red-700',
@@ -99,7 +99,7 @@ export default function AuditLogViewer() {
         </div>
         <button
           onClick={fetchLogs}
-          className="flex items-center gap-2 px-4 py-2 bg-white/80 border border-[#C35F33]/10 rounded-xl text-sm font-medium text-[#2a1f1a] hover:bg-white transition-colors"
+          className="flex items-center gap-2 px-4 py-2 bg-white/80 border border-[#B8562E]/10 rounded-xl text-sm font-medium text-[#2a1f1a] hover:bg-white transition-colors"
         >
           <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
           Refresh
@@ -114,7 +114,7 @@ export default function AuditLogViewer() {
             <select
               value={filter.action}
               onChange={(e) => setFilter({ ...filter, action: e.target.value })}
-              className="px-3 py-2 bg-white/80 border border-[#C35F33]/10 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-[#406A56]/20"
+              className="px-3 py-2 bg-white/80 border border-[#B8562E]/10 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-[#2D5A3D]/20"
             >
               <option value="">All Actions</option>
               <option value="create">Create</option>
@@ -129,7 +129,7 @@ export default function AuditLogViewer() {
           <select
             value={filter.entityType}
             onChange={(e) => setFilter({ ...filter, entityType: e.target.value })}
-            className="px-3 py-2 bg-white/80 border border-[#C35F33]/10 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-[#406A56]/20"
+            className="px-3 py-2 bg-white/80 border border-[#B8562E]/10 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-[#2D5A3D]/20"
           >
             <option value="">All Entities</option>
             <option value="user">User</option>
@@ -144,7 +144,7 @@ export default function AuditLogViewer() {
             value={filter.search}
             onChange={(e) => setFilter({ ...filter, search: e.target.value })}
             aria-label="Search" placeholder="Search..."
-            className="px-4 py-2 bg-white/80 border border-[#C35F33]/10 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-[#406A56]/20"
+            className="px-4 py-2 bg-white/80 border border-[#B8562E]/10 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-[#2D5A3D]/20"
           />
         </div>
       </div>
@@ -154,14 +154,14 @@ export default function AuditLogViewer() {
         <div className="overflow-x-auto">
           <table className="w-full">
             <thead>
-              <tr className="border-b border-[#C35F33]/10">
+              <tr className="border-b border-[#B8562E]/10">
                 <th className="px-4 py-4 text-left text-sm font-medium text-[#2a1f1a]/60">Action</th>
                 <th className="px-4 py-4 text-left text-sm font-medium text-[#2a1f1a]/60">Entity</th>
                 <th className="px-4 py-4 text-left text-sm font-medium text-[#2a1f1a]/60">Admin</th>
                 <th className="px-4 py-4 text-left text-sm font-medium text-[#2a1f1a]/60">Time</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-[#C35F33]/5">
+            <tbody className="divide-y divide-[#B8562E]/5">
               {logs.map((log) => (
                 <tr key={log.id} className="hover:bg-white/50 transition-colors">
                   <td className="px-4 py-4">
@@ -181,8 +181,8 @@ export default function AuditLogViewer() {
                   </td>
                   <td className="px-4 py-4">
                     <div className="flex items-center gap-2">
-                      <div className="w-6 h-6 rounded-full bg-gradient-to-br from-[#406A56]/20 to-[#C35F33]/20 flex items-center justify-center">
-                        <span className="text-xs font-medium text-[#406A56]">
+                      <div className="w-6 h-6 rounded-full bg-gradient-to-br from-[#2D5A3D]/20 to-[#B8562E]/20 flex items-center justify-center">
+                        <span className="text-xs font-medium text-[#2D5A3D]">
                           {(log.admin_email || 'S').charAt(0).toUpperCase()}
                         </span>
                       </div>
@@ -201,7 +201,7 @@ export default function AuditLogViewer() {
         </div>
 
         {/* Pagination */}
-        <div className="flex items-center justify-between px-4 py-4 border-t border-[#C35F33]/10">
+        <div className="flex items-center justify-between px-4 py-4 border-t border-[#B8562E]/10">
           <p className="text-sm text-[#2a1f1a]/60">
             Showing {logs.length} of {total} entries
           </p>
@@ -209,7 +209,7 @@ export default function AuditLogViewer() {
             <button
               onClick={() => setPage(Math.max(1, page - 1))}
               disabled={page === 1}
-              className="p-2 rounded-lg border border-[#C35F33]/10 hover:bg-white/80 transition-colors disabled:opacity-50"
+              className="p-2 rounded-lg border border-[#B8562E]/10 hover:bg-white/80 transition-colors disabled:opacity-50"
             >
               <ChevronLeft className="w-4 h-4" />
             </button>
@@ -219,7 +219,7 @@ export default function AuditLogViewer() {
             <button
               onClick={() => setPage(Math.min(totalPages, page + 1))}
               disabled={page === totalPages || totalPages === 0}
-              className="p-2 rounded-lg border border-[#C35F33]/10 hover:bg-white/80 transition-colors disabled:opacity-50"
+              className="p-2 rounded-lg border border-[#B8562E]/10 hover:bg-white/80 transition-colors disabled:opacity-50"
             >
               <ChevronRight className="w-4 h-4" />
             </button>

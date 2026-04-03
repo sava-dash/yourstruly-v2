@@ -134,9 +134,9 @@ export default function BadgeDisplay() {
                   cursor: 'pointer',
                   minWidth: '52px',
                   background: isSelected
-                    ? (isDark ? 'rgba(255,255,255,0.06)' : '#406A5615')
+                    ? (isDark ? 'rgba(255,255,255,0.06)' : '#2D5A3D15')
                     : 'transparent',
-                  border: isNew ? '2px solid #D9C61A' : '1px solid transparent',
+                  border: isNew ? '2px solid #C4A235' : '1px solid transparent',
                   opacity: isEarned ? 1 : 0.35,
                   transition: 'all 0.2s',
                   position: 'relative',
@@ -206,7 +206,7 @@ export default function BadgeDisplay() {
                           {def.description}
                         </div>
                         {def.criteria && (
-                          <div style={{ color: '#D9C61A', fontSize: '10px', marginTop: '4px', fontWeight: '600' }}>
+                          <div style={{ color: '#C4A235', fontSize: '10px', marginTop: '4px', fontWeight: '600' }}>
                             🎯 Need {getCriteriaLabel(def.criteria)}
                           </div>
                         )}

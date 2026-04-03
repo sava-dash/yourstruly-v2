@@ -348,9 +348,9 @@ export default function ContactInfoModal({ task, isOpen, onClose, onComplete }: 
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
-        <div className="flex items-center justify-between p-5 border-b border-[#406A56]/10">
+        <div className="flex items-center justify-between p-5 border-b border-[#2D5A3D]/10">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-full bg-gradient-to-br from-[#406A56] to-[#8DACAB] flex items-center justify-center text-white font-semibold">
+            <div className="w-10 h-10 rounded-full bg-gradient-to-br from-[#2D5A3D] to-[#8DACAB] flex items-center justify-center text-white font-semibold">
               {contactName.charAt(0).toUpperCase()}
             </div>
             <h3 className="text-[#2d2d2d] font-semibold text-lg">{getTitle()}</h3>
@@ -376,14 +376,14 @@ export default function ContactInfoModal({ task, isOpen, onClose, onComplete }: 
           {(infoType === 'birthday' || infoType === 'multiple') && (
             <div>
               <label className="block text-sm text-[#666] mb-1.5 flex items-center gap-2">
-                <Calendar size={14} className="text-[#406A56]" />
+                <Calendar size={14} className="text-[#2D5A3D]" />
                 Birthday
               </label>
               <input
                 type="date"
                 value={form.date_of_birth}
                 onChange={(e) => setForm({ ...form, date_of_birth: e.target.value })}
-                className="w-full px-4 py-3 bg-[#406A56]/5 border border-[#406A56]/10 rounded-xl text-gray-800 focus:outline-none focus:ring-2 focus:ring-[#406A56]/30 transition-all"
+                className="w-full px-4 py-3 bg-[#2D5A3D]/5 border border-[#2D5A3D]/10 rounded-xl text-gray-800 focus:outline-none focus:ring-2 focus:ring-[#2D5A3D]/30 transition-all"
               />
             </div>
           )}
@@ -392,7 +392,7 @@ export default function ContactInfoModal({ task, isOpen, onClose, onComplete }: 
           {(infoType === 'phone' || infoType === 'multiple') && (
             <div>
               <label className="block text-sm text-[#666] mb-1.5 flex items-center gap-2">
-                <Phone size={14} className="text-[#406A56]" />
+                <Phone size={14} className="text-[#2D5A3D]" />
                 Phone Number
               </label>
               <input
@@ -400,7 +400,7 @@ export default function ContactInfoModal({ task, isOpen, onClose, onComplete }: 
                 value={form.phone}
                 onChange={(e) => setForm({ ...form, phone: e.target.value })}
                 placeholder="(555) 123-4567"
-                className="w-full px-4 py-3 bg-[#406A56]/5 border border-[#406A56]/10 rounded-xl text-gray-800 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#406A56]/30 transition-all"
+                className="w-full px-4 py-3 bg-[#2D5A3D]/5 border border-[#2D5A3D]/10 rounded-xl text-gray-800 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#2D5A3D]/30 transition-all"
               />
             </div>
           )}
@@ -409,7 +409,7 @@ export default function ContactInfoModal({ task, isOpen, onClose, onComplete }: 
           {(infoType === 'email' || infoType === 'multiple') && (
             <div>
               <label className="block text-sm text-[#666] mb-1.5 flex items-center gap-2">
-                <Mail size={14} className="text-[#406A56]" />
+                <Mail size={14} className="text-[#2D5A3D]" />
                 Email Address
               </label>
               <input
@@ -417,7 +417,7 @@ export default function ContactInfoModal({ task, isOpen, onClose, onComplete }: 
                 value={form.email}
                 onChange={(e) => setForm({ ...form, email: e.target.value })}
                 placeholder="email@example.com"
-                className="w-full px-4 py-3 bg-[#406A56]/5 border border-[#406A56]/10 rounded-xl text-gray-800 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#406A56]/30 transition-all"
+                className="w-full px-4 py-3 bg-[#2D5A3D]/5 border border-[#2D5A3D]/10 rounded-xl text-gray-800 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#2D5A3D]/30 transition-all"
               />
             </div>
           )}
@@ -426,7 +426,7 @@ export default function ContactInfoModal({ task, isOpen, onClose, onComplete }: 
           {(infoType === 'nickname' || infoType === 'multiple') && (
             <div>
               <label className="block text-sm text-[#666] mb-1.5 flex items-center gap-2">
-                <User size={14} className="text-[#406A56]" />
+                <User size={14} className="text-[#2D5A3D]" />
                 Nickname
               </label>
               <input
@@ -434,7 +434,7 @@ export default function ContactInfoModal({ task, isOpen, onClose, onComplete }: 
                 value={form.nickname}
                 onChange={(e) => setForm({ ...form, nickname: e.target.value })}
                 placeholder="What do you call them?"
-                className="w-full px-4 py-3 bg-[#406A56]/5 border border-[#406A56]/10 rounded-xl text-gray-800 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#406A56]/30 transition-all"
+                className="w-full px-4 py-3 bg-[#2D5A3D]/5 border border-[#2D5A3D]/10 rounded-xl text-gray-800 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#2D5A3D]/30 transition-all"
               />
             </div>
           )}
@@ -443,7 +443,7 @@ export default function ContactInfoModal({ task, isOpen, onClose, onComplete }: 
           {(infoType === 'address' || infoType === 'multiple') && (
             <div className="space-y-3">
               <label className="block text-sm text-[#666] mb-1.5 flex items-center gap-2">
-                <MapPin size={14} className="text-[#406A56]" />
+                <MapPin size={14} className="text-[#2D5A3D]" />
                 Address
               </label>
               <input
@@ -451,7 +451,7 @@ export default function ContactInfoModal({ task, isOpen, onClose, onComplete }: 
                 value={form.address}
                 onChange={(e) => setForm({ ...form, address: e.target.value })}
                 placeholder="Street address"
-                className="w-full px-4 py-3 bg-[#406A56]/5 border border-[#406A56]/10 rounded-xl text-gray-800 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#406A56]/30 transition-all"
+                className="w-full px-4 py-3 bg-[#2D5A3D]/5 border border-[#2D5A3D]/10 rounded-xl text-gray-800 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#2D5A3D]/30 transition-all"
               />
               <div className="grid grid-cols-2 gap-3">
                 <input
@@ -459,14 +459,14 @@ export default function ContactInfoModal({ task, isOpen, onClose, onComplete }: 
                   value={form.city}
                   onChange={(e) => setForm({ ...form, city: e.target.value })}
                   placeholder="City"
-                  className="w-full px-4 py-3 bg-[#406A56]/5 border border-[#406A56]/10 rounded-xl text-gray-800 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#406A56]/30 transition-all"
+                  className="w-full px-4 py-3 bg-[#2D5A3D]/5 border border-[#2D5A3D]/10 rounded-xl text-gray-800 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#2D5A3D]/30 transition-all"
                 />
                 <input
                   type="text"
                   value={form.state}
                   onChange={(e) => setForm({ ...form, state: e.target.value })}
                   placeholder="State"
-                  className="w-full px-4 py-3 bg-[#406A56]/5 border border-[#406A56]/10 rounded-xl text-gray-800 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#406A56]/30 transition-all"
+                  className="w-full px-4 py-3 bg-[#2D5A3D]/5 border border-[#2D5A3D]/10 rounded-xl text-gray-800 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#2D5A3D]/30 transition-all"
                 />
               </div>
               <div className="grid grid-cols-2 gap-3">
@@ -475,14 +475,14 @@ export default function ContactInfoModal({ task, isOpen, onClose, onComplete }: 
                   value={form.zipcode}
                   onChange={(e) => setForm({ ...form, zipcode: e.target.value })}
                   placeholder="ZIP Code"
-                  className="w-full px-4 py-3 bg-[#406A56]/5 border border-[#406A56]/10 rounded-xl text-gray-800 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#406A56]/30 transition-all"
+                  className="w-full px-4 py-3 bg-[#2D5A3D]/5 border border-[#2D5A3D]/10 rounded-xl text-gray-800 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#2D5A3D]/30 transition-all"
                 />
                 <input
                   type="text"
                   value={form.country}
                   onChange={(e) => setForm({ ...form, country: e.target.value })}
                   placeholder="Country"
-                  className="w-full px-4 py-3 bg-[#406A56]/5 border border-[#406A56]/10 rounded-xl text-gray-800 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#406A56]/30 transition-all"
+                  className="w-full px-4 py-3 bg-[#2D5A3D]/5 border border-[#2D5A3D]/10 rounded-xl text-gray-800 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#2D5A3D]/30 transition-all"
                 />
               </div>
             </div>
@@ -497,14 +497,14 @@ export default function ContactInfoModal({ task, isOpen, onClose, onComplete }: 
                 onChange={(e) => setForm({ ...form, notes: e.target.value })}
                 placeholder={`Add notes about ${contactName}...`}
                 rows={3}
-                className="w-full px-4 py-3 bg-[#406A56]/5 border border-[#406A56]/10 rounded-xl text-gray-800 placeholder-gray-400 resize-none focus:outline-none focus:ring-2 focus:ring-[#406A56]/30 transition-all"
+                className="w-full px-4 py-3 bg-[#2D5A3D]/5 border border-[#2D5A3D]/10 rounded-xl text-gray-800 placeholder-gray-400 resize-none focus:outline-none focus:ring-2 focus:ring-[#2D5A3D]/30 transition-all"
               />
             </div>
           )}
         </div>
         
         {/* Footer */}
-        <div className="flex justify-end gap-3 p-5 border-t border-[#406A56]/10">
+        <div className="flex justify-end gap-3 p-5 border-t border-[#2D5A3D]/10">
           <button
             onClick={onClose}
             className="px-5 py-2.5 text-gray-600 hover:text-gray-800 hover:bg-gray-100 rounded-xl font-medium transition-colors"
@@ -514,7 +514,7 @@ export default function ContactInfoModal({ task, isOpen, onClose, onComplete }: 
           <button
             onClick={handleSave}
             disabled={saving}
-            className="flex items-center gap-2 px-5 py-2.5 bg-[#406A56] hover:bg-[#4a7a64] text-white rounded-xl font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            className="flex items-center gap-2 px-5 py-2.5 bg-[#2D5A3D] hover:bg-[#234A31] text-white rounded-xl font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {saving ? (
               <>

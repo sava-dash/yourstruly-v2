@@ -51,7 +51,7 @@ export default function SubscriptionSettings() {
     // Check for success/canceled query params
     const params = new URLSearchParams(window.location.search);
     if (params.get('success') === 'true') {
-      setNotification({ type: 'success', message: 'Subscription activated successfully! Welcome to Premium.' });
+      setNotification({ type: 'success', message: 'Premium activated. You now have more space for your stories.' });
       window.history.replaceState({}, '', window.location.pathname);
     } else if (params.get('canceled') === 'true') {
       setNotification({ type: 'error', message: 'Checkout was canceled. No changes were made.' });
@@ -141,7 +141,7 @@ export default function SubscriptionSettings() {
           <div className="page-blob page-blob-2" />
         </div>
         <div className="relative z-10 flex items-center justify-center h-64">
-          <Loader2 className="w-8 h-8 animate-spin text-[#406A56]" />
+          <Loader2 className="w-8 h-8 animate-spin text-[#2D5A3D]" />
         </div>
       </div>
     );
@@ -171,7 +171,7 @@ export default function SubscriptionSettings() {
         {notification && (
           <div className={`mb-6 p-4 rounded-xl flex items-center gap-3 ${
             notification.type === 'success' 
-              ? 'bg-[#406A56]/10 text-[#406A56]' 
+              ? 'bg-[#2D5A3D]/10 text-[#2D5A3D]' 
               : 'bg-red-50 text-red-600'
           }`}>
             {notification.type === 'success' ? (
@@ -193,7 +193,7 @@ export default function SubscriptionSettings() {
         {isPremium && (
           <div className="glass-card-page p-6 mb-8">
             <div className="flex items-center gap-3 mb-4">
-              <div className="w-10 h-10 rounded-full bg-[#406A56] flex items-center justify-center">
+              <div className="w-10 h-10 rounded-full bg-[#2D5A3D] flex items-center justify-center">
                 <Check className="w-5 h-5 text-white" />
               </div>
               <div>
@@ -248,7 +248,7 @@ export default function SubscriptionSettings() {
                     {feature.basic === false ? (
                       <Minus className="w-4 h-4 text-gray-300" />
                     ) : (
-                      <Check className="w-4 h-4 text-[#406A56]" />
+                      <Check className="w-4 h-4 text-[#2D5A3D]" />
                     )}
                     <span className={`text-sm ${feature.basic === false ? 'text-gray-400' : 'text-gray-700'}`}>
                       {feature.name}: {feature.basic === false ? '—' : feature.basic === true ? '✓' : feature.basic}
@@ -273,15 +273,15 @@ export default function SubscriptionSettings() {
             <div className="torn-edge torn-edge-top" />
             <div className="torn-edge torn-edge-bottom" />
             
-            <div className="absolute -top-3 left-1/2 -translate-x-1/2 z-10 px-4 py-1 bg-[#D9C61A] text-[#2d2d2d] text-xs font-bold rounded-full shadow-sm">
+            <div className="absolute -top-3 left-1/2 -translate-x-1/2 z-10 px-4 py-1 bg-[#C4A235] text-[#2d2d2d] text-xs font-bold rounded-full shadow-sm">
               <Crown className="inline w-3 h-3 mr-1" />
               Recommended
             </div>
             
             <div className="tile-content p-6">
             <div className="flex items-center gap-3 mb-4">
-              <div className="w-12 h-12 rounded-xl bg-[#406A56]/20 flex items-center justify-center">
-                <Shield className="w-6 h-6 text-[#406A56]" />
+              <div className="w-12 h-12 rounded-xl bg-[#2D5A3D]/20 flex items-center justify-center">
+                <Shield className="w-6 h-6 text-[#2D5A3D]" />
               </div>
               <div>
                 <h3 className="text-2xl font-bold text-[#2d2d2d]">Premium</h3>
@@ -292,7 +292,7 @@ export default function SubscriptionSettings() {
             {/* Dynamic Pricing Display - Avg price prominent */}
             <div className="mb-6">
               <div className="flex items-baseline gap-2">
-                <span className="text-4xl font-bold text-[#406A56]">
+                <span className="text-4xl font-bold text-[#2D5A3D]">
                   ${seatPricing.avgPerSeat}
                 </span>
                 <span className="text-gray-500">/month per person</span>
@@ -301,7 +301,7 @@ export default function SubscriptionSettings() {
                 ${billingCycle === 'monthly' ? seatPricing.monthlyTotal : seatPricing.yearlyMonthly}/mo total · {seats} {seats === 1 ? 'seat' : 'seats'}
               </p>
               {billingCycle === 'yearly' && (
-                <p className="text-sm text-[#406A56] font-medium mt-1">
+                <p className="text-sm text-[#2D5A3D] font-medium mt-1">
                   Save ${(seatPricing.monthlyTotal * 12) - seatPricing.yearlyTotal}/year with annual billing
                 </p>
               )}
@@ -313,7 +313,7 @@ export default function SubscriptionSettings() {
                 onClick={() => setBillingCycle('monthly')}
                 className={`flex-1 py-2 px-4 rounded-lg text-sm font-medium transition-colors ${
                   billingCycle === 'monthly'
-                    ? 'bg-[#406A56] text-white'
+                    ? 'bg-[#2D5A3D] text-white'
                     : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
                 }`}
               >
@@ -323,7 +323,7 @@ export default function SubscriptionSettings() {
                 onClick={() => setBillingCycle('yearly')}
                 className={`flex-1 py-2 px-4 rounded-lg text-sm font-medium transition-colors ${
                   billingCycle === 'yearly'
-                    ? 'bg-[#406A56] text-white'
+                    ? 'bg-[#2D5A3D] text-white'
                     : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
                 }`}
               >
@@ -333,13 +333,13 @@ export default function SubscriptionSettings() {
             </div>
 
             {/* Seat Slider */}
-            <div className="mb-6 p-4 bg-[#406A56]/5 rounded-xl">
+            <div className="mb-6 p-4 bg-[#2D5A3D]/5 rounded-xl">
               <div className="flex items-center justify-between mb-3">
                 <label className="text-sm font-medium text-[#2d2d2d]">
                   <Users className="inline w-4 h-4 mr-1" />
                   Family Seats
                 </label>
-                <span className="text-lg font-bold text-[#406A56]">{seats}</span>
+                <span className="text-lg font-bold text-[#2D5A3D]">{seats}</span>
               </div>
               <input
                 type="range"
@@ -347,7 +347,7 @@ export default function SubscriptionSettings() {
                 max={MAX_SEATS}
                 value={seats}
                 onChange={(e) => setSeats(parseInt(e.target.value))}
-                className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-[#406A56]"
+                className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-[#2D5A3D]"
               />
               <div className="flex justify-between text-xs text-gray-500 mt-2">
                 <span>1</span>
@@ -356,13 +356,13 @@ export default function SubscriptionSettings() {
               </div>
               
               {/* Seat pricing breakdown */}
-              <div className="mt-3 pt-3 border-t border-[#406A56]/10 text-xs text-gray-600 space-y-1">
+              <div className="mt-3 pt-3 border-t border-[#2D5A3D]/10 text-xs text-gray-600 space-y-1">
                 <div className="flex justify-between">
                   <span>Base price (includes 2 seats)</span>
                   <span>${PREMIUM_BASE_PRICE}/mo</span>
                 </div>
                 {seats > INCLUDED_SEATS && (
-                  <div className="flex justify-between text-[#406A56]">
+                  <div className="flex justify-between text-[#2D5A3D]">
                     <span>+{seats - INCLUDED_SEATS} additional seats</span>
                     <span>+${seatPricing.additionalCost}/mo</span>
                   </div>
@@ -374,7 +374,7 @@ export default function SubscriptionSettings() {
             <div className="space-y-3 mb-6">
               {FEATURES.filter(f => f.highlight).map((feature) => (
                 <div key={feature.name} className="flex items-center gap-3">
-                  <Check className="w-4 h-4 text-[#406A56]" />
+                  <Check className="w-4 h-4 text-[#2D5A3D]" />
                   <span className="text-sm text-gray-700">
                     {feature.name}: {feature.premium === true ? 'Included' : feature.premium}
                   </span>
@@ -387,7 +387,7 @@ export default function SubscriptionSettings() {
             {isPremium ? (
               <button 
                 disabled
-                className="w-full py-3 rounded-xl font-semibold bg-[#406A56]/20 text-[#406A56] cursor-not-allowed"
+                className="w-full py-3 rounded-xl font-semibold bg-[#2D5A3D]/20 text-[#2D5A3D] cursor-not-allowed"
               >
                 <Check className="inline w-4 h-4 mr-2" />
                 Current Plan
@@ -396,7 +396,7 @@ export default function SubscriptionSettings() {
               <button
                 onClick={handleCheckout}
                 disabled={checkoutLoading}
-                className="w-full py-3 rounded-xl font-semibold bg-[#406A56] text-white hover:bg-[#355a48] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                className="w-full py-3 rounded-xl font-semibold bg-[#2D5A3D] text-white hover:bg-[#355a48] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {checkoutLoading ? (
                   <Loader2 className="w-5 h-5 animate-spin mx-auto" />
@@ -423,7 +423,7 @@ export default function SubscriptionSettings() {
                 <tr className="border-b border-gray-200">
                   <th className="text-left py-3 px-4 font-medium text-gray-600">Feature</th>
                   <th className="text-center py-3 px-4 font-medium text-gray-600">Basic</th>
-                  <th className="text-center py-3 px-4 font-medium text-[#406A56]">Premium</th>
+                  <th className="text-center py-3 px-4 font-medium text-[#2D5A3D]">Premium</th>
                 </tr>
               </thead>
               <tbody>
@@ -434,16 +434,16 @@ export default function SubscriptionSettings() {
                       {feature.basic === false ? (
                         <X className="w-4 h-4 text-gray-300 mx-auto" />
                       ) : feature.basic === true ? (
-                        <Check className="w-4 h-4 text-[#406A56] mx-auto" />
+                        <Check className="w-4 h-4 text-[#2D5A3D] mx-auto" />
                       ) : (
                         <span className="text-gray-600">{feature.basic}</span>
                       )}
                     </td>
                     <td className="py-3 px-4 text-center text-sm">
                       {feature.premium === true ? (
-                        <Check className="w-4 h-4 text-[#406A56] mx-auto" />
+                        <Check className="w-4 h-4 text-[#2D5A3D] mx-auto" />
                       ) : (
-                        <span className="text-[#406A56] font-medium">{feature.premium}</span>
+                        <span className="text-[#2D5A3D] font-medium">{feature.premium}</span>
                       )}
                     </td>
                   </tr>

@@ -162,10 +162,10 @@ function generateOnboardingPrompts(
 
 const TYPE_COLORS: Record<string, { bg: string; accent: string; label: string }> = {
   memory_prompt: { bg: '#F3E8F9', accent: '#4A3552', label: 'Remember When' },
-  missing_info: { bg: '#E8F2ED', accent: '#406A56', label: 'Quick Info' },
+  missing_info: { bg: '#E8F2ED', accent: '#2D5A3D', label: 'Quick Info' },
   photo_backstory: { bg: '#FDF9E3', accent: '#B8A61A', label: 'Photo Story' },
-  favorites_firsts: { bg: '#FCE8E8', accent: '#C35F33', label: 'Your Favorites' },
-  knowledge: { bg: '#FCE8E8', accent: '#C35F33', label: 'Share Wisdom' },
+  favorites_firsts: { bg: '#FCE8E8', accent: '#B8562E', label: 'Your Favorites' },
+  knowledge: { bg: '#FCE8E8', accent: '#B8562E', label: 'Share Wisdom' },
 }
 
 // ============================================================================
@@ -212,7 +212,7 @@ export function OnboardingCards({
     <div className="max-w-lg mx-auto">
       {/* Header */}
       <div className="text-center mb-5">
-        <div className="inline-flex items-center justify-center w-12 h-12 rounded-full bg-gradient-to-br from-[#406A56] to-[#8DACAB] mb-3">
+        <div className="inline-flex items-center justify-center w-12 h-12 rounded-full bg-gradient-to-br from-[#2D5A3D] to-[#8DACAB] mb-3">
           <Sparkles size={20} className="text-white" />
         </div>
         <h2 className="text-lg font-semibold text-[#2d2d2d] font-playfair">
@@ -227,7 +227,7 @@ export function OnboardingCards({
       <div className="text-center text-xs text-gray-400 mb-3">
         {currentIndex % prompts.length + 1} / {prompts.length}
         {answeredIds.size > 0 && (
-          <span className="ml-2 text-[#406A56] font-medium">
+          <span className="ml-2 text-[#2D5A3D] font-medium">
             ✓ {answeredIds.size} answered
           </span>
         )}
@@ -251,7 +251,7 @@ export function OnboardingCards({
       <div className="text-center mt-6">
         <button
           onClick={() => onComplete(answeredIds.size)}
-          className="px-8 py-3 bg-[#406A56] text-white font-medium rounded-xl hover:bg-[#4a7a64] transition-colors"
+          className="px-8 py-3 bg-[#2D5A3D] text-white font-medium rounded-xl hover:bg-[#234A31] transition-colors"
         >
           {answeredIds.size > 0 ? 'Continue →' : 'Skip for now →'}
         </button>
@@ -621,7 +621,7 @@ function OnboardingFlippableCard({
                 {/* Original question (when no exchanges yet) */}
                 {exchanges.length === 0 && !showSavePrompt && (
                   <div className="mb-3">
-                    <p className="text-sm font-medium text-[#406A56] leading-relaxed">
+                    <p className="text-sm font-medium text-[#2D5A3D] leading-relaxed">
                       {prompt.promptText}
                     </p>
                   </div>
@@ -630,8 +630,8 @@ function OnboardingFlippableCard({
                 {/* Past exchanges */}
                 {exchanges.map((ex, i) => (
                   <div key={i} className="mb-3">
-                    <div className="bg-[#406A56]/5 rounded-2xl rounded-bl-sm px-3 py-2 mb-1.5">
-                      <p className="text-xs text-[#406A56] font-medium">{ex.question}</p>
+                    <div className="bg-[#2D5A3D]/5 rounded-2xl rounded-bl-sm px-3 py-2 mb-1.5">
+                      <p className="text-xs text-[#2D5A3D] font-medium">{ex.question}</p>
                     </div>
                     <div className="bg-gray-100 rounded-2xl rounded-br-sm px-3 py-2 ml-4">
                       <p className="text-xs text-gray-800">{ex.response}</p>
@@ -641,8 +641,8 @@ function OnboardingFlippableCard({
 
                 {/* Current follow-up question */}
                 {currentQuestion && !showSavePrompt && (
-                  <div className="bg-[#406A56]/5 rounded-2xl rounded-bl-sm px-3 py-2 mb-2">
-                    <p className="text-xs text-[#406A56] font-medium">{currentQuestion}</p>
+                  <div className="bg-[#2D5A3D]/5 rounded-2xl rounded-bl-sm px-3 py-2 mb-2">
+                    <p className="text-xs text-[#2D5A3D] font-medium">{currentQuestion}</p>
                   </div>
                 )}
 
@@ -670,7 +670,7 @@ function OnboardingFlippableCard({
                       <button
                         onClick={(e) => { e.stopPropagation(); handleSaveMemory() }}
                         disabled={isSubmitting}
-                        className="flex-1 py-2 px-3 rounded-xl bg-[#406A56] text-white text-xs font-medium hover:bg-[#4a7a64] disabled:opacity-50"
+                        className="flex-1 py-2 px-3 rounded-xl bg-[#2D5A3D] text-white text-xs font-medium hover:bg-[#234A31] disabled:opacity-50"
                       >
                         {isSubmitting ? 'Saving...' : '✨ Save Memory'}
                       </button>
@@ -694,7 +694,7 @@ function OnboardingFlippableCard({
                         : 'Share your thoughts...'
                       }
                       rows={2}
-                      className="w-full p-3 bg-gray-50 rounded-2xl border-0 resize-none focus:outline-none focus:ring-2 focus:ring-[#406A56]/30 text-gray-800 text-sm placeholder-gray-400"
+                      className="w-full p-3 bg-gray-50 rounded-2xl border-0 resize-none focus:outline-none focus:ring-2 focus:ring-[#2D5A3D]/30 text-gray-800 text-sm placeholder-gray-400"
                       style={interimText ? { color: 'transparent', caretColor: '#1f2937' } : undefined}
                       onKeyDown={(e) => {
                         if (e.key === 'Enter' && !e.shiftKey) {
@@ -728,7 +728,7 @@ function OnboardingFlippableCard({
                     <button
                       onClick={(e) => { e.stopPropagation(); handleSubmit() }}
                       disabled={!responseText.trim() || isSubmitting}
-                      className="w-10 h-10 rounded-full bg-[#406A56] text-white flex items-center justify-center disabled:opacity-40 hover:bg-[#4a7a64] transition-colors flex-shrink-0"
+                      className="w-10 h-10 rounded-full bg-[#2D5A3D] text-white flex items-center justify-center disabled:opacity-40 hover:bg-[#234A31] transition-colors flex-shrink-0"
                     >
                       <Send size={14} />
                     </button>

@@ -34,7 +34,7 @@ const tornPaths: Record<TornEdgeVariant, string> = {
 export default function TornEdge({ 
   variant = 'a', 
   position = 'bottom', 
-  color = '#F2F1E5',
+  color = '#F5F3EE',
   height = 8,
   className = ''
 }: TornEdgeProps) {

@@ -122,17 +122,17 @@ const QUICK_ACTIONS: Record<string, Array<{ label: string; icon: any; action: st
 
 // Brand colors from YoursTruly brand kit
 const BRAND_COLORS = {
-  green: '#406A56',
+  green: '#2D5A3D',
   greenLight: '#D3E1DF',
-  yellow: '#D9C61A',
-  yellowLight: '#F2F1E5',
+  yellow: '#C4A235',
+  yellowLight: '#F5F3EE',
   blue: '#8DACAB',
   blueLight: '#C5CDD6',
-  red: '#C35F33',
+  red: '#B8562E',
   redLight: '#EBD4CA',
   purple: '#4A3552',
   purpleLight: '#D8D3DA',
-  offWhite: '#F2F1E5',
+  offWhite: '#F5F3EE',
   black: '#000000',
 }
 
@@ -403,7 +403,7 @@ function MasonryTile({
           {(() => {
             const c = getCompleteness(activity)
             if (!c || c.percentage === 100) return null
-            const color = c.percentage >= 80 ? '#22c55e' : c.percentage >= 50 ? '#D9C61A' : '#C35F33'
+            const color = c.percentage >= 80 ? '#22c55e' : c.percentage >= 50 ? '#C4A235' : '#B8562E'
             return (
               <div style={{
                 display: 'flex',
@@ -1748,7 +1748,7 @@ export default function FeedPage() {
                     borderRadius: '12px',
                   }}>
                     <span style={{ fontSize: '13px' }}>🔥</span>
-                    <span style={{ fontSize: '13px', fontWeight: '700', color: '#C35F33' }}>{streakDays}</span>
+                    <span style={{ fontSize: '13px', fontWeight: '700', color: '#B8562E' }}>{streakDays}</span>
                   </div>
                 )}
               </div>
@@ -1795,7 +1795,7 @@ export default function FeedPage() {
                         height: '100%',
                         borderRadius: '2px',
                         width: `${lvl.progress}%`,
-                        background: 'linear-gradient(90deg, #D9C61A, #E8D84A)',
+                        background: 'linear-gradient(90deg, #C4A235, #E8D84A)',
                         transition: 'width 0.8s ease-out',
                       }} />
                     </div>
@@ -1823,8 +1823,8 @@ export default function FeedPage() {
                     borderRadius: '3px',
                     width: `${Math.min(storageInfo.percentage, 100)}%`,
                     background: storageInfo.percentage >= 90
-                      ? 'linear-gradient(90deg, #C35F33, #dc2626)'
-                      : 'linear-gradient(90deg, #406A56, #8DACAB)',
+                      ? 'linear-gradient(90deg, #B8562E, #dc2626)'
+                      : 'linear-gradient(90deg, #2D5A3D, #8DACAB)',
                     transition: 'width 0.8s ease-out',
                   }} />
                 </div>
@@ -2532,7 +2532,7 @@ export default function FeedPage() {
               <select
                 value={selectedContact}
                 onChange={(e) => setSelectedContact(e.target.value)}
-                className="w-full px-4 py-3 border border-gray-200 rounded-xl mb-6 focus:outline-none focus:ring-2 focus:ring-[#406A56] text-gray-900 font-medium"
+                className="w-full px-4 py-3 border border-gray-200 rounded-xl mb-6 focus:outline-none focus:ring-2 focus:ring-[#2D5A3D] text-gray-900 font-medium"
                 style={{ color: '#1A1A1A' }}
               >
                 <option value="" style={{ color: '#999' }}>Select a contact...</option>
@@ -2553,7 +2553,7 @@ export default function FeedPage() {
                 <button
                   onClick={handleCreateInterview}
                   disabled={!selectedContact}
-                  className="flex-1 px-6 py-3 bg-[#406A56] text-white font-medium rounded-xl hover:bg-[#4a7a64] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="flex-1 px-6 py-3 bg-[#2D5A3D] text-white font-medium rounded-xl hover:bg-[#234A31] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   Start Interview
                 </button>
@@ -2604,7 +2604,7 @@ export default function FeedPage() {
                   <div className="mb-6">
                     <div className="w-full bg-gray-200 rounded-full h-3 overflow-hidden">
                       <div 
-                        className="bg-gradient-to-r from-[#406A56] to-[#4a7a64] h-full transition-all duration-300"
+                        className="bg-gradient-to-r from-[#2D5A3D] to-[#234A31] h-full transition-all duration-300"
                         style={{ width: `${uploadProgress}%` }}
                       />
                     </div>
@@ -2620,7 +2620,7 @@ export default function FeedPage() {
                           type="date"
                           value={memoryMetadata.date}
                           onChange={(e) => setMemoryMetadata({ ...memoryMetadata, date: e.target.value })}
-                          className="w-full px-4 py-2 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#406A56]"
+                          className="w-full px-4 py-2 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#2D5A3D]"
                         />
                       </div>
                       <div>
@@ -2630,7 +2630,7 @@ export default function FeedPage() {
                           value={memoryMetadata.location}
                           onChange={(e) => setMemoryMetadata({ ...memoryMetadata, location: e.target.value })}
                           placeholder="Where was this taken?"
-                          className="w-full px-4 py-2 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#406A56]"
+                          className="w-full px-4 py-2 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#2D5A3D]"
                         />
                       </div>
                     </div>
@@ -2683,7 +2683,7 @@ export default function FeedPage() {
                   <div className="flex gap-3">
                     <button
                       onClick={handleAddBackstory}
-                      className="flex-1 px-6 py-3 bg-[#406A56] text-white font-medium rounded-xl hover:bg-[#4a7a64] transition-colors"
+                      className="flex-1 px-6 py-3 bg-[#2D5A3D] text-white font-medium rounded-xl hover:bg-[#234A31] transition-colors"
                     >
                       Add Backstory
                     </button>
@@ -2735,7 +2735,7 @@ export default function FeedPage() {
               <select
                 value={selectedContact}
                 onChange={(e) => setSelectedContact(e.target.value)}
-                className="w-full px-4 py-3 border border-gray-200 rounded-xl mb-6 focus:outline-none focus:ring-2 focus:ring-[#406A56] text-gray-900 font-medium"
+                className="w-full px-4 py-3 border border-gray-200 rounded-xl mb-6 focus:outline-none focus:ring-2 focus:ring-[#2D5A3D] text-gray-900 font-medium"
                 style={{ color: '#1A1A1A' }}
               >
                 <option value="" style={{ color: '#999' }}>Select a recipient...</option>
@@ -2756,7 +2756,7 @@ export default function FeedPage() {
                 <button
                   onClick={handleCreatePostscript}
                   disabled={!selectedContact}
-                  className="flex-1 px-6 py-3 bg-[#406A56] text-white font-medium rounded-xl hover:bg-[#4a7a64] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="flex-1 px-6 py-3 bg-[#2D5A3D] text-white font-medium rounded-xl hover:bg-[#234A31] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   Create PostScript
                 </button>
@@ -2789,8 +2789,8 @@ export default function FeedPage() {
         }
 
         .feed-page[data-theme="light"] {
-          background-color: #FAF8F4;
-          color: #1A2B23;
+          background-color: #FAFAF7;
+          color: #1A1F1C;
         }
 
         .feed-header {
@@ -2809,7 +2809,7 @@ export default function FeedPage() {
 
         .feed-page[data-theme="light"] .feed-header {
           background: rgba(250, 248, 244, 0.95);
-          border-bottom: 1px solid #DDE5E0;
+          border-bottom: 1px solid #DDE3DF;
         }
 
         .theme-toggle {
@@ -2828,7 +2828,7 @@ export default function FeedPage() {
 
         .feed-page[data-theme="light"] .theme-toggle {
           background: rgba(0, 0, 0, 0.04);
-          border-color: #DDE5E0;
+          border-color: #DDE3DF;
         }
 
         .theme-toggle:hover {
@@ -2856,7 +2856,7 @@ export default function FeedPage() {
         }
 
         .feed-page[data-theme="light"] .page-title {
-          color: #1A2B23;
+          color: #1A1F1C;
         }
 
         .welcome-heading {
@@ -2873,7 +2873,7 @@ export default function FeedPage() {
         }
 
         .feed-page[data-theme="light"] .welcome-heading {
-          color: #1A2B23;
+          color: #1A1F1C;
         }
 
         @media (max-width: 768px) {
@@ -2894,7 +2894,7 @@ export default function FeedPage() {
         .feed-page[data-theme="dark"] .profile-stat-label { font-size: 9px; color: rgba(141,172,171,0.5); text-transform: uppercase; letter-spacing: 0.5px; font-weight: 600; }
         .feed-page[data-theme="dark"] .profile-stat-bordered { border-left: 1px solid rgba(255,255,255,0.08); border-right: 1px solid rgba(255,255,255,0.08); }
         .feed-page[data-theme="dark"] .profile-stat-bordered-r { border-right: 1px solid rgba(255,255,255,0.08); }
-        .feed-page[data-theme="dark"] .profile-stat-xp { font-size: 22px; font-weight: 700; color: #D9C61A; }
+        .feed-page[data-theme="dark"] .profile-stat-xp { font-size: 22px; font-weight: 700; color: #C4A235; }
         .feed-page[data-theme="dark"] .profile-stat-label-xp { font-size: 9px; color: rgba(217,198,26,0.5); text-transform: uppercase; letter-spacing: 0.5px; font-weight: 600; display: flex; align-items: center; justify-content: center; gap: 2px; }
         .feed-page[data-theme="dark"] .profile-storage { border-top: 1px solid rgba(255,255,255,0.08); padding-top: 10px; }
         .feed-page[data-theme="dark"] .profile-storage-label { font-size: 10px; font-weight: 600; color: rgba(141,172,171,0.6); text-transform: uppercase; letter-spacing: 0.5px; }
@@ -2906,18 +2906,18 @@ export default function FeedPage() {
           background: rgba(255,255,255,0.92);
           backdrop-filter: blur(12px);
           box-shadow: 0 2px 12px rgba(0,0,0,0.06);
-          border: 1px solid #DDE5E0;
+          border: 1px solid #DDE3DF;
         }
         .feed-page[data-theme="light"] .profile-card-name { color: #3D6B52; }
         .feed-page[data-theme="light"] .profile-stat-value { font-size: 22px; font-weight: 700; color: #3D6B52; }
-        .feed-page[data-theme="light"] .profile-stat-label { font-size: 9px; color: #94A39C; text-transform: uppercase; letter-spacing: 0.5px; font-weight: 600; }
-        .feed-page[data-theme="light"] .profile-stat-bordered { border-left: 1px solid #DDE5E0; border-right: 1px solid #DDE5E0; }
-        .feed-page[data-theme="light"] .profile-stat-bordered-r { border-right: 1px solid #DDE5E0; }
-        .feed-page[data-theme="light"] .profile-stat-xp { font-size: 22px; font-weight: 700; color: #D9C61A; }
+        .feed-page[data-theme="light"] .profile-stat-label { font-size: 9px; color: #94A09A; text-transform: uppercase; letter-spacing: 0.5px; font-weight: 600; }
+        .feed-page[data-theme="light"] .profile-stat-bordered { border-left: 1px solid #DDE3DF; border-right: 1px solid #DDE3DF; }
+        .feed-page[data-theme="light"] .profile-stat-bordered-r { border-right: 1px solid #DDE3DF; }
+        .feed-page[data-theme="light"] .profile-stat-xp { font-size: 22px; font-weight: 700; color: #C4A235; }
         .feed-page[data-theme="light"] .profile-stat-label-xp { font-size: 9px; color: rgba(217,198,26,0.6); text-transform: uppercase; letter-spacing: 0.5px; font-weight: 600; display: flex; align-items: center; justify-content: center; gap: 2px; }
-        .feed-page[data-theme="light"] .profile-storage { border-top: 1px solid #DDE5E0; padding-top: 10px; }
-        .feed-page[data-theme="light"] .profile-storage-label { font-size: 10px; font-weight: 600; color: #94A39C; text-transform: uppercase; letter-spacing: 0.5px; }
-        .feed-page[data-theme="light"] .profile-storage-value { font-size: 10px; color: #5C6D64; }
+        .feed-page[data-theme="light"] .profile-storage { border-top: 1px solid #DDE3DF; padding-top: 10px; }
+        .feed-page[data-theme="light"] .profile-storage-label { font-size: 10px; font-weight: 600; color: #94A09A; text-transform: uppercase; letter-spacing: 0.5px; }
+        .feed-page[data-theme="light"] .profile-storage-value { font-size: 10px; color: #5A6660; }
         .feed-page[data-theme="light"] .profile-storage-track { height: 6px; background: #F5F1EA; border-radius: 3px; overflow: hidden; }
 
         .header-controls {
@@ -2960,12 +2960,12 @@ export default function FeedPage() {
 
         .feed-page[data-theme="light"] .search-box-compact {
           background: white;
-          border: 1px solid #DDE5E0;
-          color: #1A2B23;
+          border: 1px solid #DDE3DF;
+          color: #1A1F1C;
         }
 
         .search-box-compact:focus-within {
-          border-color: #C35F33;
+          border-color: #B8562E;
           width: 250px;
         }
 
@@ -2985,7 +2985,7 @@ export default function FeedPage() {
         }
 
         .feed-page[data-theme="light"] .search-box-compact input::placeholder {
-          color: #94A39C;
+          color: #94A09A;
         }
 
         .map-toggle-btn {
@@ -3008,18 +3008,18 @@ export default function FeedPage() {
 
         .feed-page[data-theme="light"] .map-toggle-btn {
           background: white;
-          border-color: #DDE5E0;
-          color: #5C6D64;
+          border-color: #DDE3DF;
+          color: #5A6660;
         }
 
         .map-toggle-btn:hover {
-          border-color: #C35F33;
-          color: #C35F33;
+          border-color: #B8562E;
+          color: #B8562E;
         }
 
         .map-toggle-btn.active {
           background: rgba(195, 95, 51, 0.12);
-          color: #C35F33;
+          color: #B8562E;
           border-color: rgba(195, 95, 51, 0.4);
         }
 
@@ -3064,18 +3064,18 @@ export default function FeedPage() {
 
         .feed-page[data-theme="light"] .reminisce-dropdown-btn {
           background: white;
-          color: #5C6D64;
-          border-color: #DDE5E0;
+          color: #5A6660;
+          border-color: #DDE3DF;
         }
 
         .reminisce-dropdown-btn:hover {
-          border-color: #C35F33;
-          color: #C35F33;
+          border-color: #B8562E;
+          color: #B8562E;
         }
 
         .reminisce-dropdown-btn.active {
           background: rgba(195, 95, 51, 0.12);
-          color: #C35F33;
+          color: #B8562E;
           border-color: rgba(195, 95, 51, 0.4);
           font-weight: 600;
         }
@@ -3095,16 +3095,16 @@ export default function FeedPage() {
           border-radius: 50%;
           border: 1px solid rgba(195, 95, 51, 0.3);
           background: rgba(195, 95, 51, 0.08);
-          color: #C35F33;
+          color: #B8562E;
           cursor: pointer;
           transition: all 0.2s ease;
           flex-shrink: 0;
         }
 
         .reminisce-clear-inline:hover {
-          background: #C35F33;
+          background: #B8562E;
           color: #fff;
-          border-color: #C35F33;
+          border-color: #B8562E;
         }
 
         .reminisce-dropdown-menu {
@@ -3125,7 +3125,7 @@ export default function FeedPage() {
 
         .feed-page[data-theme="light"] .reminisce-dropdown-menu {
           background: #fff;
-          border: 1px solid #DDE5E0;
+          border: 1px solid #DDE3DF;
         }
 
         .reminisce-dropdown-group {
@@ -3155,17 +3155,17 @@ export default function FeedPage() {
         }
 
         .feed-page[data-theme="light"] .reminisce-dropdown-item {
-          color: #5C6D64;
+          color: #5A6660;
         }
 
         .reminisce-dropdown-item:hover {
           background: rgba(195, 95, 51, 0.08);
-          color: #C35F33;
+          color: #B8562E;
         }
 
         .reminisce-dropdown-item.active {
           background: rgba(195, 95, 51, 0.12);
-          color: #C35F33;
+          color: #B8562E;
           font-weight: 600;
         }
 
@@ -3208,7 +3208,7 @@ export default function FeedPage() {
         }
 
         .feed-page[data-theme="light"] .quick-action-btn {
-          color: #1A2B23;
+          color: #1A1F1C;
         }
 
         .quick-action-btn:hover {
@@ -3261,14 +3261,14 @@ export default function FeedPage() {
         }
 
         .feed-page[data-theme="light"] .category-text-top {
-          color: #5C6D64;
+          color: #5A6660;
         }
 
         .category-text-bottom {
           position: absolute;
           top: 100%;
           left: 0;
-          color: #C35F33;
+          color: #B8562E;
         }
 
         .category-tag:hover .category-text-top {
@@ -3285,7 +3285,7 @@ export default function FeedPage() {
           left: 18px;
           right: 18px;
           height: 2px;
-          background: #C35F33;
+          background: #B8562E;
           transform: scaleX(0);
           transform-origin: left;
           transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
@@ -3311,7 +3311,7 @@ export default function FeedPage() {
         }
 
         .category-tag.active .category-text-top {
-          color: #C35F33;
+          color: #B8562E;
         }
 
         .category-tag.active .category-underline {
@@ -3324,8 +3324,8 @@ export default function FeedPage() {
         }
 
         .feed-page[data-theme="light"] .tag:hover:not(.active) {
-          color: #1A2B23;
-          background: #E8F0EC;
+          color: #1A1F1C;
+          background: #E6F0EA;
         }
 
         /* search-box replaced by search-box-compact */
@@ -3477,7 +3477,7 @@ export default function FeedPage() {
         }
 
         .feed-page[data-theme="light"] .card-title {
-          color: #1A2B23;
+          color: #1A1F1C;
         }
 
         .card-description {
@@ -3496,7 +3496,7 @@ export default function FeedPage() {
         }
 
         .feed-page[data-theme="light"] .card-description {
-          color: #5C6D64;
+          color: #5A6660;
         }
 
         .card-details {
@@ -3514,7 +3514,7 @@ export default function FeedPage() {
         }
 
         .feed-page[data-theme="light"] .card-details {
-          border-top: 1px solid #DDE5E0;
+          border-top: 1px solid #DDE3DF;
         }
 
         .card-date,
@@ -3533,7 +3533,7 @@ export default function FeedPage() {
         .feed-page[data-theme="light"] .card-date,
         .feed-page[data-theme="light"] .card-location,
         .feed-page[data-theme="light"] .card-details svg {
-          color: #94A39C;
+          color: #94A09A;
         }
 
         .loading-state {
@@ -3567,7 +3567,7 @@ export default function FeedPage() {
         }
 
         .feed-page[data-theme="light"] .empty-state {
-          color: #94A39C;
+          color: #94A09A;
         }
 
         /* Responsive Masonry Breakpoints */
@@ -3750,19 +3750,19 @@ export default function FeedPage() {
 
         .feed-page[data-theme="light"] .reminisce-pill {
           background: white;
-          color: #5C6D64;
-          border-color: #DDE5E0;
+          color: #5A6660;
+          border-color: #DDE3DF;
         }
 
         .reminisce-pill:hover {
-          border-color: #C35F33;
-          color: #C35F33;
+          border-color: #B8562E;
+          color: #B8562E;
         }
 
         .reminisce-pill.active {
-          background: #C35F33;
+          background: #B8562E;
           color: #fff;
-          border-color: #C35F33;
+          border-color: #B8562E;
           font-weight: 600;
         }
 
@@ -3777,7 +3777,7 @@ export default function FeedPage() {
         }
 
         .feed-page[data-theme="light"] .reminisce-empty {
-          color: #94A39C;
+          color: #94A09A;
         }
 
         /* Old reminisce-tabs mobile styles removed - using dropdown now */
@@ -3801,7 +3801,7 @@ export default function FeedPage() {
         }
 
         .feed-page[data-theme="light"] .browse-heading {
-          color: #1A2B23;
+          color: #1A1F1C;
         }
 
         .browse-back-btn {
@@ -3827,13 +3827,13 @@ export default function FeedPage() {
 
         .feed-page[data-theme="light"] .browse-back-btn {
           background: white;
-          color: #5C6D64;
-          border-color: #DDE5E0;
+          color: #5A6660;
+          border-color: #DDE3DF;
         }
 
         .browse-back-btn:hover {
-          color: #C35F33;
-          border-color: #C35F33;
+          color: #B8562E;
+          border-color: #B8562E;
           background: rgba(195, 95, 51, 0.08);
         }
 
@@ -3850,7 +3850,7 @@ export default function FeedPage() {
         }
 
         .feed-page[data-theme="light"] .browse-detail-heading {
-          color: #1A2B23;
+          color: #1A1F1C;
         }
 
         .person-tile:hover,
@@ -3885,7 +3885,7 @@ export default function FeedPage() {
           height: 0;
           border-top: 6px solid transparent;
           border-bottom: 6px solid transparent;
-          border-right: 8px solid #C35F33;
+          border-right: 8px solid #B8562E;
           z-index: 30;
           filter: drop-shadow(0 1px 3px rgba(195, 95, 51, 0.4));
         }
@@ -3924,7 +3924,7 @@ export default function FeedPage() {
 
         .feed-page[data-theme="light"] .timeline-scrubber {
           background: rgba(255, 255, 255, 0.92);
-          border: 1px solid #DDE5E0;
+          border: 1px solid #DDE3DF;
           box-shadow: 0 4px 20px rgba(0, 0, 0, 0.06);
         }
 
@@ -3957,18 +3957,18 @@ export default function FeedPage() {
         }
 
         .feed-page[data-theme="light"] .timeline-year-btn {
-          color: #94A39C;
+          color: #94A09A;
         }
 
         .timeline-year-btn:hover {
-          color: #C35F33;
+          color: #B8562E;
           background: rgba(195, 95, 51, 0.08);
         }
 
         .timeline-year-btn.active {
           font-size: 12px;
           font-weight: 700;
-          color: #C35F33;
+          color: #B8562E;
           background: rgba(195, 95, 51, 0.1);
           transform: scale(1.05);
           transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
@@ -3993,7 +3993,7 @@ export default function FeedPage() {
         }
 
         .feed-page[data-theme="light"] .timeline-tick {
-          background: #DDE5E0;
+          background: #DDE3DF;
         }
 
         /* Timeline responsive */

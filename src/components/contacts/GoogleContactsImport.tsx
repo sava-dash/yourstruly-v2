@@ -367,11 +367,11 @@ export function GoogleContactsImport({ onImportComplete }: GoogleContactsImportP
               initial={{ scale: 0.9, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               exit={{ scale: 0.9, opacity: 0 }}
-              className="bg-[#F2F1E5] rounded-2xl max-w-3xl w-full max-h-[90vh] overflow-hidden flex flex-col"
+              className="bg-[#F5F3EE] rounded-2xl max-w-3xl w-full max-h-[90vh] overflow-hidden flex flex-col"
               onClick={(e) => e.stopPropagation()}
             >
               {/* Header */}
-              <div className="flex items-center justify-between p-6 border-b border-[#406A56]/10">
+              <div className="flex items-center justify-between p-6 border-b border-[#2D5A3D]/10">
                 <div className="flex items-center gap-3">
                   <div className="w-10 h-10 rounded-xl bg-blue-500/10 flex items-center justify-center">
                     <img 
@@ -397,9 +397,9 @@ export function GoogleContactsImport({ onImportComplete }: GoogleContactsImportP
                 </div>
                 <button 
                   onClick={handleClose}
-                  className="p-2 hover:bg-[#406A56]/10 rounded-lg transition-colors"
+                  className="p-2 hover:bg-[#2D5A3D]/10 rounded-lg transition-colors"
                 >
-                  <X size={20} className="text-[#406A56]" />
+                  <X size={20} className="text-[#2D5A3D]" />
                 </button>
               </div>
 
@@ -453,7 +453,7 @@ export function GoogleContactsImport({ onImportComplete }: GoogleContactsImportP
                 {/* Auth/Fetching States */}
                 {(step === 'auth' || step === 'fetching' || step === 'saving') && !error && (
                   <div className="flex flex-col items-center justify-center py-16">
-                    <Loader2 size={48} className="text-[#406A56] animate-spin mb-4" />
+                    <Loader2 size={48} className="text-[#2D5A3D] animate-spin mb-4" />
                     <p className="text-[#666]">
                       {step === 'auth' && 'Waiting for Google authorization...'}
                       {step === 'fetching' && 'Fetching your contacts from Google...'}
@@ -466,16 +466,16 @@ export function GoogleContactsImport({ onImportComplete }: GoogleContactsImportP
                 {step === 'selecting' && !error && (
                   <div className="space-y-4">
                     {/* Toolbar */}
-                    <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between bg-white rounded-xl p-4 border border-[#406A56]/10">
+                    <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between bg-white rounded-xl p-4 border border-[#2D5A3D]/10">
                       {/* Search */}
                       <div className="relative flex-1 max-w-md w-full">
-                        <Search size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-[#406A56]/50" />
+                        <Search size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-[#2D5A3D]/50" />
                         <input
                           type="text"
                           aria-label="Search" placeholder="Search contacts..."
                           value={searchQuery}
                           onChange={(e) => setSearchQuery(e.target.value)}
-                          className="w-full pl-10 pr-4 py-2 bg-[#F2F1E5] border border-[#406A56]/20 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#406A56]/30"
+                          className="w-full pl-10 pr-4 py-2 bg-[#F5F3EE] border border-[#2D5A3D]/20 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#2D5A3D]/30"
                         />
                       </div>
 
@@ -486,14 +486,14 @@ export function GoogleContactsImport({ onImportComplete }: GoogleContactsImportP
                             type="checkbox"
                             checked={showDuplicates}
                             onChange={(e) => setShowDuplicates(e.target.checked)}
-                            className="rounded border-[#406A56]/20"
+                            className="rounded border-[#2D5A3D]/20"
                           />
                           Show duplicates ({duplicateCount})
                         </label>
-                        <div className="h-4 w-px bg-[#406A56]/20" />
+                        <div className="h-4 w-px bg-[#2D5A3D]/20" />
                         <button
                           onClick={toggleAll}
-                          className="text-sm text-[#406A56] hover:text-[#4a7a64] font-medium"
+                          className="text-sm text-[#2D5A3D] hover:text-[#234A31] font-medium"
                         >
                           {filteredContacts.every(c => selectedContacts.has(c.sourceId)) 
                             ? 'Deselect All' 
@@ -508,7 +508,7 @@ export function GoogleContactsImport({ onImportComplete }: GoogleContactsImportP
                       <select
                         value={defaultRelationship}
                         onChange={(e) => setDefaultRelationship(e.target.value)}
-                        className="px-3 py-1.5 bg-white border border-[#406A56]/20 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#406A56]/30"
+                        className="px-3 py-1.5 bg-white border border-[#2D5A3D]/20 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#2D5A3D]/30"
                       >
                         {RELATIONSHIP_OPTIONS.map(group => (
                           <optgroup key={group.category} label={group.category}>
@@ -535,15 +535,15 @@ export function GoogleContactsImport({ onImportComplete }: GoogleContactsImportP
                             onClick={() => toggleContact(contact.sourceId)}
                             className={`flex items-center gap-4 p-4 rounded-xl border cursor-pointer transition-all ${
                               selectedContacts.has(contact.sourceId)
-                                ? 'bg-[#406A56]/5 border-[#406A56]/30'
-                                : 'bg-white border-[#406A56]/10 hover:border-[#406A56]/20'
+                                ? 'bg-[#2D5A3D]/5 border-[#2D5A3D]/30'
+                                : 'bg-white border-[#2D5A3D]/10 hover:border-[#2D5A3D]/20'
                             } ${contact.isDuplicate ? 'opacity-60' : ''}`}
                           >
                             {/* Checkbox */}
                             <div className={`w-5 h-5 rounded border flex items-center justify-center transition-colors ${
                               selectedContacts.has(contact.sourceId)
-                                ? 'bg-[#406A56] border-[#406A56]'
-                                : 'border-[#406A56]/30'
+                                ? 'bg-[#2D5A3D] border-[#2D5A3D]'
+                                : 'border-[#2D5A3D]/30'
                             }`}>
                               {selectedContacts.has(contact.sourceId) && (
                                 <Check size={14} className="text-white" />
@@ -551,7 +551,7 @@ export function GoogleContactsImport({ onImportComplete }: GoogleContactsImportP
                             </div>
 
                             {/* Avatar */}
-                            <div className="w-10 h-10 rounded-full bg-[#406A56]/10 flex items-center justify-center flex-shrink-0">
+                            <div className="w-10 h-10 rounded-full bg-[#2D5A3D]/10 flex items-center justify-center flex-shrink-0">
                               {contact.avatarUrl ? (
                                 <img 
                                   src={contact.avatarUrl} 
@@ -559,7 +559,7 @@ export function GoogleContactsImport({ onImportComplete }: GoogleContactsImportP
                                   className="w-full h-full rounded-full object-cover"
                                 />
                               ) : (
-                                <User size={20} className="text-[#406A56]" />
+                                <User size={20} className="text-[#2D5A3D]" />
                               )}
                             </div>
 
@@ -627,9 +627,9 @@ export function GoogleContactsImport({ onImportComplete }: GoogleContactsImportP
 
               {/* Footer */}
               {step === 'selecting' && !error && (
-                <div className="flex items-center justify-between p-6 border-t border-[#406A56]/10 bg-white">
+                <div className="flex items-center justify-between p-6 border-t border-[#2D5A3D]/10 bg-white">
                   <div className="text-sm text-[#666]">
-                    <span className="font-medium text-[#406A56]">{selectedCount}</span> of {filteredContacts.length} selected
+                    <span className="font-medium text-[#2D5A3D]">{selectedCount}</span> of {filteredContacts.length} selected
                   </div>
                   <div className="flex gap-3">
                     <button onClick={handleClose} className="btn-secondary">

@@ -21,7 +21,7 @@ interface ConfettiPiece {
   rotation: number;
 }
 
-const COLORS = ['#D9C61A', '#406A56', '#C35F33', '#8DACAB', '#4A3552'];
+const COLORS = ['#C4A235', '#2D5A3D', '#B8562E', '#8DACAB', '#4A3552'];
 
 function generateConfetti(count: number): ConfettiPiece[] {
   return Array.from({ length: count }, (_, i) => ({
@@ -37,8 +37,8 @@ function generateConfetti(count: number): ConfettiPiece[] {
 
 export function CongratulationsAnimation({ 
   onComplete, 
-  title = "Welcome to Your Journey!",
-  message = "You've taken the first step in preserving your story for generations to come.",
+  title = "Welcome. Let's capture what matters.",
+  message = "Your space is ready. Start with a memory, a photo, or a story worth keeping.",
   delay = 2000
 }: CongratulationsAnimationProps) {
   const [confetti, setConfetti] = useState<ConfettiPiece[]>([]);
@@ -133,7 +133,7 @@ export function CongratulationsAnimation({
               <div className="relative inline-flex items-center justify-center">
                 {/* Glow effect */}
                 <motion.div 
-                  className="absolute inset-0 rounded-full bg-[#D9C61A]/30 blur-xl"
+                  className="absolute inset-0 rounded-full bg-[#C4A235]/30 blur-xl"
                   animate={{ 
                     scale: [1, 1.2, 1],
                     opacity: [0.5, 0.8, 0.5]
@@ -146,7 +146,7 @@ export function CongratulationsAnimation({
                 />
                 
                 {/* Icon */}
-                <div className="relative w-24 h-24 rounded-full bg-gradient-to-br from-[#D9C61A] to-[#C35F33] flex items-center justify-center shadow-lg">
+                <div className="relative w-24 h-24 rounded-full bg-gradient-to-br from-[#C4A235] to-[#B8562E] flex items-center justify-center shadow-lg">
                   <motion.div
                     animate={{ 
                       rotate: [0, 10, -10, 0],
@@ -171,7 +171,7 @@ export function CongratulationsAnimation({
                   }}
                   transition={{ duration: 1.5, repeat: Infinity }}
                 >
-                  <Sparkles size={24} className="text-[#D9C61A]" />
+                  <Sparkles size={24} className="text-[#C4A235]" />
                 </motion.div>
                 <motion.div
                   className="absolute -bottom-1 -left-1"
@@ -181,7 +181,7 @@ export function CongratulationsAnimation({
                   }}
                   transition={{ duration: 1.5, repeat: Infinity, delay: 0.5 }}
                 >
-                  <Star size={20} className="text-[#406A56]" />
+                  <Star size={20} className="text-[#2D5A3D]" />
                 </motion.div>
                 <motion.div
                   className="absolute top-1/2 -left-4"
@@ -191,7 +191,7 @@ export function CongratulationsAnimation({
                   }}
                   transition={{ duration: 1.5, repeat: Infinity, delay: 0.3 }}
                 >
-                  <Heart size={18} className="text-[#C35F33]" fill="currentColor" />
+                  <Heart size={18} className="text-[#B8562E]" fill="currentColor" />
                 </motion.div>
               </div>
             </motion.div>
@@ -249,7 +249,7 @@ export function CongratulationsAnimation({
               className={`inline-flex items-center gap-2 px-8 py-3 rounded-full font-medium
                          transition-all duration-300 ${
                            canContinue
-                             ? 'bg-[#406A56] text-white hover:bg-[#355a48] shadow-lg hover:shadow-xl'
+                             ? 'bg-[#2D5A3D] text-white hover:bg-[#355a48] shadow-lg hover:shadow-xl'
                              : 'bg-gray-200 text-gray-400 cursor-not-allowed'
                          }`}
               initial={{ opacity: 0, y: 20 }}

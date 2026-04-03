@@ -204,14 +204,14 @@ export default function MemoryContributions({ memoryId, contentType = 'memory', 
   if (contributions.length === 0) {
     return (
       <div className="border-t border-gray-200 pt-6">
-        <div className="text-center py-8 bg-gradient-to-r from-[#406A56]/5 to-[#8DACAB]/5 rounded-xl">
-          <Users size={32} className="mx-auto mb-3 text-[#406A56]/50" />
+        <div className="text-center py-8 bg-gradient-to-r from-[#2D5A3D]/5 to-[#8DACAB]/5 rounded-xl">
+          <Users size={32} className="mx-auto mb-3 text-[#2D5A3D]/50" />
           <p className="text-sm text-gray-600 mb-3">Share this {contentLabel.toLowerCase()} with family or friends</p>
           <div className="flex items-center justify-center gap-3">
             {onShare && (
               <button
                 onClick={onShare}
-                className="inline-flex items-center gap-2 px-4 py-2 bg-[#406A56] text-white rounded-lg text-sm font-medium hover:bg-[#4a7a64] transition-colors"
+                className="inline-flex items-center gap-2 px-4 py-2 bg-[#2D5A3D] text-white rounded-lg text-sm font-medium hover:bg-[#234A31] transition-colors"
               >
                 <Users size={16} />
                 Invite to Contribute
@@ -219,7 +219,7 @@ export default function MemoryContributions({ memoryId, contentType = 'memory', 
             )}
             <button
               onClick={() => setShowAddModal(true)}
-              className="inline-flex items-center gap-2 px-4 py-2 bg-[#406A56]/10 text-[#406A56] rounded-lg text-sm font-medium hover:bg-[#406A56]/20 transition-colors"
+              className="inline-flex items-center gap-2 px-4 py-2 bg-[#2D5A3D]/10 text-[#2D5A3D] rounded-lg text-sm font-medium hover:bg-[#2D5A3D]/20 transition-colors"
             >
               <Plus size={16} />
               Add to {contentLabel}
@@ -241,8 +241,8 @@ export default function MemoryContributions({ memoryId, contentType = 'memory', 
       {/* Header */}
       <div className="flex items-center justify-between">
         <h3 className="text-lg font-semibold text-[#2d2d2d] flex items-center gap-2">
-          <div className="w-8 h-8 rounded-lg bg-[#406A56]/10 flex items-center justify-center">
-            <MessageCircle size={16} className="text-[#406A56]" />
+          <div className="w-8 h-8 rounded-lg bg-[#2D5A3D]/10 flex items-center justify-center">
+            <MessageCircle size={16} className="text-[#2D5A3D]" />
           </div>
           Contributions
           <span className="text-sm font-normal text-gray-500">({contributions.length})</span>
@@ -251,7 +251,7 @@ export default function MemoryContributions({ memoryId, contentType = 'memory', 
           {onShare && (
             <button
               onClick={onShare}
-              className="flex items-center gap-2 px-3 py-2 bg-[#406A56]/10 text-[#406A56] rounded-xl text-sm font-medium hover:bg-[#406A56]/20 transition-colors"
+              className="flex items-center gap-2 px-3 py-2 bg-[#2D5A3D]/10 text-[#2D5A3D] rounded-xl text-sm font-medium hover:bg-[#2D5A3D]/20 transition-colors"
             >
               <Users size={14} />
               Invite
@@ -259,7 +259,7 @@ export default function MemoryContributions({ memoryId, contentType = 'memory', 
           )}
           <button
             onClick={() => setShowAddModal(true)}
-            className="flex items-center gap-2 px-3 py-2 bg-[#406A56] text-white rounded-xl text-sm font-medium hover:bg-[#4a7a64] transition-colors"
+            className="flex items-center gap-2 px-3 py-2 bg-[#2D5A3D] text-white rounded-xl text-sm font-medium hover:bg-[#234A31] transition-colors"
           >
             <Plus size={14} />
             Add to {contentLabel}
@@ -293,7 +293,7 @@ export default function MemoryContributions({ memoryId, contentType = 'memory', 
                   <div className="flex gap-4">
                     {/* Avatar with type indicator */}
                     <div className="relative flex-shrink-0">
-                      <div className="w-10 h-10 rounded-full bg-gradient-to-br from-[#406A56] to-[#5A8A72] flex items-center justify-center text-white text-sm font-medium">
+                      <div className="w-10 h-10 rounded-full bg-gradient-to-br from-[#2D5A3D] to-[#5A8A72] flex items-center justify-center text-white text-sm font-medium">
                         {getInitials(contribution.user?.full_name || 'Anonymous')}
                       </div>
                       <div className={`absolute -bottom-1 -right-1 w-5 h-5 rounded-full ${typeConfig.bg} flex items-center justify-center border-2 border-white`}>
@@ -330,12 +330,12 @@ export default function MemoryContributions({ memoryId, contentType = 'memory', 
                             onClick={() => handleReaction(contribution.id, reaction.emoji)}
                             className={`flex items-center gap-1 px-2 py-1 rounded-full text-xs transition-colors ${
                               reaction.hasReacted 
-                                ? 'bg-[#406A56]/10 border border-[#406A56]/30' 
+                                ? 'bg-[#2D5A3D]/10 border border-[#2D5A3D]/30' 
                                 : 'bg-gray-100 hover:bg-gray-200 border border-transparent'
                             }`}
                           >
                             <span>{reaction.emoji}</span>
-                            <span className={reaction.hasReacted ? 'text-[#406A56] font-medium' : 'text-gray-600'}>
+                            <span className={reaction.hasReacted ? 'text-[#2D5A3D] font-medium' : 'text-gray-600'}>
                               {reaction.count}
                             </span>
                           </button>
@@ -387,8 +387,8 @@ export default function MemoryContributions({ memoryId, contentType = 'memory', 
         {/* Empty State */}
         {contributions.length === 0 && (
           <div className="text-center py-12 bg-white/80 backdrop-blur-sm rounded-xl border border-gray-200">
-            <div className="w-16 h-16 mx-auto mb-4 bg-gradient-to-br from-[#406A56]/10 to-[#D9C61A]/10 rounded-full flex items-center justify-center">
-              <MessageCircle size={28} className="text-[#406A56]" />
+            <div className="w-16 h-16 mx-auto mb-4 bg-gradient-to-br from-[#2D5A3D]/10 to-[#C4A235]/10 rounded-full flex items-center justify-center">
+              <MessageCircle size={28} className="text-[#2D5A3D]" />
             </div>
             <h4 className="text-lg font-medium text-[#2d2d2d] mb-2">No contributions yet</h4>
             <p className="text-gray-500 text-sm mb-4">
@@ -396,7 +396,7 @@ export default function MemoryContributions({ memoryId, contentType = 'memory', 
             </p>
             <button
               onClick={() => setShowAddModal(true)}
-              className="inline-flex items-center gap-2 px-5 py-2.5 bg-[#406A56] text-white rounded-xl text-sm font-medium hover:bg-[#4a7a64] transition-colors"
+              className="inline-flex items-center gap-2 px-5 py-2.5 bg-[#2D5A3D] text-white rounded-xl text-sm font-medium hover:bg-[#234A31] transition-colors"
             >
               <Plus size={16} />
               Add Contribution

@@ -196,7 +196,7 @@ export default function ShareWisdomModal({ isOpen, onClose, wisdomId, wisdomTitl
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 aria-label="Search" placeholder="Search by name or email..."
-                className="w-full pl-10 pr-4 py-3 bg-[#F2F1E5] border border-gray-200 rounded-xl text-[#2d2d2d] placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#4A3552]/30 focus:border-[#4A3552] transition-all"
+                className="w-full pl-10 pr-4 py-3 bg-[#F5F3EE] border border-gray-200 rounded-xl text-[#2d2d2d] placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#4A3552]/30 focus:border-[#4A3552] transition-all"
               />
               {isSearching && (
                 <Loader2 size={18} className="absolute right-3 top-1/2 -translate-y-1/2 text-[#4A3552] animate-spin" />
@@ -211,7 +211,7 @@ export default function ShareWisdomModal({ isOpen, onClose, wisdomId, wisdomTitl
                     key={contact.id}
                     onClick={() => handleAddContact(contact)}
                     disabled={addingUser === contact.id}
-                    className="w-full flex items-center gap-3 p-3 hover:bg-[#F2F1E5] transition-colors text-left disabled:opacity-50"
+                    className="w-full flex items-center gap-3 p-3 hover:bg-[#F5F3EE] transition-colors text-left disabled:opacity-50"
                   >
                     <div className="w-10 h-10 rounded-full bg-gradient-to-br from-[#4A3552] to-[#6a4572] flex items-center justify-center text-white text-sm font-medium">
                       {getInitials(contact.name)}
@@ -279,7 +279,7 @@ export default function ShareWisdomModal({ isOpen, onClose, wisdomId, wisdomTitl
                     key={share.id}
                     className="flex items-center gap-3 p-3 bg-white rounded-xl border border-gray-200 group"
                   >
-                    <div className="w-10 h-10 rounded-full bg-gradient-to-br from-[#D9C61A] to-[#C35F33] flex items-center justify-center text-white text-sm font-medium">
+                    <div className="w-10 h-10 rounded-full bg-gradient-to-br from-[#C4A235] to-[#B8562E] flex items-center justify-center text-white text-sm font-medium">
                       {getInitials(share.contact.name)}
                     </div>
                     <div className="flex-1 min-w-0">
@@ -291,7 +291,7 @@ export default function ShareWisdomModal({ isOpen, onClose, wisdomId, wisdomTitl
                           <span className="text-[#4A3552]">{share.contact.relationship_type}</span>
                         )}
                         {share.can_comment && (
-                          <span className="px-2 py-0.5 bg-[#D9C61A]/20 text-[#8a7c08] text-xs rounded-full">
+                          <span className="px-2 py-0.5 bg-[#C4A235]/20 text-[#8a7c08] text-xs rounded-full">
                             Can comment
                           </span>
                         )}

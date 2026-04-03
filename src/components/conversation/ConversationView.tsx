@@ -671,7 +671,7 @@ export function ConversationView({ prompt, expectedXp = 15, onComplete, onClose 
               >
                 ✓
               </motion.div>
-              <h2 className="conversation-complete-title">Memory Saved!</h2>
+              <h2 className="conversation-complete-title">Memory saved</h2>
               <p className="conversation-complete-subtitle">
                 Your story has been added to your memories.
               </p>

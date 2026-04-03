@@ -337,7 +337,7 @@ export default function AlbumDetailPage({ params }: PageProps) {
                   whileHover={{ scale: 1.05 }}
                   whileTap={{ scale: 0.95 }}
                   onClick={() => setShowSlideshow(true)}
-                  className="px-5 py-3 bg-white text-[#406A56] rounded-xl font-medium flex items-center gap-2 shadow-lg"
+                  className="px-5 py-3 bg-white text-[#2D5A3D] rounded-xl font-medium flex items-center gap-2 shadow-lg"
                 >
                   <Play size={18} fill="currentColor" />
                   Play Slideshow
@@ -407,7 +407,7 @@ export default function AlbumDetailPage({ params }: PageProps) {
               <button
                 onClick={saveReorder}
                 disabled={savingOrder}
-                className="px-5 py-2 bg-[#406A56] hover:bg-[#4a7a64] text-white rounded-xl font-medium transition-colors disabled:opacity-50"
+                className="px-5 py-2 bg-[#2D5A3D] hover:bg-[#234A31] text-white rounded-xl font-medium transition-colors disabled:opacity-50"
               >
                 {savingOrder ? 'Saving...' : 'Save Order'}
               </button>
@@ -415,7 +415,7 @@ export default function AlbumDetailPage({ params }: PageProps) {
           ) : (
             <button
               onClick={() => setIsReordering(true)}
-              className="px-4 py-2 text-[#406A56] hover:bg-[#406A56]/10 rounded-xl transition-colors flex items-center gap-2"
+              className="px-4 py-2 text-[#2D5A3D] hover:bg-[#2D5A3D]/10 rounded-xl transition-colors flex items-center gap-2"
             >
               <GripVertical size={16} />
               Reorder
@@ -432,11 +432,11 @@ export default function AlbumDetailPage({ params }: PageProps) {
           className="text-center py-16 bg-white/50 rounded-2xl"
         >
           <Sparkles size={48} className="mx-auto mb-4 text-gray-300" />
-          <h3 className="text-xl font-semibold text-gray-600 mb-2">No memories yet</h3>
-          <p className="text-gray-500 mb-6">Add some memories to this album</p>
+          <h3 className="text-xl font-semibold text-gray-600 mb-2">This album is waiting for its first story</h3>
+          <p className="text-gray-500 mb-6">Add a memory to get started</p>
           <button
             onClick={() => setShowEditModal(true)}
-            className="px-5 py-2.5 bg-[#406A56] hover:bg-[#4a7a64] text-white rounded-xl font-medium transition-colors"
+            className="px-5 py-2.5 bg-[#2D5A3D] hover:bg-[#234A31] text-white rounded-xl font-medium transition-colors"
           >
             Add Memories
           </button>
@@ -517,7 +517,7 @@ export default function AlbumDetailPage({ params }: PageProps) {
                     <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent opacity-60 group-hover:opacity-80 transition-opacity" />
 
                     {/* Order Number */}
-                    <div className="absolute top-2 left-2 w-7 h-7 rounded-full bg-white/90 flex items-center justify-center text-sm font-bold text-[#406A56]">
+                    <div className="absolute top-2 left-2 w-7 h-7 rounded-full bg-white/90 flex items-center justify-center text-sm font-bold text-[#2D5A3D]">
                       {index + 1}
                     </div>
 

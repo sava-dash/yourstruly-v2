@@ -122,8 +122,8 @@ export default function ScrapbookCard({ memory, index }: ScrapbookCardProps) {
               className="w-full h-full object-cover"
             />
           ) : (
-            <div className="w-full h-full bg-gradient-to-br from-[#406A56]/20 to-[#D9C61A]/20 flex items-center justify-center">
-              <Sparkles size={32} className="text-[#406A56]/40" />
+            <div className="w-full h-full bg-gradient-to-br from-[#2D5A3D]/20 to-[#C4A235]/20 flex items-center justify-center">
+              <Sparkles size={32} className="text-[#2D5A3D]/40" />
             </div>
           )}
           

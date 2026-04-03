@@ -88,18 +88,18 @@ export default function EmailTemplatesPage() {
           placeholder="Search templates..."
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
-          className="w-full pl-10 pr-4 py-2 bg-white/60 border border-[#C35F33]/10 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#406A56]/30"
+          className="w-full pl-10 pr-4 py-2 bg-white/60 border border-[#B8562E]/10 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#2D5A3D]/30"
         />
       </div>
 
       {/* Templates List */}
       {loading ? (
         <div className="flex items-center justify-center py-12">
-          <Loader2 className="w-8 h-8 animate-spin text-[#406A56]" />
+          <Loader2 className="w-8 h-8 animate-spin text-[#2D5A3D]" />
         </div>
       ) : filteredTemplates.length === 0 ? (
-        <div className="p-12 bg-white/40 backdrop-blur-sm rounded-xl border border-[#C35F33]/10 text-center">
-          <Mail className="w-16 h-16 mx-auto text-[#C35F33]/30" />
+        <div className="p-12 bg-white/40 backdrop-blur-sm rounded-xl border border-[#B8562E]/10 text-center">
+          <Mail className="w-16 h-16 mx-auto text-[#B8562E]/30" />
           <h3 className="text-lg font-medium text-[#2a1f1a] mt-4">No Templates Found</h3>
           <p className="text-[#2a1f1a]/60 mt-2">
             {searchQuery ? 'Try a different search term' : 'Run the migration to seed default templates'}
@@ -110,7 +110,7 @@ export default function EmailTemplatesPage() {
           {filteredTemplates.map((template) => (
             <div
               key={template.id}
-              className="p-6 bg-white/60 backdrop-blur-sm rounded-xl border border-[#C35F33]/10 hover:shadow-md transition-shadow"
+              className="p-6 bg-white/60 backdrop-blur-sm rounded-xl border border-[#B8562E]/10 hover:shadow-md transition-shadow"
             >
               <div className="flex items-start justify-between gap-4">
                 <div className="flex-1">
@@ -133,7 +133,7 @@ export default function EmailTemplatesPage() {
                   {template.variables.length > 0 && (
                     <div className="flex flex-wrap gap-1 mt-3">
                       {template.variables.map((v) => (
-                        <code key={v} className="text-xs bg-[#406A56]/10 text-[#406A56] px-2 py-0.5 rounded">
+                        <code key={v} className="text-xs bg-[#2D5A3D]/10 text-[#2D5A3D] px-2 py-0.5 rounded">
                           {`{{${v}}}`}
                         </code>
                       ))}
@@ -143,21 +143,21 @@ export default function EmailTemplatesPage() {
                 <div className="flex items-center gap-2">
                   <button
                     onClick={() => setPreviewTemplate(template)}
-                    className="p-2 hover:bg-[#406A56]/10 rounded-lg transition-colors"
+                    className="p-2 hover:bg-[#2D5A3D]/10 rounded-lg transition-colors"
                     title="Preview"
                   >
-                    <Eye size={18} className="text-[#406A56]" />
+                    <Eye size={18} className="text-[#2D5A3D]" />
                   </button>
                   <button
                     onClick={() => setEditingTemplate(template)}
-                    className="p-2 hover:bg-[#406A56]/10 rounded-lg transition-colors"
+                    className="p-2 hover:bg-[#2D5A3D]/10 rounded-lg transition-colors"
                     title="Edit"
                   >
                     <Edit2 size={18} className="text-[#2a1f1a]/60" />
                   </button>
                   <button
                     onClick={() => toggleActive(template)}
-                    className="p-2 hover:bg-[#406A56]/10 rounded-lg transition-colors"
+                    className="p-2 hover:bg-[#2D5A3D]/10 rounded-lg transition-colors"
                     title={template.is_active ? 'Deactivate' : 'Activate'}
                   >
                     {template.is_active ? (
@@ -276,7 +276,7 @@ function TemplateEditorModal({
                   type="text"
                   value={form.name}
                   onChange={(e) => setForm({ ...form, name: e.target.value })}
-                  className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#406A56]/30"
+                  className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#2D5A3D]/30"
                 />
               </div>
               <div>
@@ -286,7 +286,7 @@ function TemplateEditorModal({
                 <select
                   value={form.category}
                   onChange={(e) => setForm({ ...form, category: e.target.value })}
-                  className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#406A56]/30"
+                  className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#2D5A3D]/30"
                 >
                   <option value="transactional">Transactional</option>
                   <option value="notification">Notification</option>
@@ -304,7 +304,7 @@ function TemplateEditorModal({
                 type="text"
                 value={form.description}
                 onChange={(e) => setForm({ ...form, description: e.target.value })}
-                className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#406A56]/30"
+                className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#2D5A3D]/30"
               />
             </div>
 
@@ -316,7 +316,7 @@ function TemplateEditorModal({
                 type="text"
                 value={form.subject}
                 onChange={(e) => setForm({ ...form, subject: e.target.value })}
-                className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#406A56]/30 font-mono text-sm"
+                className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#2D5A3D]/30 font-mono text-sm"
               />
             </div>
 
@@ -329,7 +329,7 @@ function TemplateEditorModal({
                 value={form.variables}
                 onChange={(e) => setForm({ ...form, variables: e.target.value })}
                 placeholder="recipientName, senderName, url"
-                className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#406A56]/30 font-mono text-sm"
+                className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#2D5A3D]/30 font-mono text-sm"
               />
             </div>
 
@@ -341,7 +341,7 @@ function TemplateEditorModal({
                   onClick={() => setActiveTab('html')}
                   className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
                     activeTab === 'html'
-                      ? 'bg-[#406A56] text-white'
+                      ? 'bg-[#2D5A3D] text-white'
                       : 'bg-gray-100 text-[#2a1f1a]/60 hover:bg-gray-200'
                   }`}
                 >
@@ -353,7 +353,7 @@ function TemplateEditorModal({
                   onClick={() => setActiveTab('text')}
                   className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
                     activeTab === 'text'
-                      ? 'bg-[#406A56] text-white'
+                      ? 'bg-[#2D5A3D] text-white'
                       : 'bg-gray-100 text-[#2a1f1a]/60 hover:bg-gray-200'
                   }`}
                 >
@@ -367,14 +367,14 @@ function TemplateEditorModal({
                   value={form.html_content}
                   onChange={(e) => setForm({ ...form, html_content: e.target.value })}
                   rows={20}
-                  className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#406A56]/30 font-mono text-xs"
+                  className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#2D5A3D]/30 font-mono text-xs"
                 />
               ) : (
                 <textarea
                   value={form.text_content}
                   onChange={(e) => setForm({ ...form, text_content: e.target.value })}
                   rows={20}
-                  className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#406A56]/30 font-mono text-sm"
+                  className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#2D5A3D]/30 font-mono text-sm"
                 />
               )}
             </div>
@@ -391,7 +391,7 @@ function TemplateEditorModal({
             <button
               type="submit"
               disabled={saving}
-              className="px-6 py-2 bg-[#406A56] text-white rounded-lg hover:bg-[#355847] transition-colors disabled:opacity-50 flex items-center gap-2"
+              className="px-6 py-2 bg-[#2D5A3D] text-white rounded-lg hover:bg-[#355847] transition-colors disabled:opacity-50 flex items-center gap-2"
             >
               {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save size={18} />}
               Save Changes

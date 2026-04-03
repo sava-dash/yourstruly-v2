@@ -44,7 +44,7 @@ export default function CreateAlbumModal({ isOpen, onClose, onCreated, editAlbum
             <button type="button" onClick={onClose} className="px-4 py-2 text-gray-600">
               Cancel
             </button>
-            <button type="submit" className="px-4 py-2 bg-[#406A56] text-white rounded-lg">
+            <button type="submit" className="px-4 py-2 bg-[#2D5A3D] text-white rounded-lg">
               {editAlbum ? 'Save' : 'Create'}
             </button>
           </div>

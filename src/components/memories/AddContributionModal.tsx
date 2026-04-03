@@ -270,7 +270,7 @@ export default function AddContributionModal({ isOpen, onClose, memoryId, onSubm
                 onChange={(e) => setContent(e.target.value)}
                 placeholder={getPlaceholder()}
                 rows={selectedType === 'quote' ? 4 : 3}
-                className={`w-full px-4 py-3 bg-[#F2F1E5] border border-gray-200 rounded-xl text-[#2d2d2d] placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#406A56]/30 focus:border-[#406A56] transition-all resize-none ${
+                className={`w-full px-4 py-3 bg-[#F5F3EE] border border-gray-200 rounded-xl text-[#2d2d2d] placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#2D5A3D]/30 focus:border-[#2D5A3D] transition-all resize-none ${
                   selectedType === 'quote' ? 'italic text-lg' : ''
                 }`}
               />
@@ -293,7 +293,7 @@ export default function AddContributionModal({ isOpen, onClose, memoryId, onSubm
                     onClick={() => setSelectedReaction(selectedReaction === emoji ? null : emoji)}
                     className={`w-10 h-10 rounded-xl flex items-center justify-center text-xl transition-all ${
                       selectedReaction === emoji
-                        ? 'bg-[#406A56]/10 border-2 border-[#406A56] scale-110'
+                        ? 'bg-[#2D5A3D]/10 border-2 border-[#2D5A3D] scale-110'
                         : 'bg-gray-100 hover:bg-gray-200 border-2 border-transparent'
                     }`}
                   >
@@ -316,7 +316,7 @@ export default function AddContributionModal({ isOpen, onClose, memoryId, onSubm
           <button
             onClick={handleSubmit}
             disabled={!selectedType || !content.trim() || (selectedType === 'photo' && !mediaPreview) || isSubmitting}
-            className="flex-1 py-3 bg-[#406A56] text-white rounded-xl font-medium hover:bg-[#4a7a64] disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center justify-center gap-2"
+            className="flex-1 py-3 bg-[#2D5A3D] text-white rounded-xl font-medium hover:bg-[#234A31] disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center justify-center gap-2"
           >
             {isSubmitting ? (
               <>

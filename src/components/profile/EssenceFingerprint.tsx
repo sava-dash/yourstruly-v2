@@ -12,9 +12,9 @@ interface EssenceFingerprintProps {
 
 // Layer colors from essence.ts
 const LAYER_COLORS: Record<EssenceLayer, string> = {
-  temperament: '#406A56',      // Sage green
-  motivation: '#D9C61A',        // Gold
-  cognitiveStyle: '#C35F33',    // Coral
+  temperament: '#2D5A3D',      // Sage green
+  motivation: '#C4A235',        // Gold
+  cognitiveStyle: '#B8562E',    // Coral
   emotionalSignature: '#8DACAB', // Teal
   socialPattern: '#4A3552',      // Plum
 }
@@ -411,7 +411,7 @@ export default function EssenceFingerprint({
           cx={centerX} 
           cy={centerY} 
           r={radius + 5} 
-          fill="#F2F1E5" 
+          fill="#F5F3EE" 
           opacity={0.3}
         />
         

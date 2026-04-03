@@ -124,7 +124,7 @@ export default function MarketplacePage() {
             <button className="relative p-3 glass rounded-xl hover:bg-white/15 transition-colors">
               <ShoppingBag size={24} className="text-[#d4a574]" />
               {cartCount > 0 && (
-                <span className="absolute -top-1 -right-1 w-5 h-5 bg-[#C35F33] text-gray-800 text-xs font-bold rounded-full flex items-center justify-center">
+                <span className="absolute -top-1 -right-1 w-5 h-5 bg-[#B8562E] text-gray-800 text-xs font-bold rounded-full flex items-center justify-center">
                   {cartCount}
                 </span>
               )}
@@ -167,10 +167,10 @@ export default function MarketplacePage() {
       </div>
 
       {/* Printing Section */}
-      <div className="bg-gradient-to-r from-[#406A56]/5 via-[#D9C61A]/5 to-[#C35F33]/5 border-b border-white/10">
+      <div className="bg-gradient-to-r from-[#2D5A3D]/5 via-[#C4A235]/5 to-[#B8562E]/5 border-b border-white/10">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
           <div className="flex items-center gap-2 mb-4">
-            <Printer size={20} className="text-[#C35F33]" />
+            <Printer size={20} className="text-[#B8562E]" />
             <h2 className="font-playfair text-xl font-semibold text-gray-800">
               📚 Printing & Keepsakes
             </h2>
@@ -179,21 +179,21 @@ export default function MarketplacePage() {
             {/* Photo Book Card */}
             <Link
               href="/dashboard/photobook/create?source=marketplace&product=photobook"
-              className="group glass rounded-2xl p-5 hover:bg-white/80 transition-all border border-[#406A56]/10 hover:border-[#406A56]/30 hover:shadow-lg"
+              className="group glass rounded-2xl p-5 hover:bg-white/80 transition-all border border-[#2D5A3D]/10 hover:border-[#2D5A3D]/30 hover:shadow-lg"
             >
               <div className="flex items-start gap-4">
-                <div className="w-14 h-14 rounded-xl bg-gradient-to-br from-[#D9C61A] to-[#C35F33] flex items-center justify-center flex-shrink-0">
+                <div className="w-14 h-14 rounded-xl bg-gradient-to-br from-[#C4A235] to-[#B8562E] flex items-center justify-center flex-shrink-0">
                   <BookOpen size={28} className="text-white" />
                 </div>
                 <div className="flex-1 min-w-0">
-                  <h3 className="font-semibold text-gray-800 group-hover:text-[#C35F33] transition-colors flex items-center gap-2">
+                  <h3 className="font-semibold text-gray-800 group-hover:text-[#B8562E] transition-colors flex items-center gap-2">
                     Photo Book
                     <ArrowRight size={16} className="opacity-0 group-hover:opacity-100 transition-opacity" />
                   </h3>
                   <p className="text-sm text-gray-600 mt-1">
                     Turn your memories into a beautiful printed book with QR-linked videos
                   </p>
-                  <p className="text-xs text-[#406A56] mt-2 font-medium">
+                  <p className="text-xs text-[#2D5A3D] mt-2 font-medium">
                     Starting at $24.99
                   </p>
                 </div>
@@ -203,21 +203,21 @@ export default function MarketplacePage() {
             {/* Calendar Card */}
             <Link
               href="/dashboard/photobook/create?source=marketplace&product=calendar"
-              className="group glass rounded-2xl p-5 hover:bg-white/80 transition-all border border-[#406A56]/10 hover:border-[#406A56]/30 hover:shadow-lg"
+              className="group glass rounded-2xl p-5 hover:bg-white/80 transition-all border border-[#2D5A3D]/10 hover:border-[#2D5A3D]/30 hover:shadow-lg"
             >
               <div className="flex items-start gap-4">
-                <div className="w-14 h-14 rounded-xl bg-gradient-to-br from-[#406A56] to-[#5A8A76] flex items-center justify-center flex-shrink-0">
+                <div className="w-14 h-14 rounded-xl bg-gradient-to-br from-[#2D5A3D] to-[#5A8A76] flex items-center justify-center flex-shrink-0">
                   <Calendar size={28} className="text-white" />
                 </div>
                 <div className="flex-1 min-w-0">
-                  <h3 className="font-semibold text-gray-800 group-hover:text-[#406A56] transition-colors flex items-center gap-2">
+                  <h3 className="font-semibold text-gray-800 group-hover:text-[#2D5A3D] transition-colors flex items-center gap-2">
                     Photo Calendar
                     <ArrowRight size={16} className="opacity-0 group-hover:opacity-100 transition-opacity" />
                   </h3>
                   <p className="text-sm text-gray-600 mt-1">
                     Create a custom wall calendar featuring your favorite moments
                   </p>
-                  <p className="text-xs text-[#406A56] mt-2 font-medium">
+                  <p className="text-xs text-[#2D5A3D] mt-2 font-medium">
                     Starting at $19.99
                   </p>
                 </div>
@@ -227,21 +227,21 @@ export default function MarketplacePage() {
             {/* Prints Card */}
             <Link
               href="/dashboard/photobook/create?source=marketplace&product=prints"
-              className="group glass rounded-2xl p-5 hover:bg-white/80 transition-all border border-[#406A56]/10 hover:border-[#406A56]/30 hover:shadow-lg"
+              className="group glass rounded-2xl p-5 hover:bg-white/80 transition-all border border-[#2D5A3D]/10 hover:border-[#2D5A3D]/30 hover:shadow-lg"
             >
               <div className="flex items-start gap-4">
-                <div className="w-14 h-14 rounded-xl bg-gradient-to-br from-[#C35F33] to-[#E07A4E] flex items-center justify-center flex-shrink-0">
+                <div className="w-14 h-14 rounded-xl bg-gradient-to-br from-[#B8562E] to-[#E07A4E] flex items-center justify-center flex-shrink-0">
                   <span className="text-2xl">🖼️</span>
                 </div>
                 <div className="flex-1 min-w-0">
-                  <h3 className="font-semibold text-gray-800 group-hover:text-[#C35F33] transition-colors flex items-center gap-2">
+                  <h3 className="font-semibold text-gray-800 group-hover:text-[#B8562E] transition-colors flex items-center gap-2">
                     Photo Prints
                     <ArrowRight size={16} className="opacity-0 group-hover:opacity-100 transition-opacity" />
                   </h3>
                   <p className="text-sm text-gray-600 mt-1">
                     High-quality prints in various sizes to frame and display
                   </p>
-                  <p className="text-xs text-[#406A56] mt-2 font-medium">
+                  <p className="text-xs text-[#2D5A3D] mt-2 font-medium">
                     Starting at $4.99
                   </p>
                 </div>
@@ -262,7 +262,7 @@ export default function MarketplacePage() {
               onClick={() => setSelectedCategory(undefined)}
               className={`px-4 py-2 rounded-full text-sm whitespace-nowrap transition-colors ${
                 !selectedCategory
-                  ? 'bg-[#406A56] text-white'
+                  ? 'bg-[#2D5A3D] text-white'
                   : 'bg-white/50 text-gray-700 hover:bg-white'
               }`}
             >
@@ -277,7 +277,7 @@ export default function MarketplacePage() {
                   onClick={() => setSelectedCategory(cat.id)}
                   className={`px-4 py-2 rounded-full text-sm whitespace-nowrap transition-colors ${
                     selectedCategory === cat.id
-                      ? 'bg-[#406A56] text-white'
+                      ? 'bg-[#2D5A3D] text-white'
                       : 'bg-white/50 text-gray-700 hover:bg-white'
                   }`}
                 >
@@ -443,7 +443,7 @@ export default function MarketplacePage() {
                 <button
                   onClick={loadMore}
                   disabled={isLoading}
-                  className="px-8 py-3 border-2 border-[#406A56] text-[#406A56] rounded-full font-medium hover:bg-[#406A56] hover:text-white transition-colors disabled:opacity-50"
+                  className="px-8 py-3 border-2 border-[#2D5A3D] text-[#2D5A3D] rounded-full font-medium hover:bg-[#2D5A3D] hover:text-white transition-colors disabled:opacity-50"
                 >
                   {isLoading ? (
                     <span className="flex items-center gap-2">

@@ -112,7 +112,7 @@ export default function SeatManagementPage() {
   if (isLoading) {
     return (
       <div className="flex items-center justify-center h-64">
-        <Loader2 className="w-8 h-8 animate-spin text-[#406A56]" />
+        <Loader2 className="w-8 h-8 animate-spin text-[#2D5A3D]" />
       </div>
     )
   }
@@ -135,7 +135,7 @@ export default function SeatManagementPage() {
       {/* Back Link */}
       <Link 
         href="/dashboard/settings/subscription"
-        className="inline-flex items-center gap-2 text-[#406A56] hover:text-[#4a7a64] mb-6 transition-colors"
+        className="inline-flex items-center gap-2 text-[#2D5A3D] hover:text-[#234A31] mb-6 transition-colors"
       >
         <ArrowLeft className="w-4 h-4" />
         Back to Subscription
@@ -153,7 +153,7 @@ export default function SeatManagementPage() {
       {notification && (
         <div className={`mb-6 p-4 rounded-xl flex items-center gap-3 ${
           notification.type === 'success' 
-            ? 'bg-[#406A56]/10 text-[#406A56]' 
+            ? 'bg-[#2D5A3D]/10 text-[#2D5A3D]' 
             : 'bg-red-50 text-red-600'
         }`}>
           {notification.type === 'success' ? (

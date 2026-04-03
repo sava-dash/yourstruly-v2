@@ -104,7 +104,7 @@ function CreatePollModal({
       <div className="bg-white rounded-2xl p-6 w-full max-w-lg max-h-[90vh] overflow-y-auto">
         <div className="flex items-center justify-between mb-6">
           <h2 className="text-xl font-bold text-[#2d2d2d]">Create Poll</h2>
-          <button onClick={onClose} className="p-2 hover:bg-[#406A56]/10 rounded-lg">
+          <button onClick={onClose} className="p-2 hover:bg-[#2D5A3D]/10 rounded-lg">
             <X size={20} className="text-[#666]" />
           </button>
         </div>
@@ -132,7 +132,7 @@ function CreatePollModal({
             <div className="space-y-2">
               {options.map((option, index) => (
                 <div key={index} className="flex items-center gap-2">
-                  <div className="w-6 h-6 rounded-full bg-[#406A56]/10 flex items-center justify-center text-xs font-medium text-[#406A56]">
+                  <div className="w-6 h-6 rounded-full bg-[#2D5A3D]/10 flex items-center justify-center text-xs font-medium text-[#2D5A3D]">
                     {index + 1}
                   </div>
                   <input
@@ -157,7 +157,7 @@ function CreatePollModal({
             {options.length < 10 && (
               <button
                 onClick={addOption}
-                className="mt-2 text-sm text-[#406A56] hover:text-[#4a7a64] flex items-center gap-1"
+                className="mt-2 text-sm text-[#2D5A3D] hover:text-[#234A31] flex items-center gap-1"
               >
                 <Plus size={14} />
                 Add Option
@@ -166,13 +166,13 @@ function CreatePollModal({
           </div>
 
           {/* Settings */}
-          <div className="space-y-3 pt-4 border-t border-[#406A56]/10">
+          <div className="space-y-3 pt-4 border-t border-[#2D5A3D]/10">
             <label className="flex items-center gap-3 cursor-pointer">
               <input
                 type="checkbox"
                 checked={isMultipleChoice}
                 onChange={e => setIsMultipleChoice(e.target.checked)}
-                className="w-4 h-4 rounded border-[#406A56]/30 text-[#406A56] focus:ring-[#406A56]"
+                className="w-4 h-4 rounded border-[#2D5A3D]/30 text-[#2D5A3D] focus:ring-[#2D5A3D]"
               />
               <span className="text-sm text-[#2d2d2d]">Allow multiple selections</span>
             </label>
@@ -182,7 +182,7 @@ function CreatePollModal({
                 type="checkbox"
                 checked={isAnonymous}
                 onChange={e => setIsAnonymous(e.target.checked)}
-                className="w-4 h-4 rounded border-[#406A56]/30 text-[#406A56] focus:ring-[#406A56]"
+                className="w-4 h-4 rounded border-[#2D5A3D]/30 text-[#2D5A3D] focus:ring-[#2D5A3D]"
               />
               <div className="flex items-center gap-2">
                 <Lock size={14} className="text-[#666]" />
@@ -195,7 +195,7 @@ function CreatePollModal({
                 type="checkbox"
                 checked={hasExpiry}
                 onChange={e => setHasExpiry(e.target.checked)}
-                className="w-4 h-4 rounded border-[#406A56]/30 text-[#406A56] focus:ring-[#406A56]"
+                className="w-4 h-4 rounded border-[#2D5A3D]/30 text-[#2D5A3D] focus:ring-[#2D5A3D]"
               />
               <span className="text-sm text-[#2d2d2d]">Set expiration</span>
             </label>
@@ -295,7 +295,7 @@ function PollCard({
             {poll.expiresAt && !isClosed && (
               <>
                 <span>·</span>
-                <span className="flex items-center gap-1 text-[#C35F33]">
+                <span className="flex items-center gap-1 text-[#B8562E]">
                   <Clock size={12} />
                   Ends {format(poll.expiresAt, 'MMM d')}
                 </span>
@@ -316,7 +316,7 @@ function PollCard({
             <div className="flex gap-1">
               <button
                 onClick={onClose}
-                className="p-1.5 text-[#666] hover:bg-[#406A56]/10 rounded-lg"
+                className="p-1.5 text-[#666] hover:bg-[#2D5A3D]/10 rounded-lg"
                 title="Close poll"
               >
                 <Lock size={14} />
@@ -346,14 +346,14 @@ function PollCard({
               disabled={isClosed || (hasVoted && !poll.isMultipleChoice)}
               className={`w-full relative overflow-hidden rounded-xl border transition-all ${
                 isMyVote
-                  ? 'border-[#406A56] bg-[#406A56]/5'
-                  : 'border-[#406A56]/10 bg-white hover:border-[#406A56]/30'
+                  ? 'border-[#2D5A3D] bg-[#2D5A3D]/5'
+                  : 'border-[#2D5A3D]/10 bg-white hover:border-[#2D5A3D]/30'
               } ${isClosed || (hasVoted && !poll.isMultipleChoice) ? 'cursor-default' : 'cursor-pointer'}`}
             >
               {/* Progress bar background */}
               <div 
                 className={`absolute inset-y-0 left-0 transition-all ${
-                  isMyVote ? 'bg-[#406A56]/10' : 'bg-[#406A56]/5'
+                  isMyVote ? 'bg-[#2D5A3D]/10' : 'bg-[#2D5A3D]/5'
                 }`}
                 style={{ width: `${percentage}%` }}
               />
@@ -362,13 +362,13 @@ function PollCard({
               <div className="relative flex items-center justify-between p-3">
                 <div className="flex items-center gap-3">
                   {isMyVote ? (
-                    <div className="w-5 h-5 rounded-full bg-[#406A56] flex items-center justify-center">
+                    <div className="w-5 h-5 rounded-full bg-[#2D5A3D] flex items-center justify-center">
                       <Check size={12} className="text-white" />
                     </div>
                   ) : (
-                    <div className="w-5 h-5 rounded-full border-2 border-[#406A56]/30" />
+                    <div className="w-5 h-5 rounded-full border-2 border-[#2D5A3D]/30" />
                   )}
-                  <span className={`text-sm ${isMyVote ? 'font-medium text-[#406A56]' : 'text-[#2d2d2d]'}`}>
+                  <span className={`text-sm ${isMyVote ? 'font-medium text-[#2D5A3D]' : 'text-[#2d2d2d]'}`}>
                     {option.text}
                   </span>
                 </div>
@@ -388,17 +388,17 @@ function PollCard({
       </div>
 
       {/* Footer */}
-      <div className="mt-4 pt-3 border-t border-[#406A56]/10 flex items-center justify-between">
+      <div className="mt-4 pt-3 border-t border-[#2D5A3D]/10 flex items-center justify-between">
         <div className="flex items-center gap-2 text-xs text-[#666]">
           <Users size={12} />
           {totalVotes} vote{totalVotes !== 1 ? 's' : ''}
           {poll.isMultipleChoice && (
-            <span className="text-[#406A56]">· Multiple choice</span>
+            <span className="text-[#2D5A3D]">· Multiple choice</span>
           )}
         </div>
         
         {!hasVoted && !isClosed && (
-          <span className="text-xs text-[#C35F33] flex items-center gap-1">
+          <span className="text-xs text-[#B8562E] flex items-center gap-1">
             <AlertCircle size={12} />
             You haven't voted
           </span>
@@ -483,7 +483,7 @@ export default function CirclePolling({
       {filteredPolls.length === 0 ? (
         <div className="empty-state">
           <div className="empty-state-icon">
-            <BarChart3 size={32} className="text-[#406A56]" />
+            <BarChart3 size={32} className="text-[#2D5A3D]" />
           </div>
           <h3 className="empty-state-title">No Polls Yet</h3>
           <p className="empty-state-text">

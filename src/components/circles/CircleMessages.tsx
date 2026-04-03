@@ -69,7 +69,7 @@ function MessageBubble({
               className="w-9 h-9 rounded-full object-cover"
             />
           ) : (
-            <div className="w-9 h-9 rounded-full bg-gradient-to-br from-[#406A56]/20 to-[#8DACAB]/30 flex items-center justify-center text-xs font-semibold text-[#406A56]">
+            <div className="w-9 h-9 rounded-full bg-gradient-to-br from-[#2D5A3D]/20 to-[#8DACAB]/30 flex items-center justify-center text-xs font-semibold text-[#2D5A3D]">
               {initials}
             </div>
           )
@@ -80,7 +80,7 @@ function MessageBubble({
       <div className={`max-w-[70%] ${message.isOwn ? 'items-end' : 'items-start'}`}>
         {/* Sender name */}
         {showName && !message.isOwn && (
-          <p className="text-xs font-semibold text-[#406A56] mb-1 px-1">
+          <p className="text-xs font-semibold text-[#2D5A3D] mb-1 px-1">
             {message.senderName}
           </p>
         )}
@@ -89,8 +89,8 @@ function MessageBubble({
         <div
           className={`rounded-2xl px-4 py-2.5 ${
             message.isOwn
-              ? 'bg-[#406A56] text-white rounded-br-md'
-              : 'bg-white border border-[#406A56]/10 text-[#2d2d2d] rounded-bl-md'
+              ? 'bg-[#2D5A3D] text-white rounded-br-md'
+              : 'bg-white border border-[#2D5A3D]/10 text-[#2d2d2d] rounded-bl-md'
           }`}
         >
           {/* Text message */}
@@ -122,7 +122,7 @@ function MessageBubble({
               <button className={`w-8 h-8 rounded-full flex items-center justify-center ${
                 message.isOwn 
                   ? 'bg-white/20 text-white hover:bg-white/30' 
-                  : 'bg-[#406A56]/10 text-[#406A56] hover:bg-[#406A56]/20'
+                  : 'bg-[#2D5A3D]/10 text-[#2D5A3D] hover:bg-[#2D5A3D]/20'
               } transition-colors`}>
                 <Mic size={14} />
               </button>
@@ -132,7 +132,7 @@ function MessageBubble({
                     <div
                       key={i}
                       className={`w-1 rounded-full ${
-                        message.isOwn ? 'bg-white/40' : 'bg-[#406A56]/30'
+                        message.isOwn ? 'bg-white/40' : 'bg-[#2D5A3D]/30'
                       }`}
                       style={{ height: `${Math.random() * 100}%`, minHeight: '4px' }}
                     />
@@ -156,7 +156,7 @@ function MessageBubble({
             {format(message.timestamp, 'h:mm a')}
           </span>
           {message.isOwn && message.status && (
-            <span className="text-[#406A56]">
+            <span className="text-[#2D5A3D]">
               {message.status === 'read' ? (
                 <CheckCheck size={12} />
               ) : (
@@ -213,10 +213,10 @@ function CircleMessageInput({
   const quickEmojis = ['😊', '❤️', '👍', '😂', '🙏', '✨', '🎉', '💪']
 
   return (
-    <div className="p-4 border-t border-[#406A56]/10 bg-white/50">
+    <div className="p-4 border-t border-[#2D5A3D]/10 bg-white/50">
       {/* Emoji Quick Picker */}
       {showEmojiPicker && (
-        <div className="mb-3 p-2 bg-white rounded-xl border border-[#406A56]/10 shadow-sm">
+        <div className="mb-3 p-2 bg-white rounded-xl border border-[#2D5A3D]/10 shadow-sm">
           <div className="flex items-center justify-between mb-2">
             <span className="text-xs font-medium text-[#666]">Quick Reactions</span>
             <button 
@@ -235,7 +235,7 @@ function CircleMessageInput({
                   setShowEmojiPicker(false)
                   textareaRef.current?.focus()
                 }}
-                className="w-9 h-9 text-xl hover:bg-[#406A56]/10 rounded-lg transition-colors"
+                className="w-9 h-9 text-xl hover:bg-[#2D5A3D]/10 rounded-lg transition-colors"
               >
                 {emoji}
               </button>
@@ -246,7 +246,7 @@ function CircleMessageInput({
 
       {/* Attachment Menu */}
       {showAttachMenu && (
-        <div className="mb-3 p-3 bg-white rounded-xl border border-[#406A56]/10 shadow-sm">
+        <div className="mb-3 p-3 bg-white rounded-xl border border-[#2D5A3D]/10 shadow-sm">
           <div className="flex items-center justify-between mb-2">
             <span className="text-xs font-medium text-[#666]">Attach</span>
             <button 
@@ -257,15 +257,15 @@ function CircleMessageInput({
             </button>
           </div>
           <div className="flex gap-2">
-            <button className="flex flex-col items-center gap-1 p-3 rounded-xl hover:bg-[#406A56]/10 transition-colors">
+            <button className="flex flex-col items-center gap-1 p-3 rounded-xl hover:bg-[#2D5A3D]/10 transition-colors">
               <div className="w-10 h-10 rounded-full bg-[#4A3552]/10 flex items-center justify-center">
                 <ImageIcon size={18} className="text-[#4A3552]" />
               </div>
               <span className="text-[10px] text-[#666]">Photo</span>
             </button>
-            <button className="flex flex-col items-center gap-1 p-3 rounded-xl hover:bg-[#406A56]/10 transition-colors">
-              <div className="w-10 h-10 rounded-full bg-[#C35F33]/10 flex items-center justify-center">
-                <Mic size={18} className="text-[#C35F33]" />
+            <button className="flex flex-col items-center gap-1 p-3 rounded-xl hover:bg-[#2D5A3D]/10 transition-colors">
+              <div className="w-10 h-10 rounded-full bg-[#B8562E]/10 flex items-center justify-center">
+                <Mic size={18} className="text-[#B8562E]" />
               </div>
               <span className="text-[10px] text-[#666]">Voice</span>
             </button>
@@ -282,8 +282,8 @@ function CircleMessageInput({
           }}
           className={`flex-shrink-0 w-10 h-10 rounded-xl flex items-center justify-center transition-all ${
             showAttachMenu
-              ? 'bg-[#406A56] text-white'
-              : 'bg-[#406A56]/10 text-[#406A56] hover:bg-[#406A56]/20'
+              ? 'bg-[#2D5A3D] text-white'
+              : 'bg-[#2D5A3D]/10 text-[#2D5A3D] hover:bg-[#2D5A3D]/20'
           }`}
         >
           <Paperclip size={18} />
@@ -298,7 +298,7 @@ function CircleMessageInput({
             placeholder={placeholder}
             disabled={disabled}
             rows={1}
-            className="w-full px-4 py-2.5 pr-10 bg-[#406A56]/5 border border-[#406A56]/10 rounded-xl text-sm text-[#2d2d2d] placeholder:text-[#999] focus:outline-none focus:border-[#406A56]/30 focus:bg-white transition-all resize-none min-h-[44px] max-h-[120px]"
+            className="w-full px-4 py-2.5 pr-10 bg-[#2D5A3D]/5 border border-[#2D5A3D]/10 rounded-xl text-sm text-[#2d2d2d] placeholder:text-[#999] focus:outline-none focus:border-[#2D5A3D]/30 focus:bg-white transition-all resize-none min-h-[44px] max-h-[120px]"
           />
           
           <button
@@ -308,7 +308,7 @@ function CircleMessageInput({
             }}
             className={`absolute right-3 bottom-2.5 p-1 rounded transition-colors ${
               showEmojiPicker
-                ? 'text-[#D9C61A]'
+                ? 'text-[#C4A235]'
                 : 'text-[#999] hover:text-[#666]'
             }`}
           >
@@ -321,8 +321,8 @@ function CircleMessageInput({
           disabled={!message.trim() || disabled}
           className={`flex-shrink-0 w-10 h-10 rounded-xl flex items-center justify-center transition-all ${
             message.trim() && !disabled
-              ? 'bg-[#406A56] text-white hover:bg-[#4a7a64] shadow-sm'
-              : 'bg-[#406A56]/10 text-[#406A56]/40 cursor-not-allowed'
+              ? 'bg-[#2D5A3D] text-white hover:bg-[#234A31] shadow-sm'
+              : 'bg-[#2D5A3D]/10 text-[#2D5A3D]/40 cursor-not-allowed'
           }`}
         >
           <Send size={18} />
@@ -366,13 +366,13 @@ export default function CircleMessages({
   })
 
   return (
-    <div className="h-[600px] flex flex-col bg-[#FAF7E8]/50 rounded-2xl border border-[#406A56]/10 overflow-hidden">
+    <div className="h-[600px] flex flex-col bg-[#FAF7E8]/50 rounded-2xl border border-[#2D5A3D]/10 overflow-hidden">
       {/* Messages Area */}
       <div className="flex-1 overflow-y-auto p-4 space-y-6">
         {messages.length === 0 ? (
           <div className="flex flex-col items-center justify-center h-full text-center">
-            <div className="w-16 h-16 rounded-full bg-[#406A56]/10 flex items-center justify-center mb-4">
-              <Send size={24} className="text-[#406A56]" />
+            <div className="w-16 h-16 rounded-full bg-[#2D5A3D]/10 flex items-center justify-center mb-4">
+              <Send size={24} className="text-[#2D5A3D]" />
             </div>
             <h3 className="font-semibold text-[#2d2d2d] mb-1">Start the conversation</h3>
             <p className="text-sm text-[#666]">
@@ -384,11 +384,11 @@ export default function CircleMessages({
             <div key={groupIndex}>
               {/* Date Separator */}
               <div className="flex items-center gap-4 mb-4">
-                <div className="flex-1 h-px bg-[#406A56]/10" />
+                <div className="flex-1 h-px bg-[#2D5A3D]/10" />
                 <span className="text-xs font-medium text-[#666] bg-[#FAF7E8] px-3 py-1 rounded-full">
                   {formatDateSeparator(date)}
                 </span>
-                <div className="flex-1 h-px bg-[#406A56]/10" />
+                <div className="flex-1 h-px bg-[#2D5A3D]/10" />
               </div>
 
               {/* Messages */}

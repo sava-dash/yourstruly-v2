@@ -177,10 +177,10 @@ export function VoiceChat({
   // Show loading while checking browser support
   if (isSupported === null) {
     return (
-      <div className="p-6 bg-white/80 backdrop-blur-sm border border-[#406A56]/10 rounded-2xl text-center">
+      <div className="p-6 bg-white/80 backdrop-blur-sm border border-[#2D5A3D]/10 rounded-2xl text-center">
         <div className="animate-pulse">
-          <div className="w-16 h-16 mx-auto rounded-full bg-[#406A56]/20" />
-          <p className="text-[#406A56]/60 mt-4">Initializing voice chat...</p>
+          <div className="w-16 h-16 mx-auto rounded-full bg-[#2D5A3D]/20" />
+          <p className="text-[#2D5A3D]/60 mt-4">Initializing voice chat...</p>
         </div>
       </div>
     )
@@ -200,7 +200,7 @@ export function VoiceChat({
   }
 
   return (
-    <div className="p-6 bg-white/80 backdrop-blur-sm border border-[#406A56]/10 rounded-2xl">
+    <div className="p-6 bg-white/80 backdrop-blur-sm border border-[#2D5A3D]/10 rounded-2xl">
       <VoiceChatUI
         state={state}
         transcript={transcript}

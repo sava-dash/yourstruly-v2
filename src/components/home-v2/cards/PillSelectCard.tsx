@@ -37,7 +37,7 @@ export function PillSelectCard({ label, options, data, onSave, saved }: PillSele
 
   return (
     <div className="h-full flex flex-col p-4 gap-3">
-      <h3 className="text-xs font-semibold uppercase tracking-wider text-[#5C6D64]">
+      <h3 className="text-xs font-semibold uppercase tracking-wider text-[#5A6660]">
         {label}
       </h3>
 
@@ -58,7 +58,7 @@ export function PillSelectCard({ label, options, data, onSave, saved }: PillSele
           ))}
           <button
             onClick={() => setShowCustom(!showCustom)}
-            className="px-3 py-1.5 rounded-full text-xs font-medium bg-[#FAF8F4] text-[#94A39C] border border-[#DDE5E0] border-dashed hover:bg-[#E8F0EC] flex items-center gap-1"
+            className="px-3 py-1.5 rounded-full text-xs font-medium bg-[#FAFAF7] text-[#94A09A] border border-[#DDE3DF] border-dashed hover:bg-[#E6F0EA] flex items-center gap-1"
           >
             <Plus size={10} /> Custom
           </button>
@@ -70,7 +70,7 @@ export function PillSelectCard({ label, options, data, onSave, saved }: PillSele
             value={customInput}
             onChange={(e) => setCustomInput(e.target.value)}
             placeholder="Type your own..."
-            className="mt-3 w-full px-3 py-2 bg-[#FAF8F4] rounded-lg border border-[#DDE5E0] text-[#1A2B23] text-sm focus:outline-none focus:ring-2 focus:ring-[#3D6B52]/30 placeholder-[#94A39C]"
+            className="mt-3 w-full px-3 py-2 bg-[#FAFAF7] rounded-lg border border-[#DDE3DF] text-[#1A1F1C] text-sm focus:outline-none focus:ring-2 focus:ring-[#3D6B52]/30 placeholder-[#94A09A]"
             autoFocus
           />
         )}

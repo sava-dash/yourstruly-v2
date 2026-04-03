@@ -180,7 +180,7 @@ export default function GamificationAdminPage() {
           <button onClick={handleReset} style={{ padding: '8px 16px', background: '#f5f5f5', border: '1px solid #ddd', borderRadius: '8px', cursor: 'pointer', fontSize: '13px', display: 'flex', alignItems: 'center', gap: '6px' }}>
             <RotateCcw size={14} /> Reset
           </button>
-          <button onClick={handleSave} disabled={saving} style={{ padding: '8px 20px', background: saved ? '#406A56' : '#333', color: '#fff', border: 'none', borderRadius: '8px', cursor: saving ? 'not-allowed' : 'pointer', fontSize: '13px', fontWeight: '600', display: 'flex', alignItems: 'center', gap: '6px' }}>
+          <button onClick={handleSave} disabled={saving} style={{ padding: '8px 20px', background: saved ? '#2D5A3D' : '#333', color: '#fff', border: 'none', borderRadius: '8px', cursor: saving ? 'not-allowed' : 'pointer', fontSize: '13px', fontWeight: '600', display: 'flex', alignItems: 'center', gap: '6px' }}>
             <Save size={14} /> {saving ? 'Saving...' : saved ? 'Saved!' : 'Save Changes'}
           </button>
         </div>
@@ -326,8 +326,8 @@ export default function GamificationAdminPage() {
               transition: 'all 0.2s',
             }}
             onMouseEnter={e => {
-              e.currentTarget.style.borderColor = '#406A56'
-              e.currentTarget.style.color = '#406A56'
+              e.currentTarget.style.borderColor = '#2D5A3D'
+              e.currentTarget.style.color = '#2D5A3D'
             }}
             onMouseLeave={e => {
               e.currentTarget.style.borderColor = '#ddd'
@@ -374,7 +374,7 @@ export default function GamificationAdminPage() {
         <div style={{ background: '#fafafa', border: '1px solid #eee', borderTop: 'none', borderRadius: '0 0 12px 12px', padding: '16px', marginBottom: '8px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
           {Object.entries(config.streakMessages).map(([days, msg]) => (
             <div key={days} style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
-              <div style={{ flex: '0 0 60px', fontSize: '13px', fontWeight: '700', color: '#C35F33', textAlign: 'center' }}>
+              <div style={{ flex: '0 0 60px', fontSize: '13px', fontWeight: '700', color: '#B8562E', textAlign: 'center' }}>
                 {days} days
               </div>
               <input value={msg} onChange={e => updateStreakMessage(days, e.target.value)} style={{ ...inputStyle, flex: 1 }} />

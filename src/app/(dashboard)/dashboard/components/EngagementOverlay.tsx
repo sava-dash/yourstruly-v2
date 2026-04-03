@@ -272,7 +272,7 @@ export function EngagementOverlay({
                   background: 'rgba(217, 198, 26, 0.1)',
                   borderRadius: '12px',
                 }}>
-                  <Sparkles size={18} style={{ color: '#D9C61A' }} />
+                  <Sparkles size={18} style={{ color: '#C4A235' }} />
                   <div>
                     <div style={{ fontSize: '18px', fontWeight: '700', color: '#2d2d2d' }}>{totalXp} XP</div>
                     <div style={{ fontSize: '11px', color: '#888' }}>Total earned</div>

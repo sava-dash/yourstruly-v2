@@ -19,17 +19,17 @@ const CATEGORY_STYLES: Record<string, {
 }> = {
   life_lessons: { 
     bg: 'linear-gradient(135deg, #F5ECD7 0%, #F0E6C8 100%)', 
-    accent: '#D9C61A',
+    accent: '#C4A235',
     icon: Lightbulb 
   },
   relationships: { 
     bg: 'linear-gradient(135deg, #F5DFD0 0%, #F0D5C2 100%)', 
-    accent: '#C35F33',
+    accent: '#B8562E',
     icon: Heart 
   },
   family: { 
     bg: 'linear-gradient(135deg, #E0EBE5 0%, #D5E4DC 100%)', 
-    accent: '#406A56',
+    accent: '#2D5A3D',
     icon: Users 
   },
   career: { 
@@ -44,12 +44,12 @@ const CATEGORY_STYLES: Record<string, {
   },
   recipes: { 
     bg: 'linear-gradient(135deg, #F5DFD0 0%, #F0D5C2 100%)', 
-    accent: '#C35F33',
+    accent: '#B8562E',
     icon: Utensils 
   },
   advice: { 
     bg: 'linear-gradient(135deg, #F5ECD7 0%, #F0E6C8 100%)', 
-    accent: '#D9C61A',
+    accent: '#C4A235',
     icon: GraduationCap 
   },
   wisdom: { 
@@ -127,7 +127,7 @@ export function QuestionPromptBar({ onCreateWisdom, onVoiceCapture }: QuestionPr
       <div className="instant-questions-bar mb-6">
         <div className="instant-questions-header">
           <div className="instant-questions-title">
-            <Sparkles size={16} className="text-[#D9C61A]" />
+            <Sparkles size={16} className="text-[#C4A235]" />
             <span>Instant Questions</span>
           </div>
         </div>
@@ -152,14 +152,14 @@ export function QuestionPromptBar({ onCreateWisdom, onVoiceCapture }: QuestionPr
         {allQuestions.length > 5 && (
           <button 
             onClick={shuffleQuestions}
-            className="p-2 rounded-lg bg-white/80 hover:bg-white border border-gray-200 text-gray-500 hover:text-[#406A56] transition-all"
+            className="p-2 rounded-lg bg-white/80 hover:bg-white border border-gray-200 text-gray-500 hover:text-[#2D5A3D] transition-all"
             title="Shuffle questions"
           >
             <Shuffle size={16} />
           </button>
         )}
         <div className="instant-questions-title flex-1">
-          <Sparkles size={16} className="text-[#D9C61A]" />
+          <Sparkles size={16} className="text-[#C4A235]" />
           <span>Instant Questions</span>
           <span className="instant-questions-xp">+100 XP each</span>
         </div>
@@ -219,7 +219,7 @@ export function QuestionPromptBar({ onCreateWisdom, onVoiceCapture }: QuestionPr
                       <span 
                         className="instant-question-btn"
                         style={{ 
-                          backgroundColor: '#406A56',
+                          backgroundColor: '#2D5A3D',
                           color: 'white' 
                         }}
                         onClick={(e) => {

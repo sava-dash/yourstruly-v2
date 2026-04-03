@@ -161,7 +161,7 @@ export function PeopleBrowse({ onSelectPerson }: PeopleBrowseProps) {
       'friend': 'from-yellow-400 to-amber-500',
       'colleague': 'from-slate-400 to-zinc-500',
     }
-    return colors[type?.toLowerCase() || ''] || 'from-[#406A56] to-[#5A8A72]'
+    return colors[type?.toLowerCase() || ''] || 'from-[#2D5A3D] to-[#5A8A72]'
   }
 
   if (loading) {
@@ -200,7 +200,7 @@ export function PeopleBrowse({ onSelectPerson }: PeopleBrowseProps) {
               <h2 className="text-xl font-bold text-[#2d2d2d]">
                 Your story with {selectedContact.name}
               </h2>
-              <p className="text-sm text-[#406A56]">
+              <p className="text-sm text-[#2D5A3D]">
                 {contactMemories.length} memories together
               </p>
             </div>
@@ -215,7 +215,7 @@ export function PeopleBrowse({ onSelectPerson }: PeopleBrowseProps) {
         ) : contactMemories.length === 0 ? (
           <div className="empty-state">
             <div className="empty-state-icon">
-              <Camera size={32} className="text-[#406A56]/50" />
+              <Camera size={32} className="text-[#2D5A3D]/50" />
             </div>
             <h3 className="empty-state-title">No tagged memories</h3>
             <p className="empty-state-text">
@@ -250,7 +250,7 @@ export function PeopleBrowse({ onSelectPerson }: PeopleBrowseProps) {
       {contacts.length === 0 ? (
         <div className="empty-state">
           <div className="empty-state-icon">
-            <User size={32} className="text-[#406A56]/50" />
+            <User size={32} className="text-[#2D5A3D]/50" />
           </div>
           <h3 className="empty-state-title">No people in your memories yet</h3>
           <p className="empty-state-text">
@@ -295,7 +295,7 @@ export function PeopleBrowse({ onSelectPerson }: PeopleBrowseProps) {
                 {/* Memory count badge */}
                 {contact.memoryCount > 0 && (
                   <div className="absolute -bottom-1 -right-1 min-w-[24px] h-6 px-1.5 
-                                  bg-[#D9C61A] rounded-full flex items-center justify-center
+                                  bg-[#C4A235] rounded-full flex items-center justify-center
                                   text-xs font-bold text-[#2d2d2d] shadow-md
                                   group-hover:scale-110 transition-transform">
                     {contact.memoryCount}
@@ -305,13 +305,13 @@ export function PeopleBrowse({ onSelectPerson }: PeopleBrowseProps) {
 
               {/* Name */}
               <span className="text-sm font-medium text-[#2d2d2d] line-clamp-1 max-w-full px-1
-                               group-hover:text-[#406A56] transition-colors">
+                               group-hover:text-[#2D5A3D] transition-colors">
                 {contact.name.split(' ')[0]}
               </span>
               
               {/* Relationship type */}
               {contact.relationshipType && (
-                <span className="text-xs text-[#406A56]/60 capitalize">
+                <span className="text-xs text-[#2D5A3D]/60 capitalize">
                   {contact.relationshipType}
                 </span>
               )}

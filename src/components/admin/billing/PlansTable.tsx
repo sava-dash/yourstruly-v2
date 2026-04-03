@@ -78,7 +78,7 @@ export default function PlansTable({ onEdit }: PlansTableProps) {
   if (isLoading) {
     return (
       <div className="glass p-8 text-center">
-        <div className="animate-spin w-6 h-6 border-2 border-[#406A56] border-t-transparent rounded-full mx-auto" />
+        <div className="animate-spin w-6 h-6 border-2 border-[#2D5A3D] border-t-transparent rounded-full mx-auto" />
       </div>
     );
   }
@@ -96,7 +96,7 @@ export default function PlansTable({ onEdit }: PlansTableProps) {
       <div className="overflow-x-auto">
         <table className="w-full">
           <thead>
-            <tr className="border-b border-[#C35F33]/10">
+            <tr className="border-b border-[#B8562E]/10">
               <th className="px-4 py-4 text-left text-sm font-medium text-[#2a1f1a]/60">Plan</th>
               <th className="px-4 py-4 text-left text-sm font-medium text-[#2a1f1a]/60">Price</th>
               <th className="px-4 py-4 text-left text-sm font-medium text-[#2a1f1a]/60">Interval</th>
@@ -105,20 +105,20 @@ export default function PlansTable({ onEdit }: PlansTableProps) {
               <th className="px-4 py-4 text-right text-sm font-medium text-[#2a1f1a]/60">Actions</th>
             </tr>
           </thead>
-          <tbody className="divide-y divide-[#C35F33]/5">
+          <tbody className="divide-y divide-[#B8562E]/5">
             {plans.map((plan) => (
               <tr key={plan.id} className="hover:bg-white/50 transition-colors">
                 <td className="px-4 py-4">
                   <div className="flex items-center gap-3">
                     <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${
                       plan.is_default 
-                        ? 'bg-gradient-to-br from-[#C35F33] to-[#D9C61A]' 
-                        : 'bg-[#406A56]/10'
+                        ? 'bg-gradient-to-br from-[#B8562E] to-[#C4A235]' 
+                        : 'bg-[#2D5A3D]/10'
                     }`}>
                       {plan.is_default ? (
                         <Crown className="w-5 h-5 text-white" />
                       ) : (
-                        <span className="text-sm font-medium text-[#406A56]">
+                        <span className="text-sm font-medium text-[#2D5A3D]">
                           {plan.name.charAt(0)}
                         </span>
                       )}
@@ -127,7 +127,7 @@ export default function PlansTable({ onEdit }: PlansTableProps) {
                       <p className="font-medium text-[#2a1f1a]">{plan.name}</p>
                       <p className="text-xs text-[#2a1f1a]/50">{plan.slug}</p>
                       {plan.is_default && (
-                        <span className="inline-flex items-center gap-1 text-xs text-[#C35F33] font-medium">
+                        <span className="inline-flex items-center gap-1 text-xs text-[#B8562E] font-medium">
                           Default Plan
                         </span>
                       )}
@@ -140,7 +140,7 @@ export default function PlansTable({ onEdit }: PlansTableProps) {
                   </span>
                 </td>
                 <td className="px-4 py-4">
-                  <span className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-[#406A56]/10 text-[#406A56] capitalize">
+                  <span className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-[#2D5A3D]/10 text-[#2D5A3D] capitalize">
                     {plan.interval}
                   </span>
                 </td>
@@ -166,7 +166,7 @@ export default function PlansTable({ onEdit }: PlansTableProps) {
                     onClick={() => handleToggleActive(plan.id, plan.is_active)}
                     className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium transition-colors ${
                       plan.is_active
-                        ? 'bg-[#406A56]/10 text-[#406A56]'
+                        ? 'bg-[#2D5A3D]/10 text-[#2D5A3D]'
                         : 'bg-gray-100 text-gray-500'
                     }`}
                   >
@@ -187,7 +187,7 @@ export default function PlansTable({ onEdit }: PlansTableProps) {
                   <div className="flex items-center justify-end gap-2">
                     <button
                       onClick={() => onEdit(plan)}
-                      className="p-2 rounded-lg hover:bg-white/80 transition-colors text-[#2a1f1a]/50 hover:text-[#406A56]"
+                      className="p-2 rounded-lg hover:bg-white/80 transition-colors text-[#2a1f1a]/50 hover:text-[#2D5A3D]"
                       title="Edit"
                     >
                       <Edit className="w-4 h-4" />

@@ -270,7 +270,7 @@ const TRAIT_ITEMS: { label: string; emoji: string }[] = [
 // BUBBLE CLUSTER COMPONENT
 // ============================================
 
-const SELECTED_COLOR = '#406A56';
+const SELECTED_COLOR = '#2D5A3D';
 const SELECTED_COLOR_TRAIT = '#4A3552';
 
 function ClusteredBubbles({

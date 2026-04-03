@@ -160,12 +160,12 @@ interface FeedDetailModalProps {
 
 // Brand colors
 const BRAND_COLORS = {
-  green: '#406A56',
-  yellow: '#D9C61A',
+  green: '#2D5A3D',
+  yellow: '#C4A235',
   blue: '#8DACAB',
-  red: '#C35F33',
+  red: '#B8562E',
   purple: '#4A3552',
-  offWhite: '#F2F1E5',
+  offWhite: '#F5F3EE',
 }
 
 const TYPE_COLORS: Record<string, string> = {
@@ -923,7 +923,7 @@ export function FeedDetailModal({ activity, isOpen, onClose, onUpdate }: FeedDet
                     background: 'transparent',
                     border: 'none',
                     cursor: 'pointer',
-                    color: isFavorite ? '#C35F33' : '#ccc',
+                    color: isFavorite ? '#B8562E' : '#ccc',
                     padding: '6px',
                     display: 'flex',
                     alignItems: 'center',

@@ -59,7 +59,7 @@ export function buildMonthlyRecapEmail(data: MonthlyRecapData): {
   <body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 0; background-color: #f8fafc;">
     <div style="background-color: #ffffff; margin: 0 auto; max-width: 600px;">
       <!-- Header -->
-      <div style="background: linear-gradient(135deg, #406A56 0%, #5a8a6a 100%); color: white; padding: 40px 30px; text-align: center; border-radius: 0 0 0 0;">
+      <div style="background: linear-gradient(135deg, #2D5A3D 0%, #5a8a6a 100%); color: white; padding: 40px 30px; text-align: center; border-radius: 0 0 0 0;">
         <h1 style="margin: 0 0 8px 0; font-size: 24px; font-weight: 300;">
           Your ${data.monthName} Recap 📊
         </h1>
@@ -95,7 +95,7 @@ export function buildMonthlyRecapEmail(data: MonthlyRecapData): {
 
         <!-- CTA -->
         <div style="text-align: center; margin: 32px 0;">
-          <a href="${dashboardUrl}" style="display: inline-block; background: #406A56; color: white; padding: 14px 36px; text-decoration: none; border-radius: 8px; font-weight: 600; font-size: 16px;">
+          <a href="${dashboardUrl}" style="display: inline-block; background: #2D5A3D; color: white; padding: 14px 36px; text-decoration: none; border-radius: 8px; font-weight: 600; font-size: 16px;">
             View Your Dashboard
           </a>
         </div>
@@ -109,7 +109,7 @@ export function buildMonthlyRecapEmail(data: MonthlyRecapData): {
       <div style="border-top: 1px solid #e2e8f0; padding: 24px 30px; text-align: center;">
         <p style="color: #94a3b8; font-size: 12px; margin: 0;">
           You're receiving this because you have an active account on
-          <a href="${APP_URL}" style="color: #406A56; text-decoration: none;">YoursTruly</a>.<br>
+          <a href="${APP_URL}" style="color: #2D5A3D; text-decoration: none;">YoursTruly</a>.<br>
           Preserve your legacy for generations to come.
         </p>
       </div>

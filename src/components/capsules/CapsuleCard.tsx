@@ -58,7 +58,7 @@ export default function AlbumCard({ album, onEdit, onDelete }: AlbumCardProps) {
 
           {/* Theme Badge */}
           <div className="absolute top-4 left-4">
-            <span className="px-3 py-1.5 bg-white/90 backdrop-blur-sm rounded-full text-[#406A56] text-xs font-semibold flex items-center gap-1.5 shadow-md">
+            <span className="px-3 py-1.5 bg-white/90 backdrop-blur-sm rounded-full text-[#2D5A3D] text-xs font-semibold flex items-center gap-1.5 shadow-md">
               <span>{theme.icon}</span>
               <span className="uppercase tracking-wider">{theme.label}</span>
             </span>
@@ -80,7 +80,7 @@ export default function AlbumCard({ album, onEdit, onDelete }: AlbumCardProps) {
               className="absolute inset-0 flex items-center justify-center"
             >
               <div className="w-16 h-16 rounded-full bg-white/90 flex items-center justify-center shadow-xl">
-                <Play size={28} className="text-[#406A56] ml-1" fill="currentColor" />
+                <Play size={28} className="text-[#2D5A3D] ml-1" fill="currentColor" />
               </div>
             </motion.div>
           )}

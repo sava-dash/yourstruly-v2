@@ -94,8 +94,8 @@ export default function SMSConsentCheckbox({
         }
 
         .sms-consent-checkbox-checked {
-          background: #406A56;
-          border-color: #406A56;
+          background: #2D5A3D;
+          border-color: #2D5A3D;
         }
 
         .sms-consent-content {
@@ -113,7 +113,7 @@ export default function SMSConsentCheckbox({
           display: flex;
           align-items: center;
           justify-content: center;
-          color: #406A56;
+          color: #2D5A3D;
         }
 
         .sms-consent-text {
@@ -152,7 +152,7 @@ export function SMSConsentInline({
         type="checkbox"
         checked={checked}
         onChange={(e) => onChange(e.target.checked)}
-        className="mt-1 w-4 h-4 rounded border-[#406A56]/30 text-[#406A56] focus:ring-[#406A56] focus:ring-offset-0"
+        className="mt-1 w-4 h-4 rounded border-[#2D5A3D]/30 text-[#2D5A3D] focus:ring-[#2D5A3D] focus:ring-offset-0"
       />
       <span className="text-sm text-[#666] leading-relaxed">
         I confirm the recipient has agreed to receive SMS messages from YoursTruly. 

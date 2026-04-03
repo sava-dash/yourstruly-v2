@@ -95,7 +95,7 @@ export default function CouponsTable({ onEdit }: CouponsTableProps) {
   if (isLoading) {
     return (
       <div className="glass p-8 text-center">
-        <div className="animate-spin w-6 h-6 border-2 border-[#406A56] border-t-transparent rounded-full mx-auto" />
+        <div className="animate-spin w-6 h-6 border-2 border-[#2D5A3D] border-t-transparent rounded-full mx-auto" />
       </div>
     );
   }
@@ -113,7 +113,7 @@ export default function CouponsTable({ onEdit }: CouponsTableProps) {
       <div className="overflow-x-auto">
         <table className="w-full">
           <thead>
-            <tr className="border-b border-[#C35F33]/10">
+            <tr className="border-b border-[#B8562E]/10">
               <th className="px-4 py-4 text-left text-sm font-medium text-[#2a1f1a]/60">Code</th>
               <th className="px-4 py-4 text-left text-sm font-medium text-[#2a1f1a]/60">Discount</th>
               <th className="px-4 py-4 text-left text-sm font-medium text-[#2a1f1a]/60">Usage</th>
@@ -122,12 +122,12 @@ export default function CouponsTable({ onEdit }: CouponsTableProps) {
               <th className="px-4 py-4 text-right text-sm font-medium text-[#2a1f1a]/60">Actions</th>
             </tr>
           </thead>
-          <tbody className="divide-y divide-[#C35F33]/5">
+          <tbody className="divide-y divide-[#B8562E]/5">
             {coupons.map((coupon) => (
               <tr key={coupon.id} className="hover:bg-white/50 transition-colors">
                 <td className="px-4 py-4">
                   <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-xl bg-[#D9C61A]/10 flex items-center justify-center">
+                    <div className="w-10 h-10 rounded-xl bg-[#C4A235]/10 flex items-center justify-center">
                       <Tag className="w-5 h-5 text-[#8B7C00]" />
                     </div>
                     <div>
@@ -135,7 +135,7 @@ export default function CouponsTable({ onEdit }: CouponsTableProps) {
                         <p className="font-medium text-[#2a1f1a] font-mono">{coupon.code}</p>
                         <button
                           onClick={() => handleCopyCode(coupon.code)}
-                          className="p-1 rounded hover:bg-white/50 text-[#2a1f1a]/30 hover:text-[#406A56] transition-colors"
+                          className="p-1 rounded hover:bg-white/50 text-[#2a1f1a]/30 hover:text-[#2D5A3D] transition-colors"
                           title="Copy code"
                         >
                           <Copy className="w-3 h-3" />
@@ -157,7 +157,7 @@ export default function CouponsTable({ onEdit }: CouponsTableProps) {
                   <div className="flex items-center gap-2">
                     <div className="flex-1 w-24 h-2 bg-gray-200 rounded-full overflow-hidden">
                       <div 
-                        className="h-full bg-[#406A56] rounded-full"
+                        className="h-full bg-[#2D5A3D] rounded-full"
                         style={{ 
                           width: coupon.max_redemptions 
                             ? `${Math.min(100, (coupon.redemptions_count / coupon.max_redemptions) * 100)}%` 
@@ -174,7 +174,7 @@ export default function CouponsTable({ onEdit }: CouponsTableProps) {
                     {coupon.expires_at ? (
                       <span>To: {format(new Date(coupon.expires_at), 'MMM d, yyyy')}</span>
                     ) : (
-                      <span className="text-[#406A56]">No expiry</span>
+                      <span className="text-[#2D5A3D]">No expiry</span>
                     )}
                   </div>
                 </td>
@@ -183,7 +183,7 @@ export default function CouponsTable({ onEdit }: CouponsTableProps) {
                     onClick={() => handleToggleActive(coupon.id, coupon.is_active)}
                     className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium transition-colors ${
                       coupon.is_active
-                        ? 'bg-[#406A56]/10 text-[#406A56]'
+                        ? 'bg-[#2D5A3D]/10 text-[#2D5A3D]'
                         : 'bg-gray-100 text-gray-500'
                     }`}
                   >
@@ -204,7 +204,7 @@ export default function CouponsTable({ onEdit }: CouponsTableProps) {
                   <div className="flex items-center justify-end gap-2">
                     <button
                       onClick={() => onEdit(coupon)}
-                      className="p-2 rounded-lg hover:bg-white/80 transition-colors text-[#2a1f1a]/50 hover:text-[#406A56]"
+                      className="p-2 rounded-lg hover:bg-white/80 transition-colors text-[#2a1f1a]/50 hover:text-[#2D5A3D]"
                       title="Edit"
                     >
                       <Edit className="w-4 h-4" />

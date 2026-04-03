@@ -52,9 +52,9 @@ interface ClusterFeature {
 
 // YoursTruly brand colors
 const BRAND_COLORS = {
-  forest: '#406A56',
-  gold: '#D9C61A',
-  coral: '#C35F33',
+  forest: '#2D5A3D',
+  gold: '#C4A235',
+  coral: '#B8562E',
   cream: '#FFF8F0',
 }
 
@@ -417,8 +417,8 @@ export default function MapView({
     return (
       <div className="relative w-full h-[calc(100vh-200px)] min-h-[500px] rounded-2xl overflow-hidden shadow-xl bg-gradient-to-br from-gray-100 to-gray-200 flex items-center justify-center">
         <div className="text-center p-8 max-w-md">
-          <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-[#406A56]/10 flex items-center justify-center">
-            <MapPin size={32} className="text-[#406A56]" />
+          <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-[#2D5A3D]/10 flex items-center justify-center">
+            <MapPin size={32} className="text-[#2D5A3D]" />
           </div>
           <h3 className="text-lg font-medium text-gray-800 mb-2">Map View Unavailable</h3>
           <p className="text-gray-600 text-sm mb-4">
@@ -446,7 +446,7 @@ export default function MapView({
             <button
               onClick={() => !isGlobeMode && onToggleGlobe()}
               className={`flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium transition-all ${
-                !isGlobeMode ? 'bg-[#406A56] text-white' : 'text-[#406A56] hover:bg-[#406A56]/10'
+                !isGlobeMode ? 'bg-[#2D5A3D] text-white' : 'text-[#2D5A3D] hover:bg-[#2D5A3D]/10'
               }`}
             >
               <MapIcon size={16} />
@@ -455,7 +455,7 @@ export default function MapView({
             <button
               onClick={() => isGlobeMode && onToggleGlobe()}
               className={`flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium transition-all ${
-                isGlobeMode ? 'bg-[#406A56] text-white' : 'text-[#406A56] hover:bg-[#406A56]/10'
+                isGlobeMode ? 'bg-[#2D5A3D] text-white' : 'text-[#2D5A3D] hover:bg-[#2D5A3D]/10'
               }`}
             >
               <Globe2 size={16} />
@@ -470,7 +470,7 @@ export default function MapView({
             onClick={() => setMapStyle(prev => 
               prev === 'light' ? 'streets' : prev === 'streets' ? 'satellite' : 'light'
             )}
-            className="flex items-center gap-2 px-3 py-2 bg-white/95 backdrop-blur-sm rounded-xl shadow-lg text-sm font-medium text-[#406A56] hover:bg-white transition-all"
+            className="flex items-center gap-2 px-3 py-2 bg-white/95 backdrop-blur-sm rounded-xl shadow-lg text-sm font-medium text-[#2D5A3D] hover:bg-white transition-all"
           >
             <Layers size={16} />
             <span className="hidden sm:inline capitalize">{mapStyle}</span>
@@ -482,7 +482,7 @@ export default function MapView({
           <button
             onClick={() => setShowDateFilter(!showDateFilter)}
             className={`flex items-center gap-2 px-3 py-2 bg-white/95 backdrop-blur-sm rounded-xl shadow-lg text-sm font-medium transition-all ${
-              dateFilter.start || dateFilter.end ? 'bg-[#D9C61A] text-white' : 'text-[#406A56] hover:bg-white'
+              dateFilter.start || dateFilter.end ? 'bg-[#C4A235] text-white' : 'text-[#2D5A3D] hover:bg-white'
             }`}
           >
             <Filter size={16} />
@@ -502,33 +502,33 @@ export default function MapView({
                 <h4 className="text-sm font-semibold text-[#2d2d2d] mb-3">Filter by Date</h4>
                 <div className="space-y-3">
                   <div>
-                    <label className="text-xs text-[#406A56]/60 block mb-1">From</label>
+                    <label className="text-xs text-[#2D5A3D]/60 block mb-1">From</label>
                     <input
                       type="date"
                       value={dateFilter.start}
                       onChange={(e) => setDateFilter(prev => ({ ...prev, start: e.target.value }))}
-                      className="w-full px-3 py-2 border border-[#406A56]/20 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#406A56]/30"
+                      className="w-full px-3 py-2 border border-[#2D5A3D]/20 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#2D5A3D]/30"
                     />
                   </div>
                   <div>
-                    <label className="text-xs text-[#406A56]/60 block mb-1">To</label>
+                    <label className="text-xs text-[#2D5A3D]/60 block mb-1">To</label>
                     <input
                       type="date"
                       value={dateFilter.end}
                       onChange={(e) => setDateFilter(prev => ({ ...prev, end: e.target.value }))}
-                      className="w-full px-3 py-2 border border-[#406A56]/20 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#406A56]/30"
+                      className="w-full px-3 py-2 border border-[#2D5A3D]/20 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#2D5A3D]/30"
                     />
                   </div>
                   <div className="flex gap-2">
                     <button
                       onClick={clearDateFilter}
-                      className="flex-1 px-3 py-2 text-sm text-[#C35F33] hover:bg-[#C35F33]/10 rounded-lg transition-colors"
+                      className="flex-1 px-3 py-2 text-sm text-[#B8562E] hover:bg-[#B8562E]/10 rounded-lg transition-colors"
                     >
                       Clear
                     </button>
                     <button
                       onClick={() => setShowDateFilter(false)}
-                      className="flex-1 px-3 py-2 text-sm bg-[#406A56] text-white rounded-lg hover:bg-[#406A56]/90 transition-colors"
+                      className="flex-1 px-3 py-2 text-sm bg-[#2D5A3D] text-white rounded-lg hover:bg-[#2D5A3D]/90 transition-colors"
                     >
                       Apply
                     </button>
@@ -544,21 +544,21 @@ export default function MapView({
       <div className="absolute bottom-4 left-4 flex flex-col gap-2 z-10">
         <button
           onClick={() => map.current?.zoomIn()}
-          className="p-2 bg-white/95 backdrop-blur-sm rounded-lg shadow-lg text-[#406A56] hover:bg-white transition-all"
+          className="p-2 bg-white/95 backdrop-blur-sm rounded-lg shadow-lg text-[#2D5A3D] hover:bg-white transition-all"
           aria-label="Zoom in"
         >
           <ZoomIn size={20} />
         </button>
         <button
           onClick={() => map.current?.zoomOut()}
-          className="p-2 bg-white/95 backdrop-blur-sm rounded-lg shadow-lg text-[#406A56] hover:bg-white transition-all"
+          className="p-2 bg-white/95 backdrop-blur-sm rounded-lg shadow-lg text-[#2D5A3D] hover:bg-white transition-all"
           aria-label="Zoom out"
         >
           <ZoomOut size={20} />
         </button>
         <button
           onClick={fitToBounds}
-          className="p-2 bg-white/95 backdrop-blur-sm rounded-lg shadow-lg text-[#406A56] hover:bg-white transition-all"
+          className="p-2 bg-white/95 backdrop-blur-sm rounded-lg shadow-lg text-[#2D5A3D] hover:bg-white transition-all"
           aria-label="Fit all markers"
           title="Fit all markers"
         >
@@ -569,12 +569,12 @@ export default function MapView({
       {/* Stats Overlay */}
       <div className="absolute bottom-4 right-4 bg-white/95 backdrop-blur-sm rounded-xl shadow-lg px-4 py-3 z-10">
         <div className="flex items-center gap-3">
-          <div className="flex items-center gap-1.5 text-[#406A56]">
+          <div className="flex items-center gap-1.5 text-[#2D5A3D]">
             <MapPin size={16} />
             <span className="text-sm font-medium">{filteredMemories.length}</span>
           </div>
-          <span className="text-[#406A56]/40">|</span>
-          <span className="text-xs text-[#406A56]/60">
+          <span className="text-[#2D5A3D]/40">|</span>
+          <span className="text-xs text-[#2D5A3D]/60">
             {memories.filter(m => !m.location_lat).length} without location
           </span>
         </div>
@@ -591,7 +591,7 @@ export default function MapView({
             className="absolute top-0 right-0 bottom-0 w-full sm:w-96 bg-white shadow-2xl z-20 overflow-hidden flex flex-col"
           >
             {/* Sidebar Header */}
-            <div className="flex items-center justify-between p-4 border-b border-[#406A56]/10">
+            <div className="flex items-center justify-between p-4 border-b border-[#2D5A3D]/10">
               <h3 className="text-lg font-semibold text-[#2d2d2d]">
                 {selectedCluster 
                   ? `${selectedCluster.length} Memories at this Location`
@@ -604,10 +604,10 @@ export default function MapView({
                   setSelectedCluster(null)
                   setSelectedMemory(null)
                 }}
-                className="p-2 hover:bg-[#406A56]/10 rounded-lg transition-colors"
+                className="p-2 hover:bg-[#2D5A3D]/10 rounded-lg transition-colors"
                 aria-label="Close sidebar"
               >
-                <X size={20} className="text-[#406A56]" />
+                <X size={20} className="text-[#2D5A3D]" />
               </button>
             </div>
 
@@ -665,13 +665,13 @@ export default function MapView({
 
                   {/* Memory Info */}
                   <div className="p-4 space-y-4">
-                    <div className="flex items-center gap-2 text-sm text-[#406A56]/70">
+                    <div className="flex items-center gap-2 text-sm text-[#2D5A3D]/70">
                       <Calendar size={14} />
                       <span>{formatDate(selectedMemory.memory_date)}</span>
                     </div>
                     
                     {selectedMemory.location_name && (
-                      <div className="flex items-start gap-2 text-sm text-[#406A56]/70">
+                      <div className="flex items-start gap-2 text-sm text-[#2D5A3D]/70">
                         <MapPin size={14} className="mt-0.5 flex-shrink-0" />
                         <span>{selectedMemory.location_name}</span>
                       </div>
@@ -685,14 +685,14 @@ export default function MapView({
 
                     {selectedMemory.ai_summary && (
                       <div className="bg-[#f5f0eb] rounded-xl p-3">
-                        <p className="text-xs text-[#406A56]/60 mb-1">AI Summary</p>
+                        <p className="text-xs text-[#2D5A3D]/60 mb-1">AI Summary</p>
                         <p className="text-sm text-[#2d2d2d]/70">{selectedMemory.ai_summary}</p>
                       </div>
                     )}
 
                     <Link
                       href={`/dashboard/memories/${selectedMemory.id}`}
-                      className="block w-full py-3 bg-[#406A56] text-white text-center rounded-xl font-medium hover:bg-[#406A56]/90 transition-colors"
+                      className="block w-full py-3 bg-[#2D5A3D] text-white text-center rounded-xl font-medium hover:bg-[#2D5A3D]/90 transition-colors"
                     >
                       View Full Memory
                     </Link>
@@ -714,7 +714,7 @@ export default function MapView({
                       className="w-full flex items-start gap-3 p-3 bg-[#f5f0eb] hover:bg-[#f0e8df] rounded-xl transition-colors text-left group"
                     >
                       {/* Thumbnail */}
-                      <div className="w-16 h-16 rounded-lg overflow-hidden flex-shrink-0 bg-[#406A56]/10">
+                      <div className="w-16 h-16 rounded-lg overflow-hidden flex-shrink-0 bg-[#2D5A3D]/10">
                         {memory.memory_media?.[0] ? (
                           <img
                             src={memory.memory_media.find(m => m.is_cover)?.file_url || memory.memory_media[0].file_url}
@@ -723,7 +723,7 @@ export default function MapView({
                           />
                         ) : (
                           <div className="w-full h-full flex items-center justify-center">
-                            <MapPin size={20} className="text-[#406A56]/40" />
+                            <MapPin size={20} className="text-[#2D5A3D]/40" />
                           </div>
                         )}
                       </div>
@@ -733,17 +733,17 @@ export default function MapView({
                         <h4 className="text-sm font-medium text-[#2d2d2d] truncate">
                           {memory.title || 'Untitled Memory'}
                         </h4>
-                        <p className="text-xs text-[#406A56]/60 mt-1">
+                        <p className="text-xs text-[#2D5A3D]/60 mt-1">
                           {formatDate(memory.memory_date)}
                         </p>
                         {memory.ai_category && (
-                          <span className="inline-block mt-1.5 px-2 py-0.5 bg-[#406A56]/10 text-[#406A56] text-xs rounded-full">
+                          <span className="inline-block mt-1.5 px-2 py-0.5 bg-[#2D5A3D]/10 text-[#2D5A3D] text-xs rounded-full">
                             {memory.ai_category}
                           </span>
                         )}
                       </div>
                       
-                      <ChevronRight size={16} className="text-[#406A56]/40 mt-1" />
+                      <ChevronRight size={16} className="text-[#2D5A3D]/40 mt-1" />
                     </button>
                   ))}
                 </div>
@@ -757,8 +757,8 @@ export default function MapView({
       {filteredMemories.length === 0 && (
         <div className="absolute inset-0 flex items-center justify-center bg-[#f5f0eb]/80 backdrop-blur-sm">
           <div className="text-center p-6">
-            <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-[#406A56]/10 flex items-center justify-center">
-              <MapPin size={28} className="text-[#406A56]/50" />
+            <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-[#2D5A3D]/10 flex items-center justify-center">
+              <MapPin size={28} className="text-[#2D5A3D]/50" />
             </div>
             <h3 className="text-lg font-semibold text-[#2d2d2d] mb-2">
               {dateFilter.start || dateFilter.end 
@@ -766,7 +766,7 @@ export default function MapView({
                 : 'No geotagged memories yet'
               }
             </h3>
-            <p className="text-sm text-[#406A56]/60 max-w-xs mx-auto">
+            <p className="text-sm text-[#2D5A3D]/60 max-w-xs mx-auto">
               {dateFilter.start || dateFilter.end 
                 ? 'Try adjusting your date filter to see more memories'
                 : 'Add locations to your memories to see them on the map'
@@ -775,7 +775,7 @@ export default function MapView({
             {(dateFilter.start || dateFilter.end) && (
               <button
                 onClick={clearDateFilter}
-                className="mt-4 px-4 py-2 bg-[#406A56] text-white rounded-lg text-sm font-medium hover:bg-[#406A56]/90 transition-colors"
+                className="mt-4 px-4 py-2 bg-[#2D5A3D] text-white rounded-lg text-sm font-medium hover:bg-[#2D5A3D]/90 transition-colors"
               >
                 Clear Date Filter
               </button>

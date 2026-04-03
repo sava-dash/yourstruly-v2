@@ -678,12 +678,12 @@ export default function CircleDetailPage({ params }: { params: Promise<{ id: str
           {/* Header skeleton */}
           <header className="mb-6">
             <div className="flex items-center gap-4">
-              <div className="w-10 h-10 rounded-xl bg-[#406A56]/10" />
+              <div className="w-10 h-10 rounded-xl bg-[#2D5A3D]/10" />
               <div className="flex items-center gap-4">
-                <div className="w-14 h-14 rounded-xl bg-[#406A56]/10" />
+                <div className="w-14 h-14 rounded-xl bg-[#2D5A3D]/10" />
                 <div>
-                  <div className="h-6 w-48 bg-[#406A56]/10 rounded mb-2" />
-                  <div className="h-4 w-24 bg-[#406A56]/10 rounded" />
+                  <div className="h-6 w-48 bg-[#2D5A3D]/10 rounded mb-2" />
+                  <div className="h-4 w-24 bg-[#2D5A3D]/10 rounded" />
                 </div>
               </div>
             </div>
@@ -692,17 +692,17 @@ export default function CircleDetailPage({ params }: { params: Promise<{ id: str
           {/* Tabs skeleton */}
           <div className="flex gap-2 mb-6">
             {[1, 2, 3, 4, 5].map(i => (
-              <div key={i} className="h-9 w-24 bg-[#406A56]/10 rounded-full" />
+              <div key={i} className="h-9 w-24 bg-[#2D5A3D]/10 rounded-full" />
             ))}
           </div>
           
           {/* Content skeleton */}
           <div className="space-y-4">
             {[1, 2, 3].map(i => (
-              <div key={i} className="bg-white/80 rounded-2xl p-6 border border-[#406A56]/10">
-                <div className="h-5 w-3/4 bg-[#406A56]/10 rounded mb-3" />
-                <div className="h-4 w-1/2 bg-[#406A56]/10 rounded mb-2" />
-                <div className="h-4 w-2/3 bg-[#406A56]/10 rounded" />
+              <div key={i} className="bg-white/80 rounded-2xl p-6 border border-[#2D5A3D]/10">
+                <div className="h-5 w-3/4 bg-[#2D5A3D]/10 rounded mb-3" />
+                <div className="h-4 w-1/2 bg-[#2D5A3D]/10 rounded mb-2" />
+                <div className="h-4 w-2/3 bg-[#2D5A3D]/10 rounded" />
               </div>
             ))}
           </div>
@@ -720,7 +720,7 @@ export default function CircleDetailPage({ params }: { params: Promise<{ id: str
         </div>
         <div className="relative z-10 flex flex-col items-center justify-center min-h-[60vh]">
           <p className="text-[#666] mb-4">{error || 'Circle not found'}</p>
-          <Link href="/dashboard/circles" className="text-[#406A56] hover:underline">
+          <Link href="/dashboard/circles" className="text-[#2D5A3D] hover:underline">
             Back to circles
           </Link>
         </div>
@@ -749,8 +749,8 @@ export default function CircleDetailPage({ params }: { params: Promise<{ id: str
                 <ChevronLeft size={20} />
               </Link>
               <div className="flex items-center gap-4">
-                <div className="w-14 h-14 rounded-xl bg-gradient-to-br from-[#406A56]/20 to-[#D9C61A]/20 flex items-center justify-center">
-                  <Users size={28} className="text-[#406A56]" />
+                <div className="w-14 h-14 rounded-xl bg-gradient-to-br from-[#2D5A3D]/20 to-[#C4A235]/20 flex items-center justify-center">
+                  <Users size={28} className="text-[#2D5A3D]" />
                 </div>
                 <div>
                   <h1 className="text-2xl font-bold text-[#2d2d2d]">{circle.name}</h1>
@@ -766,7 +766,7 @@ export default function CircleDetailPage({ params }: { params: Promise<{ id: str
 
         {/* Active Votes Banner */}
         {votes.filter(v => v.status === 'active').length > 0 && (
-          <div className="mb-6 p-4 bg-[#D9C61A]/10 border border-[#D9C61A]/30 rounded-xl">
+          <div className="mb-6 p-4 bg-[#C4A235]/10 border border-[#C4A235]/30 rounded-xl">
             <div className="flex items-center gap-2 mb-2">
               <Vote size={18} className="text-[#8a7c08]" />
               <span className="font-medium text-[#8a7c08]">Active Votes</span>
@@ -776,7 +776,7 @@ export default function CircleDetailPage({ params }: { params: Promise<{ id: str
                 <button
                   key={vote.id}
                   onClick={() => setSelectedVote(vote)}
-                  className="w-full flex items-center justify-between p-3 bg-white rounded-lg hover:bg-[#D9C61A]/5 transition-colors text-left"
+                  className="w-full flex items-center justify-between p-3 bg-white rounded-lg hover:bg-[#C4A235]/5 transition-colors text-left"
                 >
                   <div>
                     <p className="text-sm font-medium text-[#2d2d2d]">
@@ -787,9 +787,9 @@ export default function CircleDetailPage({ params }: { params: Promise<{ id: str
                     </p>
                   </div>
                   {vote.has_voted ? (
-                    <span className="text-xs text-[#406A56]">Voted ✓</span>
+                    <span className="text-xs text-[#2D5A3D]">Voted ✓</span>
                   ) : isAdmin ? (
-                    <span className="text-xs text-[#C35F33] font-medium">Vote Now →</span>
+                    <span className="text-xs text-[#B8562E] font-medium">Vote Now →</span>
                   ) : null}
                 </button>
               ))}
@@ -814,7 +814,7 @@ export default function CircleDetailPage({ params }: { params: Promise<{ id: str
                   {tab.label}
                   {/* Badges */}
                   {tab.id === 'schedule' && activeEventsCount > 0 && (
-                    <span className="ml-1 w-5 h-5 rounded-full bg-[#D9C61A] text-[10px] font-bold flex items-center justify-center text-[#2d2d2d]">
+                    <span className="ml-1 w-5 h-5 rounded-full bg-[#C4A235] text-[10px] font-bold flex items-center justify-center text-[#2d2d2d]">
                       {activeEventsCount}
                     </span>
                   )}
@@ -877,8 +877,8 @@ export default function CircleDetailPage({ params }: { params: Promise<{ id: str
               <div>
                 <div className="section-header">
                   <div className="section-title">
-                    <div className="section-title-icon bg-[#406A56]/10">
-                      <Users size={18} className="text-[#406A56]" />
+                    <div className="section-title-icon bg-[#2D5A3D]/10">
+                      <Users size={18} className="text-[#2D5A3D]" />
                     </div>
                     <span>Members ({members.length})</span>
                   </div>
@@ -917,7 +917,7 @@ export default function CircleDetailPage({ params }: { params: Promise<{ id: str
                     {!editMode && (
                       <button
                         onClick={() => setEditMode(true)}
-                        className="p-2 text-[#406A56]/50 hover:text-[#406A56] hover:bg-[#406A56]/10 rounded-lg transition-colors"
+                        className="p-2 text-[#2D5A3D]/50 hover:text-[#2D5A3D] hover:bg-[#2D5A3D]/10 rounded-lg transition-colors"
                       >
                         <Edit2 size={18} />
                       </button>
@@ -981,19 +981,19 @@ export default function CircleDetailPage({ params }: { params: Promise<{ id: str
                 <div className="content-card">
                   <h3 className="text-lg font-semibold text-[#2d2d2d] mb-4">Voting</h3>
                   <div className="space-y-3">
-                    <div className="flex items-center justify-between p-3 bg-[#406A56]/5 rounded-xl">
+                    <div className="flex items-center justify-between p-3 bg-[#2D5A3D]/5 rounded-xl">
                       <div>
                         <p className="font-medium text-[#2d2d2d]">Promotion Votes Required</p>
                         <p className="text-sm text-[#666]">Majority of admins must approve</p>
                       </div>
-                      <span className="text-[#406A56] font-medium">50%+</span>
+                      <span className="text-[#2D5A3D] font-medium">50%+</span>
                     </div>
-                    <div className="flex items-center justify-between p-3 bg-[#406A56]/5 rounded-xl">
+                    <div className="flex items-center justify-between p-3 bg-[#2D5A3D]/5 rounded-xl">
                       <div>
                         <p className="font-medium text-[#2d2d2d]">Vote Duration</p>
                         <p className="text-sm text-[#666]">Time before vote expires</p>
                       </div>
-                      <span className="text-[#406A56] font-medium">7 days</span>
+                      <span className="text-[#2D5A3D] font-medium">7 days</span>
                     </div>
                   </div>
                 </div>

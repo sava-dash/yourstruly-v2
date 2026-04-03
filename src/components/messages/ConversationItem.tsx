@@ -29,7 +29,7 @@ export default function ConversationItem({
       onClick={onClick}
       className={`w-full flex items-start gap-3 p-3 rounded-xl transition-all text-left ${
         isActive
-          ? 'bg-[#406A56]/15 border border-[#406A56]/20'
+          ? 'bg-[#2D5A3D]/15 border border-[#2D5A3D]/20'
           : 'hover:bg-white/60 border border-transparent'
       }`}
     >
@@ -45,10 +45,10 @@ export default function ConversationItem({
           <div 
             className={`w-12 h-12 rounded-full flex items-center justify-center text-sm font-semibold ${
               conversation.type === 'memory-thread'
-                ? 'bg-gradient-to-br from-[#D9C61A]/30 to-[#C35F33]/30 text-[#C35F33]'
+                ? 'bg-gradient-to-br from-[#C4A235]/30 to-[#B8562E]/30 text-[#B8562E]'
                 : conversation.type === 'circle'
-                ? 'bg-gradient-to-br from-[#406A56]/20 to-[#D9C61A]/20 text-[#406A56]'
-                : 'bg-gradient-to-br from-[#406A56]/20 to-[#8DACAB]/30 text-[#406A56]'
+                ? 'bg-gradient-to-br from-[#2D5A3D]/20 to-[#C4A235]/20 text-[#2D5A3D]'
+                : 'bg-gradient-to-br from-[#2D5A3D]/20 to-[#8DACAB]/30 text-[#2D5A3D]'
             }`}
           >
             {conversation.type === 'memory-thread' ? (
@@ -72,12 +72,12 @@ export default function ConversationItem({
         <div className="flex items-center justify-between gap-2">
           <div className="flex items-center gap-1.5 min-w-0">
             <h4 className={`text-sm font-semibold truncate ${
-              isActive ? 'text-[#406A56]' : 'text-[#2d2d2d]'
+              isActive ? 'text-[#2D5A3D]' : 'text-[#2d2d2d]'
             }`}>
               {conversation.name}
             </h4>
             {hasPinnedMessages && (
-              <Pin size={10} className="text-[#C35F33] flex-shrink-0" />
+              <Pin size={10} className="text-[#B8562E] flex-shrink-0" />
             )}
           </div>
           <span className="text-[10px] text-[#666] flex-shrink-0">
@@ -88,7 +88,7 @@ export default function ConversationItem({
         {/* Memory thread badge */}
         {conversation.type === 'memory-thread' && conversation.linkedMemoryTitle && (
           <div className="flex items-center gap-1 mt-0.5">
-            <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-[#D9C61A]/20 text-[#8a7c08] font-medium">
+            <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-[#C4A235]/20 text-[#8a7c08] font-medium">
               Memory Thread
             </span>
             {conversation.participants && conversation.participants > 2 && (
@@ -102,7 +102,7 @@ export default function ConversationItem({
         {/* Circle badge */}
         {conversation.type === 'circle' && (
           <div className="flex items-center gap-1 mt-0.5">
-            <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-[#406A56]/15 text-[#406A56] font-medium">
+            <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-[#2D5A3D]/15 text-[#2D5A3D] font-medium">
               Circle
             </span>
             {conversation.participants && conversation.participants > 0 && (
@@ -122,7 +122,7 @@ export default function ConversationItem({
 
       {/* Unread badge */}
       {conversation.unreadCount > 0 && (
-        <div className="flex-shrink-0 w-5 h-5 rounded-full bg-[#C35F33] text-white text-[10px] font-bold flex items-center justify-center">
+        <div className="flex-shrink-0 w-5 h-5 rounded-full bg-[#B8562E] text-white text-[10px] font-bold flex items-center justify-center">
           {conversation.unreadCount > 9 ? '9+' : conversation.unreadCount}
         </div>
       )}

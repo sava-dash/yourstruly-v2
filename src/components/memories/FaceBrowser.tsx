@@ -101,7 +101,7 @@ export function FaceBrowser({ onSelectFace, showMemories = true }: FaceBrowserPr
               <h2 className="text-xl font-bold text-[#2d2d2d]">
                 {selectedFace.name || 'Unknown Person'}
               </h2>
-              <p className="text-sm text-[#406A56]">
+              <p className="text-sm text-[#2D5A3D]">
                 {selectedFace.memory_count} memories • {selectedFace.face_count} photos
               </p>
             </div>
@@ -116,11 +116,11 @@ export function FaceBrowser({ onSelectFace, showMemories = true }: FaceBrowserPr
         ) : faceMemories.length === 0 ? (
           <div className="empty-state">
             <div className="empty-state-icon">
-              <Camera size={32} className="text-[#406A56]/50" />
+              <Camera size={32} className="text-[#2D5A3D]/50" />
             </div>
-            <h3 className="empty-state-title">No memories found</h3>
+            <h3 className="empty-state-title">No memories linked yet</h3>
             <p className="empty-state-text">
-              This face hasn't been linked to any memories yet
+              Tag this face in your memories to see them here
             </p>
           </div>
         ) : (
@@ -151,8 +151,8 @@ export function FaceBrowser({ onSelectFace, showMemories = true }: FaceBrowserPr
       {/* Header */}
       <div className="flex items-center justify-between mb-6">
         <div className="flex items-center gap-2">
-          <Users className="w-5 h-5 text-[#406A56]" />
-          <span className="text-sm text-[#406A56]">
+          <Users className="w-5 h-5 text-[#2D5A3D]" />
+          <span className="text-sm text-[#2D5A3D]">
             {faces.length} {faces.length === 1 ? 'person' : 'people'} detected
           </span>
         </div>
@@ -161,7 +161,7 @@ export function FaceBrowser({ onSelectFace, showMemories = true }: FaceBrowserPr
       {faces.length === 0 ? (
         <div className="empty-state">
           <div className="empty-state-icon">
-            <Users size={32} className="text-[#406A56]/50" />
+            <Users size={32} className="text-[#2D5A3D]/50" />
           </div>
           <h3 className="empty-state-title">No faces detected yet</h3>
           <p className="empty-state-text">
@@ -233,7 +233,7 @@ function FaceCard({ face, index, onClick, getThumbnailBg }: FaceCardProps) {
           {/* Memory count badge */}
           {face.memory_count > 0 && (
             <div className="absolute -bottom-1 -right-1 min-w-[24px] h-6 px-1.5 
-                            bg-[#D9C61A] rounded-full flex items-center justify-center
+                            bg-[#C4A235] rounded-full flex items-center justify-center
                             text-xs font-bold text-[#2d2d2d] shadow-md
                             group-hover:scale-110 transition-transform">
               {face.memory_count}
@@ -242,7 +242,7 @@ function FaceCard({ face, index, onClick, getThumbnailBg }: FaceCardProps) {
 
           {/* Linked to contact indicator */}
           {face.contact_id && (
-            <div className="absolute -top-1 -right-1 w-5 h-5 bg-[#406A56] rounded-full
+            <div className="absolute -top-1 -right-1 w-5 h-5 bg-[#2D5A3D] rounded-full
                             flex items-center justify-center">
               <UserCheck size={12} className="text-white" />
             </div>
@@ -251,12 +251,12 @@ function FaceCard({ face, index, onClick, getThumbnailBg }: FaceCardProps) {
 
         {/* Name */}
         <span className="text-sm font-medium text-[#2d2d2d] line-clamp-1 max-w-full px-1
-                         group-hover:text-[#406A56] transition-colors">
+                         group-hover:text-[#2D5A3D] transition-colors">
           {face.name || 'Unknown'}
         </span>
         
         {/* Photo count */}
-        <span className="text-xs text-[#406A56]/60">
+        <span className="text-xs text-[#2D5A3D]/60">
           {face.face_count} photos
         </span>
       </button>

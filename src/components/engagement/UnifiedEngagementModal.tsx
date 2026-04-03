@@ -224,14 +224,14 @@ GOOD (concise): "I love that! Who taught you this recipe?"`
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
-        <div className="flex items-center justify-between p-5 border-b border-[#406A56]/10">
+        <div className="flex items-center justify-between p-5 border-b border-[#2D5A3D]/10">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-full bg-gradient-to-br from-[#D9C61A] to-[#c4b118] flex items-center justify-center shadow-md">
+            <div className="w-10 h-10 rounded-full bg-gradient-to-br from-[#C4A235] to-[#c4b118] flex items-center justify-center shadow-md">
               <Sparkles size={20} className="text-white" />
             </div>
             <div>
-              <h2 className="font-semibold text-[#406A56]">Share Your Story</h2>
-              <p className="text-sm text-[#406A56]/60">
+              <h2 className="font-semibold text-[#2D5A3D]">Share Your Story</h2>
+              <p className="text-sm text-[#2D5A3D]/60">
                 +{expectedXp} XP
               </p>
             </div>
@@ -239,15 +239,15 @@ GOOD (concise): "I love that! Who taught you this recipe?"`
           
           <button
             onClick={onClose}
-            className="p-2 text-[#406A56]/60 hover:text-[#406A56] hover:bg-[#406A56]/10 rounded-full transition-colors"
+            className="p-2 text-[#2D5A3D]/60 hover:text-[#2D5A3D] hover:bg-[#2D5A3D]/10 rounded-full transition-colors"
           >
             <X size={20} />
           </button>
         </div>
 
         {/* Prompt Display */}
-        <div className="px-5 py-4 bg-[#406A56]/5 border-b border-[#406A56]/10">
-          <p className="text-[#406A56] font-medium leading-relaxed">
+        <div className="px-5 py-4 bg-[#2D5A3D]/5 border-b border-[#2D5A3D]/10">
+          <p className="text-[#2D5A3D] font-medium leading-relaxed">
             {prompt.promptText}
           </p>
           
@@ -264,7 +264,7 @@ GOOD (concise): "I love that! Who taught you this recipe?"`
           
           {/* Contact info */}
           {prompt.contactName && (
-            <p className="mt-2 text-sm text-[#406A56]/70">
+            <p className="mt-2 text-sm text-[#2D5A3D]/70">
               About: <span className="font-medium">{prompt.contactName}</span>
             </p>
           )}
@@ -276,18 +276,18 @@ GOOD (concise): "I love that! Who taught you this recipe?"`
             /* Text Input Mode - Uses unified ConversationEngine */
             <div className="space-y-4">
               {/* Mode switcher - voice/video options */}
-              <div className="flex items-center gap-2 pb-3 border-b border-[#406A56]/10">
-                <span className="text-xs text-[#406A56]/50">Switch to:</span>
+              <div className="flex items-center gap-2 pb-3 border-b border-[#2D5A3D]/10">
+                <span className="text-xs text-[#2D5A3D]/50">Switch to:</span>
                 <button
                   onClick={startVoice}
-                  className="flex items-center gap-1.5 px-3 py-1.5 bg-[#406A56]/10 hover:bg-[#406A56]/20 text-[#406A56] text-sm font-medium rounded-lg transition-colors"
+                  className="flex items-center gap-1.5 px-3 py-1.5 bg-[#2D5A3D]/10 hover:bg-[#2D5A3D]/20 text-[#2D5A3D] text-sm font-medium rounded-lg transition-colors"
                 >
                   <Mic size={14} />
                   Voice
                 </button>
                 <button
                   onClick={startVideo}
-                  className="flex items-center gap-1.5 px-3 py-1.5 bg-[#406A56]/10 hover:bg-[#406A56]/20 text-[#406A56] text-sm font-medium rounded-lg transition-colors"
+                  className="flex items-center gap-1.5 px-3 py-1.5 bg-[#2D5A3D]/10 hover:bg-[#2D5A3D]/20 text-[#2D5A3D] text-sm font-medium rounded-lg transition-colors"
                 >
                   <Video size={14} />
                   Video
@@ -373,7 +373,7 @@ GOOD (concise): "I love that! Who taught you this recipe?"`
               {/* Back to text button */}
               <button
                 onClick={backToText}
-                className="text-sm text-[#406A56]/60 hover:text-[#406A56] flex items-center gap-1"
+                className="text-sm text-[#2D5A3D]/60 hover:text-[#2D5A3D] flex items-center gap-1"
               >
                 ← Back to text input
               </button>
@@ -415,8 +415,8 @@ GOOD (concise): "I love that! Who taught you this recipe?"`
                 <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-green-500 flex items-center justify-center shadow-lg shadow-green-500/30">
                   <Check size={32} className="text-white" />
                 </div>
-                <h3 className="text-xl font-bold text-[#406A56]">Memory Saved!</h3>
-                <p className="text-[#406A56]/70 mt-1">+{expectedXp} XP earned</p>
+                <h3 className="text-xl font-bold text-[#2D5A3D]">Memory saved</h3>
+                <p className="text-[#2D5A3D]/70 mt-1">+{expectedXp} XP earned</p>
                 
                 {/* Add contacts section - only shows if people were mentioned */}
                 {extractedPeople.length > 0 && (
@@ -424,16 +424,16 @@ GOOD (concise): "I love that! Who taught you this recipe?"`
                     initial={{ opacity: 0, y: 10 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: 0.3 }}
-                    className="mt-6 p-4 bg-[#406A56]/5 rounded-xl text-left"
+                    className="mt-6 p-4 bg-[#2D5A3D]/5 rounded-xl text-left"
                   >
-                    <p className="text-sm font-medium text-[#406A56] mb-3 flex items-center gap-2">
+                    <p className="text-sm font-medium text-[#2D5A3D] mb-3 flex items-center gap-2">
                       <UserPlus size={16} />
                       People mentioned:
                     </p>
                     <div className="space-y-2">
                       {extractedPeople.map((name) => (
                         <div key={name} className="flex items-center justify-between gap-2">
-                          <span className="text-sm text-[#406A56]">{name}</span>
+                          <span className="text-sm text-[#2D5A3D]">{name}</span>
                           {addedContacts.has(name) ? (
                             <span className="text-xs text-green-600 flex items-center gap-1">
                               <Check size={12} /> Added
@@ -442,7 +442,7 @@ GOOD (concise): "I love that! Who taught you this recipe?"`
                             <button
                               onClick={() => handleAddContact(name)}
                               disabled={addingContact === name}
-                              className="text-xs px-2 py-1 bg-[#406A56] text-white rounded-md hover:bg-[#4a7a64] disabled:opacity-50 flex items-center gap-1"
+                              className="text-xs px-2 py-1 bg-[#2D5A3D] text-white rounded-md hover:bg-[#234A31] disabled:opacity-50 flex items-center gap-1"
                             >
                               {addingContact === name ? (
                                 <Loader2 size={10} className="animate-spin" />
@@ -461,7 +461,7 @@ GOOD (concise): "I love that! Who taught you this recipe?"`
                 {/* Done button */}
                 <button
                   onClick={handleFinish}
-                  className="mt-6 px-8 py-2.5 bg-[#406A56] text-white font-medium rounded-xl hover:bg-[#4a7a64] transition-colors"
+                  className="mt-6 px-8 py-2.5 bg-[#2D5A3D] text-white font-medium rounded-xl hover:bg-[#234A31] transition-colors"
                 >
                   Done
                 </button>

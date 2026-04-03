@@ -85,10 +85,10 @@ export default function MemoryStats() {
           disabled
         >
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[#D9C61A]/20 to-[#C35F33]/20 flex items-center justify-center">
-              <BarChart3 size={20} className="text-[#406A56]" />
+            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[#C4A235]/20 to-[#B8562E]/20 flex items-center justify-center">
+              <BarChart3 size={20} className="text-[#2D5A3D]" />
             </div>
-            <span className="font-medium text-[#406A56]">Loading stats...</span>
+            <span className="font-medium text-[#2D5A3D]">Loading stats...</span>
           </div>
         </button>
       </div>
@@ -110,21 +110,21 @@ export default function MemoryStats() {
           className="flex-1 p-4 flex items-center justify-between hover:bg-white/90 transition-all"
         >
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[#D9C61A]/20 to-[#C35F33]/20 flex items-center justify-center">
-              <Sparkles size={20} className="text-[#D9C61A]" />
+            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[#C4A235]/20 to-[#B8562E]/20 flex items-center justify-center">
+              <Sparkles size={20} className="text-[#C4A235]" />
             </div>
             <div className="text-left">
               <span className="font-semibold text-[#2d2d2d]">Your Memory Journey</span>
-              <p className="text-sm text-[#406A56]">
+              <p className="text-sm text-[#2D5A3D]">
                 {stats.totalMemories} memories • {stats.totalMedia} photos/videos
               </p>
             </div>
           </div>
-          <div className="flex items-center gap-2 text-[#406A56]">
+          <div className="flex items-center gap-2 text-[#2D5A3D]">
             {stats.currentStreak > 0 && (
-              <div className="hidden sm:flex items-center gap-1 px-3 py-1 bg-[#C35F33]/10 rounded-full">
-                <Flame size={14} className="text-[#C35F33]" />
-                <span className="text-sm font-medium text-[#C35F33]">{stats.currentStreak} day streak</span>
+              <div className="hidden sm:flex items-center gap-1 px-3 py-1 bg-[#B8562E]/10 rounded-full">
+                <Flame size={14} className="text-[#B8562E]" />
+                <span className="text-sm font-medium text-[#B8562E]">{stats.currentStreak} day streak</span>
               </div>
             )}
             {expanded ? <ChevronUp size={20} /> : <ChevronDown size={20} />}
@@ -132,7 +132,7 @@ export default function MemoryStats() {
         </button>
         <Link 
           href="/dashboard/stats"
-          className="hidden sm:flex items-center px-4 bg-[#406A56]/5 hover:bg-[#406A56]/10 border-l border-[#406A56]/10 text-[#406A56] text-sm font-medium transition-colors"
+          className="hidden sm:flex items-center px-4 bg-[#2D5A3D]/5 hover:bg-[#2D5A3D]/10 border-l border-[#2D5A3D]/10 text-[#2D5A3D] text-sm font-medium transition-colors"
         >
           Full Stats →
         </Link>
@@ -144,8 +144,8 @@ export default function MemoryStats() {
           {/* Quick Stats Cards */}
           <div className="glass-card-page p-4">
             <div className="flex items-center gap-3 mb-2">
-              <div className="w-8 h-8 rounded-lg bg-[#406A56]/10 flex items-center justify-center">
-                <Camera size={16} className="text-[#406A56]" />
+              <div className="w-8 h-8 rounded-lg bg-[#2D5A3D]/10 flex items-center justify-center">
+                <Camera size={16} className="text-[#2D5A3D]" />
               </div>
               <span className="text-sm text-[#666]">Photos</span>
             </div>
@@ -154,8 +154,8 @@ export default function MemoryStats() {
 
           <div className="glass-card-page p-4">
             <div className="flex items-center gap-3 mb-2">
-              <div className="w-8 h-8 rounded-lg bg-[#C35F33]/10 flex items-center justify-center">
-                <Video size={16} className="text-[#C35F33]" />
+              <div className="w-8 h-8 rounded-lg bg-[#B8562E]/10 flex items-center justify-center">
+                <Video size={16} className="text-[#B8562E]" />
               </div>
               <span className="text-sm text-[#666]">Videos</span>
             </div>
@@ -164,8 +164,8 @@ export default function MemoryStats() {
 
           <div className="glass-card-page p-4">
             <div className="flex items-center gap-3 mb-2">
-              <div className="w-8 h-8 rounded-lg bg-[#D9C61A]/10 flex items-center justify-center">
-                <TrendingUp size={16} className="text-[#D9C61A]" />
+              <div className="w-8 h-8 rounded-lg bg-[#C4A235]/10 flex items-center justify-center">
+                <TrendingUp size={16} className="text-[#C4A235]" />
               </div>
               <span className="text-sm text-[#666]">Avg/Month</span>
             </div>
@@ -174,8 +174,8 @@ export default function MemoryStats() {
 
           <div className="glass-card-page p-4">
             <div className="flex items-center gap-3 mb-2">
-              <div className="w-8 h-8 rounded-lg bg-[#C35F33]/10 flex items-center justify-center">
-                <Flame size={16} className="text-[#C35F33]" />
+              <div className="w-8 h-8 rounded-lg bg-[#B8562E]/10 flex items-center justify-center">
+                <Flame size={16} className="text-[#B8562E]" />
               </div>
               <span className="text-sm text-[#666]">Best Streak</span>
             </div>
@@ -185,16 +185,16 @@ export default function MemoryStats() {
           {/* Year Chart */}
           <div className="sm:col-span-2 glass-card-page p-4">
             <div className="flex items-center gap-2 mb-4">
-              <Calendar size={16} className="text-[#406A56]" />
+              <Calendar size={16} className="text-[#2D5A3D]" />
               <span className="font-medium text-[#2d2d2d]">Memories by Year</span>
             </div>
             <div className="space-y-2">
               {stats.byYear.map((yearData) => (
                 <div key={yearData.year} className="flex items-center gap-3">
                   <span className="text-sm text-[#666] w-12">{yearData.year}</span>
-                  <div className="flex-1 h-6 bg-[#406A56]/5 rounded-full overflow-hidden">
+                  <div className="flex-1 h-6 bg-[#2D5A3D]/5 rounded-full overflow-hidden">
                     <div 
-                      className="h-full bg-gradient-to-r from-[#406A56] to-[#5A8A72] rounded-full transition-all duration-500 flex items-center justify-end pr-2"
+                      className="h-full bg-gradient-to-r from-[#2D5A3D] to-[#5A8A72] rounded-full transition-all duration-500 flex items-center justify-end pr-2"
                       style={{ width: `${Math.max((yearData.count / maxYearCount) * 100, 10)}%` }}
                     >
                       <span className="text-xs text-white font-medium">{yearData.count}</span>
@@ -208,7 +208,7 @@ export default function MemoryStats() {
           {/* Top People */}
           <div className="glass-card-page p-4">
             <div className="flex items-center gap-2 mb-4">
-              <Users size={16} className="text-[#406A56]" />
+              <Users size={16} className="text-[#2D5A3D]" />
               <span className="font-medium text-[#2d2d2d]">Top People</span>
             </div>
             {stats.topPeople.length > 0 ? (
@@ -223,12 +223,12 @@ export default function MemoryStats() {
                           className="w-8 h-8 rounded-full object-cover"
                         />
                       ) : (
-                        <div className="w-8 h-8 rounded-full bg-gradient-to-br from-[#406A56] to-[#5A8A72] flex items-center justify-center text-white text-sm font-medium">
+                        <div className="w-8 h-8 rounded-full bg-gradient-to-br from-[#2D5A3D] to-[#5A8A72] flex items-center justify-center text-white text-sm font-medium">
                           {person.name.charAt(0).toUpperCase()}
                         </div>
                       )}
                       {i === 0 && (
-                        <div className="absolute -top-1 -right-1 w-4 h-4 bg-[#D9C61A] rounded-full flex items-center justify-center">
+                        <div className="absolute -top-1 -right-1 w-4 h-4 bg-[#C4A235] rounded-full flex items-center justify-center">
                           <span className="text-[10px]">👑</span>
                         </div>
                       )}
@@ -248,15 +248,15 @@ export default function MemoryStats() {
           {/* Richest Month & Milestones */}
           <div className="glass-card-page p-4">
             <div className="flex items-center gap-2 mb-4">
-              <Trophy size={16} className="text-[#D9C61A]" />
+              <Trophy size={16} className="text-[#C4A235]" />
               <span className="font-medium text-[#2d2d2d]">Highlights</span>
             </div>
             
             {stats.richestMonth && (
-              <div className="mb-4 p-3 bg-gradient-to-r from-[#D9C61A]/10 to-[#C35F33]/10 rounded-xl">
+              <div className="mb-4 p-3 bg-gradient-to-r from-[#C4A235]/10 to-[#B8562E]/10 rounded-xl">
                 <p className="text-xs text-[#666] uppercase tracking-wide">Memory-Richest Month</p>
                 <p className="font-semibold text-[#2d2d2d]">{stats.richestMonth.label}</p>
-                <p className="text-sm text-[#406A56]">{stats.richestMonth.count} memories</p>
+                <p className="text-sm text-[#2D5A3D]">{stats.richestMonth.count} memories</p>
               </div>
             )}
 
@@ -270,7 +270,7 @@ export default function MemoryStats() {
                   {milestone.achieved && milestone.memory_id && (
                     <Link 
                       href={`/dashboard/memories/${milestone.memory_id}`}
-                      className="text-xs text-[#406A56] hover:underline"
+                      className="text-xs text-[#2D5A3D] hover:underline"
                     >
                       View →
                     </Link>

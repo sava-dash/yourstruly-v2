@@ -20,8 +20,8 @@ export const MOOD_DEFINITIONS: Record<MoodType, { label: string; color: string; 
   // Positive moods
   joyful: {
     label: 'Joyful',
-    color: '#D9C61A', // brand yellow
-    bgColor: 'bg-[#D9C61A]/15',
+    color: '#C4A235', // brand yellow
+    bgColor: 'bg-[#C4A235]/15',
     description: 'Happiness, celebration, laughter'
   },
   proud: {
@@ -32,8 +32,8 @@ export const MOOD_DEFINITIONS: Record<MoodType, { label: string; color: string; 
   },
   grateful: {
     label: 'Grateful',
-    color: '#406A56', // brand green
-    bgColor: 'bg-[#406A56]/15',
+    color: '#2D5A3D', // brand green
+    bgColor: 'bg-[#2D5A3D]/15',
     description: 'Thankfulness, appreciation, blessings'
   },
   peaceful: {
@@ -44,8 +44,8 @@ export const MOOD_DEFINITIONS: Record<MoodType, { label: string; color: string; 
   },
   nostalgic: {
     label: 'Nostalgic',
-    color: '#C35F33', // brand terra cotta
-    bgColor: 'bg-[#C35F33]/15',
+    color: '#B8562E', // brand terra cotta
+    bgColor: 'bg-[#B8562E]/15',
     description: 'Fond memories, reminiscence'
   },
   loving: {

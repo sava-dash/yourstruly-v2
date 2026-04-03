@@ -119,8 +119,8 @@ export default function MemoryCardClean({ memory, showReactions = true }: Memory
                 onError={() => setImageError(true)}
               />
             ) : (
-              <div className="w-full h-full bg-gradient-to-br from-[#406A56]/20 to-[#8DACAB]/20 flex items-center justify-center">
-                <ImageIcon size={32} className="text-[#406A56]/30" />
+              <div className="w-full h-full bg-gradient-to-br from-[#2D5A3D]/20 to-[#8DACAB]/20 flex items-center justify-center">
+                <ImageIcon size={32} className="text-[#2D5A3D]/30" />
               </div>
             )}
 
@@ -168,7 +168,7 @@ export default function MemoryCardClean({ memory, showReactions = true }: Memory
         {/* Content Below */}
         <div className="px-1 pt-1">
           {/* Title */}
-          <h3 className="font-semibold text-[#2d2d2d] text-base mb-1 line-clamp-1 group-hover:text-[#406A56] transition-colors">
+          <h3 className="font-semibold text-[#2d2d2d] text-base mb-1 line-clamp-1 group-hover:text-[#2D5A3D] transition-colors">
             {memory.title || 'Untitled Memory'}
           </h3>
 
@@ -238,7 +238,7 @@ export default function MemoryCardClean({ memory, showReactions = true }: Memory
                 setShowReactionPicker(false)
               }}
               className={`w-9 h-9 rounded-full hover:bg-gray-100 flex items-center justify-center text-xl transition-transform hover:scale-125 ${
-                selectedReaction === emoji ? 'bg-[#406A56]/10 scale-110' : ''
+                selectedReaction === emoji ? 'bg-[#2D5A3D]/10 scale-110' : ''
               }`}
             >
               {emoji}

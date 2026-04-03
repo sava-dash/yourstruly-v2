@@ -61,7 +61,7 @@ export default function SubscribersTable() {
     }
 
     const styles: Record<string, string> = {
-      active: 'bg-[#406A56]/10 text-[#406A56]',
+      active: 'bg-[#2D5A3D]/10 text-[#2D5A3D]',
       trialing: 'bg-blue-100 text-blue-700',
       past_due: 'bg-amber-100 text-amber-700',
       unpaid: 'bg-red-100 text-red-700',
@@ -80,7 +80,7 @@ export default function SubscribersTable() {
   const getTierBadge = (tier: string) => {
     if (tier === 'premium' || tier === 'pro') {
       return (
-        <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium bg-[#D9C61A]/20 text-[#8B7C00]">
+        <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium bg-[#C4A235]/20 text-[#8B7C00]">
           <Crown className="w-3 h-3" />
           {tier.charAt(0).toUpperCase() + tier.slice(1)}
         </span>
@@ -108,7 +108,7 @@ export default function SubscribersTable() {
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
                 aria-label="Search" placeholder="Search by email..."
-                className="w-full pl-10 pr-4 py-2 bg-white/80 border border-[#C35F33]/10 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-[#406A56]/20 focus:border-[#406A56]/30 transition-all placeholder:text-[#2a1f1a]/40"
+                className="w-full pl-10 pr-4 py-2 bg-white/80 border border-[#B8562E]/10 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-[#2D5A3D]/20 focus:border-[#2D5A3D]/30 transition-all placeholder:text-[#2a1f1a]/40"
               />
             </div>
           </div>
@@ -118,7 +118,7 @@ export default function SubscribersTable() {
             <select
               value={statusFilter}
               onChange={(e) => setStatusFilter(e.target.value)}
-              className="px-3 py-2 bg-white/80 border border-[#C35F33]/10 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-[#406A56]/20 focus:border-[#406A56]/30 transition-all"
+              className="px-3 py-2 bg-white/80 border border-[#B8562E]/10 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-[#2D5A3D]/20 focus:border-[#2D5A3D]/30 transition-all"
             >
               <option value="all">All Status</option>
               <option value="active">Active</option>
@@ -136,7 +136,7 @@ export default function SubscribersTable() {
         <div className="overflow-x-auto">
           <table className="w-full">
             <thead>
-              <tr className="border-b border-[#C35F33]/10">
+              <tr className="border-b border-[#B8562E]/10">
                 <th className="px-4 py-4 text-left text-sm font-medium text-[#2a1f1a]/60">User</th>
                 <th className="px-4 py-4 text-left text-sm font-medium text-[#2a1f1a]/60">Plan</th>
                 <th className="px-4 py-4 text-left text-sm font-medium text-[#2a1f1a]/60">Status</th>
@@ -144,11 +144,11 @@ export default function SubscribersTable() {
                 <th className="px-4 py-4 text-left text-sm font-medium text-[#2a1f1a]/60">Subscribed</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-[#C35F33]/5">
+            <tbody className="divide-y divide-[#B8562E]/5">
               {isLoading ? (
                 <tr>
                   <td colSpan={5} className="p-8 text-center">
-                    <div className="animate-spin w-6 h-6 border-2 border-[#406A56] border-t-transparent rounded-full mx-auto" />
+                    <div className="animate-spin w-6 h-6 border-2 border-[#2D5A3D] border-t-transparent rounded-full mx-auto" />
                   </td>
                 </tr>
               ) : error ? (
@@ -168,8 +168,8 @@ export default function SubscribersTable() {
                   <tr key={sub.id} className="hover:bg-white/50 transition-colors">
                     <td className="px-4 py-4">
                       <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 rounded-full bg-gradient-to-br from-[#406A56]/20 to-[#C35F33]/20 flex items-center justify-center">
-                          <span className="text-sm font-medium text-[#406A56]">
+                        <div className="w-10 h-10 rounded-full bg-gradient-to-br from-[#2D5A3D]/20 to-[#B8562E]/20 flex items-center justify-center">
+                          <span className="text-sm font-medium text-[#2D5A3D]">
                             {(sub.user_email || 'U').charAt(0).toUpperCase()}
                           </span>
                         </div>
@@ -202,7 +202,7 @@ export default function SubscribersTable() {
 
         {/* Pagination */}
         {!isLoading && !error && subscribers.length > 0 && (
-          <div className="flex items-center justify-between px-4 py-4 border-t border-[#C35F33]/10">
+          <div className="flex items-center justify-between px-4 py-4 border-t border-[#B8562E]/10">
             <p className="text-sm text-[#2a1f1a]/60">
               Showing {subscribers.length} of {totalCount} subscribers
             </p>
@@ -210,7 +210,7 @@ export default function SubscribersTable() {
               <button
                 onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
                 disabled={currentPage === 1}
-                className="p-2 rounded-lg border border-[#C35F33]/10 hover:bg-white/80 transition-colors disabled:opacity-50"
+                className="p-2 rounded-lg border border-[#B8562E]/10 hover:bg-white/80 transition-colors disabled:opacity-50"
               >
                 <ChevronLeft className="w-4 h-4" />
               </button>
@@ -220,7 +220,7 @@ export default function SubscribersTable() {
               <button
                 onClick={() => setCurrentPage(Math.min(totalPages, currentPage + 1))}
                 disabled={currentPage === totalPages}
-                className="p-2 rounded-lg border border-[#C35F33]/10 hover:bg-white/80 transition-colors disabled:opacity-50"
+                className="p-2 rounded-lg border border-[#B8562E]/10 hover:bg-white/80 transition-colors disabled:opacity-50"
               >
                 <ChevronRight className="w-4 h-4" />
               </button>

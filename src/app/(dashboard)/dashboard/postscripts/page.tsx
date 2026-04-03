@@ -116,7 +116,7 @@ function PostScriptCard({ postscript }: { postscript: PostScript }) {
                   className="w-10 h-10 rounded-full object-cover"
                 />
               ) : (
-                <div className="w-10 h-10 rounded-full bg-gradient-to-br from-[#C35F33] to-[#D9C61A] 
+                <div className="w-10 h-10 rounded-full bg-gradient-to-br from-[#B8562E] to-[#C4A235] 
                                 flex items-center justify-center text-white text-sm font-medium">
                   {initials}
                 </div>
@@ -125,7 +125,7 @@ function PostScriptCard({ postscript }: { postscript: PostScript }) {
 
             {/* Content */}
             <div className="flex-1 min-w-0">
-              <h3 className="font-semibold text-gray-900 text-sm truncate group-hover:text-[#C35F33] transition-colors">
+              <h3 className="font-semibold text-gray-900 text-sm truncate group-hover:text-[#B8562E] transition-colors">
                 {postscript.title}
               </h3>
               <p className="text-xs text-gray-500 truncate">
@@ -230,7 +230,7 @@ export default function PostScriptsPage() {
         <header className="mb-8">
           <div className="flex items-center justify-between mb-2">
             <div className="flex items-center gap-3">
-              <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-[#C35F33] to-[#D9C61A] 
+              <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-[#B8562E] to-[#C4A235] 
                               flex items-center justify-center shadow-lg">
                 <Send size={24} className="text-white" />
               </div>
@@ -247,7 +247,7 @@ export default function PostScriptsPage() {
               {canCreatePostscript ? (
                 <Link
                   href="/dashboard/postscripts/new"
-                  className="flex items-center gap-2 bg-[#C35F33] text-white px-4 py-2 rounded-xl 
+                  className="flex items-center gap-2 bg-[#B8562E] text-white px-4 py-2 rounded-xl 
                              font-medium hover:bg-[#A84E2A] transition-colors shadow-sm"
                 >
                   <Plus size={18} />
@@ -279,7 +279,7 @@ export default function PostScriptsPage() {
             <div className="text-xs text-gray-500">Total</div>
           </div>
           <div className="glass-card p-4">
-            <div className="text-2xl font-bold text-amber-600">{stats.scheduled || 0}</div>
+            <div className="text-2xl font-bold text-[#2D5A3D]">{stats.scheduled || 0}</div>
             <div className="text-xs text-gray-500">Scheduled</div>
           </div>
           <div className="glass-card p-4">
@@ -302,7 +302,7 @@ export default function PostScriptsPage() {
                 onClick={() => setFilter(f.key)}
                 className={`px-4 py-2 rounded-full text-sm font-medium whitespace-nowrap transition-all
                   ${filter === f.key
-                    ? 'bg-[#C35F33] text-white'
+                    ? 'bg-[#B8562E] text-white'
                     : 'glass-card text-gray-600 hover:bg-white/90'
                   }`}
               >
@@ -317,7 +317,7 @@ export default function PostScriptsPage() {
               onClick={() => setViewMode('grid')}
               className={`p-2 rounded-lg transition-all flex items-center gap-1.5 text-sm
                 ${viewMode === 'grid'
-                  ? 'bg-[#C35F33] text-white shadow-sm'
+                  ? 'bg-[#B8562E] text-white shadow-sm'
                   : 'text-gray-500 hover:text-gray-700'
                 }`}
               title="Grid view"
@@ -329,7 +329,7 @@ export default function PostScriptsPage() {
               onClick={() => setViewMode('timeline')}
               className={`p-2 rounded-lg transition-all flex items-center gap-1.5 text-sm
                 ${viewMode === 'timeline'
-                  ? 'bg-[#C35F33] text-white shadow-sm'
+                  ? 'bg-[#B8562E] text-white shadow-sm'
                   : 'text-gray-500 hover:text-gray-700'
                 }`}
               title="Timeline view"
@@ -343,12 +343,12 @@ export default function PostScriptsPage() {
         {/* PostScript List */}
         {loading ? (
           <div className="flex justify-center py-12">
-            <div className="animate-spin rounded-full h-8 w-8 border-2 border-[#C35F33] border-t-transparent" />
+            <div className="animate-spin rounded-full h-8 w-8 border-2 border-[#B8562E] border-t-transparent" />
           </div>
         ) : postscripts.length === 0 ? (
           <div className="glass-card p-12 text-center">
-            <div className="w-16 h-16 rounded-full bg-[#C35F33]/10 flex items-center justify-center mx-auto mb-4">
-              <Mail size={32} className="text-[#C35F33]" />
+            <div className="w-16 h-16 rounded-full bg-[#B8562E]/10 flex items-center justify-center mx-auto mb-4">
+              <Mail size={32} className="text-[#B8562E]" />
             </div>
             <h3 className="text-lg font-semibold text-gray-900 mb-2">No messages yet</h3>
             <p className="text-gray-600 mb-6">
@@ -356,7 +356,7 @@ export default function PostScriptsPage() {
             </p>
             <Link
               href="/dashboard/postscripts/new"
-              className="inline-flex items-center gap-2 bg-[#C35F33] text-white px-6 py-3 rounded-full
+              className="inline-flex items-center gap-2 bg-[#B8562E] text-white px-6 py-3 rounded-full
                          font-medium hover:bg-[#A84E2A] transition-colors"
             >
               <Plus size={20} />

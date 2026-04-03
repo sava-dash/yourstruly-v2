@@ -74,7 +74,7 @@ export default function BillingPage() {
             <h2 className="text-lg font-medium text-[#2a1f1a]">Pricing Plans</h2>
             <button
               onClick={() => setIsPlanModalOpen(true)}
-              className="flex items-center gap-2 px-4 py-2 bg-[#406A56] text-white rounded-xl text-sm font-medium hover:bg-[#406A56]/90 transition-colors"
+              className="flex items-center gap-2 px-4 py-2 bg-[#2D5A3D] text-white rounded-xl text-sm font-medium hover:bg-[#2D5A3D]/90 transition-colors"
             >
               <Plus className="w-4 h-4" />
               Add Plan
@@ -95,7 +95,7 @@ export default function BillingPage() {
             <h2 className="text-lg font-medium text-[#2a1f1a]">Promo Codes</h2>
             <button
               onClick={() => setIsCouponModalOpen(true)}
-              className="flex items-center gap-2 px-4 py-2 bg-[#406A56] text-white rounded-xl text-sm font-medium hover:bg-[#406A56]/90 transition-colors"
+              className="flex items-center gap-2 px-4 py-2 bg-[#2D5A3D] text-white rounded-xl text-sm font-medium hover:bg-[#2D5A3D]/90 transition-colors"
             >
               <Plus className="w-4 h-4" />
               Add Coupon

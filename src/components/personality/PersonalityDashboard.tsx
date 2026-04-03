@@ -11,7 +11,7 @@ const PERSONALITY_DIMENSIONS = [
     key: 'wisdom', 
     name: 'Wisdom', 
     icon: Lightbulb,
-    color: '#D9C61A',
+    color: '#C4A235',
     description: 'Life lessons & insights shared',
     keywords: ['learned', 'lesson', 'advice', 'realize', 'understand', 'wisdom', 'knowledge']
   },
@@ -19,7 +19,7 @@ const PERSONALITY_DIMENSIONS = [
     key: 'connection', 
     name: 'Connection', 
     icon: Heart,
-    color: '#C35F33',
+    color: '#B8562E',
     description: 'Relationships & emotional bonds',
     keywords: ['love', 'family', 'friend', 'together', 'care', 'relationship', 'bond', 'close']
   },
@@ -27,7 +27,7 @@ const PERSONALITY_DIMENSIONS = [
     key: 'resilience', 
     name: 'Resilience', 
     icon: TrendingUp,
-    color: '#406A56',
+    color: '#2D5A3D',
     description: 'Overcoming challenges',
     keywords: ['overcome', 'difficult', 'challenge', 'strong', 'survive', 'through', 'persever']
   },
@@ -187,7 +187,7 @@ export function PersonalityDashboard({ userId, compact = false }: PersonalityDas
       {/* Header */}
       <div className="flex items-center justify-between mb-4">
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[#4A3552] to-[#D9C61A] flex items-center justify-center">
+          <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[#4A3552] to-[#C4A235] flex items-center justify-center">
             <Brain size={20} className="text-white" />
           </div>
           <div>
@@ -232,8 +232,8 @@ export function PersonalityDashboard({ userId, compact = false }: PersonalityDas
               <defs>
                 <linearGradient id="essenceGradient" x1="0%" y1="0%" x2="100%" y2="100%">
                   <stop offset="0%" stopColor="#4A3552" />
-                  <stop offset="50%" stopColor="#D9C61A" />
-                  <stop offset="100%" stopColor="#406A56" />
+                  <stop offset="50%" stopColor="#C4A235" />
+                  <stop offset="100%" stopColor="#2D5A3D" />
                 </linearGradient>
                 <filter id="glow">
                   <feGaussianBlur stdDeviation="3" result="coloredBlur"/>
@@ -323,7 +323,7 @@ export function PersonalityDashboard({ userId, compact = false }: PersonalityDas
                 animate={{ opacity: 1, scale: 1 }}
                 transition={{ delay: 0.5 }}
               >
-                <div className="text-3xl font-bold bg-gradient-to-r from-[#4A3552] to-[#D9C61A] bg-clip-text text-transparent">
+                <div className="text-3xl font-bold bg-gradient-to-r from-[#4A3552] to-[#C4A235] bg-clip-text text-transparent">
                   {Math.round(Object.values(personalityScores).reduce((a, b) => a + b.score, 0) / 6)}
                 </div>
                 <div className="text-[10px] text-gray-400 uppercase tracking-wider">Essence</div>

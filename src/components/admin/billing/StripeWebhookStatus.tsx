@@ -82,7 +82,7 @@ export default function StripeWebhookStatus() {
   if (isLoading) {
     return (
       <div className="glass p-8 text-center">
-        <div className="animate-spin w-6 h-6 border-2 border-[#406A56] border-t-transparent rounded-full mx-auto" />
+        <div className="animate-spin w-6 h-6 border-2 border-[#2D5A3D] border-t-transparent rounded-full mx-auto" />
       </div>
     );
   }
@@ -129,8 +129,8 @@ export default function StripeWebhookStatus() {
 
         <div className="glass p-4">
           <div className="flex items-center gap-3">
-            <div className="p-2 rounded-lg bg-[#406A56]/10">
-              <Clock className="w-5 h-5 text-[#406A56]" />
+            <div className="p-2 rounded-lg bg-[#2D5A3D]/10">
+              <Clock className="w-5 h-5 text-[#2D5A3D]" />
             </div>
             <div>
               <p className="text-sm font-medium text-[#2a1f1a]">
@@ -148,13 +148,13 @@ export default function StripeWebhookStatus() {
       <div className="glass p-4">
         <h3 className="text-sm font-medium text-[#2a1f1a] mb-3">Webhook Configuration</h3>
         <div className="space-y-2 text-sm">
-          <div className="flex items-center justify-between py-2 border-b border-[#C35F33]/5">
+          <div className="flex items-center justify-between py-2 border-b border-[#B8562E]/5">
             <span className="text-[#2a1f1a]/60">Endpoint URL</span>
             <code className="px-2 py-1 bg-white/50 rounded text-xs">
               /api/webhooks/stripe
             </code>
           </div>
-          <div className="flex items-center justify-between py-2 border-b border-[#C35F33]/5">
+          <div className="flex items-center justify-between py-2 border-b border-[#B8562E]/5">
             <span className="text-[#2a1f1a]/60">Events Subscribed</span>
             <span className="text-[#2a1f1a]">customer.subscription.*, invoice.*, checkout.session.*</span>
           </div>
@@ -170,12 +170,12 @@ export default function StripeWebhookStatus() {
 
       {/* Recent Events */}
       <div className="glass overflow-hidden">
-        <div className="flex items-center justify-between px-4 py-3 border-b border-[#C35F33]/10">
+        <div className="flex items-center justify-between px-4 py-3 border-b border-[#B8562E]/10">
           <h3 className="text-sm font-medium text-[#2a1f1a]">Recent Events</h3>
           <button
             onClick={fetchWebhookData}
             disabled={isRefreshing}
-            className="flex items-center gap-2 px-3 py-1.5 text-sm text-[#406A56] hover:bg-[#406A56]/10 rounded-lg transition-colors disabled:opacity-50"
+            className="flex items-center gap-2 px-3 py-1.5 text-sm text-[#2D5A3D] hover:bg-[#2D5A3D]/10 rounded-lg transition-colors disabled:opacity-50"
           >
             <RefreshCw className={`w-4 h-4 ${isRefreshing ? 'animate-spin' : ''}`} />
             Refresh
@@ -185,13 +185,13 @@ export default function StripeWebhookStatus() {
         <div className="overflow-x-auto">
           <table className="w-full">
             <thead>
-              <tr className="border-b border-[#C35F33]/10">
+              <tr className="border-b border-[#B8562E]/10">
                 <th className="px-4 py-3 text-left text-xs font-medium text-[#2a1f1a]/60">Event Type</th>
                 <th className="px-4 py-3 text-left text-xs font-medium text-[#2a1f1a]/60">Status</th>
                 <th className="px-4 py-3 text-left text-xs font-medium text-[#2a1f1a]/60">Time</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-[#C35F33]/5">
+            <tbody className="divide-y divide-[#B8562E]/5">
               {events.map((event) => (
                 <tr key={event.id} className="hover:bg-white/50 transition-colors">
                   <td className="px-4 py-3">

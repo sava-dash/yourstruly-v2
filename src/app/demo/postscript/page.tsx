@@ -211,12 +211,12 @@ export default function PostScriptDemoPage() {
           <div className="max-w-2xl mx-auto p-4">
             {/* Header */}
             <div className="text-center mb-8">
-              <div className="w-16 h-16 rounded-full bg-[#406A56]/20 flex items-center justify-center mx-auto mb-4 overflow-hidden paper-texture-cream">
+              <div className="w-16 h-16 rounded-full bg-[#2D5A3D]/20 flex items-center justify-center mx-auto mb-4 overflow-hidden paper-texture-cream">
                 {selectedDemo.sender_avatar ? (
                   <img src={selectedDemo.sender_avatar}
                 alt="" className="w-full h-full object-cover" />
                 ) : (
-                  <User className="w-8 h-8 text-[#406A56]" />
+                  <User className="w-8 h-8 text-[#2D5A3D]" />
                 )}
               </div>
               <p className="text-gray-500">A PostScript from</p>
@@ -237,7 +237,7 @@ export default function PostScriptDemoPage() {
               {selectedDemo.video_url && (
                 <div className="mt-8">
                   <h4 className="text-lg font-medium text-[#2d2d2d] mb-3 flex items-center gap-2">
-                    <Video className="w-5 h-5 text-[#406A56]" />
+                    <Video className="w-5 h-5 text-[#2D5A3D]" />
                     Video Message
                   </h4>
                   <div className="aspect-video bg-gray-100 rounded-xl flex items-center justify-center">
@@ -250,20 +250,20 @@ export default function PostScriptDemoPage() {
               {selectedDemo.attachments && selectedDemo.attachments.length > 0 && (
                 <div className="mt-8">
                   <h4 className="text-lg font-medium text-[#2d2d2d] mb-3 flex items-center gap-2">
-                    <Paperclip className="w-5 h-5 text-[#406A56]" />
+                    <Paperclip className="w-5 h-5 text-[#2D5A3D]" />
                     Attachments
                   </h4>
                   <div className="space-y-2">
                     {selectedDemo.attachments.map(att => (
                       <div
                         key={att.id}
-                        className="flex items-center gap-3 p-3 bg-[#406A56]/5 rounded-lg"
+                        className="flex items-center gap-3 p-3 bg-[#2D5A3D]/5 rounded-lg"
                       >
-                        <div className="w-10 h-10 bg-[#406A56]/10 rounded-lg flex items-center justify-center">
+                        <div className="w-10 h-10 bg-[#2D5A3D]/10 rounded-lg flex items-center justify-center">
                           {att.file_type.startsWith('image/') ? (
-                            <ImageIcon size={18} className="text-[#406A56]" />
+                            <ImageIcon size={18} className="text-[#2D5A3D]" />
                           ) : (
-                            <Paperclip size={18} className="text-[#406A56]" />
+                            <Paperclip size={18} className="text-[#2D5A3D]" />
                           )}
                         </div>
                         <span className="text-sm text-gray-700">{att.file_name}</span>
@@ -275,9 +275,9 @@ export default function PostScriptDemoPage() {
 
               {/* Gift */}
               {selectedDemo.has_gift && (
-                <div className="mt-8 p-6 bg-gradient-to-r from-[#D9C61A]/10 to-[#406A56]/10 rounded-xl">
+                <div className="mt-8 p-6 bg-gradient-to-r from-[#C4A235]/10 to-[#2D5A3D]/10 rounded-xl">
                   <h4 className="text-lg font-medium text-[#2d2d2d] mb-2 flex items-center gap-2">
-                    <Gift className="w-5 h-5 text-[#D9C61A]" />
+                    <Gift className="w-5 h-5 text-[#C4A235]" />
                     A Gift For You
                   </h4>
                   {selectedDemo.gift_type && (
@@ -290,7 +290,7 @@ export default function PostScriptDemoPage() {
               )}
 
               {/* Signature */}
-              <div className="mt-8 pt-6 border-t border-[#406A56]/10">
+              <div className="mt-8 pt-6 border-t border-[#2D5A3D]/10">
                 <p className="signature-handwritten">With love,</p>
                 <p className="signature-handwritten mt-1">{selectedDemo.sender_name}</p>
               </div>
@@ -313,7 +313,7 @@ export default function PostScriptDemoPage() {
               <p className="text-gray-500 mb-4">Want to create your own PostScripts?</p>
               <Link 
                 href="/dashboard/postscripts/new"
-                className="inline-flex items-center gap-2 px-6 py-3 bg-[#406A56] text-white rounded-xl font-medium hover:bg-[#355a48] transition-colors"
+                className="inline-flex items-center gap-2 px-6 py-3 bg-[#2D5A3D] text-white rounded-xl font-medium hover:bg-[#355a48] transition-colors"
               >
                 <Heart className="w-4 h-4" />
                 Create a PostScript

@@ -22,7 +22,7 @@ interface CompletionOverlayProps {
 
 /**
  * Shared completion overlay for engagement interactions.
- * Shows a "Memory Saved!" celebration with XP earned.
+ * Shows a "Memory saved" celebration with XP earned.
  * 
  * Usage:
  * ```tsx
@@ -32,7 +32,7 @@ interface CompletionOverlayProps {
 export function CompletionOverlay({
   show,
   xp = 0,
-  title = 'Memory Saved!',
+  title = 'Memory saved',
   subtitle,
   icon,
   onDone,
@@ -79,7 +79,7 @@ export function CompletionOverlay({
                 width: '72px',
                 height: '72px',
                 borderRadius: '50%',
-                background: 'linear-gradient(135deg, #406A56, #5a9a7a)',
+                background: 'linear-gradient(135deg, #2D5A3D, #5a9a7a)',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
@@ -140,7 +140,7 @@ export function CompletionOverlay({
                   fontWeight: 700,
                 }}
               >
-                <Sparkles size={16} color="#D9C61A" />
+                <Sparkles size={16} color="#C4A235" />
                 +{xp} XP
               </motion.div>
             )}

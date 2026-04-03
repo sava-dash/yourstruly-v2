@@ -197,7 +197,7 @@ export function VoiceWisdomCapture({
                 <div className="w-20 h-20 mx-auto mb-4 rounded-full bg-[#4A3552] flex items-center justify-center shadow-lg shadow-[#4A3552]/30">
                   <Sparkles size={36} className="text-white" />
                 </div>
-                <h3 className="text-xl font-bold text-[#4A3552]">Wisdom Saved!</h3>
+                <h3 className="text-xl font-bold text-[#4A3552]">Wisdom saved</h3>
                 <p className="text-[#4A3552]/70 mt-2">Your insight has been captured</p>
               </motion.div>
             </motion.div>

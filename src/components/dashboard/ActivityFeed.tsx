@@ -106,7 +106,7 @@ function ActivityItemCard({ activity, index }: { activity: ActivityItem; index: 
     >
       <Link 
         href={activity.link}
-        className="flex items-start gap-3 px-3 py-2.5 rounded-xl bg-white/60 hover:bg-white border border-transparent hover:border-[#406A56]/10 hover:shadow-sm transition-all group"
+        className="flex items-start gap-3 px-3 py-2.5 rounded-xl bg-white/60 hover:bg-white border border-transparent hover:border-[#2D5A3D]/10 hover:shadow-sm transition-all group"
         style={{ minHeight: '60px' }}
       >
         {/* Icon */}

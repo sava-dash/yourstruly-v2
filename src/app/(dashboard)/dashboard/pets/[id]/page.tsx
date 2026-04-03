@@ -237,7 +237,7 @@ export default function PetDetailPage({ params }: { params: Promise<{ id: string
   if (loading) {
     return (
       <div className="pb-8 home-background flex items-center justify-center">
-        <div className="animate-pulse text-[#406A56]">Loading...</div>
+        <div className="animate-pulse text-[#2D5A3D]">Loading...</div>
       </div>
     )
   }
@@ -252,7 +252,7 @@ export default function PetDetailPage({ params }: { params: Promise<{ id: string
         <div className="relative z-10 flex items-center justify-center min-h-screen">
           <div className="text-center">
             <p className="text-gray-500 mb-4">Pet not found</p>
-            <Link href="/dashboard/contacts" className="text-[#C35F33] hover:underline">
+            <Link href="/dashboard/contacts" className="text-[#B8562E] hover:underline">
               Back to contacts
             </Link>
           </div>
@@ -294,13 +294,13 @@ export default function PetDetailPage({ params }: { params: Promise<{ id: string
                     className="w-16 h-16 rounded-full object-cover border-2 border-white shadow-md"
                   />
                 ) : (
-                  <div className="w-16 h-16 rounded-full bg-gradient-to-br from-[#C35F33] to-[#D87A55] flex items-center justify-center text-white text-2xl font-medium shadow-md">
+                  <div className="w-16 h-16 rounded-full bg-gradient-to-br from-[#B8562E] to-[#D87A55] flex items-center justify-center text-white text-2xl font-medium shadow-md">
                     <PawPrint size={28} />
                   </div>
                 )}
                 <div>
                   <h1 className="text-2xl font-bold text-gray-900">{pet.name}</h1>
-                  <p className="text-[#C35F33] text-sm capitalize font-medium">
+                  <p className="text-[#B8562E] text-sm capitalize font-medium">
                     {pet.species}{pet.breed ? ` • ${pet.breed}` : ''}
                   </p>
                 </div>
@@ -310,7 +310,7 @@ export default function PetDetailPage({ params }: { params: Promise<{ id: string
             <div className="flex items-center gap-2">
               <button
                 onClick={() => setShowEditModal(true)}
-                className="p-2.5 bg-white/80 backdrop-blur-sm text-gray-500 hover:text-[#C35F33] rounded-xl transition-all border border-gray-200"
+                className="p-2.5 bg-white/80 backdrop-blur-sm text-gray-500 hover:text-[#B8562E] rounded-xl transition-all border border-gray-200"
               >
                 <Edit2 size={18} />
               </button>
@@ -353,7 +353,7 @@ export default function PetDetailPage({ params }: { params: Promise<{ id: string
               
               {pet.date_of_birth && (
                 <div className="flex items-center gap-3 text-gray-600">
-                  <Calendar size={16} className="text-[#C35F33]" />
+                  <Calendar size={16} className="text-[#B8562E]" />
                   <span className="text-sm">
                     Born {formatDate(pet.date_of_birth)}
                     {age && ` (${age} old)`}
@@ -363,7 +363,7 @@ export default function PetDetailPage({ params }: { params: Promise<{ id: string
               
               {pet.adoption_date && (
                 <div className="flex items-center gap-3 text-gray-600">
-                  <Heart size={16} className="text-[#C35F33]" />
+                  <Heart size={16} className="text-[#B8562E]" />
                   <span className="text-sm">
                     Adopted {formatDate(pet.adoption_date)}
                   </span>
@@ -383,7 +383,7 @@ export default function PetDetailPage({ params }: { params: Promise<{ id: string
                 <h3 className="text-gray-900 font-semibold mb-2">Favorite Things</h3>
                 <div className="flex flex-wrap gap-2">
                   {pet.favorite_things.map((thing, i) => (
-                    <span key={i} className="px-3 py-1 bg-[#C35F33]/10 text-[#C35F33] rounded-full text-sm">
+                    <span key={i} className="px-3 py-1 bg-[#B8562E]/10 text-[#B8562E] rounded-full text-sm">
                       {thing}
                     </span>
                   ))}
@@ -394,7 +394,7 @@ export default function PetDetailPage({ params }: { params: Promise<{ id: string
             {/* Medical Notes */}
             <div className="bg-white/90 backdrop-blur-sm rounded-2xl p-5 border border-gray-100 shadow-sm">
               <h3 className="text-gray-900 font-semibold mb-2 flex items-center gap-2">
-                <AlertCircle size={16} className="text-[#C35F33]" />
+                <AlertCircle size={16} className="text-[#B8562E]" />
                 Medical Notes
               </h3>
               {pet.medical_notes ? (
@@ -407,7 +407,7 @@ export default function PetDetailPage({ params }: { params: Promise<{ id: string
             {/* Emergency Caretakers */}
             <div className="bg-white/90 backdrop-blur-sm rounded-2xl p-5 border border-gray-100 shadow-sm">
               <h3 className="text-gray-900 font-semibold mb-2 flex items-center gap-2">
-                <User size={16} className="text-[#406A56]" />
+                <User size={16} className="text-[#2D5A3D]" />
                 Emergency Caretakers
               </h3>
               {caretakerContacts.length > 0 ? (
@@ -418,14 +418,14 @@ export default function PetDetailPage({ params }: { params: Promise<{ id: string
                         <img src={contact.avatar_url}
                 alt="" className="w-10 h-10 rounded-full object-cover" />
                       ) : (
-                        <div className="w-10 h-10 rounded-full bg-[#406A56]/10 flex items-center justify-center">
-                          <User size={18} className="text-[#406A56]" />
+                        <div className="w-10 h-10 rounded-full bg-[#2D5A3D]/10 flex items-center justify-center">
+                          <User size={18} className="text-[#2D5A3D]" />
                         </div>
                       )}
                       <div>
                         <p className="text-gray-900 text-sm font-medium">{contact.full_name}</p>
                         {contact.phone && (
-                          <a href={`tel:${contact.phone}`} className="text-[#406A56] text-xs hover:underline">
+                          <a href={`tel:${contact.phone}`} className="text-[#2D5A3D] text-xs hover:underline">
                             {contact.phone}
                           </a>
                         )}
@@ -437,7 +437,7 @@ export default function PetDetailPage({ params }: { params: Promise<{ id: string
                 <div className="space-y-1">
                   <p className="text-gray-900 text-sm font-medium">{pet.emergency_caretaker}</p>
                   {pet.emergency_caretaker_phone && (
-                    <a href={`tel:${pet.emergency_caretaker_phone}`} className="text-[#406A56] text-sm hover:underline">
+                    <a href={`tel:${pet.emergency_caretaker_phone}`} className="text-[#2D5A3D] text-sm hover:underline">
                       {pet.emergency_caretaker_phone}
                     </a>
                   )}
@@ -459,11 +459,11 @@ export default function PetDetailPage({ params }: { params: Promise<{ id: string
                   
 <img src={pet.profile_photo_url} alt={pet.name} className="w-20 h-20 rounded-full object-cover" />
                 ) : (
-                  <div className="w-20 h-20 rounded-full bg-gradient-to-br from-[#C35F33] to-[#D87A55] flex items-center justify-center">
+                  <div className="w-20 h-20 rounded-full bg-gradient-to-br from-[#B8562E] to-[#D87A55] flex items-center justify-center">
                     <PawPrint size={32} className="text-white" />
                   </div>
                 )}
-                <label className="flex items-center gap-2 px-4 py-2 bg-[#C35F33]/10 text-[#C35F33] rounded-xl cursor-pointer hover:bg-[#C35F33]/20 transition-colors">
+                <label className="flex items-center gap-2 px-4 py-2 bg-[#B8562E]/10 text-[#B8562E] rounded-xl cursor-pointer hover:bg-[#B8562E]/20 transition-colors">
                   <input type="file" accept="image/*" onChange={handlePhotoUpload} className="hidden" disabled={uploading} />
                   <Upload size={16} />
                   {uploading ? 'Uploading...' : 'Upload Photo'}
@@ -475,12 +475,12 @@ export default function PetDetailPage({ params }: { params: Promise<{ id: string
             <div className="bg-white/90 backdrop-blur-sm rounded-2xl p-5 border border-gray-100 shadow-sm">
               <div className="flex items-center justify-between mb-4">
                 <h3 className="text-gray-900 font-semibold flex items-center gap-2">
-                  <Camera size={18} className="text-[#D9C61A]" />
+                  <Camera size={18} className="text-[#C4A235]" />
                   Photos of {pet.name}
                 </h3>
                 <div className="flex items-center gap-2">
                   <span className="text-sm text-gray-500">{taggedPhotos.length} photos</span>
-                  <label className="flex items-center gap-1.5 px-3 py-1.5 bg-[#D9C61A]/10 text-[#8B7B0A] text-sm rounded-lg cursor-pointer hover:bg-[#D9C61A]/20 transition-colors">
+                  <label className="flex items-center gap-1.5 px-3 py-1.5 bg-[#C4A235]/10 text-[#8B7B0A] text-sm rounded-lg cursor-pointer hover:bg-[#C4A235]/20 transition-colors">
                     <input 
                       type="file" 
                       accept="image/*" 
@@ -499,7 +499,7 @@ export default function PetDetailPage({ params }: { params: Promise<{ id: string
                   <div className="w-12 h-12 rounded-full bg-gray-100 flex items-center justify-center mx-auto mb-3">
                     <ImageIcon size={24} className="text-gray-400" />
                   </div>
-                  <p className="text-gray-500 text-sm mb-2">No photos yet</p>
+                  <p className="text-gray-500 text-sm mb-2">Your photo gallery is waiting</p>
                   <p className="text-gray-400 text-xs">Upload photos or add memories featuring {pet.name}</p>
                 </div>
               ) : (
@@ -508,7 +508,7 @@ export default function PetDetailPage({ params }: { params: Promise<{ id: string
                     <Link 
                       key={photo.id} 
                       href={`/dashboard/memories/${photo.memory_id}`}
-                      className="aspect-square rounded-xl overflow-hidden hover:ring-2 hover:ring-[#C35F33] transition-all"
+                      className="aspect-square rounded-xl overflow-hidden hover:ring-2 hover:ring-[#B8562E] transition-all"
                     >
                       
 <img src={photo.file_url} alt="" className="w-full h-full object-cover" />
@@ -631,7 +631,7 @@ function PetEditModal({
               <input
                 value={form.name}
                 onChange={e => setForm({ ...form, name: e.target.value })}
-                className="w-full px-3 py-2 border border-gray-200 rounded-xl focus:ring-2 focus:ring-[#C35F33]/20 focus:border-[#C35F33] outline-none"
+                className="w-full px-3 py-2 border border-gray-200 rounded-xl focus:ring-2 focus:ring-[#B8562E]/20 focus:border-[#B8562E] outline-none"
               />
             </div>
             <div>
@@ -639,7 +639,7 @@ function PetEditModal({
               <select
                 value={form.species}
                 onChange={e => setForm({ ...form, species: e.target.value })}
-                className="w-full px-3 py-2 border border-gray-200 rounded-xl focus:ring-2 focus:ring-[#C35F33]/20 focus:border-[#C35F33] outline-none"
+                className="w-full px-3 py-2 border border-gray-200 rounded-xl focus:ring-2 focus:ring-[#B8562E]/20 focus:border-[#B8562E] outline-none"
               >
                 {SPECIES_OPTIONS.map(s => <option key={s} value={s}>{s}</option>)}
               </select>
@@ -652,7 +652,7 @@ function PetEditModal({
               <input
                 value={form.breed}
                 onChange={e => setForm({ ...form, breed: e.target.value })}
-                className="w-full px-3 py-2 border border-gray-200 rounded-xl focus:ring-2 focus:ring-[#C35F33]/20 focus:border-[#C35F33] outline-none"
+                className="w-full px-3 py-2 border border-gray-200 rounded-xl focus:ring-2 focus:ring-[#B8562E]/20 focus:border-[#B8562E] outline-none"
               />
             </div>
             <div>
@@ -660,7 +660,7 @@ function PetEditModal({
               <input
                 value={form.color}
                 onChange={e => setForm({ ...form, color: e.target.value })}
-                className="w-full px-3 py-2 border border-gray-200 rounded-xl focus:ring-2 focus:ring-[#C35F33]/20 focus:border-[#C35F33] outline-none"
+                className="w-full px-3 py-2 border border-gray-200 rounded-xl focus:ring-2 focus:ring-[#B8562E]/20 focus:border-[#B8562E] outline-none"
               />
             </div>
           </div>
@@ -672,7 +672,7 @@ function PetEditModal({
                 type="date"
                 value={form.date_of_birth}
                 onChange={e => setForm({ ...form, date_of_birth: e.target.value })}
-                className="w-full px-3 py-2 border border-gray-200 rounded-xl focus:ring-2 focus:ring-[#C35F33]/20 focus:border-[#C35F33] outline-none"
+                className="w-full px-3 py-2 border border-gray-200 rounded-xl focus:ring-2 focus:ring-[#B8562E]/20 focus:border-[#B8562E] outline-none"
               />
             </div>
             <div>
@@ -681,7 +681,7 @@ function PetEditModal({
                 type="date"
                 value={form.adoption_date}
                 onChange={e => setForm({ ...form, adoption_date: e.target.value })}
-                className="w-full px-3 py-2 border border-gray-200 rounded-xl focus:ring-2 focus:ring-[#C35F33]/20 focus:border-[#C35F33] outline-none"
+                className="w-full px-3 py-2 border border-gray-200 rounded-xl focus:ring-2 focus:ring-[#B8562E]/20 focus:border-[#B8562E] outline-none"
               />
             </div>
           </div>
@@ -692,7 +692,7 @@ function PetEditModal({
               value={form.personality}
               onChange={e => setForm({ ...form, personality: e.target.value })}
               rows={2}
-              className="w-full px-3 py-2 border border-gray-200 rounded-xl focus:ring-2 focus:ring-[#C35F33]/20 focus:border-[#C35F33] outline-none resize-none"
+              className="w-full px-3 py-2 border border-gray-200 rounded-xl focus:ring-2 focus:ring-[#B8562E]/20 focus:border-[#B8562E] outline-none resize-none"
               placeholder="Playful, loves belly rubs..."
             />
           </div>
@@ -703,14 +703,14 @@ function PetEditModal({
               value={form.medical_notes}
               onChange={e => setForm({ ...form, medical_notes: e.target.value })}
               rows={2}
-              className="w-full px-3 py-2 border border-gray-200 rounded-xl focus:ring-2 focus:ring-[#C35F33]/20 focus:border-[#C35F33] outline-none resize-none"
+              className="w-full px-3 py-2 border border-gray-200 rounded-xl focus:ring-2 focus:ring-[#B8562E]/20 focus:border-[#B8562E] outline-none resize-none"
               placeholder="Allergies, medications, vet info..."
             />
           </div>
 
           {/* Emergency Caretakers - Multi-select */}
-          <div className="p-4 bg-[#406A56]/10 rounded-xl">
-            <label className="block text-sm font-medium text-[#406A56] mb-1">Emergency Caretakers</label>
+          <div className="p-4 bg-[#2D5A3D]/10 rounded-xl">
+            <label className="block text-sm font-medium text-[#2D5A3D] mb-1">Emergency Caretakers</label>
             <p className="text-xs text-gray-500 mb-3">Who should care for {pet.name} if something happens to you?</p>
             
             {/* Selected caretakers */}
@@ -723,8 +723,8 @@ function PetEditModal({
                         <img src={contact.avatar_url}
                 alt="" className="w-8 h-8 rounded-full object-cover" />
                       ) : (
-                        <div className="w-8 h-8 rounded-full bg-[#406A56]/20 flex items-center justify-center">
-                          <User size={14} className="text-[#406A56]" />
+                        <div className="w-8 h-8 rounded-full bg-[#2D5A3D]/20 flex items-center justify-center">
+                          <User size={14} className="text-[#2D5A3D]" />
                         </div>
                       )}
                       <span className="text-sm font-medium text-gray-900">{contact.full_name}</span>
@@ -753,7 +753,7 @@ function PetEditModal({
                     }}
                     onFocus={() => setShowCaretakerDropdown(true)}
                     aria-label="Search" placeholder="Search contacts..."
-                    className="w-full pl-10 pr-4 py-2 border border-gray-200 rounded-xl focus:ring-2 focus:ring-[#406A56]/20 focus:border-[#406A56] outline-none"
+                    className="w-full pl-10 pr-4 py-2 border border-gray-200 rounded-xl focus:ring-2 focus:ring-[#2D5A3D]/20 focus:border-[#2D5A3D] outline-none"
                   />
                 </div>
                 {showCaretakerDropdown && filteredContacts.length > 0 && (
@@ -768,8 +768,8 @@ function PetEditModal({
                           <img src={contact.avatar_url}
                 alt="" className="w-8 h-8 rounded-full object-cover" />
                         ) : (
-                          <div className="w-8 h-8 rounded-full bg-[#406A56]/20 flex items-center justify-center">
-                            <User size={14} className="text-[#406A56]" />
+                          <div className="w-8 h-8 rounded-full bg-[#2D5A3D]/20 flex items-center justify-center">
+                            <User size={14} className="text-[#2D5A3D]" />
                           </div>
                         )}
                         <div>
@@ -815,7 +815,7 @@ function PetEditModal({
           <button
             onClick={handleSave}
             disabled={saving || !form.name || !form.species}
-            className="px-6 py-2 bg-[#C35F33] text-white rounded-xl font-medium hover:bg-[#A84E2A] transition-colors disabled:opacity-50 flex items-center gap-2"
+            className="px-6 py-2 bg-[#B8562E] text-white rounded-xl font-medium hover:bg-[#A84E2A] transition-colors disabled:opacity-50 flex items-center gap-2"
           >
             {saving ? 'Saving...' : <><Check size={16} /> Save</>}
           </button>

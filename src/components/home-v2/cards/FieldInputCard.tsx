@@ -33,7 +33,7 @@ export function FieldInputCard({ contactName, data, onSave, saved }: FieldInputC
 
   return (
     <div className="h-full flex flex-col p-4 gap-3">
-      <h3 className="text-xs font-semibold uppercase tracking-wider text-[#5C6D64] flex items-center gap-1.5">
+      <h3 className="text-xs font-semibold uppercase tracking-wider text-[#5A6660] flex items-center gap-1.5">
         <User size={12} /> {contactName ? `${contactName}'s Info` : 'Contact Info'}
       </h3>
 

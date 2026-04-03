@@ -655,11 +655,11 @@ html, body {
 
 /* Warm Gradient Backgrounds */
 .bg-warm-gradient {
-  background: linear-gradient(135deg, #FDF8F3 0%, #F5EDE5 50%, #FDF8F3 100%);
+  background: linear-gradient(135deg, #FAFAF7 0%, #F5EDE5 50%, #FAFAF7 100%);
 }
 
 .bg-warm-radial {
-  background: radial-gradient(ellipse at top, #FDF8F3 0%, #F2EDE7 100%);
+  background: radial-gradient(ellipse at top, #FAFAF7 0%, #F2EDE7 100%);
 }
 
 /* Polish Utilities */

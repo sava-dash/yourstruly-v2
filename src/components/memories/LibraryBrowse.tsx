@@ -178,7 +178,7 @@ export function LibraryBrowse({ onSelectMedia }: LibraryBrowseProps) {
   if (loading) {
     return (
       <div className="flex items-center justify-center py-20">
-        <div className="w-8 h-8 border-2 border-[#406A56] border-t-transparent rounded-full animate-spin" />
+        <div className="w-8 h-8 border-2 border-[#2D5A3D] border-t-transparent rounded-full animate-spin" />
       </div>
     )
   }
@@ -193,7 +193,7 @@ export function LibraryBrowse({ onSelectMedia }: LibraryBrowseProps) {
             onClick={() => setFilter('all')}
             className={`px-4 py-2 rounded-full text-sm font-medium transition-all ${
               filter === 'all'
-                ? 'bg-[#406A56] text-white'
+                ? 'bg-[#2D5A3D] text-white'
                 : 'bg-white/80 text-gray-600 hover:bg-gray-100'
             }`}
           >
@@ -244,13 +244,13 @@ export function LibraryBrowse({ onSelectMedia }: LibraryBrowseProps) {
           <div className="flex items-center gap-1 bg-white/80 rounded-lg p-1">
             <button
               onClick={() => setViewMode('grid')}
-              className={`p-2 rounded ${viewMode === 'grid' ? 'bg-[#406A56] text-white' : 'text-gray-500'}`}
+              className={`p-2 rounded ${viewMode === 'grid' ? 'bg-[#2D5A3D] text-white' : 'text-gray-500'}`}
             >
               <Grid size={16} />
             </button>
             <button
               onClick={() => setViewMode('list')}
-              className={`p-2 rounded ${viewMode === 'list' ? 'bg-[#406A56] text-white' : 'text-gray-500'}`}
+              className={`p-2 rounded ${viewMode === 'list' ? 'bg-[#2D5A3D] text-white' : 'text-gray-500'}`}
             >
               <List size={16} />
             </button>
@@ -292,7 +292,7 @@ export function LibraryBrowse({ onSelectMedia }: LibraryBrowseProps) {
                     initial={{ opacity: 0, scale: 0.95 }}
                     animate={{ opacity: 1, scale: 1 }}
                     className={`relative aspect-square rounded-lg overflow-hidden cursor-pointer group ${
-                      selectedItems.has(item.id) ? 'ring-2 ring-[#406A56] ring-offset-2' : ''
+                      selectedItems.has(item.id) ? 'ring-2 ring-[#2D5A3D] ring-offset-2' : ''
                     }`}
                     onClick={() => onSelectMedia?.(item)}
                   >
@@ -328,7 +328,7 @@ export function LibraryBrowse({ onSelectMedia }: LibraryBrowseProps) {
                       onClick={(e) => { e.stopPropagation(); toggleSelection(item.id); }}
                       className={`absolute top-2 left-2 w-5 h-5 rounded-full border-2 flex items-center justify-center transition-all ${
                         selectedItems.has(item.id)
-                          ? 'bg-[#406A56] border-[#406A56]'
+                          ? 'bg-[#2D5A3D] border-[#2D5A3D]'
                           : 'bg-white/80 border-white/80 opacity-0 group-hover:opacity-100'
                       }`}
                     >
@@ -365,7 +365,7 @@ export function LibraryBrowse({ onSelectMedia }: LibraryBrowseProps) {
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
               className={`flex items-center gap-4 p-3 bg-white rounded-xl hover:shadow-md transition-all cursor-pointer ${
-                selectedItems.has(item.id) ? 'ring-2 ring-[#406A56]' : ''
+                selectedItems.has(item.id) ? 'ring-2 ring-[#2D5A3D]' : ''
               }`}
               onClick={() => onSelectMedia?.(item)}
             >
@@ -374,7 +374,7 @@ export function LibraryBrowse({ onSelectMedia }: LibraryBrowseProps) {
                 onClick={(e) => { e.stopPropagation(); toggleSelection(item.id); }}
                 className={`w-5 h-5 rounded border-2 flex items-center justify-center flex-shrink-0 ${
                   selectedItems.has(item.id)
-                    ? 'bg-[#406A56] border-[#406A56]'
+                    ? 'bg-[#2D5A3D] border-[#2D5A3D]'
                     : 'border-gray-300'
                 }`}
               >

@@ -360,7 +360,7 @@ export default function ProfilePage() {
   }
 
   // Tag display component - Compact
-  const TagList = ({ items, colorClass = 'bg-[#406A56]/10 text-[#406A56]' }: { items: string[], colorClass?: string }) => (
+  const TagList = ({ items, colorClass = 'bg-[#2D5A3D]/10 text-[#2D5A3D]' }: { items: string[], colorClass?: string }) => (
     <div className="flex flex-wrap gap-1.5">
       {items.length > 0 ? items.map(item => (
         <span key={item} className={`px-2.5 py-0.5 rounded-full text-xs ${colorClass}`}>
@@ -373,7 +373,7 @@ export default function ProfilePage() {
   )
 
   // Glass card section component - Compact
-  const ProfileCard = ({ title, icon: Icon, iconColor = 'text-[#406A56]', bgColor = 'bg-[#406A56]/10', section, children }: {
+  const ProfileCard = ({ title, icon: Icon, iconColor = 'text-[#2D5A3D]', bgColor = 'bg-[#2D5A3D]/10', section, children }: {
     title: string
     icon: React.ComponentType<{ size?: number; className?: string }>
     iconColor?: string
@@ -385,7 +385,7 @@ export default function ProfilePage() {
       <div className="glass-card-page p-4 group relative">
         <button
           onClick={() => openEdit(section)}
-          className="absolute top-3 right-3 p-1.5 opacity-0 group-hover:opacity-100 text-[#406A56]/50 hover:text-[#406A56] hover:bg-[#406A56]/10 rounded-lg transition-all z-10"
+          className="absolute top-3 right-3 p-1.5 opacity-0 group-hover:opacity-100 text-[#2D5A3D]/50 hover:text-[#2D5A3D] hover:bg-[#2D5A3D]/10 rounded-lg transition-all z-10"
         >
           <Edit2 size={12} />
         </button>
@@ -411,7 +411,7 @@ export default function ProfilePage() {
           <div className="page-blob page-blob-3" />
         </div>
         <div className="relative z-10 flex items-center justify-center min-h-[60vh]">
-          <Loader2 className="w-8 h-8 animate-spin text-[#406A56]" />
+          <Loader2 className="w-8 h-8 animate-spin text-[#2D5A3D]" />
         </div>
       </div>
     )
@@ -449,7 +449,7 @@ export default function ProfilePage() {
               {profile.personality_type && (
                 <div className="mb-3">
                   <span className="text-sm text-gray-500">Type</span>
-                  <p className="font-medium text-[#406A56]">{profile.personality_type}</p>
+                  <p className="font-medium text-[#2D5A3D]">{profile.personality_type}</p>
                 </div>
               )}
               <div className="mb-3">
@@ -458,7 +458,7 @@ export default function ProfilePage() {
               </div>
               <button
                 onClick={() => setShowQuiz(true)}
-                className="w-full mt-3 py-2.5 px-4 bg-gradient-to-r from-[#406A56]/10 to-[#8DACAB]/10 hover:from-[#406A56]/20 hover:to-[#8DACAB]/20 text-[#406A56] font-medium rounded-xl flex items-center justify-center gap-2 transition-all border border-[#406A56]/10"
+                className="w-full mt-3 py-2.5 px-4 bg-gradient-to-r from-[#2D5A3D]/10 to-[#8DACAB]/10 hover:from-[#2D5A3D]/20 hover:to-[#8DACAB]/20 text-[#2D5A3D] font-medium rounded-xl flex items-center justify-center gap-2 transition-all border border-[#2D5A3D]/10"
               >
                 <Sparkles size={16} />
                 {profile.personality_type ? 'Retake Quiz' : 'Take Personality Quiz'}
@@ -466,13 +466,13 @@ export default function ProfilePage() {
             </ProfileCard>
 
             {/* Interests */}
-            <ProfileCard title="Interests" icon={Heart} iconColor="text-[#C35F33]" bgColor="bg-[#C35F33]/10" section="interests">
-              <TagList items={profile.interests} colorClass="bg-[#C35F33]/10 text-[#C35F33]" />
+            <ProfileCard title="Interests" icon={Heart} iconColor="text-[#B8562E]" bgColor="bg-[#B8562E]/10" section="interests">
+              <TagList items={profile.interests} colorClass="bg-[#B8562E]/10 text-[#B8562E]" />
             </ProfileCard>
 
             {/* Hobbies */}
-            <ProfileCard title="Hobbies" icon={Sparkles} iconColor="text-[#D9C61A]" bgColor="bg-[#D9C61A]/10" section="hobbies">
-              <TagList items={profile.hobbies} colorClass="bg-[#D9C61A]/20 text-[#8B7B0A]" />
+            <ProfileCard title="Hobbies" icon={Sparkles} iconColor="text-[#C4A235]" bgColor="bg-[#C4A235]/10" section="hobbies">
+              <TagList items={profile.hobbies} colorClass="bg-[#C4A235]/20 text-[#8B7B0A]" />
             </ProfileCard>
 
             {/* Skills */}
@@ -487,7 +487,7 @@ export default function ProfilePage() {
             <div className="glass-card-page glass-card-page-strong p-5 mb-4 group relative">
               <button
                 onClick={() => openEdit('basics')}
-                className="absolute top-3 right-3 p-1.5 opacity-0 group-hover:opacity-100 text-[#406A56]/50 hover:text-[#406A56] hover:bg-[#406A56]/10 rounded-lg transition-all"
+                className="absolute top-3 right-3 p-1.5 opacity-0 group-hover:opacity-100 text-[#2D5A3D]/50 hover:text-[#2D5A3D] hover:bg-[#2D5A3D]/10 rounded-lg transition-all"
               >
                 <Edit2 size={14} />
               </button>
@@ -503,7 +503,7 @@ export default function ProfilePage() {
                       className="w-[100px] h-[100px] rounded-full object-cover border-3 border-white shadow-lg"
                     />
                   ) : (
-                    <div className="w-[100px] h-[100px] rounded-full bg-gradient-to-br from-[#406A56] to-[#5A8A72] flex items-center justify-center text-white text-4xl font-semibold shadow-lg border-3 border-white">
+                    <div className="w-[100px] h-[100px] rounded-full bg-gradient-to-br from-[#2D5A3D] to-[#5A8A72] flex items-center justify-center text-white text-4xl font-semibold shadow-lg border-3 border-white">
                       {profile.full_name?.charAt(0) || '?'}
                     </div>
                   )}
@@ -515,7 +515,7 @@ export default function ProfilePage() {
                     {profile.full_name || 'Your Name'}
                   </h2>
                   {profile.occupation && (
-                    <p className="text-[#406A56] font-medium truncate">{profile.occupation}</p>
+                    <p className="text-[#2D5A3D] font-medium truncate">{profile.occupation}</p>
                   )}
                   <div className="flex items-center gap-3 text-gray-500 text-sm mt-1 flex-wrap">
                     {profile.date_of_birth && (
@@ -551,26 +551,26 @@ export default function ProfilePage() {
                         essenceVector={essenceVector} 
                         size={80}
                       />
-                      <p className="text-[10px] text-[#406A56]/60 mt-0.5">Essence</p>
+                      <p className="text-[10px] text-[#2D5A3D]/60 mt-0.5">Essence</p>
                     </>
                   ) : (
-                    <div className="w-[80px] h-[80px] rounded-full border-2 border-dashed border-[#406A56]/20 
+                    <div className="w-[80px] h-[80px] rounded-full border-2 border-dashed border-[#2D5A3D]/20 
                                     flex flex-col items-center justify-center text-center p-2">
-                      <Sparkles className="w-5 h-5 text-[#406A56]/30 mb-1" />
-                      <p className="text-[8px] text-[#406A56]/50 leading-tight">Add profile data</p>
+                      <Sparkles className="w-5 h-5 text-[#2D5A3D]/30 mb-1" />
+                      <p className="text-[8px] text-[#2D5A3D]/50 leading-tight">Add profile data</p>
                     </div>
                   )}
                 </div>
               </div>
 
               {/* Biography - Compact */}
-              <div className="border-t border-[#406A56]/10 pt-3">
+              <div className="border-t border-[#2D5A3D]/10 pt-3">
                 <div className="flex items-center gap-2 mb-2">
-                  <User size={14} className="text-[#406A56]" />
+                  <User size={14} className="text-[#2D5A3D]" />
                   <h3 className="font-semibold text-[#2d2d2d] text-sm">About Me</h3>
                   <button
                     onClick={(e) => { e.stopPropagation(); openEdit('bio'); }}
-                    className="ml-auto p-1 opacity-0 group-hover:opacity-100 text-[#406A56]/50 hover:text-[#406A56] hover:bg-[#406A56]/10 rounded-lg transition-all"
+                    className="ml-auto p-1 opacity-0 group-hover:opacity-100 text-[#2D5A3D]/50 hover:text-[#2D5A3D] hover:bg-[#2D5A3D]/10 rounded-lg transition-all"
                   >
                     <Edit2 size={12} />
                   </button>
@@ -584,14 +584,14 @@ export default function ProfilePage() {
             </div>
 
             {/* Favorites Section - Compact */}
-            <ProfileCard title="Favorites" icon={Star} iconColor="text-[#C35F33]" bgColor="bg-[#C35F33]/10" section="favorites">
+            <ProfileCard title="Favorites" icon={Star} iconColor="text-[#B8562E]" bgColor="bg-[#B8562E]/10" section="favorites">
               <div className="grid grid-cols-2 gap-3">
                 <div>
                   <div className="flex items-center gap-1.5 mb-1.5">
-                    <BookOpen size={12} className="text-[#406A56]" />
+                    <BookOpen size={12} className="text-[#2D5A3D]" />
                     <span className="text-xs font-medium text-gray-600">Books</span>
                   </div>
-                  <TagList items={profile.favorite_books} colorClass="bg-[#406A56]/10 text-[#406A56]" />
+                  <TagList items={profile.favorite_books} colorClass="bg-[#2D5A3D]/10 text-[#2D5A3D]" />
                 </div>
                 <div>
                   <div className="flex items-center gap-1.5 mb-1.5">
@@ -609,10 +609,10 @@ export default function ProfilePage() {
                 </div>
                 <div>
                   <div className="flex items-center gap-1.5 mb-1.5">
-                    <Utensils size={12} className="text-[#C35F33]" />
+                    <Utensils size={12} className="text-[#B8562E]" />
                     <span className="text-xs font-medium text-gray-600">Foods</span>
                   </div>
-                  <TagList items={profile.favorite_foods} colorClass="bg-[#C35F33]/10 text-[#C35F33]" />
+                  <TagList items={profile.favorite_foods} colorClass="bg-[#B8562E]/10 text-[#B8562E]" />
                 </div>
               </div>
             </ProfileCard>
@@ -660,8 +660,8 @@ export default function ProfilePage() {
             </ProfileCard>
 
             {/* Languages */}
-            <ProfileCard title="Languages" icon={BookOpen} iconColor="text-[#406A56]" bgColor="bg-[#406A56]/10" section="languages">
-              <TagList items={profile.languages} colorClass="bg-[#406A56]/10 text-[#406A56]" />
+            <ProfileCard title="Languages" icon={BookOpen} iconColor="text-[#2D5A3D]" bgColor="bg-[#2D5A3D]/10" section="languages">
+              <TagList items={profile.languages} colorClass="bg-[#2D5A3D]/10 text-[#2D5A3D]" />
             </ProfileCard>
 
             {/* Religion */}
@@ -670,7 +670,7 @@ export default function ProfilePage() {
             </ProfileCard>
 
             {/* Occupation */}
-            <ProfileCard title="Work" icon={Briefcase} iconColor="text-[#D9C61A]" bgColor="bg-[#D9C61A]/10" section="work">
+            <ProfileCard title="Work" icon={Briefcase} iconColor="text-[#C4A235]" bgColor="bg-[#C4A235]/10" section="work">
               {profile.occupation ? (
                 <>
                   <p className="font-medium text-[#2d2d2d]">{profile.occupation}</p>
@@ -731,7 +731,7 @@ export default function ProfilePage() {
                       const contact = contacts.find(c => c.id === contactId)
                       return contact ? (
                         <div key={contactId} className="flex items-start gap-2">
-                          <div className="w-8 h-8 rounded-full bg-[#406A56]/10 flex items-center justify-center text-sm font-medium text-[#406A56] flex-shrink-0">
+                          <div className="w-8 h-8 rounded-full bg-[#2D5A3D]/10 flex items-center justify-center text-sm font-medium text-[#2D5A3D] flex-shrink-0">
                             {contact.full_name?.charAt(0) || '?'}
                           </div>
                           <div className="flex-1 min-w-0">
@@ -742,7 +742,7 @@ export default function ProfilePage() {
                             {contact.phone && (
                               <a
                                 href={`tel:${contact.phone}`}
-                                className="text-xs text-[#406A56] hover:underline block mt-1"
+                                className="text-xs text-[#2D5A3D] hover:underline block mt-1"
                                 onClick={(e) => e.stopPropagation()}
                               >
                                 {contact.phone}
@@ -751,7 +751,7 @@ export default function ProfilePage() {
                             {contact.email && (
                               <a
                                 href={`mailto:${contact.email}`}
-                                className="text-xs text-[#406A56] hover:underline block truncate"
+                                className="text-xs text-[#2D5A3D] hover:underline block truncate"
                                 onClick={(e) => e.stopPropagation()}
                               >
                                 {contact.email}
@@ -847,7 +847,7 @@ function EditModal({
     }
   }
 
-  const TagEditor = ({ field, label, placeholder, colorClass = 'bg-[#406A56]/10 text-[#406A56]' }: {
+  const TagEditor = ({ field, label, placeholder, colorClass = 'bg-[#2D5A3D]/10 text-[#2D5A3D]' }: {
     field: keyof Profile
     label: string
     placeholder: string
@@ -883,7 +883,7 @@ function EditModal({
       <div className="modal-content-page max-w-lg">
         <div className="flex items-center justify-between mb-6">
           <h2 className="text-xl font-semibold text-[#2d2d2d]">{getTitle()}</h2>
-          <button onClick={onClose} className="p-2 text-[#406A56]/50 hover:text-[#406A56] hover:bg-[#406A56]/10 rounded-lg">
+          <button onClick={onClose} className="p-2 text-[#2D5A3D]/50 hover:text-[#2D5A3D] hover:bg-[#2D5A3D]/10 rounded-lg">
             <X size={20} />
           </button>
         </div>
@@ -895,18 +895,18 @@ function EditModal({
                 {profile.avatar_url ? (
                   <div className="relative">
                     <img src={profile.avatar_url}
-                alt="Profile photo" className="w-28 h-28 rounded-full object-cover border-4 border-[#406A56]/20" />
-                    <label className="absolute bottom-0 right-0 w-9 h-9 bg-[#406A56] text-white rounded-full flex items-center justify-center cursor-pointer hover:bg-[#355a48]">
+                alt="Profile photo" className="w-28 h-28 rounded-full object-cover border-4 border-[#2D5A3D]/20" />
+                    <label className="absolute bottom-0 right-0 w-9 h-9 bg-[#2D5A3D] text-white rounded-full flex items-center justify-center cursor-pointer hover:bg-[#234A31]">
                       <Camera size={16} />
                       <input type="file" accept="image/*" onChange={handlePhotoUpload} className="hidden" disabled={uploading} />
                     </label>
                   </div>
                 ) : (
-                  <label className="w-28 h-28 rounded-full border-4 border-dashed border-[#406A56]/30 flex flex-col items-center justify-center cursor-pointer hover:border-[#406A56]/50 transition-all">
-                    {uploading ? <Loader2 className="w-8 h-8 text-[#406A56] animate-spin" /> : (
+                  <label className="w-28 h-28 rounded-full border-4 border-dashed border-[#2D5A3D]/30 flex flex-col items-center justify-center cursor-pointer hover:border-[#2D5A3D]/50 transition-all">
+                    {uploading ? <Loader2 className="w-8 h-8 text-[#2D5A3D] animate-spin" /> : (
                       <>
-                        <Upload className="w-8 h-8 text-[#406A56]/50" />
-                        <span className="text-xs text-[#406A56]/50 mt-1">Add photo</span>
+                        <Upload className="w-8 h-8 text-[#2D5A3D]/50" />
+                        <span className="text-xs text-[#2D5A3D]/50 mt-1">Add photo</span>
                       </>
                     )}
                     <input type="file" accept="image/*" onChange={handlePhotoUpload} className="hidden" disabled={uploading} />
@@ -941,8 +941,8 @@ function EditModal({
                       onClick={() => setProfile(p => ({ ...p, gender: g }))}
                       className={`px-4 py-2 rounded-full text-sm transition-all ${
                         profile.gender === g 
-                          ? 'bg-[#406A56] text-white' 
-                          : 'bg-white/50 text-gray-600 border border-gray-200 hover:border-[#406A56]/30'
+                          ? 'bg-[#2D5A3D] text-white' 
+                          : 'bg-white/50 text-gray-600 border border-gray-200 hover:border-[#2D5A3D]/30'
                       }`}
                     >
                       {g}
@@ -959,11 +959,11 @@ function EditModal({
                   className="form-input"
                   placeholder="+1 (555) 123-4567"
                 />
-                <div className="mt-3 p-3 bg-[#406A56]/5 rounded-xl border border-[#406A56]/10">
+                <div className="mt-3 p-3 bg-[#2D5A3D]/5 rounded-xl border border-[#2D5A3D]/10">
                   <label className="flex items-start gap-3 cursor-pointer">
                     <input
                       type="checkbox"
-                      className="mt-0.5 w-4 h-4 rounded border-gray-300 text-[#406A56] focus:ring-[#406A56]"
+                      className="mt-0.5 w-4 h-4 rounded border-gray-300 text-[#2D5A3D] focus:ring-[#2D5A3D]"
                     />
                     <span className="text-sm text-gray-600">
                       I agree to receive SMS notifications from YoursTruly when someone wants to interview me about my life story. Message and data rates may apply. Reply STOP to unsubscribe.
@@ -1005,7 +1005,7 @@ function EditModal({
                 <label className="block text-sm text-[#666] mb-2">Personality Traits</label>
                 <div className="flex flex-wrap gap-2 mb-3">
                   {(profile.personality_traits || []).map(trait => (
-                    <span key={trait} className="px-3 py-1 rounded-full text-sm flex items-center gap-1 bg-[#406A56]/10 text-[#406A56]">
+                    <span key={trait} className="px-3 py-1 rounded-full text-sm flex items-center gap-1 bg-[#2D5A3D]/10 text-[#2D5A3D]">
                       {trait}
                       <button onClick={() => removeTag('personality_traits', trait)} className="hover:text-red-500 ml-1" aria-label="Remove"><X size={14} /></button>
                     </span>
@@ -1019,7 +1019,7 @@ function EditModal({
                         key={trait}
                         type="button"
                         onClick={() => setProfile(p => ({ ...p, personality_traits: [...(p.personality_traits || []), trait] }))}
-                        className="px-3 py-1.5 rounded-full text-sm bg-gray-100 text-gray-600 hover:bg-[#406A56]/10 hover:text-[#406A56] transition-colors"
+                        className="px-3 py-1.5 rounded-full text-sm bg-gray-100 text-gray-600 hover:bg-[#2D5A3D]/10 hover:text-[#2D5A3D] transition-colors"
                       >
                         + {trait}
                       </button>
@@ -1047,7 +1047,7 @@ function EditModal({
               <label className="block text-sm text-[#666] mb-2">Interests</label>
               <div className="flex flex-wrap gap-2 mb-3">
                 {(profile.interests || []).map(interest => (
-                  <span key={interest} className="px-3 py-1 rounded-full text-sm flex items-center gap-1 bg-[#C35F33]/10 text-[#C35F33]">
+                  <span key={interest} className="px-3 py-1 rounded-full text-sm flex items-center gap-1 bg-[#B8562E]/10 text-[#B8562E]">
                     {interest}
                     <button onClick={() => removeTag('interests', interest)} className="hover:text-red-500 ml-1" aria-label="Remove"><X size={14} /></button>
                   </span>
@@ -1061,7 +1061,7 @@ function EditModal({
                       key={interest}
                       type="button"
                       onClick={() => setProfile(p => ({ ...p, interests: [...(p.interests || []), interest] }))}
-                      className="px-3 py-1.5 rounded-full text-sm bg-gray-100 text-gray-600 hover:bg-[#C35F33]/10 hover:text-[#C35F33] transition-colors"
+                      className="px-3 py-1.5 rounded-full text-sm bg-gray-100 text-gray-600 hover:bg-[#B8562E]/10 hover:text-[#B8562E] transition-colors"
                     >
                       + {interest}
                     </button>
@@ -1089,7 +1089,7 @@ function EditModal({
               <label className="block text-sm text-[#666] mb-2">Hobbies</label>
               <div className="flex flex-wrap gap-2 mb-3">
                 {(profile.hobbies || []).map(hobby => (
-                  <span key={hobby} className="px-3 py-1 rounded-full text-sm flex items-center gap-1 bg-[#D9C61A]/20 text-[#8B7B0A]">
+                  <span key={hobby} className="px-3 py-1 rounded-full text-sm flex items-center gap-1 bg-[#C4A235]/20 text-[#8B7B0A]">
                     {hobby}
                     <button onClick={() => removeTag('hobbies', hobby)} className="hover:text-red-500 ml-1" aria-label="Remove"><X size={14} /></button>
                   </span>
@@ -1103,7 +1103,7 @@ function EditModal({
                       key={hobby}
                       type="button"
                       onClick={() => setProfile(p => ({ ...p, hobbies: [...(p.hobbies || []), hobby] }))}
-                      className="px-3 py-1.5 rounded-full text-sm bg-gray-100 text-gray-600 hover:bg-[#D9C61A]/20 hover:text-[#8B7B0A] transition-colors"
+                      className="px-3 py-1.5 rounded-full text-sm bg-gray-100 text-gray-600 hover:bg-[#C4A235]/20 hover:text-[#8B7B0A] transition-colors"
                     >
                       + {hobby}
                     </button>
@@ -1291,7 +1291,7 @@ function EditModal({
               <label className="block text-sm text-[#666] mb-2">Languages</label>
               <div className="flex flex-wrap gap-2 mb-3">
                 {(profile.languages || []).map(lang => (
-                  <span key={lang} className="px-3 py-1 rounded-full text-sm flex items-center gap-1 bg-[#406A56]/10 text-[#406A56]">
+                  <span key={lang} className="px-3 py-1 rounded-full text-sm flex items-center gap-1 bg-[#2D5A3D]/10 text-[#2D5A3D]">
                     {lang}
                     <button onClick={() => removeTag('languages', lang)} className="hover:text-red-500 ml-1" aria-label="Remove"><X size={14} /></button>
                   </span>
@@ -1505,7 +1505,7 @@ function EditModal({
                     }]
                     setProfile(p => ({ ...p, education_history: newHistory }))
                   }}
-                  className="w-full mt-3 py-2 px-4 bg-[#406A56]/10 text-[#406A56] hover:bg-[#406A56]/20 rounded-lg text-sm font-medium transition-colors"
+                  className="w-full mt-3 py-2 px-4 bg-[#2D5A3D]/10 text-[#2D5A3D] hover:bg-[#2D5A3D]/20 rounded-lg text-sm font-medium transition-colors"
                 >
                   + Add School
                 </button>
@@ -1515,7 +1515,7 @@ function EditModal({
 
           {section === 'emergency' && (
             <div>
-              <p className="text-sm text-gray-600 mb-4 p-3 bg-[#406A56]/5 rounded-lg">
+              <p className="text-sm text-gray-600 mb-4 p-3 bg-[#2D5A3D]/5 rounded-lg">
                 Your emergency contact can verify your passing by providing a death certificate or obituary.
                 This person will be notified and given access to manage your legacy.
               </p>
@@ -1542,12 +1542,12 @@ function EditModal({
                       }}
                       className={`w-full flex items-start gap-3 p-3 rounded-xl border transition-all text-left ${
                         isSelected
-                          ? 'border-[#406A56] bg-[#406A56]/10'
-                          : 'border-gray-200 hover:border-[#406A56]/30'
+                          ? 'border-[#2D5A3D] bg-[#2D5A3D]/10'
+                          : 'border-gray-200 hover:border-[#2D5A3D]/30'
                       }`}
                     >
                       <div className={`w-10 h-10 rounded-full flex items-center justify-center text-sm font-medium flex-shrink-0 ${
-                        isSelected ? 'bg-[#406A56] text-white' : 'bg-gray-100 text-gray-600'
+                        isSelected ? 'bg-[#2D5A3D] text-white' : 'bg-gray-100 text-gray-600'
                       }`}>
                         {contact.full_name?.charAt(0) || '?'}
                       </div>
@@ -1557,14 +1557,14 @@ function EditModal({
                           <p className="text-xs text-gray-500">{contact.relationship}</p>
                         )}
                         {contact.phone && (
-                          <p className="text-xs text-[#406A56] mt-1">{contact.phone}</p>
+                          <p className="text-xs text-[#2D5A3D] mt-1">{contact.phone}</p>
                         )}
                         {contact.email && (
-                          <p className="text-xs text-[#406A56] truncate">{contact.email}</p>
+                          <p className="text-xs text-[#2D5A3D] truncate">{contact.email}</p>
                         )}
                       </div>
                       {isSelected && (
-                        <Check className="w-5 h-5 text-[#406A56] flex-shrink-0 mt-1" />
+                        <Check className="w-5 h-5 text-[#2D5A3D] flex-shrink-0 mt-1" />
                       )}
                     </button>
                   )
@@ -1585,7 +1585,7 @@ function EditModal({
                 <label className="block text-sm text-[#666] mb-2">Favorite Books</label>
                 <div className="flex flex-wrap gap-2 mb-2">
                   {(profile.favorite_books || []).map(book => (
-                    <span key={book} className="px-3 py-1 rounded-full text-sm flex items-center gap-1 bg-[#406A56]/10 text-[#406A56]">
+                    <span key={book} className="px-3 py-1 rounded-full text-sm flex items-center gap-1 bg-[#2D5A3D]/10 text-[#2D5A3D]">
                       {book}
                       <button onClick={() => removeTag('favorite_books', book)} className="hover:text-red-500 ml-1" aria-label="Remove"><X size={14} /></button>
                     </span>
@@ -1598,7 +1598,7 @@ function EditModal({
                         key={book}
                         type="button"
                         onClick={() => setProfile(p => ({ ...p, favorite_books: [...(p.favorite_books || []), book] }))}
-                        className="px-2 py-1 rounded-full text-xs bg-gray-100 text-gray-600 hover:bg-[#406A56]/10 hover:text-[#406A56] transition-colors"
+                        className="px-2 py-1 rounded-full text-xs bg-gray-100 text-gray-600 hover:bg-[#2D5A3D]/10 hover:text-[#2D5A3D] transition-colors"
                       >
                         + {book}
                       </button>
@@ -1702,7 +1702,7 @@ function EditModal({
                 <label className="block text-sm text-[#666] mb-2">Favorite Foods</label>
                 <div className="flex flex-wrap gap-2 mb-2">
                   {(profile.favorite_foods || []).map(food => (
-                    <span key={food} className="px-3 py-1 rounded-full text-sm flex items-center gap-1 bg-[#C35F33]/10 text-[#C35F33]">
+                    <span key={food} className="px-3 py-1 rounded-full text-sm flex items-center gap-1 bg-[#B8562E]/10 text-[#B8562E]">
                       {food}
                       <button onClick={() => removeTag('favorite_foods', food)} className="hover:text-red-500 ml-1" aria-label="Remove"><X size={14} /></button>
                     </span>
@@ -1715,7 +1715,7 @@ function EditModal({
                         key={food}
                         type="button"
                         onClick={() => setProfile(p => ({ ...p, favorite_foods: [...(p.favorite_foods || []), food] }))}
-                        className="px-2 py-1 rounded-full text-xs bg-gray-100 text-gray-600 hover:bg-[#C35F33]/10 hover:text-[#C35F33] transition-colors"
+                        className="px-2 py-1 rounded-full text-xs bg-gray-100 text-gray-600 hover:bg-[#B8562E]/10 hover:text-[#B8562E] transition-colors"
                       >
                         + {food}
                       </button>
@@ -1739,7 +1739,7 @@ function EditModal({
           )}
         </div>
 
-        <div className="flex justify-end gap-3 mt-6 pt-4 border-t border-[#406A56]/10">
+        <div className="flex justify-end gap-3 mt-6 pt-4 border-t border-[#2D5A3D]/10">
           <button onClick={onClose} className="btn-secondary">Cancel</button>
           <button onClick={onSave} disabled={saving} className="btn-primary">
             {saving ? <><Loader2 size={16} className="animate-spin" /> Saving...</> : <><Check size={16} /> Save</>}

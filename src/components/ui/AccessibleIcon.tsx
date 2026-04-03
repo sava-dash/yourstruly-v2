@@ -17,7 +17,7 @@ export const IconButton = forwardRef<HTMLButtonElement, IconButtonProps>(
       <button
         ref={ref}
         aria-label={label}
-        className={`focus:outline-none focus-visible:ring-2 focus-visible:ring-[#406A56] focus-visible:ring-offset-2 ${className}`}
+        className={`focus:outline-none focus-visible:ring-2 focus-visible:ring-[#2D5A3D] focus-visible:ring-offset-2 ${className}`}
         {...props}
       >
         {children}
@@ -49,7 +49,7 @@ export function SkipToMain({ mainId = 'main-content' }: { mainId?: string }) {
   return (
     <a
       href={`#${mainId}`}
-      className="sr-only focus:not-sr-only focus:absolute focus:top-4 focus:left-4 focus:z-[100] focus:px-4 focus:py-2 focus:bg-[#406A56] focus:text-white focus:rounded-lg focus:outline-none"
+      className="sr-only focus:not-sr-only focus:absolute focus:top-4 focus:left-4 focus:z-[100] focus:px-4 focus:py-2 focus:bg-[#2D5A3D] focus:text-white focus:rounded-lg focus:outline-none"
     >
       Skip to main content
     </a>

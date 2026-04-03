@@ -245,7 +245,7 @@ export default function DeleteAccountPage() {
           <div className="page-blob page-blob-2" />
         </div>
         <div className="relative z-10 flex items-center justify-center min-h-[60vh]">
-          <Loader2 className="w-8 h-8 animate-spin text-[#406A56]" />
+          <Loader2 className="w-8 h-8 animate-spin text-[#2D5A3D]" />
         </div>
       </div>
     )
@@ -291,14 +291,14 @@ export default function DeleteAccountPage() {
             
             <div className="grid grid-cols-2 gap-3 mb-4">
               <div className="bg-gray-50 rounded-lg p-3 flex items-center gap-3">
-                <Image size={20} className="text-[#406A56]" />
+                <Image size={20} className="text-[#2D5A3D]" />
                 <div>
                   <p className="text-sm text-gray-500">Memories</p>
                   <p className="font-semibold">{stats?.memories || 0}</p>
                 </div>
               </div>
               <div className="bg-gray-50 rounded-lg p-3 flex items-center gap-3">
-                <Heart size={20} className="text-[#C35F33]" />
+                <Heart size={20} className="text-[#B8562E]" />
                 <div>
                   <p className="text-sm text-gray-500">Contacts</p>
                   <p className="font-semibold">{stats?.contacts || 0}</p>
@@ -322,8 +322,8 @@ export default function DeleteAccountPage() {
 
             {/* Export reminder */}
             {!hasExported && (
-              <div className="bg-[#406A56]/5 border border-[#406A56]/20 rounded-xl p-4 mb-4">
-                <p className="text-sm text-[#406A56] mb-3">
+              <div className="bg-[#2D5A3D]/5 border border-[#2D5A3D]/20 rounded-xl p-4 mb-4">
+                <p className="text-sm text-[#2D5A3D] mb-3">
                   <strong>Recommended:</strong> Download a backup of your data before deleting.
                 </p>
                 <button
@@ -387,8 +387,8 @@ export default function DeleteAccountPage() {
             </div>
 
             <div className="space-y-3">
-              <label className="flex items-start gap-3 p-3 rounded-xl border-2 cursor-pointer transition-all hover:border-[#406A56]/30"
-                style={{ borderColor: postscriptAction === 'keep' ? '#406A56' : '#e5e7eb' }}
+              <label className="flex items-start gap-3 p-3 rounded-xl border-2 cursor-pointer transition-all hover:border-[#2D5A3D]/30"
+                style={{ borderColor: postscriptAction === 'keep' ? '#2D5A3D' : '#e5e7eb' }}
                 onClick={() => setPostscriptAction('keep')}
               >
                 <input
@@ -519,11 +519,11 @@ export default function DeleteAccountPage() {
               Your Family Plan
             </h2>
 
-            <div className="bg-[#406A56]/5 border border-[#406A56]/20 rounded-xl p-4 mb-4 flex items-start gap-3">
-              <Building2 className="w-5 h-5 text-[#406A56] flex-shrink-0 mt-0.5" />
+            <div className="bg-[#2D5A3D]/5 border border-[#2D5A3D]/20 rounded-xl p-4 mb-4 flex items-start gap-3">
+              <Building2 className="w-5 h-5 text-[#2D5A3D] flex-shrink-0 mt-0.5" />
               <div>
-                <p className="font-medium text-[#406A56]">You&apos;re the admin of a {subscription.planName} plan</p>
-                <p className="text-sm text-[#406A56]/80">
+                <p className="font-medium text-[#2D5A3D]">You&apos;re the admin of a {subscription.planName} plan</p>
+                <p className="text-sm text-[#2D5A3D]/80">
                   {subscription.memberCount} other member{subscription.memberCount !== 1 ? 's' : ''} will be affected
                 </p>
               </div>
@@ -551,10 +551,10 @@ export default function DeleteAccountPage() {
                 <p className="font-medium text-[#2d2d2d] mb-3">What should happen to your family members?</p>
 
                 <div className="space-y-3">
-                  <label className="flex items-start gap-3 p-3 rounded-xl border-2 cursor-pointer transition-all hover:border-[#406A56]/30"
-                    style={{ borderColor: newAdminId ? '#406A56' : '#e5e7eb' }}
+                  <label className="flex items-start gap-3 p-3 rounded-xl border-2 cursor-pointer transition-all hover:border-[#2D5A3D]/30"
+                    style={{ borderColor: newAdminId ? '#2D5A3D' : '#e5e7eb' }}
                   >
-                    <UserPlus size={20} className="text-[#406A56] flex-shrink-0 mt-0.5" />
+                    <UserPlus size={20} className="text-[#2D5A3D] flex-shrink-0 mt-0.5" />
                     <div className="flex-1">
                       <p className="font-medium text-[#2d2d2d]">Transfer plan to another member</p>
                       <p className="text-sm text-gray-500 mb-2">
@@ -673,7 +673,7 @@ export default function DeleteAccountPage() {
 
             <p className="text-center text-sm text-gray-500 mt-4">
               Changed your mind?{' '}
-              <Link href="/dashboard/settings" className="text-[#406A56] hover:underline">
+              <Link href="/dashboard/settings" className="text-[#2D5A3D] hover:underline">
                 Go back to settings
               </Link>
             </p>

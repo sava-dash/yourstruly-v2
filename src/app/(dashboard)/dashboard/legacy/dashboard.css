@@ -140,7 +140,7 @@ aside::-webkit-scrollbar-track {
 .feed-page[data-theme="dark"] .profile-stat-label { font-size: 9px; color: rgba(141,172,171,0.5); text-transform: uppercase; letter-spacing: 0.5px; font-weight: 600; }
 .feed-page[data-theme="dark"] .profile-stat-bordered { border-left: 1px solid rgba(255,255,255,0.08); border-right: 1px solid rgba(255,255,255,0.08); }
 .feed-page[data-theme="dark"] .profile-stat-bordered-r { border-right: 1px solid rgba(255,255,255,0.08); }
-.feed-page[data-theme="dark"] .profile-stat-xp { font-size: 22px; font-weight: 700; color: #D9C61A; }
+.feed-page[data-theme="dark"] .profile-stat-xp { font-size: 22px; font-weight: 700; color: #C4A235; }
 .feed-page[data-theme="dark"] .profile-stat-label-xp { font-size: 9px; color: rgba(217,198,26,0.5); text-transform: uppercase; letter-spacing: 0.5px; font-weight: 600; display: flex; align-items: center; justify-content: center; gap: 2px; }
 .feed-page[data-theme="dark"] .profile-storage { border-top: 1px solid rgba(255,255,255,0.08); padding-top: 10px; }
 .feed-page[data-theme="dark"] .profile-storage-label { font-size: 10px; font-weight: 600; color: rgba(141,172,171,0.6); text-transform: uppercase; letter-spacing: 0.5px; }
@@ -154,17 +154,17 @@ aside::-webkit-scrollbar-track {
   box-shadow: 0 2px 12px rgba(0,0,0,0.08);
   border: 1px solid rgba(64,106,86,0.1);
 }
-.feed-page[data-theme="light"] .profile-card-name { color: #406A56; }
-.feed-page[data-theme="light"] .profile-stat-value { font-size: 22px; font-weight: 700; color: #406A56; }
+.feed-page[data-theme="light"] .profile-card-name { color: #2D5A3D; }
+.feed-page[data-theme="light"] .profile-stat-value { font-size: 22px; font-weight: 700; color: #2D5A3D; }
 .feed-page[data-theme="light"] .profile-stat-label { font-size: 9px; color: rgba(64,106,86,0.5); text-transform: uppercase; letter-spacing: 0.5px; font-weight: 600; }
 .feed-page[data-theme="light"] .profile-stat-bordered { border-left: 1px solid rgba(64,106,86,0.1); border-right: 1px solid rgba(64,106,86,0.1); }
 .feed-page[data-theme="light"] .profile-stat-bordered-r { border-right: 1px solid rgba(64,106,86,0.1); }
-.feed-page[data-theme="light"] .profile-stat-xp { font-size: 22px; font-weight: 700; color: #D9C61A; }
+.feed-page[data-theme="light"] .profile-stat-xp { font-size: 22px; font-weight: 700; color: #C4A235; }
 .feed-page[data-theme="light"] .profile-stat-label-xp { font-size: 9px; color: rgba(217,198,26,0.5); text-transform: uppercase; letter-spacing: 0.5px; font-weight: 600; display: flex; align-items: center; justify-content: center; gap: 2px; }
 .feed-page[data-theme="light"] .profile-storage { border-top: 1px solid rgba(64,106,86,0.1); padding-top: 10px; }
 .feed-page[data-theme="light"] .profile-storage-label { font-size: 10px; font-weight: 600; color: rgba(64,106,86,0.6); text-transform: uppercase; letter-spacing: 0.5px; }
 .feed-page[data-theme="light"] .profile-storage-value { font-size: 10px; color: #888; }
-.feed-page[data-theme="light"] .profile-storage-track { height: 6px; background: #F2F1E5; border-radius: 3px; overflow: hidden; }
+.feed-page[data-theme="light"] .profile-storage-track { height: 6px; background: #F5F3EE; border-radius: 3px; overflow: hidden; }
 
 .header-controls {
   position: -webkit-sticky;
@@ -233,7 +233,7 @@ aside::-webkit-scrollbar-track {
 }
 
 .search-box-compact:focus-within {
-  border-color: #C35F33;
+  border-color: #B8562E;
   width: 250px;
 }
 
@@ -281,13 +281,13 @@ aside::-webkit-scrollbar-track {
 }
 
 .map-toggle-btn:hover {
-  border-color: #C35F33;
-  color: #C35F33;
+  border-color: #B8562E;
+  color: #B8562E;
 }
 
 .map-toggle-btn.active {
   background: rgba(195, 95, 51, 0.12);
-  color: #C35F33;
+  color: #B8562E;
   border-color: rgba(195, 95, 51, 0.4);
 }
 
@@ -337,13 +337,13 @@ aside::-webkit-scrollbar-track {
 }
 
 .reminisce-dropdown-btn:hover {
-  border-color: #C35F33;
-  color: #C35F33;
+  border-color: #B8562E;
+  color: #B8562E;
 }
 
 .reminisce-dropdown-btn.active {
   background: rgba(195, 95, 51, 0.12);
-  color: #C35F33;
+  color: #B8562E;
   border-color: rgba(195, 95, 51, 0.4);
   font-weight: 600;
 }
@@ -363,16 +363,16 @@ aside::-webkit-scrollbar-track {
   border-radius: 50%;
   border: 1px solid rgba(195, 95, 51, 0.3);
   background: rgba(195, 95, 51, 0.08);
-  color: #C35F33;
+  color: #B8562E;
   cursor: pointer;
   transition: all 0.2s ease;
   flex-shrink: 0;
 }
 
 .reminisce-clear-inline:hover {
-  background: #C35F33;
+  background: #B8562E;
   color: #fff;
-  border-color: #C35F33;
+  border-color: #B8562E;
 }
 
 .reminisce-dropdown-menu {
@@ -428,12 +428,12 @@ aside::-webkit-scrollbar-track {
 
 .reminisce-dropdown-item:hover {
   background: rgba(195, 95, 51, 0.08);
-  color: #C35F33;
+  color: #B8562E;
 }
 
 .reminisce-dropdown-item.active {
   background: rgba(195, 95, 51, 0.12);
-  color: #C35F33;
+  color: #B8562E;
   font-weight: 600;
 }
 
@@ -534,7 +534,7 @@ aside::-webkit-scrollbar-track {
   position: absolute;
   top: 100%;
   left: 0;
-  color: #C35F33;
+  color: #B8562E;
 }
 
 .category-tag:hover .category-text-top {
@@ -551,7 +551,7 @@ aside::-webkit-scrollbar-track {
   left: 18px;
   right: 18px;
   height: 2px;
-  background: #C35F33;
+  background: #B8562E;
   transform: scaleX(0);
   transform-origin: left;
   transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
@@ -577,7 +577,7 @@ aside::-webkit-scrollbar-track {
 }
 
 .category-tag.active .category-text-top {
-  color: #C35F33;
+  color: #B8562E;
 }
 
 .category-tag.active .category-underline {
@@ -1028,14 +1028,14 @@ aside::-webkit-scrollbar-track {
 }
 
 .reminisce-pill:hover {
-  border-color: #C35F33;
-  color: #C35F33;
+  border-color: #B8562E;
+  color: #B8562E;
 }
 
 .reminisce-pill.active {
-  background: #C35F33;
+  background: #B8562E;
   color: #fff;
-  border-color: #C35F33;
+  border-color: #B8562E;
   font-weight: 600;
 }
 
@@ -1105,8 +1105,8 @@ aside::-webkit-scrollbar-track {
 }
 
 .browse-back-btn:hover {
-  color: #C35F33;
-  border-color: #C35F33;
+  color: #B8562E;
+  border-color: #B8562E;
   background: rgba(195, 95, 51, 0.08);
 }
 
@@ -1158,7 +1158,7 @@ aside::-webkit-scrollbar-track {
   height: 0;
   border-top: 6px solid transparent;
   border-bottom: 6px solid transparent;
-  border-right: 8px solid #C35F33;
+  border-right: 8px solid #B8562E;
   z-index: 30;
   filter: drop-shadow(0 1px 3px rgba(195, 95, 51, 0.4));
 }
@@ -1234,14 +1234,14 @@ aside::-webkit-scrollbar-track {
 }
 
 .timeline-year-btn:hover {
-  color: #C35F33;
+  color: #B8562E;
   background: rgba(195, 95, 51, 0.08);
 }
 
 .timeline-year-btn.active {
   font-size: 12px;
   font-weight: 700;
-  color: #C35F33;
+  color: #B8562E;
   background: rgba(195, 95, 51, 0.1);
   transform: scale(1.05);
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);

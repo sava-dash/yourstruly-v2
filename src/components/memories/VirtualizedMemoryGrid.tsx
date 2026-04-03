@@ -61,11 +61,11 @@ const GAP = 12
 const DateHeader = memo(({ monthName, year, count }: { monthName: string; year: string; count: number }) => (
   <div className="flex items-center gap-3 mb-3 px-1">
     <div className="flex items-center gap-2 px-3 py-1.5 glass-card-page">
-      <Calendar size={14} className="text-[#D9C61A]" />
+      <Calendar size={14} className="text-[#C4A235]" />
       <span className="text-[#2d2d2d] font-medium">{monthName} {year}</span>
     </div>
-    <div className="flex-1 h-px bg-[#406A56]/10" />
-    <span className="text-[#406A56]/60 text-sm">{count} memories</span>
+    <div className="flex-1 h-px bg-[#2D5A3D]/10" />
+    <span className="text-[#2D5A3D]/60 text-sm">{count} memories</span>
   </div>
 ))
 DateHeader.displayName = 'DateHeader'
@@ -144,7 +144,7 @@ function InnerList({ height, width, rowData, getRowHeight, itemWidth, gap }: Inn
       rowHeight={getRowHeight}
       rowProps={{ rowData, itemWidth, gap }}
       overscanCount={5}
-      className="scrollbar-thin scrollbar-thumb-[#406A56]/20 scrollbar-track-transparent"
+      className="scrollbar-thin scrollbar-thumb-[#2D5A3D]/20 scrollbar-track-transparent"
     />
   )
 }

@@ -95,7 +95,7 @@ export default function GalleryTimelineFilter({
       {/* Header */}
       <div className="flex items-center justify-between mb-4">
         <div className="flex items-center gap-2">
-          <Calendar size={18} className="text-[#406A56]" />
+          <Calendar size={18} className="text-[#2D5A3D]" />
           <span className="font-medium text-[#2d2d2d]">Filter by Time</span>
         </div>
         <div className="flex gap-2">
@@ -152,7 +152,7 @@ export default function GalleryTimelineFilter({
 
         {/* Divider */}
         {timeGroups.length > 0 && (
-          <div className="w-px h-12 bg-[#406A56]/20 flex-shrink-0 mx-2" />
+          <div className="w-px h-12 bg-[#2D5A3D]/20 flex-shrink-0 mx-2" />
         )}
 
         {/* Month buttons (for detailed filtering) */}

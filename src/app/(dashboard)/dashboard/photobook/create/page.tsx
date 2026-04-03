@@ -316,8 +316,8 @@ function ProductStep({
   if (isLoading) {
     return (
       <div className="max-w-6xl mx-auto text-center py-16">
-        <Loader2 className="w-8 h-8 mx-auto animate-spin text-[#406A56]" />
-        <p className="text-[#406A56]/60 mt-4">Loading products...</p>
+        <Loader2 className="w-8 h-8 mx-auto animate-spin text-[#2D5A3D]" />
+        <p className="text-[#2D5A3D]/60 mt-4">Loading products...</p>
       </div>
     )
   }
@@ -325,9 +325,9 @@ function ProductStep({
   if (products.length === 0) {
     return (
       <div className="max-w-6xl mx-auto text-center py-16">
-        <Package className="w-16 h-16 mx-auto text-[#406A56]/30" />
-        <h3 className="text-lg font-medium text-[#406A56] mt-4">No Products Available</h3>
-        <p className="text-[#406A56]/60 mt-2">Please check back later or contact support.</p>
+        <Package className="w-16 h-16 mx-auto text-[#2D5A3D]/30" />
+        <h3 className="text-lg font-medium text-[#2D5A3D] mt-4">No Products Available</h3>
+        <p className="text-[#2D5A3D]/60 mt-2">Please check back later or contact support.</p>
       </div>
     )
   }
@@ -335,8 +335,8 @@ function ProductStep({
   return (
     <div className="max-w-6xl mx-auto">
       <div className="text-center mb-8">
-        <h2 className="text-2xl font-bold text-[#406A56] mb-2">Choose Your Product</h2>
-        <p className="text-[#406A56]/60">Select the perfect format for your memories</p>
+        <h2 className="text-2xl font-bold text-[#2D5A3D] mb-2">Choose Your Product</h2>
+        <p className="text-[#2D5A3D]/60">Select the perfect format for your memories</p>
       </div>
       
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -357,18 +357,18 @@ function ProductStep({
                 onClick={() => onSelect(product)}
                 className={`cursor-pointer overflow-hidden transition-all ${
                   isSelected 
-                    ? 'ring-2 ring-[#406A56] ring-offset-2 ring-offset-[#E8E4D6]' 
+                    ? 'ring-2 ring-[#2D5A3D] ring-offset-2 ring-offset-[#E8E4D6]' 
                     : ''
                 }`}
               >
                 {/* Product Icon Header */}
                 <div className={`p-6 ${
                   isSelected 
-                    ? 'bg-gradient-to-br from-[#406A56] to-[#4a7a64]' 
-                    : 'bg-gradient-to-br from-[#406A56]/10 to-[#406A56]/5'
+                    ? 'bg-gradient-to-br from-[#2D5A3D] to-[#234A31]' 
+                    : 'bg-gradient-to-br from-[#2D5A3D]/10 to-[#2D5A3D]/5'
                 }`}>
                   <div className={`w-16 h-16 rounded-2xl flex items-center justify-center mx-auto ${
-                    isSelected ? 'bg-white/20 text-white' : 'bg-white text-[#406A56]'
+                    isSelected ? 'bg-white/20 text-white' : 'bg-white text-[#2D5A3D]'
                   }`}>
                     {product.icon}
                   </div>
@@ -378,38 +378,38 @@ function ProductStep({
                 <div className="p-5">
                   <div className="flex items-start justify-between mb-2">
                     <div>
-                      <h3 className="font-bold text-[#406A56]">{product.name}</h3>
-                      <p className="text-sm text-[#406A56]/60">{product.size}</p>
+                      <h3 className="font-bold text-[#2D5A3D]">{product.name}</h3>
+                      <p className="text-sm text-[#2D5A3D]/60">{product.size}</p>
                     </div>
                     {isSelected && (
-                      <div className="w-6 h-6 rounded-full bg-[#406A56] flex items-center justify-center">
+                      <div className="w-6 h-6 rounded-full bg-[#2D5A3D] flex items-center justify-center">
                         <Check className="w-4 h-4 text-white" />
                       </div>
                     )}
                   </div>
                   
-                  <p className="text-sm text-[#406A56]/70 mb-4">{product.description}</p>
+                  <p className="text-sm text-[#2D5A3D]/70 mb-4">{product.description}</p>
                   
                   {/* Features */}
                   <ul className="space-y-1 mb-4">
                     {product.features.map((feature, i) => (
-                      <li key={i} className="text-xs text-[#406A56]/60 flex items-center gap-2">
-                        <Check className="w-3 h-3 text-[#406A56]/40" />
+                      <li key={i} className="text-xs text-[#2D5A3D]/60 flex items-center gap-2">
+                        <Check className="w-3 h-3 text-[#2D5A3D]/40" />
                         {feature}
                       </li>
                     ))}
                   </ul>
                   
                   {/* Price */}
-                  <div className="pt-4 border-t border-[#406A56]/10">
+                  <div className="pt-4 border-t border-[#2D5A3D]/10">
                     <div className="flex items-baseline justify-between">
-                      <span className="text-2xl font-bold text-[#406A56]">${displayPrice}</span>
-                      <span className="text-xs text-[#406A56]/50">
+                      <span className="text-2xl font-bold text-[#2D5A3D]">${displayPrice}</span>
+                      <span className="text-xs text-[#2D5A3D]/50">
                         {product.minPages}-{product.maxPages} pages
                       </span>
                     </div>
                     {product.pricePerPage > 0 && (
-                      <p className="text-xs text-[#406A56]/50 mt-1">
+                      <p className="text-xs text-[#2D5A3D]/50 mt-1">
                         +${(product.pricePerPage * 1.3).toFixed(2)}/additional page
                       </p>
                     )}
@@ -447,8 +447,8 @@ function ContentStep({
   return (
     <div className="max-w-6xl mx-auto">
       <div className="text-center mb-6">
-        <h2 className="text-2xl font-bold text-[#406A56] mb-2">Select Your Memories</h2>
-        <p className="text-[#406A56]/60">Choose the photos and memories to include in your book</p>
+        <h2 className="text-2xl font-bold text-[#2D5A3D] mb-2">Select Your Memories</h2>
+        <p className="text-[#2D5A3D]/60">Choose the photos and memories to include in your book</p>
       </div>
       
       {/* Selection Status Bar */}
@@ -462,7 +462,7 @@ function ContentStep({
             }`}>
               {selectedCount} selected
             </div>
-            <div className="text-sm text-[#406A56]/60">
+            <div className="text-sm text-[#2D5A3D]/60">
               {selectedCount < minRequired ? (
                 <span>Select at least <strong>{minRequired - selectedCount}</strong> more</span>
               ) : selectedCount > maxAllowed ? (
@@ -472,13 +472,13 @@ function ContentStep({
               )}
             </div>
           </div>
-          <div className="text-sm text-[#406A56]/50">
+          <div className="text-sm text-[#2D5A3D]/50">
             Recommended: {minRequired}–{Math.ceil(maxPages / 2)} memories
           </div>
         </div>
         
         {/* Progress bar */}
-        <div className="mt-4 h-2 bg-[#406A56]/10 rounded-full overflow-hidden">
+        <div className="mt-4 h-2 bg-[#2D5A3D]/10 rounded-full overflow-hidden">
           <motion.div
             className={`h-full rounded-full ${
               selectedCount >= minRequired ? 'bg-green-500' : 'bg-amber-500'
@@ -493,16 +493,16 @@ function ContentStep({
       {/* Memory Grid */}
       {isLoading ? (
         <div className="flex items-center justify-center py-20">
-          <Loader2 className="w-8 h-8 animate-spin text-[#406A56]" />
+          <Loader2 className="w-8 h-8 animate-spin text-[#2D5A3D]" />
         </div>
       ) : memories.length === 0 ? (
         <GlassCard variant="warm" padding="lg" className="text-center">
-          <ImageIcon className="w-16 h-16 mx-auto text-[#406A56]/30 mb-4" />
-          <h3 className="text-lg font-semibold text-[#406A56] mb-2">No Memories Yet</h3>
-          <p className="text-[#406A56]/60 mb-4">Create some memories first to build your photobook</p>
+          <ImageIcon className="w-16 h-16 mx-auto text-[#2D5A3D]/30 mb-4" />
+          <h3 className="text-lg font-semibold text-[#2D5A3D] mb-2">No Memories Yet</h3>
+          <p className="text-[#2D5A3D]/60 mb-4">Create some memories first to build your photobook</p>
           <button
             onClick={() => window.location.href = '/dashboard/memories'}
-            className="px-4 py-2 bg-[#406A56] text-white rounded-xl hover:bg-[#4a7a64] transition-colors"
+            className="px-4 py-2 bg-[#2D5A3D] text-white rounded-xl hover:bg-[#234A31] transition-colors"
           >
             Go to Memories
           </button>
@@ -521,8 +521,8 @@ function ContentStep({
                 onClick={() => onToggle(memory.id)}
                 className={`relative aspect-square rounded-xl overflow-hidden cursor-pointer ring-2 transition-all ${
                   isSelected 
-                    ? 'ring-[#406A56] ring-offset-2' 
-                    : 'ring-transparent hover:ring-[#406A56]/30'
+                    ? 'ring-[#2D5A3D] ring-offset-2' 
+                    : 'ring-transparent hover:ring-[#2D5A3D]/30'
                 }`}
               >
                 {coverMedia?.file_url ? (
@@ -532,22 +532,22 @@ function ContentStep({
                     className="w-full h-full object-cover"
                   />
                 ) : (
-                  <div className="w-full h-full bg-[#406A56]/10 flex items-center justify-center">
-                    <ImageIcon className="w-8 h-8 text-[#406A56]/30" />
+                  <div className="w-full h-full bg-[#2D5A3D]/10 flex items-center justify-center">
+                    <ImageIcon className="w-8 h-8 text-[#2D5A3D]/30" />
                   </div>
                 )}
                 
                 {/* Overlay */}
                 <div className={`absolute inset-0 transition-all ${
                   isSelected 
-                    ? 'bg-[#406A56]/40' 
+                    ? 'bg-[#2D5A3D]/40' 
                     : 'bg-black/0 hover:bg-black/20'
                 }`} />
                 
                 {/* Selection indicator */}
                 <div className={`absolute top-2 right-2 w-6 h-6 rounded-full flex items-center justify-center transition-all ${
                   isSelected 
-                    ? 'bg-[#406A56] text-white' 
+                    ? 'bg-[#2D5A3D] text-white' 
                     : 'bg-white/80 text-transparent'
                 }`}>
                   <Check className="w-4 h-4" />
@@ -1016,27 +1016,27 @@ function ArrangeStep({
   return (
     <div className="flex gap-6 h-[calc(100vh-280px)] min-h-[600px]">
       {/* Left Sidebar - Page Thumbnails */}
-      <div className="w-48 flex-shrink-0 bg-[#F2F1E5]/50 rounded-2xl p-4 overflow-y-auto">
+      <div className="w-48 flex-shrink-0 bg-[#F5F3EE]/50 rounded-2xl p-4 overflow-y-auto">
         {/* Header with select all/none */}
         <div className="flex items-center justify-between mb-2">
-          <h3 className="font-semibold text-[#406A56] text-sm">Pages</h3>
+          <h3 className="font-semibold text-[#2D5A3D] text-sm">Pages</h3>
           <div className="flex items-center gap-2">
             <button
               onClick={selectAllPages}
-              className="text-xs text-[#406A56]/60 hover:text-[#406A56]"
+              className="text-xs text-[#2D5A3D]/60 hover:text-[#2D5A3D]"
               title="Select All"
             >
               All
             </button>
-            <span className="text-[#406A56]/30">|</span>
+            <span className="text-[#2D5A3D]/30">|</span>
             <button
               onClick={deselectAllPages}
-              className="text-xs text-[#406A56]/60 hover:text-[#406A56]"
+              className="text-xs text-[#2D5A3D]/60 hover:text-[#2D5A3D]"
               title="Deselect All"
             >
               None
             </button>
-            <span className="text-xs text-[#406A56]/50 ml-1">{pages.length}</span>
+            <span className="text-xs text-[#2D5A3D]/50 ml-1">{pages.length}</span>
           </div>
         </div>
 
@@ -1045,7 +1045,7 @@ function ArrangeStep({
           <div className="flex gap-1 mb-3">
             <button
               onClick={duplicateSelectedPages}
-              className="flex-1 py-1.5 px-2 bg-[#406A56]/10 hover:bg-[#406A56]/20 rounded-lg text-[#406A56] text-xs font-medium flex items-center justify-center gap-1 transition-colors"
+              className="flex-1 py-1.5 px-2 bg-[#2D5A3D]/10 hover:bg-[#2D5A3D]/20 rounded-lg text-[#2D5A3D] text-xs font-medium flex items-center justify-center gap-1 transition-colors"
               title="Duplicate Selected"
             >
               <Copy className="w-3 h-3" />
@@ -1083,10 +1083,10 @@ function ArrangeStep({
                 value={page}
                 className={`group relative cursor-pointer rounded-lg overflow-hidden border-2 transition-all ${
                   selectedPageId === page.id && !isSelected
-                    ? 'border-[#406A56] ring-1 ring-[#406A56]/20'
+                    ? 'border-[#2D5A3D] ring-1 ring-[#2D5A3D]/20'
                     : isSelected
-                    ? 'border-[#406A56] ring-2 ring-[#406A56]/30'
-                    : 'border-[#406A56]/10 hover:border-[#406A56]/30'
+                    ? 'border-[#2D5A3D] ring-2 ring-[#2D5A3D]/30'
+                    : 'border-[#2D5A3D]/10 hover:border-[#2D5A3D]/30'
                 }`}
                 onClick={(e) => {
                   const isCtrlClick = e.ctrlKey || e.metaKey
@@ -1099,8 +1099,8 @@ function ArrangeStep({
                   <div
                     className={`w-5 h-5 rounded border-2 flex items-center justify-center transition-all ${
                       isSelected
-                        ? 'bg-[#406A56] border-[#406A56]'
-                        : 'bg-white/90 border-[#406A56]/30 opacity-0 group-hover:opacity-100'
+                        ? 'bg-[#2D5A3D] border-[#2D5A3D]'
+                        : 'bg-white/90 border-[#2D5A3D]/30 opacity-0 group-hover:opacity-100'
                     }`}
                   >
                     {isSelected && <Check className="w-3 h-3 text-white" />}
@@ -1118,7 +1118,7 @@ function ArrangeStep({
                       className="w-full h-full object-cover"
                     />
                   ) : (
-                    <div className="w-full h-full flex flex-col items-center justify-center text-[#406A56]/30">
+                    <div className="w-full h-full flex flex-col items-center justify-center text-[#2D5A3D]/30">
                       <span className="text-2xl font-bold">{page.pageNumber}</span>
                       <span className="text-xs">{template?.name || 'Empty'}</span>
                     </div>
@@ -1145,7 +1145,7 @@ function ArrangeStep({
 
                 {/* QR indicator */}
                 {page.slots.some(s => s.type === 'qr') && (
-                  <div className="absolute bottom-1 left-1 p-1 bg-[#406A56] rounded">
+                  <div className="absolute bottom-1 left-1 p-1 bg-[#2D5A3D] rounded">
                     <QrCode className="w-3 h-3 text-white" />
                   </div>
                 )}
@@ -1160,7 +1160,7 @@ function ArrangeStep({
             setLayoutPickerMode('add')
             setShowLayoutPicker(true)
           }}
-          className="w-full mt-4 aspect-square rounded-lg border-2 border-dashed border-[#406A56]/30 hover:border-[#406A56]/50 hover:bg-[#406A56]/5 flex flex-col items-center justify-center text-[#406A56]/50 hover:text-[#406A56] transition-all"
+          className="w-full mt-4 aspect-square rounded-lg border-2 border-dashed border-[#2D5A3D]/30 hover:border-[#2D5A3D]/50 hover:bg-[#2D5A3D]/5 flex flex-col items-center justify-center text-[#2D5A3D]/50 hover:text-[#2D5A3D] transition-all"
         >
           <Plus className="w-6 h-6" />
           <span className="text-xs mt-1">Add Page</span>
@@ -1169,7 +1169,7 @@ function ArrangeStep({
         {/* Auto-Arrange Button */}
         <button
           onClick={onAutoArrange}
-          className="w-full mt-3 py-2 rounded-lg bg-[#406A56]/10 hover:bg-[#406A56]/20 text-[#406A56] text-sm font-medium flex items-center justify-center gap-2 transition-colors"
+          className="w-full mt-3 py-2 rounded-lg bg-[#2D5A3D]/10 hover:bg-[#2D5A3D]/20 text-[#2D5A3D] text-sm font-medium flex items-center justify-center gap-2 transition-colors"
         >
           <Wand2 className="w-4 h-4" />
           Auto-Arrange
@@ -1186,14 +1186,14 @@ function ArrangeStep({
                 setLayoutPickerMode('change')
                 setShowLayoutPicker(true)
               }}
-              className="px-3 py-2 bg-[#406A56]/10 hover:bg-[#406A56]/20 rounded-lg text-[#406A56] text-sm font-medium flex items-center gap-2"
+              className="px-3 py-2 bg-[#2D5A3D]/10 hover:bg-[#2D5A3D]/20 rounded-lg text-[#2D5A3D] text-sm font-medium flex items-center gap-2"
             >
               <Layout className="w-4 h-4" />
               Change Layout
             </button>
             <button
               onClick={() => setShowQRPicker(true)}
-              className="px-3 py-2 bg-[#406A56]/10 hover:bg-[#406A56]/20 rounded-lg text-[#406A56] text-sm font-medium flex items-center gap-2"
+              className="px-3 py-2 bg-[#2D5A3D]/10 hover:bg-[#2D5A3D]/20 rounded-lg text-[#2D5A3D] text-sm font-medium flex items-center gap-2"
             >
               <QrCode className="w-4 h-4" />
               Add QR Code
@@ -1203,10 +1203,10 @@ function ArrangeStep({
             <div className="relative">
               <button
                 onClick={() => setShowBackgroundPicker(!showBackgroundPicker)}
-                className="px-3 py-2 bg-[#406A56]/10 hover:bg-[#406A56]/20 rounded-lg text-[#406A56] text-sm font-medium flex items-center gap-2"
+                className="px-3 py-2 bg-[#2D5A3D]/10 hover:bg-[#2D5A3D]/20 rounded-lg text-[#2D5A3D] text-sm font-medium flex items-center gap-2"
               >
                 <div 
-                  className="w-4 h-4 rounded border border-[#406A56]/30"
+                  className="w-4 h-4 rounded border border-[#2D5A3D]/30"
                   style={{ 
                     background: selectedPage?.background || '#ffffff',
                   }}
@@ -1216,8 +1216,8 @@ function ArrangeStep({
               
               {/* Background Color Dropdown */}
               {showBackgroundPicker && (
-                <div className="absolute top-full left-0 mt-2 p-3 bg-white rounded-xl shadow-xl border border-[#406A56]/10 z-50 w-64">
-                  <h4 className="text-xs font-semibold text-[#406A56] uppercase mb-2">Page Background</h4>
+                <div className="absolute top-full left-0 mt-2 p-3 bg-white rounded-xl shadow-xl border border-[#2D5A3D]/10 z-50 w-64">
+                  <h4 className="text-xs font-semibold text-[#2D5A3D] uppercase mb-2">Page Background</h4>
                   <div className="grid grid-cols-6 gap-1.5">
                     {BACKGROUND_COLORS.map(bg => (
                       <button
@@ -1230,8 +1230,8 @@ function ArrangeStep({
                         }}
                         className={`w-8 h-8 rounded border-2 transition-all hover:scale-110 ${
                           selectedPage?.background === bg.value 
-                            ? 'border-[#406A56] ring-2 ring-[#406A56]/30' 
-                            : 'border-transparent hover:border-[#406A56]/30'
+                            ? 'border-[#2D5A3D] ring-2 ring-[#2D5A3D]/30' 
+                            : 'border-transparent hover:border-[#2D5A3D]/30'
                         }`}
                         style={{ background: bg.value }}
                         title={bg.label}
@@ -1240,7 +1240,7 @@ function ArrangeStep({
                   </div>
                   <button
                     onClick={() => setShowBackgroundPicker(false)}
-                    className="mt-2 w-full text-xs text-[#406A56]/60 hover:text-[#406A56]"
+                    className="mt-2 w-full text-xs text-[#2D5A3D]/60 hover:text-[#2D5A3D]"
                   >
                     Close
                   </button>
@@ -1249,11 +1249,11 @@ function ArrangeStep({
             </div>
 
             {/* Undo/Redo buttons */}
-            <div className="flex items-center gap-1 ml-2 pl-2 border-l border-[#406A56]/20">
+            <div className="flex items-center gap-1 ml-2 pl-2 border-l border-[#2D5A3D]/20">
               <button
                 onClick={onUndo}
                 disabled={!canUndo}
-                className="px-2 py-2 rounded-lg text-[#406A56] hover:bg-[#406A56]/10 disabled:opacity-30 disabled:cursor-not-allowed flex items-center gap-1"
+                className="px-2 py-2 rounded-lg text-[#2D5A3D] hover:bg-[#2D5A3D]/10 disabled:opacity-30 disabled:cursor-not-allowed flex items-center gap-1"
                 title="Undo (Ctrl+Z)"
               >
                 <Undo2 className="w-4 h-4" />
@@ -1262,7 +1262,7 @@ function ArrangeStep({
               <button
                 onClick={onRedo}
                 disabled={!canRedo}
-                className="px-2 py-2 rounded-lg text-[#406A56] hover:bg-[#406A56]/10 disabled:opacity-30 disabled:cursor-not-allowed flex items-center gap-1"
+                className="px-2 py-2 rounded-lg text-[#2D5A3D] hover:bg-[#2D5A3D]/10 disabled:opacity-30 disabled:cursor-not-allowed flex items-center gap-1"
                 title="Redo (Ctrl+Shift+Z)"
               >
                 <Redo2 className="w-4 h-4" />
@@ -1270,7 +1270,7 @@ function ArrangeStep({
               </button>
             </div>
           </div>
-          <div className="text-sm text-[#406A56]/60">
+          <div className="text-sm text-[#2D5A3D]/60">
             {availablePhotos.length - usedMediaIds.size} photos available
           </div>
         </div>
@@ -1278,13 +1278,13 @@ function ArrangeStep({
         {/* Text Formatting Toolbar */}
         {activeTextSlotId && selectedPageId && activeStyle && (
           <div 
-            className="text-toolbar flex items-center gap-2 mb-4 p-3 bg-white rounded-xl shadow-sm border border-[#406A56]/10 flex-wrap"
+            className="text-toolbar flex items-center gap-2 mb-4 p-3 bg-white rounded-xl shadow-sm border border-[#2D5A3D]/10 flex-wrap"
           >
             {/* Font Family */}
             <select
               value={activeStyle.fontFamily}
               onChange={(e) => updateTextStyle(selectedPageId!, activeTextSlotId!, { fontFamily: e.target.value })}
-              className="px-2 py-1.5 bg-[#F2F1E5] border border-[#406A56]/20 rounded-lg text-sm text-[#406A56] focus:outline-none focus:ring-2 focus:ring-[#406A56]/30 cursor-pointer"
+              className="px-2 py-1.5 bg-[#F5F3EE] border border-[#2D5A3D]/20 rounded-lg text-sm text-[#2D5A3D] focus:outline-none focus:ring-2 focus:ring-[#2D5A3D]/30 cursor-pointer"
             >
               {FONT_FAMILIES.map(f => (
                 <option key={f.value} value={f.value} style={{ fontFamily: f.value }}>{f.label}</option>
@@ -1295,7 +1295,7 @@ function ArrangeStep({
             <select
               value={activeStyle.fontSize}
               onChange={(e) => updateTextStyle(selectedPageId!, activeTextSlotId!, { fontSize: e.target.value })}
-              className="px-2 py-1.5 bg-[#F2F1E5] border border-[#406A56]/20 rounded-lg text-sm text-[#406A56] focus:outline-none focus:ring-2 focus:ring-[#406A56]/30 cursor-pointer"
+              className="px-2 py-1.5 bg-[#F5F3EE] border border-[#2D5A3D]/20 rounded-lg text-sm text-[#2D5A3D] focus:outline-none focus:ring-2 focus:ring-[#2D5A3D]/30 cursor-pointer"
             >
               {FONT_SIZES.map(s => (
                 <option key={s.value} value={s.value}>{s.label}</option>
@@ -1303,7 +1303,7 @@ function ArrangeStep({
             </select>
             
             {/* Divider */}
-            <div className="w-px h-6 bg-[#406A56]/20" />
+            <div className="w-px h-6 bg-[#2D5A3D]/20" />
             
             {/* Bold */}
             <button
@@ -1312,8 +1312,8 @@ function ArrangeStep({
               })}
               className={`p-1.5 rounded-lg transition-colors ${
                 activeStyle.fontWeight === 'bold' 
-                  ? 'bg-[#406A56] text-white' 
-                  : 'bg-[#F2F1E5] text-[#406A56] hover:bg-[#406A56]/10'
+                  ? 'bg-[#2D5A3D] text-white' 
+                  : 'bg-[#F5F3EE] text-[#2D5A3D] hover:bg-[#2D5A3D]/10'
               }`}
               title="Bold"
             >
@@ -1327,8 +1327,8 @@ function ArrangeStep({
               })}
               className={`p-1.5 rounded-lg transition-colors ${
                 activeStyle.fontStyle === 'italic' 
-                  ? 'bg-[#406A56] text-white' 
-                  : 'bg-[#F2F1E5] text-[#406A56] hover:bg-[#406A56]/10'
+                  ? 'bg-[#2D5A3D] text-white' 
+                  : 'bg-[#F5F3EE] text-[#2D5A3D] hover:bg-[#2D5A3D]/10'
               }`}
               title="Italic"
             >
@@ -1336,18 +1336,18 @@ function ArrangeStep({
             </button>
             
             {/* Divider */}
-            <div className="w-px h-6 bg-[#406A56]/20" />
+            <div className="w-px h-6 bg-[#2D5A3D]/20" />
             
             {/* Alignment */}
-            <div className="flex bg-[#F2F1E5] rounded-lg p-0.5">
+            <div className="flex bg-[#F5F3EE] rounded-lg p-0.5">
               {(['left', 'center', 'right'] as const).map((align) => (
                 <button
                   key={align}
                   onClick={() => updateTextStyle(selectedPageId, activeTextSlotId, { textAlign: align })}
                   className={`p-1.5 rounded transition-colors ${
                     activeStyle.textAlign === align 
-                      ? 'bg-[#406A56] text-white' 
-                      : 'text-[#406A56] hover:bg-[#406A56]/10'
+                      ? 'bg-[#2D5A3D] text-white' 
+                      : 'text-[#2D5A3D] hover:bg-[#2D5A3D]/10'
                   }`}
                   title={`Align ${align}`}
                 >
@@ -1359,11 +1359,11 @@ function ArrangeStep({
             </div>
             
             {/* Divider */}
-            <div className="w-px h-6 bg-[#406A56]/20" />
+            <div className="w-px h-6 bg-[#2D5A3D]/20" />
             
             {/* Text Color */}
             <div className="flex items-center gap-1">
-              <span className="text-xs text-[#406A56]/60">Color:</span>
+              <span className="text-xs text-[#2D5A3D]/60">Color:</span>
               <div className="flex gap-1">
                 {TEXT_COLORS.map(color => (
                   <button
@@ -1371,8 +1371,8 @@ function ArrangeStep({
                     onClick={() => updateTextStyle(selectedPageId, activeTextSlotId, { color })}
                     className={`w-5 h-5 rounded border-2 transition-all ${
                       activeStyle.color === color 
-                        ? 'border-[#406A56] scale-110' 
-                        : 'border-transparent hover:border-[#406A56]/30'
+                        ? 'border-[#2D5A3D] scale-110' 
+                        : 'border-transparent hover:border-[#2D5A3D]/30'
                     }`}
                     style={{ backgroundColor: color }}
                     title={color}
@@ -1384,7 +1384,7 @@ function ArrangeStep({
         )}
         
         {/* Page Canvas */}
-        <div className="flex-1 bg-[#406A56]/5 rounded-2xl p-8 flex items-center justify-center">
+        <div className="flex-1 bg-[#2D5A3D]/5 rounded-2xl p-8 flex items-center justify-center">
           {selectedPage && selectedTemplate ? (
             <div 
               className="relative shadow-2xl"
@@ -1414,8 +1414,8 @@ function ArrangeStep({
                     <div
                       key={slot.id}
                       style={style}
-                      className={`bg-[#f0f0f0] cursor-pointer hover:ring-2 hover:ring-[#406A56] transition-all overflow-hidden group relative ${
-                        isCropZoomActive ? 'ring-2 ring-[#406A56]' : ''
+                      className={`bg-[#f0f0f0] cursor-pointer hover:ring-2 hover:ring-[#2D5A3D] transition-all overflow-hidden group relative ${
+                        isCropZoomActive ? 'ring-2 ring-[#2D5A3D]' : ''
                       }`}
                       onClick={() => {
                         if (!pageSlot?.fileUrl) {
@@ -1455,7 +1455,7 @@ function ArrangeStep({
                           {/* Auto QR Code - bottom right corner */}
                           {pageSlot.memoryId && (
                             <div className="absolute bottom-2 right-2 bg-white p-1 rounded shadow-lg">
-                              <QrCode className="w-8 h-8 text-[#406A56]" />
+                              <QrCode className="w-8 h-8 text-[#2D5A3D]" />
                             </div>
                           )}
 
@@ -1473,8 +1473,8 @@ function ArrangeStep({
                               }}
                               className={`p-1.5 rounded transition-colors ${
                                 cropZoomSlotId === slot.id
-                                  ? 'bg-[#406A56] text-white'
-                                  : 'bg-white/90 text-[#406A56] hover:bg-white'
+                                  ? 'bg-[#2D5A3D] text-white'
+                                  : 'bg-white/90 text-[#2D5A3D] hover:bg-white'
                               }`}
                               title="Crop & Zoom"
                             >
@@ -1499,11 +1499,11 @@ function ArrangeStep({
 
                           {/* Crop/Zoom Controls Panel */}
                           {isCropZoomActive && (
-                            <div className="absolute bottom-0 left-0 right-0 bg-white/95 backdrop-blur-sm p-3 border-t border-[#406A56]/20">
+                            <div className="absolute bottom-0 left-0 right-0 bg-white/95 backdrop-blur-sm p-3 border-t border-[#2D5A3D]/20">
                               <div className="space-y-2">
                                 {/* Zoom slider */}
                                 <div className="flex items-center gap-2">
-                                  <ZoomOut className="w-3 h-3 text-[#406A56]" />
+                                  <ZoomOut className="w-3 h-3 text-[#2D5A3D]" />
                                   <input
                                     type="range"
                                     min="0.5"
@@ -1515,16 +1515,16 @@ function ArrangeStep({
                                       updateCropZoom(selectedPage.id, slot.id, { scale: newScale })
                                     }}
                                     onClick={(e) => e.stopPropagation()}
-                                    className="flex-1 h-1.5 bg-[#406A56]/20 rounded-lg appearance-none cursor-pointer accent-[#406A56]"
+                                    className="flex-1 h-1.5 bg-[#2D5A3D]/20 rounded-lg appearance-none cursor-pointer accent-[#2D5A3D]"
                                   />
-                                  <ZoomIn className="w-3 h-3 text-[#406A56]" />
-                                  <span className="text-xs text-[#406A56] w-10 text-right">
+                                  <ZoomIn className="w-3 h-3 text-[#2D5A3D]" />
+                                  <span className="text-xs text-[#2D5A3D] w-10 text-right">
                                     {cropZoomValues.scale.toFixed(1)}x
                                   </span>
                                 </div>
 
                                 {/* Position info */}
-                                <div className="flex items-center justify-between text-xs text-[#406A56]/60">
+                                <div className="flex items-center justify-between text-xs text-[#2D5A3D]/60">
                                   <span className="flex items-center gap-1">
                                     <Move className="w-3 h-3" />
                                     Drag to reposition
@@ -1534,7 +1534,7 @@ function ArrangeStep({
                                       e.stopPropagation()
                                       updateCropZoom(selectedPage.id, slot.id, { scale: 1, offsetX: 0, offsetY: 0 })
                                     }}
-                                    className="text-[#406A56] hover:underline"
+                                    className="text-[#2D5A3D] hover:underline"
                                   >
                                     Reset
                                   </button>
@@ -1544,7 +1544,7 @@ function ArrangeStep({
                           )}
                         </>
                       ) : (
-                        <div className="w-full h-full flex flex-col items-center justify-center text-[#406A56]/40">
+                        <div className="w-full h-full flex flex-col items-center justify-center text-[#2D5A3D]/40">
                           <Plus className="w-8 h-8" />
                           <span className="text-xs mt-1">Click to add</span>
                         </div>
@@ -1562,7 +1562,7 @@ function ArrangeStep({
                       key={slot.id}
                       style={style}
                       className={`flex items-center justify-center p-2 transition-all ${
-                        isActive ? 'ring-2 ring-[#406A56] ring-offset-2 bg-white/50' : ''
+                        isActive ? 'ring-2 ring-[#2D5A3D] ring-offset-2 bg-white/50' : ''
                       }`}
                     >
                       <textarea
@@ -1607,13 +1607,13 @@ function ArrangeStep({
                     >
                       {qrSlot ? (
                         <div className="text-center">
-                          <QrCode className="w-16 h-16 text-[#406A56] mx-auto" />
-                          <span className="text-xs text-[#406A56]/60 mt-2 block">QR Code</span>
+                          <QrCode className="w-16 h-16 text-[#2D5A3D] mx-auto" />
+                          <span className="text-xs text-[#2D5A3D]/60 mt-2 block">QR Code</span>
                         </div>
                       ) : (
                         <button
                           onClick={() => setShowQRPicker(true)}
-                          className="text-[#406A56]/40 hover:text-[#406A56]"
+                          className="text-[#2D5A3D]/40 hover:text-[#2D5A3D]"
                         >
                           <QrCode className="w-12 h-12" />
                         </button>
@@ -1626,7 +1626,7 @@ function ArrangeStep({
               })}
             </div>
           ) : (
-            <div className="text-center text-[#406A56]/40">
+            <div className="text-center text-[#2D5A3D]/40">
               <Layout className="w-16 h-16 mx-auto mb-4" />
               <p>Select a page to edit</p>
             </div>
@@ -1636,10 +1636,10 @@ function ArrangeStep({
       </div>
       
       {/* Right Sidebar - Photo Library */}
-      <div className="w-56 flex-shrink-0 bg-[#F2F1E5]/50 rounded-2xl p-4 overflow-y-auto">
+      <div className="w-56 flex-shrink-0 bg-[#F5F3EE]/50 rounded-2xl p-4 overflow-y-auto">
         <div className="flex items-center justify-between mb-3">
-          <h3 className="font-semibold text-[#406A56] text-sm">Photos</h3>
-          <span className="text-xs text-[#406A56]/60">
+          <h3 className="font-semibold text-[#2D5A3D] text-sm">Photos</h3>
+          <span className="text-xs text-[#2D5A3D]/60">
             {availablePhotos.filter(p => !usedMediaIds.has(p.mediaId)).length} available
           </span>
         </div>
@@ -1668,8 +1668,8 @@ function ArrangeStep({
                 }}
                 className={`relative aspect-square rounded-lg overflow-hidden cursor-pointer transition-all ${
                   isUsed 
-                    ? 'opacity-40 ring-2 ring-[#406A56]/30' 
-                    : 'hover:ring-2 hover:ring-[#406A56]'
+                    ? 'opacity-40 ring-2 ring-[#2D5A3D]/30' 
+                    : 'hover:ring-2 hover:ring-[#2D5A3D]'
                 }`}
                 title={photo.memoryTitle}
               >
@@ -1689,7 +1689,7 @@ function ArrangeStep({
         </div>
         
         {availablePhotos.length === 0 && (
-          <div className="text-center py-8 text-[#406A56]/40">
+          <div className="text-center py-8 text-[#2D5A3D]/40">
             <ImageIcon className="w-8 h-8 mx-auto mb-2" />
             <p className="text-xs">No photos yet</p>
           </div>
@@ -1710,22 +1710,22 @@ function ArrangeStep({
               initial={{ scale: 0.9, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               exit={{ scale: 0.9, opacity: 0 }}
-              className="bg-[#F2F1E5] rounded-2xl p-6 max-w-3xl w-full max-h-[80vh] overflow-y-auto"
+              className="bg-[#F5F3EE] rounded-2xl p-6 max-w-3xl w-full max-h-[80vh] overflow-y-auto"
               onClick={(e) => e.stopPropagation()}
             >
               <div className="flex items-center justify-between mb-6">
-                <h3 className="text-xl font-bold text-[#406A56]">Choose Layout</h3>
+                <h3 className="text-xl font-bold text-[#2D5A3D]">Choose Layout</h3>
                 <button
                   onClick={() => setShowLayoutPicker(false)}
-                  className="p-2 hover:bg-[#406A56]/10 rounded-lg"
+                  className="p-2 hover:bg-[#2D5A3D]/10 rounded-lg"
                 >
-                  <X className="w-5 h-5 text-[#406A56]" />
+                  <X className="w-5 h-5 text-[#2D5A3D]" />
                 </button>
               </div>
               
               {Object.entries(TEMPLATES_BY_CATEGORY).map(([category, templates]) => (
                 <div key={category} className="mb-6">
-                  <h4 className="text-sm font-semibold text-[#406A56]/70 uppercase tracking-wide mb-3">
+                  <h4 className="text-sm font-semibold text-[#2D5A3D]/70 uppercase tracking-wide mb-3">
                     {category === 'single' ? 'Single Photo' : 
                      category === 'multi' ? 'Multiple Photos' : 'Special'}
                   </h4>
@@ -1741,14 +1741,14 @@ function ArrangeStep({
                           }
                           setShowLayoutPicker(false)
                         }}
-                        className="aspect-square bg-white rounded-xl p-3 hover:ring-2 hover:ring-[#406A56] transition-all group"
+                        className="aspect-square bg-white rounded-xl p-3 hover:ring-2 hover:ring-[#2D5A3D] transition-all group"
                       >
                         {/* Mini layout preview */}
                         <div className="w-full h-full relative bg-[#f5f5f5] rounded">
                           {template.slots.filter(s => s.type === 'photo').slice(0, 4).map((slot, i) => (
                             <div
                               key={i}
-                              className="absolute bg-[#406A56]/20 rounded-sm"
+                              className="absolute bg-[#2D5A3D]/20 rounded-sm"
                               style={{
                                 left: `${slot.position.x}%`,
                                 top: `${slot.position.y}%`,
@@ -1758,7 +1758,7 @@ function ArrangeStep({
                             />
                           ))}
                         </div>
-                        <p className="text-xs text-[#406A56] mt-2 text-center group-hover:font-medium">
+                        <p className="text-xs text-[#2D5A3D] mt-2 text-center group-hover:font-medium">
                           {template.name}
                         </p>
                       </button>
@@ -1785,19 +1785,19 @@ function ArrangeStep({
               initial={{ scale: 0.9, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               exit={{ scale: 0.9, opacity: 0 }}
-              className="bg-[#F2F1E5] rounded-2xl p-6 max-w-2xl w-full max-h-[80vh] overflow-y-auto"
+              className="bg-[#F5F3EE] rounded-2xl p-6 max-w-2xl w-full max-h-[80vh] overflow-y-auto"
               onClick={(e) => e.stopPropagation()}
             >
               <div className="flex items-center justify-between mb-6">
                 <div>
-                  <h3 className="text-xl font-bold text-[#406A56]">Add QR Code</h3>
-                  <p className="text-sm text-[#406A56]/60">Link to a memory's digital content</p>
+                  <h3 className="text-xl font-bold text-[#2D5A3D]">Add QR Code</h3>
+                  <p className="text-sm text-[#2D5A3D]/60">Link to a memory's digital content</p>
                 </div>
                 <button
                   onClick={() => setShowQRPicker(false)}
-                  className="p-2 hover:bg-[#406A56]/10 rounded-lg"
+                  className="p-2 hover:bg-[#2D5A3D]/10 rounded-lg"
                 >
-                  <X className="w-5 h-5 text-[#406A56]" />
+                  <X className="w-5 h-5 text-[#2D5A3D]" />
                 </button>
               </div>
               
@@ -1809,9 +1809,9 @@ function ArrangeStep({
                     <button
                       key={memory.id}
                       onClick={() => selectedPage && addQRToPage(selectedPage.id, memory.id)}
-                      className="text-left bg-white rounded-xl overflow-hidden hover:ring-2 hover:ring-[#406A56] transition-all"
+                      className="text-left bg-white rounded-xl overflow-hidden hover:ring-2 hover:ring-[#2D5A3D] transition-all"
                     >
-                      <div className="aspect-video bg-[#406A56]/10">
+                      <div className="aspect-video bg-[#2D5A3D]/10">
                         {coverMedia?.file_url ? (
                           <img
                             src={coverMedia.file_url}
@@ -1820,13 +1820,13 @@ function ArrangeStep({
                           />
                         ) : (
                           <div className="w-full h-full flex items-center justify-center">
-                            <ImageIcon className="w-8 h-8 text-[#406A56]/30" />
+                            <ImageIcon className="w-8 h-8 text-[#2D5A3D]/30" />
                           </div>
                         )}
                       </div>
                       <div className="p-3">
-                        <p className="font-medium text-[#406A56] text-sm truncate">{memory.title}</p>
-                        <p className="text-xs text-[#406A56]/50">
+                        <p className="font-medium text-[#2D5A3D] text-sm truncate">{memory.title}</p>
+                        <p className="text-xs text-[#2D5A3D]/50">
                           {memory.memory_media?.length || 0} photos
                         </p>
                       </div>
@@ -1853,19 +1853,19 @@ function ArrangeStep({
               initial={{ scale: 0.9, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               exit={{ scale: 0.9, opacity: 0 }}
-              className="bg-[#F2F1E5] rounded-2xl p-6 max-w-4xl w-full max-h-[80vh] overflow-y-auto"
+              className="bg-[#F5F3EE] rounded-2xl p-6 max-w-4xl w-full max-h-[80vh] overflow-y-auto"
               onClick={(e) => e.stopPropagation()}
             >
               <div className="flex items-center justify-between mb-6">
                 <div>
-                  <h3 className="text-xl font-bold text-[#406A56]">Select Photo</h3>
-                  <p className="text-sm text-[#406A56]/60">Choose a photo for this slot</p>
+                  <h3 className="text-xl font-bold text-[#2D5A3D]">Select Photo</h3>
+                  <p className="text-sm text-[#2D5A3D]/60">Choose a photo for this slot</p>
                 </div>
                 <button
                   onClick={() => { setShowPhotoPicker(false); setActiveSlotId(null) }}
-                  className="p-2 hover:bg-[#406A56]/10 rounded-lg"
+                  className="p-2 hover:bg-[#2D5A3D]/10 rounded-lg"
                 >
-                  <X className="w-5 h-5 text-[#406A56]" />
+                  <X className="w-5 h-5 text-[#2D5A3D]" />
                 </button>
               </div>
               
@@ -1887,7 +1887,7 @@ function ArrangeStep({
                       className={`relative aspect-square rounded-xl overflow-hidden transition-all ${
                         isUsed 
                           ? 'opacity-40 cursor-not-allowed' 
-                          : 'hover:ring-2 hover:ring-[#406A56] cursor-pointer'
+                          : 'hover:ring-2 hover:ring-[#2D5A3D] cursor-pointer'
                       }`}
                     >
                       <img
@@ -1909,7 +1909,7 @@ function ArrangeStep({
               </div>
               
               {availablePhotos.length === 0 && (
-                <div className="text-center py-12 text-[#406A56]/50">
+                <div className="text-center py-12 text-[#2D5A3D]/50">
                   <ImageIcon className="w-12 h-12 mx-auto mb-3 opacity-50" />
                   <p>No photos available</p>
                   <p className="text-sm">Select memories with photos in Step 2</p>
@@ -1989,8 +1989,8 @@ function PreviewStep({
   return (
     <div className="max-w-5xl mx-auto">
       <div className="text-center mb-6">
-        <h2 className="text-2xl font-bold text-[#406A56] mb-2">Preview Your Book</h2>
-        <p className="text-[#406A56]/60">
+        <h2 className="text-2xl font-bold text-[#2D5A3D] mb-2">Preview Your Book</h2>
+        <p className="text-[#2D5A3D]/60">
           Spread {currentSpread + 1} of {totalSpreads}
         </p>
       </div>
@@ -2001,7 +2001,7 @@ function PreviewStep({
         <button
           onClick={() => setCurrentSpread(Math.max(0, currentSpread - 1))}
           disabled={currentSpread === 0}
-          className="absolute left-0 top-1/2 -translate-y-1/2 -translate-x-12 p-3 bg-[#406A56] text-white rounded-full disabled:opacity-30 disabled:cursor-not-allowed hover:bg-[#4a7a64] transition-colors z-10"
+          className="absolute left-0 top-1/2 -translate-y-1/2 -translate-x-12 p-3 bg-[#2D5A3D] text-white rounded-full disabled:opacity-30 disabled:cursor-not-allowed hover:bg-[#234A31] transition-colors z-10"
         >
           <ChevronLeft className="w-6 h-6" />
         </button>
@@ -2009,7 +2009,7 @@ function PreviewStep({
         <button
           onClick={() => setCurrentSpread(Math.min(totalSpreads - 1, currentSpread + 1))}
           disabled={currentSpread === totalSpreads - 1}
-          className="absolute right-0 top-1/2 -translate-y-1/2 translate-x-12 p-3 bg-[#406A56] text-white rounded-full disabled:opacity-30 disabled:cursor-not-allowed hover:bg-[#4a7a64] transition-colors z-10"
+          className="absolute right-0 top-1/2 -translate-y-1/2 translate-x-12 p-3 bg-[#2D5A3D] text-white rounded-full disabled:opacity-30 disabled:cursor-not-allowed hover:bg-[#234A31] transition-colors z-10"
         >
           <ChevronRight className="w-6 h-6" />
         </button>
@@ -2026,14 +2026,14 @@ function PreviewStep({
             {leftPage ? (
               <PagePreview page={leftPage} />
             ) : (
-              <div className="w-full h-full flex items-center justify-center text-[#406A56]/30">
+              <div className="w-full h-full flex items-center justify-center text-[#2D5A3D]/30">
                 <BookOpen className="w-12 h-12" />
               </div>
             )}
           </motion.div>
           
           {/* Spine */}
-          <div className="w-2 bg-gradient-to-r from-[#406A56]/20 to-[#406A56]/10" />
+          <div className="w-2 bg-gradient-to-r from-[#2D5A3D]/20 to-[#2D5A3D]/10" />
           
           {/* Right Page */}
           <motion.div
@@ -2045,7 +2045,7 @@ function PreviewStep({
             {rightPage ? (
               <PagePreview page={rightPage} />
             ) : (
-              <div className="w-full h-full flex items-center justify-center text-[#406A56]/30">
+              <div className="w-full h-full flex items-center justify-center text-[#2D5A3D]/30">
                 {pages.length % 2 === 1 ? (
                   <span className="text-sm">Back Cover</span>
                 ) : (
@@ -2064,8 +2064,8 @@ function PreviewStep({
               onClick={() => setCurrentSpread(i)}
               className={`w-2 h-2 rounded-full transition-all ${
                 i === currentSpread 
-                  ? 'w-6 bg-[#406A56]' 
-                  : 'bg-[#406A56]/30 hover:bg-[#406A56]/50'
+                  ? 'w-6 bg-[#2D5A3D]' 
+                  : 'bg-[#2D5A3D]/30 hover:bg-[#2D5A3D]/50'
               }`}
             />
           ))}
@@ -2076,7 +2076,7 @@ function PreviewStep({
       <div className="flex justify-center mt-6">
         <button
           onClick={() => setShowPrintPreview(true)}
-          className="px-6 py-3 bg-[#406A56] text-white rounded-xl hover:bg-[#4a7a64] flex items-center gap-2 shadow-lg"
+          className="px-6 py-3 bg-[#2D5A3D] text-white rounded-xl hover:bg-[#234A31] flex items-center gap-2 shadow-lg"
         >
           <Printer className="w-5 h-5" />
           Print Preview (300 DPI)
@@ -2086,10 +2086,10 @@ function PreviewStep({
       {/* Stats Row - Compact horizontal layout */}
       <div className="flex flex-wrap items-center justify-center gap-4 mt-6">
         {/* Page count */}
-        <div className="flex items-center gap-2 px-4 py-2 bg-white/80 rounded-xl border border-[#406A56]/10">
-          <BookOpen className="w-5 h-5 text-[#406A56]" />
-          <span className="text-sm font-medium text-[#406A56]">{pages.length} pages</span>
-          <span className="text-xs text-[#406A56]/60">• {selectedMemories.length} memories</span>
+        <div className="flex items-center gap-2 px-4 py-2 bg-white/80 rounded-xl border border-[#2D5A3D]/10">
+          <BookOpen className="w-5 h-5 text-[#2D5A3D]" />
+          <span className="text-sm font-medium text-[#2D5A3D]">{pages.length} pages</span>
+          <span className="text-xs text-[#2D5A3D]/60">• {selectedMemories.length} memories</span>
         </div>
         
         {/* Low res warning (compact) */}
@@ -2115,13 +2115,13 @@ function PreviewStep({
               initial={{ scale: 0.9, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               exit={{ scale: 0.9, opacity: 0 }}
-              className="bg-[#F2F1E5] rounded-2xl p-6 max-w-6xl w-full max-h-[90vh] overflow-y-auto"
+              className="bg-[#F5F3EE] rounded-2xl p-6 max-w-6xl w-full max-h-[90vh] overflow-y-auto"
               onClick={(e) => e.stopPropagation()}
             >
               <div className="flex items-center justify-between mb-6">
                 <div>
-                  <h3 className="text-xl font-bold text-[#406A56]">Print Preview</h3>
-                  <p className="text-sm text-[#406A56]/60">
+                  <h3 className="text-xl font-bold text-[#2D5A3D]">Print Preview</h3>
+                  <p className="text-sm text-[#2D5A3D]/60">
                     Actual print size: {getPrintDimensions().width}×{getPrintDimensions().height}" at 300 DPI
                     ({getPrintDimensions().pixelWidth}×{getPrintDimensions().pixelHeight}px)
                   </p>
@@ -2129,16 +2129,16 @@ function PreviewStep({
                 <div className="flex items-center gap-2">
                   <button
                     onClick={() => window.print()}
-                    className="px-4 py-2 bg-[#406A56] text-white rounded-lg hover:bg-[#4a7a64] flex items-center gap-2"
+                    className="px-4 py-2 bg-[#2D5A3D] text-white rounded-lg hover:bg-[#234A31] flex items-center gap-2"
                   >
                     <Printer className="w-4 h-4" />
                     Print
                   </button>
                   <button
                     onClick={() => setShowPrintPreview(false)}
-                    className="p-2 hover:bg-[#406A56]/10 rounded-lg"
+                    className="p-2 hover:bg-[#2D5A3D]/10 rounded-lg"
                   >
-                    <X className="w-5 h-5 text-[#406A56]" />
+                    <X className="w-5 h-5 text-[#2D5A3D]" />
                   </button>
                 </div>
               </div>
@@ -2153,8 +2153,8 @@ function PreviewStep({
                     <div className="aspect-square relative">
                       <PagePreview page={page} printSize={getPrintDimensions().pixelWidth} />
                     </div>
-                    <div className="p-2 bg-[#406A56]/5 text-center">
-                      <span className="text-xs font-medium text-[#406A56]">Page {page.pageNumber}</span>
+                    <div className="p-2 bg-[#2D5A3D]/5 text-center">
+                      <span className="text-xs font-medium text-[#2D5A3D]">Page {page.pageNumber}</span>
                     </div>
                   </div>
                 ))}
@@ -2196,7 +2196,7 @@ function PagePreview({ page, printSize }: { page: PageData; printSize?: number }
 
   if (!template) {
     return (
-      <div className="w-full h-full flex items-center justify-center text-[#406A56]/30">
+      <div className="w-full h-full flex items-center justify-center text-[#2D5A3D]/30">
         <span className="text-sm">Unknown layout</span>
       </div>
     )
@@ -2291,7 +2291,7 @@ function PagePreview({ page, printSize }: { page: PageData; printSize?: number }
                   className="w-16 h-16"
                 />
               ) : (
-                <QrCode className="w-12 h-12 text-[#406A56]/30" />
+                <QrCode className="w-12 h-12 text-[#2D5A3D]/30" />
               )}
             </div>
           )
@@ -2335,78 +2335,78 @@ function CheckoutStep({
   return (
     <div className="max-w-4xl mx-auto">
       <div className="text-center mb-8">
-        <h2 className="text-2xl font-bold text-[#406A56] mb-2">Complete Your Order</h2>
-        <p className="text-[#406A56]/60">Enter your shipping details to receive your photobook</p>
+        <h2 className="text-2xl font-bold text-[#2D5A3D] mb-2">Complete Your Order</h2>
+        <p className="text-[#2D5A3D]/60">Enter your shipping details to receive your photobook</p>
       </div>
       
       <div className="grid grid-cols-1 lg:grid-cols-5 gap-8">
         {/* Shipping Form */}
         <div className="lg:col-span-3">
           <GlassCard variant="warm" padding="lg">
-            <h3 className="text-lg font-semibold text-[#406A56] mb-6">Shipping Address</h3>
+            <h3 className="text-lg font-semibold text-[#2D5A3D] mb-6">Shipping Address</h3>
             
             <div className="space-y-4">
               <div>
-                <label className="block text-sm font-medium text-[#406A56]/80 mb-1">
+                <label className="block text-sm font-medium text-[#2D5A3D]/80 mb-1">
                   Full Name *
                 </label>
                 <input
                   type="text"
                   value={address.name}
                   onChange={(e) => setAddress({ ...address, name: e.target.value })}
-                  className="w-full px-4 py-3 bg-white border border-[#406A56]/20 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#406A56]/30 text-[#406A56]"
+                  className="w-full px-4 py-3 bg-white border border-[#2D5A3D]/20 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#2D5A3D]/30 text-[#2D5A3D]"
                   placeholder="John Doe"
                 />
               </div>
               
               <div>
-                <label className="block text-sm font-medium text-[#406A56]/80 mb-1">
+                <label className="block text-sm font-medium text-[#2D5A3D]/80 mb-1">
                   Address Line 1 *
                 </label>
                 <input
                   type="text"
                   value={address.line1}
                   onChange={(e) => setAddress({ ...address, line1: e.target.value })}
-                  className="w-full px-4 py-3 bg-white border border-[#406A56]/20 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#406A56]/30 text-[#406A56]"
+                  className="w-full px-4 py-3 bg-white border border-[#2D5A3D]/20 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#2D5A3D]/30 text-[#2D5A3D]"
                   placeholder="123 Main Street"
                 />
               </div>
               
               <div>
-                <label className="block text-sm font-medium text-[#406A56]/80 mb-1">
+                <label className="block text-sm font-medium text-[#2D5A3D]/80 mb-1">
                   Address Line 2
                 </label>
                 <input
                   type="text"
                   value={address.line2 || ''}
                   onChange={(e) => setAddress({ ...address, line2: e.target.value })}
-                  className="w-full px-4 py-3 bg-white border border-[#406A56]/20 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#406A56]/30 text-[#406A56]"
+                  className="w-full px-4 py-3 bg-white border border-[#2D5A3D]/20 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#2D5A3D]/30 text-[#2D5A3D]"
                   placeholder="Apt 4B (optional)"
                 />
               </div>
               
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-[#406A56]/80 mb-1">
+                  <label className="block text-sm font-medium text-[#2D5A3D]/80 mb-1">
                     City *
                   </label>
                   <input
                     type="text"
                     value={address.city}
                     onChange={(e) => setAddress({ ...address, city: e.target.value })}
-                    className="w-full px-4 py-3 bg-white border border-[#406A56]/20 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#406A56]/30 text-[#406A56]"
+                    className="w-full px-4 py-3 bg-white border border-[#2D5A3D]/20 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#2D5A3D]/30 text-[#2D5A3D]"
                     placeholder="New York"
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-[#406A56]/80 mb-1">
+                  <label className="block text-sm font-medium text-[#2D5A3D]/80 mb-1">
                     State/Province
                   </label>
                   <input
                     type="text"
                     value={address.state}
                     onChange={(e) => setAddress({ ...address, state: e.target.value })}
-                    className="w-full px-4 py-3 bg-white border border-[#406A56]/20 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#406A56]/30 text-[#406A56]"
+                    className="w-full px-4 py-3 bg-white border border-[#2D5A3D]/20 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#2D5A3D]/30 text-[#2D5A3D]"
                     placeholder="NY"
                   />
                 </div>
@@ -2414,25 +2414,25 @@ function CheckoutStep({
               
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-[#406A56]/80 mb-1">
+                  <label className="block text-sm font-medium text-[#2D5A3D]/80 mb-1">
                     Postal Code *
                   </label>
                   <input
                     type="text"
                     value={address.postalCode}
                     onChange={(e) => setAddress({ ...address, postalCode: e.target.value })}
-                    className="w-full px-4 py-3 bg-white border border-[#406A56]/20 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#406A56]/30 text-[#406A56]"
+                    className="w-full px-4 py-3 bg-white border border-[#2D5A3D]/20 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#2D5A3D]/30 text-[#2D5A3D]"
                     placeholder="10001"
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-[#406A56]/80 mb-1">
+                  <label className="block text-sm font-medium text-[#2D5A3D]/80 mb-1">
                     Country *
                   </label>
                   <select
                     value={address.country}
                     onChange={(e) => setAddress({ ...address, country: e.target.value })}
-                    className="w-full px-4 py-3 bg-white border border-[#406A56]/20 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#406A56]/30 text-[#406A56]"
+                    className="w-full px-4 py-3 bg-white border border-[#2D5A3D]/20 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#2D5A3D]/30 text-[#2D5A3D]"
                   >
                     <option value="">Select country</option>
                     <option value="US">United States</option>
@@ -2451,37 +2451,37 @@ function CheckoutStep({
         {/* Order Summary */}
         <div className="lg:col-span-2">
           <GlassCard variant="warm" padding="lg" className="sticky top-24">
-            <h3 className="text-lg font-semibold text-[#406A56] mb-6">Order Summary</h3>
+            <h3 className="text-lg font-semibold text-[#2D5A3D] mb-6">Order Summary</h3>
             
             <div className="space-y-4">
               {/* Product */}
-              <div className="flex items-center gap-4 pb-4 border-b border-[#406A56]/10">
-                <div className="w-16 h-16 rounded-xl bg-[#406A56]/10 flex items-center justify-center text-[#406A56]">
+              <div className="flex items-center gap-4 pb-4 border-b border-[#2D5A3D]/10">
+                <div className="w-16 h-16 rounded-xl bg-[#2D5A3D]/10 flex items-center justify-center text-[#2D5A3D]">
                   {product.icon}
                 </div>
                 <div className="flex-1">
-                  <p className="font-medium text-[#406A56]">{product.name}</p>
-                  <p className="text-sm text-[#406A56]/60">{pageCount} pages</p>
+                  <p className="font-medium text-[#2D5A3D]">{product.name}</p>
+                  <p className="text-sm text-[#2D5A3D]/60">{pageCount} pages</p>
                 </div>
               </div>
               
               {/* Price breakdown */}
               <div className="space-y-2 text-sm">
-                <div className="flex justify-between text-[#406A56]/70">
+                <div className="flex justify-between text-[#2D5A3D]/70">
                   <span>Base price ({product.minPages} pages)</span>
                   <span>${(basePrice * 1.3).toFixed(2)}</span>
                 </div>
                 {additionalPages > 0 && (
-                  <div className="flex justify-between text-[#406A56]/70">
+                  <div className="flex justify-between text-[#2D5A3D]/70">
                     <span>Additional pages ({additionalPages})</span>
                     <span>${(additionalCost * 1.3).toFixed(2)}</span>
                   </div>
                 )}
-                <div className="flex justify-between text-[#406A56]/70">
+                <div className="flex justify-between text-[#2D5A3D]/70">
                   <span>Shipping</span>
                   <span>${shipping.toFixed(2)}</span>
                 </div>
-                <div className="flex justify-between pt-4 border-t border-[#406A56]/10 text-lg font-bold text-[#406A56]">
+                <div className="flex justify-between pt-4 border-t border-[#2D5A3D]/10 text-lg font-bold text-[#2D5A3D]">
                   <span>Total</span>
                   <span>${finalTotal.toFixed(2)}</span>
                 </div>
@@ -2491,7 +2491,7 @@ function CheckoutStep({
               <button
                 onClick={onSubmit}
                 disabled={!isAddressComplete || isSubmitting}
-                className="w-full py-4 bg-gradient-to-r from-[#406A56] to-[#4a7a64] text-white font-semibold rounded-xl hover:from-[#4a7a64] hover:to-[#5a8a74] disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 mt-6"
+                className="w-full py-4 bg-gradient-to-r from-[#2D5A3D] to-[#234A31] text-white font-semibold rounded-xl hover:from-[#234A31] hover:to-[#5a8a74] disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 mt-6"
               >
                 {isSubmitting ? (
                   <>
@@ -2506,7 +2506,7 @@ function CheckoutStep({
                 )}
               </button>
               
-              <p className="text-xs text-center text-[#406A56]/50 mt-4">
+              <p className="text-xs text-center text-[#2D5A3D]/50 mt-4">
                 Secure payment powered by Stripe
               </p>
             </div>
@@ -3010,17 +3010,17 @@ export default function CreatePhotobookPage() {
   return (
     <div className="min-h-screen pb-24 pt-14">
       {/* Header */}
-      <div className="sticky top-14 z-40 bg-[#E8E4D6]/95 backdrop-blur-sm border-b border-[#406A56]/10">
+      <div className="sticky top-14 z-40 bg-[#E8E4D6]/95 backdrop-blur-sm border-b border-[#2D5A3D]/10">
         <div className="max-w-7xl mx-auto px-4 py-4">
           <div className="flex items-center justify-between mb-4">
             <button
               onClick={() => router.push('/dashboard')}
-              className="flex items-center gap-2 text-[#406A56]/70 hover:text-[#406A56]"
+              className="flex items-center gap-2 text-[#2D5A3D]/70 hover:text-[#2D5A3D]"
             >
               <ArrowLeft className="w-5 h-5" />
               <span>Back to Dashboard</span>
             </button>
-            <h1 className="text-xl font-bold text-[#406A56]">Create Photobook</h1>
+            <h1 className="text-xl font-bold text-[#2D5A3D]">Create Photobook</h1>
             <div className="w-32" /> {/* Spacer */}
           </div>
           
@@ -3039,14 +3039,14 @@ export default function CreatePhotobookPage() {
                   disabled={!isClickable && index > currentStep}
                   className={`flex items-center gap-2 px-4 py-2 rounded-xl transition-all ${
                     isActive 
-                      ? 'bg-[#406A56] text-white' 
+                      ? 'bg-[#2D5A3D] text-white' 
                       : isComplete 
-                        ? 'bg-[#406A56]/10 text-[#406A56]' 
-                        : 'text-[#406A56]/40'
+                        ? 'bg-[#2D5A3D]/10 text-[#2D5A3D]' 
+                        : 'text-[#2D5A3D]/40'
                   } ${isClickable ? 'cursor-pointer hover:opacity-80' : 'cursor-not-allowed'}`}
                 >
                   <div className={`w-8 h-8 rounded-full flex items-center justify-center ${
-                    isComplete ? 'bg-[#406A56] text-white' : ''
+                    isComplete ? 'bg-[#2D5A3D] text-white' : ''
                   }`}>
                     {isComplete ? (
                       <Check className="w-4 h-4" />
@@ -3119,12 +3119,12 @@ export default function CreatePhotobookPage() {
       
       {/* Bottom Navigation */}
       {currentStep < 3 && (
-        <div className="fixed bottom-0 left-0 right-0 bg-[#E8E4D6]/95 backdrop-blur-sm border-t border-[#406A56]/10 p-4">
+        <div className="fixed bottom-0 left-0 right-0 bg-[#E8E4D6]/95 backdrop-blur-sm border-t border-[#2D5A3D]/10 p-4">
           <div className="max-w-7xl mx-auto flex items-center justify-between">
             <button
               onClick={() => goToStep(currentStep - 1)}
               disabled={currentStep === 0}
-              className="px-6 py-3 text-[#406A56] hover:bg-[#406A56]/10 rounded-xl disabled:opacity-30 disabled:cursor-not-allowed flex items-center gap-2"
+              className="px-6 py-3 text-[#2D5A3D] hover:bg-[#2D5A3D]/10 rounded-xl disabled:opacity-30 disabled:cursor-not-allowed flex items-center gap-2"
             >
               <ChevronLeft className="w-5 h-5" />
               Back
@@ -3133,7 +3133,7 @@ export default function CreatePhotobookPage() {
             <button
               onClick={() => goToStep(currentStep + 1)}
               disabled={!canProceed()}
-              className="px-8 py-3 bg-gradient-to-r from-[#406A56] to-[#4a7a64] text-white font-semibold rounded-xl hover:from-[#4a7a64] hover:to-[#5a8a74] disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+              className="px-8 py-3 bg-gradient-to-r from-[#2D5A3D] to-[#234A31] text-white font-semibold rounded-xl hover:from-[#234A31] hover:to-[#5a8a74] disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
             >
               {currentStep === 2 ? 'Proceed to Checkout' : 'Continue'}
               <ChevronRight className="w-5 h-5" />

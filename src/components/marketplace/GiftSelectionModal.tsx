@@ -159,7 +159,7 @@ export default function GiftSelectionModal({
         <div className="flex items-center justify-between p-5 border-b border-white/40 bg-white/50">
           <div>
             <h3 className="font-playfair text-xl font-semibold text-[#2d2d2d] flex items-center gap-2">
-              <Gift size={22} className="text-[#406A56]" />
+              <Gift size={22} className="text-[#2D5A3D]" />
               {title}
             </h3>
             {context && (
@@ -171,7 +171,7 @@ export default function GiftSelectionModal({
                   <span className="ml-1 text-gray-400">• {context.relationship}</span>
                 )}
                 {priceRange && (
-                  <span className="ml-2 text-[#406A56] font-medium">
+                  <span className="ml-2 text-[#2D5A3D] font-medium">
                     • ${priceRange.min}-${priceRange.max}
                   </span>
                 )}
@@ -180,14 +180,14 @@ export default function GiftSelectionModal({
           </div>
           <button
             onClick={onClose}
-            className="p-2 hover:bg-[#406A56]/10 rounded-full transition-colors"
+            className="p-2 hover:bg-[#2D5A3D]/10 rounded-full transition-colors"
           >
             <X size={20} />
           </button>
         </div>
 
         {/* Search and filters */}
-        <div className="p-4 space-y-4 bg-white/30 border-b border-[#406A56]/10">
+        <div className="p-4 space-y-4 bg-white/30 border-b border-[#2D5A3D]/10">
           {/* Search bar */}
           <div className="relative">
             <Search size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" />
@@ -196,7 +196,7 @@ export default function GiftSelectionModal({
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               aria-label="Search" placeholder="Search gifts..."
-              className="w-full pl-11 pr-4 py-3 bg-white border border-gray-200 rounded-xl text-sm focus:outline-none focus:border-[#406A56] transition-colors"
+              className="w-full pl-11 pr-4 py-3 bg-white border border-gray-200 rounded-xl text-sm focus:outline-none focus:border-[#2D5A3D] transition-colors"
             />
           </div>
 
@@ -216,7 +216,7 @@ export default function GiftSelectionModal({
               onClick={() => setSelectedCategory(undefined)}
               className={`px-3 py-1.5 rounded-full text-sm whitespace-nowrap transition-colors ${
                 !selectedCategory
-                  ? 'bg-[#406A56] text-white'
+                  ? 'bg-[#2D5A3D] text-white'
                   : 'bg-white text-gray-600 hover:bg-gray-100'
               }`}
             >
@@ -228,7 +228,7 @@ export default function GiftSelectionModal({
                 onClick={() => setSelectedCategory(cat.id)}
                 className={`px-3 py-1.5 rounded-full text-sm whitespace-nowrap transition-colors ${
                   selectedCategory === cat.id
-                    ? 'bg-[#406A56] text-white'
+                    ? 'bg-[#2D5A3D] text-white'
                     : 'bg-white text-gray-600 hover:bg-gray-100'
                 }`}
               >
@@ -238,7 +238,7 @@ export default function GiftSelectionModal({
             <button
               onClick={() => setShowFilters(!showFilters)}
               className={`p-2 rounded-lg transition-colors ml-auto flex-shrink-0 ${
-                showFilters ? 'bg-[#406A56] text-white' : 'bg-white text-gray-600 hover:bg-gray-100'
+                showFilters ? 'bg-[#2D5A3D] text-white' : 'bg-white text-gray-600 hover:bg-gray-100'
               }`}
             >
               <SlidersHorizontal size={18} />
@@ -265,7 +265,7 @@ export default function GiftSelectionModal({
                           onClick={() => handlePriceRangeSelect(range)}
                           className={`px-3 py-1.5 rounded-full text-sm transition-colors ${
                             priceRange?.min === range.min && priceRange?.max === range.max
-                              ? 'bg-[#406A56] text-white'
+                              ? 'bg-[#2D5A3D] text-white'
                               : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
                           }`}
                         >
@@ -285,7 +285,7 @@ export default function GiftSelectionModal({
                         value={customPriceMin}
                         onChange={(e) => setCustomPriceMin(e.target.value)}
                         placeholder="Min"
-                        className="w-20 px-2 py-1 border border-gray-200 rounded-lg text-sm focus:outline-none focus:border-[#406A56]"
+                        className="w-20 px-2 py-1 border border-gray-200 rounded-lg text-sm focus:outline-none focus:border-[#2D5A3D]"
                       />
                       <span className="text-gray-400">-</span>
                       <span className="text-gray-500">$</span>
@@ -294,11 +294,11 @@ export default function GiftSelectionModal({
                         value={customPriceMax}
                         onChange={(e) => setCustomPriceMax(e.target.value)}
                         placeholder="Max"
-                        className="w-20 px-2 py-1 border border-gray-200 rounded-lg text-sm focus:outline-none focus:border-[#406A56]"
+                        className="w-20 px-2 py-1 border border-gray-200 rounded-lg text-sm focus:outline-none focus:border-[#2D5A3D]"
                       />
                       <button
                         onClick={handleCustomPriceApply}
-                        className="px-3 py-1 bg-[#406A56] text-white rounded-lg text-sm hover:bg-[#365c4a] transition-colors"
+                        className="px-3 py-1 bg-[#2D5A3D] text-white rounded-lg text-sm hover:bg-[#365c4a] transition-colors"
                       >
                         Apply
                       </button>
@@ -313,25 +313,25 @@ export default function GiftSelectionModal({
           {hasActiveFilters && (
             <div className="flex items-center gap-2 flex-wrap">
               {activeProvider !== 'all' && (
-                <span className="inline-flex items-center gap-1 px-2 py-1 bg-[#406A56]/10 text-[#406A56] rounded-full text-xs">
+                <span className="inline-flex items-center gap-1 px-2 py-1 bg-[#2D5A3D]/10 text-[#2D5A3D] rounded-full text-xs">
                   {activeProvider.charAt(0).toUpperCase() + activeProvider.slice(1)}
-                  <button onClick={() => setActiveProvider('all')} className="hover:text-[#C35F33]">
+                  <button onClick={() => setActiveProvider('all')} className="hover:text-[#B8562E]">
                     <X size={12} />
                   </button>
                 </span>
               )}
               {selectedCategory && (
-                <span className="inline-flex items-center gap-1 px-2 py-1 bg-[#406A56]/10 text-[#406A56] rounded-full text-xs">
+                <span className="inline-flex items-center gap-1 px-2 py-1 bg-[#2D5A3D]/10 text-[#2D5A3D] rounded-full text-xs">
                   {categories.find(c => c.id === selectedCategory)?.name || selectedCategory}
-                  <button onClick={() => setSelectedCategory(undefined)} className="hover:text-[#C35F33]">
+                  <button onClick={() => setSelectedCategory(undefined)} className="hover:text-[#B8562E]">
                     <X size={12} />
                   </button>
                 </span>
               )}
               {priceRange && (
-                <span className="inline-flex items-center gap-1 px-2 py-1 bg-[#406A56]/10 text-[#406A56] rounded-full text-xs">
+                <span className="inline-flex items-center gap-1 px-2 py-1 bg-[#2D5A3D]/10 text-[#2D5A3D] rounded-full text-xs">
                   ${priceRange.min}-${priceRange.max}
-                  <button onClick={() => setPriceRange(undefined)} className="hover:text-[#C35F33]">
+                  <button onClick={() => setPriceRange(undefined)} className="hover:text-[#B8562E]">
                     <X size={12} />
                   </button>
                 </span>
@@ -339,14 +339,14 @@ export default function GiftSelectionModal({
               {searchQuery && (
                 <span className="inline-flex items-center gap-1 px-2 py-1 bg-gray-100 text-gray-600 rounded-full text-xs">
                   &quot;{searchQuery}&quot;
-                  <button onClick={() => setSearchQuery('')} className="hover:text-[#C35F33]">
+                  <button onClick={() => setSearchQuery('')} className="hover:text-[#B8562E]">
                     <X size={12} />
                   </button>
                 </span>
               )}
               <button
                 onClick={clearFilters}
-                className="text-xs text-gray-500 hover:text-[#406A56] underline"
+                className="text-xs text-gray-500 hover:text-[#2D5A3D] underline"
               >
                 Clear all
               </button>
@@ -372,14 +372,14 @@ export default function GiftSelectionModal({
           {/* AI Recommendations section */}
           {context?.eventType && !searchQuery && !selectedCategory && activeProvider === 'all' && (
             <section>
-              <h4 className="font-handwritten text-lg text-[#406A56] mb-3 flex items-center gap-2">
+              <h4 className="font-handwritten text-lg text-[#2D5A3D] mb-3 flex items-center gap-2">
                 <Sparkles size={16} />
                 {isLoadingSuggestions ? 'Finding perfect gifts...' : 'Recommended for this occasion'}
               </h4>
               
               {isLoadingSuggestions ? (
                 <div className="flex items-center justify-center py-8">
-                  <Loader2 size={24} className="animate-spin text-[#406A56]" />
+                  <Loader2 size={24} className="animate-spin text-[#2D5A3D]" />
                 </div>
               ) : aiSuggestions.length > 0 ? (
                 <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
@@ -387,7 +387,7 @@ export default function GiftSelectionModal({
                     <motion.div
                       key={product.id}
                       onClick={() => handleSelectProduct(product)}
-                      className={`cursor-pointer ${selectedProduct?.id === product.id ? 'ring-2 ring-[#406A56] rounded-2xl' : ''}`}
+                      className={`cursor-pointer ${selectedProduct?.id === product.id ? 'ring-2 ring-[#2D5A3D] rounded-2xl' : ''}`}
                       whileHover={{ y: -2 }}
                       whileTap={{ scale: 0.98 }}
                     >
@@ -398,7 +398,7 @@ export default function GiftSelectionModal({
                         isFavorite={favorites.includes(product.id)}
                       />
                       {product.suggestionReason && (
-                        <p className="text-xs text-[#406A56] mt-1 text-center font-handwritten">
+                        <p className="text-xs text-[#2D5A3D] mt-1 text-center font-handwritten">
                           {product.suggestionReason}
                         </p>
                       )}
@@ -414,7 +414,7 @@ export default function GiftSelectionModal({
           {/* All products */}
           <section>
             <div className="flex items-center justify-between mb-3">
-              <h4 className="font-handwritten text-lg text-[#406A56]">
+              <h4 className="font-handwritten text-lg text-[#2D5A3D]">
                 {searchQuery ? 'Search Results' : 'All Gifts'}
               </h4>
               <span className="text-xs text-gray-500">
@@ -424,7 +424,7 @@ export default function GiftSelectionModal({
             
             {isLoadingProducts && filteredProducts.length === 0 ? (
               <div className="flex items-center justify-center py-12">
-                <Loader2 size={32} className="animate-spin text-[#406A56]" />
+                <Loader2 size={32} className="animate-spin text-[#2D5A3D]" />
               </div>
             ) : filteredProducts.length === 0 ? (
               <div className="text-center py-12">
@@ -434,7 +434,7 @@ export default function GiftSelectionModal({
                 {hasActiveFilters && (
                   <button
                     onClick={clearFilters}
-                    className="mt-4 px-4 py-2 bg-[#406A56] text-white rounded-lg text-sm hover:bg-[#365c4a] transition-colors"
+                    className="mt-4 px-4 py-2 bg-[#2D5A3D] text-white rounded-lg text-sm hover:bg-[#365c4a] transition-colors"
                   >
                     Clear all filters
                   </button>
@@ -447,7 +447,7 @@ export default function GiftSelectionModal({
                     <motion.div
                       key={product.id}
                       onClick={() => handleSelectProduct(product)}
-                      className={`cursor-pointer ${selectedProduct?.id === product.id ? 'ring-2 ring-[#406A56] rounded-2xl' : ''}`}
+                      className={`cursor-pointer ${selectedProduct?.id === product.id ? 'ring-2 ring-[#2D5A3D] rounded-2xl' : ''}`}
                       whileHover={{ y: -2 }}
                       whileTap={{ scale: 0.98 }}
                     >
@@ -467,7 +467,7 @@ export default function GiftSelectionModal({
                     <button
                       onClick={loadMore}
                       disabled={isLoadingProducts}
-                      className="px-6 py-2 border border-[#406A56] text-[#406A56] rounded-full text-sm hover:bg-[#406A56] hover:text-white transition-colors disabled:opacity-50"
+                      className="px-6 py-2 border border-[#2D5A3D] text-[#2D5A3D] rounded-full text-sm hover:bg-[#2D5A3D] hover:text-white transition-colors disabled:opacity-50"
                     >
                       {isLoadingProducts ? (
                         <span className="flex items-center gap-2">
@@ -492,7 +492,7 @@ export default function GiftSelectionModal({
               initial={{ y: 100, opacity: 0 }}
               animate={{ y: 0, opacity: 1 }}
               exit={{ y: 100, opacity: 0 }}
-              className="p-4 bg-white border-t border-[#406A56]/10"
+              className="p-4 bg-white border-t border-[#2D5A3D]/10"
             >
               <div className="flex items-center gap-4">
                 <div className="w-16 h-16 rounded-lg overflow-hidden bg-gray-100 flex-shrink-0">
@@ -507,7 +507,7 @@ export default function GiftSelectionModal({
                   <h4 className="font-playfair font-semibold text-[#2d2d2d] truncate">
                     {selectedProduct.name}
                   </h4>
-                  <p className="text-[#406A56] font-bold">${selectedProduct.price.toFixed(2)}</p>
+                  <p className="text-[#2D5A3D] font-bold">${selectedProduct.price.toFixed(2)}</p>
                   <p className="text-xs text-gray-500 capitalize">
                     {selectedProduct.provider}
                   </p>
@@ -521,7 +521,7 @@ export default function GiftSelectionModal({
                   </button>
                   <motion.button
                     onClick={handleConfirmSelection}
-                    className="flex items-center gap-2 px-6 py-2 bg-[#406A56] text-white rounded-xl font-medium"
+                    className="flex items-center gap-2 px-6 py-2 bg-[#2D5A3D] text-white rounded-xl font-medium"
                     whileTap={{ scale: 0.98 }}
                   >
                     <Check size={16} />
@@ -556,7 +556,7 @@ export function InlineGiftSelector({
 
   if (selectedGift) {
     return (
-      <div className="flex items-center gap-3 p-3 bg-[#406A56]/10 rounded-xl border border-[#406A56]/20">
+      <div className="flex items-center gap-3 p-3 bg-[#2D5A3D]/10 rounded-xl border border-[#2D5A3D]/20">
         <div className="w-14 h-14 rounded-lg overflow-hidden bg-white flex-shrink-0">
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
@@ -566,15 +566,15 @@ export function InlineGiftSelector({
           />
         </div>
         <div className="flex-1 min-w-0">
-          <p className="font-handwritten text-[#406A56] text-sm">Attached Gift</p>
+          <p className="font-handwritten text-[#2D5A3D] text-sm">Attached Gift</p>
           <h4 className="font-playfair font-semibold text-[#2d2d2d] truncate text-sm">
             {selectedGift.name}
           </h4>
-          <p className="text-[#406A56] font-bold text-sm">${selectedGift.price.toFixed(2)}</p>
+          <p className="text-[#2D5A3D] font-bold text-sm">${selectedGift.price.toFixed(2)}</p>
         </div>
         <button
           onClick={onRemoveGift}
-          className="p-2 text-gray-400 hover:text-[#C35F33] transition-colors"
+          className="p-2 text-gray-400 hover:text-[#B8562E] transition-colors"
         >
           <X size={18} />
         </button>
@@ -586,9 +586,9 @@ export function InlineGiftSelector({
     <>
       <button
         onClick={() => setIsModalOpen(true)}
-        className="w-full flex items-center gap-3 p-4 border-2 border-dashed border-[#406A56]/30 rounded-xl text-[#406A56] hover:bg-[#406A56]/5 hover:border-[#406A56]/50 transition-all"
+        className="w-full flex items-center gap-3 p-4 border-2 border-dashed border-[#2D5A3D]/30 rounded-xl text-[#2D5A3D] hover:bg-[#2D5A3D]/5 hover:border-[#2D5A3D]/50 transition-all"
       >
-        <div className="w-10 h-10 rounded-full bg-[#406A56]/10 flex items-center justify-center">
+        <div className="w-10 h-10 rounded-full bg-[#2D5A3D]/10 flex items-center justify-center">
           <Gift size={20} />
         </div>
         <div className="text-left">

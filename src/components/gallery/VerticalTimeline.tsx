@@ -75,7 +75,7 @@ export default function VerticalTimeline({
       
       {/* Progress indicator - moves with current photo index */}
       <motion.div 
-        className="absolute right-[-4px] w-[9px] h-[9px] rounded-full bg-[#D9C61A] z-10"
+        className="absolute right-[-4px] w-[9px] h-[9px] rounded-full bg-[#C4A235] z-10"
         style={{ boxShadow: '0 0 10px rgba(217, 198, 26, 0.5)' }}
         animate={{ top: `${progressPosition}%` }}
         transition={{ type: 'spring', stiffness: 300, damping: 30 }}
@@ -94,13 +94,13 @@ export default function VerticalTimeline({
           >
             <span className={`
               text-xs font-medium transition-all whitespace-nowrap
-              ${isActive ? 'text-[#D9C61A] font-bold' : 'text-white/40 group-hover:text-white/70'}
+              ${isActive ? 'text-[#C4A235] font-bold' : 'text-white/40 group-hover:text-white/70'}
             `}>
               {data.year}
             </span>
             <div className={`
               w-2 h-px transition-all
-              ${isActive ? 'bg-[#D9C61A] w-3' : 'bg-white/30 group-hover:bg-white/50'}
+              ${isActive ? 'bg-[#C4A235] w-3' : 'bg-white/30 group-hover:bg-white/50'}
             `} />
           </button>
         )

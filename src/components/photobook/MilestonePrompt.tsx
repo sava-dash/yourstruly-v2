@@ -110,11 +110,11 @@ export default function MilestonePrompt({ memoryCount, userId }: MilestonePrompt
 
   return (
     <div className="fixed bottom-6 right-6 z-50 animate-in slide-in-from-bottom-4 fade-in duration-300">
-      <div className="glass-card-page p-5 max-w-sm shadow-xl border border-[#D9C61A]/30">
+      <div className="glass-card-page p-5 max-w-sm shadow-xl border border-[#C4A235]/30">
         {/* Close button */}
         <button
           onClick={handleDismiss}
-          className="absolute top-3 right-3 p-1 rounded-lg text-[#406A56]/50 hover:text-[#406A56] hover:bg-[#406A56]/10 transition-all"
+          className="absolute top-3 right-3 p-1 rounded-lg text-[#2D5A3D]/50 hover:text-[#2D5A3D] hover:bg-[#2D5A3D]/10 transition-all"
           aria-label="Dismiss"
         >
           <X size={18} />
@@ -122,10 +122,10 @@ export default function MilestonePrompt({ memoryCount, userId }: MilestonePrompt
 
         {/* Icon */}
         <div className="flex items-center gap-3 mb-3">
-          <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-[#D9C61A] to-[#C35F33] flex items-center justify-center">
+          <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-[#C4A235] to-[#B8562E] flex items-center justify-center">
             <span className="text-2xl">📚</span>
           </div>
-          <div className="flex items-center gap-1 text-[#D9C61A]">
+          <div className="flex items-center gap-1 text-[#C4A235]">
             <Sparkles size={16} />
             <span className="text-sm font-medium">Milestone!</span>
           </div>
@@ -135,7 +135,7 @@ export default function MilestonePrompt({ memoryCount, userId }: MilestonePrompt
         <h3 className="text-lg font-semibold text-[#2d2d2d] mb-1">
           You have {memoryCount} memories!
         </h3>
-        <p className="text-sm text-[#406A56]/70 mb-4">
+        <p className="text-sm text-[#2D5A3D]/70 mb-4">
           That&apos;s a beautiful collection. Turn them into a printed photo book you can hold forever.
         </p>
 
@@ -143,7 +143,7 @@ export default function MilestonePrompt({ memoryCount, userId }: MilestonePrompt
         <div className="flex items-center gap-2">
           <Link
             href="/dashboard/photobook/create?source=memories"
-            className="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 bg-gradient-to-r from-[#C35F33] to-[#D9C61A] text-white rounded-xl font-medium hover:opacity-90 transition-all"
+            className="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 bg-gradient-to-r from-[#B8562E] to-[#C4A235] text-white rounded-xl font-medium hover:opacity-90 transition-all"
           >
             <BookOpen size={18} />
             Create Book
@@ -154,7 +154,7 @@ export default function MilestonePrompt({ memoryCount, userId }: MilestonePrompt
         {/* Don't show again */}
         <button
           onClick={handleNeverShow}
-          className="w-full mt-2 text-xs text-[#406A56]/50 hover:text-[#406A56] transition-colors"
+          className="w-full mt-2 text-xs text-[#2D5A3D]/50 hover:text-[#2D5A3D] transition-colors"
         >
           Don&apos;t remind me again
         </button>

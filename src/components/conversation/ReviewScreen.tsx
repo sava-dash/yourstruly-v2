@@ -299,7 +299,7 @@ export function ReviewScreen({
       {/* Tag People Section */}
       <div className="review-tag-people">
         <div className="review-section-header">
-          <Users size={16} className="text-[#406A56]" />
+          <Users size={16} className="text-[#2D5A3D]" />
           <span>Tag People</span>
         </div>
         <p className="review-section-hint">Tag contacts who appear in this memory</p>
@@ -410,7 +410,7 @@ export function ReviewScreen({
       {/* Optional Photo Upload */}
       <div className="review-photos">
         <div className="review-section-header">
-          <Image size={16} className="text-[#406A56]" />
+          <Image size={16} className="text-[#2D5A3D]" />
           <span>Add Photos (Optional)</span>
         </div>
         <p className="review-section-hint">Add up to 5 photos to accompany this memory</p>

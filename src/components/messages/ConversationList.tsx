@@ -48,11 +48,11 @@ export default function ConversationList({
   return (
     <div className="h-full flex flex-col">
       {/* Header */}
-      <div className="p-4 border-b border-[#406A56]/10 flex-shrink-0">
+      <div className="p-4 border-b border-[#2D5A3D]/10 flex-shrink-0">
         <div className="flex items-center justify-between mb-4">
           <h2 className="text-lg font-bold text-[#2d2d2d]">Messages</h2>
           {unreadCount > 0 && (
-            <span className="px-2.5 py-1 rounded-full bg-[#C35F33]/15 text-[#C35F33] text-xs font-semibold">
+            <span className="px-2.5 py-1 rounded-full bg-[#B8562E]/15 text-[#B8562E] text-xs font-semibold">
               {unreadCount} new
             </span>
           )}
@@ -62,20 +62,20 @@ export default function ConversationList({
         <div className="relative">
           <Search 
             size={16} 
-            className="absolute left-3 top-1/2 -translate-y-1/2 text-[#406A56]/50" 
+            className="absolute left-3 top-1/2 -translate-y-1/2 text-[#2D5A3D]/50" 
           />
           <input
             type="text"
             aria-label="Search" placeholder="Search conversations..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full pl-9 pr-4 py-2.5 bg-[#406A56]/5 border border-[#406A56]/10 rounded-xl text-sm text-[#2d2d2d] placeholder:text-[#999] focus:outline-none focus:border-[#406A56]/30 focus:bg-white transition-all"
+            className="w-full pl-9 pr-4 py-2.5 bg-[#2D5A3D]/5 border border-[#2D5A3D]/10 rounded-xl text-sm text-[#2d2d2d] placeholder:text-[#999] focus:outline-none focus:border-[#2D5A3D]/30 focus:bg-white transition-all"
           />
         </div>
       </div>
 
       {/* Filter Tabs */}
-      <div className="px-4 py-3 border-b border-[#406A56]/10 flex-shrink-0">
+      <div className="px-4 py-3 border-b border-[#2D5A3D]/10 flex-shrink-0">
         <div className="flex gap-2 overflow-x-auto scrollbar-hide">
           {filters.map(({ id, label, icon: Icon }) => (
             <button
@@ -83,8 +83,8 @@ export default function ConversationList({
               onClick={() => setFilter(id)}
               className={`flex items-center gap-1.5 px-4 py-2 text-xs font-medium transition-all rounded-full ${
                 filter === id
-                  ? 'bg-[#406A56] text-white'
-                  : 'bg-[#F8F6EE] text-[#666] hover:bg-white hover:text-[#406A56] border border-[#406A56]/10'
+                  ? 'bg-[#2D5A3D] text-white'
+                  : 'bg-[#F8F6EE] text-[#666] hover:bg-white hover:text-[#2D5A3D] border border-[#2D5A3D]/10'
               }`}
             >
               <Icon size={13} />
@@ -98,8 +98,8 @@ export default function ConversationList({
       <div className="flex-1 overflow-y-auto p-2 min-h-0">
         {filteredConversations.length === 0 ? (
           <div className="flex flex-col items-center justify-center h-40 text-center px-4">
-            <div className="w-12 h-12 rounded-full bg-[#406A56]/10 flex items-center justify-center mb-3">
-              <MessageSquare size={20} className="text-[#406A56]/50" />
+            <div className="w-12 h-12 rounded-full bg-[#2D5A3D]/10 flex items-center justify-center mb-3">
+              <MessageSquare size={20} className="text-[#2D5A3D]/50" />
             </div>
             <p className="text-sm text-[#666]">
               {searchQuery ? 'No conversations found' : 'No conversations yet'}

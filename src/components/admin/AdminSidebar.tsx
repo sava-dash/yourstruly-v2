@@ -77,15 +77,15 @@ export default function AdminSidebar({ admin }: AdminSidebarProps) {
 
       <div className="relative z-10 flex flex-col h-full">
         {/* Logo */}
-        <div className="p-6 border-b border-[#C35F33]/10">
+        <div className="p-6 border-b border-[#B8562E]/10">
           <Link href="/admin" className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[#406A56] to-[#4A3552] flex items-center justify-center shadow-lg flex-shrink-0">
+            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[#2D5A3D] to-[#4A3552] flex items-center justify-center shadow-lg flex-shrink-0">
               <Crown className="w-5 h-5 text-white" />
             </div>
             {!collapsed && (
               <div className="flex flex-col">
                 <span className="font-semibold text-[#2a1f1a] leading-tight">YoursTruly</span>
-                <span className="text-xs text-[#C35F33] font-medium">Admin Portal</span>
+                <span className="text-xs text-[#B8562E] font-medium">Admin Portal</span>
               </div>
             )}
           </Link>
@@ -103,20 +103,20 @@ export default function AdminSidebar({ admin }: AdminSidebarProps) {
                 href={item.href}
                 className={`flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all duration-200 group ${
                   active
-                    ? 'bg-[#406A56]/10 text-[#406A56]'
+                    ? 'bg-[#2D5A3D]/10 text-[#2D5A3D]'
                     : 'text-[#2a1f1a]/70 hover:bg-white/50 hover:text-[#2a1f1a]'
                 }`}
               >
                 <div className={`p-1.5 rounded-lg transition-colors ${
-                  active ? 'bg-[#406A56]/20' : 'bg-transparent group-hover:bg-white/50'
+                  active ? 'bg-[#2D5A3D]/20' : 'bg-transparent group-hover:bg-white/50'
                 }`}>
-                  <Icon className={`w-5 h-5 ${active ? 'text-[#406A56]' : 'text-[#2a1f1a]/60'}`} />
+                  <Icon className={`w-5 h-5 ${active ? 'text-[#2D5A3D]' : 'text-[#2a1f1a]/60'}`} />
                 </div>
                 {!collapsed && (
                   <span className="font-medium text-sm">{item.label}</span>
                 )}
                 {!collapsed && item.badge && (
-                  <span className="ml-auto bg-[#C35F33] text-white text-xs font-bold px-2 py-0.5 rounded-full">
+                  <span className="ml-auto bg-[#B8562E] text-white text-xs font-bold px-2 py-0.5 rounded-full">
                     {item.badge}
                   </span>
                 )}
@@ -126,9 +126,9 @@ export default function AdminSidebar({ admin }: AdminSidebarProps) {
         </nav>
 
         {/* User section */}
-        <div className="p-4 border-t border-[#C35F33]/10">
+        <div className="p-4 border-t border-[#B8562E]/10">
           <div className={`flex items-center gap-3 ${collapsed ? 'justify-center' : ''}`}>
-            <div className="w-10 h-10 rounded-full bg-gradient-to-br from-[#C35F33] to-[#406A56] flex items-center justify-center text-white font-medium flex-shrink-0">
+            <div className="w-10 h-10 rounded-full bg-gradient-to-br from-[#B8562E] to-[#2D5A3D] flex items-center justify-center text-white font-medium flex-shrink-0">
               {admin.email?.charAt(0).toUpperCase() || 'A'}
             </div>
             {!collapsed && (
@@ -136,7 +136,7 @@ export default function AdminSidebar({ admin }: AdminSidebarProps) {
                 <p className="text-sm font-medium text-[#2a1f1a] truncate">
                   {admin.email}
                 </p>
-                <p className="text-xs text-[#C35F33] capitalize">
+                <p className="text-xs text-[#B8562E] capitalize">
                   {admin.role.replace('_', ' ')}
                 </p>
               </div>
@@ -145,7 +145,7 @@ export default function AdminSidebar({ admin }: AdminSidebarProps) {
               <form action="/admin/api/auth/logout" method="POST">
                 <button
                   type="submit"
-                  className="p-2 rounded-lg hover:bg-white/50 text-[#2a1f1a]/50 hover:text-[#C35F33] transition-colors"
+                  className="p-2 rounded-lg hover:bg-white/50 text-[#2a1f1a]/50 hover:text-[#B8562E] transition-colors"
                   title="Logout"
                 >
                   <LogOut className="w-4 h-4" />
@@ -159,7 +159,7 @@ export default function AdminSidebar({ admin }: AdminSidebarProps) {
       {/* Collapse toggle */}
       <button
         onClick={() => setCollapsed(!collapsed)}
-        className="absolute -right-3 top-24 w-6 h-6 rounded-full bg-white border border-[#C35F33]/20 shadow-md flex items-center justify-center text-[#2a1f1a]/50 hover:text-[#406A56] transition-colors z-20"
+        className="absolute -right-3 top-24 w-6 h-6 rounded-full bg-white border border-[#B8562E]/20 shadow-md flex items-center justify-center text-[#2a1f1a]/50 hover:text-[#2D5A3D] transition-colors z-20"
       >
         {collapsed ? (
           <ChevronRight className="w-3 h-3" />

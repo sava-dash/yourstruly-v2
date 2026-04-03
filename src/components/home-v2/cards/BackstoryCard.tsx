@@ -176,12 +176,12 @@ export function BackstoryCard({ promptText, category, data, onSave, saved }: Bac
     <div className="h-full flex flex-col">
       {/* Header */}
       <div className="flex items-center justify-between px-5 pt-4 pb-2">
-        <h3 className="text-xs font-semibold uppercase tracking-wider text-[#5C6D64] flex items-center gap-1.5">
+        <h3 className="text-xs font-semibold uppercase tracking-wider text-[#5A6660] flex items-center gap-1.5">
           <Sparkles size={12} /> {category === 'photo' ? 'Tell the Story' : 'Your Story'}
         </h3>
         <button
           onClick={() => setIsMuted(!isMuted)}
-          className="p-1.5 rounded-lg hover:bg-[#E8F0EC] transition-colors text-[#94A39C]"
+          className="p-1.5 rounded-lg hover:bg-[#E6F0EA] transition-colors text-[#94A09A]"
         >
           {isMuted ? <VolumeX size={14} /> : <Volume2 size={14} />}
         </button>
@@ -193,8 +193,8 @@ export function BackstoryCard({ promptText, category, data, onSave, saved }: Bac
           <div key={i} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
             <div className={`max-w-[85%] px-3.5 py-2.5 rounded-2xl text-sm leading-relaxed ${
               msg.role === 'user'
-                ? 'bg-[#E8F0EC] text-[#1A2B23] rounded-br-md'
-                : 'bg-[#FAF8F4] text-[#5C6D64] rounded-bl-md'
+                ? 'bg-[#E6F0EA] text-[#1A1F1C] rounded-br-md'
+                : 'bg-[#FAFAF7] text-[#5A6660] rounded-bl-md'
             }`}>
               {msg.content}
             </div>
@@ -202,11 +202,11 @@ export function BackstoryCard({ promptText, category, data, onSave, saved }: Bac
         ))}
         {isSending && (
           <div className="flex justify-start">
-            <div className="bg-[#FAF8F4] px-4 py-3 rounded-2xl rounded-bl-md">
+            <div className="bg-[#FAFAF7] px-4 py-3 rounded-2xl rounded-bl-md">
               <div className="flex gap-1">
-                <span className="w-2 h-2 bg-[#94A39C] rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
-                <span className="w-2 h-2 bg-[#94A39C] rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
-                <span className="w-2 h-2 bg-[#94A39C] rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
+                <span className="w-2 h-2 bg-[#94A09A] rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
+                <span className="w-2 h-2 bg-[#94A09A] rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
+                <span className="w-2 h-2 bg-[#94A09A] rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
               </div>
             </div>
           </div>
@@ -216,10 +216,10 @@ export function BackstoryCard({ promptText, category, data, onSave, saved }: Bac
 
       {/* Input area */}
       {!saved ? (
-        <div className="px-4 pb-4 pt-2 border-t border-[#DDE5E0]">
+        <div className="px-4 pb-4 pt-2 border-t border-[#DDE3DF]">
           {/* Live transcript preview */}
           {liveTranscript && (
-            <p className="text-xs text-[#94A39C] italic mb-1 px-1">{liveTranscript}</p>
+            <p className="text-xs text-[#94A09A] italic mb-1 px-1">{liveTranscript}</p>
           )}
 
           <div className="flex items-end gap-2">
@@ -227,7 +227,7 @@ export function BackstoryCard({ promptText, category, data, onSave, saved }: Bac
             <button
               onClick={isRecording ? stopRecording : startRecording}
               className={`w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0 transition-colors ${
-                isRecording ? 'bg-[#B8562E] text-white animate-pulse' : 'bg-[#F5F3EE] text-[#5C6D64] hover:bg-[#E6F0EA]'
+                isRecording ? 'bg-[#B8562E] text-white animate-pulse' : 'bg-[#F5F3EE] text-[#5A6660] hover:bg-[#E6F0EA]'
               }`}
             >
               {isRecording ? <Square size={14} fill="white" /> : <Mic size={16} />}
@@ -241,7 +241,7 @@ export function BackstoryCard({ promptText, category, data, onSave, saved }: Bac
               onKeyDown={(e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleSend() } }}
               placeholder="Type your response..."
               rows={1}
-              className="flex-1 px-3 py-2.5 bg-[#FAF8F4] rounded-xl border border-[#DDE5E0] text-[#1A2B23] text-sm focus:outline-none focus:ring-1 focus:ring-[#3D6B52]/30 placeholder-[#94A39C] resize-none"
+              className="flex-1 px-3 py-2.5 bg-[#FAFAF7] rounded-xl border border-[#DDE3DF] text-[#1A1F1C] text-sm focus:outline-none focus:ring-1 focus:ring-[#3D6B52]/30 placeholder-[#94A09A] resize-none"
               style={{ maxHeight: '80px' }}
             />
 

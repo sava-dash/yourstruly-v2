@@ -46,19 +46,19 @@ interface ActivityFeedModalProps {
 }
 
 const ACTIVITY_ICONS: Record<string, { icon: typeof Heart; color: string; bg: string }> = {
-  memory_shared: { icon: ImageIcon, color: 'text-[#C35F33]', bg: 'bg-[#C35F33]/10' },
+  memory_shared: { icon: ImageIcon, color: 'text-[#B8562E]', bg: 'bg-[#B8562E]/10' },
   wisdom_shared: { icon: BookOpen, color: 'text-[#4A3552]', bg: 'bg-[#4A3552]/10' },
-  circle_message: { icon: MessageCircle, color: 'text-[#406A56]', bg: 'bg-[#406A56]/10' },
+  circle_message: { icon: MessageCircle, color: 'text-[#2D5A3D]', bg: 'bg-[#2D5A3D]/10' },
   circle_invite: { icon: Users, color: 'text-[#8DACAB]', bg: 'bg-[#8DACAB]/15' },
-  circle_content: { icon: Heart, color: 'text-[#C35F33]', bg: 'bg-[#C35F33]/10' },
+  circle_content: { icon: Heart, color: 'text-[#B8562E]', bg: 'bg-[#B8562E]/10' },
   wisdom_comment: { icon: MessageCircle, color: 'text-[#4A3552]', bg: 'bg-[#4A3552]/10' },
-  xp_earned: { icon: Sparkles, color: 'text-[#406A56]', bg: 'bg-[#406A56]/10' },
-  photo_backstory: { icon: Camera, color: 'text-[#D9C61A]', bg: 'bg-[#D9C61A]/15' },
-  knowledge: { icon: Brain, color: 'text-[#C35F33]', bg: 'bg-[#C35F33]/10' },
-  memory_created: { icon: Plus, color: 'text-[#C35F33]', bg: 'bg-[#C35F33]/10' },
+  xp_earned: { icon: Sparkles, color: 'text-[#2D5A3D]', bg: 'bg-[#2D5A3D]/10' },
+  photo_backstory: { icon: Camera, color: 'text-[#C4A235]', bg: 'bg-[#C4A235]/15' },
+  knowledge: { icon: Brain, color: 'text-[#B8562E]', bg: 'bg-[#B8562E]/10' },
+  memory_created: { icon: Plus, color: 'text-[#B8562E]', bg: 'bg-[#B8562E]/10' },
   wisdom_created: { icon: Plus, color: 'text-[#4A3552]', bg: 'bg-[#4A3552]/10' },
-  contact_added: { icon: UserPlus, color: 'text-[#406A56]', bg: 'bg-[#406A56]/10' },
-  photos_uploaded: { icon: Camera, color: 'text-[#D9C61A]', bg: 'bg-[#D9C61A]/15' },
+  contact_added: { icon: UserPlus, color: 'text-[#2D5A3D]', bg: 'bg-[#2D5A3D]/10' },
+  photos_uploaded: { icon: Camera, color: 'text-[#C4A235]', bg: 'bg-[#C4A235]/15' },
 }
 
 function ActivityCard({ activity }: { activity: ActivityItem }) {
@@ -159,13 +159,13 @@ function ActivityCard({ activity }: { activity: ActivityItem }) {
         
         <button
           onClick={() => setShowComments(!showComments)}
-          className="flex items-center gap-1.5 text-sm text-gray-500 hover:text-[#406A56] transition-colors"
+          className="flex items-center gap-1.5 text-sm text-gray-500 hover:text-[#2D5A3D] transition-colors"
         >
           <MessageCircle size={18} />
           <span>Comment</span>
         </button>
         
-        <button className="flex items-center gap-1.5 text-sm text-gray-500 hover:text-[#D9C61A] transition-colors">
+        <button className="flex items-center gap-1.5 text-sm text-gray-500 hover:text-[#C4A235] transition-colors">
           <Smile size={18} />
           <span>React</span>
         </button>
@@ -188,12 +188,12 @@ function ActivityCard({ activity }: { activity: ActivityItem }) {
                   onChange={(e) => setComment(e.target.value)}
                   onKeyDown={(e) => e.key === 'Enter' && handleAddComment()}
                   placeholder="Write a comment..."
-                  className="flex-1 px-4 py-2 rounded-full bg-white border border-gray-200 focus:border-[#406A56] focus:outline-none text-sm"
+                  className="flex-1 px-4 py-2 rounded-full bg-white border border-gray-200 focus:border-[#2D5A3D] focus:outline-none text-sm"
                 />
                 <button
                   onClick={handleAddComment}
                   disabled={!comment.trim()}
-                  className="p-2 rounded-full bg-[#406A56] text-white hover:bg-[#2d4d3d] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="p-2 rounded-full bg-[#2D5A3D] text-white hover:bg-[#2d4d3d] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   <Send size={16} />
                 </button>
@@ -241,7 +241,7 @@ export default function ActivityFeedModal({ isOpen, onClose, initialActivities }
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
-      className="fixed inset-0 z-50 bg-[#FDF8F3]"
+      className="fixed inset-0 z-50 bg-[#FAFAF7]"
     >
       {/* Header */}
       <div className="sticky top-0 z-10 bg-white/90 backdrop-blur-md border-b border-gray-200 px-4 py-3">
@@ -265,13 +265,13 @@ export default function ActivityFeedModal({ isOpen, onClose, initialActivities }
                 animate={{ rotate: 360 }}
                 transition={{ duration: 1.5, repeat: Infinity, ease: 'linear' }}
               >
-                <Sparkles size={32} className="text-[#D9C61A]" />
+                <Sparkles size={32} className="text-[#C4A235]" />
               </motion.div>
             </div>
           ) : activities.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-12 gap-2">
-              <div className="w-16 h-16 rounded-full bg-[#406A56]/5 flex items-center justify-center">
-                <Sparkles size={24} className="text-[#406A56]/40" />
+              <div className="w-16 h-16 rounded-full bg-[#2D5A3D]/5 flex items-center justify-center">
+                <Sparkles size={24} className="text-[#2D5A3D]/40" />
               </div>
               <p className="text-gray-500">No activity yet</p>
               <p className="text-sm text-gray-400">Start creating memories and wisdom!</p>

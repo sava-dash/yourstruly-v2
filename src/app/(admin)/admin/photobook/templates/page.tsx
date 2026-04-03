@@ -228,7 +228,7 @@ export default function TemplatesPage() {
         <div className="flex items-center gap-4">
           <Link
             href="/admin/photobook"
-            className="p-2 rounded-lg hover:bg-white/50 text-[#2a1f1a]/50 hover:text-[#406A56] transition-colors"
+            className="p-2 rounded-lg hover:bg-white/50 text-[#2a1f1a]/50 hover:text-[#2D5A3D] transition-colors"
           >
             <ArrowLeft className="w-5 h-5" />
           </Link>
@@ -239,7 +239,7 @@ export default function TemplatesPage() {
         </div>
         <button
           onClick={startNew}
-          className="flex items-center gap-2 px-4 py-2 bg-[#406A56] text-white rounded-xl hover:bg-[#4A7A66] transition-colors"
+          className="flex items-center gap-2 px-4 py-2 bg-[#2D5A3D] text-white rounded-xl hover:bg-[#4A7A66] transition-colors"
         >
           <Plus className="w-4 h-4" />
           Add Template
@@ -252,7 +252,7 @@ export default function TemplatesPage() {
           onClick={() => setActiveCategory(null)}
           className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
             activeCategory === null
-              ? 'bg-[#406A56] text-white'
+              ? 'bg-[#2D5A3D] text-white'
               : 'bg-white/50 text-[#2a1f1a]/70 hover:bg-white/80'
           }`}
         >
@@ -264,7 +264,7 @@ export default function TemplatesPage() {
             onClick={() => setActiveCategory(cat.value)}
             className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
               activeCategory === cat.value
-                ? 'bg-[#406A56] text-white'
+                ? 'bg-[#2D5A3D] text-white'
                 : 'bg-white/50 text-[#2a1f1a]/70 hover:bg-white/80'
             }`}
           >
@@ -287,7 +287,7 @@ export default function TemplatesPage() {
                 type="text"
                 value={formData.template_id}
                 onChange={(e) => setFormData({ ...formData, template_id: e.target.value })}
-                className="w-full px-3 py-2 rounded-lg border border-[#C35F33]/20 bg-white/50 focus:outline-none focus:ring-2 focus:ring-[#406A56]/50"
+                className="w-full px-3 py-2 rounded-lg border border-[#B8562E]/20 bg-white/50 focus:outline-none focus:ring-2 focus:ring-[#2D5A3D]/50"
                 placeholder="e.g., full-photo"
               />
             </div>
@@ -298,7 +298,7 @@ export default function TemplatesPage() {
                 type="text"
                 value={formData.name}
                 onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                className="w-full px-3 py-2 rounded-lg border border-[#C35F33]/20 bg-white/50 focus:outline-none focus:ring-2 focus:ring-[#406A56]/50"
+                className="w-full px-3 py-2 rounded-lg border border-[#B8562E]/20 bg-white/50 focus:outline-none focus:ring-2 focus:ring-[#2D5A3D]/50"
                 placeholder="e.g., Full Photo"
               />
             </div>
@@ -309,7 +309,7 @@ export default function TemplatesPage() {
                 type="text"
                 value={formData.description || ''}
                 onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                className="w-full px-3 py-2 rounded-lg border border-[#C35F33]/20 bg-white/50 focus:outline-none focus:ring-2 focus:ring-[#406A56]/50"
+                className="w-full px-3 py-2 rounded-lg border border-[#B8562E]/20 bg-white/50 focus:outline-none focus:ring-2 focus:ring-[#2D5A3D]/50"
                 placeholder="Brief description"
               />
             </div>
@@ -319,7 +319,7 @@ export default function TemplatesPage() {
               <select
                 value={formData.category}
                 onChange={(e) => setFormData({ ...formData, category: e.target.value as 'single' | 'multi' | 'special' })}
-                className="w-full px-3 py-2 rounded-lg border border-[#C35F33]/20 bg-white/50 focus:outline-none focus:ring-2 focus:ring-[#406A56]/50"
+                className="w-full px-3 py-2 rounded-lg border border-[#B8562E]/20 bg-white/50 focus:outline-none focus:ring-2 focus:ring-[#2D5A3D]/50"
               >
                 {CATEGORIES.map((c) => (
                   <option key={c.value} value={c.value}>{c.label}</option>
@@ -333,7 +333,7 @@ export default function TemplatesPage() {
                 type="text"
                 value={formData.background || ''}
                 onChange={(e) => setFormData({ ...formData, background: e.target.value })}
-                className="w-full px-3 py-2 rounded-lg border border-[#C35F33]/20 bg-white/50 focus:outline-none focus:ring-2 focus:ring-[#406A56]/50"
+                className="w-full px-3 py-2 rounded-lg border border-[#B8562E]/20 bg-white/50 focus:outline-none focus:ring-2 focus:ring-[#2D5A3D]/50"
                 placeholder="#ffffff or linear-gradient(...)"
               />
             </div>
@@ -345,7 +345,7 @@ export default function TemplatesPage() {
                 min="0"
                 value={formData.min_photos}
                 onChange={(e) => setFormData({ ...formData, min_photos: parseInt(e.target.value) || 0 })}
-                className="w-full px-3 py-2 rounded-lg border border-[#C35F33]/20 bg-white/50 focus:outline-none focus:ring-2 focus:ring-[#406A56]/50"
+                className="w-full px-3 py-2 rounded-lg border border-[#B8562E]/20 bg-white/50 focus:outline-none focus:ring-2 focus:ring-[#2D5A3D]/50"
               />
             </div>
             
@@ -356,7 +356,7 @@ export default function TemplatesPage() {
                 min="0"
                 value={formData.max_photos}
                 onChange={(e) => setFormData({ ...formData, max_photos: parseInt(e.target.value) || 0 })}
-                className="w-full px-3 py-2 rounded-lg border border-[#C35F33]/20 bg-white/50 focus:outline-none focus:ring-2 focus:ring-[#406A56]/50"
+                className="w-full px-3 py-2 rounded-lg border border-[#B8562E]/20 bg-white/50 focus:outline-none focus:ring-2 focus:ring-[#2D5A3D]/50"
               />
             </div>
             
@@ -367,7 +367,7 @@ export default function TemplatesPage() {
                 min="0"
                 value={formData.sort_order}
                 onChange={(e) => setFormData({ ...formData, sort_order: parseInt(e.target.value) || 0 })}
-                className="w-full px-3 py-2 rounded-lg border border-[#C35F33]/20 bg-white/50 focus:outline-none focus:ring-2 focus:ring-[#406A56]/50"
+                className="w-full px-3 py-2 rounded-lg border border-[#B8562E]/20 bg-white/50 focus:outline-none focus:ring-2 focus:ring-[#2D5A3D]/50"
               />
             </div>
             
@@ -377,7 +377,7 @@ export default function TemplatesPage() {
                 id="is_enabled"
                 checked={formData.is_enabled}
                 onChange={(e) => setFormData({ ...formData, is_enabled: e.target.checked })}
-                className="w-4 h-4 rounded border-[#C35F33]/20 text-[#406A56] focus:ring-[#406A56]/50"
+                className="w-4 h-4 rounded border-[#B8562E]/20 text-[#2D5A3D] focus:ring-[#2D5A3D]/50"
               />
               <label htmlFor="is_enabled" className="text-sm font-medium text-[#2a1f1a]/70">
                 Enabled
@@ -393,13 +393,13 @@ export default function TemplatesPage() {
                 value={slotsJson}
                 onChange={(e) => setSlotsJson(e.target.value)}
                 rows={10}
-                className="w-full px-3 py-2 rounded-lg border border-[#C35F33]/20 bg-white/50 focus:outline-none focus:ring-2 focus:ring-[#406A56]/50 font-mono text-sm"
+                className="w-full px-3 py-2 rounded-lg border border-[#B8562E]/20 bg-white/50 focus:outline-none focus:ring-2 focus:ring-[#2D5A3D]/50 font-mono text-sm"
                 placeholder='[{"id":"photo-1","type":"photo","position":{"x":0,"y":0,"width":100,"height":100},"required":true}]'
               />
             </div>
           </div>
           
-          <div className="flex justify-end gap-3 mt-6 pt-4 border-t border-[#C35F33]/10">
+          <div className="flex justify-end gap-3 mt-6 pt-4 border-t border-[#B8562E]/10">
             <button
               onClick={cancelEdit}
               className="px-4 py-2 text-[#2a1f1a]/70 hover:text-[#2a1f1a] transition-colors"
@@ -409,7 +409,7 @@ export default function TemplatesPage() {
             <button
               onClick={handleSave}
               disabled={saving || !formData.template_id || !formData.name}
-              className="flex items-center gap-2 px-4 py-2 bg-[#406A56] text-white rounded-xl hover:bg-[#4A7A66] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              className="flex items-center gap-2 px-4 py-2 bg-[#2D5A3D] text-white rounded-xl hover:bg-[#4A7A66] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
               Save
@@ -422,16 +422,16 @@ export default function TemplatesPage() {
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
         {loading ? (
           <div className="col-span-full p-12 text-center">
-            <Loader2 className="w-8 h-8 mx-auto animate-spin text-[#406A56]" />
+            <Loader2 className="w-8 h-8 mx-auto animate-spin text-[#2D5A3D]" />
             <p className="text-[#2a1f1a]/60 mt-2">Loading templates...</p>
           </div>
         ) : filteredTemplates.length === 0 ? (
           <div className="col-span-full p-12 text-center glass">
-            <Layout className="w-12 h-12 mx-auto text-[#C35F33]/30" />
+            <Layout className="w-12 h-12 mx-auto text-[#B8562E]/30" />
             <p className="text-[#2a1f1a]/60 mt-4">No templates yet</p>
             <button
               onClick={startNew}
-              className="mt-4 text-[#406A56] hover:underline"
+              className="mt-4 text-[#2D5A3D] hover:underline"
             >
               Add your first template
             </button>
@@ -444,7 +444,7 @@ export default function TemplatesPage() {
             >
               {/* Preview */}
               <div 
-                className="aspect-square rounded-lg mb-4 relative overflow-hidden border border-[#C35F33]/10"
+                className="aspect-square rounded-lg mb-4 relative overflow-hidden border border-[#B8562E]/10"
                 style={{ background: template.background || '#ffffff' }}
               >
                 {/* Render slot preview boxes */}
@@ -457,7 +457,7 @@ export default function TemplatesPage() {
                       top: `${slot.position.y}%`,
                       width: `${slot.position.width}%`,
                       height: `${slot.position.height}%`,
-                      borderColor: slot.type === 'photo' ? '#406A56' : slot.type === 'text' ? '#C35F33' : '#4A3552',
+                      borderColor: slot.type === 'photo' ? '#2D5A3D' : slot.type === 'text' ? '#B8562E' : '#4A3552',
                       backgroundColor: slot.type === 'photo' ? 'rgba(64, 106, 86, 0.1)' : slot.type === 'text' ? 'rgba(195, 95, 51, 0.1)' : 'rgba(74, 53, 82, 0.1)',
                     }}
                   >
@@ -477,8 +477,8 @@ export default function TemplatesPage() {
                   </p>
                 </div>
                 <span className={`px-2 py-0.5 text-xs rounded-full ${
-                  template.category === 'single' ? 'bg-[#406A56]/10 text-[#406A56]' :
-                  template.category === 'multi' ? 'bg-[#C35F33]/10 text-[#C35F33]' :
+                  template.category === 'single' ? 'bg-[#2D5A3D]/10 text-[#2D5A3D]' :
+                  template.category === 'multi' ? 'bg-[#B8562E]/10 text-[#B8562E]' :
                   'bg-[#4A3552]/10 text-[#4A3552]'
                 }`}>
                   {template.category}
@@ -504,15 +504,15 @@ export default function TemplatesPage() {
               </div>
               
               {/* Actions */}
-              <div className="flex items-center justify-between pt-3 border-t border-[#C35F33]/10">
+              <div className="flex items-center justify-between pt-3 border-t border-[#B8562E]/10">
                 <button
                   onClick={() => toggleEnabled(template)}
                   className="flex items-center gap-1 text-sm"
                 >
                   {template.is_enabled ? (
                     <>
-                      <ToggleRight className="w-5 h-5 text-[#406A56]" />
-                      <span className="text-[#406A56]">Enabled</span>
+                      <ToggleRight className="w-5 h-5 text-[#2D5A3D]" />
+                      <span className="text-[#2D5A3D]">Enabled</span>
                     </>
                   ) : (
                     <>
@@ -525,7 +525,7 @@ export default function TemplatesPage() {
                 <div className="flex gap-1">
                   <button
                     onClick={() => startEdit(template)}
-                    className="p-2 rounded-lg hover:bg-white/50 text-[#2a1f1a]/50 hover:text-[#406A56] transition-colors"
+                    className="p-2 rounded-lg hover:bg-white/50 text-[#2a1f1a]/50 hover:text-[#2D5A3D] transition-colors"
                     title="Edit"
                   >
                     <Pencil className="w-4 h-4" />
@@ -533,7 +533,7 @@ export default function TemplatesPage() {
                   
                   <button
                     onClick={() => handleDelete(template.id)}
-                    className="p-2 rounded-lg hover:bg-white/50 text-[#2a1f1a]/50 hover:text-[#C35F33] transition-colors"
+                    className="p-2 rounded-lg hover:bg-white/50 text-[#2a1f1a]/50 hover:text-[#B8562E] transition-colors"
                     title="Delete"
                   >
                     <Trash2 className="w-4 h-4" />

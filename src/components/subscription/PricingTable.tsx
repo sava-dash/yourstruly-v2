@@ -34,12 +34,12 @@ export function PricingTable({ plans, currentPlanId, onSelectPlan, billingPeriod
             key={plan.id}
             className={`relative rounded-2xl p-6 ${
               plan.is_popular 
-                ? 'bg-gradient-to-br from-[#406A56] to-[#4a7a64] text-white ring-2 ring-[#406A56]' 
+                ? 'bg-gradient-to-br from-[#2D5A3D] to-[#234A31] text-white ring-2 ring-[#2D5A3D]' 
                 : 'bg-white border border-gray-200'
             }`}
           >
             {plan.is_popular && (
-              <div className="absolute -top-3 left-1/2 -translate-x-1/2 px-3 py-1 bg-[#D9C61A] text-[#2d2d2d] text-xs font-bold rounded-full">
+              <div className="absolute -top-3 left-1/2 -translate-x-1/2 px-3 py-1 bg-[#C4A235] text-[#2d2d2d] text-xs font-bold rounded-full">
                 Most Popular
               </div>
             )}
@@ -65,7 +65,7 @@ export function PricingTable({ plans, currentPlanId, onSelectPlan, billingPeriod
             <ul className="space-y-3 mb-6">
               {plan.features.map((feature, i) => (
                 <li key={i} className="flex items-start gap-2">
-                  <Check size={16} className={`mt-0.5 flex-shrink-0 ${plan.is_popular ? 'text-white' : 'text-[#406A56]'}`} />
+                  <Check size={16} className={`mt-0.5 flex-shrink-0 ${plan.is_popular ? 'text-white' : 'text-[#2D5A3D]'}`} />
                   <span className={`text-sm ${plan.is_popular ? 'text-white/90' : 'text-gray-700'}`}>
                     {feature.name}: {feature.value}
                   </span>
@@ -80,8 +80,8 @@ export function PricingTable({ plans, currentPlanId, onSelectPlan, billingPeriod
                 isCurrent
                   ? 'bg-gray-200 text-gray-500 cursor-not-allowed'
                   : plan.is_popular
-                    ? 'bg-white text-[#406A56] hover:bg-gray-100'
-                    : 'bg-[#406A56] text-white hover:bg-[#4a7a64]'
+                    ? 'bg-white text-[#2D5A3D] hover:bg-gray-100'
+                    : 'bg-[#2D5A3D] text-white hover:bg-[#234A31]'
               }`}
             >
               {isCurrent ? 'Current Plan' : 'Select Plan'}

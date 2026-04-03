@@ -53,7 +53,7 @@ export function PillSelector({
                 initial={{ opacity: 0, scale: 0.8 }}
                 animate={{ opacity: 1, scale: 1 }}
                 exit={{ opacity: 0, scale: 0.8 }}
-                className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-[#406A56]/15 text-[#406A56] text-sm rounded-full"
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-[#2D5A3D]/15 text-[#2D5A3D] text-sm rounded-full"
               >
                 {item}
                 <button 
@@ -81,9 +81,9 @@ export function PillSelector({
               key={suggestion}
               onClick={() => addItem(suggestion)}
               disabled={selected.length >= maxSelections}
-              className="inline-flex items-center gap-1 px-3 py-1.5 bg-gray-50 hover:bg-[#406A56]/10 
-                         text-gray-600 hover:text-[#406A56] text-sm rounded-full transition-colors
-                         disabled:opacity-50 disabled:cursor-not-allowed border border-gray-200 hover:border-[#406A56]/30"
+              className="inline-flex items-center gap-1 px-3 py-1.5 bg-gray-50 hover:bg-[#2D5A3D]/10 
+                         text-gray-600 hover:text-[#2D5A3D] text-sm rounded-full transition-colors
+                         disabled:opacity-50 disabled:cursor-not-allowed border border-gray-200 hover:border-[#2D5A3D]/30"
             >
               <Plus size={12} />
               {suggestion}
@@ -100,13 +100,13 @@ export function PillSelector({
           onChange={(e) => setCustomInput(e.target.value)}
           onKeyDown={(e) => e.key === 'Enter' && (e.preventDefault(), addCustom())}
           className="flex-1 px-4 py-2.5 bg-white border border-gray-200 rounded-xl text-sm text-[#2d2d2d]
-                     placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#406A56]/20 focus:border-[#406A56]/40"
+                     placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#2D5A3D]/20 focus:border-[#2D5A3D]/40"
           placeholder={placeholder}
         />
         <button 
           onClick={addCustom}
           disabled={!customInput.trim()}
-          className="px-5 py-2.5 bg-[#406A56] hover:bg-[#355a48] text-white text-sm font-medium rounded-xl 
+          className="px-5 py-2.5 bg-[#2D5A3D] hover:bg-[#355a48] text-white text-sm font-medium rounded-xl 
                      transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
         >
           Add

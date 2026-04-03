@@ -90,8 +90,8 @@ export default function CaptionEditor({ mediaId, onXPEarned }: CaptionEditorProp
   if (loading) {
     return (
       <div className="animate-pulse space-y-3">
-        <div className="h-10 bg-[#F2F1E5] rounded-lg" />
-        <div className="h-24 bg-[#F2F1E5] rounded-lg" />
+        <div className="h-10 bg-[#F5F3EE] rounded-lg" />
+        <div className="h-24 bg-[#F5F3EE] rounded-lg" />
       </div>
     )
   }
@@ -108,7 +108,7 @@ export default function CaptionEditor({ mediaId, onXPEarned }: CaptionEditorProp
           value={backstory.caption || ''}
           onChange={(e) => updateField('caption', e.target.value)}
           placeholder="A brief caption for this moment..."
-          className="w-full px-4 py-2.5 bg-white border border-[#406A56]/20 rounded-xl text-[#2d2d2d] placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#406A56]/30 focus:border-[#406A56] transition-all"
+          className="w-full px-4 py-2.5 bg-white border border-[#2D5A3D]/20 rounded-xl text-[#2d2d2d] placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#2D5A3D]/30 focus:border-[#2D5A3D] transition-all"
           maxLength={280}
         />
         <div className="text-xs text-gray-400 text-right mt-1">
@@ -121,7 +121,7 @@ export default function CaptionEditor({ mediaId, onXPEarned }: CaptionEditorProp
         <div className="flex items-center justify-between mb-1">
           <label className="text-sm text-[#2d2d2d] font-medium">The Story Behind It</label>
           {currentXP < 15 && backstory.backstory && backstory.backstory.length > 20 && (
-            <span className="text-xs text-[#D9C61A] flex items-center gap-1">
+            <span className="text-xs text-[#C4A235] flex items-center gap-1">
               <Sparkles size={10} />
               +{15 - currentXP} XP
             </span>
@@ -132,14 +132,14 @@ export default function CaptionEditor({ mediaId, onXPEarned }: CaptionEditorProp
           onChange={(e) => updateField('backstory', e.target.value)}
           placeholder="What was happening? Why does this moment matter? What do you want to remember about it?"
           rows={4}
-          className="w-full px-4 py-3 bg-white border border-[#406A56]/20 rounded-xl text-[#2d2d2d] placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#406A56]/30 focus:border-[#406A56] resize-none transition-all"
+          className="w-full px-4 py-3 bg-white border border-[#2D5A3D]/20 rounded-xl text-[#2d2d2d] placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#2D5A3D]/30 focus:border-[#2D5A3D] resize-none transition-all"
         />
       </div>
 
       {/* Advanced fields toggle */}
       <button
         onClick={() => setShowAdvanced(!showAdvanced)}
-        className="flex items-center gap-2 text-sm text-gray-500 hover:text-[#406A56] transition-colors"
+        className="flex items-center gap-2 text-sm text-gray-500 hover:text-[#2D5A3D] transition-colors"
       >
         {showAdvanced ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
         More details
@@ -164,8 +164,8 @@ export default function CaptionEditor({ mediaId, onXPEarned }: CaptionEditorProp
                     onClick={() => updateField('mood', backstory.mood === mood ? null : mood)}
                     className={`px-3 py-1.5 rounded-full text-sm capitalize transition-colors ${
                       backstory.mood === mood
-                        ? 'bg-[#406A56] text-white'
-                        : 'bg-[#F2F1E5] text-gray-600 hover:text-[#406A56] hover:bg-[#406A56]/10 border border-[#406A56]/10'
+                        ? 'bg-[#2D5A3D] text-white'
+                        : 'bg-[#F5F3EE] text-gray-600 hover:text-[#2D5A3D] hover:bg-[#2D5A3D]/10 border border-[#2D5A3D]/10'
                     }`}
                   >
                     {mood}
@@ -182,7 +182,7 @@ export default function CaptionEditor({ mediaId, onXPEarned }: CaptionEditorProp
                 onChange={(e) => updateField('significance', e.target.value)}
                 placeholder="Why is this moment important to you?"
                 rows={2}
-                className="w-full px-4 py-2.5 bg-white border border-[#406A56]/20 rounded-xl text-[#2d2d2d] placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#406A56]/30 focus:border-[#406A56] resize-none transition-all"
+                className="w-full px-4 py-2.5 bg-white border border-[#2D5A3D]/20 rounded-xl text-[#2d2d2d] placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#2D5A3D]/30 focus:border-[#2D5A3D] resize-none transition-all"
               />
             </div>
           </motion.div>
@@ -193,12 +193,12 @@ export default function CaptionEditor({ mediaId, onXPEarned }: CaptionEditorProp
       <div className="flex items-center justify-between pt-2">
         <div className="text-sm">
           {xpToEarn > 0 ? (
-            <span className="text-[#D9C61A] flex items-center gap-1">
+            <span className="text-[#C4A235] flex items-center gap-1">
               <Sparkles size={14} />
               Save to earn +{xpToEarn} XP
             </span>
           ) : currentXP > 0 ? (
-            <span className="text-[#406A56] flex items-center gap-1">
+            <span className="text-[#2D5A3D] flex items-center gap-1">
               <Check size={14} />
               {currentXP} XP earned
             </span>
@@ -210,7 +210,7 @@ export default function CaptionEditor({ mediaId, onXPEarned }: CaptionEditorProp
           disabled={!hasChanges || saving}
           className={`px-4 py-2 rounded-xl font-medium transition-all ${
             hasChanges
-              ? 'bg-[#406A56] hover:bg-[#4a7a64] text-white shadow-sm'
+              ? 'bg-[#2D5A3D] hover:bg-[#234A31] text-white shadow-sm'
               : 'bg-gray-200 text-gray-400 cursor-not-allowed'
           }`}
         >

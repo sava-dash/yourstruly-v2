@@ -87,7 +87,7 @@ export function EnvelopeMessage({
                 {/* Letterhead */}
                 <div className="flex items-center justify-between mb-4 pb-3 border-b border-gray-200/50">
                   <span className="text-sm text-gray-500 font-handwritten">From {senderName}</span>
-                  <Mail size={16} className="text-[#406A56]" />
+                  <Mail size={16} className="text-[#2D5A3D]" />
                 </div>
 
                 {/* Message with typewriter effect */}

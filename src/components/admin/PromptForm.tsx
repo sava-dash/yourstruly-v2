@@ -138,7 +138,7 @@ export default function PromptForm({ initialData, mode }: PromptFormProps) {
                   onChange={(e) => setFormData({ ...formData, id: e.target.value })}
                   disabled={mode === 'edit'}
                   placeholder="e.g., memory_cooking_001"
-                  className="w-full px-4 py-2 rounded-xl border border-[#C35F33]/20 bg-white/50 focus:outline-none focus:ring-2 focus:ring-[#406A56]/20 text-sm disabled:bg-gray-100"
+                  className="w-full px-4 py-2 rounded-xl border border-[#B8562E]/20 bg-white/50 focus:outline-none focus:ring-2 focus:ring-[#2D5A3D]/20 text-sm disabled:bg-gray-100"
                   required
                 />
                 <p className="text-xs text-[#2a1f1a]/40 mt-1">
@@ -154,7 +154,7 @@ export default function PromptForm({ initialData, mode }: PromptFormProps) {
                 <select
                   value={formData.type}
                   onChange={(e) => setFormData({ ...formData, type: e.target.value })}
-                  className="w-full px-4 py-2 rounded-xl border border-[#C35F33]/20 bg-white/50 focus:outline-none focus:ring-2 focus:ring-[#406A56]/20 text-sm"
+                  className="w-full px-4 py-2 rounded-xl border border-[#B8562E]/20 bg-white/50 focus:outline-none focus:ring-2 focus:ring-[#2D5A3D]/20 text-sm"
                   required
                 >
                   {PROMPT_TYPES.map((type) => (
@@ -174,7 +174,7 @@ export default function PromptForm({ initialData, mode }: PromptFormProps) {
                   <select
                     value={formData.category}
                     onChange={(e) => setFormData({ ...formData, category: e.target.value })}
-                    className="w-full px-4 py-2 rounded-xl border border-[#C35F33]/20 bg-white/50 focus:outline-none focus:ring-2 focus:ring-[#406A56]/20 text-sm"
+                    className="w-full px-4 py-2 rounded-xl border border-[#B8562E]/20 bg-white/50 focus:outline-none focus:ring-2 focus:ring-[#2D5A3D]/20 text-sm"
                   >
                     <option value="">Select a category...</option>
                     {KNOWLEDGE_CATEGORIES.map((cat) => (
@@ -189,7 +189,7 @@ export default function PromptForm({ initialData, mode }: PromptFormProps) {
                     value={formData.category}
                     onChange={(e) => setFormData({ ...formData, category: e.target.value })}
                     placeholder="e.g., cooking, travel"
-                    className="w-full px-4 py-2 rounded-xl border border-[#C35F33]/20 bg-white/50 focus:outline-none focus:ring-2 focus:ring-[#406A56]/20 text-sm"
+                    className="w-full px-4 py-2 rounded-xl border border-[#B8562E]/20 bg-white/50 focus:outline-none focus:ring-2 focus:ring-[#2D5A3D]/20 text-sm"
                   />
                 )}
               </div>
@@ -204,7 +204,7 @@ export default function PromptForm({ initialData, mode }: PromptFormProps) {
                   onChange={(e) => setFormData({ ...formData, prompt_text: e.target.value })}
                   placeholder="What would you like to ask the user?"
                   rows={3}
-                  className="w-full px-4 py-2 rounded-xl border border-[#C35F33]/20 bg-white/50 focus:outline-none focus:ring-2 focus:ring-[#406A56]/20 text-sm resize-none"
+                  className="w-full px-4 py-2 rounded-xl border border-[#B8562E]/20 bg-white/50 focus:outline-none focus:ring-2 focus:ring-[#2D5A3D]/20 text-sm resize-none"
                   required
                 />
               </div>
@@ -221,12 +221,12 @@ export default function PromptForm({ initialData, mode }: PromptFormProps) {
                     onChange={(e) => setNewVariation(e.target.value)}
                     onKeyPress={(e) => e.key === 'Enter' && (e.preventDefault(), addVariation())}
                     placeholder="Add an alternative way to ask this..."
-                    className="flex-1 px-4 py-2 rounded-xl border border-[#C35F33]/20 bg-white/50 focus:outline-none focus:ring-2 focus:ring-[#406A56]/20 text-sm"
+                    className="flex-1 px-4 py-2 rounded-xl border border-[#B8562E]/20 bg-white/50 focus:outline-none focus:ring-2 focus:ring-[#2D5A3D]/20 text-sm"
                   />
                   <button
                     type="button"
                     onClick={addVariation}
-                    className="px-4 py-2 rounded-xl bg-[#406A56]/10 text-[#406A56] hover:bg-[#406A56]/20 transition-colors"
+                    className="px-4 py-2 rounded-xl bg-[#2D5A3D]/10 text-[#2D5A3D] hover:bg-[#2D5A3D]/20 transition-colors"
                   >
                     <Plus className="w-4 h-4" />
                   </button>
@@ -267,7 +267,7 @@ export default function PromptForm({ initialData, mode }: PromptFormProps) {
                 <select
                   value={formData.target_interest}
                   onChange={(e) => setFormData({ ...formData, target_interest: e.target.value })}
-                  className="w-full px-4 py-2 rounded-xl border border-[#C35F33]/20 bg-white/50 focus:outline-none focus:ring-2 focus:ring-[#406A56]/20 text-sm"
+                  className="w-full px-4 py-2 rounded-xl border border-[#B8562E]/20 bg-white/50 focus:outline-none focus:ring-2 focus:ring-[#2D5A3D]/20 text-sm"
                 >
                   <option value="">Any interest</option>
                   {INTERESTS.map((interest) => (
@@ -286,7 +286,7 @@ export default function PromptForm({ initialData, mode }: PromptFormProps) {
                 <select
                   value={formData.target_skill}
                   onChange={(e) => setFormData({ ...formData, target_skill: e.target.value })}
-                  className="w-full px-4 py-2 rounded-xl border border-[#C35F33]/20 bg-white/50 focus:outline-none focus:ring-2 focus:ring-[#406A56]/20 text-sm"
+                  className="w-full px-4 py-2 rounded-xl border border-[#B8562E]/20 bg-white/50 focus:outline-none focus:ring-2 focus:ring-[#2D5A3D]/20 text-sm"
                 >
                   <option value="">Any skill</option>
                   {SKILLS.map((skill) => (
@@ -305,7 +305,7 @@ export default function PromptForm({ initialData, mode }: PromptFormProps) {
                 <select
                   value={formData.target_religion}
                   onChange={(e) => setFormData({ ...formData, target_religion: e.target.value })}
-                  className="w-full px-4 py-2 rounded-xl border border-[#C35F33]/20 bg-white/50 focus:outline-none focus:ring-2 focus:ring-[#406A56]/20 text-sm"
+                  className="w-full px-4 py-2 rounded-xl border border-[#B8562E]/20 bg-white/50 focus:outline-none focus:ring-2 focus:ring-[#2D5A3D]/20 text-sm"
                 >
                   <option value="">Any religion</option>
                   {RELIGIONS.map((religion) => (
@@ -325,7 +325,7 @@ export default function PromptForm({ initialData, mode }: PromptFormProps) {
                   <select
                     value={formData.target_field}
                     onChange={(e) => setFormData({ ...formData, target_field: e.target.value })}
-                    className="w-full px-4 py-2 rounded-xl border border-[#C35F33]/20 bg-white/50 focus:outline-none focus:ring-2 focus:ring-[#406A56]/20 text-sm"
+                    className="w-full px-4 py-2 rounded-xl border border-[#B8562E]/20 bg-white/50 focus:outline-none focus:ring-2 focus:ring-[#2D5A3D]/20 text-sm"
                   >
                     <option value="">Select a field...</option>
                     {MISSING_INFO_FIELDS.map((field) => (
@@ -355,7 +355,7 @@ export default function PromptForm({ initialData, mode }: PromptFormProps) {
                   max="50"
                   value={formData.priority_boost}
                   onChange={(e) => setFormData({ ...formData, priority_boost: parseInt(e.target.value) })}
-                  className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-[#406A56]"
+                  className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-[#2D5A3D]"
                 />
                 <div className="flex justify-between text-xs text-[#2a1f1a]/40 mt-1">
                   <span>Normal</span>
@@ -374,7 +374,7 @@ export default function PromptForm({ initialData, mode }: PromptFormProps) {
                   max="365"
                   value={formData.cooldown_days}
                   onChange={(e) => setFormData({ ...formData, cooldown_days: parseInt(e.target.value) })}
-                  className="w-full px-4 py-2 rounded-xl border border-[#C35F33]/20 bg-white/50 focus:outline-none focus:ring-2 focus:ring-[#406A56]/20 text-sm"
+                  className="w-full px-4 py-2 rounded-xl border border-[#B8562E]/20 bg-white/50 focus:outline-none focus:ring-2 focus:ring-[#2D5A3D]/20 text-sm"
                 />
                 <p className="text-xs text-[#2a1f1a]/40 mt-1">
                   Days before showing again after skip
@@ -396,7 +396,7 @@ export default function PromptForm({ initialData, mode }: PromptFormProps) {
                       onClick={() => toggleSeasonalMonth(index + 1)}
                       className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-colors ${
                         formData.seasonal_months.includes(index + 1)
-                          ? 'bg-[#406A56] text-white'
+                          ? 'bg-[#2D5A3D] text-white'
                           : 'bg-white/50 text-[#2a1f1a]/60 hover:bg-white/80'
                       }`}
                     >
@@ -414,7 +414,7 @@ export default function PromptForm({ initialData, mode }: PromptFormProps) {
                 id="anniversary_based"
                 checked={formData.anniversary_based}
                 onChange={(e) => setFormData({ ...formData, anniversary_based: e.target.checked })}
-                className="w-4 h-4 rounded border-[#C35F33]/20 text-[#406A56] focus:ring-[#406A56]/20"
+                className="w-4 h-4 rounded border-[#B8562E]/20 text-[#2D5A3D] focus:ring-[#2D5A3D]/20"
               />
               <label htmlFor="anniversary_based" className="text-sm text-[#2a1f1a]/70">
                 Show on memory anniversaries
@@ -430,13 +430,13 @@ export default function PromptForm({ initialData, mode }: PromptFormProps) {
             <h3 className="text-lg font-semibold text-[#2a1f1a] mb-4">Status</h3>
             
             <div className="space-y-3">
-              <label className="flex items-center gap-3 p-3 rounded-xl border border-[#C35F33]/20 cursor-pointer hover:bg-white/30 transition-colors">
+              <label className="flex items-center gap-3 p-3 rounded-xl border border-[#B8562E]/20 cursor-pointer hover:bg-white/30 transition-colors">
                 <input
                   type="radio"
                   name="is_active"
                   checked={formData.is_active}
                   onChange={() => setFormData({ ...formData, is_active: true })}
-                  className="w-4 h-4 text-[#406A56] focus:ring-[#406A56]/20"
+                  className="w-4 h-4 text-[#2D5A3D] focus:ring-[#2D5A3D]/20"
                 />
                 <div className="flex-1">
                   <p className="text-sm font-medium text-[#2a1f1a]">Active</p>
@@ -444,13 +444,13 @@ export default function PromptForm({ initialData, mode }: PromptFormProps) {
                 </div>
               </label>
               
-              <label className="flex items-center gap-3 p-3 rounded-xl border border-[#C35F33]/20 cursor-pointer hover:bg-white/30 transition-colors">
+              <label className="flex items-center gap-3 p-3 rounded-xl border border-[#B8562E]/20 cursor-pointer hover:bg-white/30 transition-colors">
                 <input
                   type="radio"
                   name="is_active"
                   checked={!formData.is_active}
                   onChange={() => setFormData({ ...formData, is_active: false })}
-                  className="w-4 h-4 text-[#406A56] focus:ring-[#406A56]/20"
+                  className="w-4 h-4 text-[#2D5A3D] focus:ring-[#2D5A3D]/20"
                 />
                 <div className="flex-1">
                   <p className="text-sm font-medium text-[#2a1f1a]">Inactive</p>
@@ -467,17 +467,17 @@ export default function PromptForm({ initialData, mode }: PromptFormProps) {
             <button
               type="button"
               onClick={() => setShowPreview(!showPreview)}
-              className="flex items-center gap-2 text-sm text-[#406A56] hover:underline"
+              className="flex items-center gap-2 text-sm text-[#2D5A3D] hover:underline"
             >
               <Eye className="w-4 h-4" />
               {showPreview ? 'Hide Preview' : 'Show Preview'}
             </button>
 
             {showPreview && (
-              <div className="mt-4 p-4 rounded-xl bg-gradient-to-br from-[#406A56]/5 to-[#C35F33]/5 border border-[#406A56]/10">
+              <div className="mt-4 p-4 rounded-xl bg-gradient-to-br from-[#2D5A3D]/5 to-[#B8562E]/5 border border-[#2D5A3D]/10">
                 <div className="flex items-start gap-3">
-                  <div className="w-8 h-8 rounded-full bg-[#406A56]/10 flex items-center justify-center flex-shrink-0">
-                    <MessageSquare className="w-4 h-4 text-[#406A56]" />
+                  <div className="w-8 h-8 rounded-full bg-[#2D5A3D]/10 flex items-center justify-center flex-shrink-0">
+                    <MessageSquare className="w-4 h-4 text-[#2D5A3D]" />
                   </div>
                   <div>
                     <p className="text-sm text-[#2a1f1a]">
@@ -486,7 +486,7 @@ export default function PromptForm({ initialData, mode }: PromptFormProps) {
                     <div className="flex items-center gap-2 mt-3">
                       <button
                         type="button"
-                        className="px-3 py-1.5 rounded-lg bg-[#406A56] text-white text-xs font-medium"
+                        className="px-3 py-1.5 rounded-lg bg-[#2D5A3D] text-white text-xs font-medium"
                       >
                         Answer
                       </button>
@@ -509,7 +509,7 @@ export default function PromptForm({ initialData, mode }: PromptFormProps) {
               <button
                 type="submit"
                 disabled={saving}
-                className="w-full flex items-center justify-center gap-2 px-4 py-2.5 bg-[#406A56] text-white rounded-xl text-sm font-medium hover:bg-[#406A56]/90 transition-colors disabled:opacity-50"
+                className="w-full flex items-center justify-center gap-2 px-4 py-2.5 bg-[#2D5A3D] text-white rounded-xl text-sm font-medium hover:bg-[#2D5A3D]/90 transition-colors disabled:opacity-50"
               >
                 <Save className="w-4 h-4" />
                 {saving ? 'Saving...' : mode === 'create' ? 'Create Prompt' : 'Save Changes'}
@@ -518,7 +518,7 @@ export default function PromptForm({ initialData, mode }: PromptFormProps) {
               <button
                 type="button"
                 onClick={() => router.push('/admin/engagement')}
-                className="w-full flex items-center justify-center gap-2 px-4 py-2.5 border border-[#C35F33]/20 text-[#2a1f1a]/70 rounded-xl text-sm font-medium hover:bg-white/50 transition-colors"
+                className="w-full flex items-center justify-center gap-2 px-4 py-2.5 border border-[#B8562E]/20 text-[#2a1f1a]/70 rounded-xl text-sm font-medium hover:bg-white/50 transition-colors"
               >
                 <X className="w-4 h-4" />
                 Cancel

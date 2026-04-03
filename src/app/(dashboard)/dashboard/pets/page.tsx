@@ -134,7 +134,7 @@ export default function PetsPage() {
         {pets.length === 0 ? (
           <div className="empty-state">
             <div className="empty-state-icon">
-              <Heart size={32} className="text-[#C35F33]" />
+              <Heart size={32} className="text-[#B8562E]" />
             </div>
             <h3 className="empty-state-title">No pets yet</h3>
             <p className="empty-state-text">Add your beloved pets to your life story.</p>
@@ -155,7 +155,7 @@ export default function PetsPage() {
               >
                 <div className="flex items-start justify-between mb-3">
                   <div className="flex items-center gap-3">
-                    <div className="w-12 h-12 rounded-full bg-gradient-to-br from-[#C35F33] to-[#D9C61A] flex items-center justify-center text-2xl shadow-sm">
+                    <div className="w-12 h-12 rounded-full bg-gradient-to-br from-[#B8562E] to-[#C4A235] flex items-center justify-center text-2xl shadow-sm">
                       {speciesEmoji[pet.species] || '🐾'}
                     </div>
                     <div>
@@ -166,13 +166,13 @@ export default function PetsPage() {
                   <div className="flex gap-1">
                     <button 
                       onClick={() => openEdit(pet)} 
-                      className="p-2 text-[#406A56]/60 hover:text-[#406A56] hover:bg-[#406A56]/10 rounded-lg transition-colors"
+                      className="p-2 text-[#2D5A3D]/60 hover:text-[#2D5A3D] hover:bg-[#2D5A3D]/10 rounded-lg transition-colors"
                     >
                       <Edit2 size={16} />
                     </button>
                     <button 
                       onClick={() => handleDelete(pet.id)} 
-                      className="p-2 text-[#406A56]/60 hover:text-[#C35F33] hover:bg-[#C35F33]/10 rounded-lg transition-colors"
+                      className="p-2 text-[#2D5A3D]/60 hover:text-[#B8562E] hover:bg-[#B8562E]/10 rounded-lg transition-colors"
                     >
                       <Trash2 size={16} />
                     </button>
@@ -183,13 +183,13 @@ export default function PetsPage() {
                   {pet.personality && <p className="text-[#666]">{pet.personality}</p>}
                   {pet.date_of_birth && (
                     <p className="text-[#666] flex items-center gap-1">
-                      <Calendar size={12} className="text-[#D9C61A]" />
+                      <Calendar size={12} className="text-[#C4A235]" />
                       Born: {new Date(pet.date_of_birth).toLocaleDateString()}
                     </p>
                   )}
                   {pet.is_deceased && (
                     <p className="text-[#888] italic flex items-center gap-1 mt-2">
-                      <Sparkles size={12} className="text-[#D9C61A]" />
+                      <Sparkles size={12} className="text-[#C4A235]" />
                       Rainbow Bridge {pet.date_of_passing ? `· ${new Date(pet.date_of_passing).toLocaleDateString()}` : ''}
                     </p>
                   )}
@@ -270,12 +270,12 @@ function PetModal({
 
   return (
     <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-      <div className="bg-[#FDF8F3] rounded-2xl p-6 border border-[#406A56]/10 shadow-xl w-full max-w-lg max-h-[90vh] overflow-y-auto scrollbar-thin">
+      <div className="bg-[#FAFAF7] rounded-2xl p-6 border border-[#2D5A3D]/10 shadow-xl w-full max-w-lg max-h-[90vh] overflow-y-auto scrollbar-thin">
         <div className="flex items-center justify-between mb-6">
           <h2 className="text-xl font-semibold text-[#2d2d2d]">
             {pet ? 'Edit Pet' : 'Add Pet'}
           </h2>
-          <button onClick={onClose} className="p-2 text-[#406A56]/60 hover:text-[#406A56] hover:bg-[#406A56]/10 rounded-lg transition-colors">
+          <button onClick={onClose} className="p-2 text-[#2D5A3D]/60 hover:text-[#2D5A3D] hover:bg-[#2D5A3D]/10 rounded-lg transition-colors">
             <X size={20} />
           </button>
         </div>
@@ -380,13 +380,13 @@ function PetModal({
             />
           </div>
 
-          <div className="p-4 bg-[#406A56]/5 rounded-xl border border-[#406A56]/10">
+          <div className="p-4 bg-[#2D5A3D]/5 rounded-xl border border-[#2D5A3D]/10">
             <label className="flex items-center gap-3 cursor-pointer">
               <input
                 type="checkbox"
                 checked={form.is_deceased}
                 onChange={e => setForm({ ...form, is_deceased: e.target.checked })}
-                className="w-5 h-5 rounded border-[#406A56]/30 bg-white text-[#406A56] focus:ring-[#406A56]"
+                className="w-5 h-5 rounded border-[#2D5A3D]/30 bg-white text-[#2D5A3D] focus:ring-[#2D5A3D]"
               />
               <span className="text-[#666]">This pet has passed away 🌈</span>
             </label>

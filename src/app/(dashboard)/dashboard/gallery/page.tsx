@@ -21,7 +21,7 @@ const GalleryGlobe = dynamic(() => import('@/components/gallery/GalleryGlobe'), 
   ssr: false,
   loading: () => (
     <div className="gallery-globe-section flex items-center justify-center">
-      <div className="text-[#406A56]/50">Loading globe...</div>
+      <div className="text-[#2D5A3D]/50">Loading globe...</div>
     </div>
   )
 })
@@ -333,10 +333,10 @@ export default function GalleryPage() {
           </div>
         ) : media.length === 0 ? (
           <div className="glass-card p-12 text-center">
-            <div className="w-16 h-16 mx-auto mb-4 bg-[#406A56]/10 rounded-full flex items-center justify-center">
-              <ImageIcon size={32} className="text-[#406A56]/50" />
+            <div className="w-16 h-16 mx-auto mb-4 bg-[#2D5A3D]/10 rounded-full flex items-center justify-center">
+              <ImageIcon size={32} className="text-[#2D5A3D]/50" />
             </div>
-            <h3 className="text-lg font-semibold text-[#2d2d2d] mb-2">No photos yet</h3>
+            <h3 className="text-lg font-semibold text-[#2d2d2d] mb-2">Your photo gallery is waiting</h3>
             <p className="text-[#666]">Upload your first photos to see them on the globe</p>
           </div>
         ) : (
@@ -368,7 +368,7 @@ export default function GalleryPage() {
                     onClick={() => setViewMode('globe')}
                     className={`flex items-center gap-2 px-4 py-2 text-sm font-medium transition-all ${
                       viewMode === 'globe'
-                        ? 'bg-[#406A56] text-white'
+                        ? 'bg-[#2D5A3D] text-white'
                         : 'text-white/70 hover:text-white hover:bg-white/10'
                     }`}
                   >
@@ -379,7 +379,7 @@ export default function GalleryPage() {
                     onClick={() => setViewMode('timeline')}
                     className={`flex items-center gap-2 px-4 py-2 text-sm font-medium transition-all ${
                       viewMode === 'timeline'
-                        ? 'bg-[#406A56] text-white'
+                        ? 'bg-[#2D5A3D] text-white'
                         : 'text-white/70 hover:text-white hover:bg-white/10'
                     }`}
                   >
@@ -439,7 +439,7 @@ export default function GalleryPage() {
                   <div
                     key={item.id}
                     onClick={() => handleGlobeSelect(item)}
-                    className="bubble-tile aspect-square rounded-xl overflow-hidden cursor-pointer hover:ring-2 hover:ring-[#406A56] transition-all relative group"
+                    className="bubble-tile aspect-square rounded-xl overflow-hidden cursor-pointer hover:ring-2 hover:ring-[#2D5A3D] transition-all relative group"
                   >
                     <img
                       src={item.file_url}
@@ -462,7 +462,7 @@ export default function GalleryPage() {
                     )}
                     {(item.location_lat && item.location_lng) || (item.exif_lat && item.exif_lng) ? (
                       <div className="absolute bottom-2 right-2 w-5 h-5 bg-white/80 backdrop-blur rounded-full flex items-center justify-center">
-                        <MapPin size={10} className="text-[#406A56]" />
+                        <MapPin size={10} className="text-[#2D5A3D]" />
                       </div>
                     ) : null}
                     {item.taken_at && (
@@ -480,7 +480,7 @@ export default function GalleryPage() {
               <div className="glass-card p-5 mt-5">
                 <div className="flex items-center justify-between mb-4">
                   <h3 className="font-semibold text-[#2d2d2d]">Albums</h3>
-                  <Link href="/dashboard/capsules" className="text-xs text-[#406A56] hover:underline">
+                  <Link href="/dashboard/capsules" className="text-xs text-[#2D5A3D] hover:underline">
                     Manage Albums
                   </Link>
                 </div>
@@ -505,8 +505,8 @@ export default function GalleryPage() {
                               className="w-full h-full object-cover group-hover:scale-105 transition-transform"
                             />
                           ) : (
-                            <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-[#406A56]/20 to-[#D9C61A]/20">
-                              <ImageIcon size={24} className="text-[#406A56]/40" />
+                            <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-[#2D5A3D]/20 to-[#C4A235]/20">
+                              <ImageIcon size={24} className="text-[#2D5A3D]/40" />
                             </div>
                           )}
                           <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
@@ -515,7 +515,7 @@ export default function GalleryPage() {
                             <p className="text-white/60 text-xs">{album.memory_ids?.length || 0} memories</p>
                           </div>
                           {/* User album badge */}
-                          <div className="absolute top-2 right-2 px-2 py-0.5 bg-[#406A56]/80 backdrop-blur rounded-full">
+                          <div className="absolute top-2 right-2 px-2 py-0.5 bg-[#2D5A3D]/80 backdrop-blur rounded-full">
                             <span className="text-white text-[10px] font-medium">My Album</span>
                           </div>
                         </div>
@@ -542,13 +542,13 @@ export default function GalleryPage() {
                           <p className="text-white/60 text-xs">{album.count} photos</p>
                         </div>
                         {/* Smart album badge */}
-                        <div className="absolute top-2 right-2 px-2 py-0.5 bg-[#D9C61A]/80 backdrop-blur rounded-full">
+                        <div className="absolute top-2 right-2 px-2 py-0.5 bg-[#C4A235]/80 backdrop-blur rounded-full">
                           <span className="text-[#2d2d2d] text-[10px] font-medium">✨ Smart</span>
                         </div>
                         {/* Play overlay */}
                         <div className="absolute inset-0 flex items-center justify-center bg-black/30 opacity-0 group-hover:opacity-100 transition-opacity">
                           <div className="w-10 h-10 rounded-full bg-white/90 flex items-center justify-center">
-                            <Play size={16} className="text-[#406A56] ml-0.5" />
+                            <Play size={16} className="text-[#2D5A3D] ml-0.5" />
                           </div>
                         </div>
                       </div>
@@ -558,10 +558,10 @@ export default function GalleryPage() {
                   {/* Create new album button */}
                   <Link
                     href="/dashboard/capsules"
-                    className="aspect-square rounded-xl border-2 border-dashed border-gray-300 hover:border-[#406A56] flex flex-col items-center justify-center gap-2 transition-colors group"
+                    className="aspect-square rounded-xl border-2 border-dashed border-gray-300 hover:border-[#2D5A3D] flex flex-col items-center justify-center gap-2 transition-colors group"
                   >
-                    <Plus size={24} className="text-gray-400 group-hover:text-[#406A56]" />
-                    <span className="text-xs text-gray-500 group-hover:text-[#406A56]">New Album</span>
+                    <Plus size={24} className="text-gray-400 group-hover:text-[#2D5A3D]" />
+                    <span className="text-xs text-gray-500 group-hover:text-[#2D5A3D]">New Album</span>
                   </Link>
                 </div>
               </div>
@@ -591,9 +591,9 @@ export default function GalleryPage() {
               {/* Close button */}
               <button
                 onClick={() => setShowUploadModal(false)}
-                className="absolute top-4 right-4 p-1.5 rounded-lg bg-[#406A56]/10 hover:bg-[#406A56]/20 transition-colors"
+                className="absolute top-4 right-4 p-1.5 rounded-lg bg-[#2D5A3D]/10 hover:bg-[#2D5A3D]/20 transition-colors"
               >
-                <X size={18} className="text-[#406A56]" />
+                <X size={18} className="text-[#2D5A3D]" />
               </button>
 
               <h2 className="text-lg font-semibold text-[#2d2d2d] mb-2">Add Photos</h2>
@@ -606,10 +606,10 @@ export default function GalleryPage() {
                     setShowUploadModal(false)
                     fileInputRef.current?.click()
                   }}
-                  className="w-full p-4 rounded-xl bg-[#406A56]/10 hover:bg-[#406A56]/20 transition-all group text-left flex items-center gap-4"
+                  className="w-full p-4 rounded-xl bg-[#2D5A3D]/10 hover:bg-[#2D5A3D]/20 transition-all group text-left flex items-center gap-4"
                 >
-                  <div className="w-12 h-12 rounded-xl bg-[#406A56]/20 flex items-center justify-center group-hover:bg-[#406A56]/30 transition-colors">
-                    <Upload size={24} className="text-[#406A56]" />
+                  <div className="w-12 h-12 rounded-xl bg-[#2D5A3D]/20 flex items-center justify-center group-hover:bg-[#2D5A3D]/30 transition-colors">
+                    <Upload size={24} className="text-[#2D5A3D]" />
                   </div>
                   <div>
                     <p className="font-medium text-[#2d2d2d]">Upload from Device</p>
@@ -623,9 +623,9 @@ export default function GalleryPage() {
                     setShowUploadModal(false)
                     setShowDigitizeModal(true)
                   }}
-                  className="w-full p-4 rounded-xl bg-[#D9C61A]/10 hover:bg-[#D9C61A]/20 transition-all group text-left flex items-center gap-4 relative overflow-hidden"
+                  className="w-full p-4 rounded-xl bg-[#C4A235]/10 hover:bg-[#C4A235]/20 transition-all group text-left flex items-center gap-4 relative overflow-hidden"
                 >
-                  <div className="w-12 h-12 rounded-xl bg-[#D9C61A]/20 flex items-center justify-center group-hover:bg-[#D9C61A]/30 transition-colors">
+                  <div className="w-12 h-12 rounded-xl bg-[#C4A235]/20 flex items-center justify-center group-hover:bg-[#C4A235]/30 transition-colors">
                     <Scan size={24} className="text-[#8a7c08]" />
                   </div>
                   <div className="flex-1">

@@ -75,7 +75,7 @@ export function ScopeIndicator({
       >
         {hasCircles ? (
           <>
-            <Users size={icon} className="text-[#406A56]" />
+            <Users size={icon} className="text-[#2D5A3D]" />
             <span>{getDisplayText()}</span>
           </>
         ) : (
@@ -93,7 +93,7 @@ export function ScopeIndicator({
     <span 
       className={`inline-flex items-center rounded-full ${container} ${
         hasCircles
-          ? 'bg-[#406A56]/10 text-[#406A56]'
+          ? 'bg-[#2D5A3D]/10 text-[#2D5A3D]'
           : 'bg-gray-100 text-gray-500'
       } ${className}`}
       title={hasCircles ? displayNames.join(', ') : 'Private'}

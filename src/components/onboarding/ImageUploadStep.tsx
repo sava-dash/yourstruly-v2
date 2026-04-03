@@ -184,7 +184,7 @@ export function ImageUploadStep({ userId, onBack, onContinue, onSkip }: ImageUpl
     >
       {/* Info card */}
       <div className="text-center mb-5">
-        <div className="w-14 h-14 bg-gradient-to-br from-[#C35F33] to-[#D9C61A] rounded-full flex items-center justify-center mx-auto mb-3 shadow-lg">
+        <div className="w-14 h-14 bg-gradient-to-br from-[#B8562E] to-[#C4A235] rounded-full flex items-center justify-center mx-auto mb-3 shadow-lg">
           <Camera size={28} className="text-white" />
         </div>
         <h2 className="text-xl font-semibold text-[#2d2d2d] font-playfair">
@@ -209,8 +209,8 @@ export function ImageUploadStep({ userId, onBack, onContinue, onSkip }: ImageUpl
           relative border-2 border-dashed rounded-xl p-6 text-center cursor-pointer
           transition-all duration-200
           ${isDragging 
-            ? 'border-[#406A56] bg-[#406A56]/10' 
-            : 'border-gray-200 bg-white/50 hover:border-[#406A56]/50 hover:bg-[#406A56]/5'
+            ? 'border-[#2D5A3D] bg-[#2D5A3D]/10' 
+            : 'border-gray-200 bg-white/50 hover:border-[#2D5A3D]/50 hover:bg-[#2D5A3D]/5'
           }
         `}
       >
@@ -226,9 +226,9 @@ export function ImageUploadStep({ userId, onBack, onContinue, onSkip }: ImageUpl
         <div className="flex flex-col items-center gap-3">
           <div className={`
             w-12 h-12 rounded-full flex items-center justify-center transition-colors
-            ${isDragging ? 'bg-[#406A56]/20' : 'bg-gray-100'}
+            ${isDragging ? 'bg-[#2D5A3D]/20' : 'bg-gray-100'}
           `}>
-            <Upload size={24} className={isDragging ? 'text-[#406A56]' : 'text-gray-400'} />
+            <Upload size={24} className={isDragging ? 'text-[#2D5A3D]' : 'text-gray-400'} />
           </div>
           
           <div>
@@ -245,7 +245,7 @@ export function ImageUploadStep({ userId, onBack, onContinue, onSkip }: ImageUpl
       {/* Suggestion Badge */}
       {images.length === 0 && (
         <div className="flex items-center justify-center gap-2 mt-3">
-          <Sparkles size={14} className="text-[#D9C61A]" />
+          <Sparkles size={14} className="text-[#C4A235]" />
           <span className="text-xs text-gray-500">
             We suggest {SUGGESTED_MIN}-{SUGGESTED_MAX} photos to get the most out of YoursTruly
           </span>
@@ -260,7 +260,7 @@ export function ImageUploadStep({ userId, onBack, onContinue, onSkip }: ImageUpl
               {images.length} photo{images.length !== 1 ? 's' : ''} selected
             </span>
             {doneCount > 0 && (
-              <span className="text-xs text-[#406A56] flex items-center gap-1">
+              <span className="text-xs text-[#2D5A3D] flex items-center gap-1">
                 <Check size={12} />
                 {doneCount} uploaded
               </span>
@@ -291,8 +291,8 @@ export function ImageUploadStep({ userId, onBack, onContinue, onSkip }: ImageUpl
                   )}
                   
                   {image.status === 'done' && (
-                    <div className="absolute inset-0 bg-[#406A56]/20 flex flex-col items-center justify-end">
-                      <div className="absolute top-1 right-1 w-5 h-5 rounded-full bg-[#406A56] flex items-center justify-center">
+                    <div className="absolute inset-0 bg-[#2D5A3D]/20 flex flex-col items-center justify-end">
+                      <div className="absolute top-1 right-1 w-5 h-5 rounded-full bg-[#2D5A3D] flex items-center justify-center">
                         <Check size={10} className="text-white" />
                       </div>
                       {image.locationName && (
@@ -343,7 +343,7 @@ export function ImageUploadStep({ userId, onBack, onContinue, onSkip }: ImageUpl
         return (
           <div className="mt-3 flex flex-wrap gap-1.5">
             {uniqueLocations.map((loc, i) => (
-              <span key={i} className="inline-flex items-center gap-1 text-[11px] px-2 py-1 bg-[#406A56]/8 text-[#406A56] rounded-full border border-[#406A56]/15">
+              <span key={i} className="inline-flex items-center gap-1 text-[11px] px-2 py-1 bg-[#2D5A3D]/8 text-[#2D5A3D] rounded-full border border-[#2D5A3D]/15">
                 <MapPin size={10} /> {loc}
               </span>
             ))}
@@ -356,9 +356,9 @@ export function ImageUploadStep({ userId, onBack, onContinue, onSkip }: ImageUpl
         <motion.div
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
-          className="mt-4 p-3 bg-gradient-to-r from-[#406A56]/5 to-[#8DACAB]/5 rounded-xl border border-[#406A56]/10"
+          className="mt-4 p-3 bg-gradient-to-r from-[#2D5A3D]/5 to-[#8DACAB]/5 rounded-xl border border-[#2D5A3D]/10"
         >
-          <p className="text-xs font-semibold text-[#406A56] uppercase tracking-wide mb-2">
+          <p className="text-xs font-semibold text-[#2D5A3D] uppercase tracking-wide mb-2">
             What happens next
           </p>
           <ul className="space-y-1.5">
@@ -368,7 +368,7 @@ export function ImageUploadStep({ userId, onBack, onContinue, onSkip }: ImageUpl
               "This is how your memories come to life"
             ].map((item, i) => (
               <li key={i} className="flex items-start gap-2 text-xs text-[#2d2d2d]/70">
-                <Sparkles size={12} className="text-[#D9C61A] flex-shrink-0 mt-0.5" />
+                <Sparkles size={12} className="text-[#C4A235] flex-shrink-0 mt-0.5" />
                 <span>{item}</span>
               </li>
             ))}
@@ -381,7 +381,7 @@ export function ImageUploadStep({ userId, onBack, onContinue, onSkip }: ImageUpl
         <button 
           onClick={onBack} 
           disabled={isUploading}
-          className="flex items-center gap-2 px-4 py-2 text-gray-500 hover:text-[#406A56] disabled:opacity-50"
+          className="flex items-center gap-2 px-4 py-2 text-gray-500 hover:text-[#2D5A3D] disabled:opacity-50"
         >
           <ChevronLeft size={18} /> Back
         </button>
@@ -401,8 +401,8 @@ export function ImageUploadStep({ userId, onBack, onContinue, onSkip }: ImageUpl
             className={`
               flex items-center gap-2 px-6 py-2.5 rounded-xl font-medium transition-all
               ${images.length > 0 
-                ? 'bg-gradient-to-r from-[#406A56] to-[#8DACAB] text-white hover:shadow-lg' 
-                : 'bg-[#406A56] text-white hover:bg-[#355a48]'
+                ? 'bg-gradient-to-r from-[#2D5A3D] to-[#8DACAB] text-white hover:shadow-lg' 
+                : 'bg-[#2D5A3D] text-white hover:bg-[#355a48]'
               }
               disabled:opacity-50 disabled:cursor-not-allowed
             `}

@@ -98,14 +98,14 @@ export default function CirclesPage() {
     switch (role) {
       case 'owner':
         return (
-          <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium bg-[#D9C61A]/20 text-[#8a7c08]">
+          <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium bg-[#C4A235]/20 text-[#8a7c08]">
             <Crown size={12} />
             Owner
           </span>
         )
       case 'admin':
         return (
-          <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium bg-[#406A56]/15 text-[#406A56]">
+          <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium bg-[#2D5A3D]/15 text-[#2D5A3D]">
             <Shield size={12} />
             Admin
           </span>
@@ -146,7 +146,7 @@ export default function CirclesPage() {
           <p className="text-red-600 mb-4">{error}</p>
           <button 
             onClick={loadCircles}
-            className="text-[#406A56] hover:underline"
+            className="text-[#2D5A3D] hover:underline"
           >
             Try again
           </button>
@@ -189,7 +189,7 @@ export default function CirclesPage() {
         {/* Search */}
         {circles.length > 0 && (
           <div className="relative max-w-md mb-6">
-            <Search size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-[#406A56]/50" />
+            <Search size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-[#2D5A3D]/50" />
             <input
               type="text"
               aria-label="Search" placeholder="Search circles..."
@@ -204,11 +204,11 @@ export default function CirclesPage() {
         {circles.length === 0 ? (
           <div className="empty-state">
             <div className="empty-state-icon">
-              <Users size={32} className="text-[#406A56]" />
+              <Users size={32} className="text-[#2D5A3D]" />
             </div>
-            <h3 className="empty-state-title">No Circles Yet</h3>
+            <h3 className="empty-state-title">Create a circle for the people closest to you</h3>
             <p className="empty-state-text">
-              Create a circle to share your memories and wisdom with family, friends, or other trusted groups.
+              Circles let you share memories and wisdom with family, friends, or other trusted groups.
             </p>
             <button
               onClick={() => setShowCreateModal(true)}
@@ -220,10 +220,10 @@ export default function CirclesPage() {
           </div>
         ) : filteredCircles.length === 0 ? (
           <div className="empty-state">
-            <p className="empty-state-text mb-2">No circles match your search</p>
+            <p className="empty-state-text mb-2">No circles match your search.</p>
             <button
               onClick={() => setSearchQuery('')}
-              className="text-[#406A56] hover:text-[#4a7a64] text-sm font-medium"
+              className="text-[#2D5A3D] hover:text-[#234A31] text-sm font-medium"
             >
               Clear search
             </button>
@@ -238,8 +238,8 @@ export default function CirclesPage() {
               >
                 <div className="flex items-start justify-between mb-4">
                   <div className="flex items-center gap-3">
-                    <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-[#406A56]/20 to-[#D9C61A]/20 flex items-center justify-center">
-                      <Users size={24} className="text-[#406A56]" />
+                    <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-[#2D5A3D]/20 to-[#C4A235]/20 flex items-center justify-center">
+                      <Users size={24} className="text-[#2D5A3D]" />
                     </div>
                     <div>
                       <h3 className="text-[#2d2d2d] font-semibold text-lg">{circle.name}</h3>
@@ -257,7 +257,7 @@ export default function CirclesPage() {
                   </p>
                 )}
 
-                <div className="flex items-center justify-between pt-3 border-t border-[#406A56]/10">
+                <div className="flex items-center justify-between pt-3 border-t border-[#2D5A3D]/10">
                   {circle.members && circle.members.length > 0 ? (
                     <MemberAvatarStack 
                       members={circle.members} 
@@ -268,7 +268,7 @@ export default function CirclesPage() {
                   ) : (
                     <span className="text-xs text-[#888]">No members yet</span>
                   )}
-                  <span className="text-sm text-[#406A56] font-medium group-hover:underline">
+                  <span className="text-sm text-[#2D5A3D] font-medium group-hover:underline">
                     View →
                   </span>
                 </div>

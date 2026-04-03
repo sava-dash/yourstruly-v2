@@ -60,7 +60,7 @@ export class OnboardingErrorBoundary extends React.Component<Props, State> {
     if (this.state.hasError && this.state.retryCount >= 3) {
       // After 3 retries, show fallback or default error UI
       return this.props.fallback || (
-        <div className="min-h-screen bg-[#FDF8F3] flex items-center justify-center p-4">
+        <div className="min-h-screen bg-[#FAFAF7] flex items-center justify-center p-4">
           <div className="bg-white/90 backdrop-blur-xl p-8 rounded-2xl shadow-xl max-w-md text-center">
             <h2 className="text-xl font-semibold text-[#2d2d2d] mb-4">
               Something went wrong
@@ -70,7 +70,7 @@ export class OnboardingErrorBoundary extends React.Component<Props, State> {
             </p>
             <button
               onClick={() => window.location.reload()}
-              className="px-6 py-3 bg-[#406A56] text-white rounded-xl font-medium hover:bg-[#355a48] transition-all"
+              className="px-6 py-3 bg-[#2D5A3D] text-white rounded-xl font-medium hover:bg-[#355a48] transition-all"
             >
               Try Again
             </button>

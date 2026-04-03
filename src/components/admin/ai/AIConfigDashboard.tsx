@@ -140,7 +140,7 @@ export default function AIConfigDashboard({ initialConfig, settings, promptCount
         <button
           onClick={handleSave}
           disabled={isSaving}
-          className="flex items-center gap-2 px-4 py-2 bg-[#406A56] text-white rounded-xl hover:bg-[#406A56]/90 disabled:opacity-50"
+          className="flex items-center gap-2 px-4 py-2 bg-[#2D5A3D] text-white rounded-xl hover:bg-[#2D5A3D]/90 disabled:opacity-50"
         >
           {isSaving ? <RefreshCw className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
           Save All Changes
@@ -150,12 +150,12 @@ export default function AIConfigDashboard({ initialConfig, settings, promptCount
       {/* API Key Status */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         {Object.entries(config.apiKeyStatus).map(([provider, isSet]) => (
-          <div key={provider} className="p-4 bg-white/60 rounded-xl border border-[#C35F33]/10">
+          <div key={provider} className="p-4 bg-white/60 rounded-xl border border-[#B8562E]/10">
             <div className="flex items-center gap-2">
               {isSet ? (
-                <CheckCircle className="w-5 h-5 text-[#406A56]" />
+                <CheckCircle className="w-5 h-5 text-[#2D5A3D]" />
               ) : (
-                <XCircle className="w-5 h-5 text-[#C35F33]" />
+                <XCircle className="w-5 h-5 text-[#B8562E]" />
               )}
               <span className="text-sm font-medium capitalize">{provider}</span>
             </div>
@@ -178,7 +178,7 @@ export default function AIConfigDashboard({ initialConfig, settings, promptCount
         {/* Models Tab */}
         <TabsContent value="models" className="space-y-6">
           {/* Chat Model */}
-          <div className="p-6 bg-white/60 rounded-xl border border-[#C35F33]/10">
+          <div className="p-6 bg-white/60 rounded-xl border border-[#B8562E]/10">
             <h3 className="text-lg font-semibold text-[#2a1f1a] mb-4">Chat Model</h3>
             <p className="text-sm text-[#2a1f1a]/60 mb-4">Primary model for conversations and memory assistance</p>
             
@@ -188,8 +188,8 @@ export default function AIConfigDashboard({ initialConfig, settings, promptCount
                   key={model.id}
                   className={`flex items-center gap-4 p-4 rounded-xl border cursor-pointer transition-all ${
                     config.models.chat === model.id 
-                      ? 'border-[#406A56] bg-[#406A56]/5' 
-                      : 'border-[#C35F33]/10 hover:border-[#406A56]/50'
+                      ? 'border-[#2D5A3D] bg-[#2D5A3D]/5' 
+                      : 'border-[#B8562E]/10 hover:border-[#2D5A3D]/50'
                   }`}
                 >
                   <input
@@ -198,7 +198,7 @@ export default function AIConfigDashboard({ initialConfig, settings, promptCount
                     value={model.id}
                     checked={config.models.chat === model.id}
                     onChange={(e) => setConfig({ ...config, models: { ...config.models, chat: e.target.value } })}
-                    className="w-4 h-4 text-[#406A56]"
+                    className="w-4 h-4 text-[#2D5A3D]"
                   />
                   <div className="flex-1">
                     <div className="flex items-center gap-2">
@@ -215,7 +215,7 @@ export default function AIConfigDashboard({ initialConfig, settings, promptCount
           </div>
 
           {/* Embedding Model */}
-          <div className="p-6 bg-white/60 rounded-xl border border-[#C35F33]/10">
+          <div className="p-6 bg-white/60 rounded-xl border border-[#B8562E]/10">
             <h3 className="text-lg font-semibold text-[#2a1f1a] mb-4">Embedding Model</h3>
             <p className="text-sm text-[#2a1f1a]/60 mb-4">Used for semantic search in memories</p>
             
@@ -225,8 +225,8 @@ export default function AIConfigDashboard({ initialConfig, settings, promptCount
                   key={model.id}
                   className={`flex items-center gap-4 p-4 rounded-xl border cursor-pointer transition-all ${
                     config.models.embedding === model.id 
-                      ? 'border-[#406A56] bg-[#406A56]/5' 
-                      : 'border-[#C35F33]/10 hover:border-[#406A56]/50'
+                      ? 'border-[#2D5A3D] bg-[#2D5A3D]/5' 
+                      : 'border-[#B8562E]/10 hover:border-[#2D5A3D]/50'
                   }`}
                 >
                   <input
@@ -235,7 +235,7 @@ export default function AIConfigDashboard({ initialConfig, settings, promptCount
                     value={model.id}
                     checked={config.models.embedding === model.id}
                     onChange={(e) => setConfig({ ...config, models: { ...config.models, embedding: e.target.value } })}
-                    className="w-4 h-4 text-[#406A56]"
+                    className="w-4 h-4 text-[#2D5A3D]"
                   />
                   <div className="flex-1">
                     <div className="flex items-center gap-2">
@@ -250,9 +250,9 @@ export default function AIConfigDashboard({ initialConfig, settings, promptCount
               ))}
             </div>
             
-            <div className="mt-4 p-3 bg-[#D9C61A]/10 rounded-lg border border-[#D9C61A]/20">
+            <div className="mt-4 p-3 bg-[#C4A235]/10 rounded-lg border border-[#C4A235]/20">
               <div className="flex items-start gap-2">
-                <AlertTriangle className="w-4 h-4 text-[#D9C61A] mt-0.5" />
+                <AlertTriangle className="w-4 h-4 text-[#C4A235] mt-0.5" />
                 <p className="text-sm text-[#2a1f1a]/70">
                   Changing embedding model requires re-indexing all memories. Current dimension: {config.embeddingDimensions}
                 </p>
@@ -263,12 +263,12 @@ export default function AIConfigDashboard({ initialConfig, settings, promptCount
 
         {/* System Prompts Tab */}
         <TabsContent value="prompts" className="space-y-6">
-          <div className="p-6 bg-white/60 rounded-xl border border-[#C35F33]/10">
+          <div className="p-6 bg-white/60 rounded-xl border border-[#B8562E]/10">
             <div className="flex items-center justify-between mb-4">
               <h3 className="text-lg font-semibold text-[#2a1f1a]">Main Chat System Prompt</h3>
               <button
                 onClick={() => setSystemPrompt(DEFAULT_SYSTEM_PROMPT)}
-                className="text-sm text-[#406A56] hover:underline"
+                className="text-sm text-[#2D5A3D] hover:underline"
               >
                 Reset to default
               </button>
@@ -280,18 +280,18 @@ export default function AIConfigDashboard({ initialConfig, settings, promptCount
               value={systemPrompt}
               onChange={(e) => setSystemPrompt(e.target.value)}
               rows={12}
-              className="w-full px-4 py-3 bg-white border border-[#C35F33]/10 rounded-xl text-sm font-mono resize-y focus:outline-none focus:ring-2 focus:ring-[#406A56]/20"
+              className="w-full px-4 py-3 bg-white border border-[#B8562E]/10 rounded-xl text-sm font-mono resize-y focus:outline-none focus:ring-2 focus:ring-[#2D5A3D]/20"
             />
             <p className="text-xs text-[#2a1f1a]/40 mt-2">
               {systemPrompt.length} characters
             </p>
           </div>
 
-          <div className="p-6 bg-white/60 rounded-xl border border-[#C35F33]/10">
+          <div className="p-6 bg-white/60 rounded-xl border border-[#B8562E]/10">
             <h3 className="text-lg font-semibold text-[#2a1f1a] mb-4">Engagement Prompts</h3>
             <div className="flex items-center gap-4">
-              <div className="p-4 bg-[#406A56]/10 rounded-xl">
-                <FileText className="w-8 h-8 text-[#406A56]" />
+              <div className="p-4 bg-[#2D5A3D]/10 rounded-xl">
+                <FileText className="w-8 h-8 text-[#2D5A3D]" />
               </div>
               <div>
                 <p className="text-2xl font-bold text-[#2a1f1a]">{promptCount}</p>
@@ -299,7 +299,7 @@ export default function AIConfigDashboard({ initialConfig, settings, promptCount
               </div>
               <a
                 href="/admin/engagement"
-                className="ml-auto px-4 py-2 bg-[#406A56]/10 text-[#406A56] rounded-xl text-sm font-medium hover:bg-[#406A56]/20"
+                className="ml-auto px-4 py-2 bg-[#2D5A3D]/10 text-[#2D5A3D] rounded-xl text-sm font-medium hover:bg-[#2D5A3D]/20"
               >
                 Manage Prompts →
               </a>
@@ -309,12 +309,12 @@ export default function AIConfigDashboard({ initialConfig, settings, promptCount
 
         {/* Interview AI Tab */}
         <TabsContent value="interview" className="space-y-6">
-          <div className="p-6 bg-white/60 rounded-xl border border-[#C35F33]/10">
+          <div className="p-6 bg-white/60 rounded-xl border border-[#B8562E]/10">
             <div className="flex items-center justify-between mb-4">
               <h3 className="text-lg font-semibold text-[#2a1f1a]">Interview System Prompt</h3>
               <button
                 onClick={() => setInterviewPrompt(INTERVIEW_SYSTEM_PROMPT)}
-                className="text-sm text-[#406A56] hover:underline"
+                className="text-sm text-[#2D5A3D] hover:underline"
               >
                 Reset to default
               </button>
@@ -326,18 +326,18 @@ export default function AIConfigDashboard({ initialConfig, settings, promptCount
               value={interviewPrompt}
               onChange={(e) => setInterviewPrompt(e.target.value)}
               rows={10}
-              className="w-full px-4 py-3 bg-white border border-[#C35F33]/10 rounded-xl text-sm font-mono resize-y focus:outline-none focus:ring-2 focus:ring-[#406A56]/20"
+              className="w-full px-4 py-3 bg-white border border-[#B8562E]/10 rounded-xl text-sm font-mono resize-y focus:outline-none focus:ring-2 focus:ring-[#2D5A3D]/20"
             />
           </div>
 
-          <div className="p-6 bg-white/60 rounded-xl border border-[#C35F33]/10">
+          <div className="p-6 bg-white/60 rounded-xl border border-[#B8562E]/10">
             <h3 className="text-lg font-semibold text-[#2a1f1a] mb-4">Interview Settings</h3>
             <div className="grid md:grid-cols-2 gap-4">
               <div>
                 <label className="block text-sm font-medium text-[#2a1f1a] mb-2">
                   Follow-up Question Depth
                 </label>
-                <select className="w-full px-4 py-2 bg-white border border-[#C35F33]/10 rounded-xl">
+                <select className="w-full px-4 py-2 bg-white border border-[#B8562E]/10 rounded-xl">
                   <option value="1">Light (1-2 follow-ups)</option>
                   <option value="2">Medium (2-3 follow-ups)</option>
                   <option value="3">Deep (3-5 follow-ups)</option>
@@ -347,7 +347,7 @@ export default function AIConfigDashboard({ initialConfig, settings, promptCount
                 <label className="block text-sm font-medium text-[#2a1f1a] mb-2">
                   Conversation Temperature
                 </label>
-                <select className="w-full px-4 py-2 bg-white border border-[#C35F33]/10 rounded-xl">
+                <select className="w-full px-4 py-2 bg-white border border-[#B8562E]/10 rounded-xl">
                   <option value="0.5">Focused (0.5)</option>
                   <option value="0.7">Balanced (0.7)</option>
                   <option value="0.9">Creative (0.9)</option>
@@ -359,15 +359,15 @@ export default function AIConfigDashboard({ initialConfig, settings, promptCount
 
         {/* Voice Tab */}
         <TabsContent value="voice" className="space-y-6">
-          <div className="p-6 bg-white/60 rounded-xl border border-[#C35F33]/10">
+          <div className="p-6 bg-white/60 rounded-xl border border-[#B8562E]/10">
             <h3 className="text-lg font-semibold text-[#2a1f1a] mb-4">Voice Cloning (ElevenLabs)</h3>
             <div className="flex items-center gap-2 mb-4">
               {config.apiKeyStatus.elevenlabs ? (
-                <CheckCircle className="w-5 h-5 text-[#406A56]" />
+                <CheckCircle className="w-5 h-5 text-[#2D5A3D]" />
               ) : (
-                <XCircle className="w-5 h-5 text-[#C35F33]" />
+                <XCircle className="w-5 h-5 text-[#B8562E]" />
               )}
-              <span className={config.apiKeyStatus.elevenlabs ? 'text-[#406A56]' : 'text-[#C35F33]'}>
+              <span className={config.apiKeyStatus.elevenlabs ? 'text-[#2D5A3D]' : 'text-[#B8562E]'}>
                 {config.apiKeyStatus.elevenlabs ? 'Connected' : 'API key not configured'}
               </span>
             </div>
@@ -376,9 +376,9 @@ export default function AIConfigDashboard({ initialConfig, settings, promptCount
               {AVAILABLE_MODELS.voice.map((model) => (
                 <label
                   key={model.id}
-                  className="flex items-center gap-4 p-4 rounded-xl border border-[#C35F33]/10 hover:border-[#406A56]/50 cursor-pointer"
+                  className="flex items-center gap-4 p-4 rounded-xl border border-[#B8562E]/10 hover:border-[#2D5A3D]/50 cursor-pointer"
                 >
-                  <input type="radio" name="voiceModel" className="w-4 h-4 text-[#406A56]" />
+                  <input type="radio" name="voiceModel" className="w-4 h-4 text-[#2D5A3D]" />
                   <div>
                     <span className="font-medium text-[#2a1f1a]">{model.name}</span>
                     <p className="text-sm text-[#2a1f1a]/50">{model.description}</p>
@@ -388,7 +388,7 @@ export default function AIConfigDashboard({ initialConfig, settings, promptCount
             </div>
           </div>
 
-          <div className="p-6 bg-white/60 rounded-xl border border-[#C35F33]/10">
+          <div className="p-6 bg-white/60 rounded-xl border border-[#B8562E]/10">
             <h3 className="text-lg font-semibold text-[#2a1f1a] mb-4">Voice Clone Settings</h3>
             <div className="space-y-4">
               <div>
@@ -398,7 +398,7 @@ export default function AIConfigDashboard({ initialConfig, settings, promptCount
                 <input
                   type="number"
                   defaultValue={30}
-                  className="w-full px-4 py-2 bg-white border border-[#C35F33]/10 rounded-xl"
+                  className="w-full px-4 py-2 bg-white border border-[#B8562E]/10 rounded-xl"
                 />
                 <p className="text-xs text-[#2a1f1a]/50 mt-1">Seconds of audio required to create a voice clone</p>
               </div>
@@ -424,7 +424,7 @@ export default function AIConfigDashboard({ initialConfig, settings, promptCount
 
         {/* Test Tab */}
         <TabsContent value="test" className="space-y-6">
-          <div className="p-6 bg-white/60 rounded-xl border border-[#C35F33]/10">
+          <div className="p-6 bg-white/60 rounded-xl border border-[#B8562E]/10">
             <h3 className="text-lg font-semibold text-[#2a1f1a] mb-4">Test AI Configuration</h3>
             <p className="text-sm text-[#2a1f1a]/60 mb-4">
               Send a test message to verify your AI configuration is working
@@ -440,14 +440,14 @@ export default function AIConfigDashboard({ initialConfig, settings, promptCount
                   onChange={(e) => setTestMessage(e.target.value)}
                   rows={3}
                   placeholder="Enter a test message to send to the AI..."
-                  className="w-full px-4 py-3 bg-white border border-[#C35F33]/10 rounded-xl resize-none focus:outline-none focus:ring-2 focus:ring-[#406A56]/20"
+                  className="w-full px-4 py-3 bg-white border border-[#B8562E]/10 rounded-xl resize-none focus:outline-none focus:ring-2 focus:ring-[#2D5A3D]/20"
                 />
               </div>
               
               <button
                 onClick={handleTest}
                 disabled={isTesting || !testMessage.trim()}
-                className="flex items-center gap-2 px-4 py-2 bg-[#406A56] text-white rounded-xl hover:bg-[#406A56]/90 disabled:opacity-50"
+                className="flex items-center gap-2 px-4 py-2 bg-[#2D5A3D] text-white rounded-xl hover:bg-[#2D5A3D]/90 disabled:opacity-50"
               >
                 {isTesting ? (
                   <RefreshCw className="w-4 h-4 animate-spin" />
@@ -458,9 +458,9 @@ export default function AIConfigDashboard({ initialConfig, settings, promptCount
               </button>
 
               {testResponse && (
-                <div className="p-4 bg-[#F2F1E5] rounded-xl border border-[#C35F33]/10">
+                <div className="p-4 bg-[#F5F3EE] rounded-xl border border-[#B8562E]/10">
                   <div className="flex items-center gap-2 mb-2">
-                    <Bot className="w-4 h-4 text-[#406A56]" />
+                    <Bot className="w-4 h-4 text-[#2D5A3D]" />
                     <span className="text-sm font-medium text-[#2a1f1a]">Response</span>
                   </div>
                   <p className="text-sm text-[#2a1f1a]/80 whitespace-pre-wrap">{testResponse}</p>
@@ -469,9 +469,9 @@ export default function AIConfigDashboard({ initialConfig, settings, promptCount
             </div>
           </div>
 
-          <div className="p-6 bg-white/60 rounded-xl border border-[#C35F33]/10">
+          <div className="p-6 bg-white/60 rounded-xl border border-[#B8562E]/10">
             <h3 className="text-lg font-semibold text-[#2a1f1a] mb-4">Current Configuration</h3>
-            <pre className="p-4 bg-[#2a1f1a] text-[#F2F1E5] rounded-xl text-sm overflow-x-auto">
+            <pre className="p-4 bg-[#2a1f1a] text-[#F5F3EE] rounded-xl text-sm overflow-x-auto">
               {JSON.stringify(config, null, 2)}
             </pre>
           </div>

@@ -377,9 +377,9 @@ export default function JournalistPage() {
 
   const getStatusStyle = (status: string) => {
     switch (status) {
-      case 'completed': return 'bg-[#406A56]/10 text-[#406A56]'
+      case 'completed': return 'bg-[#2D5A3D]/10 text-[#2D5A3D]'
       case 'recording': return 'bg-blue-50 text-blue-600'
-      case 'sent': return 'bg-[#D9C61A]/10 text-[#9a8c12]'
+      case 'sent': return 'bg-[#C4A235]/10 text-[#9a8c12]'
       default: return 'bg-gray-100 text-gray-500'
     }
   }
@@ -443,7 +443,7 @@ export default function JournalistPage() {
               </p>
               <button
                 onClick={() => setShowNewSession(true)}
-                className="inline-flex items-center gap-2 px-5 py-2.5 bg-[#C35F33] hover:bg-[#a54d28] text-white rounded-xl transition-all"
+                className="inline-flex items-center gap-2 px-5 py-2.5 bg-[#B8562E] hover:bg-[#a54d28] text-white rounded-xl transition-all"
               >
                 <Plus size={18} />
                 Start your first interview
@@ -461,14 +461,14 @@ export default function JournalistPage() {
                 >
                   <div className="flex items-start justify-between gap-4 mb-4">
                     <div className="flex items-start gap-4">
-                      <div className="w-12 h-12 rounded-full bg-gradient-to-br from-[#406A56] to-[#5a8a70] flex items-center justify-center text-white">
+                      <div className="w-12 h-12 rounded-full bg-gradient-to-br from-[#2D5A3D] to-[#5a8a70] flex items-center justify-center text-white">
                         <Users size={24} />
                       </div>
                       <div>
                         <h3 className="text-[#2d2d2d] font-semibold">Group Interview</h3>
                         <p className="text-[#888] text-sm">{group.sessions.length} people</p>
                         <div className="flex items-center gap-2 mt-1">
-                          <span className="text-xs text-[#406A56]">
+                          <span className="text-xs text-[#2D5A3D]">
                             {group.sessions.filter(s => s.status === 'completed').length} of {group.sessions.length} completed
                           </span>
                         </div>
@@ -476,7 +476,7 @@ export default function JournalistPage() {
                     </div>
                     <Link
                       href={`/dashboard/journalist/group/${group.group_id}`}
-                      className="flex items-center gap-2 px-3 py-1.5 bg-[#406A56] hover:bg-[#2d5442] text-white text-sm rounded-lg transition-all"
+                      className="flex items-center gap-2 px-3 py-1.5 bg-[#2D5A3D] hover:bg-[#234A31] text-white text-sm rounded-lg transition-all"
                     >
                       <Play size={14} />
                       Story Time
@@ -491,7 +491,7 @@ export default function JournalistPage() {
                           key={session.id}
                           className={`flex items-center gap-2 px-3 py-1.5 rounded-full text-xs ${
                             session.status === 'completed' 
-                              ? 'bg-[#406A56]/10 text-[#406A56]' 
+                              ? 'bg-[#2D5A3D]/10 text-[#2D5A3D]' 
                               : 'bg-gray-100 text-gray-600'
                           }`}
                         >
@@ -525,7 +525,7 @@ export default function JournalistPage() {
                             {session.status}
                           </span>
                           {session.video_responses?.length > 0 && (
-                            <span className="text-[#406A56] text-xs flex items-center gap-1">
+                            <span className="text-[#2D5A3D] text-xs flex items-center gap-1">
                               <CheckCircle size={12} />
                               Answered
                             </span>
@@ -538,13 +538,13 @@ export default function JournalistPage() {
                       {session.status === 'pending' && (
                         <div className="flex flex-col items-end gap-2">
                           {/* Shareable URL */}
-                          <div className="flex items-center gap-2 bg-[#F2F1E5] rounded-lg px-3 py-2 border border-[#E8E7DC]">
+                          <div className="flex items-center gap-2 bg-[#F5F3EE] rounded-lg px-3 py-2 border border-[#E8E7DC]">
                             <span className="text-sm text-[#666] truncate max-w-[200px] sm:max-w-[280px]">
                               {`${typeof window !== 'undefined' ? window.location.origin : ''}/interview/${session.access_token}`}
                             </span>
                             <button
                               onClick={() => copyLink(session.access_token, session.id)}
-                              className="p-1.5 hover:bg-[#406A56]/10 rounded-md transition-all text-[#406A56]"
+                              className="p-1.5 hover:bg-[#2D5A3D]/10 rounded-md transition-all text-[#2D5A3D]"
                               title="Copy link"
                             >
                               <Copy size={14} />
@@ -554,7 +554,7 @@ export default function JournalistPage() {
                           <div className="flex items-center gap-2">
                             <button
                               onClick={() => shareViaEmail(session.access_token, session.contact?.full_name || 'there')}
-                              className="flex items-center gap-1.5 px-3 py-1.5 bg-[#406A56]/10 hover:bg-[#406A56]/20 text-[#406A56] text-sm rounded-lg transition-all"
+                              className="flex items-center gap-1.5 px-3 py-1.5 bg-[#2D5A3D]/10 hover:bg-[#2D5A3D]/20 text-[#2D5A3D] text-sm rounded-lg transition-all"
                               title="Share via Email"
                             >
                               <Mail size={14} />
@@ -562,14 +562,14 @@ export default function JournalistPage() {
                             </button>
                             <button
                               onClick={() => shareViaSMS(session.id, session.access_token, (session.contact as any)?.phone, (session.contact as any)?.full_name)}
-                              className="flex items-center gap-1.5 px-3 py-1.5 bg-[#406A56]/10 hover:bg-[#406A56]/20 text-[#406A56] text-sm rounded-lg transition-all"
+                              className="flex items-center gap-1.5 px-3 py-1.5 bg-[#2D5A3D]/10 hover:bg-[#2D5A3D]/20 text-[#2D5A3D] text-sm rounded-lg transition-all"
                               title="Share via SMS"
                             >
                               <MessageSquare size={14} />
                               <span className="hidden sm:inline">SMS</span>
                             </button>
                             {copied === session.id && (
-                              <span className="text-xs text-[#406A56] font-medium">Copied!</span>
+                              <span className="text-xs text-[#2D5A3D] font-medium">Copied!</span>
                             )}
                           </div>
                         </div>
@@ -585,7 +585,7 @@ export default function JournalistPage() {
                       )}
                       <Link
                         href={`/dashboard/journalist/${session.id}`}
-                        className="flex items-center gap-2 px-3 py-1.5 bg-[#406A56]/10 hover:bg-[#406A56]/20 text-[#406A56] text-sm rounded-lg transition-all"
+                        className="flex items-center gap-2 px-3 py-1.5 bg-[#2D5A3D]/10 hover:bg-[#2D5A3D]/20 text-[#2D5A3D] text-sm rounded-lg transition-all"
                       >
                         View
                       </Link>
@@ -620,7 +620,7 @@ export default function JournalistPage() {
               initial={{ scale: 0.95, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               exit={{ scale: 0.95, opacity: 0 }}
-              className="bg-[#F2F1E5] rounded-2xl max-w-lg w-full max-h-[85vh] overflow-hidden shadow-xl"
+              className="bg-[#F5F3EE] rounded-2xl max-w-lg w-full max-h-[85vh] overflow-hidden shadow-xl"
               onClick={e => e.stopPropagation()}
             >
               {/* Modal Header */}
@@ -644,7 +644,7 @@ export default function JournalistPage() {
                     <button
                       onClick={() => { setRecipientMode('single'); setSelectedContacts([]); setSelectedCircle(null) }}
                       className={`flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl text-sm font-medium transition-all ${
-                        recipientMode === 'single' ? 'bg-[#406A56] text-white' : 'bg-white/70 text-[#666]'
+                        recipientMode === 'single' ? 'bg-[#2D5A3D] text-white' : 'bg-white/70 text-[#666]'
                       }`}
                     >
                       <User size={16} />
@@ -653,7 +653,7 @@ export default function JournalistPage() {
                     <button
                       onClick={() => { setRecipientMode('multiple'); setSelectedContacts([]); setSelectedCircle(null) }}
                       className={`flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl text-sm font-medium transition-all ${
-                        recipientMode === 'multiple' ? 'bg-[#406A56] text-white' : 'bg-white/70 text-[#666]'
+                        recipientMode === 'multiple' ? 'bg-[#2D5A3D] text-white' : 'bg-white/70 text-[#666]'
                       }`}
                     >
                       <Users size={16} />
@@ -662,7 +662,7 @@ export default function JournalistPage() {
                     <button
                       onClick={() => { setRecipientMode('circle'); setSelectedContacts([]); setSelectedCircle(null) }}
                       className={`flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl text-sm font-medium transition-all ${
-                        recipientMode === 'circle' ? 'bg-[#406A56] text-white' : 'bg-white/70 text-[#666]'
+                        recipientMode === 'circle' ? 'bg-[#2D5A3D] text-white' : 'bg-white/70 text-[#666]'
                       }`}
                     >
                       <Heart size={16} />
@@ -677,8 +677,8 @@ export default function JournalistPage() {
                         {circles.length === 0 ? (
                           <div className="text-center py-8">
                             <Heart size={40} className="text-[#888] mx-auto mb-3" />
-                            <p className="text-[#666] mb-4">No circles yet</p>
-                            <Link href="/dashboard/circles" className="text-[#C35F33] hover:underline">
+                            <p className="text-[#666] mb-4">Create a circle first to get started</p>
+                            <Link href="/dashboard/circles" className="text-[#B8562E] hover:underline">
                               Create a circle first →
                             </Link>
                           </div>
@@ -700,13 +700,13 @@ export default function JournalistPage() {
                                   }}
                                   className={`flex items-center gap-3 p-3 rounded-xl transition-all text-left ${
                                     selectedCircle?.id === circle.id 
-                                      ? 'bg-[#406A56]/10 ring-2 ring-[#406A56]' 
+                                      ? 'bg-[#2D5A3D]/10 ring-2 ring-[#2D5A3D]' 
                                       : 'bg-white/70 hover:bg-white'
                                   }`}
                                 >
                                   <div 
                                     className="w-8 h-8 rounded-full flex items-center justify-center"
-                                    style={{ backgroundColor: '#406A5620', color: '#406A56' }}
+                                    style={{ backgroundColor: '#2D5A3D20', color: '#2D5A3D' }}
                                   >
                                     <Heart size={16} />
                                   </div>
@@ -728,7 +728,7 @@ export default function JournalistPage() {
                                       key={contact.id}
                                       className="flex items-center gap-3 p-3 bg-white/70 rounded-xl"
                                     >
-                                      <div className={`w-6 h-6 rounded-full border-2 flex items-center justify-center border-[#406A56] bg-[#406A56]`}>
+                                      <div className={`w-6 h-6 rounded-full border-2 flex items-center justify-center border-[#2D5A3D] bg-[#2D5A3D]`}>
                                         <Check size={14} className="text-white" />
                                       </div>
                                       <div className="w-9 h-9 rounded-full bg-gradient-to-br from-[#4A3552] to-[#6b4a7a] flex items-center justify-center text-white text-sm font-medium">
@@ -756,8 +756,8 @@ export default function JournalistPage() {
                       contacts.length === 0 ? (
                         <div className="text-center py-8">
                           <User size={40} className="text-[#888] mx-auto mb-3" />
-                          <p className="text-[#666] mb-4">No contacts yet</p>
-                          <Link href="/dashboard/contacts" className="text-[#C35F33] hover:underline">
+                          <p className="text-[#666] mb-4">Add your first contact to get started</p>
+                          <Link href="/dashboard/contacts" className="text-[#B8562E] hover:underline">
                             Add contacts first →
                           </Link>
                         </div>
@@ -770,12 +770,12 @@ export default function JournalistPage() {
                                 key={contact.id}
                                 onClick={() => toggleContactSelection(contact)}
                                 className={`w-full flex items-center gap-4 p-4 rounded-xl transition-all text-left ${
-                                  isSelected ? 'bg-[#406A56]/10 ring-2 ring-[#406A56]' : 'bg-white/70 hover:bg-white'
+                                  isSelected ? 'bg-[#2D5A3D]/10 ring-2 ring-[#2D5A3D]' : 'bg-white/70 hover:bg-white'
                                 }`}
                               >
                                 {recipientMode === 'multiple' && (
                                   <div className={`w-6 h-6 rounded-full border-2 flex items-center justify-center ${
-                                    isSelected ? 'border-[#406A56] bg-[#406A56]' : 'border-gray-300'
+                                    isSelected ? 'border-[#2D5A3D] bg-[#2D5A3D]' : 'border-gray-300'
                                   }`}>
                                     {isSelected && <Check size={14} className="text-white" />}
                                   </div>
@@ -801,7 +801,7 @@ export default function JournalistPage() {
                       <button
                         onClick={proceedToQuestion}
                         disabled={getSelectedRecipients().length === 0}
-                        className="w-full py-3 bg-[#406A56] hover:bg-[#2d5442] text-white rounded-xl font-medium transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                        className="w-full py-3 bg-[#2D5A3D] hover:bg-[#234A31] text-white rounded-xl font-medium transition-all disabled:opacity-50 disabled:cursor-not-allowed"
                       >
                         Continue with {getSelectedRecipients().length} {getSelectedRecipients().length === 1 ? 'person' : 'people'}
                       </button>
@@ -817,7 +817,7 @@ export default function JournalistPage() {
                   <div className="flex items-center justify-between px-6 py-3 bg-white/50">
                     <button
                       onClick={() => { setStep('recipients'); setSelectedCategory(null); setSelectedQuestion(null); setCustomQuestion('') }}
-                      className="text-[#C35F33] text-sm hover:underline"
+                      className="text-[#B8562E] text-sm hover:underline"
                     >
                       ← Change recipients
                     </button>
@@ -847,7 +847,7 @@ export default function JournalistPage() {
                         onChange={(e) => { setCustomQuestion(e.target.value); setSelectedQuestion(null); setSelectedCategory(null) }}
                         placeholder="What's a story from your childhood that shaped who you are today?"
                         rows={2}
-                        className="w-full px-4 py-3 bg-white border border-[#E8E7DC] rounded-xl text-[#2d2d2d] placeholder-[#aaa] focus:outline-none focus:ring-2 focus:ring-[#406A56] resize-none"
+                        className="w-full px-4 py-3 bg-white border border-[#E8E7DC] rounded-xl text-[#2d2d2d] placeholder-[#aaa] focus:outline-none focus:ring-2 focus:ring-[#2D5A3D] resize-none"
                       />
                     </div>
 
@@ -867,7 +867,7 @@ export default function JournalistPage() {
                             onClick={() => { setSelectedCategory(cat.id); setCustomQuestion('') }}
                             className={`flex items-center gap-2 px-4 py-2 rounded-full whitespace-nowrap text-sm transition-all ${
                               selectedCategory === cat.id
-                                ? 'bg-[#406A56] text-white'
+                                ? 'bg-[#2D5A3D] text-white'
                                 : 'bg-white/70 text-[#666] hover:bg-white'
                             }`}
                           >
@@ -887,7 +887,7 @@ export default function JournalistPage() {
                             onClick={() => { setSelectedQuestion(q.id); setCustomQuestion('') }}
                             className={`w-full p-4 rounded-xl text-left transition-all ${
                               selectedQuestion === q.id
-                                ? 'bg-[#406A56]/10 ring-2 ring-[#406A56]'
+                                ? 'bg-[#2D5A3D]/10 ring-2 ring-[#2D5A3D]'
                                 : 'bg-white/70 hover:bg-white'
                             }`}
                           >
@@ -914,7 +914,7 @@ export default function JournalistPage() {
                     <button
                       onClick={handleCreateSession}
                       disabled={creating || (!selectedQuestion && !customQuestion.trim()) || (getSelectedRecipients().some(r => r.phone) && !smsConsent)}
-                      className="w-full py-3 bg-[#C35F33] hover:bg-[#a54d28] text-white rounded-xl font-medium transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                      className="w-full py-3 bg-[#B8562E] hover:bg-[#a54d28] text-white rounded-xl font-medium transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
                     >
                       {creating ? (
                         'Creating...'

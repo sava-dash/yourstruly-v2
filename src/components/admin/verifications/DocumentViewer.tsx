@@ -26,7 +26,7 @@ export function DocumentViewer({ url, type }: DocumentViewerProps) {
             href={url}
             target="_blank"
             rel="noopener noreferrer"
-            className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-[#406A56]/10 text-[#406A56] text-sm font-medium hover:bg-[#406A56]/20 transition-colors"
+            className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-[#2D5A3D]/10 text-[#2D5A3D] text-sm font-medium hover:bg-[#2D5A3D]/20 transition-colors"
           >
             <Download className="w-4 h-4" />
             Open PDF

@@ -71,7 +71,7 @@ export default function ThreadToolbar({
   }
 
   return (
-    <div className="border-b border-[#406A56]/10 bg-white/30">
+    <div className="border-b border-[#2D5A3D]/10 bg-white/30">
       {/* Quick Stats Bar */}
       <div className="flex items-center justify-between px-4 py-2">
         <div className="flex items-center gap-4 text-xs text-[#666]">
@@ -88,7 +88,7 @@ export default function ThreadToolbar({
             </span>
           )}
           {stats.schedules > 0 && (
-            <span className="flex items-center gap-1 text-[#C35F33]">
+            <span className="flex items-center gap-1 text-[#B8562E]">
               <Calendar size={12} />
               {stats.schedules}
             </span>
@@ -111,8 +111,8 @@ export default function ThreadToolbar({
               }}
               className={`flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-medium transition-all ${
                 showPinned
-                  ? 'bg-[#C35F33]/15 text-[#C35F33]'
-                  : 'bg-white/60 text-[#666] hover:bg-white hover:text-[#C35F33] border border-[#406A56]/10'
+                  ? 'bg-[#B8562E]/15 text-[#B8562E]'
+                  : 'bg-white/60 text-[#666] hover:bg-white hover:text-[#B8562E] border border-[#2D5A3D]/10'
               }`}
             >
               <Pin size={12} />
@@ -135,8 +135,8 @@ export default function ThreadToolbar({
               disabled={isGeneratingSummary}
               className={`flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-medium transition-all ${
                 showSummary
-                  ? 'bg-[#D9C61A]/20 text-[#8a7c08]'
-                  : 'bg-white/60 text-[#666] hover:bg-white hover:text-[#8a7c08] border border-[#406A56]/10'
+                  ? 'bg-[#C4A235]/20 text-[#8a7c08]'
+                  : 'bg-white/60 text-[#666] hover:bg-white hover:text-[#8a7c08] border border-[#2D5A3D]/10'
               }`}
             >
               {isGeneratingSummary ? (
@@ -153,8 +153,8 @@ export default function ThreadToolbar({
       {/* Pinned Messages Panel */}
       {showPinned && pinnedMessages.length > 0 && (
         <div className="px-4 pb-3 space-y-2">
-          <div className="p-3 bg-[#C35F33]/5 rounded-xl border border-[#C35F33]/10">
-            <p className="text-xs font-semibold text-[#C35F33] mb-2 flex items-center gap-1">
+          <div className="p-3 bg-[#B8562E]/5 rounded-xl border border-[#B8562E]/10">
+            <p className="text-xs font-semibold text-[#B8562E] mb-2 flex items-center gap-1">
               <Pin size={12} />
               Pinned Messages
             </p>
@@ -162,11 +162,11 @@ export default function ThreadToolbar({
               {pinnedMessages.map(msg => (
                 <div 
                   key={msg.id}
-                  className="flex items-start justify-between gap-2 p-2 bg-white rounded-lg cursor-pointer hover:bg-[#C35F33]/5 transition-colors"
+                  className="flex items-start justify-between gap-2 p-2 bg-white rounded-lg cursor-pointer hover:bg-[#B8562E]/5 transition-colors"
                   onClick={() => onScrollToMessage?.(msg.id)}
                 >
                   <div className="min-w-0 flex-1">
-                    <p className="text-[10px] font-semibold text-[#406A56]">
+                    <p className="text-[10px] font-semibold text-[#2D5A3D]">
                       {msg.senderName}
                     </p>
                     <p className="text-xs text-[#2d2d2d] truncate">
@@ -182,7 +182,7 @@ export default function ThreadToolbar({
                         e.stopPropagation()
                         onUnpin(msg.id)
                       }}
-                      className="p-0.5 text-[#666] hover:text-[#C35F33] transition-colors"
+                      className="p-0.5 text-[#666] hover:text-[#B8562E] transition-colors"
                       title="Unpin"
                     >
                       <X size={12} />
@@ -198,7 +198,7 @@ export default function ThreadToolbar({
       {/* AI Summary Panel */}
       {showSummary && summary && (
         <div className="px-4 pb-3">
-          <div className="p-4 bg-gradient-to-br from-[#D9C61A]/10 to-[#406A56]/10 rounded-xl border border-[#D9C61A]/20">
+          <div className="p-4 bg-gradient-to-br from-[#C4A235]/10 to-[#2D5A3D]/10 rounded-xl border border-[#C4A235]/20">
             <div className="flex items-start justify-between mb-3">
               <p className="text-xs font-semibold text-[#8a7c08] flex items-center gap-1.5">
                 <Sparkles size={12} />
@@ -221,7 +221,7 @@ export default function ThreadToolbar({
                 <ul className="space-y-1">
                   {summary.keyPoints.map((point, i) => (
                     <li key={i} className="flex items-start gap-2 text-xs text-[#2d2d2d]">
-                      <span className="text-[#406A56]">•</span>
+                      <span className="text-[#2D5A3D]">•</span>
                       {point}
                     </li>
                   ))}
@@ -237,7 +237,7 @@ export default function ThreadToolbar({
                 <ul className="space-y-1">
                   {summary.actionItems.map((item, i) => (
                     <li key={i} className="flex items-start gap-2 text-xs text-[#2d2d2d]">
-                      <span className="text-[#C35F33]">→</span>
+                      <span className="text-[#B8562E]">→</span>
                       {item}
                     </li>
                   ))}

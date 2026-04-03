@@ -239,7 +239,7 @@
 }
 
 .plan-card.plan-current {
-  border-color: #406A56;
+  border-color: #2D5A3D;
 }
 
 .plan-card.plan-premium {
@@ -250,7 +250,7 @@
   position: absolute;
   top: -12px;
   right: 20px;
-  background: #406A56;
+  background: #2D5A3D;
   color: white;
   padding: 4px 12px;
   border-radius: 12px;
@@ -335,7 +335,7 @@
 }
 
 .plan-cta-primary {
-  background: #406A56;
+  background: #2D5A3D;
   color: white;
 }
 
@@ -345,8 +345,8 @@
 
 .plan-cta-secondary {
   background: transparent;
-  border: 2px solid #406A56;
-  color: #406A56;
+  border: 2px solid #2D5A3D;
+  color: #2D5A3D;
 }
 
 .plan-cta-secondary:hover {
@@ -408,7 +408,7 @@
 .seat-number {
   width: 32px;
   height: 32px;
-  background: #406A56;
+  background: #2D5A3D;
   color: white;
   border-radius: 50%;
   display: flex;
@@ -423,7 +423,7 @@
 }
 
 .seat-number.seat-paid {
-  background: #C35F33;
+  background: #B8562E;
 }
 
 .seat-info {
@@ -488,7 +488,7 @@
   background: transparent;
   border: 2px dashed rgba(64, 106, 86, 0.3);
   border-radius: 12px;
-  color: #406A56;
+  color: #2D5A3D;
   font-size: 14px;
   font-weight: 500;
   cursor: pointer;
@@ -496,7 +496,7 @@
 }
 
 .add-seat-btn:hover {
-  border-color: #406A56;
+  border-color: #2D5A3D;
   background: rgba(64, 106, 86, 0.05);
 }
 
@@ -538,7 +538,7 @@
   align-items: center;
   justify-content: center;
   margin-bottom: 12px;
-  color: #406A56;
+  color: #2D5A3D;
 }
 
 .feature-locked-title {
@@ -555,7 +555,7 @@
 
 .feature-locked-cta {
   padding: 10px 20px;
-  background: #406A56;
+  background: #2D5A3D;
   color: white;
   border: none;
   border-radius: 8px;

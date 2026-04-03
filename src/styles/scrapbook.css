@@ -99,7 +99,7 @@
 
 /* Full torn paper card */
 .torn-paper {
-  background: #F2F1E5;
+  background: #F5F3EE;
   position: relative;
   padding: 20px;
   /* Clip-path for torn edges all around */
@@ -181,7 +181,7 @@
    Scrapbook Sections
    ------------------------- */
 .section-cream {
-  background: #F2F1E5;
+  background: #F5F3EE;
 }
 
 .section-purple {
@@ -190,18 +190,18 @@
 }
 
 .section-terracotta {
-  background: #C35F33;
+  background: #B8562E;
   color: white;
 }
 
 .section-green {
-  background: #406A56;
+  background: #2D5A3D;
   color: white;
 }
 
 /* Yellow accent bar */
 .accent-bar-yellow {
-  background: #D9C61A;
+  background: #C4A235;
   padding: 8px 16px;
   font-size: 0.75rem;
   font-weight: 600;
@@ -219,7 +219,7 @@
   justify-content: center;
   width: 28px;
   height: 28px;
-  background: #D9C61A;
+  background: #C4A235;
   color: #000;
   font-weight: 700;
   font-size: 0.875rem;
@@ -255,7 +255,7 @@
    Scrapbook Cards
    ------------------------- */
 .card-scrapbook {
-  background: #F2F1E5;
+  background: #F5F3EE;
   border-radius: 4px;
   padding: 20px;
   position: relative;
@@ -307,7 +307,7 @@
    Memory Timeline Cards
    ------------------------- */
 .memory-card-scrapbook {
-  background: #F2F1E5;
+  background: #F5F3EE;
   border-radius: 8px;
   overflow: hidden;
   position: relative;
@@ -360,7 +360,7 @@
   align-items: center;
   gap: 8px;
   padding: 12px 24px;
-  background: #406A56;
+  background: #2D5A3D;
   color: white;
   font-weight: 500;
   border-radius: 8px;
@@ -374,12 +374,12 @@
 
 .btn-scrapbook-outline {
   background: transparent;
-  border: 2px solid #406A56;
-  color: #406A56;
+  border: 2px solid #2D5A3D;
+  color: #2D5A3D;
 }
 
 .btn-scrapbook-outline:hover {
-  background: #406A56;
+  background: #2D5A3D;
   color: white;
 }
 

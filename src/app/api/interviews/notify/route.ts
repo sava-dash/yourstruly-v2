@@ -248,7 +248,7 @@ function generateEmailTemplate(subject: string, message: string, link: string, t
       font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
       line-height: 1.6;
       color: #333;
-      background-color: #F2F1E5;
+      background-color: #F5F3EE;
       margin: 0;
       padding: 0;
     }
@@ -261,7 +261,7 @@ function generateEmailTemplate(subject: string, message: string, link: string, t
       box-shadow: 0 4px 16px rgba(0,0,0,0.1);
     }
     .header {
-      background: linear-gradient(135deg, #406A56, #4A3552);
+      background: linear-gradient(135deg, #2D5A3D, #4A3552);
       padding: 40px 20px;
       text-align: center;
     }
@@ -282,7 +282,7 @@ function generateEmailTemplate(subject: string, message: string, link: string, t
     }
     .button {
       display: inline-block;
-      background: linear-gradient(135deg, #406A56, #2d4f3e);
+      background: linear-gradient(135deg, #2D5A3D, #2d4f3e);
       color: white;
       text-decoration: none;
       padding: 16px 32px;
@@ -292,7 +292,7 @@ function generateEmailTemplate(subject: string, message: string, link: string, t
       margin: 20px 0;
     }
     .button:hover {
-      background: linear-gradient(135deg, #4a7a64, #365949);
+      background: linear-gradient(135deg, #234A31, #365949);
     }
     .footer {
       background: #f8f8f8;
@@ -302,7 +302,7 @@ function generateEmailTemplate(subject: string, message: string, link: string, t
       color: #888;
     }
     .footer a {
-      color: #406A56;
+      color: #2D5A3D;
       text-decoration: none;
     }
   </style>
@@ -322,7 +322,7 @@ function generateEmailTemplate(subject: string, message: string, link: string, t
             </center>
             <p style="text-align: center; font-size: 14px; color: #888; margin-top: 30px;">
               Or copy and paste this link:<br>
-              <a href="${link}" style="color: #406A56; word-break: break-all;">${link}</a>
+              <a href="${link}" style="color: #2D5A3D; word-break: break-all;">${link}</a>
             </p>
           </div>
           <div class="footer">

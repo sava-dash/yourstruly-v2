@@ -183,12 +183,12 @@ export async function POST(request: NextRequest) {
                 </p>
                 <div style="text-align: center; margin: 32px 0;">
                   <a href="${interviewLink}" 
-                     style="background: #406A56; color: white; padding: 14px 32px; text-decoration: none; border-radius: 10px; font-size: 16px; font-weight: 600; display: inline-block;">
+                     style="background: #2D5A3D; color: white; padding: 14px 32px; text-decoration: none; border-radius: 10px; font-size: 16px; font-weight: 600; display: inline-block;">
                     Answer the Question →
                   </a>
                 </div>
                 <p style="color: #999; font-size: 13px; text-align: center; margin-top: 32px;">
-                  Or copy this link: <a href="${interviewLink}" style="color: #406A56;">${interviewLink}</a>
+                  Or copy this link: <a href="${interviewLink}" style="color: #2D5A3D;">${interviewLink}</a>
                 </p>
                 <hr style="margin: 32px 0; border: none; border-top: 1px solid #eee;">
                 <p style="color: #bbb; font-size: 11px; text-align: center;">

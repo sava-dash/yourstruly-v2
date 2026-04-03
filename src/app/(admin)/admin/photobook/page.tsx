@@ -41,7 +41,7 @@ export default async function PhotobookAdminPage() {
         { label: 'Total', value: products.length },
         { label: 'Enabled', value: enabledProducts },
       ],
-      color: 'from-[#406A56] to-[#4A7A66]',
+      color: 'from-[#2D5A3D] to-[#4A7A66]',
     },
     {
       title: 'Layout Templates',
@@ -52,7 +52,7 @@ export default async function PhotobookAdminPage() {
         { label: 'Total', value: templates.length },
         { label: 'Enabled', value: enabledTemplates },
       ],
-      color: 'from-[#C35F33] to-[#D37F53]',
+      color: 'from-[#B8562E] to-[#D37F53]',
     },
     {
       title: 'Cover Designs',
@@ -89,7 +89,7 @@ export default async function PhotobookAdminPage() {
           </p>
         </div>
         <div className="flex items-center gap-2">
-          <Printer className="w-5 h-5 text-[#406A56]" />
+          <Printer className="w-5 h-5 text-[#2D5A3D]" />
           <span className="text-sm text-[#2a1f1a]/60">Provider: Prodigi</span>
         </div>
       </div>
@@ -108,7 +108,7 @@ export default async function PhotobookAdminPage() {
                 <div className={`p-3 rounded-xl bg-gradient-to-br ${section.color} shadow-lg`}>
                   <Icon className="w-6 h-6 text-white" />
                 </div>
-                <ArrowRight className="w-5 h-5 text-[#2a1f1a]/30 group-hover:text-[#406A56] group-hover:translate-x-1 transition-all" />
+                <ArrowRight className="w-5 h-5 text-[#2a1f1a]/30 group-hover:text-[#2D5A3D] group-hover:translate-x-1 transition-all" />
               </div>
               
               <h3 className="text-lg font-semibold text-[#2a1f1a] mb-1">
@@ -141,7 +141,7 @@ export default async function PhotobookAdminPage() {
               className="flex items-center justify-between p-3 rounded-xl bg-white/50 hover:bg-white/80 transition-colors"
             >
               <div className="flex items-center gap-3">
-                <BookOpen className="w-5 h-5 text-[#406A56]" />
+                <BookOpen className="w-5 h-5 text-[#2D5A3D]" />
                 <div>
                   <p className="font-medium text-[#2a1f1a]">{product.name}</p>
                   <p className="text-xs text-[#2a1f1a]/50">{product.size} • {product.binding}</p>

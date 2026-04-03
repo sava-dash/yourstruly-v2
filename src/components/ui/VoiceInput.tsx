@@ -113,18 +113,18 @@ export default function VoiceInput({
   return (
     <div className={`relative ${className}`}>
       {/* Main container - glassmorphism style */}
-      <div className="bg-white/70 backdrop-blur-xl rounded-2xl border border-[#D9C61A]/20 shadow-lg p-4">
+      <div className="bg-white/70 backdrop-blur-xl rounded-2xl border border-[#C4A235]/20 shadow-lg p-4">
         
         {/* Placeholder or transcript */}
         <div className="min-h-[60px] mb-4">
           {displayText ? (
-            <p className="text-[#406A56] text-lg leading-relaxed">
+            <p className="text-[#2D5A3D] text-lg leading-relaxed">
               {transcript}
-              <span className="text-[#406A56]/40">{interimTranscript}</span>
+              <span className="text-[#2D5A3D]/40">{interimTranscript}</span>
               {isListening && <span className="animate-pulse">|</span>}
             </p>
           ) : (
-            <p className="text-[#406A56]/40 text-lg">{placeholder}</p>
+            <p className="text-[#2D5A3D]/40 text-lg">{placeholder}</p>
           )}
         </div>
 
@@ -151,8 +151,8 @@ export default function VoiceInput({
               relative w-16 h-16 rounded-full flex items-center justify-center
               transition-all duration-300
               ${isListening 
-                ? 'bg-[#406A56] text-white shadow-lg shadow-[#406A56]/30' 
-                : 'bg-[#406A56]/10 text-[#406A56] hover:bg-[#406A56]/20'
+                ? 'bg-[#2D5A3D] text-white shadow-lg shadow-[#2D5A3D]/30' 
+                : 'bg-[#2D5A3D]/10 text-[#2D5A3D] hover:bg-[#2D5A3D]/20'
               }
               ${error ? 'opacity-50 cursor-not-allowed' : ''}
             `}
@@ -162,12 +162,12 @@ export default function VoiceInput({
             {isListening && (
               <>
                 <motion.div
-                  className="absolute inset-0 rounded-full bg-[#406A56]"
+                  className="absolute inset-0 rounded-full bg-[#2D5A3D]"
                   animate={{ scale: [1, 1.3, 1], opacity: [0.5, 0, 0.5] }}
                   transition={{ duration: 1.5, repeat: Infinity }}
                 />
                 <motion.div
-                  className="absolute inset-0 rounded-full bg-[#406A56]"
+                  className="absolute inset-0 rounded-full bg-[#2D5A3D]"
                   animate={{ scale: [1, 1.5, 1], opacity: [0.3, 0, 0.3] }}
                   transition={{ duration: 1.5, repeat: Infinity, delay: 0.3 }}
                 />
@@ -183,7 +183,7 @@ export default function VoiceInput({
               initial={{ scale: 0 }}
               animate={{ scale: 1 }}
               onClick={handleSubmit}
-              className="w-10 h-10 rounded-full bg-[#D9C61A] flex items-center justify-center text-white hover:bg-[#D9C61A]/90 transition-colors shadow-md"
+              className="w-10 h-10 rounded-full bg-[#C4A235] flex items-center justify-center text-white hover:bg-[#C4A235]/90 transition-colors shadow-md"
             >
               <Send size={18} />
             </motion.button>
@@ -197,11 +197,11 @@ export default function VoiceInput({
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: 10 }}
-              className="text-center text-sm text-[#406A56]/60 mt-3 flex items-center justify-center gap-2"
+              className="text-center text-sm text-[#2D5A3D]/60 mt-3 flex items-center justify-center gap-2"
             >
               <span className="relative flex h-2 w-2">
-                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#406A56] opacity-75"></span>
-                <span className="relative inline-flex rounded-full h-2 w-2 bg-[#406A56]"></span>
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#2D5A3D] opacity-75"></span>
+                <span className="relative inline-flex rounded-full h-2 w-2 bg-[#2D5A3D]"></span>
               </span>
               Listening...
             </motion.p>
@@ -232,9 +232,9 @@ export function VoiceInputButton({
       <button
         onClick={() => setIsOpen(true)}
         className={`
-          w-10 h-10 rounded-full bg-[#406A56]/10 
-          flex items-center justify-center text-[#406A56]
-          hover:bg-[#406A56]/20 transition-colors
+          w-10 h-10 rounded-full bg-[#2D5A3D]/10 
+          flex items-center justify-center text-[#2D5A3D]
+          hover:bg-[#2D5A3D]/20 transition-colors
           ${className}
         `}
       >

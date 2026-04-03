@@ -201,9 +201,9 @@ export default function FeedMap({ activities, onLocationClick }: FeedMapProps) {
         'circle-color': [
           'step',
           ['get', 'point_count'],
-          '#406A56',  // < 10
-          10, '#D9C61A',  // 10-50
-          50, '#C35F33'   // 50+
+          '#2D5A3D',  // < 10
+          10, '#C4A235',  // 10-50
+          50, '#B8562E'   // 50+
         ],
         'circle-radius': [
           'step',
@@ -253,9 +253,9 @@ export default function FeedMap({ activities, onLocationClick }: FeedMapProps) {
       filter: ['!', ['has', 'point_count']],
       paint: {
         'circle-radius': 10,
-        'circle-color': '#406A56',
+        'circle-color': '#2D5A3D',
         'circle-stroke-width': 2,
-        'circle-stroke-color': '#D9C61A',
+        'circle-stroke-color': '#C4A235',
       }
     })
 
@@ -499,7 +499,7 @@ export default function FeedMap({ activities, onLocationClick }: FeedMapProps) {
           width: 100%;
           padding: 8px 12px;
           margin-bottom: 6px;
-          background: #C35F33;
+          background: #B8562E;
           color: #fff;
           border: none;
           border-radius: 8px;

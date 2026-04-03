@@ -62,7 +62,7 @@ export function validatePassword(password: string): PasswordValidationResult {
   if (requirements.hasNumber && requirements.hasSpecialChar) score++;
 
   const strengthLabels = ['Very Weak', 'Weak', 'Fair', 'Good', 'Strong'];
-  const strengthColors = ['bg-gray-200', 'bg-red-500', 'bg-yellow-500', 'bg-blue-500', 'bg-[#406A56]'];
+  const strengthColors = ['bg-gray-200', 'bg-red-500', 'bg-yellow-500', 'bg-blue-500', 'bg-[#2D5A3D]'];
 
   return {
     isValid,

@@ -34,8 +34,8 @@ export function LogoOutro({
   onComplete,
 }: LogoOutroProps) {
   const backgrounds = {
-    gradient: 'bg-gradient-to-br from-[#F2F1E5] via-[#E8E4D4] to-[#DED8C8]',
-    solid: 'bg-[#F2F1E5]',
+    gradient: 'bg-gradient-to-br from-[#F5F3EE] via-[#E8E4D4] to-[#DED8C8]',
+    solid: 'bg-[#F5F3EE]',
     transparent: 'bg-transparent',
   }
 
@@ -60,7 +60,7 @@ export function LogoOutro({
       >
         {/* Logo Text - Styled like brand */}
         <motion.h1
-          className="text-4xl md:text-5xl font-serif italic text-[#406A56] tracking-wide"
+          className="text-4xl md:text-5xl font-serif italic text-[#2D5A3D] tracking-wide"
           style={{ fontFamily: 'Georgia, serif' }}
         >
           YoursTruly
@@ -71,7 +71,7 @@ export function LogoOutro({
           initial={{ scaleX: 0 }}
           animate={{ scaleX: 1 }}
           transition={{ delay: 0.6, duration: 0.4 }}
-          className="w-24 h-0.5 bg-[#D9C61A] mt-3 mb-4"
+          className="w-24 h-0.5 bg-[#C4A235] mt-3 mb-4"
         />
 
         {/* Tagline */}
@@ -113,7 +113,7 @@ export function LogoOutro({
  * 
  * export function LogoOutroAnimated(props: LogoOutroProps) {
  *   return (
- *     <div className="w-full h-full flex items-center justify-center bg-[#F2F1E5]">
+ *     <div className="w-full h-full flex items-center justify-center bg-[#F5F3EE]">
  *       <Lottie
  *         animationData={logoAnimation}
  *         loop={false}

@@ -13,17 +13,17 @@ import WisdomComments from '@/components/wisdom/WisdomComments';
 
 // Wisdom categories with icons and colors
 const WISDOM_CATEGORIES = [
-  { key: 'life_lessons', label: 'Life Lessons', icon: Lightbulb, color: '#D9C61A', bgColor: '#FDF9E3' },
-  { key: 'relationships', label: 'Relationships', icon: Heart, color: '#C35F33', bgColor: '#FCEEE8' },
-  { key: 'family', label: 'Family', icon: Users, color: '#406A56', bgColor: '#E8F2ED' },
+  { key: 'life_lessons', label: 'Life Lessons', icon: Lightbulb, color: '#C4A235', bgColor: '#FDF9E3' },
+  { key: 'relationships', label: 'Relationships', icon: Heart, color: '#B8562E', bgColor: '#FCEEE8' },
+  { key: 'family', label: 'Family', icon: Users, color: '#2D5A3D', bgColor: '#E8F2ED' },
   { key: 'career', label: 'Career', icon: Briefcase, color: '#4A3552', bgColor: '#EDE8F0' },
   { key: 'parenting', label: 'Parenting', icon: Baby, color: '#8DACAB', bgColor: '#EBF2F1' },
   { key: 'health', label: 'Health', icon: Activity, color: '#5B8A72', bgColor: '#E6F0EB' },
   { key: 'spirituality', label: 'Spirituality', icon: Moon, color: '#6B5B95', bgColor: '#EFEAF5' },
   { key: 'creativity', label: 'Creativity', icon: Palette, color: '#E07C52', bgColor: '#FCF0EA' },
   { key: 'values', label: 'Values', icon: Compass, color: '#3D7068', bgColor: '#E4EDEC' },
-  { key: 'recipes', label: 'Recipes', icon: Utensils, color: '#C35F33', bgColor: '#FCEEE8' },
-  { key: 'advice', label: 'Advice', icon: GraduationCap, color: '#D9C61A', bgColor: '#FDF9E3' },
+  { key: 'recipes', label: 'Recipes', icon: Utensils, color: '#B8562E', bgColor: '#FCEEE8' },
+  { key: 'advice', label: 'Advice', icon: GraduationCap, color: '#C4A235', bgColor: '#FDF9E3' },
   { key: 'other', label: 'Other', icon: HelpCircle, color: '#888888', bgColor: '#F5F5F5' },
 ];
 
@@ -450,7 +450,7 @@ export default function WisdomDetailPage() {
               {/* Share as Card button */}
               <button
                 onClick={() => setShowCardModal(true)}
-                className="flex items-center gap-1.5 px-4 py-2 bg-gradient-to-r from-[#D9C61A] to-[#C35F33] text-white rounded-xl hover:opacity-90 transition-all shadow-sm"
+                className="flex items-center gap-1.5 px-4 py-2 bg-gradient-to-r from-[#C4A235] to-[#B8562E] text-white rounded-xl hover:opacity-90 transition-all shadow-sm"
               >
                 <ImageIcon size={16} />
                 <span className="text-sm font-medium">Share as Card</span>
@@ -495,7 +495,7 @@ export default function WisdomDetailPage() {
                     {shares.map(share => (
                       <div
                         key={share.id}
-                        className="flex items-center gap-3 p-2 rounded-xl hover:bg-[#F2F1E5] transition-colors"
+                        className="flex items-center gap-3 p-2 rounded-xl hover:bg-[#F5F3EE] transition-colors"
                       >
                         <div className="w-10 h-10 rounded-full bg-gradient-to-br from-[#4A3552] to-[#6a4572] flex items-center justify-center text-white text-sm font-medium flex-shrink-0">
                           {getInitials(share.contact.name)}
@@ -509,7 +509,7 @@ export default function WisdomDetailPage() {
                               <span className="text-[#4A3552]">{share.contact.relationship_type}</span>
                             )}
                             {share.can_comment && (
-                              <span className="px-1.5 py-0.5 bg-[#D9C61A]/20 text-[#8a7c08] rounded text-[10px]">
+                              <span className="px-1.5 py-0.5 bg-[#C4A235]/20 text-[#8a7c08] rounded text-[10px]">
                                 Can comment
                               </span>
                             )}
@@ -641,7 +641,7 @@ export default function WisdomDetailPage() {
               {/* Direct Audio Player (for audio_url - shown always when available) */}
               {entry.audio_url && (
                 <div className="mt-6">
-                  <div className="flex items-center gap-3 px-5 py-4 bg-gradient-to-r from-[#4A3552]/5 to-[#D9C61A]/5 rounded-2xl border border-[#4A3552]/10">
+                  <div className="flex items-center gap-3 px-5 py-4 bg-gradient-to-r from-[#4A3552]/5 to-[#C4A235]/5 rounded-2xl border border-[#4A3552]/10">
                     <div className="w-12 h-12 rounded-full bg-[#4A3552]/20 flex items-center justify-center flex-shrink-0">
                       <Volume2 size={20} className="text-[#4A3552]" />
                     </div>
@@ -666,7 +666,7 @@ export default function WisdomDetailPage() {
                 <div className="mt-6">
                   <button
                     onClick={togglePlayback}
-                    className="flex items-center gap-3 px-5 py-4 bg-gradient-to-r from-[#4A3552]/5 to-[#D9C61A]/5 hover:from-[#4A3552]/10 hover:to-[#D9C61A]/10 rounded-2xl transition-all w-full border border-[#4A3552]/10"
+                    className="flex items-center gap-3 px-5 py-4 bg-gradient-to-r from-[#4A3552]/5 to-[#C4A235]/5 hover:from-[#4A3552]/10 hover:to-[#C4A235]/10 rounded-2xl transition-all w-full border border-[#4A3552]/10"
                   >
                     <div className={`w-12 h-12 rounded-full flex items-center justify-center transition-colors ${isPlaying ? 'bg-[#4A3552]' : 'bg-[#4A3552]/20'}`}>
                       {isPlaying ? (
@@ -717,9 +717,9 @@ export default function WisdomDetailPage() {
 
             {/* Quick Summary */}
             {summary && (
-              <div className="p-8 bg-gradient-to-br from-[#D9C61A]/5 to-transparent">
+              <div className="p-8 bg-gradient-to-br from-[#C4A235]/5 to-transparent">
                 <div className="flex items-start gap-4">
-                  <Quote size={24} className="text-[#D9C61A] flex-shrink-0 mt-1" />
+                  <Quote size={24} className="text-[#C4A235] flex-shrink-0 mt-1" />
                   <p className="text-[#2d2d2d] leading-relaxed text-lg italic">
                     {summary.length > 200 ? summary.slice(0, 200) + '...' : summary}
                   </p>
@@ -751,14 +751,14 @@ export default function WisdomDetailPage() {
                       <div className="flex items-start gap-3">
                         <div className={`w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 transition-colors ${
                           currentExchangeIndex === index && playingPart === 'question'
-                            ? 'bg-[#406A56] text-white'
-                            : 'bg-[#406A56]/10 text-[#406A56]'
+                            ? 'bg-[#2D5A3D] text-white'
+                            : 'bg-[#2D5A3D]/10 text-[#2D5A3D]'
                         }`}>
                           <span className="text-xs font-bold">Q</span>
                         </div>
                         <p className={`pt-1.5 font-medium transition-colors ${
                           currentExchangeIndex === index && playingPart === 'question'
-                            ? 'text-[#406A56]'
+                            ? 'text-[#2D5A3D]'
                             : 'text-gray-600'
                         }`}>
                           {exchange.question}
@@ -770,7 +770,7 @@ export default function WisdomDetailPage() {
                         <div className={`rounded-2xl p-5 transition-colors ${
                           currentExchangeIndex === index && playingPart === 'answer'
                             ? 'bg-[#4A3552]/10 border border-[#4A3552]/20'
-                            : 'bg-[#F2F1E5]'
+                            : 'bg-[#F5F3EE]'
                         }`}>
                           <p className="text-[#2d2d2d] leading-relaxed">
                             {exchange.answer}
@@ -803,7 +803,7 @@ export default function WisdomDetailPage() {
             )}
 
             {/* Comments Section */}
-            <div className="p-8 border-t border-gray-100 bg-gradient-to-br from-[#F2F1E5]/50 to-transparent">
+            <div className="p-8 border-t border-gray-100 bg-gradient-to-br from-[#F5F3EE]/50 to-transparent">
               <WisdomComments wisdomId={entry.id} />
             </div>
           </motion.div>

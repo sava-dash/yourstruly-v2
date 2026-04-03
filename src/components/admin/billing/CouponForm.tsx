@@ -82,7 +82,7 @@ export default function CouponForm({ coupon, onClose }: CouponFormProps) {
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50">
       <div className="relative w-full max-w-lg glass bg-white rounded-2xl shadow-2xl">
         {/* Header */}
-        <div className="flex items-center justify-between px-6 py-4 border-b border-[#C35F33]/10">
+        <div className="flex items-center justify-between px-6 py-4 border-b border-[#B8562E]/10">
           <h2 className="text-xl font-semibold text-[#2a1f1a]">
             {coupon ? 'Edit Coupon' : 'Create Coupon'}
           </h2>
@@ -110,7 +110,7 @@ export default function CouponForm({ coupon, onClose }: CouponFormProps) {
               onChange={(e) => setFormData({ ...formData, code: e.target.value.toUpperCase() })}
               required
               disabled={!!coupon}
-              className="w-full px-4 py-2 bg-white/80 border border-[#C35F33]/10 rounded-xl text-sm font-mono focus:outline-none focus:ring-2 focus:ring-[#406A56]/20 focus:border-[#406A56]/30 disabled:bg-gray-100"
+              className="w-full px-4 py-2 bg-white/80 border border-[#B8562E]/10 rounded-xl text-sm font-mono focus:outline-none focus:ring-2 focus:ring-[#2D5A3D]/20 focus:border-[#2D5A3D]/30 disabled:bg-gray-100"
               placeholder="e.g., SUMMER20"
             />
             <p className="text-xs text-[#2a1f1a]/50">Code will be converted to uppercase</p>
@@ -122,7 +122,7 @@ export default function CouponForm({ coupon, onClose }: CouponFormProps) {
               type="text"
               value={formData.description}
               onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-              className="w-full px-4 py-2 bg-white/80 border border-[#C35F33]/10 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-[#406A56]/20 focus:border-[#406A56]/30"
+              className="w-full px-4 py-2 bg-white/80 border border-[#B8562E]/10 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-[#2D5A3D]/20 focus:border-[#2D5A3D]/30"
               placeholder="e.g., Summer sale - 20% off"
             />
           </div>
@@ -133,7 +133,7 @@ export default function CouponForm({ coupon, onClose }: CouponFormProps) {
               <select
                 value={formData.discount_type}
                 onChange={(e) => setFormData({ ...formData, discount_type: e.target.value as 'percentage' | 'fixed_amount' })}
-                className="w-full px-4 py-2 bg-white/80 border border-[#C35F33]/10 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-[#406A56]/20 focus:border-[#406A56]/30"
+                className="w-full px-4 py-2 bg-white/80 border border-[#B8562E]/10 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-[#2D5A3D]/20 focus:border-[#2D5A3D]/30"
               >
                 <option value="percentage">Percentage (%)</option>
                 <option value="fixed_amount">Fixed Amount ($)</option>
@@ -152,7 +152,7 @@ export default function CouponForm({ coupon, onClose }: CouponFormProps) {
                 value={formData.discount_value}
                 onChange={(e) => setFormData({ ...formData, discount_value: parseFloat(e.target.value) })}
                 required
-                className="w-full px-4 py-2 bg-white/80 border border-[#C35F33]/10 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-[#406A56]/20 focus:border-[#406A56]/30"
+                className="w-full px-4 py-2 bg-white/80 border border-[#B8562E]/10 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-[#2D5A3D]/20 focus:border-[#2D5A3D]/30"
               />
             </div>
           </div>
@@ -166,7 +166,7 @@ export default function CouponForm({ coupon, onClose }: CouponFormProps) {
                 value={formData.max_redemptions}
                 onChange={(e) => setFormData({ ...formData, max_redemptions: e.target.value })}
                 placeholder="Unlimited"
-                className="w-full px-4 py-2 bg-white/80 border border-[#C35F33]/10 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-[#406A56]/20 focus:border-[#406A56]/30"
+                className="w-full px-4 py-2 bg-white/80 border border-[#B8562E]/10 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-[#2D5A3D]/20 focus:border-[#2D5A3D]/30"
               />
             </div>
 
@@ -179,7 +179,7 @@ export default function CouponForm({ coupon, onClose }: CouponFormProps) {
                 value={formData.min_purchase_cents}
                 onChange={(e) => setFormData({ ...formData, min_purchase_cents: e.target.value })}
                 placeholder="No minimum"
-                className="w-full px-4 py-2 bg-white/80 border border-[#C35F33]/10 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-[#406A56]/20 focus:border-[#406A56]/30"
+                className="w-full px-4 py-2 bg-white/80 border border-[#B8562E]/10 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-[#2D5A3D]/20 focus:border-[#2D5A3D]/30"
               />
             </div>
           </div>
@@ -192,7 +192,7 @@ export default function CouponForm({ coupon, onClose }: CouponFormProps) {
                 value={formData.starts_at}
                 onChange={(e) => setFormData({ ...formData, starts_at: e.target.value })}
                 required
-                className="w-full px-4 py-2 bg-white/80 border border-[#C35F33]/10 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-[#406A56]/20 focus:border-[#406A56]/30"
+                className="w-full px-4 py-2 bg-white/80 border border-[#B8562E]/10 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-[#2D5A3D]/20 focus:border-[#2D5A3D]/30"
               />
             </div>
 
@@ -202,18 +202,18 @@ export default function CouponForm({ coupon, onClose }: CouponFormProps) {
                 type="date"
                 value={formData.expires_at}
                 onChange={(e) => setFormData({ ...formData, expires_at: e.target.value })}
-                className="w-full px-4 py-2 bg-white/80 border border-[#C35F33]/10 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-[#406A56]/20 focus:border-[#406A56]/30"
+                className="w-full px-4 py-2 bg-white/80 border border-[#B8562E]/10 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-[#2D5A3D]/20 focus:border-[#2D5A3D]/30"
               />
             </div>
           </div>
 
-          <div className="flex items-center gap-3 pt-4 border-t border-[#C35F33]/10">
+          <div className="flex items-center gap-3 pt-4 border-t border-[#B8562E]/10">
             <input
               type="checkbox"
               id="is_active"
               checked={formData.is_active}
               onChange={(e) => setFormData({ ...formData, is_active: e.target.checked })}
-              className="rounded border-[#C35F33]/20 text-[#406A56] focus:ring-[#406A56]/20"
+              className="rounded border-[#B8562E]/20 text-[#2D5A3D] focus:ring-[#2D5A3D]/20"
             />
             <label htmlFor="is_active" className="text-sm text-[#2a1f1a]">
               Active
@@ -225,14 +225,14 @@ export default function CouponForm({ coupon, onClose }: CouponFormProps) {
             <button
               type="button"
               onClick={onClose}
-              className="px-4 py-2 bg-white/80 border border-[#C35F33]/10 rounded-xl text-sm font-medium text-[#2a1f1a] hover:bg-white transition-colors"
+              className="px-4 py-2 bg-white/80 border border-[#B8562E]/10 rounded-xl text-sm font-medium text-[#2a1f1a] hover:bg-white transition-colors"
             >
               Cancel
             </button>
             <button
               type="submit"
               disabled={isLoading}
-              className="flex items-center gap-2 px-4 py-2 bg-[#406A56] text-white rounded-xl text-sm font-medium hover:bg-[#406A56]/90 transition-colors disabled:opacity-50"
+              className="flex items-center gap-2 px-4 py-2 bg-[#2D5A3D] text-white rounded-xl text-sm font-medium hover:bg-[#2D5A3D]/90 transition-colors disabled:opacity-50"
             >
               {isLoading && <Loader2 className="w-4 h-4 animate-spin" />}
               {coupon ? 'Update Coupon' : 'Create Coupon'}

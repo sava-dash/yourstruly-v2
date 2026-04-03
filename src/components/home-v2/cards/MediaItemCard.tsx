@@ -40,12 +40,12 @@ export function MediaItemCard({ url, name, type, addedBy, onRemove }: MediaItemC
       {/* Bottom info */}
       <div className="p-2 flex items-center justify-between">
         {addedBy && (
-          <span className="text-[10px] text-[#94A39C]">
+          <span className="text-[10px] text-[#94A09A]">
             Added by {addedBy.name}
           </span>
         )}
         {onRemove && (
-          <button onClick={onRemove} className="p-1 rounded-full hover:bg-[#E8F0EC] text-[#94A39C] hover:text-[#5C6D64]">
+          <button onClick={onRemove} className="p-1 rounded-full hover:bg-[#E6F0EA] text-[#94A09A] hover:text-[#5A6660]">
             <X size={12} />
           </button>
         )}

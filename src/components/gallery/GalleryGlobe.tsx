@@ -178,7 +178,7 @@ export default function GalleryGlobe({ media, onSelectMedia, selectedTimeframe }
         width: ${size}px;
         height: ${size}px;
         border-radius: 50%;
-        border: 3px solid ${isCluster ? '#D9C61A' : '#406A56'};
+        border: 3px solid ${isCluster ? '#C4A235' : '#2D5A3D'};
         background-size: cover;
         background-position: center;
         cursor: pointer;
@@ -205,7 +205,7 @@ export default function GalleryGlobe({ media, onSelectMedia, selectedTimeframe }
           right: -6px;
           width: 22px;
           height: 22px;
-          background: #D9C61A;
+          background: #C4A235;
           border-radius: 50%;
           display: flex;
           align-items: center;
@@ -221,11 +221,11 @@ export default function GalleryGlobe({ media, onSelectMedia, selectedTimeframe }
 
       el.addEventListener('mouseenter', () => {
         el.style.boxShadow = '0 6px 25px rgba(0,0,0,0.6), 0 0 0 3px rgba(64,106,86,0.3)'
-        el.style.borderColor = '#D9C61A'
+        el.style.borderColor = '#C4A235'
       })
       el.addEventListener('mouseleave', () => {
         el.style.boxShadow = '0 4px 15px rgba(0,0,0,0.4)'
-        el.style.borderColor = isCluster ? '#D9C61A' : '#406A56'
+        el.style.borderColor = isCluster ? '#C4A235' : '#2D5A3D'
       })
       el.addEventListener('click', (e) => {
         // Stop propagation to prevent map from handling the click
@@ -292,8 +292,8 @@ export default function GalleryGlobe({ media, onSelectMedia, selectedTimeframe }
     return (
       <div className="gallery-globe-section flex items-center justify-center bg-gradient-to-br from-gray-900 to-gray-800">
         <div className="text-center p-8 max-w-md">
-          <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-[#406A56]/20 flex items-center justify-center">
-            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="text-[#406A56]">
+          <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-[#2D5A3D]/20 flex items-center justify-center">
+            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="text-[#2D5A3D]">
               <circle cx="12" cy="12" r="10" />
               <path d="M2 12h20M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z" />
             </svg>

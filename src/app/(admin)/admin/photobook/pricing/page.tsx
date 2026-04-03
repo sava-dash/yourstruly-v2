@@ -213,7 +213,7 @@ export default function PricingPage() {
     switch (rule.pricing_type) {
       case 'markup':
         return (
-          <span className="text-[#406A56] font-semibold">
+          <span className="text-[#2D5A3D] font-semibold">
             {rule.markup_percentage}% markup
           </span>
         );
@@ -226,7 +226,7 @@ export default function PricingPage() {
         );
       case 'discount':
         return (
-          <span className="text-[#C35F33]">
+          <span className="text-[#B8562E]">
             {rule.discount_code}: {rule.discount_percentage ? `${rule.discount_percentage}%` : `$${rule.discount_amount}`} off
             {rule.max_uses && ` (${rule.current_uses}/${rule.max_uses} uses)`}
           </span>
@@ -249,7 +249,7 @@ export default function PricingPage() {
         <div className="flex items-center gap-4">
           <Link
             href="/admin/photobook"
-            className="p-2 rounded-lg hover:bg-white/50 text-[#2a1f1a]/50 hover:text-[#406A56] transition-colors"
+            className="p-2 rounded-lg hover:bg-white/50 text-[#2a1f1a]/50 hover:text-[#2D5A3D] transition-colors"
           >
             <ArrowLeft className="w-5 h-5" />
           </Link>
@@ -260,7 +260,7 @@ export default function PricingPage() {
         </div>
         <button
           onClick={startNew}
-          className="flex items-center gap-2 px-4 py-2 bg-[#406A56] text-white rounded-xl hover:bg-[#4A7A66] transition-colors"
+          className="flex items-center gap-2 px-4 py-2 bg-[#2D5A3D] text-white rounded-xl hover:bg-[#4A7A66] transition-colors"
         >
           <Plus className="w-4 h-4" />
           Add Rule
@@ -273,7 +273,7 @@ export default function PricingPage() {
           onClick={() => setActiveType(null)}
           className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
             activeType === null
-              ? 'bg-[#406A56] text-white'
+              ? 'bg-[#2D5A3D] text-white'
               : 'bg-white/50 text-[#2a1f1a]/70 hover:bg-white/80'
           }`}
         >
@@ -287,7 +287,7 @@ export default function PricingPage() {
               onClick={() => setActiveType(type.value)}
               className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors flex items-center gap-2 ${
                 activeType === type.value
-                  ? 'bg-[#406A56] text-white'
+                  ? 'bg-[#2D5A3D] text-white'
                   : 'bg-white/50 text-[#2a1f1a]/70 hover:bg-white/80'
               }`}
             >
@@ -312,7 +312,7 @@ export default function PricingPage() {
                 type="text"
                 value={formData.name}
                 onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                className="w-full px-3 py-2 rounded-lg border border-[#C35F33]/20 bg-white/50 focus:outline-none focus:ring-2 focus:ring-[#406A56]/50"
+                className="w-full px-3 py-2 rounded-lg border border-[#B8562E]/20 bg-white/50 focus:outline-none focus:ring-2 focus:ring-[#2D5A3D]/50"
                 placeholder="e.g., Default Markup"
               />
             </div>
@@ -322,7 +322,7 @@ export default function PricingPage() {
               <select
                 value={formData.pricing_type}
                 onChange={(e) => setFormData({ ...formData, pricing_type: e.target.value as 'markup' | 'shipping' | 'discount' | 'addon' })}
-                className="w-full px-3 py-2 rounded-lg border border-[#C35F33]/20 bg-white/50 focus:outline-none focus:ring-2 focus:ring-[#406A56]/50"
+                className="w-full px-3 py-2 rounded-lg border border-[#B8562E]/20 bg-white/50 focus:outline-none focus:ring-2 focus:ring-[#2D5A3D]/50"
               >
                 {PRICING_TYPES.map((t) => (
                   <option key={t.value} value={t.value}>{t.label}</option>
@@ -336,7 +336,7 @@ export default function PricingPage() {
                 type="text"
                 value={formData.description || ''}
                 onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                className="w-full px-3 py-2 rounded-lg border border-[#C35F33]/20 bg-white/50 focus:outline-none focus:ring-2 focus:ring-[#406A56]/50"
+                className="w-full px-3 py-2 rounded-lg border border-[#B8562E]/20 bg-white/50 focus:outline-none focus:ring-2 focus:ring-[#2D5A3D]/50"
                 placeholder="Brief description"
               />
             </div>
@@ -351,7 +351,7 @@ export default function PricingPage() {
                   min="0"
                   value={formData.markup_percentage || 0}
                   onChange={(e) => setFormData({ ...formData, markup_percentage: parseFloat(e.target.value) || 0 })}
-                  className="w-full px-3 py-2 rounded-lg border border-[#C35F33]/20 bg-white/50 focus:outline-none focus:ring-2 focus:ring-[#406A56]/50"
+                  className="w-full px-3 py-2 rounded-lg border border-[#B8562E]/20 bg-white/50 focus:outline-none focus:ring-2 focus:ring-[#2D5A3D]/50"
                 />
               </div>
             )}
@@ -365,7 +365,7 @@ export default function PricingPage() {
                     type="text"
                     value={formData.region || ''}
                     onChange={(e) => setFormData({ ...formData, region: e.target.value })}
-                    className="w-full px-3 py-2 rounded-lg border border-[#C35F33]/20 bg-white/50 focus:outline-none focus:ring-2 focus:ring-[#406A56]/50"
+                    className="w-full px-3 py-2 rounded-lg border border-[#B8562E]/20 bg-white/50 focus:outline-none focus:ring-2 focus:ring-[#2D5A3D]/50"
                     placeholder="e.g., US, EU, INTL"
                   />
                 </div>
@@ -377,7 +377,7 @@ export default function PricingPage() {
                     min="0"
                     value={formData.flat_rate || ''}
                     onChange={(e) => setFormData({ ...formData, flat_rate: parseFloat(e.target.value) || null })}
-                    className="w-full px-3 py-2 rounded-lg border border-[#C35F33]/20 bg-white/50 focus:outline-none focus:ring-2 focus:ring-[#406A56]/50"
+                    className="w-full px-3 py-2 rounded-lg border border-[#B8562E]/20 bg-white/50 focus:outline-none focus:ring-2 focus:ring-[#2D5A3D]/50"
                   />
                 </div>
                 <div>
@@ -388,7 +388,7 @@ export default function PricingPage() {
                     min="0"
                     value={formData.per_item_rate || ''}
                     onChange={(e) => setFormData({ ...formData, per_item_rate: parseFloat(e.target.value) || null })}
-                    className="w-full px-3 py-2 rounded-lg border border-[#C35F33]/20 bg-white/50 focus:outline-none focus:ring-2 focus:ring-[#406A56]/50"
+                    className="w-full px-3 py-2 rounded-lg border border-[#B8562E]/20 bg-white/50 focus:outline-none focus:ring-2 focus:ring-[#2D5A3D]/50"
                   />
                 </div>
                 <div>
@@ -399,7 +399,7 @@ export default function PricingPage() {
                     min="0"
                     value={formData.free_threshold || ''}
                     onChange={(e) => setFormData({ ...formData, free_threshold: parseFloat(e.target.value) || null })}
-                    className="w-full px-3 py-2 rounded-lg border border-[#C35F33]/20 bg-white/50 focus:outline-none focus:ring-2 focus:ring-[#406A56]/50"
+                    className="w-full px-3 py-2 rounded-lg border border-[#B8562E]/20 bg-white/50 focus:outline-none focus:ring-2 focus:ring-[#2D5A3D]/50"
                   />
                 </div>
               </>
@@ -414,7 +414,7 @@ export default function PricingPage() {
                     type="text"
                     value={formData.discount_code || ''}
                     onChange={(e) => setFormData({ ...formData, discount_code: e.target.value.toUpperCase() })}
-                    className="w-full px-3 py-2 rounded-lg border border-[#C35F33]/20 bg-white/50 focus:outline-none focus:ring-2 focus:ring-[#406A56]/50"
+                    className="w-full px-3 py-2 rounded-lg border border-[#B8562E]/20 bg-white/50 focus:outline-none focus:ring-2 focus:ring-[#2D5A3D]/50"
                     placeholder="e.g., SAVE20"
                   />
                 </div>
@@ -427,7 +427,7 @@ export default function PricingPage() {
                     max="100"
                     value={formData.discount_percentage || ''}
                     onChange={(e) => setFormData({ ...formData, discount_percentage: parseFloat(e.target.value) || null, discount_amount: null })}
-                    className="w-full px-3 py-2 rounded-lg border border-[#C35F33]/20 bg-white/50 focus:outline-none focus:ring-2 focus:ring-[#406A56]/50"
+                    className="w-full px-3 py-2 rounded-lg border border-[#B8562E]/20 bg-white/50 focus:outline-none focus:ring-2 focus:ring-[#2D5A3D]/50"
                   />
                 </div>
                 <div>
@@ -438,7 +438,7 @@ export default function PricingPage() {
                     min="0"
                     value={formData.discount_amount || ''}
                     onChange={(e) => setFormData({ ...formData, discount_amount: parseFloat(e.target.value) || null, discount_percentage: null })}
-                    className="w-full px-3 py-2 rounded-lg border border-[#C35F33]/20 bg-white/50 focus:outline-none focus:ring-2 focus:ring-[#406A56]/50"
+                    className="w-full px-3 py-2 rounded-lg border border-[#B8562E]/20 bg-white/50 focus:outline-none focus:ring-2 focus:ring-[#2D5A3D]/50"
                   />
                 </div>
                 <div>
@@ -449,7 +449,7 @@ export default function PricingPage() {
                     min="0"
                     value={formData.min_order_value || ''}
                     onChange={(e) => setFormData({ ...formData, min_order_value: parseFloat(e.target.value) || null })}
-                    className="w-full px-3 py-2 rounded-lg border border-[#C35F33]/20 bg-white/50 focus:outline-none focus:ring-2 focus:ring-[#406A56]/50"
+                    className="w-full px-3 py-2 rounded-lg border border-[#B8562E]/20 bg-white/50 focus:outline-none focus:ring-2 focus:ring-[#2D5A3D]/50"
                   />
                 </div>
                 <div>
@@ -459,7 +459,7 @@ export default function PricingPage() {
                     min="0"
                     value={formData.max_uses || ''}
                     onChange={(e) => setFormData({ ...formData, max_uses: parseInt(e.target.value) || null })}
-                    className="w-full px-3 py-2 rounded-lg border border-[#C35F33]/20 bg-white/50 focus:outline-none focus:ring-2 focus:ring-[#406A56]/50"
+                    className="w-full px-3 py-2 rounded-lg border border-[#B8562E]/20 bg-white/50 focus:outline-none focus:ring-2 focus:ring-[#2D5A3D]/50"
                     placeholder="Leave empty for unlimited"
                   />
                 </div>
@@ -476,7 +476,7 @@ export default function PricingPage() {
                   min="0"
                   value={formData.flat_rate || ''}
                   onChange={(e) => setFormData({ ...formData, flat_rate: parseFloat(e.target.value) || null })}
-                  className="w-full px-3 py-2 rounded-lg border border-[#C35F33]/20 bg-white/50 focus:outline-none focus:ring-2 focus:ring-[#406A56]/50"
+                  className="w-full px-3 py-2 rounded-lg border border-[#B8562E]/20 bg-white/50 focus:outline-none focus:ring-2 focus:ring-[#2D5A3D]/50"
                 />
               </div>
             )}
@@ -487,7 +487,7 @@ export default function PricingPage() {
                 id="is_enabled"
                 checked={formData.is_enabled}
                 onChange={(e) => setFormData({ ...formData, is_enabled: e.target.checked })}
-                className="w-4 h-4 rounded border-[#C35F33]/20 text-[#406A56] focus:ring-[#406A56]/50"
+                className="w-4 h-4 rounded border-[#B8562E]/20 text-[#2D5A3D] focus:ring-[#2D5A3D]/50"
               />
               <label htmlFor="is_enabled" className="text-sm font-medium text-[#2a1f1a]/70">
                 Enabled
@@ -495,7 +495,7 @@ export default function PricingPage() {
             </div>
           </div>
           
-          <div className="flex justify-end gap-3 mt-6 pt-4 border-t border-[#C35F33]/10">
+          <div className="flex justify-end gap-3 mt-6 pt-4 border-t border-[#B8562E]/10">
             <button
               onClick={cancelEdit}
               className="px-4 py-2 text-[#2a1f1a]/70 hover:text-[#2a1f1a] transition-colors"
@@ -505,7 +505,7 @@ export default function PricingPage() {
             <button
               onClick={handleSave}
               disabled={saving || !formData.name}
-              className="flex items-center gap-2 px-4 py-2 bg-[#406A56] text-white rounded-xl hover:bg-[#4A7A66] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              className="flex items-center gap-2 px-4 py-2 bg-[#2D5A3D] text-white rounded-xl hover:bg-[#4A7A66] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
               Save
@@ -518,22 +518,22 @@ export default function PricingPage() {
       <div className="glass">
         {loading ? (
           <div className="p-12 text-center">
-            <Loader2 className="w-8 h-8 mx-auto animate-spin text-[#406A56]" />
+            <Loader2 className="w-8 h-8 mx-auto animate-spin text-[#2D5A3D]" />
             <p className="text-[#2a1f1a]/60 mt-2">Loading pricing rules...</p>
           </div>
         ) : filteredRules.length === 0 ? (
           <div className="p-12 text-center">
-            <DollarSign className="w-12 h-12 mx-auto text-[#C35F33]/30" />
+            <DollarSign className="w-12 h-12 mx-auto text-[#B8562E]/30" />
             <p className="text-[#2a1f1a]/60 mt-4">No pricing rules yet</p>
             <button
               onClick={startNew}
-              className="mt-4 text-[#406A56] hover:underline"
+              className="mt-4 text-[#2D5A3D] hover:underline"
             >
               Add your first pricing rule
             </button>
           </div>
         ) : (
-          <div className="divide-y divide-[#C35F33]/10">
+          <div className="divide-y divide-[#B8562E]/10">
             {filteredRules.map((rule) => {
               const Icon = getTypeIcon(rule.pricing_type);
               return (
@@ -544,15 +544,15 @@ export default function PricingPage() {
                   }`}
                 >
                   <div className={`flex-shrink-0 w-10 h-10 rounded-lg flex items-center justify-center ${
-                    rule.pricing_type === 'markup' ? 'bg-[#406A56]/10' :
+                    rule.pricing_type === 'markup' ? 'bg-[#2D5A3D]/10' :
                     rule.pricing_type === 'shipping' ? 'bg-[#8DACAB]/20' :
-                    rule.pricing_type === 'discount' ? 'bg-[#C35F33]/10' :
+                    rule.pricing_type === 'discount' ? 'bg-[#B8562E]/10' :
                     'bg-[#4A3552]/10'
                   }`}>
                     <Icon className={`w-5 h-5 ${
-                      rule.pricing_type === 'markup' ? 'text-[#406A56]' :
+                      rule.pricing_type === 'markup' ? 'text-[#2D5A3D]' :
                       rule.pricing_type === 'shipping' ? 'text-[#8DACAB]' :
-                      rule.pricing_type === 'discount' ? 'text-[#C35F33]' :
+                      rule.pricing_type === 'discount' ? 'text-[#B8562E]' :
                       'text-[#4A3552]'
                     }`} />
                   </div>
@@ -560,7 +560,7 @@ export default function PricingPage() {
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2">
                       <h3 className="font-medium text-[#2a1f1a]">{rule.name}</h3>
-                      <span className="px-2 py-0.5 text-xs rounded-full bg-[#406A56]/10 text-[#406A56] capitalize">
+                      <span className="px-2 py-0.5 text-xs rounded-full bg-[#2D5A3D]/10 text-[#2D5A3D] capitalize">
                         {rule.pricing_type}
                       </span>
                     </div>
@@ -580,7 +580,7 @@ export default function PricingPage() {
                       title={rule.is_enabled ? 'Disable' : 'Enable'}
                     >
                       {rule.is_enabled ? (
-                        <ToggleRight className="w-5 h-5 text-[#406A56]" />
+                        <ToggleRight className="w-5 h-5 text-[#2D5A3D]" />
                       ) : (
                         <ToggleLeft className="w-5 h-5 text-[#2a1f1a]/30" />
                       )}
@@ -588,7 +588,7 @@ export default function PricingPage() {
                     
                     <button
                       onClick={() => startEdit(rule)}
-                      className="p-2 rounded-lg hover:bg-white/50 text-[#2a1f1a]/50 hover:text-[#406A56] transition-colors"
+                      className="p-2 rounded-lg hover:bg-white/50 text-[#2a1f1a]/50 hover:text-[#2D5A3D] transition-colors"
                       title="Edit"
                     >
                       <Pencil className="w-4 h-4" />
@@ -596,7 +596,7 @@ export default function PricingPage() {
                     
                     <button
                       onClick={() => handleDelete(rule.id)}
-                      className="p-2 rounded-lg hover:bg-white/50 text-[#2a1f1a]/50 hover:text-[#C35F33] transition-colors"
+                      className="p-2 rounded-lg hover:bg-white/50 text-[#2a1f1a]/50 hover:text-[#B8562E] transition-colors"
                       title="Delete"
                     >
                       <Trash2 className="w-4 h-4" />

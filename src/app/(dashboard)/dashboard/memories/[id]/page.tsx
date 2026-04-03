@@ -473,7 +473,7 @@ export default function MemoryDetailPage({ params }: { params: Promise<{ id: str
         <div className="relative z-10 flex items-center justify-center min-h-screen">
           <div className="text-center">
             <p className="text-gray-600 mb-4">Memory not found</p>
-            <Link href="/dashboard/memories" className="text-[#406A56] hover:underline">
+            <Link href="/dashboard/memories" className="text-[#2D5A3D] hover:underline">
               Back to memories
             </Link>
           </div>
@@ -516,7 +516,7 @@ export default function MemoryDetailPage({ params }: { params: Promise<{ id: str
           {shares.length > 0 && (
             <button
               onClick={() => setShowSharedList(!showSharedList)}
-              className="flex items-center gap-1.5 px-3 py-1.5 bg-[#406A56]/10 hover:bg-[#406A56]/20 rounded-full text-[#406A56] text-sm transition-colors"
+              className="flex items-center gap-1.5 px-3 py-1.5 bg-[#2D5A3D]/10 hover:bg-[#2D5A3D]/20 rounded-full text-[#2D5A3D] text-sm transition-colors"
             >
               <Users size={14} />
               <span>Shared with {shares.length}</span>
@@ -534,14 +534,14 @@ export default function MemoryDetailPage({ params }: { params: Promise<{ id: str
           {/* Share button */}
           <button
             onClick={() => setShowShareModal(true)}
-            className="flex items-center gap-1.5 px-3 py-2 bg-[#406A56] text-white rounded-xl hover:bg-[#4a7a64] transition-all shadow-sm"
+            className="flex items-center gap-1.5 px-3 py-2 bg-[#2D5A3D] text-white rounded-xl hover:bg-[#234A31] transition-all shadow-sm"
           >
             <Share2 size={16} />
             <span className="text-sm font-medium">Share</span>
           </button>
           <button
             onClick={toggleFavorite}
-            className={`p-2.5 bg-white/80 backdrop-blur-sm rounded-xl transition-all border border-gray-200 shadow-sm ${memory.is_favorite ? 'text-[#C35F33]' : 'text-gray-400 hover:text-[#C35F33]'}`}
+            className={`p-2.5 bg-white/80 backdrop-blur-sm rounded-xl transition-all border border-gray-200 shadow-sm ${memory.is_favorite ? 'text-[#B8562E]' : 'text-gray-400 hover:text-[#B8562E]'}`}
           >
             <Heart size={18} fill={memory.is_favorite ? 'currentColor' : 'none'} />
           </button>
@@ -572,7 +572,7 @@ export default function MemoryDetailPage({ params }: { params: Promise<{ id: str
             <div className="bg-white/90 backdrop-blur-sm rounded-2xl p-4 shadow-sm border border-gray-100">
               <div className="flex items-center justify-between mb-3">
                 <h3 className="text-sm font-semibold text-[#2d2d2d] flex items-center gap-2">
-                  <Users size={16} className="text-[#406A56]" />
+                  <Users size={16} className="text-[#2D5A3D]" />
                   Shared with {shares.length} {shares.length === 1 ? 'person' : 'people'}
                 </h3>
                 <button
@@ -586,9 +586,9 @@ export default function MemoryDetailPage({ params }: { params: Promise<{ id: str
                 {shares.filter(share => share.shared_with).map(share => (
                   <div
                     key={share.id}
-                    className="flex items-center gap-3 p-2 rounded-xl hover:bg-[#F2F1E5] transition-colors group"
+                    className="flex items-center gap-3 p-2 rounded-xl hover:bg-[#F5F3EE] transition-colors group"
                   >
-                    <div className="w-10 h-10 rounded-full bg-gradient-to-br from-[#406A56] to-[#5A8A72] flex items-center justify-center text-white text-sm font-medium flex-shrink-0">
+                    <div className="w-10 h-10 rounded-full bg-gradient-to-br from-[#2D5A3D] to-[#5A8A72] flex items-center justify-center text-white text-sm font-medium flex-shrink-0">
                       {getInitials(share.shared_with?.full_name || 'Unknown')}
                     </div>
                     <div className="flex-1 min-w-0">
@@ -597,7 +597,7 @@ export default function MemoryDetailPage({ params }: { params: Promise<{ id: str
                       </div>
                       <div className="flex items-center gap-2 text-xs text-gray-500">
                         {share.permission_level === 'contributor' && (
-                          <span className="px-1.5 py-0.5 bg-[#D9C61A]/20 text-[#8a7c08] rounded text-[10px]">
+                          <span className="px-1.5 py-0.5 bg-[#C4A235]/20 text-[#8a7c08] rounded text-[10px]">
                             Contributor
                           </span>
                         )}
@@ -665,7 +665,7 @@ export default function MemoryDetailPage({ params }: { params: Promise<{ id: str
                           key={m.id}
                           onClick={() => setSelectedMedia(m)}
                           className={`relative flex-shrink-0 w-16 h-16 rounded-lg overflow-hidden border-2 transition-all ${
-                            selectedMedia?.id === m.id ? 'border-[#406A56] ring-2 ring-[#406A56]/20' : 'border-transparent hover:border-gray-300'
+                            selectedMedia?.id === m.id ? 'border-[#2D5A3D] ring-2 ring-[#2D5A3D]/20' : 'border-transparent hover:border-gray-300'
                           }`}
                         >
                           <img src={m.file_url} alt="" className="w-full h-full object-cover" />
@@ -681,10 +681,10 @@ export default function MemoryDetailPage({ params }: { params: Promise<{ id: str
                       <button
                         onClick={() => fileInputRef.current?.click()}
                         disabled={uploading}
-                        className="flex-shrink-0 w-16 h-16 rounded-lg border-2 border-dashed border-gray-300 hover:border-[#406A56] flex items-center justify-center transition-colors bg-white/50"
+                        className="flex-shrink-0 w-16 h-16 rounded-lg border-2 border-dashed border-gray-300 hover:border-[#2D5A3D] flex items-center justify-center transition-colors bg-white/50"
                       >
                         {uploading ? (
-                          <div className="w-5 h-5 border-2 border-[#406A56] border-t-transparent rounded-full animate-spin" />
+                          <div className="w-5 h-5 border-2 border-[#2D5A3D] border-t-transparent rounded-full animate-spin" />
                         ) : (
                           <Plus size={20} className="text-gray-400" />
                         )}
@@ -695,10 +695,10 @@ export default function MemoryDetailPage({ params }: { params: Promise<{ id: str
               ) : (
                 <div className="aspect-video flex flex-col items-center justify-center bg-gradient-to-br from-gray-50 to-gray-100 rounded-xl">
                   <ImageIcon size={48} className="text-gray-300 mb-4" />
-                  <p className="text-gray-500 mb-4">No photos yet</p>
+                  <p className="text-gray-500 mb-4">Your photo gallery is waiting</p>
                   <button
                     onClick={() => fileInputRef.current?.click()}
-                    className="flex items-center gap-2 px-4 py-2 bg-[#406A56] hover:bg-[#355a49] text-white rounded-lg transition-colors"
+                    className="flex items-center gap-2 px-4 py-2 bg-[#2D5A3D] hover:bg-[#355a49] text-white rounded-lg transition-colors"
                   >
                     <Upload size={18} />
                     Upload Photos
@@ -721,10 +721,10 @@ export default function MemoryDetailPage({ params }: { params: Promise<{ id: str
             {parsedContent?.type === 'conversation' && parsedContent.exchanges && parsedContent.exchanges.length > 0 && (
               <div className="bg-white/95 backdrop-blur-sm rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
                 {/* Transcript Header */}
-                <div className="px-6 py-4 border-b border-gray-100 bg-gradient-to-r from-[#406A56]/5 to-transparent">
+                <div className="px-6 py-4 border-b border-gray-100 bg-gradient-to-r from-[#2D5A3D]/5 to-transparent">
                   <div className="flex items-center justify-between">
                     <h2 className="text-lg font-semibold text-[#2d2d2d] flex items-center gap-2">
-                      <MessageSquare size={18} className="text-[#406A56]" />
+                      <MessageSquare size={18} className="text-[#2D5A3D]" />
                       Conversation
                     </h2>
                     
@@ -733,8 +733,8 @@ export default function MemoryDetailPage({ params }: { params: Promise<{ id: str
                       onClick={() => playConversation(parsedContent.exchanges)}
                       className={`flex items-center gap-2 px-4 py-2 rounded-full transition-all ${
                         isPlayingConversation 
-                          ? 'bg-[#406A56] text-white' 
-                          : 'bg-[#406A56]/10 text-[#406A56] hover:bg-[#406A56]/20'
+                          ? 'bg-[#2D5A3D] text-white' 
+                          : 'bg-[#2D5A3D]/10 text-[#2D5A3D] hover:bg-[#2D5A3D]/20'
                       }`}
                     >
                       {isPlayingConversation ? (
@@ -760,14 +760,14 @@ export default function MemoryDetailPage({ params }: { params: Promise<{ id: str
                 {/* Q&A Exchanges - Beautiful card layout */}
                 <div className="p-6 space-y-8">
                   {parsedContent.exchanges.map((ex: { question: string; answer: string; audioUrl?: string }, idx: number) => (
-                    <div key={idx} className={`relative ${isPlayingConversation && currentPlayingIndex === idx ? 'ring-2 ring-[#406A56]/30 rounded-xl p-2 -m-2' : ''}`}>
+                    <div key={idx} className={`relative ${isPlayingConversation && currentPlayingIndex === idx ? 'ring-2 ring-[#2D5A3D]/30 rounded-xl p-2 -m-2' : ''}`}>
                       {/* Question */}
                       <div className="mb-4">
                         <div className="flex items-start gap-3">
-                          <div className="flex-shrink-0 w-8 h-8 rounded-full bg-[#406A56] flex items-center justify-center text-white text-xs font-bold">
+                          <div className="flex-shrink-0 w-8 h-8 rounded-full bg-[#2D5A3D] flex items-center justify-center text-white text-xs font-bold">
                             Q{idx + 1}
                           </div>
-                          <div className="flex-1 bg-[#406A56]/5 rounded-2xl rounded-tl-none px-4 py-3">
+                          <div className="flex-1 bg-[#2D5A3D]/5 rounded-2xl rounded-tl-none px-4 py-3">
                             <p className="text-[#2d2d2d] font-medium leading-relaxed">{ex.question}</p>
                           </div>
                         </div>
@@ -776,11 +776,11 @@ export default function MemoryDetailPage({ params }: { params: Promise<{ id: str
                       {/* Answer */}
                       <div className="pl-11">
                         <div className="flex items-start gap-3">
-                          <div className="flex-shrink-0 w-8 h-8 rounded-full bg-gradient-to-br from-[#D9C61A] to-[#C9B60A] flex items-center justify-center text-white text-xs font-bold">
+                          <div className="flex-shrink-0 w-8 h-8 rounded-full bg-gradient-to-br from-[#C4A235] to-[#C9B60A] flex items-center justify-center text-white text-xs font-bold">
                             A
                           </div>
                           <div className="flex-1">
-                            <div className="bg-gradient-to-br from-[#FEFCE8] to-white border border-[#D9C61A]/20 rounded-2xl rounded-tl-none px-4 py-3 shadow-sm">
+                            <div className="bg-gradient-to-br from-[#FEFCE8] to-white border border-[#C4A235]/20 rounded-2xl rounded-tl-none px-4 py-3 shadow-sm">
                               <p className="text-gray-700 leading-relaxed whitespace-pre-wrap">{ex.answer}</p>
                             </div>
                             
@@ -788,7 +788,7 @@ export default function MemoryDetailPage({ params }: { params: Promise<{ id: str
                             {ex.audioUrl && (
                               <button 
                                 onClick={() => new Audio(ex.audioUrl).play()}
-                                className="mt-2 flex items-center gap-1.5 text-xs text-[#406A56] hover:text-[#355a49] transition-colors"
+                                className="mt-2 flex items-center gap-1.5 text-xs text-[#2D5A3D] hover:text-[#355a49] transition-colors"
                               >
                                 <Play size={12} fill="currentColor" />
                                 <span>Listen to original response</span>
@@ -801,7 +801,7 @@ export default function MemoryDetailPage({ params }: { params: Promise<{ id: str
                       {/* Separator */}
                       {idx < parsedContent.exchanges.length - 1 && (
                         <div className="mt-8 flex items-center justify-center">
-                          <div className="w-16 h-px bg-gradient-to-r from-transparent via-[#D9C61A]/30 to-transparent" />
+                          <div className="w-16 h-px bg-gradient-to-r from-transparent via-[#C4A235]/30 to-transparent" />
                         </div>
                       )}
                     </div>
@@ -827,8 +827,8 @@ export default function MemoryDetailPage({ params }: { params: Promise<{ id: str
               <div className="space-y-3">
                 {memory.memory_date && (
                   <div className="flex items-center gap-3">
-                    <div className="w-8 h-8 rounded-lg bg-[#406A56]/10 flex items-center justify-center">
-                      <Calendar size={14} className="text-[#406A56]" />
+                    <div className="w-8 h-8 rounded-lg bg-[#2D5A3D]/10 flex items-center justify-center">
+                      <Calendar size={14} className="text-[#2D5A3D]" />
                     </div>
                     <div>
                       <p className="text-xs text-gray-400">Date</p>
@@ -838,8 +838,8 @@ export default function MemoryDetailPage({ params }: { params: Promise<{ id: str
                 )}
                 {memory.location_name && (
                   <div className="flex items-center gap-3">
-                    <div className="w-8 h-8 rounded-lg bg-[#C35F33]/10 flex items-center justify-center">
-                      <MapPin size={14} className="text-[#C35F33]" />
+                    <div className="w-8 h-8 rounded-lg bg-[#B8562E]/10 flex items-center justify-center">
+                      <MapPin size={14} className="text-[#B8562E]" />
                     </div>
                     <div>
                       <p className="text-xs text-gray-400">Location</p>
@@ -865,14 +865,14 @@ export default function MemoryDetailPage({ params }: { params: Promise<{ id: str
             {/* Smart Tags - Categories only */}
             {(memory.ai_mood || memory.ai_category) && (
               <div className="bg-white/90 backdrop-blur-sm rounded-2xl p-5 shadow-sm border border-gray-100">
-                <h3 className="text-sm font-medium text-[#406A56] flex items-center gap-2 mb-3">
+                <h3 className="text-sm font-medium text-[#2D5A3D] flex items-center gap-2 mb-3">
                   <Sparkles size={14} />
                   Smart Tags
                 </h3>
                 
                 <div className="flex flex-wrap gap-2">
                   {memory.ai_category && (
-                    <span className="px-3 py-1.5 bg-[#8DACAB]/20 text-[#406A56] rounded-full text-sm capitalize">
+                    <span className="px-3 py-1.5 bg-[#8DACAB]/20 text-[#2D5A3D] rounded-full text-sm capitalize">
                       {memory.ai_category}
                     </span>
                   )}
@@ -895,7 +895,7 @@ export default function MemoryDetailPage({ params }: { params: Promise<{ id: str
                 <div className="space-y-2">
                   {shares.filter(share => share.shared_with).map(share => (
                     <div key={share.id} className="flex items-center gap-2 text-sm">
-                      <div className="w-6 h-6 rounded-full bg-gradient-to-br from-[#406A56] to-[#5A8A72] flex items-center justify-center text-white text-xs">
+                      <div className="w-6 h-6 rounded-full bg-gradient-to-br from-[#2D5A3D] to-[#5A8A72] flex items-center justify-center text-white text-xs">
                         {getInitials(share.shared_with?.full_name || 'Unknown')}
                       </div>
                       <span className="text-gray-700">{share.shared_with?.full_name || 'Unknown'}</span>
@@ -941,7 +941,7 @@ export default function MemoryDetailPage({ params }: { params: Promise<{ id: str
               type="text"
               value={editForm.title}
               onChange={(e) => setEditForm({ ...editForm, title: e.target.value })}
-              className="w-full px-4 py-3 bg-white border border-[#406A56]/20 rounded-xl text-[#2d2d2d] placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#406A56]/30 focus:border-[#406A56] transition-all"
+              className="w-full px-4 py-3 bg-white border border-[#2D5A3D]/20 rounded-xl text-[#2d2d2d] placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#2D5A3D]/30 focus:border-[#2D5A3D] transition-all"
               placeholder="Give this memory a title..."
             />
           </div>
@@ -951,40 +951,40 @@ export default function MemoryDetailPage({ params }: { params: Promise<{ id: str
               value={editForm.description}
               onChange={(e) => setEditForm({ ...editForm, description: e.target.value })}
               rows={4}
-              className="w-full px-4 py-3 bg-white border border-[#406A56]/20 rounded-xl text-[#2d2d2d] placeholder-gray-400 resize-none focus:outline-none focus:ring-2 focus:ring-[#406A56]/30 focus:border-[#406A56] transition-all"
+              className="w-full px-4 py-3 bg-white border border-[#2D5A3D]/20 rounded-xl text-[#2d2d2d] placeholder-gray-400 resize-none focus:outline-none focus:ring-2 focus:ring-[#2D5A3D]/30 focus:border-[#2D5A3D] transition-all"
               placeholder="What happened? Who was there? How did you feel?"
             />
           </div>
           <div className="grid grid-cols-2 gap-4">
             <div>
               <label className="block text-[#2d2d2d] text-sm font-medium mb-2">
-                <Calendar size={14} className="inline mr-1.5 text-[#406A56]" />
+                <Calendar size={14} className="inline mr-1.5 text-[#2D5A3D]" />
                 Date
               </label>
               <input
                 type="date"
                 value={editForm.memory_date}
                 onChange={(e) => setEditForm({ ...editForm, memory_date: e.target.value })}
-                className="w-full px-4 py-3 bg-white border border-[#406A56]/20 rounded-xl text-[#2d2d2d] focus:outline-none focus:ring-2 focus:ring-[#406A56]/30 focus:border-[#406A56] transition-all"
+                className="w-full px-4 py-3 bg-white border border-[#2D5A3D]/20 rounded-xl text-[#2d2d2d] focus:outline-none focus:ring-2 focus:ring-[#2D5A3D]/30 focus:border-[#2D5A3D] transition-all"
               />
             </div>
             <div>
               <label className="block text-[#2d2d2d] text-sm font-medium mb-2">
-                <MapPin size={14} className="inline mr-1.5 text-[#406A56]" />
+                <MapPin size={14} className="inline mr-1.5 text-[#2D5A3D]" />
                 Location
               </label>
               <input
                 type="text"
                 value={editForm.location_name}
                 onChange={(e) => setEditForm({ ...editForm, location_name: e.target.value })}
-                className="w-full px-4 py-3 bg-white border border-[#406A56]/20 rounded-xl text-[#2d2d2d] placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#406A56]/30 focus:border-[#406A56] transition-all"
+                className="w-full px-4 py-3 bg-white border border-[#2D5A3D]/20 rounded-xl text-[#2d2d2d] placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#2D5A3D]/30 focus:border-[#2D5A3D] transition-all"
                 placeholder="Where was this?"
               />
             </div>
           </div>
           <button
             onClick={handleSaveEdit}
-            className="w-full py-3 bg-[#406A56] hover:bg-[#4a7a64] text-white rounded-xl font-medium transition-colors shadow-sm mt-2"
+            className="w-full py-3 bg-[#2D5A3D] hover:bg-[#234A31] text-white rounded-xl font-medium transition-colors shadow-sm mt-2"
           >
             Save Changes
           </button>
@@ -997,7 +997,7 @@ export default function MemoryDetailPage({ params }: { params: Promise<{ id: str
         <div className="flex gap-3">
           <button
             onClick={() => setShowDeleteConfirm(false)}
-            className="flex-1 py-2.5 bg-white border border-[#406A56]/20 hover:bg-[#F2F1E5] text-[#2d2d2d] rounded-xl transition-colors"
+            className="flex-1 py-2.5 bg-white border border-[#2D5A3D]/20 hover:bg-[#F5F3EE] text-[#2d2d2d] rounded-xl transition-colors"
           >
             Cancel
           </button>
@@ -1024,7 +1024,7 @@ export default function MemoryDetailPage({ params }: { params: Promise<{ id: str
         <div className="flex gap-3">
           <button
             onClick={() => setShowRemoveConfirm(null)}
-            className="flex-1 py-2.5 bg-white border border-[#406A56]/20 hover:bg-[#F2F1E5] text-[#2d2d2d] rounded-xl transition-colors"
+            className="flex-1 py-2.5 bg-white border border-[#2D5A3D]/20 hover:bg-[#F5F3EE] text-[#2d2d2d] rounded-xl transition-colors"
           >
             Cancel
           </button>

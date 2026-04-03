@@ -67,7 +67,7 @@ export function PostscriptModal({ isOpen, onClose }: PostscriptModalProps) {
 
   const getInitials = (name: string) => name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2)
   const getAvatarColor = (name: string) => {
-    const colors = ['#C35F33', '#406A56', '#4A3552', '#8DACAB', '#D9C61A']
+    const colors = ['#B8562E', '#2D5A3D', '#4A3552', '#8DACAB', '#C4A235']
     return colors[name.charCodeAt(0) % colors.length]
   }
 
@@ -139,23 +139,23 @@ export function PostscriptModal({ isOpen, onClose }: PostscriptModalProps) {
           initial={{ scale: 0.9, opacity: 0 }}
           animate={{ scale: 1, opacity: 1 }}
           exit={{ scale: 0.9, opacity: 0 }}
-          className="bg-[#F2F1E5] rounded-2xl max-w-lg w-full max-h-[85vh] overflow-hidden flex flex-col"
+          className="bg-[#F5F3EE] rounded-2xl max-w-lg w-full max-h-[85vh] overflow-hidden flex flex-col"
           onClick={(e) => e.stopPropagation()}
         >
           {/* Header */}
           <div className="p-5 pb-3">
             <div className="flex items-center gap-3 mb-3">
-              <button onClick={step > 1 ? () => setStep(step - 1) : handleClose} className="p-2 hover:bg-[#406A56]/10 rounded-lg">
-                {step > 1 ? <ChevronRight size={20} className="text-[#406A56] rotate-180" /> : <X size={20} className="text-[#406A56]" />}
+              <button onClick={step > 1 ? () => setStep(step - 1) : handleClose} className="p-2 hover:bg-[#2D5A3D]/10 rounded-lg">
+                {step > 1 ? <ChevronRight size={20} className="text-[#2D5A3D] rotate-180" /> : <X size={20} className="text-[#2D5A3D]" />}
               </button>
               <div className="flex-1">
                 <h2 className="text-lg font-bold text-[#2d2d2d]">Create PostScript</h2>
-                <p className="text-xs text-[#406A56]/60">Step {step} of 4</p>
+                <p className="text-xs text-[#2D5A3D]/60">Step {step} of 4</p>
               </div>
             </div>
             <div className="flex gap-1.5">
               {[1,2,3,4].map(s => (
-                <div key={s} className={`flex-1 h-1 rounded-full ${s <= step ? 'bg-[#C35F33]' : 'bg-[#406A56]/20'}`} />
+                <div key={s} className={`flex-1 h-1 rounded-full ${s <= step ? 'bg-[#B8562E]' : 'bg-[#2D5A3D]/20'}`} />
               ))}
             </div>
           </div>
@@ -166,32 +166,32 @@ export function PostscriptModal({ isOpen, onClose }: PostscriptModalProps) {
             {step === 1 && (
               <div className="space-y-4">
                 <div className="text-center mb-4">
-                  <div className="w-12 h-12 bg-[#C35F33]/10 rounded-full flex items-center justify-center mx-auto mb-2">
-                    <Users size={24} className="text-[#C35F33]" />
+                  <div className="w-12 h-12 bg-[#B8562E]/10 rounded-full flex items-center justify-center mx-auto mb-2">
+                    <Users size={24} className="text-[#B8562E]" />
                   </div>
                   <h3 className="font-semibold text-[#2d2d2d]">Who is this for?</h3>
                 </div>
 
                 <div className="relative">
-                  <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-[#406A56]/40" />
+                  <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-[#2D5A3D]/40" />
                   <input
                     type="text"
                     aria-label="Search" 
                     placeholder="Search contacts..."
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
-                    className="w-full pl-9 pr-3 py-2.5 bg-white border border-[#406A56]/20 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-[#406A56]/30"
+                    className="w-full pl-9 pr-3 py-2.5 bg-white border border-[#2D5A3D]/20 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-[#2D5A3D]/30"
                   />
                 </div>
 
                 <div className="space-y-1.5 max-h-48 overflow-y-auto">
                   {loading ? (
-                    <div className="text-center py-6 text-[#406A56]/50 text-sm">Loading...</div>
+                    <div className="text-center py-6 text-[#2D5A3D]/50 text-sm">Loading...</div>
                   ) : filteredContacts.slice(0, 8).map(contact => (
                     <button
                       key={contact.id}
                       onClick={() => selectContact(contact)}
-                      className="w-full flex items-center gap-2.5 p-2.5 bg-white rounded-xl hover:bg-[#406A56]/5 transition-colors text-left"
+                      className="w-full flex items-center gap-2.5 p-2.5 bg-white rounded-xl hover:bg-[#2D5A3D]/5 transition-colors text-left"
                     >
                       <div 
                         className="w-8 h-8 rounded-full flex items-center justify-center text-white text-xs font-medium"
@@ -202,22 +202,22 @@ export function PostscriptModal({ isOpen, onClose }: PostscriptModalProps) {
                       <div className="flex-1 min-w-0">
                         <p className="font-medium text-sm text-[#2d2d2d] truncate">{contact.full_name}</p>
                         {contact.relationship_type && (
-                          <p className="text-xs text-[#406A56]/60">{contact.relationship_type}</p>
+                          <p className="text-xs text-[#2D5A3D]/60">{contact.relationship_type}</p>
                         )}
                       </div>
-                      <ChevronRight size={16} className="text-[#406A56]/30 flex-shrink-0" />
+                      <ChevronRight size={16} className="text-[#2D5A3D]/30 flex-shrink-0" />
                     </button>
                   ))}
                 </div>
 
-                <div className="border-t border-[#406A56]/10 pt-3">
-                  <p className="text-xs text-[#406A56]/60 mb-2">Or enter manually:</p>
+                <div className="border-t border-[#2D5A3D]/10 pt-3">
+                  <p className="text-xs text-[#2D5A3D]/60 mb-2">Or enter manually:</p>
                   <input
                     type="text"
                     placeholder="Recipient name"
                     value={form.recipient_name}
                     onChange={(e) => setForm({ ...form, recipient_name: e.target.value, recipient_contact_id: null })}
-                    className="w-full px-3 py-2.5 bg-white border border-[#406A56]/20 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-[#406A56]/30"
+                    className="w-full px-3 py-2.5 bg-white border border-[#2D5A3D]/20 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-[#2D5A3D]/30"
                   />
                 </div>
               </div>
@@ -227,8 +227,8 @@ export function PostscriptModal({ isOpen, onClose }: PostscriptModalProps) {
             {step === 2 && (
               <div className="space-y-4">
                 <div className="text-center mb-4">
-                  <div className="w-12 h-12 bg-[#D9C61A]/20 rounded-full flex items-center justify-center mx-auto mb-2">
-                    <Calendar size={24} className="text-[#D9C61A]" />
+                  <div className="w-12 h-12 bg-[#C4A235]/20 rounded-full flex items-center justify-center mx-auto mb-2">
+                    <Calendar size={24} className="text-[#C4A235]" />
                   </div>
                   <h3 className="font-semibold text-[#2d2d2d]">When to deliver?</h3>
                 </div>
@@ -239,7 +239,7 @@ export function PostscriptModal({ isOpen, onClose }: PostscriptModalProps) {
                       key={type}
                       onClick={() => setForm({ ...form, delivery_type: type })}
                       className={`flex-1 py-2 px-2 rounded-lg text-xs font-medium transition-all ${
-                        form.delivery_type === type ? 'bg-white shadow-sm text-[#406A56]' : 'text-[#406A56]/60'
+                        form.delivery_type === type ? 'bg-white shadow-sm text-[#2D5A3D]' : 'text-[#2D5A3D]/60'
                       }`}
                     >
                       {type === 'date' ? 'Date' : type === 'event' ? 'Event' : 'After'}
@@ -253,7 +253,7 @@ export function PostscriptModal({ isOpen, onClose }: PostscriptModalProps) {
                     value={form.delivery_date}
                     onChange={(e) => setForm({ ...form, delivery_date: e.target.value })}
                     min={new Date().toISOString().split('T')[0]}
-                    className="w-full px-3 py-2.5 bg-white border border-[#406A56]/20 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-[#406A56]/30"
+                    className="w-full px-3 py-2.5 bg-white border border-[#2D5A3D]/20 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-[#2D5A3D]/30"
                   />
                 )}
 
@@ -265,12 +265,12 @@ export function PostscriptModal({ isOpen, onClose }: PostscriptModalProps) {
                         onClick={() => setForm({ ...form, delivery_event: event.key })}
                         className={`p-3 rounded-xl border text-center transition-all ${
                           form.delivery_event === event.key 
-                            ? 'border-[#C35F33] bg-[#C35F33]/5' 
-                            : 'border-[#406A56]/10 bg-white hover:border-[#406A56]/30'
+                            ? 'border-[#B8562E] bg-[#B8562E]/5' 
+                            : 'border-[#2D5A3D]/10 bg-white hover:border-[#2D5A3D]/30'
                         }`}
                       >
                         <span className="text-xl block">{event.icon}</span>
-                        <span className="text-xs font-medium text-[#406A56]">{event.label}</span>
+                        <span className="text-xs font-medium text-[#2D5A3D]">{event.label}</span>
                       </button>
                     ))}
                   </div>
@@ -299,7 +299,7 @@ export function PostscriptModal({ isOpen, onClose }: PostscriptModalProps) {
                   placeholder="Title (e.g., Happy Birthday!)"
                   value={form.title}
                   onChange={(e) => setForm({ ...form, title: e.target.value })}
-                  className="w-full px-3 py-2.5 bg-white border border-[#406A56]/20 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-[#406A56]/30"
+                  className="w-full px-3 py-2.5 bg-white border border-[#2D5A3D]/20 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-[#2D5A3D]/30"
                 />
 
                 <textarea
@@ -307,7 +307,7 @@ export function PostscriptModal({ isOpen, onClose }: PostscriptModalProps) {
                   value={form.message}
                   onChange={(e) => setForm({ ...form, message: e.target.value })}
                   rows={6}
-                  className="w-full px-3 py-2.5 bg-white border border-[#406A56]/20 rounded-xl text-sm resize-none focus:outline-none focus:ring-2 focus:ring-[#406A56]/30"
+                  className="w-full px-3 py-2.5 bg-white border border-[#2D5A3D]/20 rounded-xl text-sm resize-none focus:outline-none focus:ring-2 focus:ring-[#2D5A3D]/30"
                 />
               </div>
             )}
@@ -328,13 +328,13 @@ export function PostscriptModal({ isOpen, onClose }: PostscriptModalProps) {
                   </div>
                 )}
 
-                <div className="bg-white rounded-xl divide-y divide-[#406A56]/10">
+                <div className="bg-white rounded-xl divide-y divide-[#2D5A3D]/10">
                   <div className="p-3">
-                    <p className="text-xs text-[#406A56]/60 uppercase">To</p>
+                    <p className="text-xs text-[#2D5A3D]/60 uppercase">To</p>
                     <p className="font-medium text-[#2d2d2d]">{form.recipient_name}</p>
                   </div>
                   <div className="p-3">
-                    <p className="text-xs text-[#406A56]/60 uppercase">Delivery</p>
+                    <p className="text-xs text-[#2D5A3D]/60 uppercase">Delivery</p>
                     <p className="font-medium text-[#2d2d2d]">
                       {form.delivery_type === 'date' && form.delivery_date && new Date(form.delivery_date).toLocaleDateString()}
                       {form.delivery_type === 'event' && EVENT_OPTIONS.find(e => e.key === form.delivery_event)?.label}
@@ -342,9 +342,9 @@ export function PostscriptModal({ isOpen, onClose }: PostscriptModalProps) {
                     </p>
                   </div>
                   <div className="p-3">
-                    <p className="text-xs text-[#406A56]/60 uppercase">Message</p>
+                    <p className="text-xs text-[#2D5A3D]/60 uppercase">Message</p>
                     <p className="font-semibold text-[#2d2d2d]">{form.title}</p>
-                    <p className="text-sm text-[#406A56]/80 line-clamp-3">{form.message}</p>
+                    <p className="text-sm text-[#2D5A3D]/80 line-clamp-3">{form.message}</p>
                   </div>
                 </div>
               </div>
@@ -352,12 +352,12 @@ export function PostscriptModal({ isOpen, onClose }: PostscriptModalProps) {
           </div>
 
           {/* Footer */}
-          <div className="p-5 pt-3 border-t border-[#406A56]/10">
+          <div className="p-5 pt-3 border-t border-[#2D5A3D]/10">
             {step < 4 ? (
               <button
                 onClick={() => setStep(step + 1)}
                 disabled={!canProceed()}
-                className="w-full py-3 bg-[#406A56] text-white font-semibold rounded-xl hover:bg-[#4a7a64] transition-colors flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                className="w-full py-3 bg-[#2D5A3D] text-white font-semibold rounded-xl hover:bg-[#234A31] transition-colors flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 Continue
                 <ChevronRight size={18} />
@@ -367,14 +367,14 @@ export function PostscriptModal({ isOpen, onClose }: PostscriptModalProps) {
                 <button
                   onClick={() => handleSave('draft')}
                   disabled={saving}
-                  className="flex-1 py-3 bg-[#406A56]/10 text-[#406A56] font-semibold rounded-xl hover:bg-[#406A56]/20 transition-colors disabled:opacity-50"
+                  className="flex-1 py-3 bg-[#2D5A3D]/10 text-[#2D5A3D] font-semibold rounded-xl hover:bg-[#2D5A3D]/20 transition-colors disabled:opacity-50"
                 >
                   Save Draft
                 </button>
                 <button
                   onClick={() => handleSave('scheduled')}
                   disabled={saving}
-                  className="flex-1 py-3 bg-[#C35F33] text-white font-semibold rounded-xl hover:bg-[#A84E2A] transition-colors flex items-center justify-center gap-2 disabled:opacity-50"
+                  className="flex-1 py-3 bg-[#B8562E] text-white font-semibold rounded-xl hover:bg-[#A84E2A] transition-colors flex items-center justify-center gap-2 disabled:opacity-50"
                 >
                   {saving ? '...' : <><Send size={16} /> Schedule</>}
                 </button>

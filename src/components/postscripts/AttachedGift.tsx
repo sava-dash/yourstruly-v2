@@ -145,8 +145,8 @@ export function AttachedGift({ gift, onRemove, compact = false, showStatus = tru
 
   if (compact) {
     return (
-      <div className="flex items-center gap-2 p-2 bg-[#C35F33]/5 rounded-lg border border-[#C35F33]/10">
-        <Gift className="w-4 h-4 text-[#C35F33]" />
+      <div className="flex items-center gap-2 p-2 bg-[#B8562E]/5 rounded-lg border border-[#B8562E]/10">
+        <Gift className="w-4 h-4 text-[#B8562E]" />
         <span className="text-sm text-gray-700 truncate flex-1">{gift.name}</span>
         {showStatus && (
           <span className={`text-xs px-2 py-0.5 rounded-full ${status.bgColor} ${status.color}`}>
@@ -260,7 +260,7 @@ export function GiftPreview({ giftCount, className = '' }: GiftPreviewProps) {
   if (giftCount === 0) return null
 
   return (
-    <div className={`inline-flex items-center gap-1.5 px-2 py-1 bg-[#C35F33]/10 text-[#C35F33] rounded-lg text-xs font-medium ${className}`}>
+    <div className={`inline-flex items-center gap-1.5 px-2 py-1 bg-[#B8562E]/10 text-[#B8562E] rounded-lg text-xs font-medium ${className}`}>
       <Gift className="w-3.5 h-3.5" />
       <span>
         {giftCount === 1 ? '1 gift included' : `${giftCount} gifts included`}

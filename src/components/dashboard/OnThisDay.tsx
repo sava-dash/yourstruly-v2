@@ -46,10 +46,10 @@ function MemoryPreview({ memory, onClick }: { memory: OnThisDayMemory; onClick: 
       animate={{ opacity: 1, scale: 1 }}
       exit={{ opacity: 0, scale: 0.95 }}
       onClick={onClick}
-      className="w-full flex items-start gap-3 p-3 rounded-xl hover:bg-[#406A56]/5 transition-colors text-left group"
+      className="w-full flex items-start gap-3 p-3 rounded-xl hover:bg-[#2D5A3D]/5 transition-colors text-left group"
     >
       {/* Thumbnail */}
-      <div className="flex-shrink-0 w-14 h-14 rounded-xl overflow-hidden bg-gradient-to-br from-[#D9C61A]/20 to-[#C35F33]/20 flex items-center justify-center">
+      <div className="flex-shrink-0 w-14 h-14 rounded-xl overflow-hidden bg-gradient-to-br from-[#C4A235]/20 to-[#B8562E]/20 flex items-center justify-center">
         {hasImage ? (
           <Image
             src={coverMedia.file_url}
@@ -60,20 +60,20 @@ function MemoryPreview({ memory, onClick }: { memory: OnThisDayMemory; onClick: 
             unoptimized
           />
         ) : (
-          <ImageIcon size={20} className="text-[#406A56]/40" />
+          <ImageIcon size={20} className="text-[#2D5A3D]/40" />
         )}
       </div>
       
       {/* Content */}
       <div className="flex-1 min-w-0">
         {/* Years ago badge */}
-        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-[#C35F33]/10 text-[#C35F33] text-[10px] font-semibold mb-1">
+        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-[#B8562E]/10 text-[#B8562E] text-[10px] font-semibold mb-1">
           <Calendar size={10} />
           {getYearsAgoText(memory.years_ago)}
         </span>
         
         {/* Title */}
-        <p className="text-sm font-medium text-gray-800 line-clamp-1 group-hover:text-[#406A56] transition-colors">
+        <p className="text-sm font-medium text-gray-800 line-clamp-1 group-hover:text-[#2D5A3D] transition-colors">
           {memory.title || 'Untitled memory'}
         </p>
         
@@ -137,7 +137,7 @@ function MemoryModal({ memory, onClose }: { memory: OnThisDayMemory; onClose: ()
         animate={{ scale: 1, opacity: 1, y: 0 }}
         exit={{ scale: 0.9, opacity: 0, y: 20 }}
         onClick={(e) => e.stopPropagation()}
-        className="relative w-full max-w-lg max-h-[85vh] bg-[#FDF8F3] rounded-2xl overflow-hidden shadow-2xl flex flex-col"
+        className="relative w-full max-w-lg max-h-[85vh] bg-[#FAFAF7] rounded-2xl overflow-hidden shadow-2xl flex flex-col"
       >
         {/* Close button */}
         <button 
@@ -161,8 +161,8 @@ function MemoryModal({ memory, onClose }: { memory: OnThisDayMemory; onClose: ()
             
             {/* Years ago badge on image */}
             <div className="absolute bottom-4 left-4 flex items-center gap-2 px-3 py-1.5 bg-white/90 backdrop-blur-sm rounded-full">
-              <Calendar size={14} className="text-[#C35F33]" />
-              <span className="text-sm font-semibold text-[#C35F33]">
+              <Calendar size={14} className="text-[#B8562E]" />
+              <span className="text-sm font-semibold text-[#B8562E]">
                 {getYearsAgoText(memory.years_ago)}
               </span>
             </div>
@@ -173,8 +173,8 @@ function MemoryModal({ memory, onClose }: { memory: OnThisDayMemory; onClose: ()
         <div className="p-5 overflow-y-auto flex-1">
           {!hasImage && (
             <div className="flex items-center gap-2 mb-3">
-              <Calendar size={16} className="text-[#C35F33]" />
-              <span className="text-sm font-semibold text-[#C35F33]">
+              <Calendar size={16} className="text-[#B8562E]" />
+              <span className="text-sm font-semibold text-[#B8562E]">
                 {getYearsAgoText(memory.years_ago)}
               </span>
             </div>
@@ -197,8 +197,8 @@ function MemoryModal({ memory, onClose }: { memory: OnThisDayMemory; onClose: ()
           {interviewPairs ? (
             <div className="space-y-4">
               {interviewPairs.map((pair, index) => (
-                <div key={index} className="bg-white/50 rounded-xl p-4 border border-[#406A56]/10">
-                  <p className="text-sm font-medium text-[#406A56] mb-2">
+                <div key={index} className="bg-white/50 rounded-xl p-4 border border-[#2D5A3D]/10">
+                  <p className="text-sm font-medium text-[#2D5A3D] mb-2">
                     {pair.question}
                   </p>
                   <p className="text-gray-700 leading-relaxed">
@@ -216,7 +216,7 @@ function MemoryModal({ memory, onClose }: { memory: OnThisDayMemory; onClose: ()
           {/* View full memory link */}
           <Link
             href={`/dashboard/memories/${memory.id}`}
-            className="inline-flex items-center gap-2 mt-4 px-4 py-2 bg-[#406A56] text-white text-sm font-medium rounded-xl hover:bg-[#4a7a64] transition-colors"
+            className="inline-flex items-center gap-2 mt-4 px-4 py-2 bg-[#2D5A3D] text-white text-sm font-medium rounded-xl hover:bg-[#234A31] transition-colors"
           >
             View full memory
             <ChevronRight size={16} />
@@ -294,15 +294,15 @@ export default function OnThisDay() {
               </span>
               <button
                 onClick={goToPrev}
-                className="p-1 rounded-lg hover:bg-[#406A56]/10 transition-colors"
+                className="p-1 rounded-lg hover:bg-[#2D5A3D]/10 transition-colors"
               >
-                <ChevronLeft size={14} className="text-[#406A56]" />
+                <ChevronLeft size={14} className="text-[#2D5A3D]" />
               </button>
               <button
                 onClick={goToNext}
-                className="p-1 rounded-lg hover:bg-[#406A56]/10 transition-colors"
+                className="p-1 rounded-lg hover:bg-[#2D5A3D]/10 transition-colors"
               >
-                <ChevronRight size={14} className="text-[#406A56]" />
+                <ChevronRight size={14} className="text-[#2D5A3D]" />
               </button>
             </div>
           )}
@@ -316,7 +316,7 @@ export default function OnThisDay() {
                 animate={{ rotate: 360 }}
                 transition={{ duration: 1.5, repeat: Infinity, ease: 'linear' }}
               >
-                <Calendar size={18} className="text-[#C35F33]/50" />
+                <Calendar size={18} className="text-[#B8562E]/50" />
               </motion.div>
             </div>
           ) : error ? (

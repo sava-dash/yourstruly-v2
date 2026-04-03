@@ -41,7 +41,7 @@ export const STEP_EXPLANATIONS: Record<string, StepExplanation> = {
     description: "Every person has a unique journey worth preserving. We're here to help you capture the essence of who you are—your wisdom, memories, and the moments that shaped you.",
     valueProposition: "This 2-minute onboarding helps us create deeply personalized experiences that honor your unique story.",
     icon: <Sparkles className="w-8 h-8" />,
-    gradient: "from-[#406A56] to-[#8DACAB]",
+    gradient: "from-[#2D5A3D] to-[#8DACAB]",
   },
   name: {
     title: "Your Identity",
@@ -49,7 +49,7 @@ export const STEP_EXPLANATIONS: Record<string, StepExplanation> = {
     description: "Your name is the first thread in the tapestry of your legacy. It's how your loved ones will find you, remember you, and connect with your stories.",
     valueProposition: "This personalizes every interaction and helps family members recognize and connect with your stories.",
     icon: <User className="w-8 h-8" />,
-    gradient: "from-[#406A56] to-[#D9C61A]",
+    gradient: "from-[#2D5A3D] to-[#C4A235]",
   },
   interests: {
     title: "What Captivates You",
@@ -57,7 +57,7 @@ export const STEP_EXPLANATIONS: Record<string, StepExplanation> = {
     description: "The things that spark your curiosity reveal the truest parts of you. Your interests guide the memories you'll want to preserve and the stories worth telling.",
     valueProposition: "We use this to suggest relevant prompts, connect you with similar family members, and curate content that truly resonates with you.",
     icon: <Heart className="w-8 h-8" />,
-    gradient: "from-[#C35F33] to-[#D9C61A]",
+    gradient: "from-[#B8562E] to-[#C4A235]",
   },
   hobbies: {
     title: "How You Spend Your Time",
@@ -65,7 +65,7 @@ export const STEP_EXPLANATIONS: Record<string, StepExplanation> = {
     description: "Hobbies are the activities that bring you joy, relaxation, and fulfillment. They represent the colorful details that make your life uniquely yours.",
     valueProposition: "This helps us understand what activities to associate with your memories and which experiences you might want to document most.",
     icon: <Palette className="w-8 h-8" />,
-    gradient: "from-[#D9C61A] to-[#406A56]",
+    gradient: "from-[#C4A235] to-[#2D5A3D]",
   },
   skills: {
     title: "Your Strengths",
@@ -73,7 +73,7 @@ export const STEP_EXPLANATIONS: Record<string, StepExplanation> = {
     description: "The skills you've developed represent years of growth, learning, and dedication. They're gifts that can inspire and guide future generations.",
     valueProposition: "We highlight these in your legacy profile and use them to suggest prompts about lessons learned and wisdom gained.",
     icon: <Briefcase className="w-8 h-8" />,
-    gradient: "from-[#406A56] to-[#8DACAB]",
+    gradient: "from-[#2D5A3D] to-[#8DACAB]",
   },
   personality: {
     title: "Who You Are",
@@ -81,7 +81,7 @@ export const STEP_EXPLANATIONS: Record<string, StepExplanation> = {
     description: "Your personality traits define how you move through the world. Understanding your nature helps us create experiences that feel authentic to you.",
     valueProposition: "This shapes how we communicate with you—whether you prefer gentle reflection or energetic exploration of your memories.",
     icon: <Brain className="w-8 h-8" />,
-    gradient: "from-[#8DACAB] to-[#C35F33]",
+    gradient: "from-[#8DACAB] to-[#B8562E]",
   },
   'life-goals': {
     title: "What Drives You",
@@ -89,7 +89,7 @@ export const STEP_EXPLANATIONS: Record<string, StepExplanation> = {
     description: "Your life goals represent your deepest values and the legacy you want to leave. They're the north star that guides your most meaningful decisions.",
     valueProposition: "We use this to create prompts about your journey, achievements, and the wisdom you've gathered along the way.",
     icon: <Target className="w-8 h-8" />,
-    gradient: "from-[#C35F33] to-[#D9C61A]",
+    gradient: "from-[#B8562E] to-[#C4A235]",
   },
   religion: {
     title: "Your Beliefs",
@@ -97,7 +97,7 @@ export const STEP_EXPLANATIONS: Record<string, StepExplanation> = {
     description: "Spirituality often provides the framework for how we understand life's biggest questions. Your beliefs shape your perspective in profound ways.",
     valueProposition: "This helps us respectfully personalize prompts around meaning, purpose, and the values you hold most dear.",
     icon: <Compass className="w-8 h-8" />,
-    gradient: "from-[#D9C61A] to-[#406A56]",
+    gradient: "from-[#C4A235] to-[#2D5A3D]",
   },
   location: {
     title: "Where You Call Home",
@@ -105,7 +105,7 @@ export const STEP_EXPLANATIONS: Record<string, StepExplanation> = {
     description: "The places we've lived become part of our story. They hold memories of who we were and how we've grown over time.",
     valueProposition: "This contextualizes your memories geographically and helps family members understand the settings that shaped your life.",
     icon: <MapPin className="w-8 h-8" />,
-    gradient: "from-[#406A56] to-[#8DACAB]",
+    gradient: "from-[#2D5A3D] to-[#8DACAB]",
   },
   'favorite-quote': {
     title: "Words That Inspire",
@@ -113,7 +113,7 @@ export const STEP_EXPLANATIONS: Record<string, StepExplanation> = {
     description: "The quotes we live by reveal our deepest values and the wisdom we've embraced. They're guideposts for how we navigate life.",
     valueProposition: "We feature this prominently in your profile and use it to understand the principles that guide your life.",
     icon: <Quote className="w-8 h-8" />,
-    gradient: "from-[#8DACAB] to-[#C35F33]",
+    gradient: "from-[#8DACAB] to-[#B8562E]",
   },
   background: {
     title: "Your Journey",
@@ -121,7 +121,7 @@ export const STEP_EXPLANATIONS: Record<string, StepExplanation> = {
     description: "Understanding why you're here helps us support your unique path. Whether you're preserving memories for family or reflecting on your own, your story deserves care.",
     valueProposition: "This shapes the entire experience—we'll tailor prompts, suggestions, and features to match your specific goals.",
     icon: <BookOpen className="w-8 h-8" />,
-    gradient: "from-[#C35F33] to-[#D9C61A]",
+    gradient: "from-[#B8562E] to-[#C4A235]",
   },
   'heartfelt-question': {
     title: "Your First Memory",
@@ -129,7 +129,7 @@ export const STEP_EXPLANATIONS: Record<string, StepExplanation> = {
     description: "This is where your story begins. Based on everything you've shared, we've crafted a question designed just for you—to capture something meaningful from the start.",
     valueProposition: "Your answer becomes your first preserved memory, instantly creating value and setting the tone for your ongoing journey.",
     icon: <Lightbulb className="w-8 h-8" />,
-    gradient: "from-[#D9C61A] to-[#406A56]",
+    gradient: "from-[#C4A235] to-[#2D5A3D]",
   },
   'image-upload': {
     title: "Your Photos, Your Stories",
@@ -137,7 +137,7 @@ export const STEP_EXPLANATIONS: Record<string, StepExplanation> = {
     description: "Every photo holds a story waiting to be told. Upload a few of your favorite images and watch as YoursTruly brings them to life—organized, tagged, and ready for the memories they'll become.",
     valueProposition: "When you land on your dashboard, you'll already have images waiting to be turned into rich, meaningful memories. It's the fastest way to see the magic of what YoursTruly can do.",
     icon: <Camera className="w-8 h-8" />,
-    gradient: "from-[#C35F33] to-[#D9C61A]",
+    gradient: "from-[#B8562E] to-[#C4A235]",
   },
   celebration: {
     title: "You're All Set",
@@ -145,7 +145,7 @@ export const STEP_EXPLANATIONS: Record<string, StepExplanation> = {
     description: "You've taken the most important step—beginning. Your profile is now personalized to help you capture and preserve the moments that matter most.",
     valueProposition: "Everything we've learned shapes how YoursTruly will serve you and your family for years to come.",
     icon: <Trophy className="w-8 h-8" />,
-    gradient: "from-[#406A56] to-[#D9C61A]",
+    gradient: "from-[#2D5A3D] to-[#C4A235]",
   },
 };
 
@@ -189,7 +189,7 @@ export function OnboardingStepExplanation({ step, showForMobile = false }: Onboa
             </div>
           </div>
           <div className="flex-1 min-w-0">
-            <p className="text-xs font-semibold tracking-wider uppercase text-[#C35F33]/70 mb-1">
+            <p className="text-xs font-semibold tracking-wider uppercase text-[#B8562E]/70 mb-1">
               {explanation.subtitle}
             </p>
             <h3 className="text-xl font-bold text-[#2d2d2d] font-playfair leading-tight">
@@ -204,13 +204,13 @@ export function OnboardingStepExplanation({ step, showForMobile = false }: Onboa
         </p>
 
         {/* Value Proposition - Trust Builder */}
-        <div className="bg-gradient-to-r from-[#406A56]/5 to-[#8DACAB]/5 rounded-xl p-4 border border-[#406A56]/10">
+        <div className="bg-gradient-to-r from-[#2D5A3D]/5 to-[#8DACAB]/5 rounded-xl p-4 border border-[#2D5A3D]/10">
           <div className="flex items-start gap-3">
             <div className="flex-shrink-0 mt-0.5">
-              <Shield className="w-4 h-4 text-[#406A56]" />
+              <Shield className="w-4 h-4 text-[#2D5A3D]" />
             </div>
             <div>
-              <p className="text-xs font-semibold text-[#406A56] uppercase tracking-wide mb-1">
+              <p className="text-xs font-semibold text-[#2D5A3D] uppercase tracking-wide mb-1">
                 Why This Matters
               </p>
               <p className="text-sm text-[#2d2d2d]/70 leading-relaxed">
@@ -222,9 +222,9 @@ export function OnboardingStepExplanation({ step, showForMobile = false }: Onboa
 
         {/* Progress Indicator for Desktop */}
         {!showForMobile && (
-          <div className="mt-8 pt-6 border-t border-[#406A56]/10">
+          <div className="mt-8 pt-6 border-t border-[#2D5A3D]/10">
             <div className="flex items-center gap-2">
-              <Star className="w-4 h-4 text-[#D9C61A] fill-[#D9C61A]" />
+              <Star className="w-4 h-4 text-[#C4A235] fill-[#C4A235]" />
               <p className="text-xs text-[#2d2d2d]/60 italic">
                 Your data is private and secure. You control who sees your story.
               </p>
@@ -274,12 +274,12 @@ export function StepIllustration({ step, className = "" }: StepIllustrationProps
       
       {/* Floating decorative elements */}
       <motion.div
-        className="absolute -top-2 -right-2 w-8 h-8 rounded-full bg-[#D9C61A]/30 backdrop-blur-sm"
+        className="absolute -top-2 -right-2 w-8 h-8 rounded-full bg-[#C4A235]/30 backdrop-blur-sm"
         animate={{ y: [0, -5, 0], rotate: [0, 10, 0] }}
         transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
       />
       <motion.div
-        className="absolute -bottom-3 -left-3 w-6 h-6 rounded-full bg-[#C35F33]/30 backdrop-blur-sm"
+        className="absolute -bottom-3 -left-3 w-6 h-6 rounded-full bg-[#B8562E]/30 backdrop-blur-sm"
         animate={{ y: [0, 5, 0], rotate: [0, -10, 0] }}
         transition={{ duration: 3, repeat: Infinity, ease: "easeInOut", delay: 0.5 }}
       />

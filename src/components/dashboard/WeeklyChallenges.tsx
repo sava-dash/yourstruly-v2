@@ -53,7 +53,7 @@ export default function WeeklyChallenges() {
   const t = {
     cardBg: isDark ? 'rgba(40, 40, 40, 0.92)' : 'rgba(255,255,255,0.95)',
     cardBorder: isDark ? '1px solid rgba(255,255,255,0.08)' : '1px solid rgba(64,106,86,0.1)',
-    headerColor: isDark ? '#8DACAB' : '#406A56',
+    headerColor: isDark ? '#8DACAB' : '#2D5A3D',
     divider: isDark ? 'rgba(255,255,255,0.06)' : '#f0f0f0',
     iconBg: isDark ? 'rgba(255,255,255,0.08)' : '#f5f5f5',
     labelColor: isDark ? 'rgba(255,255,255,0.8)' : '#333',
@@ -103,7 +103,7 @@ export default function WeeklyChallenges() {
                 width: '28px',
                 height: '28px',
                 borderRadius: '50%',
-                background: c.completed ? '#406A56' : t.iconBg,
+                background: c.completed ? '#2D5A3D' : t.iconBg,
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
@@ -136,7 +136,7 @@ export default function WeeklyChallenges() {
                   <div style={{
                     height: '100%',
                     width: `${progress}%`,
-                    background: c.completed ? '#406A56' : '#D9C61A',
+                    background: c.completed ? '#2D5A3D' : '#C4A235',
                     borderRadius: '2px',
                     transition: 'width 0.5s ease',
                   }} />
@@ -153,7 +153,7 @@ export default function WeeklyChallenges() {
                 <span style={{ fontSize: '11px', fontWeight: '600', color: t.countColor }}>
                   {c.current_count}/{c.target_count}
                 </span>
-                <span style={{ fontSize: '10px', fontWeight: '600', color: c.completed ? '#406A56' : '#D9C61A' }}>
+                <span style={{ fontSize: '10px', fontWeight: '600', color: c.completed ? '#2D5A3D' : '#C4A235' }}>
                   {c.completed ? '✓ Done' : `⚡${c.xp_reward} XP`}
                 </span>
               </div>
