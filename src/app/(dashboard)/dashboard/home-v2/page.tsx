@@ -335,11 +335,57 @@ export default function HomeV2Page() {
           </button>
         </div>
 
-        {/* Loading */}
+        {/* Loading skeletons */}
         {promptsLoading && (
           <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '20px', paddingTop: '40px' }}>
             {[1, 2, 3].map(i => (
-              <div key={i} style={{ width: `${CARD_W}px`, height: `${CARD_H}px`, borderRadius: '24px', background: 'rgba(255,255,255,0.04)', animation: 'pulse 2s infinite' }} />
+              <div key={i} style={{
+                width: `${CARD_W}px`, maxWidth: '100%', height: `${CARD_H}px`,
+                borderRadius: '24px', overflow: 'hidden', position: 'relative',
+                background: 'rgba(255,255,255,0.04)',
+                border: '1px solid rgba(255,255,255,0.06)',
+              }}>
+                {/* Shimmer photo area */}
+                <div style={{
+                  height: '60%', background: 'rgba(255,255,255,0.06)',
+                  animation: 'skeleton-pulse 1.8s ease-in-out infinite',
+                }} />
+                {/* Shimmer content area */}
+                <div style={{ padding: '20px 24px', display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                  <div style={{
+                    height: '14px', width: '80px', borderRadius: '10px',
+                    background: 'rgba(255,255,255,0.06)',
+                    animation: 'skeleton-pulse 1.8s ease-in-out infinite',
+                    animationDelay: '0.2s',
+                  }} />
+                  <div style={{
+                    height: '24px', width: '85%', borderRadius: '8px',
+                    background: 'rgba(255,255,255,0.06)',
+                    animation: 'skeleton-pulse 1.8s ease-in-out infinite',
+                    animationDelay: '0.3s',
+                  }} />
+                  <div style={{
+                    height: '24px', width: '60%', borderRadius: '8px',
+                    background: 'rgba(255,255,255,0.06)',
+                    animation: 'skeleton-pulse 1.8s ease-in-out infinite',
+                    animationDelay: '0.4s',
+                  }} />
+                  <div style={{ display: 'flex', gap: '8px', marginTop: 'auto', paddingTop: '16px' }}>
+                    <div style={{
+                      height: '12px', width: '60px', borderRadius: '6px',
+                      background: 'rgba(255,255,255,0.04)',
+                      animation: 'skeleton-pulse 1.8s ease-in-out infinite',
+                      animationDelay: '0.5s',
+                    }} />
+                    <div style={{
+                      height: '12px', width: '40px', borderRadius: '6px',
+                      background: 'rgba(255,255,255,0.04)',
+                      animation: 'skeleton-pulse 1.8s ease-in-out infinite',
+                      animationDelay: '0.6s',
+                    }} />
+                  </div>
+                </div>
+              </div>
             ))}
           </div>
         )}
@@ -424,6 +470,11 @@ export default function HomeV2Page() {
         )}
 
         <style jsx global>{`
+          @keyframes skeleton-pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.4; }
+          }
+
           /* ── Profile card dark theme ── */
           .feed-page[data-theme="dark"] .profile-card-feed {
             background: rgba(255,255,255,0.04);

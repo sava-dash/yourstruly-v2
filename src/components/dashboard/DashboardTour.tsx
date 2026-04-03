@@ -167,21 +167,38 @@ function TourOverlay({ step, stepIdx, total, onNext, onPrev, onClose }: {
           padding: '24px',
           boxShadow: '0 20px 60px rgba(0,0,0,0.35), 0 0 0 1px rgba(0,0,0,0.08), 0 0 0 4px rgba(64,106,86,0.1)',
         }}>
-          <button
-            onClick={onClose}
-            style={{
-              position: 'absolute',
-              top: 12,
-              right: 12,
-              background: 'none',
-              border: 'none',
-              cursor: 'pointer',
-              color: '#999',
-              padding: 4,
-            }}
-          >
-            <X size={16} />
-          </button>
+          <div style={{ position: 'absolute', top: 12, right: 12, display: 'flex', alignItems: 'center', gap: 4 }}>
+            <button
+              onClick={onClose}
+              style={{
+                background: 'none',
+                border: 'none',
+                cursor: 'pointer',
+                color: '#999',
+                padding: '6px 12px',
+                fontSize: 14,
+                borderRadius: 8,
+                transition: 'color 0.15s',
+              }}
+              className="px-3 py-1.5 text-sm text-neutral-400 hover:text-neutral-700"
+              aria-label="Skip tour"
+            >
+              Skip tour
+            </button>
+            <button
+              onClick={onClose}
+              style={{
+                background: 'none',
+                border: 'none',
+                cursor: 'pointer',
+                color: '#999',
+                padding: 4,
+              }}
+              aria-label="Close tour"
+            >
+              <X size={16} />
+            </button>
+          </div>
           <h3 style={{ fontSize: 18, fontWeight: 700, color: '#2d2d2d', marginBottom: 6 }}>{step.title}</h3>
           <p style={{ fontSize: 14, color: '#666', lineHeight: 1.6 }}>{step.content}</p>
           {/* Progress */}

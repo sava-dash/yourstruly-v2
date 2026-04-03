@@ -176,7 +176,7 @@ export default function TopNav({ user, profile }: TopNavProps) {
                 </SlideUpButton>
                 
                 {myStoryOpen && (
-                  <div className="absolute top-full left-0 mt-1 w-48 glass-modal rounded-refined p-1.5 dropdown-menu">
+                  <div className="absolute top-full left-0 mt-1 w-48 glass-modal rounded-refined p-1.5 dropdown-menu" role="menu">
                     {myStoryItems.map((item) => {
                       const Icon = item.icon
                       const isActive = pathname === item.href
@@ -185,6 +185,7 @@ export default function TopNav({ user, profile }: TopNavProps) {
                           key={item.href}
                           href={item.href}
                           onClick={() => setMyStoryOpen(false)}
+                          role="menuitem"
                           className={`flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-all ${
                             isActive
                               ? 'bg-[#C35F33]/15 text-[#C35F33]'
@@ -212,7 +213,7 @@ export default function TopNav({ user, profile }: TopNavProps) {
                 </SlideUpButton>
                 
                 {toolsOpen && (
-                  <div className="absolute top-full left-0 mt-1 w-48 glass-modal rounded-refined p-1.5 dropdown-menu">
+                  <div className="absolute top-full left-0 mt-1 w-48 glass-modal rounded-refined p-1.5 dropdown-menu" role="menu">
                     {toolsItems.map((item) => {
                       const Icon = item.icon
                       const isActive = pathname === item.href
@@ -225,6 +226,8 @@ export default function TopNav({ user, profile }: TopNavProps) {
                             if (isDisabled) e.preventDefault()
                             else setToolsOpen(false)
                           }}
+                          role="menuitem"
+                          aria-disabled={isDisabled || undefined}
                           className={`flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-all ${
                             isActive
                               ? 'bg-[#C35F33]/15 text-[#C35F33]'
@@ -257,7 +260,7 @@ export default function TopNav({ user, profile }: TopNavProps) {
                 </SlideUpButton>
                 
                 {peopleOpen && (
-                  <div className="absolute top-full left-0 mt-1 w-44 glass-modal rounded-refined p-1.5 dropdown-menu">
+                  <div className="absolute top-full left-0 mt-1 w-44 glass-modal rounded-refined p-1.5 dropdown-menu" role="menu">
                     {peopleItems.map((item) => {
                       const Icon = item.icon
                       const isActive = pathname === item.href
@@ -266,6 +269,7 @@ export default function TopNav({ user, profile }: TopNavProps) {
                           key={item.href}
                           href={item.href}
                           onClick={() => setPeopleOpen(false)}
+                          role="menuitem"
                           className={`flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-all ${
                             isActive
                               ? 'bg-[#C35F33]/15 text-[#C35F33]'
@@ -293,6 +297,9 @@ export default function TopNav({ user, profile }: TopNavProps) {
                   activityOpen ? 'bg-[#C35F33]/15 text-[#C35F33]' : 'text-gray-500 hover:bg-[#C35F33]/5 hover:text-[#C35F33]'
                 }`}
                 title="Activity"
+                aria-label="Notifications"
+                aria-expanded={activityOpen}
+                aria-haspopup="true"
               >
                 <Bell size={18} />
                 {unreadCount > 0 && (
@@ -330,6 +337,7 @@ export default function TopNav({ user, profile }: TopNavProps) {
                       : 'text-gray-500 hover:bg-[#C35F33]/5 hover:text-[#C35F33]'
                   }`}
                   title={item.label}
+                  aria-label={item.label === 'Shop' ? 'Marketplace' : item.label}
                 >
                   <Icon size={18} />
                 </Link>
@@ -344,6 +352,9 @@ export default function TopNav({ user, profile }: TopNavProps) {
               <button
                 onClick={() => setUserOpen(!userOpen)}
                 className="flex items-center gap-2 px-2 py-1 rounded-lg text-gray-600 hover:bg-[#C35F33]/5 transition-all"
+                aria-label="User menu"
+                aria-expanded={userOpen}
+                aria-haspopup="true"
               >
                 <div className="w-8 h-8 rounded-full bg-gradient-to-br from-[#C35F33] to-[#D9C61A] flex items-center justify-center text-white font-semibold text-sm">
                   {profile?.full_name?.charAt(0) || user.email?.charAt(0).toUpperCase()}
@@ -355,7 +366,7 @@ export default function TopNav({ user, profile }: TopNavProps) {
               </button>
 
               {userOpen && (
-                <div className="absolute top-full right-0 mt-1 w-56 glass-modal rounded-refined p-1.5 dropdown-menu">
+                <div className="absolute top-full right-0 mt-1 w-56 glass-modal rounded-refined p-1.5 dropdown-menu" role="menu">
                   <div className="px-3 py-2 border-b border-[#C35F33]/10 mb-1">
                     <p className="text-sm font-medium text-gray-900 truncate">{profile?.full_name || 'Welcome!'}</p>
                     <p className="text-xs text-gray-500 truncate">{user.email}</p>
@@ -364,6 +375,7 @@ export default function TopNav({ user, profile }: TopNavProps) {
                     href="/dashboard/profile"
                     onClick={() => setUserOpen(false)}
                     className="flex items-center gap-3 px-3 py-2 rounded-lg text-sm text-gray-600 hover:bg-[#C35F33]/5 hover:text-[#C35F33] transition-all"
+                    role="menuitem"
                   >
                     <UserIcon size={16} />
                     <span>My Profile</span>
@@ -372,6 +384,7 @@ export default function TopNav({ user, profile }: TopNavProps) {
                     href="/dashboard/settings"
                     onClick={() => setUserOpen(false)}
                     className="flex items-center gap-3 px-3 py-2 rounded-lg text-sm text-gray-600 hover:bg-[#C35F33]/5 hover:text-[#C35F33] transition-all"
+                    role="menuitem"
                   >
                     <Settings size={16} />
                     <span>Settings</span>
@@ -383,6 +396,7 @@ export default function TopNav({ user, profile }: TopNavProps) {
                   <button
                     onClick={handleSignOut}
                     className="w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm text-red-500 hover:bg-red-50 hover:text-red-600 transition-all"
+                    role="menuitem"
                   >
                     <LogOut size={16} />
                     <span>Sign Out</span>
@@ -395,6 +409,8 @@ export default function TopNav({ user, profile }: TopNavProps) {
             <button
               onClick={() => setMobileOpen(!mobileOpen)}
               className="lg:hidden flex items-center justify-center w-9 h-9 rounded-lg text-gray-600 hover:bg-[#C35F33]/5 transition-all"
+              aria-label={mobileOpen ? 'Close menu' : 'Open menu'}
+              aria-expanded={mobileOpen}
             >
               {mobileOpen ? <X size={20} /> : <Menu size={20} />}
             </button>
