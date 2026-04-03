@@ -3,47 +3,47 @@
    ============================================ */
 
 :root {
-  /* Brand Primary -- Green (growth, life, "Live on") */
-  --color-primary: #3D6B52;
-  --color-primary-hover: #2F5441;
-  --color-primary-light: #E8F0EC;
-  --color-primary-muted: #8DACAB;
+  /* Primary — Evergreen */
+  --color-primary: #2D5A3D;
+  --color-primary-hover: #234A31;
+  --color-primary-light: #E6F0EA;
+  --color-primary-muted: #7A9B88;
 
-  /* Secondary -- Terracotta (warmth, memories) */
-  --color-secondary: #C35F33;
-  --color-secondary-light: #FCEEE7;
+  /* Secondary — Amber Clay */
+  --color-secondary: #B8562E;
+  --color-secondary-light: #FBF0EB;
 
-  /* Accent -- Gold (achievements, milestones) */
-  --color-accent: #C9A832;
-  --color-accent-light: #FBF6E3;
+  /* Accent — Heirloom Gold */
+  --color-accent: #C4A235;
+  --color-accent-light: #FAF5E4;
 
   /* Backgrounds */
-  --color-bg: #FAF8F4;
-  --color-background: #FAF8F4;
+  --color-bg: #FAFAF7;
+  --color-background: #FAFAF7;
   --color-surface: #FFFFFF;
-  --color-surface-warm: #F5F1EA;
-  --color-surface-secondary: #F5F1EA;
+  --color-surface-warm: #F5F3EE;
+  --color-surface-secondary: #F5F3EE;
 
   /* Text */
-  --color-text: #1A2B23;
-  --color-text-primary: #1A2B23;
-  --color-text-secondary: #5C6D64;
-  --color-text-muted: #94A39C;
+  --color-text: #1A1F1C;
+  --color-text-primary: #1A1F1C;
+  --color-text-secondary: #5A6660;
+  --color-text-muted: #94A09A;
 
   /* Borders */
-  --color-border: #DDE5E0;
-  --color-border-light: #E8F0EC;
-  --color-border-dark: #C4D1CA;
+  --color-border: #DDE3DF;
+  --color-border-light: #E6F0EA;
+  --color-border-dark: #B8C4BD;
 
   /* Semantic */
-  --color-error: #C4392A;
-  --color-success: #2A8C56;
-  --color-warning: #D4920A;
+  --color-error: #C23B2E;
+  --color-success: #2D7A4F;
+  --color-warning: #CC8B18;
 
   /* Interactive States */
-  --color-hover: rgba(61, 107, 82, 0.1);
-  --color-active: rgba(61, 107, 82, 0.2);
-  --color-focus: rgba(61, 107, 82, 0.3);
+  --color-hover: rgba(45, 90, 61, 0.1);
+  --color-active: rgba(45, 90, 61, 0.2);
+  --color-focus: rgba(45, 90, 61, 0.3);
 
   /* Shadows */
   --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);

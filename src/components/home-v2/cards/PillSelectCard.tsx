@@ -37,7 +37,7 @@ export function PillSelectCard({ label, options, data, onSave, saved }: PillSele
 
   return (
     <div className="h-full flex flex-col p-4 gap-3">
-      <h3 className="text-xs font-semibold uppercase tracking-wider text-[#8DACAB]/70">
+      <h3 className="text-xs font-semibold uppercase tracking-wider text-[#5C6D64]">
         {label}
       </h3>
 
@@ -49,8 +49,8 @@ export function PillSelectCard({ label, options, data, onSave, saved }: PillSele
               onClick={() => toggle(option)}
               className={`px-3 py-1.5 rounded-full text-xs font-medium transition-colors ${
                 selected.has(option)
-                  ? 'bg-[#D9C61A]/20 text-[#D9C61A] border border-[#D9C61A]/40'
-                  : 'bg-white/5 text-white/60 border border-white/10 hover:bg-white/10'
+                  ? 'bg-[#2D5A3D] text-white border border-[#2D5A3D]'
+                  : 'bg-[#F5F3EE] text-[#5A6660] border border-[#DDE3DF] hover:bg-[#E6F0EA]'
               }`}
             >
               {option}
@@ -58,7 +58,7 @@ export function PillSelectCard({ label, options, data, onSave, saved }: PillSele
           ))}
           <button
             onClick={() => setShowCustom(!showCustom)}
-            className="px-3 py-1.5 rounded-full text-xs font-medium bg-white/5 text-white/40 border border-white/10 border-dashed hover:bg-white/10 flex items-center gap-1"
+            className="px-3 py-1.5 rounded-full text-xs font-medium bg-[#FAF8F4] text-[#94A39C] border border-[#DDE5E0] border-dashed hover:bg-[#E8F0EC] flex items-center gap-1"
           >
             <Plus size={10} /> Custom
           </button>
@@ -70,7 +70,7 @@ export function PillSelectCard({ label, options, data, onSave, saved }: PillSele
             value={customInput}
             onChange={(e) => setCustomInput(e.target.value)}
             placeholder="Type your own..."
-            className="mt-3 w-full px-3 py-2 bg-white/5 rounded-lg border border-white/10 text-white text-sm focus:outline-none focus:ring-2 focus:ring-[#D9C61A]/30 placeholder-white/30"
+            className="mt-3 w-full px-3 py-2 bg-[#FAF8F4] rounded-lg border border-[#DDE5E0] text-[#1A2B23] text-sm focus:outline-none focus:ring-2 focus:ring-[#3D6B52]/30 placeholder-[#94A39C]"
             autoFocus
           />
         )}
@@ -81,8 +81,8 @@ export function PillSelectCard({ label, options, data, onSave, saved }: PillSele
         disabled={(selected.size === 0 && !customInput.trim()) || saving || saved}
         className={`w-full py-2 rounded-xl text-sm font-medium transition-colors flex items-center justify-center gap-2 ${
           saved
-            ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30'
-            : 'bg-[#406A56] text-white hover:bg-[#4a7a64] disabled:opacity-40'
+            ? 'bg-[#E6F0EA] text-[#2D5A3D] border border-[#2D5A3D]/30'
+            : 'bg-[#2D5A3D] text-white hover:bg-[#234A31] disabled:opacity-40'
         }`}
       >
         {saved ? <><Check size={14} /> Saved</> : saving ? <Loader2 size={14} className="animate-spin" /> : 'Save'}

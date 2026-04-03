@@ -1,6 +1,5 @@
 'use client'
 
-import { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
 import { Sparkles, Camera, BookOpen, Brain, Heart, MessageSquare, Users, Gift, ArrowRight } from 'lucide-react'
 import { TYPE_CONFIG } from '../constants'
@@ -35,18 +34,8 @@ const TYPE_COLORS: Record<string, string> = {
 }
 
 export function EngagementTile({ nextPrompt, totalWaiting, onOpen }: EngagementTileProps) {
-  const [isDark, setIsDark] = useState(false)
-
-  useEffect(() => {
-    const el = document.querySelector('.feed-page')
-    if (el) setIsDark(el.getAttribute('data-theme') === 'dark')
-    const observer = new MutationObserver(() => {
-      const feedEl = document.querySelector('.feed-page')
-      if (feedEl) setIsDark(feedEl.getAttribute('data-theme') === 'dark')
-    })
-    if (el) observer.observe(el, { attributes: true, attributeFilter: ['data-theme'] })
-    return () => observer.disconnect()
-  }, [])
+  // Always use light theme
+  const isDark = false
 
   if (!nextPrompt && totalWaiting === 0) return null
 

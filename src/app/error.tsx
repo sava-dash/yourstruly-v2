@@ -10,22 +10,22 @@ export default function Error({
   reset: () => void
 }) {
   return (
-    <div className="min-h-screen bg-neutral-950 flex items-center justify-center p-8">
+    <div className="min-h-screen bg-[#FAFAF7] flex items-center justify-center p-8">
       <div className="text-center max-w-md">
-        <h1 className="text-2xl font-semibold text-amber-100 mb-2">Something went wrong</h1>
-        <p className="text-neutral-400 mb-6">
+        <h1 className="text-2xl font-semibold text-[#1A1F1C] mb-2">Something went wrong</h1>
+        <p className="text-[#5A6660] mb-6">
           We ran into an issue. Please try again or head back to your dashboard.
         </p>
         <div className="flex gap-3 justify-center">
           <button
             onClick={reset}
-            className="px-5 py-2.5 bg-amber-700 hover:bg-amber-600 text-white rounded-lg font-medium transition-colors"
+            className="px-5 py-2.5 bg-[#2D5A3D] hover:bg-[#234A31] text-white rounded-lg font-medium transition-colors"
           >
             Try Again
           </button>
           <Link
             href="/dashboard"
-            className="px-5 py-2.5 border border-neutral-700 hover:border-neutral-500 text-neutral-300 rounded-lg font-medium transition-colors"
+            className="px-5 py-2.5 border border-[#DDE3DF] hover:border-[#2D5A3D] text-[#1A1F1C] rounded-lg font-medium transition-colors"
           >
             Dashboard
           </Link>

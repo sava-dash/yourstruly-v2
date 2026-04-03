@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Geist, Caveat, Playfair_Display, Inter_Tight } from "next/font/google";
+import { Geist, DM_Serif_Display, DM_Sans } from "next/font/google";
 import "./globals.css";
 import "@/styles/themes.css";
 // Map CSS moved to dashboard layout — only load where maps are used
@@ -12,25 +12,18 @@ const geistSans = Geist({
   subsets: ["latin"],
 });
 
-// Brand primary font - Inter Tight
-const interTight = Inter_Tight({
-  variable: "--font-inter-tight",
+// Brand primary font - DM Sans
+const dmSans = DM_Sans({
+  variable: "--font-dm-sans",
   subsets: ["latin"],
   weight: ["400", "500", "600", "700", "800"],
 });
 
-// Handwritten font for category pills and warm touches
-const caveat = Caveat({
-  variable: "--font-handwritten",
+// Serif font for memory titles and headings
+const dmSerif = DM_Serif_Display({
+  variable: "--font-dm-serif",
   subsets: ["latin"],
-  weight: ["400", "500", "600", "700"],
-});
-
-// Serif font for memory titles
-const playfair = Playfair_Display({
-  variable: "--font-playfair",
-  subsets: ["latin"],
-  weight: ["400", "500", "600", "700"],
+  weight: ["400"],
 });
 
 export const metadata: Metadata = {
@@ -62,7 +55,7 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body
-        className={`${geistSans.variable} ${interTight.variable} ${caveat.variable} ${playfair.variable} antialiased`}
+        className={`${geistSans.variable} ${dmSans.variable} ${dmSerif.variable} antialiased`}
       >
         <CookiebotScript />
         <SkipToMain />

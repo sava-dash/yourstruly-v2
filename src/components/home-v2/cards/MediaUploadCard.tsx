@@ -29,13 +29,13 @@ export function MediaUploadCard({ onUpload }: MediaUploadCardProps) {
 
   return (
     <div className="h-full flex flex-col p-4 gap-3">
-      <h3 className="text-xs font-semibold uppercase tracking-wider text-[#8DACAB]/70 flex items-center gap-1.5">
+      <h3 className="text-xs font-semibold uppercase tracking-wider text-[#5C6D64] flex items-center gap-1.5">
         <ImageIcon size={12} /> Add Media
       </h3>
 
       <div
         className={`flex-1 flex flex-col items-center justify-center rounded-xl border-2 border-dashed transition-colors cursor-pointer ${
-          isDragging ? 'border-[#D9C61A] bg-[#D9C61A]/10' : 'border-white/15 hover:border-white/30 bg-white/5'
+          isDragging ? 'border-[#2D5A3D] bg-[#E6F0EA]' : 'border-[#DDE3DF] hover:border-[#94A09A] bg-[#F5F3EE]'
         }`}
         onClick={() => inputRef.current?.click()}
         onDragOver={(e) => { e.preventDefault(); setIsDragging(true) }}
@@ -43,11 +43,11 @@ export function MediaUploadCard({ onUpload }: MediaUploadCardProps) {
         onDrop={(e) => { e.preventDefault(); setIsDragging(false); handleFiles(e.dataTransfer.files) }}
       >
         {isUploading ? (
-          <Loader2 size={24} className="text-white/40 animate-spin" />
+          <Loader2 size={24} className="text-[#94A09A] animate-spin" />
         ) : (
           <>
-            <Upload size={24} className="text-white/30 mb-2" />
-            <p className="text-xs text-white/40 text-center">
+            <Upload size={24} className="text-[#94A09A] mb-2" />
+            <p className="text-xs text-[#94A09A] text-center">
               Drop photos/videos here<br />or tap to browse
             </p>
           </>

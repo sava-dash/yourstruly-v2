@@ -49,7 +49,7 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="min-h-screen bg-[#FDF8F3] flex items-center justify-center p-4 relative overflow-hidden">
+    <div className="min-h-screen bg-[#FAFAF7] flex items-center justify-center p-4 relative overflow-hidden">
       {/* Decorative background */}
       <div className="home-background" />
       
@@ -68,7 +68,7 @@ export default function LoginPage() {
             alt="YoursTruly" 
             className="h-20 w-auto mx-auto mb-2"
           />
-          <p className="text-[#406A56]/70 mt-2">Live on.</p>
+          <p className="text-[#2D5A3D]/70 mt-2">Live on.</p>
         </div>
 
         {/* Glass card */}
@@ -117,7 +117,7 @@ export default function LoginPage() {
                   type="email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  className="w-full pl-10 pr-4 py-3 rounded-xl bg-white border border-gray-200 text-[#2d2d2d] placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#406A56]/40 focus:border-[#406A56] transition-all"
+                  className="w-full pl-10 pr-4 py-3 rounded-xl bg-white border border-gray-200 text-[#2d2d2d] placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#2D5A3D]/40 focus:border-[#2D5A3D] transition-all"
                   placeholder="you@example.com"
                   required
                   aria-required="true"
@@ -138,7 +138,7 @@ export default function LoginPage() {
                   type={showPassword ? 'text' : 'password'}
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  className="w-full pl-10 pr-12 py-3 rounded-xl bg-white border border-gray-200 text-[#2d2d2d] placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#406A56]/40 focus:border-[#406A56] transition-all"
+                  className="w-full pl-10 pr-12 py-3 rounded-xl bg-white border border-gray-200 text-[#2d2d2d] placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#2D5A3D]/40 focus:border-[#2D5A3D] transition-all"
                   placeholder="••••••••"
                   required
                   aria-required="true"
@@ -158,12 +158,12 @@ export default function LoginPage() {
 
             <div className="flex items-center justify-between">
               <label className="flex items-center gap-2 cursor-pointer">
-                <input type="checkbox" className="w-4 h-4 rounded border-gray-300 text-[#406A56] focus:ring-[#406A56]" />
+                <input type="checkbox" className="w-4 h-4 rounded border-gray-300 text-[#2D5A3D] focus:ring-[#2D5A3D]" />
                 <span className="text-sm text-gray-600">Remember me</span>
               </label>
               <Link 
                 href="/forgot-password" 
-                className="text-sm text-[#406A56] hover:text-[#355a48] font-medium"
+                className="text-sm text-[#2D5A3D] hover:text-[#234A31] font-medium"
               >
                 Forgot password?
               </Link>
@@ -178,7 +178,7 @@ export default function LoginPage() {
             <button
               type="submit"
               disabled={loading}
-              className="w-full py-3.5 bg-[#406A56] hover:bg-[#355a48] text-white font-semibold rounded-xl transition-all disabled:opacity-50 flex items-center justify-center gap-2 shadow-md hover:shadow-lg"
+              className="w-full py-3.5 bg-[#2D5A3D] hover:bg-[#234A31] text-white font-semibold rounded-xl transition-all disabled:opacity-50 flex items-center justify-center gap-2 shadow-md hover:shadow-lg"
             >
               {loading ? (
                 <>
@@ -196,7 +196,7 @@ export default function LoginPage() {
 
           <p className="mt-6 text-center text-gray-600">
             Don&apos;t have an account?{' '}
-            <Link href="/signup" className="text-[#406A56] hover:text-[#355a48] font-semibold">
+            <Link href="/signup" className="text-[#2D5A3D] hover:text-[#234A31] font-semibold">
               Get started free
             </Link>
           </p>

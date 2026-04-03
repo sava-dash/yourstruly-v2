@@ -1,102 +1,116 @@
 /**
  * Design Tokens - YoursTruly V2
  * Centralized design system tokens for consistency across the app
- * Based on HeroUI theme with purple primary + semantic color roles
+ * Ogilvy "Modern Sanctuary" palette — Evergreen, Amber Clay, Heirloom Gold
  */
 
 export const colors = {
-  // Semantic color roles (use these in components, not raw hex)
+  // Primary — Evergreen scale
   primary: {
-    50: '#F2EAFA',
-    100: '#E4D4F4',
-    200: '#C9A9E9',
-    300: '#AE7EDE',
-    400: '#9353D3',
-    500: '#7828C8', // Main brand purple
-    600: '#6020A0',
-    700: '#481878',
-    800: '#301050',
-    900: '#180828',
-    DEFAULT: '#7828C8',
+    50: '#E6F0EA',
+    100: '#C2D9CC',
+    200: '#9BC1AB',
+    300: '#74A88A',
+    400: '#539672',
+    500: '#2D5A3D', // Main brand Evergreen
+    600: '#274F36',
+    700: '#234A31',
+    800: '#1B3926',
+    900: '#122518',
+    DEFAULT: '#2D5A3D',
   },
-  
+
   // Functional colors
   success: {
-    light: '#D1FAE5',
-    DEFAULT: '#17C964',
-    dark: '#10B981',
+    light: '#E6F0EA',
+    DEFAULT: '#2D7A4F',
+    dark: '#234A31',
   },
   warning: {
-    light: '#FEF3C7',
-    DEFAULT: '#F5A524',
-    dark: '#F59E0B',
+    light: '#FAF5E4',
+    DEFAULT: '#CC8B18',
+    dark: '#A67014',
   },
   error: {
-    light: '#FEE2E2',
-    DEFAULT: '#F31260',
-    dark: '#EF4444',
+    light: '#FBEAE8',
+    DEFAULT: '#C23B2E',
+    dark: '#9A2F24',
   },
   info: {
-    light: '#DBEAFE',
-    DEFAULT: '#006FEE',
-    dark: '#3B82F6',
+    light: '#E6F0EA',
+    DEFAULT: '#2D5A3D',
+    dark: '#234A31',
   },
-  
+
+  // Secondary — Amber Clay
+  secondary: {
+    light: '#FBF0EB',
+    DEFAULT: '#B8562E',
+    dark: '#934525',
+  },
+
+  // Accent — Heirloom Gold
+  accent: {
+    light: '#FAF5E4',
+    DEFAULT: '#C4A235',
+    dark: '#9D822A',
+  },
+
   // Prompt type colors (semantic, not raw hex)
   promptTypes: {
     photo: {
-      bg: '#FEF3C7', // yellow-100
-      text: '#78350F', // yellow-900
-      border: '#FCD34D', // yellow-400
+      bg: '#FAF5E4',
+      text: '#7A6520',
+      border: '#C4A235',
     },
     memory: {
-      bg: '#F3E8FF', // purple-100
-      text: '#581C87', // purple-900
-      border: '#C084FC', // purple-400
+      bg: '#E6F0EA',
+      text: '#1B3926',
+      border: '#7A9B88',
     },
     wisdom: {
-      bg: '#FEE2E2', // red-100
-      text: '#7F1D1D', // red-900
-      border: '#F87171', // red-400
+      bg: '#FBF0EB',
+      text: '#6B3A1E',
+      border: '#B8562E',
     },
     contact: {
-      bg: '#D1FAE5', // green-100
-      text: '#14532D', // green-900
-      border: '#34D399', // green-400
+      bg: '#E6F0EA',
+      text: '#1B3926',
+      border: '#2D7A4F',
     },
     connect: {
-      bg: '#DBEAFE', // blue-100
-      text: '#1E3A8A', // blue-900
-      border: '#60A5FA', // blue-400
+      bg: '#E6F0EA',
+      text: '#234A31',
+      border: '#7A9B88',
     },
   },
-  
+
   // Neutral scale
   neutral: {
-    50: '#FAFAFA',
-    100: '#F4F4F5',
-    200: '#E4E4E7',
-    300: '#D4D4D8',
-    400: '#A1A1AA',
-    500: '#71717A',
-    600: '#52525B',
-    700: '#3F3F46',
-    800: '#27272A',
-    900: '#18181B',
+    50: '#FAFAF7',
+    100: '#F5F3EE',
+    200: '#DDE3DF',
+    300: '#B8C4BD',
+    400: '#94A09A',
+    500: '#5A6660',
+    600: '#404A45',
+    700: '#2E3632',
+    800: '#1F2522',
+    900: '#1A1F1C',
   },
-  
+
   // Background & Surface
   background: {
-    DEFAULT: '#FFFFFF',
-    secondary: '#FAFAFA',
-    tertiary: '#F4F4F5',
+    DEFAULT: '#FAFAF7',
+    secondary: '#F5F3EE',
+    tertiary: '#FFFFFF',
   },
-  
+
   // Text colors
   text: {
-    primary: '#2D2D2D',
-    secondary: '#71717A',
-    muted: '#A1A1AA',
+    primary: '#1A1F1C',
+    secondary: '#5A6660',
+    muted: '#94A09A',
     inverse: '#FFFFFF',
   },
 } as const;
@@ -121,9 +135,9 @@ export const radius = {
 
 export const shadows = {
   sm: '0 1px 2px 0 rgba(0, 0, 0, 0.05)',
-  md: '0 4px 12px rgba(82, 50, 93, 0.08)',
-  lg: '0 8px 40px rgba(82, 50, 93, 0.12)',
-  xl: '0 12px 48px rgba(82, 50, 93, 0.16)',
+  md: '0 4px 12px rgba(45, 90, 61, 0.08)',
+  lg: '0 8px 40px rgba(45, 90, 61, 0.12)',
+  xl: '0 12px 48px rgba(45, 90, 61, 0.16)',
 } as const;
 
 export const transitions = {

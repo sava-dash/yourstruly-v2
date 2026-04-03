@@ -84,7 +84,7 @@ export default function SignupPage() {
   const { requirements, strength } = validation;
 
   return (
-    <div className="min-h-screen bg-[#FDF8F3] flex items-center justify-center p-4 relative overflow-hidden">
+    <div className="min-h-screen bg-[#FAFAF7] flex items-center justify-center p-4 relative overflow-hidden">
       {/* Decorative background */}
       <div className="home-background" />
       
@@ -103,7 +103,7 @@ export default function SignupPage() {
             alt="YoursTruly" 
             className="h-20 w-auto mx-auto mb-2"
           />
-          <p className="text-[#406A56]/70 mt-2">Live on.</p>
+          <p className="text-[#2D5A3D]/70 mt-2">Live on.</p>
         </div>
 
         {/* Card */}
@@ -152,7 +152,7 @@ export default function SignupPage() {
                   type="text"
                   value={fullName}
                   onChange={(e) => setFullName(e.target.value)}
-                  className="w-full pl-10 pr-4 py-3 rounded-xl bg-white border border-gray-200 text-[#2d2d2d] placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#406A56]/40 focus:border-[#406A56] transition-all"
+                  className="w-full pl-10 pr-4 py-3 rounded-xl bg-white border border-gray-200 text-[#2d2d2d] placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#2D5A3D]/40 focus:border-[#2D5A3D] transition-all"
                   placeholder="John Doe"
                   required
                   aria-required="true"
@@ -173,7 +173,7 @@ export default function SignupPage() {
                   type="email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  className="w-full pl-10 pr-4 py-3 rounded-xl bg-white border border-gray-200 text-[#2d2d2d] placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#406A56]/40 focus:border-[#406A56] transition-all"
+                  className="w-full pl-10 pr-4 py-3 rounded-xl bg-white border border-gray-200 text-[#2d2d2d] placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#2D5A3D]/40 focus:border-[#2D5A3D] transition-all"
                   placeholder="you@example.com"
                   required
                   aria-required="true"
@@ -200,7 +200,7 @@ export default function SignupPage() {
                     }
                   }}
                   onFocus={() => setShowRequirements(true)}
-                  className="w-full pl-10 pr-12 py-3 rounded-xl bg-white border border-gray-200 text-[#2d2d2d] placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#406A56]/40 focus:border-[#406A56] transition-all"
+                  className="w-full pl-10 pr-12 py-3 rounded-xl bg-white border border-gray-200 text-[#2d2d2d] placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#2D5A3D]/40 focus:border-[#2D5A3D] transition-all"
                   placeholder="••••••••"
                   required
                   aria-required="true"
@@ -222,7 +222,7 @@ export default function SignupPage() {
                 <div id="password-requirements" className="mt-3 p-3 bg-gray-50 rounded-lg border border-gray-100">
                   <p className="text-xs font-medium text-gray-600 mb-2">Password must contain:</p>
                   <ul className="space-y-1.5">
-                    <li className={`flex items-center gap-2 text-xs transition-colors ${requirements.minLength ? 'text-[#406A56]' : 'text-gray-500'}`}>
+                    <li className={`flex items-center gap-2 text-xs transition-colors ${requirements.minLength ? 'text-[#2D5A3D]' : 'text-gray-500'}`}>
                       {requirements.minLength ? (
                         <Check className="w-3.5 h-3.5" />
                       ) : (
@@ -230,7 +230,7 @@ export default function SignupPage() {
                       )}
                       At least 8 characters
                     </li>
-                    <li className={`flex items-center gap-2 text-xs transition-colors ${requirements.hasUppercase ? 'text-[#406A56]' : 'text-gray-500'}`}>
+                    <li className={`flex items-center gap-2 text-xs transition-colors ${requirements.hasUppercase ? 'text-[#2D5A3D]' : 'text-gray-500'}`}>
                       {requirements.hasUppercase ? (
                         <Check className="w-3.5 h-3.5" />
                       ) : (
@@ -238,7 +238,7 @@ export default function SignupPage() {
                       )}
                       At least 1 uppercase letter
                     </li>
-                    <li className={`flex items-center gap-2 text-xs transition-colors ${requirements.hasLowercase ? 'text-[#406A56]' : 'text-gray-500'}`}>
+                    <li className={`flex items-center gap-2 text-xs transition-colors ${requirements.hasLowercase ? 'text-[#2D5A3D]' : 'text-gray-500'}`}>
                       {requirements.hasLowercase ? (
                         <Check className="w-3.5 h-3.5" />
                       ) : (
@@ -246,7 +246,7 @@ export default function SignupPage() {
                       )}
                       At least 1 lowercase letter
                     </li>
-                    <li className={`flex items-center gap-2 text-xs transition-colors ${requirements.hasNumber ? 'text-[#406A56]' : 'text-gray-500'}`}>
+                    <li className={`flex items-center gap-2 text-xs transition-colors ${requirements.hasNumber ? 'text-[#2D5A3D]' : 'text-gray-500'}`}>
                       {requirements.hasNumber ? (
                         <Check className="w-3.5 h-3.5" />
                       ) : (
@@ -254,7 +254,7 @@ export default function SignupPage() {
                       )}
                       At least 1 number
                     </li>
-                    <li className={`flex items-center gap-2 text-xs transition-colors ${requirements.hasSpecialChar ? 'text-[#406A56]' : 'text-gray-500'}`}>
+                    <li className={`flex items-center gap-2 text-xs transition-colors ${requirements.hasSpecialChar ? 'text-[#2D5A3D]' : 'text-gray-500'}`}>
                       {requirements.hasSpecialChar ? (
                         <Check className="w-3.5 h-3.5" />
                       ) : (
@@ -279,7 +279,7 @@ export default function SignupPage() {
                       />
                     ))}
                   </div>
-                  <p id="password-strength" className={`text-xs mt-1 ${strength.score >= 3 ? 'text-[#406A56]' : 'text-gray-400'}`}>
+                  <p id="password-strength" className={`text-xs mt-1 ${strength.score >= 3 ? 'text-[#2D5A3D]' : 'text-gray-400'}`}>
                     Password strength: {strength.label}
                   </p>
                 </div>
@@ -293,15 +293,15 @@ export default function SignupPage() {
                   type="checkbox" 
                   checked={agreedToTerms}
                   onChange={(e) => setAgreedToTerms(e.target.checked)}
-                  className="mt-0.5 w-4 h-4 rounded border-gray-300 text-[#406A56] focus:ring-[#406A56]"
+                  className="mt-0.5 w-4 h-4 rounded border-gray-300 text-[#2D5A3D] focus:ring-[#2D5A3D]"
                   aria-required="true"
                   aria-invalid={!agreedToTerms && !!error}
                 />
                 <span className="text-sm text-gray-600 leading-relaxed">
                   I agree to the{' '}
-                  <Link href="/terms" className="text-[#406A56] hover:underline">Terms of Service</Link>
+                  <Link href="/terms" className="text-[#2D5A3D] hover:underline">Terms of Service</Link>
                   {' '}and{' '}
-                  <Link href="/privacy" className="text-[#406A56] hover:underline">Privacy Policy</Link>
+                  <Link href="/privacy" className="text-[#2D5A3D] hover:underline">Privacy Policy</Link>
                   <span className="text-red-500" aria-hidden="true"> *</span>
                 </span>
               </label>
@@ -316,7 +316,7 @@ export default function SignupPage() {
             <button
               type="submit"
               disabled={loading}
-              className="w-full py-3.5 bg-[#406A56] hover:bg-[#355a48] text-white font-semibold rounded-xl transition-all disabled:opacity-50 flex items-center justify-center gap-2 shadow-md hover:shadow-lg"
+              className="w-full py-3.5 bg-[#2D5A3D] hover:bg-[#234A31] text-white font-semibold rounded-xl transition-all disabled:opacity-50 flex items-center justify-center gap-2 shadow-md hover:shadow-lg"
             >
               {loading ? (
                 <>
@@ -334,7 +334,7 @@ export default function SignupPage() {
 
           <p className="mt-6 text-center text-gray-600">
             Already have an account?{' '}
-            <Link href="/login" className="text-[#406A56] hover:text-[#355a48] font-semibold">
+            <Link href="/login" className="text-[#2D5A3D] hover:text-[#234A31] font-semibold">
               Sign in
             </Link>
           </p>
@@ -345,13 +345,13 @@ export default function SignupPage() {
           <p className="text-sm text-gray-500 mb-2">Free forever plan includes:</p>
           <div className="flex flex-wrap justify-center gap-3 text-xs text-gray-400">
             <span className="flex items-center gap-1">
-              <Check className="w-3 h-3 text-[#406A56]" /> 50 memories
+              <Check className="w-3 h-3 text-[#2D5A3D]" /> 50 memories
             </span>
             <span className="flex items-center gap-1">
-              <Check className="w-3 h-3 text-[#406A56]" /> 1 GB storage
+              <Check className="w-3 h-3 text-[#2D5A3D]" /> 1 GB storage
             </span>
             <span className="flex items-center gap-1">
-              <Check className="w-3 h-3 text-[#406A56]" /> 3 AI interviews
+              <Check className="w-3 h-3 text-[#2D5A3D]" /> 3 AI interviews
             </span>
           </div>
         </div>

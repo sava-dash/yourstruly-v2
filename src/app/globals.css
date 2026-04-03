@@ -7,8 +7,8 @@
 @import "../styles/scrapbook.css";
 
 :root {
-  --background: #FAF8F4;
-  --foreground: #1A2B23;
+  --background: #FAFAF7;
+  --foreground: #1A1F1C;
 }
 
 @theme inline {
@@ -18,9 +18,9 @@
 }
 
 body {
-  background-color: #FAF8F4;
-  color: #1A2B23;
-  font-family: var(--font-inter-tight), 'Inter Tight', Arial, sans-serif;
+  background-color: #FAFAF7;
+  color: #1A1F1C;
+  font-family: var(--font-dm-sans), 'DM Sans', Arial, sans-serif;
   min-height: 100vh;
 }
 
@@ -212,8 +212,8 @@ html, body {
 .hover-lift:hover {
   transform: translateY(-4px);
   box-shadow: 
-    0 8px 24px rgba(195, 95, 51, 0.1),
-    0 16px 48px rgba(195, 95, 51, 0.08);
+    0 8px 24px rgba(184, 86, 46, 0.1),
+    0 16px 48px rgba(184, 86, 46, 0.08);
 }
 
 /* Dropdown menu animation */
@@ -267,17 +267,20 @@ html, body {
   display: none;
 }
 
-/* Font Utilities for Marketplace */
+/* Font Utilities */
 .font-handwritten {
-  font-family: var(--font-handwritten), 'Caveat', cursive;
+  font-family: var(--font-dm-serif), 'DM Serif Display', serif;
+  font-style: italic;
 }
 
-.font-playfair {
-  font-family: var(--font-playfair), 'Playfair Display', serif;
+.font-playfair,
+.font-dm-serif {
+  font-family: var(--font-dm-serif), 'DM Serif Display', serif;
 }
 
-.font-inter-tight {
-  font-family: var(--font-inter-tight), 'Inter Tight', sans-serif;
+.font-inter-tight,
+.font-dm-sans {
+  font-family: var(--font-dm-sans), 'DM Sans', sans-serif;
 }
 
 /* Line clamp utilities */
@@ -297,12 +300,12 @@ html, body {
 
 /* YoursTruly color variables (aliases for unified brand) */
 :root {
-  --yt-green: #3D6B52;
-  --yt-red: #C35F33;
-  --yt-yellow: #C9A832;
-  --yt-blue: #8DACAB;
-  --yt-cream: #FAF8F4;
-  --yt-warm-bg: #FAF8F4;
+  --yt-green: #2D5A3D;
+  --yt-red: #B8562E;
+  --yt-yellow: #C4A235;
+  --yt-blue: #7A9B88;
+  --yt-cream: #FAFAF7;
+  --yt-warm-bg: #FAFAF7;
 }
 
 /* ============================================
@@ -311,19 +314,19 @@ html, body {
 
 /* Elegant Serif Typography */
 .title-elegant {
-  font-family: var(--font-playfair), 'Playfair Display', Georgia, serif;
-  font-weight: 500;
+  font-family: var(--font-dm-serif), 'DM Serif Display', Georgia, serif;
+  font-weight: 400;
   letter-spacing: -0.02em;
 }
 
 .title-elegant-bold {
-  font-family: var(--font-playfair), 'Playfair Display', Georgia, serif;
-  font-weight: 700;
+  font-family: var(--font-dm-serif), 'DM Serif Display', Georgia, serif;
+  font-weight: 400;
   letter-spacing: -0.02em;
 }
 
 .title-elegant-light {
-  font-family: var(--font-playfair), 'Playfair Display', Georgia, serif;
+  font-family: var(--font-dm-serif), 'DM Serif Display', Georgia, serif;
   font-weight: 400;
   letter-spacing: -0.01em;
 }
@@ -334,7 +337,7 @@ html, body {
   font-weight: 600;
   letter-spacing: 0.1em;
   text-transform: uppercase;
-  color: rgba(195, 95, 51, 0.6);
+  color: rgba(184, 86, 46, 0.6);
 }
 
 /* Glass/Frosted Effects - Canonical frosted glass style (white-based) */
@@ -345,7 +348,7 @@ html, body {
   border: 1px solid rgba(255, 255, 255, 0.5);
   border-radius: 20px;
   box-shadow:
-    0 4px 16px rgba(195, 95, 51, 0.06),
+    0 4px 16px rgba(184, 86, 46, 0.06),
     0 12px 32px rgba(0, 0, 0, 0.06);
   transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
 }
@@ -353,7 +356,7 @@ html, body {
 .glass:hover {
   background: rgba(255, 255, 255, 0.85);
   box-shadow:
-    0 6px 20px rgba(195, 95, 51, 0.08),
+    0 6px 20px rgba(184, 86, 46, 0.08),
     0 16px 40px rgba(0, 0, 0, 0.08);
   transform: translateY(-2px);
 }
@@ -378,7 +381,7 @@ html, body {
   border: 1px solid rgba(255, 255, 255, 0.5);
   border-radius: 20px;
   box-shadow:
-    0 4px 16px rgba(195, 95, 51, 0.06),
+    0 4px 16px rgba(184, 86, 46, 0.06),
     0 12px 32px rgba(0, 0, 0, 0.06);
   transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
 }
@@ -395,7 +398,7 @@ html, body {
   border: 1px solid rgba(255, 255, 255, 0.5);
   border-radius: 20px;
   box-shadow:
-    0 4px 16px rgba(195, 95, 51, 0.06),
+    0 4px 16px rgba(184, 86, 46, 0.06),
     0 20px 60px rgba(0, 0, 0, 0.1);
 }
 
@@ -406,7 +409,7 @@ html, body {
   -webkit-backdrop-filter: blur(20px);
   border-bottom: 1px solid rgba(255, 255, 255, 0.5);
   box-shadow:
-    0 4px 16px rgba(195, 95, 51, 0.04),
+    0 4px 16px rgba(184, 86, 46, 0.04),
     0 8px 24px rgba(0, 0, 0, 0.04);
 }
 
@@ -455,7 +458,7 @@ html, body {
   position: absolute;
   top: 100%;
   left: 0;
-  color: #C35F33;
+  color: #B8562E;
 }
 
 /* On hover, slide both texts up */
@@ -470,7 +473,7 @@ html, body {
   left: 0;
   height: 2px;
   width: 100%;
-  background: #C35F33;
+  background: #B8562E;
   transform: scaleX(0);
   transform-origin: left;
   transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
@@ -497,7 +500,7 @@ html, body {
 }
 
 .slide-up-link.active .slide-up-text-top {
-  color: #C35F33;
+  color: #B8562E;
 }
 
 .slide-up-link.active .slide-up-underline {
@@ -520,14 +523,14 @@ html, body {
   left: 0;
   height: 2px;
   width: 100%;
-  background: #C35F33;
+  background: #B8562E;
   transform: scaleX(0);
   transform-origin: left;
   transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .nav-link-underline:hover {
-  color: #C35F33;
+  color: #B8562E;
 }
 
 .nav-link-underline:hover::after {
@@ -535,7 +538,7 @@ html, body {
 }
 
 .nav-link-underline.active {
-  color: #C35F33;
+  color: #B8562E;
   font-weight: 600;
 }
 
@@ -566,20 +569,20 @@ html, body {
 /* Enhanced Card Shadows */
 .card-shadow {
   box-shadow: 
-    0 1px 3px rgba(195, 95, 51, 0.04),
-    0 4px 12px rgba(195, 95, 51, 0.06);
+    0 1px 3px rgba(184, 86, 46, 0.04),
+    0 4px 12px rgba(184, 86, 46, 0.06);
 }
 
 .card-shadow-md {
   box-shadow: 
-    0 2px 4px rgba(195, 95, 51, 0.04),
-    0 8px 24px rgba(195, 95, 51, 0.08);
+    0 2px 4px rgba(184, 86, 46, 0.04),
+    0 8px 24px rgba(184, 86, 46, 0.08);
 }
 
 .card-shadow-lg {
   box-shadow: 
-    0 4px 6px rgba(195, 95, 51, 0.03),
-    0 12px 40px rgba(195, 95, 51, 0.12);
+    0 4px 6px rgba(184, 86, 46, 0.03),
+    0 12px 40px rgba(184, 86, 46, 0.12);
 }
 
 .card-shadow-hover {
@@ -588,23 +591,23 @@ html, body {
 
 .card-shadow-hover:hover {
   box-shadow: 
-    0 4px 8px rgba(195, 95, 51, 0.06),
-    0 16px 48px rgba(195, 95, 51, 0.14);
+    0 4px 8px rgba(184, 86, 46, 0.06),
+    0 16px 48px rgba(184, 86, 46, 0.14);
   transform: translateY(-2px);
 }
 
 /* Refined Borders */
 .border-refined {
-  border: 1px solid rgba(195, 95, 51, 0.1);
+  border: 1px solid rgba(184, 86, 46, 0.1);
 }
 
 .border-refined-hover {
-  border: 1px solid rgba(195, 95, 51, 0.1);
+  border: 1px solid rgba(184, 86, 46, 0.1);
   transition: border-color 0.2s ease;
 }
 
 .border-refined-hover:hover {
-  border-color: rgba(195, 95, 51, 0.25);
+  border-color: rgba(184, 86, 46, 0.25);
 }
 
 /* Photo Card Overlay (Dribbble style) */
@@ -684,7 +687,7 @@ html, body {
   border-radius: 999px;
   font-size: 0.75rem;
   font-weight: 600;
-  color: #C35F33;
+  color: #B8562E;
   box-shadow: 0 2px 8px rgba(0,0,0,0.1);
 }
 
@@ -698,7 +701,7 @@ html, body {
 /* Custom scrollbar styling */
 .scrollbar-thin {
   scrollbar-width: thin;
-  scrollbar-color: rgba(64, 106, 86, 0.2) transparent;
+  scrollbar-color: rgba(45, 90, 61, 0.2) transparent;
 }
 
 .scrollbar-thin::-webkit-scrollbar {
@@ -710,12 +713,37 @@ html, body {
 }
 
 .scrollbar-thin::-webkit-scrollbar-thumb {
-  background-color: rgba(64, 106, 86, 0.2);
+  background-color: rgba(45, 90, 61, 0.2);
   border-radius: 3px;
 }
 
 .scrollbar-thin::-webkit-scrollbar-thumb:hover {
-  background-color: rgba(64, 106, 86, 0.4);
+  background-color: rgba(45, 90, 61, 0.4);
+}
+
+/* =============================================================================
+   GLOBAL SCROLLBARS — Sleek brand-aligned scrollbars
+   ============================================================================= */
+
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: #DDE3DF;
+  border-radius: 3px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #94A09A;
+}
+
+/* Firefox */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: #DDE3DF transparent;
 }
 
 /* =============================================================================
@@ -750,7 +778,7 @@ html, body {
 
 /* Focus visible styles for keyboard navigation */
 :focus-visible {
-  outline: 2px solid #406A56;
+  outline: 2px solid #2D5A3D;
   outline-offset: 2px;
 }
 
@@ -765,7 +793,7 @@ a:focus-visible,
 input:focus-visible,
 select:focus-visible,
 textarea:focus-visible {
-  outline: 2px solid #406A56;
+  outline: 2px solid #2D5A3D;
   outline-offset: 2px;
   border-radius: 4px;
 }

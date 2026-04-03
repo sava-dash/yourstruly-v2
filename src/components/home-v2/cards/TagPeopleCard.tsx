@@ -28,7 +28,7 @@ export function TagPeopleCard({ photoUrl, photoId, data, onSave, saved }: TagPeo
 
   if (!photoId) {
     return (
-      <div className="h-full flex flex-col items-center justify-center p-5 text-white/30">
+      <div className="h-full flex flex-col items-center justify-center p-5 text-[#94A09A]">
         <Users size={32} className="mb-2" />
         <p className="text-sm">No photo to tag</p>
       </div>
@@ -38,7 +38,7 @@ export function TagPeopleCard({ photoUrl, photoId, data, onSave, saved }: TagPeo
   return (
     <div className="h-full flex flex-col">
       <div className="flex items-center justify-between px-5 pt-4 pb-2">
-        <h3 className="text-xs font-semibold uppercase tracking-wider text-[#8DACAB]/70 flex items-center gap-1.5">
+        <h3 className="text-xs font-semibold uppercase tracking-wider text-[#5C6D64] flex items-center gap-1.5">
           <Users size={12} /> Tag People
         </h3>
         {xpEarned > 0 && (
@@ -62,7 +62,7 @@ export function TagPeopleCard({ photoUrl, photoId, data, onSave, saved }: TagPeo
             onClick={handleSave}
             disabled={saving}
             className={`w-full py-3 rounded-xl text-sm font-medium transition-colors flex items-center justify-center gap-2 ${
-              'bg-[#406A56] text-white hover:bg-[#4a7a64] disabled:opacity-40'
+              'bg-[#2D5A3D] text-white hover:bg-[#234A31] disabled:opacity-40'
             }`}
           >
             {saving ? <Loader2 size={14} className="animate-spin" /> : 'Done Tagging →'}
@@ -72,7 +72,7 @@ export function TagPeopleCard({ photoUrl, photoId, data, onSave, saved }: TagPeo
 
       {saved && (
         <div className="px-5 pb-4 pt-2">
-          <div className="flex items-center justify-center gap-2 py-2 text-emerald-400 text-sm">
+          <div className="flex items-center justify-center gap-2 py-2 text-[#2D5A3D] text-sm">
             <Check size={14} /> Tags saved
           </div>
         </div>

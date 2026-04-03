@@ -80,9 +80,9 @@ export function CardChain({ row, onCardSave, onAddCard, onMediaUploaded }: CardC
         animate="visible"
         style={{
           flexShrink: 0, width: `${CARD_W}px`, height: `${CARD_H}px`,
-          borderRadius: '24px', overflow: 'hidden', background: '#222',
-          border: '1px solid rgba(255,255,255,0.08)',
-          boxShadow: '0 12px 40px rgba(0,0,0,0.4)',
+          borderRadius: '24px', overflow: 'hidden', background: '#FFFFFF',
+          border: '1px solid #DDE5E0',
+          boxShadow: '0 4px 20px rgba(0,0,0,0.08)',
           display: 'flex', flexDirection: 'column', scrollSnapAlign: 'start',
         }}
       >
@@ -100,8 +100,8 @@ export function CardChain({ row, onCardSave, onAddCard, onMediaUploaded }: CardC
         animate="visible"
         style={{
           flexShrink: 0, width: '280px', height: `${CARD_H}px`,
-          borderRadius: '24px', overflow: 'hidden', background: 'rgba(34,34,34,0.5)',
-          border: '2px dashed rgba(255,255,255,0.1)',
+          borderRadius: '24px', overflow: 'hidden', background: 'rgba(255,255,255,0.5)',
+          border: '2px dashed #DDE5E0',
           display: 'flex', flexDirection: 'column',
         }}
       >

@@ -69,12 +69,12 @@ export function WhenWhereCard({ data, onSave, saved }: WhenWhereCardProps) {
     return (
       <div className="h-full flex flex-col p-5 gap-4">
         <div className="flex items-center justify-between">
-          <h3 className="text-xs font-semibold uppercase tracking-wider text-[#8DACAB]/70 flex items-center gap-1.5">
+          <h3 className="text-xs font-semibold uppercase tracking-wider text-[#5C6D64] flex items-center gap-1.5">
             <MapPin size={12} /> When & Where
           </h3>
           <button
             onClick={() => setEditing(true)}
-            className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-white/8 hover:bg-white/12 text-white/50 hover:text-white/80 text-xs transition-colors"
+            className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-[#F5F1EA] hover:bg-[#E8F0EC] text-[#5C6D64] hover:text-[#1A2B23] text-xs transition-colors"
           >
             <Pencil size={11} /> Edit
           </button>
@@ -90,23 +90,23 @@ export function WhenWhereCard({ data, onSave, saved }: WhenWhereCardProps) {
             />
             <div className="absolute bottom-0 inset-x-0 bg-gradient-to-t from-black/70 to-transparent p-4">
               <p className="text-white text-sm font-medium">{location}</p>
-              {date && <p className="text-white/50 text-xs mt-1">{date}</p>}
+              {date && <p className="text-white/70 text-xs mt-1">{date}</p>}
             </div>
           </div>
         ) : (
           <div className="flex-1 flex flex-col justify-center items-center gap-3">
-            <div className="w-12 h-12 rounded-full bg-[#406A56]/20 flex items-center justify-center">
-              <MapPin size={20} className="text-[#7FBF9B]" />
+            <div className="w-12 h-12 rounded-full bg-[#E8F0EC] flex items-center justify-center">
+              <MapPin size={20} className="text-[#3D6B52]" />
             </div>
             <div className="text-center">
-              {location && <p className="text-white text-sm font-medium">{location}</p>}
-              {date && <p className="text-white/50 text-xs mt-1">{date}</p>}
-              {!location && !date && <p className="text-white/30 text-sm">No location set</p>}
+              {location && <p className="text-[#1A2B23] text-sm font-medium">{location}</p>}
+              {date && <p className="text-[#94A39C] text-xs mt-1">{date}</p>}
+              {!location && !date && <p className="text-[#94A39C] text-sm">No location set</p>}
             </div>
           </div>
         )}
 
-        <div className="flex items-center justify-center gap-2 py-1 text-emerald-400 text-xs">
+        <div className="flex items-center justify-center gap-2 py-1 text-[#2D5A3D] text-xs">
           <Check size={12} /> Saved
         </div>
       </div>
@@ -117,13 +117,13 @@ export function WhenWhereCard({ data, onSave, saved }: WhenWhereCardProps) {
   return (
     <div className="h-full flex flex-col p-5 gap-4">
       <div className="flex items-center justify-between">
-        <h3 className="text-xs font-semibold uppercase tracking-wider text-[#8DACAB]/70 flex items-center gap-1.5">
+        <h3 className="text-xs font-semibold uppercase tracking-wider text-[#5C6D64] flex items-center gap-1.5">
           <MapPin size={12} /> When & Where
         </h3>
         {saved && (
           <button
             onClick={() => setEditing(false)}
-            className="text-xs text-white/40 hover:text-white/60 transition-colors"
+            className="text-xs text-[#94A39C] hover:text-[#5C6D64] transition-colors"
           >
             Cancel
           </button>
@@ -133,7 +133,7 @@ export function WhenWhereCard({ data, onSave, saved }: WhenWhereCardProps) {
       <div className="relative flex-1 flex flex-col gap-3">
         {/* Location */}
         <div>
-          <label className="text-[10px] font-semibold uppercase tracking-wider text-white/30 mb-1.5 block">
+          <label className="text-[10px] font-semibold uppercase tracking-wider text-[#94A39C] mb-1.5 block">
             Where was this?
           </label>
           <div className="relative">
@@ -142,17 +142,17 @@ export function WhenWhereCard({ data, onSave, saved }: WhenWhereCardProps) {
               value={location}
               onChange={(e) => handleLocationChange(e.target.value)}
               placeholder="City, place, or address..."
-              className="w-full px-3 py-3 bg-white/5 rounded-xl border border-white/10 text-white text-sm focus:outline-none focus:ring-2 focus:ring-[#D9C61A]/30 focus:border-[#D9C61A]/50 placeholder-white/30"
+              className="w-full px-3 py-3 bg-[#FAF8F4] rounded-xl border border-[#DDE5E0] text-[#1A2B23] text-sm focus:outline-none focus:ring-2 focus:ring-[#3D6B52]/30 focus:border-[#3D6B52]/50 placeholder-[#94A39C]"
             />
             {suggestions.length > 0 && (
-              <div className="absolute top-full left-0 right-0 mt-1 bg-[#2a2a2a] rounded-xl shadow-lg border border-white/10 z-20 overflow-hidden">
+              <div className="absolute top-full left-0 right-0 mt-1 bg-white rounded-xl shadow-lg border border-[#DDE5E0] z-20 overflow-hidden">
                 {suggestions.map(s => (
                   <button
                     key={s.id}
                     onClick={() => selectSuggestion(s)}
-                    className="w-full px-3 py-2.5 text-left text-sm text-white/80 hover:bg-white/10 flex items-center gap-2"
+                    className="w-full px-3 py-2.5 text-left text-sm text-[#1A2B23] hover:bg-[#E8F0EC] flex items-center gap-2"
                   >
-                    <MapPin size={12} className="text-white/40 flex-shrink-0" />
+                    <MapPin size={12} className="text-[#94A39C] flex-shrink-0" />
                     {s.place_name}
                   </button>
                 ))}
@@ -163,7 +163,7 @@ export function WhenWhereCard({ data, onSave, saved }: WhenWhereCardProps) {
 
         {/* Date */}
         <div>
-          <label className="text-[10px] font-semibold uppercase tracking-wider text-white/30 mb-1.5 block">
+          <label className="text-[10px] font-semibold uppercase tracking-wider text-[#94A39C] mb-1.5 block">
             When was this taken?
           </label>
           <input
@@ -171,7 +171,7 @@ export function WhenWhereCard({ data, onSave, saved }: WhenWhereCardProps) {
             value={date}
             onChange={(e) => setDate(e.target.value)}
             placeholder="e.g. Summer 2019, March 2020..."
-            className="w-full px-3 py-3 bg-white/5 rounded-xl border border-white/10 text-white text-sm focus:outline-none focus:ring-2 focus:ring-[#D9C61A]/30 focus:border-[#D9C61A]/50 placeholder-white/30"
+            className="w-full px-3 py-3 bg-[#FAF8F4] rounded-xl border border-[#DDE5E0] text-[#1A2B23] text-sm focus:outline-none focus:ring-2 focus:ring-[#3D6B52]/30 focus:border-[#3D6B52]/50 placeholder-[#94A39C]"
           />
         </div>
 
@@ -192,7 +192,7 @@ export function WhenWhereCard({ data, onSave, saved }: WhenWhereCardProps) {
       <button
         onClick={handleSave}
         disabled={(!location.trim() && !date.trim()) || saving}
-        className="w-full py-3 rounded-xl text-sm font-medium transition-colors flex items-center justify-center gap-2 bg-[#406A56] text-white hover:bg-[#4a7a64] disabled:opacity-40"
+        className="w-full py-3 rounded-xl text-sm font-medium transition-colors flex items-center justify-center gap-2 bg-[#2D5A3D] text-white hover:bg-[#234A31] disabled:opacity-40"
       >
         {saving ? <Loader2 size={14} className="animate-spin" /> : saved ? 'Update →' : 'Next →'}
       </button>

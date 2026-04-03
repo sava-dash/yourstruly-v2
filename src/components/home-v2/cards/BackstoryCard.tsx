@@ -176,12 +176,12 @@ export function BackstoryCard({ promptText, category, data, onSave, saved }: Bac
     <div className="h-full flex flex-col">
       {/* Header */}
       <div className="flex items-center justify-between px-5 pt-4 pb-2">
-        <h3 className="text-xs font-semibold uppercase tracking-wider text-[#8DACAB]/70 flex items-center gap-1.5">
+        <h3 className="text-xs font-semibold uppercase tracking-wider text-[#5C6D64] flex items-center gap-1.5">
           <Sparkles size={12} /> {category === 'photo' ? 'Tell the Story' : 'Your Story'}
         </h3>
         <button
           onClick={() => setIsMuted(!isMuted)}
-          className="p-1.5 rounded-lg hover:bg-white/10 transition-colors text-white/40"
+          className="p-1.5 rounded-lg hover:bg-[#E8F0EC] transition-colors text-[#94A39C]"
         >
           {isMuted ? <VolumeX size={14} /> : <Volume2 size={14} />}
         </button>
@@ -193,8 +193,8 @@ export function BackstoryCard({ promptText, category, data, onSave, saved }: Bac
           <div key={i} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
             <div className={`max-w-[85%] px-3.5 py-2.5 rounded-2xl text-sm leading-relaxed ${
               msg.role === 'user'
-                ? 'bg-[#406A56]/30 text-white rounded-br-md'
-                : 'bg-white/8 text-white/80 rounded-bl-md'
+                ? 'bg-[#E8F0EC] text-[#1A2B23] rounded-br-md'
+                : 'bg-[#FAF8F4] text-[#5C6D64] rounded-bl-md'
             }`}>
               {msg.content}
             </div>
@@ -202,11 +202,11 @@ export function BackstoryCard({ promptText, category, data, onSave, saved }: Bac
         ))}
         {isSending && (
           <div className="flex justify-start">
-            <div className="bg-white/8 px-4 py-3 rounded-2xl rounded-bl-md">
+            <div className="bg-[#FAF8F4] px-4 py-3 rounded-2xl rounded-bl-md">
               <div className="flex gap-1">
-                <span className="w-2 h-2 bg-white/30 rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
-                <span className="w-2 h-2 bg-white/30 rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
-                <span className="w-2 h-2 bg-white/30 rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
+                <span className="w-2 h-2 bg-[#94A39C] rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
+                <span className="w-2 h-2 bg-[#94A39C] rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
+                <span className="w-2 h-2 bg-[#94A39C] rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
               </div>
             </div>
           </div>
@@ -216,10 +216,10 @@ export function BackstoryCard({ promptText, category, data, onSave, saved }: Bac
 
       {/* Input area */}
       {!saved ? (
-        <div className="px-4 pb-4 pt-2 border-t border-white/5">
+        <div className="px-4 pb-4 pt-2 border-t border-[#DDE5E0]">
           {/* Live transcript preview */}
           {liveTranscript && (
-            <p className="text-xs text-white/30 italic mb-1 px-1">{liveTranscript}</p>
+            <p className="text-xs text-[#94A39C] italic mb-1 px-1">{liveTranscript}</p>
           )}
 
           <div className="flex items-end gap-2">
@@ -227,7 +227,7 @@ export function BackstoryCard({ promptText, category, data, onSave, saved }: Bac
             <button
               onClick={isRecording ? stopRecording : startRecording}
               className={`w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0 transition-colors ${
-                isRecording ? 'bg-red-500 text-white animate-pulse' : 'bg-white/10 text-white/50 hover:bg-white/15'
+                isRecording ? 'bg-[#B8562E] text-white animate-pulse' : 'bg-[#F5F3EE] text-[#5C6D64] hover:bg-[#E6F0EA]'
               }`}
             >
               {isRecording ? <Square size={14} fill="white" /> : <Mic size={16} />}
@@ -241,7 +241,7 @@ export function BackstoryCard({ promptText, category, data, onSave, saved }: Bac
               onKeyDown={(e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleSend() } }}
               placeholder="Type your response..."
               rows={1}
-              className="flex-1 px-3 py-2.5 bg-white/5 rounded-xl border border-white/10 text-white text-sm focus:outline-none focus:ring-1 focus:ring-white/20 placeholder-white/30 resize-none"
+              className="flex-1 px-3 py-2.5 bg-[#FAF8F4] rounded-xl border border-[#DDE5E0] text-[#1A2B23] text-sm focus:outline-none focus:ring-1 focus:ring-[#3D6B52]/30 placeholder-[#94A39C] resize-none"
               style={{ maxHeight: '80px' }}
             />
 
@@ -249,7 +249,7 @@ export function BackstoryCard({ promptText, category, data, onSave, saved }: Bac
             <button
               onClick={handleSend}
               disabled={!input.trim() || isSending}
-              className="w-10 h-10 rounded-full flex items-center justify-center bg-[#406A56] text-white disabled:opacity-40 transition-colors flex-shrink-0"
+              className="w-10 h-10 rounded-full flex items-center justify-center bg-[#2D5A3D] text-white disabled:opacity-40 transition-colors flex-shrink-0"
             >
               {isSending ? <Loader2 size={14} className="animate-spin" /> : <Send size={14} />}
             </button>
@@ -260,7 +260,7 @@ export function BackstoryCard({ promptText, category, data, onSave, saved }: Bac
             <button
               onClick={handleSave}
               disabled={saving}
-              className="w-full mt-3 py-2.5 rounded-xl text-sm font-medium bg-[#406A56] text-white hover:bg-[#4a7a64] disabled:opacity-40 transition-colors flex items-center justify-center gap-2"
+              className="w-full mt-3 py-2.5 rounded-xl text-sm font-medium bg-[#2D5A3D] text-white hover:bg-[#234A31] disabled:opacity-40 transition-colors flex items-center justify-center gap-2"
             >
               {saving ? <Loader2 size={14} className="animate-spin" /> : <><Check size={14} /> Save & Continue →</>}
             </button>
@@ -268,7 +268,7 @@ export function BackstoryCard({ promptText, category, data, onSave, saved }: Bac
         </div>
       ) : (
         <div className="px-5 pb-4 pt-2">
-          <div className="flex items-center justify-center gap-2 py-3 text-emerald-400 text-sm">
+          <div className="flex items-center justify-center gap-2 py-3 text-[#2D5A3D] text-sm">
             <Check size={14} /> Conversation saved
           </div>
         </div>

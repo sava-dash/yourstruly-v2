@@ -95,7 +95,7 @@ export function TextVoiceVideoCard({ label = 'Your Story', placeholder = 'Share 
 
   return (
     <div className="h-full flex flex-col p-4 gap-3">
-      <h3 className="text-xs font-semibold uppercase tracking-wider text-[#8DACAB]/70">
+      <h3 className="text-xs font-semibold uppercase tracking-wider text-[#5C6D64]">
         {label}
       </h3>
 
@@ -104,13 +104,13 @@ export function TextVoiceVideoCard({ label = 'Your Story', placeholder = 'Share 
           value={text}
           onChange={(e) => setText(e.target.value)}
           placeholder={placeholder}
-          className="w-full h-full min-h-[100px] px-3 py-2.5 bg-white/5 rounded-xl border border-white/10 text-white text-sm focus:outline-none focus:ring-2 focus:ring-[#D9C61A]/30 focus:border-[#D9C61A]/50 placeholder-white/30 resize-none"
-          style={interimText ? { color: 'transparent', caretColor: 'white' } : undefined}
+          className="w-full h-full min-h-[100px] px-3 py-2.5 bg-[#FAF8F4] rounded-xl border border-[#DDE5E0] text-[#1A2B23] text-sm focus:outline-none focus:ring-2 focus:ring-[#3D6B52]/30 focus:border-[#3D6B52]/50 placeholder-[#94A39C] resize-none"
+          style={interimText ? { color: 'transparent', caretColor: '#1A2B23' } : undefined}
         />
         {interimText && (
           <div className="absolute inset-0 px-3 py-2.5 pointer-events-none text-sm">
-            <span className="text-white">{text}</span>
-            <span className="text-white/40 italic">{interimText}</span>
+            <span className="text-[#1A2B23]">{text}</span>
+            <span className="text-[#94A39C] italic">{interimText}</span>
           </div>
         )}
       </div>
@@ -120,7 +120,7 @@ export function TextVoiceVideoCard({ label = 'Your Story', placeholder = 'Share 
           onClick={isRecording ? stopRecording : startRecording}
           disabled={isVideoRecording}
           className={`w-10 h-10 rounded-full flex items-center justify-center transition-colors flex-shrink-0 ${
-            isRecording ? 'bg-red-500 text-white animate-pulse' : 'bg-white/10 text-white/60 hover:bg-white/20 disabled:opacity-40'
+            isRecording ? 'bg-[#B8562E] text-white animate-pulse' : 'bg-[#F5F3EE] text-[#5C6D64] hover:bg-[#E6F0EA] disabled:opacity-40'
           }`}
         >
           {isRecording ? <Square size={14} fill="white" /> : <Mic size={16} />}
@@ -128,7 +128,7 @@ export function TextVoiceVideoCard({ label = 'Your Story', placeholder = 'Share 
         <button
           onClick={() => {/* TODO: video recording */}}
           disabled={isRecording}
-          className="w-10 h-10 rounded-full flex items-center justify-center bg-white/10 text-white/60 hover:bg-white/20 disabled:opacity-40 transition-colors flex-shrink-0"
+          className="w-10 h-10 rounded-full flex items-center justify-center bg-[#F5F3EE] text-[#5C6D64] hover:bg-[#E6F0EA] disabled:opacity-40 transition-colors flex-shrink-0"
         >
           <Video size={16} />
         </button>
@@ -140,8 +140,8 @@ export function TextVoiceVideoCard({ label = 'Your Story', placeholder = 'Share 
           disabled={!text.trim() || saving || saved}
           className={`px-5 py-2 rounded-xl text-sm font-medium transition-colors flex items-center gap-2 ${
             saved
-              ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30'
-              : 'bg-[#406A56] text-white hover:bg-[#4a7a64] disabled:opacity-40'
+              ? 'bg-[#E6F0EA] text-[#2D5A3D] border border-[#2D5A3D]/30'
+              : 'bg-[#2D5A3D] text-white hover:bg-[#234A31] disabled:opacity-40'
           }`}
         >
           {saved ? <><Check size={14} /> Saved</> : saving ? <Loader2 size={14} className="animate-spin" /> : <><Send size={14} /> Save</>}

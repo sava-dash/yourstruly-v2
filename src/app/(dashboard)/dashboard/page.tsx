@@ -17,6 +17,7 @@ import { useGamificationConfig } from '@/hooks/useGamificationConfig'
 
 const BadgeDisplay = dynamic(() => import('@/components/dashboard/BadgeDisplay'), { ssr: false })
 const WeeklyChallenges = dynamic(() => import('@/components/dashboard/WeeklyChallenges'), { ssr: false })
+const OnThisDayRow = dynamic(() => import('@/components/home-v2/OnThisDayRow'), { ssr: false })
 
 const uid = () => `card-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`
 
@@ -214,7 +215,7 @@ export default function HomeV2Page() {
   const lvl = getXpLevel(totalXp, gamificationConfig?.xpLevels)
 
   return (
-    <div className="feed-page" data-theme="dark" style={{ background: '#1A1A1A', color: '#F5F5F5' }}>
+    <div className="feed-page" data-theme="light" style={{ background: '#FAF8F4', color: '#1A2B23' }}>
       {/* ── Mobile sidebar toggle ── */}
       <button
         onClick={() => setSidebarOpen(true)}
@@ -223,9 +224,9 @@ export default function HomeV2Page() {
           display: 'none', /* shown via media query */
           position: 'fixed', top: '62px', left: '12px', zIndex: 20,
           width: '36px', height: '36px', borderRadius: '10px',
-          background: 'rgba(255,255,255,0.08)', border: '1px solid rgba(255,255,255,0.1)',
+          background: 'rgba(0,0,0,0.04)', border: '1px solid #DDE5E0',
           alignItems: 'center', justifyContent: 'center', cursor: 'pointer',
-          color: 'rgba(255,255,255,0.6)',
+          color: '#5C6D64',
         }}
       >
         <Menu size={18} />
@@ -265,8 +266,8 @@ export default function HomeV2Page() {
           style={{
             display: 'none', /* shown via media query */
             alignSelf: 'flex-end', padding: '4px',
-            background: 'rgba(255,255,255,0.1)', borderRadius: '8px',
-            border: 'none', color: 'rgba(255,255,255,0.6)', cursor: 'pointer',
+            background: 'rgba(0,0,0,0.04)', borderRadius: '8px',
+            border: 'none', color: '#5C6D64', cursor: 'pointer',
           }}
         >
           <X size={18} />
@@ -302,7 +303,7 @@ export default function HomeV2Page() {
           <div style={{ marginBottom: '12px' }}>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '4px' }}>
               <span className="profile-card-name" style={{ fontSize: '12px', fontWeight: '700' }}>{lvl.emoji} {lvl.title}</span>
-              {lvl.nextLevel && <span style={{ fontSize: '10px', color: '#888' }}>{lvl.xpToNext} XP to {lvl.nextLevel.title}</span>}
+              {lvl.nextLevel && <span style={{ fontSize: '10px', color: '#94A39C' }}>{lvl.xpToNext} XP to {lvl.nextLevel.title}</span>}
             </div>
             <div style={{ height: '4px', background: 'rgba(217,198,26,0.15)', borderRadius: '2px', overflow: 'hidden' }}>
               <div style={{ height: '100%', borderRadius: '2px', width: `${lvl.progress}%`, background: 'linear-gradient(90deg, #D9C61A, #E8D84A)', transition: 'width 0.8s ease-out' }} />
@@ -328,18 +329,21 @@ export default function HomeV2Page() {
         <div style={{ display: 'flex', justifyContent: 'flex-end', padding: '8px 24px 0' }}>
           <button onClick={() => shuffle()} style={{
             display: 'flex', alignItems: 'center', gap: '6px', padding: '8px 16px',
-            borderRadius: '12px', background: 'rgba(255,255,255,0.08)', border: 'none',
-            color: 'rgba(255,255,255,0.6)', fontSize: '13px', cursor: 'pointer',
+            borderRadius: '12px', background: 'white', border: '1px solid #DDE5E0',
+            color: '#5C6D64', fontSize: '13px', cursor: 'pointer',
           }}>
             <RefreshCw size={14} /> Shuffle
           </button>
         </div>
 
+        {/* On This Day — memory resurfacing */}
+        <OnThisDayRow />
+
         {/* Loading */}
         {promptsLoading && (
           <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '20px', paddingTop: '40px' }}>
             {[1, 2, 3].map(i => (
-              <div key={i} style={{ width: `${CARD_W}px`, height: `${CARD_H}px`, borderRadius: '24px', background: 'rgba(255,255,255,0.04)', animation: 'pulse 2s infinite' }} />
+              <div key={i} style={{ width: `${CARD_W}px`, height: `${CARD_H}px`, borderRadius: '24px', background: 'rgba(0,0,0,0.04)', animation: 'pulse 2s infinite' }} />
             ))}
           </div>
         )}
@@ -424,29 +428,31 @@ export default function HomeV2Page() {
         )}
 
         <style jsx global>{`
-          /* ── Profile card dark theme ── */
-          .feed-page[data-theme="dark"] .profile-card-feed {
-            background: rgba(255,255,255,0.04);
-            border: 1px solid rgba(255,255,255,0.06);
+          /* ── Profile card light theme ── */
+          .feed-page[data-theme="light"] .profile-card-feed {
+            background: rgba(255,255,255,0.92);
+            backdrop-filter: blur(12px);
+            box-shadow: 0 2px 12px rgba(0,0,0,0.06);
+            border: 1px solid #DDE5E0;
           }
-          .feed-page[data-theme="dark"] .profile-card-name { color: #8DACAB; }
-          .feed-page[data-theme="dark"] .profile-stat-value { font-size: 22px; font-weight: 700; color: #8DACAB; }
-          .feed-page[data-theme="dark"] .profile-stat-label { font-size: 9px; color: rgba(141,172,171,0.5); text-transform: uppercase; letter-spacing: 0.5px; font-weight: 600; }
-          .feed-page[data-theme="dark"] .profile-stat-bordered { border-left: 1px solid rgba(255,255,255,0.08); border-right: 1px solid rgba(255,255,255,0.08); }
-          .feed-page[data-theme="dark"] .profile-stat-bordered-r { border-right: 1px solid rgba(255,255,255,0.08); }
-          .feed-page[data-theme="dark"] .profile-stat-xp { font-size: 22px; font-weight: 700; color: #D9C61A; }
-          .feed-page[data-theme="dark"] .profile-stat-label-xp { font-size: 9px; color: rgba(217,198,26,0.5); text-transform: uppercase; letter-spacing: 0.5px; font-weight: 600; display: flex; align-items: center; justify-content: center; gap: 2px; }
-          .feed-page[data-theme="dark"] .profile-storage { border-top: 1px solid rgba(255,255,255,0.08); padding-top: 10px; }
-          .feed-page[data-theme="dark"] .profile-storage-label { font-size: 10px; font-weight: 600; color: rgba(141,172,171,0.6); text-transform: uppercase; letter-spacing: 0.5px; }
-          .feed-page[data-theme="dark"] .profile-storage-value { font-size: 10px; color: rgba(255,255,255,0.5); }
-          .feed-page[data-theme="dark"] .profile-storage-track { height: 6px; background: rgba(255,255,255,0.08); border-radius: 3px; overflow: hidden; }
+          .feed-page[data-theme="light"] .profile-card-name { color: #3D6B52; }
+          .feed-page[data-theme="light"] .profile-stat-value { font-size: 22px; font-weight: 700; color: #3D6B52; }
+          .feed-page[data-theme="light"] .profile-stat-label { font-size: 9px; color: #94A39C; text-transform: uppercase; letter-spacing: 0.5px; font-weight: 600; }
+          .feed-page[data-theme="light"] .profile-stat-bordered { border-left: 1px solid #DDE5E0; border-right: 1px solid #DDE5E0; }
+          .feed-page[data-theme="light"] .profile-stat-bordered-r { border-right: 1px solid #DDE5E0; }
+          .feed-page[data-theme="light"] .profile-stat-xp { font-size: 22px; font-weight: 700; color: #D9C61A; }
+          .feed-page[data-theme="light"] .profile-stat-label-xp { font-size: 9px; color: rgba(217,198,26,0.6); text-transform: uppercase; letter-spacing: 0.5px; font-weight: 600; display: flex; align-items: center; justify-content: center; gap: 2px; }
+          .feed-page[data-theme="light"] .profile-storage { border-top: 1px solid #DDE5E0; padding-top: 10px; }
+          .feed-page[data-theme="light"] .profile-storage-label { font-size: 10px; font-weight: 600; color: #94A39C; text-transform: uppercase; letter-spacing: 0.5px; }
+          .feed-page[data-theme="light"] .profile-storage-value { font-size: 10px; color: #5C6D64; }
+          .feed-page[data-theme="light"] .profile-storage-track { height: 6px; background: #F5F1EA; border-radius: 3px; overflow: hidden; }
 
           /* ── Desktop layout ── */
           .home-v2-main { margin-left: 280px; }
-          .dashboard-sidebar { background: #1A1A1A; }
+          .dashboard-sidebar { background: #FAF8F4; border-right: 1px solid #DDE5E0; }
           aside::-webkit-scrollbar { width: 4px; }
           aside::-webkit-scrollbar-track { background: transparent; }
-          aside::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 2px; }
+          aside::-webkit-scrollbar-thumb { background: rgba(0,0,0,0.1); border-radius: 2px; }
 
           /* ── Snap scroll — 1 card per swipe ── */
           .snap-container {
@@ -455,7 +461,7 @@ export default function HomeV2Page() {
             overscroll-behavior-y: contain;
           }
           .snap-container::-webkit-scrollbar { width: 6px; }
-          .snap-container::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 3px; }
+          .snap-container::-webkit-scrollbar-thumb { background: rgba(0,0,0,0.1); border-radius: 3px; }
 
           /* ── Mobile (< 768px) ── */
           @media (max-width: 767px) {
@@ -465,12 +471,12 @@ export default function HomeV2Page() {
             .dashboard-sidebar {
               transform: translateX(-100%);
               transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-              background: #1A1A1A;
+              background: #FAF8F4;
               box-shadow: none;
             }
             .dashboard-sidebar.sidebar-open {
               transform: translateX(0);
-              box-shadow: 8px 0 32px rgba(0,0,0,0.5);
+              box-shadow: 8px 0 32px rgba(0,0,0,0.12);
             }
 
             /* Show toggle button */
@@ -492,11 +498,11 @@ export default function HomeV2Page() {
             .dashboard-sidebar {
               transform: translateX(-100%);
               transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-              background: #1A1A1A;
+              background: #FAF8F4;
             }
             .dashboard-sidebar.sidebar-open {
               transform: translateX(0);
-              box-shadow: 8px 0 32px rgba(0,0,0,0.5);
+              box-shadow: 8px 0 32px rgba(0,0,0,0.12);
             }
             .sidebar-toggle-btn { display: flex !important; }
             .sidebar-overlay { display: block !important; }
@@ -511,7 +517,7 @@ export default function HomeV2Page() {
 }
 
 
-/* ─── Prompt Card — dark theme, portrait, used in both states ─── */
+/* ─── Prompt Card — light theme, portrait, used in both states ─── */
 function PromptCard({ row, onClick, isExpanded, index }: {
   row: PromptRow
   onClick: () => void
@@ -533,17 +539,17 @@ function PromptCard({ row, onClick, isExpanded, index }: {
         height: `${CARD_H}px`,
         borderRadius: '24px',
         overflow: 'hidden',
-        background: '#222',
-        border: isExpanded ? '1px solid rgba(255,255,255,0.15)' : '1px solid rgba(255,255,255,0.06)',
+        background: '#FFFFFF',
+        border: isExpanded ? '1px solid #DDE5E0' : '1px solid #DDE5E0',
         boxShadow: isExpanded
-          ? '0 20px 60px rgba(0,0,0,0.6)'
-          : '0 12px 40px rgba(0,0,0,0.4)',
+          ? '0 20px 60px rgba(0,0,0,0.12)'
+          : '0 4px 20px rgba(0,0,0,0.08)',
         cursor: 'pointer',
         flexShrink: 0,
         display: 'flex',
         flexDirection: 'column',
       }}
-      whileHover={!isExpanded ? { scale: 1.01, boxShadow: '0 16px 50px rgba(0,0,0,0.5)' } : {}}
+      whileHover={!isExpanded ? { scale: 1.01, boxShadow: '0 12px 40px rgba(0,0,0,0.12)' } : {}}
       whileTap={!isExpanded ? { scale: 0.99 } : {}}
     >
       {/* Photo hero — fills ~60% of card */}
@@ -557,7 +563,7 @@ function PromptCard({ row, onClick, isExpanded, index }: {
           />
           <div style={{
             position: 'absolute', inset: 0,
-            background: 'linear-gradient(to top, rgba(0,0,0,0.6), transparent 60%)',
+            background: 'linear-gradient(to top, rgba(0,0,0,0.5), transparent 60%)',
           }} />
           {/* Close button when expanded */}
           {isExpanded && (
@@ -599,14 +605,14 @@ function PromptCard({ row, onClick, isExpanded, index }: {
           <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '16px' }}>
             <div style={{
               width: '40px', height: '40px', borderRadius: '50%',
-              background: 'rgba(127,191,155,0.12)',
+              background: '#E8F0EC',
               display: 'flex', alignItems: 'center', justifyContent: 'center',
             }}>
-              <Icon size={18} color="#7FBF9B" />
+              <Icon size={18} color="#3D6B52" />
             </div>
             <span style={{
               fontSize: '11px', fontWeight: 600,
-              color: 'rgba(255,255,255,0.35)',
+              color: '#94A39C',
               textTransform: 'uppercase', letterSpacing: '0.08em',
             }}>
               {meta.label}
@@ -617,9 +623,9 @@ function PromptCard({ row, onClick, isExpanded, index }: {
                 animate={{ opacity: 1, scale: 1 }}
                 style={{
                   marginLeft: 'auto', width: '34px', height: '34px', borderRadius: '50%',
-                  background: 'rgba(255,255,255,0.08)', border: 'none',
+                  background: '#F5F1EA', border: '1px solid #DDE5E0',
                   display: 'flex', alignItems: 'center', justifyContent: 'center',
-                  cursor: 'pointer', color: 'rgba(255,255,255,0.5)',
+                  cursor: 'pointer', color: '#5C6D64',
                 }}
                 onClick={(e) => { e.stopPropagation(); onClick() }}
               >
@@ -631,14 +637,14 @@ function PromptCard({ row, onClick, isExpanded, index }: {
 
         <p style={{
           fontSize: hasPhoto ? '22px' : '24px',
-          fontWeight: 700, color: '#fff',
+          fontWeight: 700, color: '#1A2B23',
           lineHeight: 1.3, margin: 0,
         }}>
           {row.promptText}
         </p>
 
         {row.contactName && (
-          <p style={{ fontSize: '13px', color: 'rgba(255,255,255,0.35)', margin: '8px 0 0' }}>
+          <p style={{ fontSize: '13px', color: '#94A39C', margin: '8px 0 0' }}>
             About {row.contactName}
           </p>
         )}
@@ -646,14 +652,14 @@ function PromptCard({ row, onClick, isExpanded, index }: {
         <div style={{
           display: 'flex', alignItems: 'center', justifyContent: 'center',
           gap: '10px', marginTop: 'auto', paddingTop: '24px',
-          fontSize: '12px', color: 'rgba(255,255,255,0.25)',
+          fontSize: '12px', color: '#94A39C',
         }}>
           <span>{meta.hint}</span>
-          <span style={{ width: '3px', height: '3px', borderRadius: '50%', background: 'rgba(255,255,255,0.15)' }} />
+          <span style={{ width: '3px', height: '3px', borderRadius: '50%', background: '#DDE3DF' }} />
           <span>{meta.time}</span>
           {!isExpanded && (
             <>
-              <span style={{ width: '3px', height: '3px', borderRadius: '50%', background: 'rgba(255,255,255,0.15)' }} />
+              <span style={{ width: '3px', height: '3px', borderRadius: '50%', background: '#DDE5E0' }} />
               <span>Tap to start</span>
             </>
           )}
