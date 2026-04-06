@@ -168,7 +168,8 @@ export default function AboutMePage() {
       const [profileRes, favRes, recipeRes] = await Promise.all([
         supabase.from('profiles').select('personality_type, personality_traits, interests, hobbies, skills, life_goals, religions, favorite_quote, personal_motto').eq('id', user.id).single(),
         supabase.from('favorites').select('*').eq('user_id', user.id).order('category').order('sort_order'),
-        supabase.from('knowledge_entries').select('id, prompt_text, response_text, audio_url, tags, created_at').eq('user_id', user.id).eq('category', 'recipes').order('created_at', { ascending: false }),
+        // Filter client-side since 'recipes' may not be in the knowledge_category enum yet
+        supabase.from('knowledge_entries').select('id, prompt_text, response_text, audio_url, tags, created_at, category').eq('user_id', user.id).order('created_at', { ascending: false }).limit(100),
       ])
 
       console.log('[Favorites] Loaded:', {
@@ -179,7 +180,15 @@ export default function AboutMePage() {
       if (profileRes.data) setProfile(profileRes.data)
       if (favRes.data) setFavorites(favRes.data)
       if (favRes.error) console.error('[Favorites] Load error:', favRes.error)
-      if (recipeRes.data) setRecipes(recipeRes.data)
+      // Client-side filter to only keep recipe-category entries
+      if (recipeRes.data) {
+        const recipesOnly = recipeRes.data.filter((r: any) =>
+          r.category === 'recipes' || r.category === 'practical' ||
+          /recipe|cook|bake|ingredient/i.test(r.prompt_text || '') ||
+          /recipe|cook|bake|ingredient/i.test(r.response_text || '')
+        )
+        setRecipes(recipesOnly)
+      }
       setLoading(false)
     }
     load()

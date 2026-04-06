@@ -20,7 +20,7 @@ import { InviteCollaboratorCard } from '@/components/home-v2/cards/InviteCollabo
 import { SongCard } from '@/components/home-v2/cards/SongCard'
 import { PeoplePresentCard } from '@/components/home-v2/cards/PeoplePresentCard'
 import { ListItemCard } from '@/components/home-v2/cards/ListItemCard'
-import { RefreshCw, X, Heart, Camera, Brain, User, BookOpen, Sparkles, Menu, Trash2 } from 'lucide-react'
+import { RefreshCw, X, Heart, Camera, Brain, User, BookOpen, Sparkles, Menu, Trash2, ChevronLeft, ChevronRight } from 'lucide-react'
 import type { PromptRow, ChainCard, CardType, PromptCategory } from '@/components/home-v2/types'
 import { categorizePrompt, generateInitialCards } from '@/components/home-v2/types'
 import { useDashboardData } from './hooks/useDashboardData'
@@ -313,16 +313,19 @@ export default function HomeV2Page() {
       addXp(xp, `card_saved:${card.type}`, cardId)
     }
 
-    // Auto-advance: scroll to next card in the carousel after save
-    requestAnimationFrame(() => {
+    // Auto-advance: scroll to next card in carousel
+    setTimeout(() => {
       const scrollEl = scrollRowRefs.current.get(promptId)
       if (!scrollEl) return
-      const savedCard = scrollEl.querySelector(`[data-card-id="${cardId}"]`) as HTMLElement
-      if (savedCard) {
-        const next = savedCard.parentElement?.nextElementSibling as HTMLElement
-        if (next) next.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' })
-      }
-    })
+      const savedCard = scrollEl.querySelector(`[data-card-id="${cardId}"]`) as HTMLElement | null
+      if (!savedCard) return
+      const next = savedCard.nextElementSibling as HTMLElement | null
+      if (!next) return
+      // Use offsetLeft (relative to scroll container) — most reliable
+      const target = next.offsetLeft - scrollEl.clientWidth / 2 + next.offsetWidth / 2
+      console.log('[CardChain] Auto-advance', { from: scrollEl.scrollLeft, to: target, nextOffsetLeft: next.offsetLeft })
+      scrollEl.scrollTo({ left: target, behavior: 'smooth' })
+    }, 400)
   }, [rows, answerPrompt, supabase, addXp])
 
 
@@ -575,21 +578,126 @@ export default function HomeV2Page() {
                     </motion.button>
                   )}
 
-                  {/* Horizontal scroll-snap carousel */}
+                  {/* Prev/Next navigation arrows — only when expanded */}
+                  {isExpanded && (
+                    <>
+                      <motion.button
+                        initial={{ opacity: 0, x: -10 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        whileTap={{ scale: 0.95 }}
+                        onClick={(e) => {
+                          e.stopPropagation()
+                          const el = scrollRowRefs.current.get(row.promptId)
+                          if (!el) return
+                          const cards = Array.from(el.querySelectorAll('[data-card-id], [data-chain-card="-1"]')) as HTMLElement[]
+                          const containerCenter = el.scrollLeft + el.clientWidth / 2
+                          let currentIdx = 0
+                          for (let i = 0; i < cards.length; i++) {
+                            const center = cards[i].offsetLeft + cards[i].offsetWidth / 2
+                            if (Math.abs(center - containerCenter) < cards[i].offsetWidth / 2) {
+                              currentIdx = i
+                              break
+                            }
+                          }
+                          const prev = cards[Math.max(0, currentIdx - 1)]
+                          if (prev) {
+                            const target = prev.offsetLeft - el.clientWidth / 2 + prev.offsetWidth / 2
+                            el.scrollTo({ left: target, behavior: 'smooth' })
+                          }
+                        }}
+                        style={{
+                          position: 'absolute',
+                          left: '20px',
+                          top: '50%',
+                          marginTop: '-28px',
+                          zIndex: 30,
+                          width: '56px',
+                          height: '56px',
+                          borderRadius: '50%',
+                          background: '#2D5A3D',
+                          border: '3px solid #FFFFFF',
+                          boxShadow: '0 8px 24px rgba(0,0,0,0.25), 0 2px 6px rgba(0,0,0,0.15)',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          cursor: 'pointer',
+                          color: '#FFFFFF',
+                          fontSize: '32px',
+                          fontWeight: 700,
+                          lineHeight: 1,
+                          padding: 0,
+                        }}
+                        aria-label="Previous card"
+                      >
+                        <ChevronLeft size={28} strokeWidth={3} />
+                      </motion.button>
+                      <motion.button
+                        initial={{ opacity: 0, x: 10 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        whileTap={{ scale: 0.95 }}
+                        onClick={(e) => {
+                          e.stopPropagation()
+                          const el = scrollRowRefs.current.get(row.promptId)
+                          if (!el) return
+                          const cards = Array.from(el.querySelectorAll('[data-card-id], [data-chain-card="-1"]')) as HTMLElement[]
+                          const containerCenter = el.scrollLeft + el.clientWidth / 2
+                          let currentIdx = 0
+                          for (let i = 0; i < cards.length; i++) {
+                            const center = cards[i].offsetLeft + cards[i].offsetWidth / 2
+                            if (Math.abs(center - containerCenter) < cards[i].offsetWidth / 2) {
+                              currentIdx = i
+                              break
+                            }
+                          }
+                          const next = cards[Math.min(cards.length - 1, currentIdx + 1)]
+                          if (next) {
+                            const target = next.offsetLeft - el.clientWidth / 2 + next.offsetWidth / 2
+                            el.scrollTo({ left: target, behavior: 'smooth' })
+                          }
+                        }}
+                        style={{
+                          position: 'absolute',
+                          right: '20px',
+                          top: '50%',
+                          marginTop: '-28px',
+                          zIndex: 30,
+                          width: '56px',
+                          height: '56px',
+                          borderRadius: '50%',
+                          background: '#2D5A3D',
+                          border: '3px solid #FFFFFF',
+                          boxShadow: '0 8px 24px rgba(0,0,0,0.25), 0 2px 6px rgba(0,0,0,0.15)',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          cursor: 'pointer',
+                          color: '#FFFFFF',
+                          fontSize: '32px',
+                          fontWeight: 700,
+                          lineHeight: 1,
+                          padding: 0,
+                        }}
+                        aria-label="Next card"
+                      >
+                        <ChevronRight size={28} strokeWidth={3} />
+                      </motion.button>
+                    </>
+                  )}
+
+                  {/* Horizontal scroll carousel */}
                   <div
                     ref={(el) => { if (el) scrollRowRefs.current.set(row.promptId, el); }}
                     className="card-carousel"
-                    onWheel={(e) => { if (isExpanded) e.preventDefault() }}
-                    onTouchMove={(e) => { if (isExpanded) e.preventDefault() }}
                     style={{
                       display: 'flex',
                       gap: '16px',
-                      overflowX: isExpanded ? 'scroll' : 'hidden',
+                      overflowX: isExpanded ? 'auto' : 'hidden',
                       overflowY: 'visible',
-                      // Centering padding
+                      scrollSnapType: isExpanded ? 'x mandatory' : 'none',
+                      scrollBehavior: 'smooth',
+                      WebkitOverflowScrolling: 'touch',
                       paddingLeft: 'var(--card-inset)',
                       paddingRight: 'var(--card-inset)',
-                      // Extra bottom padding inside the carousel for shadow + balanced top
                       paddingTop: '8px',
                       paddingBottom: '40px',
                     }}
