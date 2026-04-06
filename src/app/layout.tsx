@@ -26,6 +26,7 @@ const dmSerif = DM_Serif_Display({
   weight: ["400"],
 });
 
+
 export const metadata: Metadata = {
   title: "YoursTruly",
   description: "Live on. Preserve your memories, stories, and legacy for the people who matter most.",

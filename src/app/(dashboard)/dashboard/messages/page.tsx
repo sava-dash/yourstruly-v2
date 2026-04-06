@@ -289,13 +289,13 @@ export default function MessagesPage() {
                   /* Empty State */
                   <div className="flex-1 flex items-center justify-center bg-gradient-to-br from-white/60 to-[#F5F3EE]/40">
                     <div className="text-center px-8 py-8 bg-white rounded-xl shadow-sm mx-4">
-                      <div className="w-20 h-20 rounded-full bg-[#4A3552]/10 flex items-center justify-center mx-auto mb-4">
-                        <MessageSquare size={32} className="text-[#4A3552]" />
+                      <div className="w-20 h-20 rounded-full bg-[#2D5A3D]/10 flex items-center justify-center mx-auto mb-4">
+                        <MessageSquare size={32} className="text-[#2D5A3D]" />
                       </div>
-                      <h3 className="text-lg font-semibold text-[#2d2d2d] mb-2">
+                      <h3 className="text-lg font-semibold text-[#1A1F1C] mb-2">
                         Select a conversation
                       </h3>
-                      <p className="text-sm text-[#666] max-w-sm">
+                      <p className="text-sm text-[#5A6660] max-w-sm">
                         Choose a conversation from the list to start messaging,
                         or browse memory threads to collaborate with family.
                       </p>

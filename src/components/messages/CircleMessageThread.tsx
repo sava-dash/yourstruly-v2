@@ -93,7 +93,7 @@ function MessageBubble({
         {message.reply_to && (
           <div className={`mb-1 px-3 py-1.5 rounded-lg text-xs bg-[#2D5A3D]/5 border-l-2 border-[#2D5A3D]/30 ${isOwn ? 'ml-auto' : ''}`}>
             <span className="font-medium text-[#2D5A3D]">{message.reply_to.sender.full_name}</span>
-            <p className="text-[#666] truncate">{message.reply_to.content}</p>
+            <p className="text-[#5A6660] truncate">{message.reply_to.content}</p>
           </div>
         )}
 
@@ -102,7 +102,7 @@ function MessageBubble({
           className={`rounded-2xl px-4 py-2.5 ${
             isOwn
               ? 'bg-[#2D5A3D] text-white rounded-br-md'
-              : 'bg-white border border-[#2D5A3D]/10 text-[#2d2d2d] rounded-bl-md'
+              : 'bg-white border border-[#2D5A3D]/10 text-[#1A1F1C] rounded-bl-md'
           }`}
         >
           {/* Image message */}
@@ -130,7 +130,7 @@ function MessageBubble({
         <div className={`flex items-center gap-1.5 mt-1 px-1 ${
           isOwn ? 'justify-end' : 'justify-start'
         }`}>
-          <span className="text-[10px] text-[#999]">
+          <span className="text-[10px] text-[#94A09A]">
             {format(new Date(message.created_at), 'h:mm a')}
           </span>
           {isOwn && (
@@ -191,10 +191,10 @@ function CircleMessageInput({
       {showEmojiPicker && (
         <div className="mb-3 p-2 bg-white rounded-xl border border-[#2D5A3D]/10 shadow-sm">
           <div className="flex items-center justify-between mb-2">
-            <span className="text-xs font-medium text-[#666]">Quick Reactions</span>
+            <span className="text-xs font-medium text-[#5A6660]">Quick Reactions</span>
             <button 
               onClick={() => setShowEmojiPicker(false)}
-              className="text-[#666] hover:text-[#2d2d2d]"
+              className="text-[#5A6660] hover:text-[#1A1F1C]"
             >
               <X size={14} />
             </button>
@@ -228,7 +228,7 @@ function CircleMessageInput({
             placeholder={placeholder}
             disabled={disabled}
             rows={1}
-            className="w-full px-4 py-2.5 pr-10 bg-[#2D5A3D]/5 border border-[#2D5A3D]/10 rounded-xl text-sm text-[#2d2d2d] placeholder:text-[#999] focus:outline-none focus:border-[#2D5A3D]/30 focus:bg-white transition-all resize-none min-h-[44px] max-h-[120px]"
+            className="w-full px-4 py-2.5 pr-10 bg-[#2D5A3D]/5 border border-[#2D5A3D]/10 rounded-xl text-sm text-[#1A1F1C] placeholder:text-[#94A09A] focus:outline-none focus:border-[#2D5A3D]/30 focus:bg-white transition-all resize-none min-h-[44px] max-h-[120px]"
           />
           
           <button
@@ -236,7 +236,7 @@ function CircleMessageInput({
             className={`absolute right-3 bottom-2.5 p-1 rounded transition-colors ${
               showEmojiPicker
                 ? 'text-[#C4A235]'
-                : 'text-[#999] hover:text-[#666]'
+                : 'text-[#94A09A] hover:text-[#5A6660]'
             }`}
           >
             <Smile size={18} />
@@ -361,8 +361,8 @@ export default function CircleMessageThread({
             <Users size={18} className="text-[#2D5A3D]" />
           </div>
           <div>
-            <h3 className="font-semibold text-[#2d2d2d]">{circleName}</h3>
-            <p className="text-xs text-[#666]">{memberCount} member{memberCount !== 1 ? 's' : ''}</p>
+            <h3 className="font-semibold text-[#1A1F1C]">{circleName}</h3>
+            <p className="text-xs text-[#5A6660]">{memberCount} member{memberCount !== 1 ? 's' : ''}</p>
           </div>
         </div>
         <button
@@ -385,8 +385,8 @@ export default function CircleMessageThread({
             <div className="w-16 h-16 rounded-full bg-[#2D5A3D]/10 flex items-center justify-center mb-4">
               <Send size={24} className="text-[#2D5A3D]" />
             </div>
-            <h3 className="font-semibold text-[#2d2d2d] mb-1">Start the conversation</h3>
-            <p className="text-sm text-[#666]">
+            <h3 className="font-semibold text-[#1A1F1C] mb-1">Start the conversation</h3>
+            <p className="text-sm text-[#5A6660]">
               Send the first message to {circleName}
             </p>
           </div>
@@ -396,7 +396,7 @@ export default function CircleMessageThread({
               {/* Date Separator */}
               <div className="flex items-center gap-4 mb-4">
                 <div className="flex-1 h-px bg-[#2D5A3D]/10" />
-                <span className="text-xs font-medium text-[#666] bg-[#FAF7E8] px-3 py-1 rounded-full">
+                <span className="text-xs font-medium text-[#5A6660] bg-[#FAF7E8] px-3 py-1 rounded-full">
                   {formatDateSeparator(date)}
                 </span>
                 <div className="flex-1 h-px bg-[#2D5A3D]/10" />

@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { createClient } from '@/lib/supabase/client'
-import { Plus, Edit2, Trash2, X, Users, ChevronLeft, Calendar, MapPin, Phone, Mail, Heart, Search } from 'lucide-react'
+import { Plus, Edit2, Trash2, X, Users, ChevronLeft, Calendar, MapPin, Phone, Mail, Heart, Search, Cake, Sparkles, Send, Check } from 'lucide-react'
 import Link from 'next/link'
 import { useSearchParams, useRouter } from 'next/navigation'
 import '@/styles/page-styles.css'
@@ -11,6 +11,7 @@ import '@/styles/home.css'
 import { getCategoryIcon } from '@/lib/dashboard/icons'
 import { GoogleContactsImport } from '@/components/contacts'
 import { TornEdgeFilterPill } from '@/components/ui/TornEdgeFilter'
+import ContactDetailModal from '@/components/contacts/ContactDetailModal'
 
 // ============================================
 // HELPER FUNCTIONS
@@ -143,9 +144,63 @@ export default function ContactsPage() {
   const [editingPet, setEditingPet] = useState<Pet | null>(null)
   const [searchQuery, setSearchQuery] = useState('')
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null)
+  const [selectedDetailContact, setSelectedDetailContact] = useState<Contact | null>(null)
+  const [pingOpenFor, setPingOpenFor] = useState<string | null>(null) // contact id with open dropdown
+  const [pingSent, setPingSent] = useState<Record<string, string>>({}) // contact id -> sent message
   const supabase = createClient()
   const searchParams = useSearchParams()
   const router = useRouter()
+
+  const GRATITUDE_OPTIONS = [
+    { emoji: '💛', label: 'Thinking of you' },
+    { emoji: '🌟', label: 'Proud of you' },
+    { emoji: '💜', label: 'Miss you' },
+    { emoji: '❤️', label: 'Love you' },
+    { emoji: '🙏', label: 'Thank you' },
+  ]
+
+  const handleSendPing = async (contact: Contact, message: string) => {
+    try {
+      const { data: { user } } = await supabase.auth.getUser()
+      if (!user) return
+
+      // Get sender name
+      const { data: profile } = await supabase.from('profiles').select('full_name').eq('id', user.id).single()
+      const senderName = profile?.full_name || 'Someone'
+
+      // Store the gratitude ping
+      await supabase.from('gratitude_pings').insert({
+        sender_id: user.id,
+        recipient_contact_id: contact.id,
+        recipient_email: contact.email || null,
+        message,
+        sender_name: senderName,
+        recipient_name: contact.full_name,
+      })
+
+      // Send email notification if contact has email
+      if (contact.email) {
+        await fetch('/api/gratitude-ping', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            recipientEmail: contact.email,
+            recipientName: contact.full_name,
+            senderName,
+            message,
+          }),
+        }).catch(() => {}) // Don't block on email failure
+      }
+
+      // Show sent confirmation
+      setPingSent(prev => ({ ...prev, [contact.id]: message }))
+      setPingOpenFor(null)
+      // Clear confirmation after 3s
+      setTimeout(() => setPingSent(prev => { const next = { ...prev }; delete next[contact.id]; return next }), 3000)
+    } catch (err) {
+      console.error('Failed to send gratitude ping:', err)
+    }
+  }
 
   // Handle edit query parameter from contact detail page
   useEffect(() => {
@@ -168,6 +223,14 @@ export default function ContactsPage() {
       router.replace('/dashboard/contacts', { scroll: false })
     }
   }
+
+  // Close gratitude ping dropdown when clicking elsewhere
+  useEffect(() => {
+    if (!pingOpenFor) return
+    const close = () => setPingOpenFor(null)
+    document.addEventListener('click', close)
+    return () => document.removeEventListener('click', close)
+  }, [pingOpenFor])
 
   // Legacy relationship type mapping (for contacts created with old generic values)
   const LEGACY_RELATIONSHIP_MAP: Record<string, string> = {
@@ -331,6 +394,46 @@ export default function ContactsPage() {
     return contactCircles.get(contact.email.toLowerCase()) || []
   }
 
+  // Contacts with birthdays in the next 30 days
+  const upcomingBirthdays = contacts.filter(c => {
+    if (!c.date_of_birth) return false
+    const match = c.date_of_birth.match(/^(\d{4})-(\d{2})-(\d{2})$/)
+    if (!match) return false
+    const [, , month, day] = match
+    const now = new Date()
+    const thisYear = now.getFullYear()
+    // Build this year's birthday
+    let bday = new Date(thisYear, parseInt(month, 10) - 1, parseInt(day, 10))
+    // If already passed this year, check next year
+    if (bday < now) {
+      bday = new Date(thisYear + 1, parseInt(month, 10) - 1, parseInt(day, 10))
+    }
+    const diffMs = bday.getTime() - now.getTime()
+    const diffDays = diffMs / (1000 * 60 * 60 * 24)
+    return diffDays >= 0 && diffDays <= 30
+  }).sort((a, b) => {
+    // Sort by upcoming date
+    const getNextBday = (d: string) => {
+      const m = d.match(/^(\d{4})-(\d{2})-(\d{2})$/)!
+      const now = new Date()
+      let bd = new Date(now.getFullYear(), parseInt(m[2], 10) - 1, parseInt(m[3], 10))
+      if (bd < now) bd = new Date(now.getFullYear() + 1, parseInt(m[2], 10) - 1, parseInt(m[3], 10))
+      return bd.getTime()
+    }
+    return getNextBday(a.date_of_birth!) - getNextBday(b.date_of_birth!)
+  })
+
+  // Calculate days until birthday
+  const daysUntilBirthday = (dateStr: string): number => {
+    const match = dateStr.match(/^(\d{4})-(\d{2})-(\d{2})$/)
+    if (!match) return 999
+    const [, , month, day] = match
+    const now = new Date()
+    let bday = new Date(now.getFullYear(), parseInt(month, 10) - 1, parseInt(day, 10))
+    if (bday < now) bday = new Date(now.getFullYear() + 1, parseInt(month, 10) - 1, parseInt(day, 10))
+    return Math.ceil((bday.getTime() - now.getTime()) / (1000 * 60 * 60 * 24))
+  }
+
   if (loading) {
     return (
       <div className="page-container">
@@ -356,14 +459,14 @@ export default function ContactsPage() {
       </div>
 
       {/* Content */}
-      <div className="relative z-10">
+      <div className="relative z-10 max-w-5xl mx-auto">
         {/* Header */}
         <div className="page-header">
           <Link href="/dashboard" className="page-header-back">
             <ChevronLeft size={20} />
           </Link>
           <div>
-            <h1 className="page-header-title">Contacts & Pets</h1>
+            <h1 className="page-header-title" style={{ fontFamily: 'var(--font-dm-serif, DM Serif Display, serif)' }}>Contacts & Pets</h1>
             <p className="page-header-subtitle">People and companions in your life</p>
           </div>
         </div>
@@ -415,6 +518,41 @@ export default function ContactsPage() {
             />
           </div>
 
+          {/* Upcoming Birthdays */}
+          {upcomingBirthdays.length > 0 && (
+            <div className="mb-6 bg-white border border-[#DDE3DF] rounded-xl shadow-sm p-4">
+              <div className="flex items-center gap-2 mb-3">
+                <Cake size={16} className="text-[#C4A235]" />
+                <h3 className="text-sm font-semibold text-[#2d2d2d]">Upcoming Birthdays</h3>
+              </div>
+              <div className="flex flex-wrap gap-3">
+                {upcomingBirthdays.map(c => {
+                  const days = daysUntilBirthday(c.date_of_birth!)
+                  return (
+                    <div
+                      key={c.id}
+                      className="flex items-center gap-2 px-3 py-2 bg-[#C4A235]/10 rounded-lg cursor-pointer hover:bg-[#C4A235]/20 transition-colors"
+                      onClick={() => setSelectedDetailContact(c)}
+                    >
+                      <div className="w-7 h-7 rounded-full bg-gradient-to-br from-[#2D5A3D] to-[#5a8a6e] flex items-center justify-center text-white text-xs font-bold flex-shrink-0">
+                        {c.full_name.charAt(0)}
+                      </div>
+                      <div>
+                        <span className="text-sm font-medium text-[#2d2d2d]">{c.full_name}</span>
+                        <span className="text-xs text-[#666] ml-1.5">
+                          {formatDateNoTimezone(c.date_of_birth, 'short')}
+                        </span>
+                      </div>
+                      <span className="text-xs font-medium text-[#C4A235] ml-1">
+                        {days === 0 ? 'Today!' : days === 1 ? 'Tomorrow' : `${days}d`}
+                      </span>
+                    </div>
+                  )
+                })}
+              </div>
+            </div>
+          )}
+
           {contacts.length === 0 ? (
             <div className="empty-state">
               <div className="empty-state-icon">
@@ -447,12 +585,12 @@ export default function ContactsPage() {
           ) : (
             <div className="contacts-grid">
               {filteredContacts.map(contact => (
-                <div 
-                  key={contact.id} 
-                  className="contact-tile group cursor-pointer"
-                  onClick={() => window.location.href = `/dashboard/contacts/${contact.id}`}
+                <div
+                  key={contact.id}
+                  className="bg-white border border-[#DDE3DF] rounded-xl shadow-sm hover:shadow-md transition-all group cursor-pointer"
+                  onClick={() => setSelectedDetailContact(contact)}
                 >
-                  <div className="contact-tile-inner">
+                  <div className="p-5">
                     <div className="flex items-start justify-between mb-3">
                       <div className="flex items-center gap-3">
                         <div className="contact-avatar">
@@ -465,7 +603,7 @@ export default function ContactsPage() {
                               {getRelationshipLabel(contact.relationship_type)}
                             </span>
                             {getContactCircles(contact).map(circle => (
-                              <span 
+                              <span
                                 key={circle.circleId}
                                 className="contact-circle-badge"
                                 title={`Member of ${circle.circleName} circle`}
@@ -493,24 +631,73 @@ export default function ContactsPage() {
                           <span>{formatDateNoTimezone(contact.date_of_birth, 'short')}</span>
                         </div>
                       )}
-                      {contact.email && (
-                        <div className="contact-detail-row">
-                          <Mail size={14} className="text-[#2D5A3D]" />
-                          <span className="truncate">{contact.email}</span>
-                        </div>
-                      )}
-                      {contact.phone && (
-                        <div className="contact-detail-row">
-                          <Phone size={14} className="text-[#2D5A3D]" />
-                          <span>{contact.phone}</span>
-                        </div>
-                      )}
                       {(contact.city || contact.country) && (
                         <div className="contact-detail-row">
                           <MapPin size={14} className="text-[#2D5A3D]" />
                           <span>{[contact.city, contact.state, contact.country].filter(Boolean).join(', ')}</span>
                         </div>
                       )}
+                    </div>
+                    {/* Quick action icons */}
+                    <div className="flex items-center gap-2 mt-3 pt-3 border-t border-[#DDE3DF]" onClick={(e) => e.stopPropagation()}>
+                      {contact.email && (
+                        <a
+                          href={`mailto:${contact.email}`}
+                          className="inline-flex items-center gap-1.5 px-2.5 py-1.5 text-xs text-[#2D5A3D] bg-[#2D5A3D]/5 hover:bg-[#2D5A3D]/10 rounded-lg transition-colors"
+                          title={contact.email}
+                        >
+                          <Mail size={13} />
+                          <span className="hidden sm:inline truncate max-w-[120px]">{contact.email}</span>
+                        </a>
+                      )}
+                      {contact.phone && (
+                        <a
+                          href={`tel:${contact.phone}`}
+                          className="inline-flex items-center gap-1.5 px-2.5 py-1.5 text-xs text-[#2D5A3D] bg-[#2D5A3D]/5 hover:bg-[#2D5A3D]/10 rounded-lg transition-colors"
+                          title={contact.phone}
+                        >
+                          <Phone size={13} />
+                          <span className="hidden sm:inline">{contact.phone}</span>
+                        </a>
+                      )}
+                      {/* Gratitude ping */}
+                      <div className="relative ml-auto">
+                        {pingSent[contact.id] ? (
+                          <span className="inline-flex items-center gap-1 px-2.5 py-1.5 text-xs text-[#2D5A3D] bg-[#2D5A3D]/10 rounded-lg">
+                            <Check size={13} /> Sent
+                          </span>
+                        ) : (
+                          <button
+                            onClick={(e) => { e.stopPropagation(); setPingOpenFor(pingOpenFor === contact.id ? null : contact.id) }}
+                            className="inline-flex items-center gap-1.5 px-2.5 py-1.5 text-xs text-[#C4A235] bg-[#C4A235]/10 hover:bg-[#C4A235]/20 rounded-lg transition-colors"
+                            title="Send a gratitude ping"
+                          >
+                            <Sparkles size={13} />
+                            <span className="hidden sm:inline">Ping</span>
+                          </button>
+                        )}
+                        {/* Dropdown */}
+                        {pingOpenFor === contact.id && (
+                          <div
+                            className="absolute bottom-full right-0 mb-2 bg-white border border-[#DDE3DF] rounded-xl shadow-lg z-20 py-1 min-w-[180px]"
+                            onClick={(e) => e.stopPropagation()}
+                          >
+                            <div className="px-3 py-1.5 text-[10px] uppercase tracking-wider text-[#94A09A] font-semibold">
+                              Send to {contact.full_name.split(' ')[0]}
+                            </div>
+                            {GRATITUDE_OPTIONS.map(opt => (
+                              <button
+                                key={opt.label}
+                                onClick={() => handleSendPing(contact, opt.label)}
+                                className="w-full px-3 py-2 text-left text-sm text-[#2d2d2d] hover:bg-[#F5F1EA] transition-colors flex items-center gap-2"
+                              >
+                                <span>{opt.emoji}</span>
+                                <span>{opt.label}</span>
+                              </button>
+                            ))}
+                          </div>
+                        )}
+                      </div>
                     </div>
                   </div>
                 </div>
@@ -596,6 +783,23 @@ export default function ContactsPage() {
           </section>
         )}
       </div>
+
+      {/* Contact Detail Modal */}
+      {selectedDetailContact && (
+        <ContactDetailModal
+          contact={selectedDetailContact}
+          isOpen={!!selectedDetailContact}
+          onClose={() => setSelectedDetailContact(null)}
+          onSave={() => {
+            setSelectedDetailContact(null)
+            loadData()
+          }}
+          onDelete={() => {
+            setSelectedDetailContact(null)
+            loadData()
+          }}
+        />
+      )}
 
       {/* Contact Modal */}
       {showContactModal && (

@@ -74,7 +74,7 @@ export default function ThreadToolbar({
     <div className="border-b border-[#2D5A3D]/10 bg-white/30">
       {/* Quick Stats Bar */}
       <div className="flex items-center justify-between px-4 py-2">
-        <div className="flex items-center gap-4 text-xs text-[#666]">
+        <div className="flex items-center gap-4 text-xs text-[#5A6660]">
           {stats.participants > 2 && (
             <span className="flex items-center gap-1">
               <Users size={12} />
@@ -112,7 +112,7 @@ export default function ThreadToolbar({
               className={`flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-medium transition-all ${
                 showPinned
                   ? 'bg-[#B8562E]/15 text-[#B8562E]'
-                  : 'bg-white/60 text-[#666] hover:bg-white hover:text-[#B8562E] border border-[#2D5A3D]/10'
+                  : 'bg-white/60 text-[#5A6660] hover:bg-white hover:text-[#B8562E] border border-[#2D5A3D]/10'
               }`}
             >
               <Pin size={12} />
@@ -136,7 +136,7 @@ export default function ThreadToolbar({
               className={`flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-medium transition-all ${
                 showSummary
                   ? 'bg-[#C4A235]/20 text-[#8a7c08]'
-                  : 'bg-white/60 text-[#666] hover:bg-white hover:text-[#8a7c08] border border-[#2D5A3D]/10'
+                  : 'bg-white/60 text-[#5A6660] hover:bg-white hover:text-[#8a7c08] border border-[#2D5A3D]/10'
               }`}
             >
               {isGeneratingSummary ? (
@@ -169,12 +169,12 @@ export default function ThreadToolbar({
                     <p className="text-[10px] font-semibold text-[#2D5A3D]">
                       {msg.senderName}
                     </p>
-                    <p className="text-xs text-[#2d2d2d] truncate">
+                    <p className="text-xs text-[#1A1F1C] truncate">
                       {msg.content || (msg.type === 'poll' ? '📊 Poll' : msg.type === 'schedule' ? '📅 Schedule' : '[Media]')}
                     </p>
                   </div>
                   <div className="flex items-center gap-1.5">
-                    <span className="text-[10px] text-[#999]">
+                    <span className="text-[10px] text-[#94A09A]">
                       {format(msg.timestamp, 'MMM d')}
                     </span>
                     <button
@@ -182,7 +182,7 @@ export default function ThreadToolbar({
                         e.stopPropagation()
                         onUnpin(msg.id)
                       }}
-                      className="p-0.5 text-[#666] hover:text-[#B8562E] transition-colors"
+                      className="p-0.5 text-[#5A6660] hover:text-[#B8562E] transition-colors"
                       title="Unpin"
                     >
                       <X size={12} />
@@ -204,23 +204,23 @@ export default function ThreadToolbar({
                 <Sparkles size={12} />
                 AI Thread Summary
               </p>
-              <span className="text-[10px] text-[#666]">
+              <span className="text-[10px] text-[#5A6660]">
                 {format(summary.generatedAt, 'h:mm a')}
               </span>
             </div>
             
-            <p className="text-sm text-[#2d2d2d] mb-4 leading-relaxed">
+            <p className="text-sm text-[#1A1F1C] mb-4 leading-relaxed">
               {summary.summary}
             </p>
             
             {summary.keyPoints.length > 0 && (
               <div className="mb-3">
-                <p className="text-[10px] font-semibold text-[#666] uppercase tracking-wide mb-1.5">
+                <p className="text-[10px] font-semibold text-[#5A6660] uppercase tracking-wide mb-1.5">
                   Key Points
                 </p>
                 <ul className="space-y-1">
                   {summary.keyPoints.map((point, i) => (
-                    <li key={i} className="flex items-start gap-2 text-xs text-[#2d2d2d]">
+                    <li key={i} className="flex items-start gap-2 text-xs text-[#1A1F1C]">
                       <span className="text-[#2D5A3D]">•</span>
                       {point}
                     </li>
@@ -231,12 +231,12 @@ export default function ThreadToolbar({
             
             {summary.actionItems.length > 0 && (
               <div>
-                <p className="text-[10px] font-semibold text-[#666] uppercase tracking-wide mb-1.5">
+                <p className="text-[10px] font-semibold text-[#5A6660] uppercase tracking-wide mb-1.5">
                   Action Items
                 </p>
                 <ul className="space-y-1">
                   {summary.actionItems.map((item, i) => (
-                    <li key={i} className="flex items-start gap-2 text-xs text-[#2d2d2d]">
+                    <li key={i} className="flex items-start gap-2 text-xs text-[#1A1F1C]">
                       <span className="text-[#B8562E]">→</span>
                       {item}
                     </li>

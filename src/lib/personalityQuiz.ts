@@ -348,9 +348,17 @@ export const INTEREST_OPTIONS = [
 export const LANGUAGE_OPTIONS = [
   'English', 'Spanish', 'French', 'German', 'Italian',
   'Portuguese', 'Chinese (Mandarin)', 'Chinese (Cantonese)', 'Japanese', 'Korean',
-  'Arabic', 'Hindi', 'Russian', 'Dutch', 'Swedish',
-  'Polish', 'Turkish', 'Vietnamese', 'Thai', 'Indonesian',
-  'Greek', 'Hebrew', 'Filipino/Tagalog', 'Swahili', 'Sign Language (ASL)'
+  'Arabic', 'Hindi', 'Urdu', 'Bengali', 'Punjabi', 'Tamil', 'Telugu', 'Marathi', 'Gujarati',
+  'Russian', 'Ukrainian', 'Dutch', 'Swedish', 'Norwegian', 'Danish', 'Finnish',
+  'Polish', 'Czech', 'Slovak', 'Romanian', 'Hungarian', 'Serbian', 'Croatian', 'Bulgarian',
+  'Turkish', 'Persian (Farsi)', 'Kurdish', 'Pashto',
+  'Vietnamese', 'Thai', 'Indonesian', 'Malay', 'Burmese', 'Khmer', 'Lao',
+  'Greek', 'Hebrew', 'Yiddish', 'Amharic', 'Somali',
+  'Filipino/Tagalog', 'Swahili', 'Hausa', 'Yoruba', 'Igbo', 'Zulu', 'Xhosa',
+  'Nepali', 'Sinhala', 'Dari',
+  'Catalan', 'Basque', 'Galician', 'Welsh', 'Irish (Gaelic)', 'Scottish Gaelic',
+  'Latin', 'Esperanto',
+  'Sign Language (ASL)', 'Sign Language (BSL)', 'Sign Language (Other)',
 ]
 
 export const RELIGION_OPTIONS = [

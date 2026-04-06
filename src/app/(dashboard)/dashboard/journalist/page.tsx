@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { motion, AnimatePresence } from 'framer-motion'
 import { 
@@ -106,7 +106,9 @@ export default function JournalistPage() {
   const [creating, setCreating] = useState(false)
   const [copied, setCopied] = useState<string | null>(null)
   const [smsConsent, setSmsConsent] = useState(false)
-  
+  const [searchQuery, setSearchQuery] = useState('')
+  const [statusFilter, setStatusFilter] = useState<'all' | 'active' | 'completed' | 'draft'>('all')
+
   const supabase = createClient()
 
   useEffect(() => {
@@ -197,7 +199,43 @@ export default function JournalistPage() {
   // Individual sessions (not part of a group)
   const individualSessions = sessions.filter(s => !s.interview_group_id)
 
-  const filteredQuestions = selectedCategory 
+  // Search and status filtering
+  const filteredGroupedSessions = useMemo(() => {
+    return groupedSessions.filter(group => {
+      const q = searchQuery.toLowerCase().trim()
+      const matchesSearch = !q ||
+        group.question.toLowerCase().includes(q) ||
+        group.sessions.some(s =>
+          s.contact?.full_name?.toLowerCase().includes(q) ||
+          s.status.toLowerCase().includes(q)
+        )
+      const matchesStatus = statusFilter === 'all' ||
+        (statusFilter === 'completed' && group.sessions.every(s => s.status === 'completed')) ||
+        (statusFilter === 'active' && group.sessions.some(s => s.status === 'sent' || s.status === 'recording')) ||
+        (statusFilter === 'draft' && group.sessions.some(s => s.status === 'pending'))
+      return matchesSearch && matchesStatus
+    })
+  }, [groupedSessions, searchQuery, statusFilter])
+
+  const filteredIndividualSessions = useMemo(() => {
+    return individualSessions.filter(session => {
+      const q = searchQuery.toLowerCase().trim()
+      const matchesSearch = !q ||
+        session.contact?.full_name?.toLowerCase().includes(q) ||
+        session.title?.toLowerCase().includes(q) ||
+        session.session_questions?.some(sq => sq.question_text.toLowerCase().includes(q)) ||
+        session.status.toLowerCase().includes(q)
+      const matchesStatus = statusFilter === 'all' ||
+        (statusFilter === 'completed' && session.status === 'completed') ||
+        (statusFilter === 'active' && (session.status === 'sent' || session.status === 'recording')) ||
+        (statusFilter === 'draft' && session.status === 'pending')
+      return matchesSearch && matchesStatus
+    })
+  }, [individualSessions, searchQuery, statusFilter])
+
+  const hasFilteredResults = filteredGroupedSessions.length > 0 || filteredIndividualSessions.length > 0
+
+  const filteredQuestions = selectedCategory
     ? questions.filter(q => 
         selectedCategory === 'custom' ? !q.is_system : q.category === selectedCategory
       )
@@ -401,23 +439,28 @@ export default function JournalistPage() {
       </div>
 
       {/* Content */}
-      <div className="relative z-10">
+      <div className="relative z-10 max-w-5xl mx-auto">
         {/* Header */}
         <header className="mb-6">
-          <div className="max-w-4xl mx-auto flex items-center justify-between">
+          <div className="flex items-center justify-between">
             <div className="flex items-center gap-4">
               <Link href="/dashboard" className="page-header-back">
                 <ChevronLeft size={20} />
               </Link>
               <div>
-                <h1 className="page-header-title">Interviews</h1>
+                <h1
+                  className="text-2xl font-bold text-[#1A1F1C]"
+                  style={{ fontFamily: 'var(--font-dm-serif, DM Serif Display, serif)' }}
+                >
+                  Interviews
+                </h1>
                 <p className="page-header-subtitle">Capture family stories remotely</p>
               </div>
             </div>
 
             <button
               onClick={() => setShowNewSession(true)}
-              className="btn-primary"
+              className="flex items-center gap-2 px-4 py-2 bg-[#2D5A3D] hover:bg-[#244B32] text-white text-sm font-medium rounded-xl transition-colors"
             >
               <Plus size={18} />
               <span className="hidden sm:inline">New Interview</span>
@@ -425,17 +468,59 @@ export default function JournalistPage() {
           </div>
         </header>
 
+        {/* Search and Filter */}
+        {!loading && sessions.length > 0 && (
+          <div className="mb-5 space-y-3">
+            {/* Search input */}
+            <div className="relative">
+              <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-[#94A09A]" />
+              <input
+                type="text"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                placeholder="Search by contact name, question, or status..."
+                className="w-full pl-9 pr-4 py-2 rounded-xl border border-[#DDE3DF] bg-white text-sm text-[#1A1F1C] placeholder-[#94A09A] focus:outline-none focus:ring-2 focus:ring-[#2D5A3D]/20 focus:border-[#2D5A3D]"
+              />
+              {searchQuery && (
+                <button
+                  onClick={() => setSearchQuery('')}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-[#94A09A] hover:text-[#5A6660]"
+                >
+                  <X size={14} />
+                </button>
+              )}
+            </div>
+
+            {/* Status filter pills */}
+            <div className="flex gap-2">
+              {(['all', 'active', 'completed', 'draft'] as const).map((status) => (
+                <button
+                  key={status}
+                  onClick={() => setStatusFilter(status)}
+                  className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${
+                    statusFilter === status
+                      ? 'bg-[#2D5A3D] text-white'
+                      : 'bg-white border border-[#DDE3DF] text-[#5A6660] hover:bg-[#F0F0EC]'
+                  }`}
+                >
+                  {status.charAt(0).toUpperCase() + status.slice(1)}
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
+
         {/* Main Content */}
         <main className="pb-12">
-          <div className="max-w-4xl mx-auto">
+          <div>
           {loading ? (
             <div className="flex items-center justify-center h-64">
               <div className="text-[#666]">Loading...</div>
             </div>
           ) : sessions.length === 0 ? (
-            <div className="bg-white/80 backdrop-blur-sm rounded-2xl p-12 text-center shadow-sm">
-              <div className="w-16 h-16 bg-[#4A3552]/10 rounded-full flex items-center justify-center mx-auto mb-4">
-                <Video size={32} className="text-[#4A3552]" />
+            <div className="bg-white border border-[#DDE3DF] rounded-xl p-12 text-center shadow-sm">
+              <div className="w-16 h-16 bg-[#2D5A3D]/10 rounded-full flex items-center justify-center mx-auto mb-4">
+                <Video size={32} className="text-[#2D5A3D]" />
               </div>
               <h3 className="text-lg font-semibold text-[#2d2d2d] mb-2">No interviews yet</h3>
               <p className="text-[#666] mb-6 max-w-md mx-auto">
@@ -443,7 +528,7 @@ export default function JournalistPage() {
               </p>
               <button
                 onClick={() => setShowNewSession(true)}
-                className="inline-flex items-center gap-2 px-5 py-2.5 bg-[#B8562E] hover:bg-[#a54d28] text-white rounded-xl transition-all"
+                className="inline-flex items-center gap-2 px-5 py-2.5 bg-[#2D5A3D] hover:bg-[#244B32] text-white rounded-xl transition-colors"
               >
                 <Plus size={18} />
                 Start your first interview
@@ -451,13 +536,20 @@ export default function JournalistPage() {
             </div>
           ) : (
             <div className="space-y-4">
+              {/* No results after filtering */}
+              {!hasFilteredResults && (
+                <div className="bg-white border border-[#DDE3DF] rounded-xl p-8 text-center shadow-sm">
+                  <p className="text-[#5A6660] text-sm">No interviews match your search or filter.</p>
+                </div>
+              )}
+
               {/* Grouped Interviews */}
-              {groupedSessions.map((group) => (
+              {filteredGroupedSessions.map((group) => (
                 <motion.div
                   key={group.group_id}
                   initial={{ opacity: 0, y: 10 }}
                   animate={{ opacity: 1, y: 0 }}
-                  className="bg-white/80 backdrop-blur-sm rounded-2xl p-5 shadow-sm hover:shadow-md transition-all"
+                  className="bg-white border border-[#DDE3DF] rounded-xl p-5 shadow-sm hover:shadow-md transition-all"
                 >
                   <div className="flex items-start justify-between gap-4 mb-4">
                     <div className="flex items-start gap-4">
@@ -476,7 +568,7 @@ export default function JournalistPage() {
                     </div>
                     <Link
                       href={`/dashboard/journalist/group/${group.group_id}`}
-                      className="flex items-center gap-2 px-3 py-1.5 bg-[#2D5A3D] hover:bg-[#234A31] text-white text-sm rounded-lg transition-all"
+                      className="flex items-center gap-2 px-3 py-1.5 bg-[#2D5A3D] hover:bg-[#244B32] text-white text-sm rounded-lg transition-colors"
                     >
                       <Play size={14} />
                       Story Time
@@ -505,16 +597,16 @@ export default function JournalistPage() {
               ))}
 
               {/* Individual Interviews */}
-              {individualSessions.map((session) => (
+              {filteredIndividualSessions.map((session) => (
                 <motion.div
                   key={session.id}
                   initial={{ opacity: 0, y: 10 }}
                   animate={{ opacity: 1, y: 0 }}
-                  className="bg-white/80 backdrop-blur-sm rounded-2xl p-5 shadow-sm hover:shadow-md transition-all"
+                  className="bg-white border border-[#DDE3DF] rounded-xl p-5 shadow-sm hover:shadow-md transition-all"
                 >
                   <div className="flex items-start justify-between gap-4">
                     <div className="flex items-start gap-4">
-                      <div className="w-12 h-12 rounded-full bg-gradient-to-br from-[#4A3552] to-[#6b4a7a] flex items-center justify-center text-white font-semibold">
+                      <div className="w-12 h-12 rounded-full bg-gradient-to-br from-[#2D5A3D] to-[#5a8a70] flex items-center justify-center text-white font-semibold">
                         {session.contact?.full_name?.charAt(0) || '?'}
                       </div>
                       <div>
@@ -577,7 +669,7 @@ export default function JournalistPage() {
                       {(session.status === 'sent' || session.status === 'completed') && (
                         <Link
                           href={`/dashboard/journalist/${session.id}?followup=true`}
-                          className="flex items-center gap-2 px-3 py-1.5 bg-[#4A3552] hover:bg-[#5d4466] text-white text-sm rounded-lg transition-all"
+                          className="flex items-center gap-2 px-3 py-1.5 bg-[#2D5A3D] hover:bg-[#244B32] text-white text-sm rounded-lg transition-colors"
                         >
                           <Plus size={14} />
                           Ask More
@@ -678,7 +770,7 @@ export default function JournalistPage() {
                           <div className="text-center py-8">
                             <Heart size={40} className="text-[#888] mx-auto mb-3" />
                             <p className="text-[#666] mb-4">Create a circle first to get started</p>
-                            <Link href="/dashboard/circles" className="text-[#B8562E] hover:underline">
+                            <Link href="/dashboard/circles" className="text-[#2D5A3D] hover:underline">
                               Create a circle first →
                             </Link>
                           </div>
@@ -731,7 +823,7 @@ export default function JournalistPage() {
                                       <div className={`w-6 h-6 rounded-full border-2 flex items-center justify-center border-[#2D5A3D] bg-[#2D5A3D]`}>
                                         <Check size={14} className="text-white" />
                                       </div>
-                                      <div className="w-9 h-9 rounded-full bg-gradient-to-br from-[#4A3552] to-[#6b4a7a] flex items-center justify-center text-white text-sm font-medium">
+                                      <div className="w-9 h-9 rounded-full bg-gradient-to-br from-[#2D5A3D] to-[#5a8a70] flex items-center justify-center text-white text-sm font-medium">
                                         {contact.full_name.charAt(0)}
                                       </div>
                                       <span className="text-[#2d2d2d]">{contact.full_name}</span>
@@ -757,7 +849,7 @@ export default function JournalistPage() {
                         <div className="text-center py-8">
                           <User size={40} className="text-[#888] mx-auto mb-3" />
                           <p className="text-[#666] mb-4">Add your first contact to get started</p>
-                          <Link href="/dashboard/contacts" className="text-[#B8562E] hover:underline">
+                          <Link href="/dashboard/contacts" className="text-[#2D5A3D] hover:underline">
                             Add contacts first →
                           </Link>
                         </div>
@@ -780,7 +872,7 @@ export default function JournalistPage() {
                                     {isSelected && <Check size={14} className="text-white" />}
                                   </div>
                                 )}
-                                <div className="w-11 h-11 rounded-full bg-gradient-to-br from-[#4A3552] to-[#6b4a7a] flex items-center justify-center text-white font-medium">
+                                <div className="w-11 h-11 rounded-full bg-gradient-to-br from-[#2D5A3D] to-[#5a8a70] flex items-center justify-center text-white font-medium">
                                   {contact.full_name.charAt(0)}
                                 </div>
                                 <div>
@@ -817,20 +909,20 @@ export default function JournalistPage() {
                   <div className="flex items-center justify-between px-6 py-3 bg-white/50">
                     <button
                       onClick={() => { setStep('recipients'); setSelectedCategory(null); setSelectedQuestion(null); setCustomQuestion('') }}
-                      className="text-[#B8562E] text-sm hover:underline"
+                      className="text-[#2D5A3D] text-sm hover:underline"
                     >
                       ← Change recipients
                     </button>
-                    <div className="flex items-center gap-2 px-3 py-1.5 bg-[#4A3552]/10 rounded-full">
+                    <div className="flex items-center gap-2 px-3 py-1.5 bg-[#2D5A3D]/10 rounded-full">
                       {getSelectedRecipients().length === 1 ? (
                         <>
-                          <User size={14} className="text-[#4A3552]" />
-                          <span className="text-[#4A3552] text-sm font-medium">{getSelectedRecipients()[0].full_name}</span>
+                          <User size={14} className="text-[#2D5A3D]" />
+                          <span className="text-[#2D5A3D] text-sm font-medium">{getSelectedRecipients()[0].full_name}</span>
                         </>
                       ) : (
                         <>
-                          <Users size={14} className="text-[#4A3552]" />
-                          <span className="text-[#4A3552] text-sm font-medium">{getSelectedRecipients().length} people</span>
+                          <Users size={14} className="text-[#2D5A3D]" />
+                          <span className="text-[#2D5A3D] text-sm font-medium">{getSelectedRecipients().length} people</span>
                         </>
                       )}
                     </div>
@@ -914,7 +1006,7 @@ export default function JournalistPage() {
                     <button
                       onClick={handleCreateSession}
                       disabled={creating || (!selectedQuestion && !customQuestion.trim()) || (getSelectedRecipients().some(r => r.phone) && !smsConsent)}
-                      className="w-full py-3 bg-[#B8562E] hover:bg-[#a54d28] text-white rounded-xl font-medium transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                      className="w-full py-3 bg-[#2D5A3D] hover:bg-[#244B32] text-white rounded-xl font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
                     >
                       {creating ? (
                         'Creating...'

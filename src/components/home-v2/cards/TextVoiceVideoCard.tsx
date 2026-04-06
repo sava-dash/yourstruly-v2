@@ -138,7 +138,7 @@ export function TextVoiceVideoCard({ label = 'Your Story', placeholder = 'Share 
         <button
           onClick={handleSave}
           disabled={!text.trim() || saving || saved}
-          className={`px-5 py-2 rounded-xl text-sm font-medium transition-colors flex items-center gap-2 ${
+          className={`px-5 py-2 rounded-xl text-sm font-medium transition-all active:scale-[0.96] flex items-center gap-2 ${
             saved
               ? 'bg-[#E6F0EA] text-[#2D5A3D] border border-[#2D5A3D]/30'
               : 'bg-[#2D5A3D] text-white hover:bg-[#234A31] disabled:opacity-40'

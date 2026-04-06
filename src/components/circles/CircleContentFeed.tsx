@@ -125,9 +125,9 @@ function ContentCard({
         )}
 
         {/* Content */}
-        <h3 className="font-semibold text-[#2d2d2d] mb-1 line-clamp-1">{content.title}</h3>
+        <h3 className="font-semibold text-[#1A1F1C] mb-1 line-clamp-1">{content.title}</h3>
         {content.description && (
-          <p className="text-sm text-[#666] line-clamp-2 mb-3">{content.description}</p>
+          <p className="text-sm text-[#5A6660] line-clamp-2 mb-3">{content.description}</p>
         )}
 
         {/* Footer */}
@@ -136,9 +136,9 @@ function ContentCard({
             <div className="w-6 h-6 rounded-full bg-gradient-to-br from-[#2D5A3D]/20 to-[#8DACAB]/30 flex items-center justify-center text-[8px] font-semibold text-[#2D5A3D]">
               {initials}
             </div>
-            <span className="text-xs text-[#666]">{isMe ? 'You' : content.sharedByName.split(' ')[0]}</span>
+            <span className="text-xs text-[#5A6660]">{isMe ? 'You' : content.sharedByName.split(' ')[0]}</span>
           </div>
-          <div className="flex items-center gap-3 text-xs text-[#999]">
+          <div className="flex items-center gap-3 text-xs text-[#94A09A]">
             <span className="flex items-center gap-1">
               <Heart size={12} className={content.hasLiked ? 'fill-red-400 text-red-400' : ''} />
               {content.likes}
@@ -192,7 +192,7 @@ function ContentCard({
             <div>
               <h3 
                 onClick={onView}
-                className="font-semibold text-[#2d2d2d] hover:text-[#2D5A3D] cursor-pointer line-clamp-1"
+                className="font-semibold text-[#1A1F1C] hover:text-[#2D5A3D] cursor-pointer line-clamp-1"
               >
                 {content.title}
               </h3>
@@ -203,17 +203,17 @@ function ContentCard({
               </span>
             </div>
             <button className="p-1.5 hover:bg-[#2D5A3D]/10 rounded-lg flex-shrink-0">
-              <MoreVertical size={16} className="text-[#666]" />
+              <MoreVertical size={16} className="text-[#5A6660]" />
             </button>
           </div>
 
           {content.description && (
-            <p className="text-sm text-[#666] line-clamp-1 mb-2">{content.description}</p>
+            <p className="text-sm text-[#5A6660] line-clamp-1 mb-2">{content.description}</p>
           )}
 
           {/* Meta & Actions */}
           <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3 text-xs text-[#666]">
+            <div className="flex items-center gap-3 text-xs text-[#5A6660]">
               <span className="flex items-center gap-1">
                 <User size={12} />
                 {isMe ? 'You' : content.sharedByName}
@@ -230,20 +230,20 @@ function ContentCard({
                 className={`p-2 rounded-lg transition-colors ${
                   content.hasLiked 
                     ? 'text-red-400 bg-red-50' 
-                    : 'text-[#666] hover:bg-[#2D5A3D]/10'
+                    : 'text-[#5A6660] hover:bg-[#2D5A3D]/10'
                 }`}
               >
                 <Heart size={14} className={content.hasLiked ? 'fill-current' : ''} />
               </button>
               <button 
                 onClick={(e) => { e.stopPropagation(); onComment(); }}
-                className="p-2 text-[#666] hover:bg-[#2D5A3D]/10 rounded-lg"
+                className="p-2 text-[#5A6660] hover:bg-[#2D5A3D]/10 rounded-lg"
               >
                 <MessageCircle size={14} />
               </button>
               <button 
                 onClick={onView}
-                className="p-2 text-[#666] hover:bg-[#2D5A3D]/10 rounded-lg"
+                className="p-2 text-[#5A6660] hover:bg-[#2D5A3D]/10 rounded-lg"
               >
                 <Eye size={14} />
               </button>
@@ -291,8 +291,8 @@ export default function CircleContentFeed({
       {/* Header */}
       <div className="section-header mb-4">
         <div className="section-title">
-          <div className="section-title-icon bg-[#4A3552]/10">
-            <FileText size={18} className="text-[#4A3552]" />
+          <div className="section-title-icon bg-[#2D5A3D]/10">
+            <FileText size={18} className="text-[#2D5A3D]" />
           </div>
           <span>Shared Content</span>
         </div>
@@ -302,7 +302,7 @@ export default function CircleContentFeed({
             <button
               onClick={() => setViewMode('list')}
               className={`p-1.5 rounded-md transition-colors ${
-                viewMode === 'list' ? 'bg-white shadow-sm text-[#2D5A3D]' : 'text-[#666]'
+                viewMode === 'list' ? 'bg-white shadow-sm text-[#2D5A3D]' : 'text-[#5A6660]'
               }`}
             >
               <List size={16} />
@@ -310,7 +310,7 @@ export default function CircleContentFeed({
             <button
               onClick={() => setViewMode('grid')}
               className={`p-1.5 rounded-md transition-colors ${
-                viewMode === 'grid' ? 'bg-white shadow-sm text-[#2D5A3D]' : 'text-[#666]'
+                viewMode === 'grid' ? 'bg-white shadow-sm text-[#2D5A3D]' : 'text-[#5A6660]'
               }`}
             >
               <Grid size={16} />
@@ -334,7 +334,7 @@ export default function CircleContentFeed({
         <div className="content-card mb-4">
           <div className="flex flex-wrap items-center gap-4">
             <div>
-              <label className="text-xs text-[#666] block mb-1">Type</label>
+              <label className="text-xs text-[#5A6660] block mb-1">Type</label>
               <div className="flex gap-1">
                 <button
                   onClick={() => setFilter('all')}
@@ -360,7 +360,7 @@ export default function CircleContentFeed({
             </div>
             
             <div>
-              <label className="text-xs text-[#666] block mb-1">Sort by</label>
+              <label className="text-xs text-[#5A6660] block mb-1">Sort by</label>
               <select
                 value={sortBy}
                 onChange={e => setSortBy(e.target.value as 'recent' | 'popular')}

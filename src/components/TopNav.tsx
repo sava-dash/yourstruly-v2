@@ -10,25 +10,23 @@ import { motion, AnimatePresence } from 'framer-motion'
 import SlideUpLink, { SlideUpButton } from '@/components/SlideUpLink'
 import ActivityFeed from '@/components/dashboard/ActivityFeed'
 import { DashboardTourTrigger } from '@/components/dashboard/DashboardTour'
-import { 
-  User as UserIcon, 
-  Users, 
+import {
+  User as UserIcon,
+  Users,
   Home,
   Settings,
   LogOut,
-  Camera,
   MessageSquare,
   Gift,
-  FolderOpen,
   ChevronDown,
   Menu,
   X,
-  Lightbulb,
   Mail,
   BookOpen,
   UsersRound,
   ShoppingBag,
   Bell,
+  Sparkles,
 } from 'lucide-react'
 
 interface Profile {
@@ -46,13 +44,8 @@ const primaryNav = [
   { href: '/dashboard', label: 'Home', icon: Home },
 ]
 
-// My Story dropdown - content about you
-const myStoryItems = [
-  { href: '/dashboard/feed', label: 'Timeline', icon: BookOpen },
-  { href: '/dashboard/memories', label: 'Memories', icon: Camera },
-  { href: '/dashboard/wisdom', label: 'Wisdom', icon: Lightbulb },
-  { href: '/dashboard/gallery', label: 'Gallery', icon: FolderOpen },
-]
+// My Story - direct link to unified page
+const myStoryLink = { href: '/dashboard/my-story', label: 'My Story', icon: BookOpen }
 
 // Tools dropdown - utilities + postscripts + books
 const toolsItems = [
@@ -77,14 +70,12 @@ export default function TopNav({ user, profile }: TopNavProps) {
   const pathname = usePathname()
   const router = useRouter()
   const supabase = createClient()
-  const [myStoryOpen, setMyStoryOpen] = useState(false)
   const [peopleOpen, setPeopleOpen] = useState(false)
   const [toolsOpen, setToolsOpen] = useState(false)
   const [userOpen, setUserOpen] = useState(false)
   const [mobileOpen, setMobileOpen] = useState(false)
   const [activityOpen, setActivityOpen] = useState(false)
   const [unreadCount, setUnreadCount] = useState(0)
-  const myStoryRef = useRef<HTMLDivElement>(null)
   const peopleRef = useRef<HTMLDivElement>(null)
   const toolsRef = useRef<HTMLDivElement>(null)
   const userRef = useRef<HTMLDivElement>(null)
@@ -114,7 +105,6 @@ export default function TopNav({ user, profile }: TopNavProps) {
   // Close dropdowns on outside click
   useEffect(() => {
     const handleClick = (e: MouseEvent) => {
-      if (myStoryRef.current && !myStoryRef.current.contains(e.target as Node)) setMyStoryOpen(false)
       if (peopleRef.current && !peopleRef.current.contains(e.target as Node)) setPeopleOpen(false)
       if (toolsRef.current && !toolsRef.current.contains(e.target as Node)) setToolsOpen(false)
       if (userRef.current && !userRef.current.contains(e.target as Node)) setUserOpen(false)
@@ -158,47 +148,32 @@ export default function TopNav({ user, profile }: TopNavProps) {
                 )
               })}
 
-              {/* My Story Dropdown */}
-              <div ref={myStoryRef} className="relative mx-3">
-                <SlideUpButton
-                  onClick={() => { setMyStoryOpen(!myStoryOpen); setPeopleOpen(false); setToolsOpen(false) }}
-                  isActive={myStoryItems.some(i => pathname === i.href)}
+              {/* My Story - Direct Link */}
+              <div className="mx-3">
+                <SlideUpLink
+                  href={myStoryLink.href}
+                  isActive={pathname.startsWith('/dashboard/my-story')}
                   className="text-sm"
-                  suffix={<ChevronDown size={14} className={`transition-transform ${myStoryOpen ? 'rotate-180' : ''}`} />}
                 >
-                  My Story
-                </SlideUpButton>
-                
-                {myStoryOpen && (
-                  <div className="absolute top-full left-0 mt-1 w-48 glass-modal rounded-refined p-1.5 dropdown-menu" role="menu">
-                    {myStoryItems.map((item) => {
-                      const Icon = item.icon
-                      const isActive = pathname === item.href
-                      return (
-                        <Link
-                          key={item.href}
-                          href={item.href}
-                          onClick={() => setMyStoryOpen(false)}
-                          role="menuitem"
-                          className={`flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-all ${
-                            isActive
-                              ? 'bg-[#2D5A3D]/15 text-[#2D5A3D]'
-                              : 'text-gray-600 hover:bg-[#2D5A3D]/5 hover:text-[#2D5A3D]'
-                          }`}
-                        >
-                          <Icon size={16} />
-                          <span>{item.label}</span>
-                        </Link>
-                      )
-                    })}
-                  </div>
-                )}
+                  {myStoryLink.label}
+                </SlideUpLink>
+              </div>
+
+              {/* My Faves - Direct Link */}
+              <div className="mx-3">
+                <SlideUpLink
+                  href="/dashboard/about-me"
+                  isActive={pathname.startsWith('/dashboard/about-me')}
+                  className="text-sm"
+                >
+                  My Faves
+                </SlideUpLink>
               </div>
 
               {/* Tools Dropdown */}
               <div ref={toolsRef} className="relative mx-3">
                 <SlideUpButton
-                  onClick={() => { setToolsOpen(!toolsOpen); setMyStoryOpen(false); setPeopleOpen(false) }}
+                  onClick={() => { setToolsOpen(!toolsOpen); setPeopleOpen(false) }}
                   isActive={toolsItems.some(i => pathname === i.href)}
                   className="text-sm"
                   suffix={<ChevronDown size={14} className={`transition-transform ${toolsOpen ? 'rotate-180' : ''}`} />}
@@ -245,7 +220,7 @@ export default function TopNav({ user, profile }: TopNavProps) {
               {/* People Dropdown */}
               <div ref={peopleRef} className="relative mx-3">
                 <SlideUpButton
-                  onClick={() => { setPeopleOpen(!peopleOpen); setMyStoryOpen(false); setToolsOpen(false) }}
+                  onClick={() => { setPeopleOpen(!peopleOpen); setToolsOpen(false) }}
                   isActive={peopleItems.some(i => pathname === i.href)}
                   className="text-sm"
                   suffix={<ChevronDown size={14} className={`transition-transform ${peopleOpen ? 'rotate-180' : ''}`} />}
@@ -316,6 +291,8 @@ export default function TopNav({ user, profile }: TopNavProps) {
                 )}
               </AnimatePresence>
             </div>
+
+            {/* AI Concierge — now handled by ConciergeFAB in layout */}
 
             {/* Messages & Shop Icons - Desktop */}
             {rightIcons.map((item) => {
@@ -437,29 +414,33 @@ export default function TopNav({ user, profile }: TopNavProps) {
               )
             })}
 
-            {/* My Story Section */}
-            <div className="pt-3 pb-1">
-              <p className="px-4 text-xs font-semibold text-[#2D5A3D]/60 uppercase tracking-wider">My Story</p>
-            </div>
-            {myStoryItems.map((item) => {
-              const Icon = item.icon
-              const isActive = pathname === item.href
-              return (
-                <Link
-                  key={item.href}
-                  href={item.href}
-                  onClick={() => setMobileOpen(false)}
-                  className={`flex items-center gap-3 px-4 py-3 rounded-xl text-base transition-all ${
-                    isActive
-                      ? 'bg-[#2D5A3D]/15 text-[#2D5A3D]'
-                      : 'text-gray-600 hover:bg-[#2D5A3D]/5 hover:text-[#2D5A3D]'
-                  }`}
-                >
-                  <Icon size={20} />
-                  <span>{item.label}</span>
-                </Link>
-              )
-            })}
+            {/* My Story - Direct Link */}
+            <Link
+              href={myStoryLink.href}
+              onClick={() => setMobileOpen(false)}
+              className={`flex items-center gap-3 px-4 py-3 rounded-xl text-base transition-all ${
+                pathname.startsWith('/dashboard/my-story')
+                  ? 'bg-[#2D5A3D]/15 text-[#2D5A3D]'
+                  : 'text-gray-600 hover:bg-[#2D5A3D]/5 hover:text-[#2D5A3D]'
+              }`}
+            >
+              <BookOpen size={20} />
+              <span>{myStoryLink.label}</span>
+            </Link>
+
+            {/* My Faves */}
+            <Link
+              href="/dashboard/about-me"
+              onClick={() => setMobileOpen(false)}
+              className={`flex items-center gap-3 px-4 py-3 rounded-xl text-base transition-all ${
+                pathname.startsWith('/dashboard/about-me')
+                  ? 'bg-[#2D5A3D]/15 text-[#2D5A3D]'
+                  : 'text-gray-600 hover:bg-[#2D5A3D]/5 hover:text-[#2D5A3D]'
+              }`}
+            >
+              <Sparkles size={20} />
+              <span>My Faves</span>
+            </Link>
 
             {/* Tools Section */}
             <div className="pt-3 pb-1">
@@ -575,6 +556,7 @@ export default function TopNav({ user, profile }: TopNavProps) {
           </div>
         </div>
       )}
+
     </>
   )
 }

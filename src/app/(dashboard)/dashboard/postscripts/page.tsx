@@ -8,8 +8,6 @@ import {
 } from 'lucide-react'
 import Link from 'next/link'
 import '@/styles/page-styles.css'
-import '@/styles/engagement.css'
-import '@/styles/home.css'
 import { getCategoryIcon } from '@/lib/dashboard/icons'
 import PostscriptTimeline from '@/components/postscripts/PostscriptTimeline'
 import PostscriptCreditsCounter from '@/components/postscripts/PostscriptCreditsCounter'
@@ -75,6 +73,17 @@ function getStatusIcon(status: string) {
   }
 }
 
+function getDaysUntilDelivery(dateStr: string | null): number | null {
+  if (!dateStr) return null
+  const now = new Date()
+  now.setHours(0, 0, 0, 0)
+  const delivery = new Date(dateStr)
+  delivery.setHours(0, 0, 0, 0)
+  const diffMs = delivery.getTime() - now.getTime()
+  if (diffMs < 0) return null
+  return Math.ceil(diffMs / (1000 * 60 * 60 * 24))
+}
+
 function PostScriptCard({ postscript }: { postscript: PostScript }) {
   const isCircle = !!postscript.circle_id
   const displayName = postscript.circle?.name || postscript.recipient_name
@@ -84,72 +93,83 @@ function PostScriptCard({ postscript }: { postscript: PostScript }) {
     .join('')
     .toUpperCase()
     .slice(0, 2)
-  
+
   const firstImage = postscript.attachments?.find(a => a.file_type?.startsWith('image/'))
   const hasAudio = postscript.audio_url
+  const daysUntil = postscript.status === 'scheduled' ? getDaysUntilDelivery(postscript.delivery_date) : null
 
   return (
     <Link href={`/dashboard/postscripts/${postscript.id}`}>
-      <div className="bubble-tile glass-card group cursor-pointer h-full flex flex-col">
-        <div className="bubble-content flex flex-col h-full">
-          {/* Image Preview */}
-          {firstImage && (
-            <div className="relative h-28 -mx-4 -mt-4 mb-3 rounded-t-xl overflow-hidden">
-              
-<img src={firstImage.file_url} alt="" className="w-full h-full object-cover" />
-              <div className="absolute inset-0 bg-gradient-to-t from-black/30 to-transparent" />
-            </div>
-          )}
-          
-          <div className="flex items-start gap-3 flex-1">
-            {/* Recipient Avatar */}
-            <div className="flex-shrink-0">
-              {isCircle ? (
-                <div className="w-10 h-10 rounded-full bg-[#8DACAB] 
-                                flex items-center justify-center text-white">
-                  <Users size={18} />
-                </div>
-              ) : postscript.recipient?.avatar_url ? (
-                <img 
-                  src={postscript.recipient.avatar_url} 
-                  alt={postscript.recipient_name}
-                  className="w-10 h-10 rounded-full object-cover"
-                />
-              ) : (
-                <div className="w-10 h-10 rounded-full bg-gradient-to-br from-[#B8562E] to-[#C4A235] 
-                                flex items-center justify-center text-white text-sm font-medium">
-                  {initials}
-                </div>
-              )}
-            </div>
+      <div className="bg-white border border-[#DDE3DF] rounded-xl shadow-sm group cursor-pointer h-full flex flex-col p-4">
+        {/* Image Preview */}
+        {firstImage && (
+          <div className="relative h-28 -mx-4 -mt-4 mb-3 rounded-t-xl overflow-hidden">
+            <img src={firstImage.file_url} alt="" className="w-full h-full object-cover" />
+            <div className="absolute inset-0 bg-gradient-to-t from-black/30 to-transparent" />
+          </div>
+        )}
 
-            {/* Content */}
-            <div className="flex-1 min-w-0">
-              <h3 className="font-semibold text-gray-900 text-sm truncate group-hover:text-[#B8562E] transition-colors">
-                {postscript.title}
-              </h3>
-              <p className="text-xs text-gray-500 truncate">
-                To: {displayName} {isCircle && <span className="text-[#8DACAB]">(Circle)</span>}
-              </p>
-            </div>
+        <div className="flex items-start gap-3 flex-1">
+          {/* Recipient Avatar */}
+          <div className="flex-shrink-0">
+            {isCircle ? (
+              <div className="w-10 h-10 rounded-full bg-[#8DACAB]
+                              flex items-center justify-center text-white">
+                <Users size={18} />
+              </div>
+            ) : postscript.recipient?.avatar_url ? (
+              <img
+                src={postscript.recipient.avatar_url}
+                alt={postscript.recipient_name}
+                className="w-10 h-10 rounded-full object-cover"
+              />
+            ) : (
+              <div className="w-10 h-10 rounded-full bg-gradient-to-br from-[#B8562E] to-[#C4A235]
+                              flex items-center justify-center text-white text-sm font-medium">
+                {initials}
+              </div>
+            )}
           </div>
 
-          {/* Footer */}
-          <div className="flex items-center justify-between mt-3 pt-3 border-t border-gray-100">
-            <span className={`bubble-type bubble-type-${getStatusColor(postscript.status)} text-[10px] flex items-center gap-1`}>
+          {/* Content */}
+          <div className="flex-1 min-w-0">
+            <h3 className="font-semibold text-[#1A1F1C] text-sm truncate group-hover:text-[#2D5A3D] transition-colors">
+              {postscript.title}
+            </h3>
+            <p className="text-xs text-[#94A09A] truncate">
+              To: {displayName} {isCircle && <span className="text-[#8DACAB]">(Circle)</span>}
+            </p>
+          </div>
+        </div>
+
+        {/* Footer */}
+        <div className="flex items-center justify-between mt-3 pt-3 border-t border-[#DDE3DF]">
+          <div className="flex items-center gap-2">
+            <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-medium
+              ${postscript.status === 'draft' ? 'bg-purple-50 text-purple-600' : ''}
+              ${postscript.status === 'scheduled' ? 'bg-yellow-50 text-yellow-700' : ''}
+              ${postscript.status === 'sent' ? 'bg-blue-50 text-blue-600' : ''}
+              ${postscript.status === 'opened' ? 'bg-green-50 text-green-600' : ''}
+            `}>
               {getStatusIcon(postscript.status)}
               <span className="capitalize">{postscript.status}</span>
             </span>
-            
-            <div className="flex items-center gap-2 text-gray-400">
-              {hasAudio && <Mic size={12} />}
-              {postscript.attachments && postscript.attachments.length > 0 && (
-                <span className="flex items-center gap-0.5 text-xs">
-                  <ImageIcon size={12} />
-                  {postscript.attachments.length}
-                </span>
-              )}
-            </div>
+            {daysUntil !== null && (
+              <span className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded-full bg-[#2D5A3D]/10 text-[#2D5A3D] text-[10px] font-medium">
+                <Calendar size={10} />
+                {daysUntil === 0 ? 'Today' : daysUntil === 1 ? '1 day' : `${daysUntil}d`}
+              </span>
+            )}
+          </div>
+
+          <div className="flex items-center gap-2 text-[#94A09A]">
+            {hasAudio && <Mic size={12} />}
+            {postscript.attachments && postscript.attachments.length > 0 && (
+              <span className="flex items-center gap-0.5 text-xs">
+                <ImageIcon size={12} />
+                {postscript.attachments.length}
+              </span>
+            )}
           </div>
         </div>
       </div>
@@ -218,107 +238,98 @@ export default function PostScriptsPage() {
 
   return (
     <div className="page-container">
-      {/* Warm gradient background with blobs */}
-      <div className="page-background">
-        <div className="page-blob page-blob-1" />
-        <div className="page-blob page-blob-2" />
-        <div className="page-blob page-blob-3" />
-      </div>
+      <div className="page-background" />
 
-      <div className="relative z-10">
+      <div className="relative z-10 max-w-5xl mx-auto">
         {/* Header */}
-        <header className="mb-8">
-          <div className="flex items-center justify-between mb-2">
-            <div className="flex items-center gap-3">
-              <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-[#B8562E] to-[#C4A235] 
-                              flex items-center justify-center shadow-lg">
-                <Send size={24} className="text-white" />
-              </div>
-              <div>
-                <h1 className="text-2xl font-bold text-gray-900">Future Messages</h1>
-                <p className="text-gray-600 text-sm">Schedule messages for your loved ones</p>
-              </div>
-            </div>
-            <div className="flex items-center gap-3">
-              {/* Credits Counter */}
-              <PostscriptCreditsCounter variant="compact" />
-              
-              {/* Add Button */}
-              {canCreatePostscript ? (
-                <Link
-                  href="/dashboard/postscripts/new"
-                  className="flex items-center gap-2 bg-[#B8562E] text-white px-4 py-2 rounded-xl 
-                             font-medium hover:bg-[#A84E2A] transition-colors shadow-sm"
-                >
-                  <Plus size={18} />
-                  <span className="hidden sm:inline">Add a PostScript</span>
-                </Link>
-              ) : (
-                <button
-                  onClick={() => {
-                    // Trigger the credits modal by clicking the counter
-                    const counter = document.querySelector('[data-credits-counter]') as HTMLButtonElement
-                    counter?.click()
-                  }}
-                  className="flex items-center gap-2 bg-gray-300 text-gray-600 px-4 py-2 rounded-xl 
-                             font-medium cursor-not-allowed"
-                  title="You need postscript credits to create a new message"
-                >
-                  <Plus size={18} />
-                  <span className="hidden sm:inline">No Credits</span>
-                </button>
-              )}
-            </div>
+        <div className="flex items-center justify-between mb-2">
+          <h1
+            className="text-2xl font-bold text-[#1A1F1C]"
+            style={{ fontFamily: 'var(--font-dm-serif, DM Serif Display, serif)' }}
+          >
+            Future Messages
+          </h1>
+
+          <div className="flex items-center gap-3">
+            {/* Credits Counter */}
+            <PostscriptCreditsCounter variant="compact" />
+
+            {/* Add Button */}
+            {canCreatePostscript ? (
+              <Link
+                href="/dashboard/postscripts/new"
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#2D5A3D] text-white text-sm font-medium hover:bg-[#244B32] transition-colors"
+              >
+                <Plus size={16} />
+                <span className="hidden sm:inline">Add a PostScript</span>
+              </Link>
+            ) : (
+              <button
+                onClick={() => {
+                  const counter = document.querySelector('[data-credits-counter]') as HTMLButtonElement
+                  counter?.click()
+                }}
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-gray-300 text-gray-600 text-sm font-medium cursor-not-allowed"
+                title="You need postscript credits to create a new message"
+              >
+                <Plus size={16} />
+                <span className="hidden sm:inline">No Credits</span>
+              </button>
+            )}
           </div>
-        </header>
+        </div>
+
+        <p className="text-xs text-[#94A09A] mb-4">
+          Schedule messages for your loved ones
+        </p>
 
         {/* Stats Cards */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-6">
-          <div className="glass-card p-4">
-            <div className="text-2xl font-bold text-gray-900">{stats.total}</div>
-            <div className="text-xs text-gray-500">Total</div>
+          <div className="bg-white border border-[#DDE3DF] rounded-xl shadow-sm p-4">
+            <div className="text-2xl font-bold text-[#1A1F1C]">{stats.total}</div>
+            <div className="text-xs text-[#94A09A]">Total</div>
           </div>
-          <div className="glass-card p-4">
+          <div className="bg-white border border-[#DDE3DF] rounded-xl shadow-sm p-4">
             <div className="text-2xl font-bold text-[#2D5A3D]">{stats.scheduled || 0}</div>
-            <div className="text-xs text-gray-500">Scheduled</div>
+            <div className="text-xs text-[#94A09A]">Scheduled</div>
           </div>
-          <div className="glass-card p-4">
+          <div className="bg-white border border-[#DDE3DF] rounded-xl shadow-sm p-4">
             <div className="text-2xl font-bold text-blue-600">{stats.sent || 0}</div>
-            <div className="text-xs text-gray-500">Sent</div>
+            <div className="text-xs text-[#94A09A]">Sent</div>
           </div>
-          <div className="glass-card p-4">
+          <div className="bg-white border border-[#DDE3DF] rounded-xl shadow-sm p-4">
             <div className="text-2xl font-bold text-green-600">{stats.opened || 0}</div>
-            <div className="text-xs text-gray-500">Opened</div>
+            <div className="text-xs text-[#94A09A]">Opened</div>
           </div>
         </div>
 
         {/* Filter Tabs & View Toggle */}
-        <div className="flex items-center justify-between gap-4 mb-6">
+        <div className="flex items-center justify-between mb-5 gap-2">
           {/* Filter Tabs */}
-          <div className="flex gap-2 overflow-x-auto pb-2">
+          <div className="flex gap-1 bg-white rounded-lg border border-[#DDE3DF] p-0.5">
             {filters.map(f => (
               <button
                 key={f.key}
                 onClick={() => setFilter(f.key)}
-                className={`px-4 py-2 rounded-full text-sm font-medium whitespace-nowrap transition-all
+                className={`px-3 py-1.5 rounded-md text-sm font-medium transition-colors
                   ${filter === f.key
-                    ? 'bg-[#B8562E] text-white'
-                    : 'glass-card text-gray-600 hover:bg-white/90'
+                    ? 'bg-[#2D5A3D] text-white'
+                    : 'text-[#5A6660] hover:bg-[#F0F0EC]'
                   }`}
               >
                 {f.label}
               </button>
             ))}
           </div>
-          
+
           {/* View Toggle */}
-          <div className="flex-shrink-0 flex bg-white/80 backdrop-blur-sm rounded-xl p-1 border border-gray-200/50 shadow-sm">
+          <div className="flex gap-0.5 bg-white rounded-lg border border-[#DDE3DF] p-0.5">
             <button
               onClick={() => setViewMode('grid')}
-              className={`p-2 rounded-lg transition-all flex items-center gap-1.5 text-sm
+              className={`p-1.5 rounded-md transition-colors flex items-center gap-1.5 text-sm
                 ${viewMode === 'grid'
-                  ? 'bg-[#B8562E] text-white shadow-sm'
-                  : 'text-gray-500 hover:text-gray-700'
+                  ? 'bg-[#2D5A3D] text-white'
+                  : 'text-[#5A6660] hover:bg-[#F0F0EC]'
                 }`}
               title="Grid view"
             >
@@ -327,10 +338,10 @@ export default function PostScriptsPage() {
             </button>
             <button
               onClick={() => setViewMode('timeline')}
-              className={`p-2 rounded-lg transition-all flex items-center gap-1.5 text-sm
+              className={`p-1.5 rounded-md transition-colors flex items-center gap-1.5 text-sm
                 ${viewMode === 'timeline'
-                  ? 'bg-[#B8562E] text-white shadow-sm'
-                  : 'text-gray-500 hover:text-gray-700'
+                  ? 'bg-[#2D5A3D] text-white'
+                  : 'text-[#5A6660] hover:bg-[#F0F0EC]'
                 }`}
               title="Timeline view"
             >
@@ -342,24 +353,26 @@ export default function PostScriptsPage() {
 
         {/* PostScript List */}
         {loading ? (
-          <div className="flex justify-center py-12">
-            <div className="animate-spin rounded-full h-8 w-8 border-2 border-[#B8562E] border-t-transparent" />
+          <div className="flex flex-col items-center justify-center py-20">
+            <div className="w-8 h-8 border-2 border-[#2D5A3D] border-t-transparent rounded-full animate-spin" />
+            <p className="text-sm text-[#94A09A] mt-3">Loading your messages...</p>
           </div>
         ) : postscripts.length === 0 ? (
-          <div className="glass-card p-12 text-center">
-            <div className="w-16 h-16 rounded-full bg-[#B8562E]/10 flex items-center justify-center mx-auto mb-4">
-              <Mail size={32} className="text-[#B8562E]" />
+          <div className="flex flex-col items-center justify-center py-20 text-center">
+            <div className="w-16 h-16 rounded-full bg-[#2D5A3D]/10 flex items-center justify-center mx-auto mb-4">
+              <Mail size={32} className="text-[#2D5A3D]" />
             </div>
-            <h3 className="text-lg font-semibold text-gray-900 mb-2">No messages yet</h3>
-            <p className="text-gray-600 mb-6">
-              Create your first future message to send to a loved one.
+            <p
+              className="text-lg text-[#5A6660] mb-6 max-w-sm"
+              style={{ fontFamily: 'var(--font-dm-serif, DM Serif Display, serif)' }}
+            >
+              No messages yet. Create your first future message to send to a loved one.
             </p>
             <Link
               href="/dashboard/postscripts/new"
-              className="inline-flex items-center gap-2 bg-[#B8562E] text-white px-6 py-3 rounded-full
-                         font-medium hover:bg-[#A84E2A] transition-colors"
+              className="px-4 py-2 rounded-lg bg-[#2D5A3D] text-white text-sm font-medium hover:bg-[#244B32] transition-colors inline-flex items-center gap-2"
             >
-              <Plus size={20} />
+              <Plus size={16} />
               Create PostScript
             </Link>
           </div>

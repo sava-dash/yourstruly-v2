@@ -63,6 +63,7 @@ export default function FaceTagger({ mediaId, imageUrl, onXPEarned }: FaceTagger
   }, [mediaId])
 
   const loadFacesOrDetect = async () => {
+    // First try to load existing faces (including manual tags)
     const res = await fetch(`/api/media/${mediaId}/faces`)
     if (res.ok) {
       const data = await res.json()
@@ -72,6 +73,14 @@ export default function FaceTagger({ mediaId, imageUrl, onXPEarned }: FaceTagger
         return
       }
     }
+    // Only auto-detect on first visit — skip if detection was already attempted
+    const detectionKey = `face-detect-${mediaId}`
+    if (sessionStorage.getItem(detectionKey)) {
+      // Detection was already run this session, just show manual tagging mode
+      setLoading(false)
+      return
+    }
+    sessionStorage.setItem(detectionKey, '1')
     await detectFaces()
   }
 

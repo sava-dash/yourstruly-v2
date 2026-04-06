@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { Plus, Users, ChevronLeft, Crown, Shield, User, Search } from 'lucide-react'
+import { Plus, Users, ChevronLeft, Crown, Shield, User, Search, Clock } from 'lucide-react'
 import Link from 'next/link'
 import CreateCircleModal from '@/components/circles/CreateCircleModal'
 import MemberAvatarStack from '@/components/circles/MemberAvatarStack'
@@ -173,7 +173,7 @@ export default function CirclesPage() {
               <ChevronLeft size={20} />
             </Link>
             <div>
-              <h1 className="page-header-title">My Circles</h1>
+              <h1 className="page-header-title" style={{ fontFamily: 'var(--font-dm-serif, DM Serif Display, serif)' }}>My Circles</h1>
               <p className="page-header-subtitle">Share memories and knowledge with trusted groups</p>
             </div>
           </div>
@@ -236,31 +236,55 @@ export default function CirclesPage() {
                 href={`/dashboard/circles/${circle.id}`}
                 className="content-card content-card-interactive group"
               >
-                <div className="flex items-start justify-between mb-4">
+                <div className="flex items-start justify-between mb-3">
                   <div className="flex items-center gap-3">
                     <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-[#2D5A3D]/20 to-[#C4A235]/20 flex items-center justify-center">
                       <Users size={24} className="text-[#2D5A3D]" />
                     </div>
                     <div>
                       <h3 className="text-[#2d2d2d] font-semibold text-lg">{circle.name}</h3>
-                      <p className="text-[#666] text-sm">
-                        {circle.member_count || 1} member{(circle.member_count || 1) !== 1 ? 's' : ''}
-                      </p>
                     </div>
                   </div>
                   {getRoleBadge(circle.my_role)}
                 </div>
 
+                {/* Prominent member count */}
+                <div className="flex items-center gap-2 mb-3 px-3 py-2 bg-[#2D5A3D]/5 rounded-lg">
+                  <Users size={16} className="text-[#2D5A3D]" />
+                  <span className="text-[#2D5A3D] font-semibold text-sm">
+                    {circle.member_count || 1}
+                  </span>
+                  <span className="text-[#666] text-sm">
+                    member{(circle.member_count || 1) !== 1 ? 's' : ''}
+                  </span>
+                </div>
+
                 {circle.description && (
-                  <p className="text-[#666] text-sm line-clamp-2 mb-4">
+                  <p className="text-[#666] text-sm line-clamp-2 mb-3">
                     {circle.description}
                   </p>
                 )}
 
+                {/* Recent activity */}
+                <div className="flex items-center gap-1.5 mb-4 text-xs text-[#94A09A]">
+                  <Clock size={12} />
+                  <span>
+                    {(() => {
+                      const created = new Date(circle.created_at)
+                      const now = new Date()
+                      const diffDays = Math.floor((now.getTime() - created.getTime()) / (1000 * 60 * 60 * 24))
+                      if (diffDays < 1) return 'Created today'
+                      if (diffDays < 7) return `Active ${diffDays}d ago`
+                      if (diffDays < 30) return `Active ${Math.floor(diffDays / 7)}w ago`
+                      return `Created ${created.toLocaleDateString('en-US', { month: 'short', year: 'numeric' })}`
+                    })()}
+                  </span>
+                </div>
+
                 <div className="flex items-center justify-between pt-3 border-t border-[#2D5A3D]/10">
                   {circle.members && circle.members.length > 0 ? (
-                    <MemberAvatarStack 
-                      members={circle.members} 
+                    <MemberAvatarStack
+                      members={circle.members}
                       totalCount={circle.member_count || circle.members.length}
                       maxDisplay={4}
                       size="sm"

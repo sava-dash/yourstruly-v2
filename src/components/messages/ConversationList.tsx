@@ -50,7 +50,7 @@ export default function ConversationList({
       {/* Header */}
       <div className="p-4 border-b border-[#2D5A3D]/10 flex-shrink-0">
         <div className="flex items-center justify-between mb-4">
-          <h2 className="text-lg font-bold text-[#2d2d2d]">Messages</h2>
+          <h2 className="text-lg font-bold text-[#1A1F1C]" style={{ fontFamily: 'var(--font-dm-serif, DM Serif Display, serif)' }}>Messages</h2>
           {unreadCount > 0 && (
             <span className="px-2.5 py-1 rounded-full bg-[#B8562E]/15 text-[#B8562E] text-xs font-semibold">
               {unreadCount} new
@@ -69,7 +69,7 @@ export default function ConversationList({
             aria-label="Search" placeholder="Search conversations..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full pl-9 pr-4 py-2.5 bg-[#2D5A3D]/5 border border-[#2D5A3D]/10 rounded-xl text-sm text-[#2d2d2d] placeholder:text-[#999] focus:outline-none focus:border-[#2D5A3D]/30 focus:bg-white transition-all"
+            className="w-full pl-9 pr-4 py-2.5 bg-[#2D5A3D]/5 border border-[#2D5A3D]/10 rounded-xl text-sm text-[#1A1F1C] placeholder:text-[#94A09A] focus:outline-none focus:border-[#2D5A3D]/30 focus:bg-white transition-all"
           />
         </div>
       </div>
@@ -84,7 +84,7 @@ export default function ConversationList({
               className={`flex items-center gap-1.5 px-4 py-2 text-xs font-medium transition-all rounded-full ${
                 filter === id
                   ? 'bg-[#2D5A3D] text-white'
-                  : 'bg-[#F8F6EE] text-[#666] hover:bg-white hover:text-[#2D5A3D] border border-[#2D5A3D]/10'
+                  : 'bg-[#F8F6EE] text-[#5A6660] hover:bg-white hover:text-[#2D5A3D] border border-[#2D5A3D]/10'
               }`}
             >
               <Icon size={13} />
@@ -101,7 +101,7 @@ export default function ConversationList({
             <div className="w-12 h-12 rounded-full bg-[#2D5A3D]/10 flex items-center justify-center mb-3">
               <MessageSquare size={20} className="text-[#2D5A3D]/50" />
             </div>
-            <p className="text-sm text-[#666]">
+            <p className="text-sm text-[#5A6660]">
               {searchQuery ? 'No conversations found' : 'No conversations yet'}
             </p>
           </div>

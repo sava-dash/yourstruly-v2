@@ -690,12 +690,21 @@ export default function MapView({
                       </div>
                     )}
 
-                    <Link
-                      href={`/dashboard/memories/${selectedMemory.id}`}
-                      className="block w-full py-3 bg-[#2D5A3D] text-white text-center rounded-xl font-medium hover:bg-[#2D5A3D]/90 transition-colors"
-                    >
-                      View Full Memory
-                    </Link>
+                    {onSelectMemory ? (
+                      <button
+                        onClick={() => { onSelectMemory(selectedMemory); setSidebarOpen(false); setSelectedMemory(null) }}
+                        className="block w-full py-3 bg-[#2D5A3D] text-white text-center rounded-xl font-medium hover:bg-[#2D5A3D]/90 transition-colors"
+                      >
+                        View Full Memory
+                      </button>
+                    ) : (
+                      <Link
+                        href={`/dashboard/memories/${selectedMemory.id}`}
+                        className="block w-full py-3 bg-[#2D5A3D] text-white text-center rounded-xl font-medium hover:bg-[#2D5A3D]/90 transition-colors"
+                      >
+                        View Full Memory
+                      </Link>
+                    )}
                   </div>
                 </div>
               )}

@@ -28,7 +28,7 @@ interface ScopeSelectorProps {
 
 // Generate consistent color from circle name
 function getCircleColor(name: string): string {
-  const colors = ['#2D5A3D', '#B8562E', '#C4A235', '#8DACAB', '#4A3552', '#2C5F7C'];
+  const colors = ['#2D5A3D', '#B8562E', '#C4A235', '#8DACAB', '#244B32', '#2C5F7C'];
   let hash = 0;
   for (let i = 0; i < name.length; i++) {
     hash = name.charCodeAt(i) + ((hash << 5) - hash);
@@ -187,13 +187,13 @@ export function ScopeSelector({
                 <Sparkles size={20} className="text-white" />
               </div>
               <div>
-                <h3 className="text-[#2d2d2d] font-semibold text-lg">{title}</h3>
+                <h3 className="text-[#1A1F1C] font-semibold text-lg">{title}</h3>
                 <p className="text-gray-500 text-sm">Choose who sees this {getContentLabel()}</p>
               </div>
             </div>
             <button
               onClick={handleDismiss}
-              className="text-gray-400 hover:text-[#2d2d2d] transition-colors p-2 hover:bg-[#2D5A3D]/5 rounded-lg"
+              className="text-gray-400 hover:text-[#1A1F1C] transition-colors p-2 hover:bg-[#2D5A3D]/5 rounded-lg"
             >
               <X size={20} />
             </button>
@@ -218,7 +218,7 @@ export function ScopeSelector({
                 <Lock size={20} className={isPrivate && selectedCircles.length === 0 ? 'text-white' : 'text-gray-500'} />
               </div>
               <div className="flex-1">
-                <p className="text-[#2d2d2d] font-medium">Private</p>
+                <p className="text-[#1A1F1C] font-medium">Private</p>
                 <p className="text-gray-500 text-sm">Only visible to you</p>
               </div>
               {isPrivate && selectedCircles.length === 0 && (
@@ -262,7 +262,7 @@ export function ScopeSelector({
                       <Users size={20} className="text-white" />
                     </div>
                     <div className="flex-1">
-                      <p className="text-[#2d2d2d] font-medium">{circle.name}</p>
+                      <p className="text-[#1A1F1C] font-medium">{circle.name}</p>
                       {circle.memberCount && (
                         <p className="text-gray-500 text-sm">
                           {circle.memberCount} {circle.memberCount === 1 ? 'member' : 'members'}
@@ -293,7 +293,7 @@ export function ScopeSelector({
           <div className="p-5 border-t border-[#2D5A3D]/10 flex gap-3">
             <button
               onClick={handleDismiss}
-              className="flex-1 px-4 py-3 bg-gray-100 hover:bg-gray-200 text-[#2d2d2d] rounded-xl font-medium transition-colors"
+              className="flex-1 px-4 py-3 bg-gray-100 hover:bg-gray-200 text-[#1A1F1C] rounded-xl font-medium transition-colors"
             >
               Cancel
             </button>

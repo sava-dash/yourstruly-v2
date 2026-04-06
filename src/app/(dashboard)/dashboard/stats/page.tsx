@@ -95,7 +95,7 @@ export default function StatsPage() {
         {/* Header */}
         <header className="mb-8">
           <div className="flex items-center gap-4">
-            <Link href="/dashboard/memories" className="page-header-back">
+            <Link href="/dashboard/my-story" className="page-header-back">
               <ChevronLeft size={20} />
             </Link>
             <div>
@@ -123,7 +123,7 @@ export default function StatsPage() {
             <p className="empty-state-text">
               Start adding memories to see your journey unfold
             </p>
-            <Link href="/dashboard/memories" className="btn-primary mx-auto mt-4">
+            <Link href="/dashboard/my-story" className="btn-primary mx-auto mt-4">
               <ImageIcon size={18} />
               Go to Memories
             </Link>
@@ -137,7 +137,7 @@ export default function StatsPage() {
             <p className="empty-state-text">
               Add your first memory to begin tracking your story
             </p>
-            <Link href="/dashboard/memories" className="btn-primary mx-auto mt-4">
+            <Link href="/dashboard/my-story" className="btn-primary mx-auto mt-4">
               <ImageIcon size={18} />
               Add Your First Memory
             </Link>

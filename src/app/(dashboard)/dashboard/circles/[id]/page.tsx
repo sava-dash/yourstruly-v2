@@ -719,7 +719,7 @@ export default function CircleDetailPage({ params }: { params: Promise<{ id: str
           <div className="page-blob page-blob-2" />
         </div>
         <div className="relative z-10 flex flex-col items-center justify-center min-h-[60vh]">
-          <p className="text-[#666] mb-4">{error || 'Circle not found'}</p>
+          <p className="text-[#5A6660] mb-4">{error || 'Circle not found'}</p>
           <Link href="/dashboard/circles" className="text-[#2D5A3D] hover:underline">
             Back to circles
           </Link>
@@ -753,14 +753,14 @@ export default function CircleDetailPage({ params }: { params: Promise<{ id: str
                   <Users size={28} className="text-[#2D5A3D]" />
                 </div>
                 <div>
-                  <h1 className="text-2xl font-bold text-[#2d2d2d]">{circle.name}</h1>
-                  <p className="text-[#666] text-sm">{members.length} member{members.length !== 1 ? 's' : ''}</p>
+                  <h1 className="text-2xl font-bold text-[#1A1F1C]" style={{ fontFamily: 'var(--font-dm-serif, DM Serif Display, serif)' }}>{circle.name}</h1>
+                  <p className="text-[#5A6660] text-sm">{members.length} member{members.length !== 1 ? 's' : ''}</p>
                 </div>
               </div>
             </div>
           </div>
           {circle.description && (
-            <p className="text-[#666] mt-4 ml-[72px]">{circle.description}</p>
+            <p className="text-[#5A6660] mt-4 ml-[72px]">{circle.description}</p>
           )}
         </header>
 
@@ -779,10 +779,10 @@ export default function CircleDetailPage({ params }: { params: Promise<{ id: str
                   className="w-full flex items-center justify-between p-3 bg-white rounded-lg hover:bg-[#C4A235]/5 transition-colors text-left"
                 >
                   <div>
-                    <p className="text-sm font-medium text-[#2d2d2d]">
+                    <p className="text-sm font-medium text-[#1A1F1C]">
                       {vote.vote_type === 'promote' ? 'Promote' : 'Demote'} {vote.target_member_name}
                     </p>
-                    <p className="text-xs text-[#666]">
+                    <p className="text-xs text-[#5A6660]">
                       {vote.yes_votes}/{vote.required_votes} votes needed
                     </p>
                   </div>
@@ -814,12 +814,12 @@ export default function CircleDetailPage({ params }: { params: Promise<{ id: str
                   {tab.label}
                   {/* Badges */}
                   {tab.id === 'schedule' && activeEventsCount > 0 && (
-                    <span className="ml-1 w-5 h-5 rounded-full bg-[#C4A235] text-[10px] font-bold flex items-center justify-center text-[#2d2d2d]">
+                    <span className="ml-1 w-5 h-5 rounded-full bg-[#C4A235] text-[10px] font-bold flex items-center justify-center text-[#1A1F1C]">
                       {activeEventsCount}
                     </span>
                   )}
                   {tab.id === 'polls' && activePollsCount > 0 && (
-                    <span className="ml-1 w-5 h-5 rounded-full bg-[#4A3552] text-[10px] font-bold flex items-center justify-center text-white">
+                    <span className="ml-1 w-5 h-5 rounded-full bg-[#2D5A3D] text-[10px] font-bold flex items-center justify-center text-white">
                       {activePollsCount}
                     </span>
                   )}
@@ -913,7 +913,7 @@ export default function CircleDetailPage({ params }: { params: Promise<{ id: str
                 {/* Circle Info */}
                 <div className="content-card">
                   <div className="flex items-center justify-between mb-4">
-                    <h3 className="text-lg font-semibold text-[#2d2d2d]">Circle Information</h3>
+                    <h3 className="text-lg font-semibold text-[#1A1F1C]">Circle Information</h3>
                     {!editMode && (
                       <button
                         onClick={() => setEditMode(true)}
@@ -927,7 +927,7 @@ export default function CircleDetailPage({ params }: { params: Promise<{ id: str
                   {editMode ? (
                     <div className="space-y-4">
                       <div>
-                        <label className="block text-sm text-[#666] mb-1.5">Circle Name</label>
+                        <label className="block text-sm text-[#5A6660] mb-1.5">Circle Name</label>
                         <input
                           type="text"
                           value={editForm.name}
@@ -936,7 +936,7 @@ export default function CircleDetailPage({ params }: { params: Promise<{ id: str
                         />
                       </div>
                       <div>
-                        <label className="block text-sm text-[#666] mb-1.5">Description</label>
+                        <label className="block text-sm text-[#5A6660] mb-1.5">Description</label>
                         <textarea
                           value={editForm.description}
                           onChange={e => setEditForm({ ...editForm, description: e.target.value })}
@@ -962,16 +962,16 @@ export default function CircleDetailPage({ params }: { params: Promise<{ id: str
                   ) : (
                     <div className="space-y-3">
                       <div>
-                        <p className="text-sm text-[#666]">Name</p>
-                        <p className="text-[#2d2d2d] font-medium">{circle.name}</p>
+                        <p className="text-sm text-[#5A6660]">Name</p>
+                        <p className="text-[#1A1F1C] font-medium">{circle.name}</p>
                       </div>
                       <div>
-                        <p className="text-sm text-[#666]">Description</p>
-                        <p className="text-[#2d2d2d]">{circle.description || 'No description'}</p>
+                        <p className="text-sm text-[#5A6660]">Description</p>
+                        <p className="text-[#1A1F1C]">{circle.description || 'No description'}</p>
                       </div>
                       <div>
-                        <p className="text-sm text-[#666]">Created</p>
-                        <p className="text-[#2d2d2d]">{formatDate(circle.created_at)}</p>
+                        <p className="text-sm text-[#5A6660]">Created</p>
+                        <p className="text-[#1A1F1C]">{formatDate(circle.created_at)}</p>
                       </div>
                     </div>
                   )}
@@ -979,19 +979,19 @@ export default function CircleDetailPage({ params }: { params: Promise<{ id: str
 
                 {/* Voting Settings */}
                 <div className="content-card">
-                  <h3 className="text-lg font-semibold text-[#2d2d2d] mb-4">Voting</h3>
+                  <h3 className="text-lg font-semibold text-[#1A1F1C] mb-4">Voting</h3>
                   <div className="space-y-3">
                     <div className="flex items-center justify-between p-3 bg-[#2D5A3D]/5 rounded-xl">
                       <div>
-                        <p className="font-medium text-[#2d2d2d]">Promotion Votes Required</p>
-                        <p className="text-sm text-[#666]">Majority of admins must approve</p>
+                        <p className="font-medium text-[#1A1F1C]">Promotion Votes Required</p>
+                        <p className="text-sm text-[#5A6660]">Majority of admins must approve</p>
                       </div>
                       <span className="text-[#2D5A3D] font-medium">50%+</span>
                     </div>
                     <div className="flex items-center justify-between p-3 bg-[#2D5A3D]/5 rounded-xl">
                       <div>
-                        <p className="font-medium text-[#2d2d2d]">Vote Duration</p>
-                        <p className="text-sm text-[#666]">Time before vote expires</p>
+                        <p className="font-medium text-[#1A1F1C]">Vote Duration</p>
+                        <p className="text-sm text-[#5A6660]">Time before vote expires</p>
                       </div>
                       <span className="text-[#2D5A3D] font-medium">7 days</span>
                     </div>

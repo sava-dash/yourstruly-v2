@@ -54,7 +54,7 @@ export function DashboardSidebar({
         
         {/* Stats Row - Compact */}
         <div className="flex items-center justify-between text-center mb-3">
-          <Link href="/dashboard/memories" className="flex-1 hover:opacity-70 transition-opacity">
+          <Link href="/dashboard/my-story" className="flex-1 hover:opacity-70 transition-opacity">
             <div className="text-2xl font-bold text-[#2D5A3D]">{stats.memories}</div>
             <div className="text-[10px] text-[#2D5A3D]/60 uppercase tracking-wide">Memories</div>
           </Link>
@@ -62,7 +62,7 @@ export function DashboardSidebar({
             <div className="text-2xl font-bold text-[#2D5A3D]">{stats.contacts}</div>
             <div className="text-[10px] text-[#2D5A3D]/60 uppercase tracking-wide">People</div>
           </Link>
-          <Link href="/dashboard/gallery" className="flex-1 hover:opacity-70 transition-opacity border-r border-[#2D5A3D]/10">
+          <Link href="/dashboard/my-story?tab=photos" className="flex-1 hover:opacity-70 transition-opacity border-r border-[#2D5A3D]/10">
             <div className="text-2xl font-bold text-[#2D5A3D]">{stats.photos}</div>
             <div className="text-[10px] text-[#2D5A3D]/60 uppercase tracking-wide">Photos</div>
           </Link>

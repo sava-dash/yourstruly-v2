@@ -4,7 +4,9 @@ import { createClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
 import TopNav from '@/components/TopNav'
 import BottomNav from '@/components/BottomNav'
-import VoiceFAB from '@/components/VoiceFAB'
+// VoiceFAB removed — quick actions moved to My Story "New" dropdown + global voice button in nav
+import VoiceWrapper from '@/components/voice/VoiceWrapper'
+import ConciergeFAB from '@/components/concierge/ConciergeFAB'
 import { DashboardTourProvider } from '@/components/dashboard/DashboardTour'
 
 export default async function DashboardLayout({
@@ -28,14 +30,16 @@ export default async function DashboardLayout({
 
   return (
     <DashboardTourProvider>
-      <div className="min-h-screen relative">
-        <TopNav user={user} profile={profile} />
-        <main id="main-content" className="pt-14 pb-16 lg:pb-0" role="main">
-          {children}
-        </main>
-        <BottomNav />
-        <VoiceFAB />
-      </div>
+      <VoiceWrapper>
+        <div className="min-h-screen relative">
+          <TopNav user={user} profile={profile} />
+          <main id="main-content" className="pt-14 pb-16 lg:pb-0" role="main">
+            {children}
+          </main>
+          <BottomNav />
+          <ConciergeFAB />
+        </div>
+      </VoiceWrapper>
     </DashboardTourProvider>
   )
 }

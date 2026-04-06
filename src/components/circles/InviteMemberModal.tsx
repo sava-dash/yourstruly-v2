@@ -165,8 +165,8 @@ export default function InviteMemberModal({
         {/* Header */}
         <div className="flex items-center justify-between mb-6">
           <div>
-            <h2 className="text-xl font-semibold text-[#2d2d2d]">Invite to Circle</h2>
-            <p className="text-sm text-[#666] mt-1">{circleName}</p>
+            <h2 className="text-xl font-semibold text-[#1A1F1C]">Invite to Circle</h2>
+            <p className="text-sm text-[#5A6660] mt-1">{circleName}</p>
           </div>
           <button
             onClick={onClose}
@@ -178,7 +178,7 @@ export default function InviteMemberModal({
 
         {/* Search Users */}
         <div className="mb-6">
-          <label className="block text-sm font-medium text-[#2d2d2d] mb-2">Search YoursTruly Users</label>
+          <label className="block text-sm font-medium text-[#1A1F1C] mb-2">Search YoursTruly Users</label>
           <div className="relative">
             <Search size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-[#2D5A3D]/50" />
             <input
@@ -203,13 +203,13 @@ export default function InviteMemberModal({
                     {user.full_name.charAt(0)}
                   </div>
                   <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium text-[#2d2d2d]">{user.full_name}</p>
-                    <p className="text-xs text-[#666] truncate">{user.email}</p>
+                    <p className="text-sm font-medium text-[#1A1F1C]">{user.full_name}</p>
+                    <p className="text-xs text-[#5A6660] truncate">{user.email}</p>
                   </div>
                   {user.isYTUser ? (
                     <span className="text-xs text-[#2D5A3D] bg-[#2D5A3D]/10 px-2 py-0.5 rounded-full">YT User</span>
                   ) : (
-                    <span className="text-xs text-[#888] bg-gray-100 px-2 py-0.5 rounded-full">Send Link</span>
+                    <span className="text-xs text-[#94A09A] bg-gray-100 px-2 py-0.5 rounded-full">Send Link</span>
                   )}
                 </button>
               ))}
@@ -217,11 +217,11 @@ export default function InviteMemberModal({
           )}
 
           {searching && (
-            <p className="text-sm text-[#666] mt-2">Searching...</p>
+            <p className="text-sm text-[#5A6660] mt-2">Searching...</p>
           )}
 
           {searchQuery.length >= 2 && !searching && searchResults.length === 0 && (
-            <p className="text-sm text-[#666] mt-2">No users found. Try generating an invite link instead.</p>
+            <p className="text-sm text-[#5A6660] mt-2">No users found. Try generating an invite link instead.</p>
           )}
 
           {/* Show contacts when not searching */}
@@ -239,10 +239,10 @@ export default function InviteMemberModal({
             
             return (
               <div className="mt-3">
-                <p className="text-xs text-[#888] uppercase tracking-wide mb-2">Your Contacts</p>
+                <p className="text-xs text-[#94A09A] uppercase tracking-wide mb-2">Your Contacts</p>
                 <div className="border border-[#2D5A3D]/10 rounded-xl overflow-hidden max-h-48 overflow-y-auto">
                   {loadingContacts ? (
-                    <p className="text-sm text-[#666] p-3">Loading contacts...</p>
+                    <p className="text-sm text-[#5A6660] p-3">Loading contacts...</p>
                   ) : (
                     availableContacts.slice(0, 6).map(contact => (
                       <button
@@ -262,12 +262,12 @@ export default function InviteMemberModal({
                           )}
                         </div>
                         <div className="flex-1 min-w-0">
-                          <p className="text-sm font-medium text-[#2d2d2d]">{contact.full_name}</p>
+                          <p className="text-sm font-medium text-[#1A1F1C]">{contact.full_name}</p>
                           {contact.email && (
-                            <p className="text-xs text-[#666] truncate">{contact.email}</p>
+                            <p className="text-xs text-[#5A6660] truncate">{contact.email}</p>
                           )}
                         </div>
-                        <span className="text-xs text-[#888] bg-gray-100 px-2 py-0.5 rounded-full">Send Link</span>
+                        <span className="text-xs text-[#94A09A] bg-gray-100 px-2 py-0.5 rounded-full">Send Link</span>
                       </button>
                     ))
                   )}
@@ -282,7 +282,7 @@ export default function InviteMemberModal({
           <div className="flex items-center justify-between mb-2">
             <div className="flex items-center gap-2">
               <LinkIcon size={16} className="text-[#2D5A3D]" />
-              <span className="text-sm font-medium text-[#2d2d2d]">Invite Link</span>
+              <span className="text-sm font-medium text-[#1A1F1C]">Invite Link</span>
             </div>
             <button
               onClick={handleGenerateLink}
@@ -292,7 +292,7 @@ export default function InviteMemberModal({
               {generatingLink ? 'Generating...' : 'Generate New Link'}
             </button>
           </div>
-          <p className="text-xs text-[#666]">
+          <p className="text-xs text-[#5A6660]">
             Share a link to invite anyone to this circle. Links expire after 7 days.
           </p>
         </div>
@@ -300,7 +300,7 @@ export default function InviteMemberModal({
         {/* Pending Invites */}
         {pendingInvites.length > 0 && (
           <div>
-            <h3 className="text-sm font-medium text-[#2d2d2d] mb-3 flex items-center gap-2">
+            <h3 className="text-sm font-medium text-[#1A1F1C] mb-3 flex items-center gap-2">
               <Clock size={14} className="text-[#C4A235]" />
               Pending Invites ({pendingInvites.length})
             </h3>
@@ -326,7 +326,7 @@ export default function InviteMemberModal({
                     <div className="flex-1 min-w-0">
                       {invite.invitee_name ? (
                         <div className="flex items-center gap-2">
-                          <p className="text-sm text-[#2d2d2d] truncate">{invite.invitee_name}</p>
+                          <p className="text-sm text-[#1A1F1C] truncate">{invite.invitee_name}</p>
                           {invite.invite_link && (
                             <button
                               onClick={() => handleCopyLink(invite.invite_link!)}
@@ -342,10 +342,10 @@ export default function InviteMemberModal({
                           )}
                         </div>
                       ) : invite.email ? (
-                        <p className="text-sm text-[#2d2d2d] truncate">{invite.email}</p>
+                        <p className="text-sm text-[#1A1F1C] truncate">{invite.email}</p>
                       ) : invite.invite_link ? (
                         <div className="flex items-center gap-2">
-                          <p className="text-sm text-[#2d2d2d]">Generic invite link</p>
+                          <p className="text-sm text-[#1A1F1C]">Generic invite link</p>
                           <button
                             onClick={() => handleCopyLink(invite.invite_link!)}
                             className="p-1 hover:bg-[#2D5A3D]/10 rounded transition-colors"
@@ -359,7 +359,7 @@ export default function InviteMemberModal({
                           </button>
                         </div>
                       ) : null}
-                      <p className="text-xs text-[#888] mt-0.5">
+                      <p className="text-xs text-[#94A09A] mt-0.5">
                         Expires {formatDate(invite.expires_at)}
                       </p>
                     </div>

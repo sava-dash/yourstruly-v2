@@ -72,7 +72,7 @@ export default function ConversationItem({
         <div className="flex items-center justify-between gap-2">
           <div className="flex items-center gap-1.5 min-w-0">
             <h4 className={`text-sm font-semibold truncate ${
-              isActive ? 'text-[#2D5A3D]' : 'text-[#2d2d2d]'
+              isActive ? 'text-[#2D5A3D]' : 'text-[#1A1F1C]'
             }`}>
               {conversation.name}
             </h4>
@@ -80,7 +80,7 @@ export default function ConversationItem({
               <Pin size={10} className="text-[#B8562E] flex-shrink-0" />
             )}
           </div>
-          <span className="text-[10px] text-[#666] flex-shrink-0">
+          <span className="text-[10px] text-[#5A6660] flex-shrink-0">
             {formatDistanceToNow(conversation.timestamp, { addSuffix: false })}
           </span>
         </div>
@@ -92,7 +92,7 @@ export default function ConversationItem({
               Memory Thread
             </span>
             {conversation.participants && conversation.participants > 2 && (
-              <span className="text-[10px] text-[#666]">
+              <span className="text-[10px] text-[#5A6660]">
                 · {conversation.participants} people
               </span>
             )}
@@ -106,7 +106,7 @@ export default function ConversationItem({
               Circle
             </span>
             {conversation.participants && conversation.participants > 0 && (
-              <span className="text-[10px] text-[#666]">
+              <span className="text-[10px] text-[#5A6660]">
                 · {conversation.participants} member{conversation.participants !== 1 ? 's' : ''}
               </span>
             )}
@@ -114,7 +114,7 @@ export default function ConversationItem({
         )}
         
         <p className={`text-xs mt-1 truncate ${
-          conversation.unreadCount > 0 ? 'text-[#2d2d2d] font-medium' : 'text-[#666]'
+          conversation.unreadCount > 0 ? 'text-[#1A1F1C] font-medium' : 'text-[#5A6660]'
         }`}>
           {conversation.lastMessage}
         </p>

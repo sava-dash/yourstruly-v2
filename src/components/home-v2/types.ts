@@ -3,17 +3,20 @@
  */
 
 export type CardType =
-  | 'when-where'       // Location + date input
-  | 'text-voice-video' // Text, voice, or video response
-  | 'media-upload'     // Upload photos/videos
-  | 'media-item'       // An uploaded media item (auto-populated)
-  | 'tag-people'       // Tag people in media
-  | 'pill-select'      // Pill-based selection (interests, traits, etc.)
-  | 'field-input'      // Simple field input (DOB, phone, email, etc.)
-  | 'list-item'        // A single item in a list (book, movie, etc.)
-  | 'quote'            // Quote card
-  | 'comment'          // Comment/reaction card
-  | 'plus'             // "Add more" button card
+  | 'when-where'            // Location + date input
+  | 'text-voice-video'      // Text, voice, or video response
+  | 'media-upload'          // Upload photos/videos
+  | 'media-item'            // An uploaded media item (auto-populated)
+  | 'tag-people'            // Tag people in media (photo)
+  | 'people-present'        // Tag people present in memory (no photo required)
+  | 'pill-select'           // Pill-based selection (interests, traits, etc.)
+  | 'field-input'           // Simple field input (DOB, phone, email, etc.)
+  | 'list-item'             // A single item in a list (book, movie, etc.)
+  | 'quote'                 // Quote card
+  | 'comment'               // Comment/reaction card
+  | 'invite-collaborator'   // Invite contacts to contribute to the story
+  | 'song'                  // Song dedication — attach a song to the memory
+  | 'plus'                  // "Add more" button card
 
 export type PromptCategory =
   | 'memory'
@@ -95,7 +98,7 @@ export function categorizePrompt(type: string): PromptCategory {
 export function generateInitialCards(category: PromptCategory, promptType: string): CardType[] {
   switch (category) {
     case 'memory':
-      return ['when-where', 'text-voice-video', 'media-upload', 'plus']
+      return ['when-where', 'text-voice-video', 'people-present', 'media-upload', 'plus']
     case 'photo':
       return ['when-where', 'text-voice-video', 'tag-people', 'plus'] // backstory uses BackstoryCard via CardChain
     case 'wisdom':

@@ -1,14 +1,26 @@
 'use client'
 
-import { useState, useCallback, useEffect, useRef } from 'react'
+import React, { useState, useCallback, useEffect, useRef } from 'react'
 import { AnimatePresence, motion } from 'framer-motion'
 import Link from 'next/link'
 import dynamic from 'next/dynamic'
 import { createClient } from '@/lib/supabase/client'
 import { useEngagementPrompts } from '@/hooks/useEngagementPrompts'
 import { useSubscription } from '@/hooks/useSubscription'
-import { CardChain } from '@/components/home-v2/CardChain'
-import { RefreshCw, X, Heart, Camera, Brain, User, BookOpen, Sparkles, Menu } from 'lucide-react'
+import { WhenWhereCard } from '@/components/home-v2/cards/WhenWhereCard'
+import { TextVoiceVideoCard } from '@/components/home-v2/cards/TextVoiceVideoCard'
+import { BackstoryCard } from '@/components/home-v2/cards/BackstoryCard'
+import { MediaUploadCard } from '@/components/home-v2/cards/MediaUploadCard'
+import { MediaItemCard } from '@/components/home-v2/cards/MediaItemCard'
+import { FieldInputCard } from '@/components/home-v2/cards/FieldInputCard'
+import { PillSelectCard } from '@/components/home-v2/cards/PillSelectCard'
+import { TagPeopleCard } from '@/components/home-v2/cards/TagPeopleCard'
+import { PlusCard } from '@/components/home-v2/cards/PlusCard'
+import { InviteCollaboratorCard } from '@/components/home-v2/cards/InviteCollaboratorCard'
+import { SongCard } from '@/components/home-v2/cards/SongCard'
+import { PeoplePresentCard } from '@/components/home-v2/cards/PeoplePresentCard'
+import { ListItemCard } from '@/components/home-v2/cards/ListItemCard'
+import { RefreshCw, X, Heart, Camera, Brain, User, BookOpen, Sparkles, Menu, Trash2 } from 'lucide-react'
 import type { PromptRow, ChainCard, CardType, PromptCategory } from '@/components/home-v2/types'
 import { categorizePrompt, generateInitialCards } from '@/components/home-v2/types'
 import { useDashboardData } from './hooks/useDashboardData'
@@ -20,6 +32,16 @@ const WeeklyChallenges = dynamic(() => import('@/components/dashboard/WeeklyChal
 const OnThisDayRow = dynamic(() => import('@/components/home-v2/OnThisDayRow'), { ssr: false })
 
 const uid = () => `card-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`
+
+// Category colors from Ogilvy brand palette
+const CATEGORY_COLORS: Record<string, { bg: string; border: string; accent: string; cardBg: string }> = {
+  memory:    { bg: '#E6F0EA', border: '#7A9B88', accent: '#2D5A3D', cardBg: '#F7FAF8' },
+  photo:     { bg: '#FAF5E4', border: '#C4A235', accent: '#7A6520', cardBg: '#FDFBF3' },
+  wisdom:    { bg: '#FBF0EB', border: '#B8562E', accent: '#6B3A1E', cardBg: '#FDF8F5' },
+  contact:   { bg: '#E6F0EA', border: '#2D7A4F', accent: '#1B3926', cardBg: '#F7FAF8' },
+  profile:   { bg: '#F5F1EA', border: '#C4A235', accent: '#5A6660', cardBg: '#FAFAF7' },
+  favorites: { bg: '#F0EAF5', border: '#8A6BA8', accent: '#4A3552', cardBg: '#FAF8FC' },
+}
 
 const CATEGORY_META: Record<string, { icon: any; label: string; hint: string; time: string }> = {
   memory: { icon: Heart, label: 'Remember When', hint: '🎙️ Talk or type', time: '~2 min' },
@@ -53,15 +75,13 @@ function getXpLevel(xp: number, levels?: any[]) {
   return { ...current, nextLevel: next, progress: Math.min(progress, 100), xpToNext }
 }
 
-// Card dimensions — portrait, comfortably fits with peek of next card
-const CARD_W = 530
 const CARD_H = 600
 
 export default function HomeV2Page() {
   const supabase = createClient()
   const [user, setUser] = useState<any>(null)
   const [profile, setProfile] = useState<any>(null)
-  const chainScrollRef = useRef<HTMLDivElement>(null)
+  const mainRef = useRef<HTMLDivElement>(null)
 
   const {
     prompts: rawPrompts,
@@ -78,9 +98,57 @@ export default function HomeV2Page() {
   const streakDays = 0
 
   const [expandedRowId, setExpandedRowId] = useState<string | null>(null)
-  const [chainVisible, setChainVisible] = useState(false)
+  const expandedRowIdRef = useRef<string | null>(null)
+  const scrollRowRefs = useRef<Map<string, HTMLDivElement>>(new Map())
+  // Keep ref in sync with state
+  useEffect(() => { expandedRowIdRef.current = expandedRowId }, [expandedRowId])
   const [sidebarOpen, setSidebarOpen] = useState(false)
   const [rows, setRows] = useState<Map<string, PromptRow>>(new Map())
+
+  // Pick up pre-filled memory from AI Concierge via custom event
+  const insertConciergeDraft = useCallback((draft: { title: string; description: string; location?: string; date?: string; people?: string[]; mood?: string }) => {
+    const promptId = `concierge-${Date.now()}`
+    const cards: ChainCard[] = [
+      { id: uid(), type: 'when-where', data: { location: draft.location || '', date: draft.date || '' }, saved: !!(draft.location || draft.date), createdAt: new Date().toISOString() },
+      { id: uid(), type: 'text-voice-video', data: { text: draft.description || '' }, saved: false, createdAt: new Date().toISOString() },  // BackstoryCard will pre-seed messages from text
+      { id: uid(), type: 'people-present', data: { preselectedNames: draft.people || [] }, saved: false, createdAt: new Date().toISOString() },
+      { id: uid(), type: 'media-upload', data: {}, saved: false, createdAt: new Date().toISOString() },
+      { id: uid(), type: 'plus', data: {}, saved: false, createdAt: new Date().toISOString() },
+    ]
+    const newRow: PromptRow = {
+      promptId, promptText: draft.title || 'New Memory', promptType: 'memory',
+      category: 'memory', cards, expanded: false,
+    }
+    setRows(prev => {
+      const result = new Map<string, PromptRow>()
+      result.set(promptId, newRow)
+      prev.forEach((v, k) => result.set(k, v))
+      return result
+    })
+    setTimeout(() => {
+      setExpandedRowId(promptId)
+      requestAnimationFrame(() => {
+        const scrollEl = scrollRowRefs.current.get(promptId)
+        if (scrollEl) {
+          const firstCard = scrollEl.querySelector('[data-chain-card="0"]') as HTMLElement
+          if (firstCard) firstCard.scrollIntoView({ behavior: 'smooth', inline: 'start', block: 'nearest' })
+        }
+      })
+    }, 200)
+  }, [])
+
+  // Listen for concierge draft events
+  useEffect(() => {
+    const handler = (e: CustomEvent) => insertConciergeDraft(e.detail)
+    window.addEventListener('concierge-create-memory', handler as EventListener)
+    // Also check sessionStorage on mount (for cross-page navigation)
+    const stored = sessionStorage.getItem('concierge-memory-draft')
+    if (stored) {
+      sessionStorage.removeItem('concierge-memory-draft')
+      try { insertConciergeDraft(JSON.parse(stored)) } catch {}
+    }
+    return () => window.removeEventListener('concierge-create-memory', handler as EventListener)
+  }, [insertConciergeDraft])
 
   useEffect(() => {
     const load = async () => {
@@ -97,16 +165,30 @@ export default function HomeV2Page() {
   useEffect(() => {
     const seenPhotoIds = new Set<string>()
     const newRows = new Map<string, PromptRow>()
+
+    // IMPORTANT: Preserve the currently expanded row even if answerPrompt removed it from rawPrompts.
+    // This prevents the blur-freeze bug where the expanded row disappears and all remaining rows
+    // stay blurred with pointerEvents: none.
+    const currentExpandedId = expandedRowIdRef.current
+    if (currentExpandedId) {
+      const existingExpanded = rows.get(currentExpandedId)
+      if (existingExpanded) {
+        newRows.set(currentExpandedId, existingExpanded)
+        if (existingExpanded.photoId) seenPhotoIds.add(existingExpanded.photoId)
+      }
+    }
+
     for (const prompt of rawPrompts) {
       if (prompt.type === 'tag_person') continue
       if (prompt.photoId) {
         if (seenPhotoIds.has(prompt.photoId)) continue
         seenPhotoIds.add(prompt.photoId)
       }
-      const category = categorizePrompt(prompt.type)
-      const cardTypes = generateInitialCards(category, prompt.type)
+      // Preserve existing card state (saves, data) but always use rawPrompts order
       const existing = rows.get(prompt.id)
       if (existing) { newRows.set(prompt.id, existing); continue }
+      const category = categorizePrompt(prompt.type)
+      const cardTypes = generateInitialCards(category, prompt.type)
       const cards: ChainCard[] = cardTypes.map(type => ({
         id: uid(), type, data: {}, saved: false, createdAt: new Date().toISOString(),
       }))
@@ -122,19 +204,61 @@ export default function HomeV2Page() {
     setRows(newRows)
   }, [rawPrompts])
 
+  // Open: expand row, scroll to first chain card
   const handleSelect = useCallback((promptId: string) => {
     setExpandedRowId(promptId)
-    setChainVisible(true)
-    setTimeout(() => {
-      if (chainScrollRef.current) chainScrollRef.current.scrollTo({ left: 0, behavior: 'smooth' })
-    }, 100)
+    // After state update and render, scroll to the first chain card
+    requestAnimationFrame(() => {
+      const scrollEl = scrollRowRefs.current.get(promptId)
+      if (scrollEl) {
+        const firstChainCard = scrollEl.querySelector('[data-chain-card="0"]') as HTMLElement
+        if (firstChainCard) {
+          firstChainCard.scrollIntoView({ behavior: 'smooth', inline: 'start', block: 'nearest' })
+        }
+      }
+    })
   }, [])
 
-  // Close: hide chain and clear expanded simultaneously so everything moves together
+  // Close: collapse back to feed
   const handleBack = useCallback(() => {
-    setChainVisible(false)
     setExpandedRowId(null)
   }, [])
+
+  // Save & Finish: mark prompt as answered, remove from feed
+  const handleFinish = useCallback(async () => {
+    if (!expandedRowId) return
+    const row = rows.get(expandedRowId)
+    if (!row) { setExpandedRowId(null); return }
+
+    // Collect all saved card data into a summary
+    const savedCards = row.cards.filter(c => c.saved && c.type !== 'plus')
+    const textParts: string[] = []
+    for (const card of savedCards) {
+      if (card.data.text) textParts.push(card.data.text)
+      if (card.data.location) textParts.push(`Location: ${card.data.location}`)
+      if (card.data.date) textParts.push(`Date: ${card.data.date}`)
+      if (card.data.song?.name) textParts.push(`Song: ${card.data.song.name} by ${card.data.song.artist}`)
+    }
+
+    const responseText = textParts.join('\n\n') || 'Completed'
+
+    // Close the expanded view immediately
+    setExpandedRowId(null)
+
+    // Remove from local rows
+    setRows(prev => {
+      const next = new Map(prev)
+      next.delete(row.promptId)
+      return next
+    })
+
+    // Mark as answered in the backend (removes from rawPrompts)
+    try {
+      await answerPrompt(row.promptId, { type: 'text', text: responseText })
+    } catch (err) {
+      console.error('Failed to finish prompt:', err)
+    }
+  }, [expandedRowId, rows, answerPrompt])
 
   const handleCardSave = useCallback(async (promptId: string, cardId: string, data: Record<string, any>) => {
     setRows(prev => {
@@ -163,7 +287,19 @@ export default function HomeV2Page() {
         await answerPrompt(promptId, { type: 'selection', text: selected.join(', '), data: { value: selected.join(', ') } })
       }
     } catch (err) { console.error('Auto-save failed:', err) }
+
+    // Auto-advance: scroll to next card in the carousel after save
+    requestAnimationFrame(() => {
+      const scrollEl = scrollRowRefs.current.get(promptId)
+      if (!scrollEl) return
+      const savedCard = scrollEl.querySelector(`[data-card-id="${cardId}"]`) as HTMLElement
+      if (savedCard) {
+        const next = savedCard.parentElement?.nextElementSibling as HTMLElement
+        if (next) next.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' })
+      }
+    })
   }, [rows, answerPrompt, supabase])
+
 
   const handleAddCard = useCallback((promptId: string, type: CardType) => {
     setRows(prev => {
@@ -183,6 +319,17 @@ export default function HomeV2Page() {
       return next
     })
   }, [user, profile])
+
+  const handleDeleteCard = useCallback((promptId: string, cardId: string) => {
+    setRows(prev => {
+      const next = new Map(prev)
+      const row = next.get(promptId)
+      if (!row) return prev
+      const updatedCards = row.cards.filter(c => c.id !== cardId)
+      next.set(promptId, { ...row, cards: updatedCards })
+      return next
+    })
+  }, [])
 
   const handleMediaUploaded = useCallback((promptId: string, files: { url: string; name: string; type: string }[]) => {
     setRows(prev => {
@@ -207,7 +354,8 @@ export default function HomeV2Page() {
   const expandedRow = expandedRowId ? rows.get(expandedRowId) : null
 
   // Sidebar data
-  const firstName = profile?.full_name?.split(' ')[0] || 'there'
+  const rawFirstName = profile?.full_name?.split(' ')[0] || 'there'
+  const firstName = rawFirstName.charAt(0).toUpperCase() + rawFirstName.slice(1)
   const currentStreakDays = Math.max(engagementStats?.currentStreakDays ?? 0, streakDays)
   const storageUsed = subscription?.storage?.total_bytes ? subscription.storage.total_bytes / (1024 * 1024 * 1024) : 0
   const storageLimit = subscription?.storage?.limit_bytes ? subscription.storage.limit_bytes / (1024 * 1024 * 1024) : 10
@@ -274,7 +422,7 @@ export default function HomeV2Page() {
         </button>
         <div className="profile-card-feed" style={{ borderRadius: '16px', padding: '16px 20px' }}>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '12px' }}>
-            <h2 className="profile-card-name" style={{ fontSize: '18px', fontWeight: '600', margin: 0 }}>Hey {firstName}</h2>
+            <h2 className="profile-card-name" style={{ fontSize: '18px', fontWeight: '600', margin: 0, fontFamily: 'var(--font-dm-serif, DM Serif Display, serif)' }}>Hey {firstName}</h2>
             {currentStreakDays > 0 && (
               <div style={{ display: 'flex', alignItems: 'center', gap: '3px', padding: '3px 8px', background: 'linear-gradient(90deg, rgba(217,198,26,0.15), rgba(195,95,51,0.15))', borderRadius: '12px' }}>
                 <span style={{ fontSize: '13px' }}>🔥</span>
@@ -283,7 +431,7 @@ export default function HomeV2Page() {
             )}
           </div>
           <div className="profile-card-stats" style={{ display: 'flex', alignItems: 'center', textAlign: 'center', marginBottom: '12px' }}>
-            <Link href="/dashboard/memories" style={{ flex: 1, textDecoration: 'none' }}>
+            <Link href="/dashboard/my-story" style={{ flex: 1, textDecoration: 'none' }}>
               <div className="profile-stat-value">{dashboardStats?.memories ?? 0}</div>
               <div className="profile-stat-label">Memories</div>
             </Link>
@@ -291,7 +439,7 @@ export default function HomeV2Page() {
               <div className="profile-stat-value">{dashboardStats?.contacts ?? 0}</div>
               <div className="profile-stat-label">People</div>
             </Link>
-            <Link href="/dashboard/gallery" className="profile-stat-bordered-r" style={{ flex: 1, textDecoration: 'none' }}>
+            <Link href="/dashboard/my-story?tab=photos" className="profile-stat-bordered-r" style={{ flex: 1, textDecoration: 'none' }}>
               <div className="profile-stat-value">{dashboardStats?.photos ?? 0}</div>
               <div className="profile-stat-label">Photos</div>
             </Link>
@@ -327,13 +475,13 @@ export default function HomeV2Page() {
       <main className="dashboard-main home-v2-main" style={{ minHeight: '100vh' }}>
         {/* Shuffle — top right */}
         <div style={{ display: 'flex', justifyContent: 'flex-end', padding: '8px 24px 0' }}>
-          <button onClick={() => shuffle()} style={{
+          <motion.button whileTap={{ scale: 0.96 }} onClick={() => shuffle()} style={{
             display: 'flex', alignItems: 'center', gap: '6px', padding: '8px 16px',
             borderRadius: '12px', background: 'white', border: '1px solid #DDE3DF',
             color: '#5A6660', fontSize: '13px', cursor: 'pointer',
           }}>
             <RefreshCw size={14} /> Shuffle
-          </button>
+          </motion.button>
         </div>
 
         {/* On This Day — memory resurfacing */}
@@ -343,91 +491,134 @@ export default function HomeV2Page() {
         {promptsLoading && (
           <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '20px', paddingTop: '40px' }}>
             {[1, 2, 3].map(i => (
-              <div key={i} style={{ width: `${CARD_W}px`, height: `${CARD_H}px`, borderRadius: '24px', background: 'rgba(0,0,0,0.04)', animation: 'pulse 2s infinite' }} />
+              <div key={i} className="card-skeleton" style={{ height: `${CARD_H}px`, borderRadius: '24px', background: 'linear-gradient(90deg, #FAFAF7 25%, #EDE8DB 50%, #FAFAF7 75%)', backgroundSize: '200% 100%', animation: 'shimmer 1.5s infinite' }} />
             ))}
           </div>
         )}
 
-        {/* Snap-scroll card list */}
+        {/* Vertical feed — one row per prompt, vertical snap scroll */}
         {!promptsLoading && (
-          
-            <div
-              className="snap-container"
-              style={{
-                height: `calc(100vh - 100px)`,
-                overflowY: 'auto',
-                overflowX: 'hidden',
-                scrollSnapType: 'y mandatory',
-                padding: '0 24px',
-              }}
-            >
-              {allPrompts.map((row, index) => {
-                const isExpanded = row.promptId === expandedRowId
-                const showDetailCards = isExpanded && chainVisible
+          <div
+            ref={mainRef}
+            className="snap-container"
+            style={{
+              height: `calc(100vh - 100px)`,
+              overflowY: 'auto',
+              overflowX: 'hidden',
+              scrollSnapType: expandedRowId ? 'none' : 'y mandatory',
+            }}
+          >
+            {allPrompts.map((row, index) => {
+              const isExpanded = row.promptId === expandedRowId
+              const hasExpandedRow = !!expandedRowId
+              const isBehind = hasExpandedRow && !isExpanded
 
-                return (
+              return (
+                <React.Fragment key={row.promptId}>
+                <motion.div
+                  animate={{
+                    opacity: isBehind ? 0.3 : 1,
+                    filter: isBehind ? 'blur(4px)' : 'blur(0px)',
+                    scale: isBehind ? 0.97 : 1,
+                  }}
+                  transition={{ duration: 0.35 }}
+                  style={{
+                    scrollSnapAlign: 'start',
+                    minHeight: `${CARD_H + 80}px`,
+                    paddingTop: index === 0 ? '24px' : '8px',
+                    paddingBottom: '8px',
+                    pointerEvents: isBehind ? 'none' : 'auto',
+                    position: 'relative',
+                  }}
+                >
+                  {/* Close button — top right, visible when expanded */}
+                  {isExpanded && (
+                    <motion.button
+                      initial={{ opacity: 0, scale: 0.8 }}
+                      animate={{ opacity: 1, scale: 1 }}
+                      onClick={(e) => { e.stopPropagation(); handleBack() }}
+                      style={{
+                        position: 'absolute', top: `${index === 0 ? 32 : 24}px`, right: '16px',
+                        zIndex: 10, width: '40px', height: '40px', borderRadius: '50%',
+                        background: '#FFFFFF', border: '1px solid #DDE3DF',
+                        boxShadow: '0 2px 10px rgba(0,0,0,0.12)',
+                        display: 'flex', alignItems: 'center', justifyContent: 'center',
+                        cursor: 'pointer', color: '#5A6660',
+                      }}
+                    >
+                      <X size={18} />
+                    </motion.button>
+                  )}
+
+                  {/* Horizontal scroll-snap carousel */}
                   <div
-                    key={row.promptId}
-                    ref={isExpanded ? chainScrollRef : undefined}
+                    ref={(el) => { if (el) scrollRowRefs.current.set(row.promptId, el); }}
+                    className="card-carousel"
+                    onWheel={(e) => { if (isExpanded) e.preventDefault() }}
+                    onTouchMove={(e) => { if (isExpanded) e.preventDefault() }}
                     style={{
-                      scrollSnapAlign: 'start',
-                      minHeight: `${CARD_H + 32}px`,
-                      paddingTop: '16px',
-                      paddingBottom: '16px',
-                      overflowX: isExpanded ? 'auto' : 'visible',
+                      display: 'flex',
+                      gap: '16px',
+                      overflowX: isExpanded ? 'scroll' : 'hidden',
                       overflowY: 'visible',
-                      scrollbarWidth: 'none',
+                      // Centering padding
+                      paddingLeft: 'var(--card-inset)',
+                      paddingRight: 'var(--card-inset)',
+                      // Extra bottom padding inside the carousel for shadow + balanced top
+                      paddingTop: '8px',
+                      paddingBottom: '40px',
                     }}
                   >
-                    <div style={{
-                      display: 'flex',
-                      alignItems: 'flex-start',
-                      gap: '16px',
-                      /* Always use padding for positioning, never justify-content */
-                      paddingRight: isExpanded ? '24px' : 0,
-                    }}>
-                      {/* Prompt card with animated x position */}
-                      <motion.div
-                        animate={{
-                          marginLeft: isExpanded ? '24px' : 'calc(50% - ' + (CARD_W / 2) + 'px)',
-                        }}
-                        transition={{
-                          type: 'spring',
-                          stiffness: 280,
-                          damping: 28,
-                        }}
-                        style={{ flexShrink: 0 }}
-                      >
-                        <PromptCard
-                          row={row}
-                          onClick={isExpanded ? handleBack : () => handleSelect(row.promptId)}
-                          isExpanded={isExpanded}
-                          index={index}
-                        />
-                      </motion.div>
-
-                      {/* Detail cards */}
-                      <AnimatePresence>
-                        {showDetailCards && (
-                          <CardChain
-                            row={row}
-                            onCardSave={(cardId, data) => handleCardSave(row.promptId, cardId, data)}
-                            onAddCard={(type) => handleAddCard(row.promptId, type)}
-                            onMediaUploaded={(files) => handleMediaUploaded(row.promptId, files)}
-                          />
-                        )}
-                      </AnimatePresence>
+                    {/* Prompt card */}
+                    <div style={{ flexShrink: 0, scrollSnapAlign: 'center' }} data-chain-card="-1">
+                      <PromptCard
+                        row={row}
+                        onClick={isExpanded ? undefined : () => handleSelect(row.promptId)}
+                        onClose={isExpanded ? handleBack : undefined}
+                        isExpanded={isExpanded}
+                        index={index}
+                      />
                     </div>
+
+                    {/* Chain cards — visible when expanded */}
+                    {isExpanded && row.cards.map((card, ci) => (
+                      <div
+                        key={card.id}
+                        style={{ flexShrink: 0, scrollSnapAlign: 'center' }}
+                        data-chain-card={ci}
+                        data-card-id={card.id}
+                      >
+                        <CardChainCard
+                          card={card}
+                          row={row}
+                          index={ci}
+                          onCardSave={(cardId, data) => handleCardSave(row.promptId, cardId, data)}
+                          onAddCard={(type) => handleAddCard(row.promptId, type)}
+                          onMediaUploaded={(files) => handleMediaUploaded(row.promptId, files)}
+                          onDelete={card.addedBy ? () => handleDeleteCard(row.promptId, card.id) : undefined}
+                          onFinish={card.type === 'plus' ? handleFinish : undefined}
+                        />
+                      </div>
+                    ))}
                   </div>
-                )
-              })}
-              {/* Bottom spacer so last card can snap to top */}
-              <div style={{ height: `calc(100vh - ${CARD_H + 140}px)`, flexShrink: 0 }} />
-            </div>
-          
+                </motion.div>
+                {index < allPrompts.length - 1 && !hasExpandedRow && (
+                  <div style={{ height: '1px', background: 'rgba(45,90,61,0.06)', margin: '-12px 64px 0' }} />
+                )}
+                </React.Fragment>
+              )
+            })}
+            {/* Bottom spacer so last card can snap to top */}
+            <div style={{ height: `calc(100vh - ${CARD_H + 140}px)`, flexShrink: 0 }} />
+          </div>
         )}
 
         <style jsx global>{`
+          @keyframes shimmer {
+            0% { background-position: -200% 0; }
+            100% { background-position: 200% 0; }
+          }
+
           /* ── Profile card light theme ── */
           .feed-page[data-theme="light"] .profile-card-feed {
             background: rgba(255,255,255,0.92);
@@ -454,20 +645,38 @@ export default function HomeV2Page() {
           aside::-webkit-scrollbar-track { background: transparent; }
           aside::-webkit-scrollbar-thumb { background: rgba(0,0,0,0.1); border-radius: 2px; }
 
+          /* ── Card sizing via CSS custom properties ── */
+          .home-v2-main {
+            --card-w: min(530px, calc(100vw - 280px - 64px));
+            --card-inset: calc((100% - min(530px, calc(100vw - 280px - 64px))) / 2);
+          }
+
           /* ── Snap scroll — 1 card per swipe ── */
           .snap-container {
             scroll-behavior: smooth;
             -webkit-overflow-scrolling: touch;
             overscroll-behavior-y: contain;
+            /* Paper texture — subtle noise grain */
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.03'/%3E%3C/svg%3E");
           }
           .snap-container::-webkit-scrollbar { width: 6px; }
           .snap-container::-webkit-scrollbar-thumb { background: rgba(0,0,0,0.1); border-radius: 3px; }
 
+          /* ── Horizontal card carousel — hide scrollbar ── */
+          .card-carousel::-webkit-scrollbar { display: none; }
+          .card-carousel { -ms-overflow-style: none; scrollbar-width: none; }
+
+          /* ── Loading skeleton ── */
+          .card-skeleton { width: var(--card-w); margin: 0 auto; }
+
           /* ── Mobile (< 768px) ── */
           @media (max-width: 767px) {
-            .home-v2-main { margin-left: 0 !important; }
+            .home-v2-main {
+              margin-left: 0 !important;
+              --card-w: calc(100vw - 48px);
+              --card-inset: 16px;
+            }
 
-            /* Hide sidebar by default, slide in from left when open */
             .dashboard-sidebar {
               transform: translateX(-100%);
               transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
@@ -479,22 +688,18 @@ export default function HomeV2Page() {
               box-shadow: 8px 0 32px rgba(0,0,0,0.12);
             }
 
-            /* Show toggle button */
             .sidebar-toggle-btn { display: flex !important; }
-
-            /* Show overlay when sidebar open */
             .sidebar-overlay { display: block !important; }
-
-            /* Show close button inside sidebar */
             .sidebar-close-btn { display: flex !important; }
-
-            /* Cards fill screen width on mobile */
-            .snap-container { padding: 0 12px !important; }
           }
 
           /* ── Tablet (768-1024) ── */
           @media (min-width: 768px) and (max-width: 1024px) {
-            .home-v2-main { margin-left: 0 !important; }
+            .home-v2-main {
+              margin-left: 0 !important;
+              --card-w: min(530px, calc(100vw - 64px));
+              --card-inset: calc((100% - min(530px, calc(100vw - 64px))) / 2);
+            }
             .dashboard-sidebar {
               transform: translateX(-100%);
               transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
@@ -518,39 +723,39 @@ export default function HomeV2Page() {
 
 
 /* ─── Prompt Card — light theme, portrait, used in both states ─── */
-function PromptCard({ row, onClick, isExpanded, index }: {
+function PromptCard({ row, onClick, onClose, isExpanded, index }: {
   row: PromptRow
-  onClick: () => void
+  onClick?: () => void
+  onClose?: () => void
   isExpanded: boolean
   index: number
 }) {
   const meta = CATEGORY_META[row.category] || CATEGORY_META.memory
+  const colors = CATEGORY_COLORS[row.category] || CATEGORY_COLORS.memory
   const hasPhoto = !!row.photoUrl
   const Icon = meta.icon
 
   return (
     <motion.div
-      onClick={onClick}
+      onClick={onClick || undefined}
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.35, delay: index * 0.04 }}
       style={{
-        width: `${CARD_W}px`,
+        width: 'var(--card-w)',
         height: `${CARD_H}px`,
         borderRadius: '24px',
         overflow: 'hidden',
-        background: '#FFFFFF',
-        border: isExpanded ? '1px solid #DDE3DF' : '1px solid #DDE3DF',
-        boxShadow: isExpanded
-          ? '0 20px 60px rgba(0,0,0,0.12)'
-          : '0 4px 20px rgba(0,0,0,0.08)',
+        background: colors.cardBg,
+        border: `1px solid ${colors.border}25`,
+        boxShadow: '0 1px 2px rgba(45,90,61,0.04), 0 4px 16px rgba(0,0,0,0.05), 0 12px 40px rgba(0,0,0,0.03)',
         cursor: 'pointer',
         flexShrink: 0,
         display: 'flex',
         flexDirection: 'column',
       }}
-      whileHover={!isExpanded ? { scale: 1.01, boxShadow: '0 12px 40px rgba(0,0,0,0.12)' } : {}}
-      whileTap={!isExpanded ? { scale: 0.99 } : {}}
+      whileHover={!isExpanded ? { boxShadow: '0 2px 4px rgba(45,90,61,0.06), 0 8px 24px rgba(0,0,0,0.08), 0 16px 48px rgba(0,0,0,0.04)' } : {}}
+      whileTap={!isExpanded ? { scale: 0.96 } : {}}
     >
       {/* Photo hero — fills ~60% of card */}
       {hasPhoto && (
@@ -577,7 +782,7 @@ function PromptCard({ row, onClick, isExpanded, index }: {
                 border: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center',
                 cursor: 'pointer', color: '#fff',
               }}
-              onClick={(e) => { e.stopPropagation(); onClick() }}
+              onClick={(e) => { e.stopPropagation(); onClose ? onClose() : onClick?.() }}
             >
               <X size={16} />
             </motion.button>
@@ -596,24 +801,25 @@ function PromptCard({ row, onClick, isExpanded, index }: {
         </div>
       )}
 
-      {/* Content */}
+      {/* Content — thicker bottom padding for Polaroid-style caption area */}
       <div style={{
-        padding: hasPhoto ? '20px 24px 28px' : '32px 24px 28px',
+        padding: hasPhoto ? '20px 24px 40px' : '32px 24px 40px',
         flex: 1, display: 'flex', flexDirection: 'column',
       }}>
         {!hasPhoto && (
           <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '16px' }}>
             <div style={{
               width: '40px', height: '40px', borderRadius: '50%',
-              background: '#E6F0EA',
+              background: colors.bg,
               display: 'flex', alignItems: 'center', justifyContent: 'center',
             }}>
-              <Icon size={18} color="#3D6B52" />
+              <Icon size={18} color={colors.accent} />
             </div>
             <span style={{
               fontSize: '11px', fontWeight: 600,
-              color: '#94A09A',
+              color: colors.accent,
               textTransform: 'uppercase', letterSpacing: '0.08em',
+              opacity: 0.7,
             }}>
               {meta.label}
             </span>
@@ -627,7 +833,7 @@ function PromptCard({ row, onClick, isExpanded, index }: {
                   display: 'flex', alignItems: 'center', justifyContent: 'center',
                   cursor: 'pointer', color: '#5A6660',
                 }}
-                onClick={(e) => { e.stopPropagation(); onClick() }}
+                onClick={(e) => { e.stopPropagation(); onClose ? onClose() : onClick?.() }}
               >
                 <X size={16} />
               </motion.button>
@@ -638,7 +844,7 @@ function PromptCard({ row, onClick, isExpanded, index }: {
         <p style={{
           fontSize: hasPhoto ? '22px' : '24px',
           fontWeight: 700, color: '#1A1F1C',
-          lineHeight: 1.3, margin: 0,
+          lineHeight: 1.6, letterSpacing: '0.01em', margin: 0,
         }}>
           {row.promptText}
         </p>
@@ -649,9 +855,11 @@ function PromptCard({ row, onClick, isExpanded, index }: {
           </p>
         )}
 
+        {/* Bottom caption area */}
         <div style={{
           display: 'flex', alignItems: 'center', justifyContent: 'center',
-          gap: '10px', marginTop: 'auto', paddingTop: '24px',
+          gap: '10px', marginTop: 'auto', paddingTop: '16px',
+          borderTop: `1px solid ${colors.border}15`,
           fontSize: '12px', color: '#94A09A',
         }}>
           <span>{meta.hint}</span>
@@ -665,6 +873,147 @@ function PromptCard({ row, onClick, isExpanded, index }: {
           )}
         </div>
       </div>
+    </motion.div>
+  )
+}
+
+
+/* ─── Chain Card — renders a single card from the chain ─── */
+const PROFILE_OPTIONS: Record<string, string[]> = {
+  personality: ['Adventurous', 'Analytical', 'Creative', 'Empathetic', 'Funny', 'Introverted', 'Leader', 'Optimistic', 'Patient', 'Thoughtful'],
+  religion: ['Christianity', 'Islam', 'Judaism', 'Buddhism', 'Hinduism', 'Spiritual', 'Agnostic', 'Atheist', 'Other'],
+  skills: ['Cooking', 'Writing', 'Music', 'Sports', 'Gardening', 'Photography', 'Teaching', 'Programming', 'Art', 'Public Speaking'],
+  languages: ['English', 'Spanish', 'French', 'Mandarin', 'Arabic', 'Hindi', 'Portuguese', 'German', 'Japanese', 'Korean'],
+}
+
+function CardChainCard({ card, row, index, onCardSave, onAddCard, onMediaUploaded, onDelete, onFinish }: {
+  card: ChainCard
+  row: PromptRow
+  index: number
+  onCardSave: (cardId: string, data: Record<string, any>) => void
+  onAddCard: (type: CardType) => void
+  onMediaUploaded: (files: { url: string; name: string; type: string }[]) => void
+  onDelete?: () => void
+  onFinish?: () => void
+}) {
+  const handleSave = useCallback((data: Record<string, any>) => {
+    onCardSave(card.id, data)
+  }, [card.id, onCardSave])
+
+  const isPlus = card.type === 'plus'
+  const colors = CATEGORY_COLORS[row.category] || CATEGORY_COLORS.memory
+
+  const cardStyle: React.CSSProperties = isPlus
+    ? {
+        width: '280px', height: `${CARD_H}px`,
+        borderRadius: '24px', overflow: 'hidden',
+        background: `${colors.cardBg}80`,
+        border: `2px dashed ${colors.border}40`,
+        display: 'flex', flexDirection: 'column',
+      }
+    : {
+        width: 'var(--card-w)', height: `${CARD_H}px`,
+        borderRadius: '24px', overflow: 'hidden',
+        background: `linear-gradient(180deg, ${colors.cardBg} 0%, ${colors.cardBg}F0 100%)`,
+        border: `1px solid ${colors.border}25`,
+        boxShadow: '0 1px 2px rgba(45,90,61,0.04), 0 4px 16px rgba(0,0,0,0.05), 0 12px 40px rgba(0,0,0,0.03)',
+        display: 'flex', flexDirection: 'column',
+      }
+
+  const renderContent = () => {
+    switch (card.type) {
+      case 'when-where':
+        return <WhenWhereCard data={card.data} onSave={handleSave} saved={card.saved} />
+      case 'text-voice-video': {
+        const isUserAdded = !!card.addedBy
+        const hasPrefilledText = !!card.data.text && !card.data.messages
+        // Use BackstoryCard (AI conversation) for photo/memory
+        if (!isUserAdded && (row.category === 'photo' || row.category === 'memory')) {
+          // Pre-seed with concierge text: user's story first, AI follow-up generated after
+          const cardData = hasPrefilledText
+            ? { ...card.data, messages: [
+                { role: 'user' as const, content: card.data.text },
+              ]}
+            : card.data
+          return <BackstoryCard promptText={row.promptText} category={row.category} data={cardData} onSave={handleSave} saved={card.saved} />
+        }
+        const addedLabel = isUserAdded ? 'Add More' : (row.category === 'wisdom' ? 'Share Your Wisdom' : 'Your Story')
+        const addedPlaceholder = isUserAdded
+          ? 'What else is on your mind about this memory?'
+          : (row.promptText || 'Share your thoughts...')
+        return <TextVoiceVideoCard label={addedLabel} placeholder={addedPlaceholder} data={card.data} onSave={handleSave} saved={card.saved} />
+      }
+      case 'tag-people':
+        return <TagPeopleCard photoUrl={row.photoUrl} photoId={row.photoId} data={card.data} onSave={handleSave} saved={card.saved} />
+      case 'people-present':
+        return <PeoplePresentCard data={card.data} onSave={handleSave} saved={card.saved} />
+      case 'media-upload':
+        return <MediaUploadCard onUpload={onMediaUploaded} />
+      case 'media-item':
+        return <MediaItemCard url={card.data.url} name={card.data.name} type={card.data.type} addedBy={card.addedBy} />
+      case 'field-input':
+        return <FieldInputCard contactName={row.contactName} data={card.data} onSave={handleSave} saved={card.saved} />
+      case 'pill-select':
+        return <PillSelectCard label={row.promptText} options={PROFILE_OPTIONS[row.promptType] || PROFILE_OPTIONS.skills} data={card.data} onSave={handleSave} saved={card.saved} />
+      case 'quote':
+        // Saved quotes show large typography; unsaved use text input
+        if (card.saved && card.data.text) {
+          return (
+            <div className="h-full flex flex-col items-center justify-center p-8 text-center" style={{ background: 'linear-gradient(135deg, #F8F0E3 0%, #EDE8DD 100%)' }}>
+              <div className="text-[#C4A235]/30 text-6xl font-serif leading-none mb-4">&ldquo;</div>
+              <p className="text-xl sm:text-2xl font-bold text-[#3A3228] leading-relaxed italic" style={{ fontFamily: 'var(--font-dm-serif, DM Serif Display, serif)' }}>
+                {card.data.text}
+              </p>
+              <div className="text-[#C4A235]/30 text-6xl font-serif leading-none mt-4">&rdquo;</div>
+              {card.addedBy && (
+                <p className="text-xs text-[#94A09A] mt-4">Added by {card.addedBy.name}</p>
+              )}
+            </div>
+          )
+        }
+        return <TextVoiceVideoCard label="Quote" placeholder="Add a memorable quote..." data={card.data} onSave={handleSave} saved={card.saved} />
+      case 'comment':
+        return <TextVoiceVideoCard label="Comment" placeholder="Add a note..." data={card.data} onSave={handleSave} saved={card.saved} />
+      case 'invite-collaborator':
+        return <InviteCollaboratorCard promptText={row.promptText} promptId={row.promptId} onSave={handleSave} saved={card.saved} data={card.data} />
+      case 'list-item': {
+        // Determine category from prompt type
+        const favCategory = row.promptType?.replace('favorite_', '') || 'books'
+        return <ListItemCard category={favCategory} promptText={row.promptText} data={card.data} onSave={handleSave} saved={card.saved} />
+      }
+      case 'song':
+        return <SongCard data={card.data} onSave={handleSave} saved={card.saved} />
+      case 'plus':
+        return <PlusCard onAdd={onAddCard} onFinish={onFinish} category={row.category} />
+      default:
+        return null
+    }
+  }
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, scale: 0.97 }}
+      animate={{ opacity: 1, scale: 1 }}
+      transition={{ type: 'spring', stiffness: 300, damping: 25, delay: 0.05 + index * 0.05 }}
+      style={{ ...cardStyle, position: 'relative' }}
+    >
+      {/* Delete button — only on user-added cards */}
+      {onDelete && (
+        <button
+          onClick={onDelete}
+          style={{
+            position: 'absolute', top: '10px', right: '10px', zIndex: 5,
+            width: '30px', height: '30px', borderRadius: '50%',
+            background: 'rgba(255,255,255,0.9)', border: '1px solid #DDE3DF',
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            cursor: 'pointer', color: '#B8562E',
+          }}
+          title="Remove card"
+        >
+          <Trash2 size={13} />
+        </button>
+      )}
+      {renderContent()}
     </motion.div>
   )
 }

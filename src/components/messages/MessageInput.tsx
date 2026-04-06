@@ -208,13 +208,13 @@ export default function MessageInput({
             <p className="text-xs font-semibold text-[#2D5A3D]">
               Replying to {replyingTo.senderName}
             </p>
-            <p className="text-xs text-[#666] truncate mt-0.5">
+            <p className="text-xs text-[#5A6660] truncate mt-0.5">
               {replyingTo.content || '[Media]'}
             </p>
           </div>
           <button 
             onClick={onCancelReply}
-            className="p-1 text-[#666] hover:text-[#2d2d2d]"
+            className="p-1 text-[#5A6660] hover:text-[#1A1F1C]"
           >
             <X size={14} />
           </button>
@@ -230,11 +230,11 @@ export default function MessageInput({
               className="relative group flex items-center gap-2 px-3 py-2 bg-white rounded-lg border border-[#2D5A3D]/10"
             >
               {file.type.startsWith('image/') ? (
-                <ImageIcon size={14} className="text-[#4A3552]" />
+                <ImageIcon size={14} className="text-[#2D5A3D]" />
               ) : (
                 <FileIcon size={14} className="text-[#2D5A3D]" />
               )}
-              <span className="text-xs text-[#2d2d2d] max-w-[100px] truncate">
+              <span className="text-xs text-[#1A1F1C] max-w-[100px] truncate">
                 {file.name}
               </span>
               <button
@@ -254,9 +254,9 @@ export default function MessageInput({
           <div className="flex items-center justify-between mb-3">
             <div className="flex items-center gap-2">
               <BarChart2 size={16} className="text-[#2D5A3D]" />
-              <span className="text-sm font-semibold text-[#2d2d2d]">Create Poll</span>
+              <span className="text-sm font-semibold text-[#1A1F1C]">Create Poll</span>
             </div>
-            <button onClick={() => setShowPollCreator(false)} className="text-[#666] hover:text-[#2d2d2d]">
+            <button onClick={() => setShowPollCreator(false)} className="text-[#5A6660] hover:text-[#1A1F1C]">
               <X size={16} />
             </button>
           </div>
@@ -266,7 +266,7 @@ export default function MessageInput({
             placeholder="Ask a question..."
             value={pollQuestion}
             onChange={(e) => setPollQuestion(e.target.value)}
-            className="w-full px-3 py-2 mb-3 bg-[#2D5A3D]/5 border border-[#2D5A3D]/10 rounded-lg text-sm text-[#2d2d2d] placeholder:text-[#666] focus:outline-none focus:border-[#2D5A3D]/30"
+            className="w-full px-3 py-2 mb-3 bg-[#2D5A3D]/5 border border-[#2D5A3D]/10 rounded-lg text-sm text-[#1A1F1C] placeholder:text-[#5A6660] focus:outline-none focus:border-[#2D5A3D]/30"
           />
           
           <div className="space-y-2 mb-3">
@@ -281,12 +281,12 @@ export default function MessageInput({
                     newOpts[i] = e.target.value
                     setPollOptions(newOpts)
                   }}
-                  className="flex-1 px-3 py-2 bg-[#2D5A3D]/5 border border-[#2D5A3D]/10 rounded-lg text-sm text-[#2d2d2d] placeholder:text-[#666] focus:outline-none focus:border-[#2D5A3D]/30"
+                  className="flex-1 px-3 py-2 bg-[#2D5A3D]/5 border border-[#2D5A3D]/10 rounded-lg text-sm text-[#1A1F1C] placeholder:text-[#5A6660] focus:outline-none focus:border-[#2D5A3D]/30"
                 />
                 {pollOptions.length > 2 && (
                   <button 
                     onClick={() => setPollOptions(pollOptions.filter((_, j) => j !== i))}
-                    className="text-[#666] hover:text-[#B8562E]"
+                    className="text-[#5A6660] hover:text-[#B8562E]"
                   >
                     <XCircle size={16} />
                   </button>
@@ -305,7 +305,7 @@ export default function MessageInput({
                 <Plus size={14} />
                 Add option
               </button>
-              <label className="flex items-center gap-2 text-xs text-[#666] cursor-pointer">
+              <label className="flex items-center gap-2 text-xs text-[#5A6660] cursor-pointer">
                 <input 
                   type="checkbox" 
                   checked={pollMultiSelect}
@@ -332,9 +332,9 @@ export default function MessageInput({
           <div className="flex items-center justify-between mb-3">
             <div className="flex items-center gap-2">
               <Calendar size={16} className="text-[#B8562E]" />
-              <span className="text-sm font-semibold text-[#2d2d2d]">Propose Times</span>
+              <span className="text-sm font-semibold text-[#1A1F1C]">Propose Times</span>
             </div>
-            <button onClick={() => setShowScheduleCreator(false)} className="text-[#666] hover:text-[#2d2d2d]">
+            <button onClick={() => setShowScheduleCreator(false)} className="text-[#5A6660] hover:text-[#1A1F1C]">
               <X size={16} />
             </button>
           </div>
@@ -351,7 +351,7 @@ export default function MessageInput({
             {scheduleSlots.map((slot, i) => (
               <div key={i} className="flex items-center gap-2">
                 <div className="flex-1 relative">
-                  <Clock size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-[#666]" />
+                  <Clock size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-[#5A6660]" />
                   <input
                     type="datetime-local"
                     value={slot}
@@ -366,7 +366,7 @@ export default function MessageInput({
                 {scheduleSlots.length > 1 && (
                   <button 
                     onClick={() => setScheduleSlots(scheduleSlots.filter((_, j) => j !== i))}
-                    className="text-[#666] hover:text-[#B8562E]"
+                    className="text-[#5A6660] hover:text-[#B8562E]"
                   >
                     <XCircle size={16} />
                   </button>
@@ -399,10 +399,10 @@ export default function MessageInput({
       {showEmojiPicker && (
         <div className="mb-3 p-2 bg-white rounded-xl border border-[#2D5A3D]/10 shadow-sm">
           <div className="flex items-center justify-between mb-2">
-            <span className="text-xs font-medium text-[#666]">Quick Reactions</span>
+            <span className="text-xs font-medium text-[#5A6660]">Quick Reactions</span>
             <button 
               onClick={() => setShowEmojiPicker(false)}
-              className="text-[#666] hover:text-[#2d2d2d]"
+              className="text-[#5A6660] hover:text-[#1A1F1C]"
             >
               <X size={14} />
             </button>
@@ -429,10 +429,10 @@ export default function MessageInput({
       {showAttachMenu && (
         <div className="mb-3 p-3 bg-white rounded-xl border border-[#2D5A3D]/10 shadow-sm">
           <div className="flex items-center justify-between mb-2">
-            <span className="text-xs font-medium text-[#666]">Add to message</span>
+            <span className="text-xs font-medium text-[#5A6660]">Add to message</span>
             <button 
               onClick={() => setShowAttachMenu(false)}
-              className="text-[#666] hover:text-[#2d2d2d]"
+              className="text-[#5A6660] hover:text-[#1A1F1C]"
             >
               <X size={14} />
             </button>
@@ -442,10 +442,10 @@ export default function MessageInput({
               onClick={() => fileInputRef.current?.click()}
               className="flex flex-col items-center gap-1 p-3 rounded-xl hover:bg-[#2D5A3D]/10 transition-colors"
             >
-              <div className="w-10 h-10 rounded-full bg-[#4A3552]/10 flex items-center justify-center">
-                <ImageIcon size={18} className="text-[#4A3552]" />
+              <div className="w-10 h-10 rounded-full bg-[#2D5A3D]/10 flex items-center justify-center">
+                <ImageIcon size={18} className="text-[#2D5A3D]" />
               </div>
-              <span className="text-[10px] text-[#666]">Photo</span>
+              <span className="text-[10px] text-[#5A6660]">Photo</span>
             </button>
             <button 
               onClick={() => fileInputRef.current?.click()}
@@ -454,7 +454,7 @@ export default function MessageInput({
               <div className="w-10 h-10 rounded-full bg-[#2D5A3D]/10 flex items-center justify-center">
                 <FileIcon size={18} className="text-[#2D5A3D]" />
               </div>
-              <span className="text-[10px] text-[#666]">File</span>
+              <span className="text-[10px] text-[#5A6660]">File</span>
             </button>
             <button 
               onClick={() => {
@@ -466,7 +466,7 @@ export default function MessageInput({
               <div className="w-10 h-10 rounded-full bg-[#C4A235]/10 flex items-center justify-center">
                 <BarChart2 size={18} className="text-[#8a7c08]" />
               </div>
-              <span className="text-[10px] text-[#666]">Poll</span>
+              <span className="text-[10px] text-[#5A6660]">Poll</span>
             </button>
             <button 
               onClick={() => {
@@ -478,13 +478,13 @@ export default function MessageInput({
               <div className="w-10 h-10 rounded-full bg-[#B8562E]/10 flex items-center justify-center">
                 <Calendar size={18} className="text-[#B8562E]" />
               </div>
-              <span className="text-[10px] text-[#666]">Schedule</span>
+              <span className="text-[10px] text-[#5A6660]">Schedule</span>
             </button>
             <button className="flex flex-col items-center gap-1 p-3 rounded-xl hover:bg-[#2D5A3D]/10 transition-colors">
               <div className="w-10 h-10 rounded-full bg-[#8DACAB]/20 flex items-center justify-center">
                 <Mic size={18} className="text-[#5d8585]" />
               </div>
-              <span className="text-[10px] text-[#666]">Voice</span>
+              <span className="text-[10px] text-[#5A6660]">Voice</span>
             </button>
           </div>
         </div>
@@ -502,7 +502,7 @@ export default function MessageInput({
               <div className="w-6 h-6 rounded-full bg-gradient-to-br from-[#2D5A3D]/20 to-[#8DACAB]/30 flex items-center justify-center text-[10px] font-semibold text-[#2D5A3D]">
                 {p.name.slice(0, 1).toUpperCase()}
               </div>
-              <span className="text-sm text-[#2d2d2d]">{p.name}</span>
+              <span className="text-sm text-[#1A1F1C]">{p.name}</span>
             </button>
           ))}
         </div>
@@ -556,7 +556,7 @@ export default function MessageInput({
             placeholder={placeholder}
             disabled={disabled || showPollCreator || showScheduleCreator}
             rows={1}
-            className="w-full px-4 py-2.5 pr-10 bg-[#2D5A3D]/5 border border-[#2D5A3D]/10 rounded-xl text-sm text-[#2d2d2d] placeholder:text-[#999] focus:outline-none focus:border-[#2D5A3D]/30 focus:bg-white transition-all resize-none min-h-[44px] max-h-[120px]"
+            className="w-full px-4 py-2.5 pr-10 bg-[#2D5A3D]/5 border border-[#2D5A3D]/10 rounded-xl text-sm text-[#1A1F1C] placeholder:text-[#94A09A] focus:outline-none focus:border-[#2D5A3D]/30 focus:bg-white transition-all resize-none min-h-[44px] max-h-[120px]"
           />
           
           {/* Emoji Button (inside input) */}
@@ -568,7 +568,7 @@ export default function MessageInput({
             className={`absolute right-3 bottom-2.5 p-1 rounded transition-colors ${
               showEmojiPicker
                 ? 'text-[#C4A235]'
-                : 'text-[#999] hover:text-[#666]'
+                : 'text-[#94A09A] hover:text-[#5A6660]'
             }`}
           >
             <Smile size={18} />

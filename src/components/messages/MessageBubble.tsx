@@ -140,7 +140,7 @@ export default function MessageBubble({
           <div className={`mb-1 px-3 py-1.5 rounded-lg text-xs border-l-2 ${
             message.isOwn 
               ? 'bg-white/10 border-white/30 text-white/80'
-              : 'bg-[#2D5A3D]/5 border-[#2D5A3D]/30 text-[#666]'
+              : 'bg-[#2D5A3D]/5 border-[#2D5A3D]/30 text-[#5A6660]'
           }`}>
             <span className="font-semibold">{message.replyTo.senderName}</span>
             <p className="truncate opacity-80">{message.replyTo.content}</p>
@@ -154,21 +154,21 @@ export default function MessageBubble({
           } ${
             message.isOwn
               ? 'bg-[#2D5A3D] text-white rounded-br-md'
-              : 'bg-white border border-[#2D5A3D]/10 text-[#2d2d2d] rounded-bl-md'
+              : 'bg-white border border-[#2D5A3D]/10 text-[#1A1F1C] rounded-bl-md'
           }`}
         >
           {/* Action buttons - appear on hover */}
           <div className={`absolute top-1 ${message.isOwn ? '-left-24' : '-right-24'} hidden group-hover:flex items-center gap-0.5 bg-white rounded-lg shadow-lg border border-[#2D5A3D]/10 p-0.5`}>
             <button
               onClick={() => setShowReactions(!showReactions)}
-              className="p-1.5 rounded-md hover:bg-[#2D5A3D]/10 text-[#666] hover:text-[#2D5A3D] transition-colors"
+              className="p-1.5 rounded-md hover:bg-[#2D5A3D]/10 text-[#5A6660] hover:text-[#2D5A3D] transition-colors"
               title="React"
             >
               <Smile size={14} />
             </button>
             <button
               onClick={() => onReply?.(message)}
-              className="p-1.5 rounded-md hover:bg-[#2D5A3D]/10 text-[#666] hover:text-[#2D5A3D] transition-colors"
+              className="p-1.5 rounded-md hover:bg-[#2D5A3D]/10 text-[#5A6660] hover:text-[#2D5A3D] transition-colors"
               title="Reply"
             >
               <Reply size={14} />
@@ -176,7 +176,7 @@ export default function MessageBubble({
             <button
               onClick={() => onPin?.(message.id)}
               className={`p-1.5 rounded-md hover:bg-[#2D5A3D]/10 transition-colors ${
-                message.isPinned ? 'text-[#B8562E]' : 'text-[#666] hover:text-[#2D5A3D]'
+                message.isPinned ? 'text-[#B8562E]' : 'text-[#5A6660] hover:text-[#2D5A3D]'
               }`}
               title={message.isPinned ? 'Unpin' : 'Pin'}
             >
@@ -184,7 +184,7 @@ export default function MessageBubble({
             </button>
             <button
               onClick={() => setShowMenu(!showMenu)}
-              className="p-1.5 rounded-md hover:bg-[#2D5A3D]/10 text-[#666] hover:text-[#2D5A3D] transition-colors"
+              className="p-1.5 rounded-md hover:bg-[#2D5A3D]/10 text-[#5A6660] hover:text-[#2D5A3D] transition-colors"
               title="More"
             >
               <MoreHorizontal size={14} />
@@ -253,11 +253,11 @@ export default function MessageBubble({
                     </div>
                   )}
                   <div className="flex-1 min-w-0">
-                    <p className={`text-xs font-medium truncate ${message.isOwn ? 'text-white' : 'text-[#2d2d2d]'}`}>
+                    <p className={`text-xs font-medium truncate ${message.isOwn ? 'text-white' : 'text-[#1A1F1C]'}`}>
                       {attachment.name}
                     </p>
                     {attachment.size && (
-                      <p className={`text-[10px] ${message.isOwn ? 'text-white/70' : 'text-[#666]'}`}>
+                      <p className={`text-[10px] ${message.isOwn ? 'text-white/70' : 'text-[#5A6660]'}`}>
                         {formatFileSize(attachment.size)}
                       </p>
                     )}
@@ -299,7 +299,7 @@ export default function MessageBubble({
                 </div>
               </div>
               <span className={`text-xs font-medium ${
-                message.isOwn ? 'text-white/70' : 'text-[#666]'
+                message.isOwn ? 'text-white/70' : 'text-[#5A6660]'
               }`}>
                 {formatVoiceDuration(message.voiceDuration || 0)}
               </span>
@@ -309,7 +309,7 @@ export default function MessageBubble({
           {/* Poll */}
           {message.type === 'poll' && message.poll && (
             <div className="space-y-3">
-              <p className={`font-semibold text-sm ${message.isOwn ? 'text-white' : 'text-[#2d2d2d]'}`}>
+              <p className={`font-semibold text-sm ${message.isOwn ? 'text-white' : 'text-[#1A1F1C]'}`}>
                 📊 {message.poll.question}
               </p>
               <div className="space-y-2">
@@ -345,7 +345,7 @@ export default function MessageBubble({
                   )
                 })}
               </div>
-              <p className={`text-[10px] ${message.isOwn ? 'text-white/60' : 'text-[#666]'}`}>
+              <p className={`text-[10px] ${message.isOwn ? 'text-white/60' : 'text-[#5A6660]'}`}>
                 {message.poll.totalVotes} vote{message.poll.totalVotes !== 1 ? 's' : ''}
                 {message.poll.multiSelect && ' · Multiple choice'}
               </p>
@@ -356,11 +356,11 @@ export default function MessageBubble({
           {message.type === 'schedule' && message.schedule && (
             <div className="space-y-3">
               <div>
-                <p className={`font-semibold text-sm ${message.isOwn ? 'text-white' : 'text-[#2d2d2d]'}`}>
+                <p className={`font-semibold text-sm ${message.isOwn ? 'text-white' : 'text-[#1A1F1C]'}`}>
                   📅 {message.schedule.title}
                 </p>
                 {message.schedule.description && (
-                  <p className={`text-xs mt-0.5 ${message.isOwn ? 'text-white/70' : 'text-[#666]'}`}>
+                  <p className={`text-xs mt-0.5 ${message.isOwn ? 'text-white/70' : 'text-[#5A6660]'}`}>
                     {message.schedule.description}
                   </p>
                 )}
@@ -389,7 +389,7 @@ export default function MessageBubble({
                         </span>
                         <span className={`text-[10px] px-1.5 py-0.5 rounded-full ${
                           isFinalized
-                            ? 'bg-[#C4A235] text-[#2d2d2d]'
+                            ? 'bg-[#C4A235] text-[#1A1F1C]'
                             : message.isOwn ? 'bg-white/20' : 'bg-[#2D5A3D]/10'
                         }`}>
                           {isFinalized ? '✓ Confirmed' : `${slot.votes} available`}
@@ -417,7 +417,7 @@ export default function MessageBubble({
                 }`}
               >
                 <span>{reaction.emoji}</span>
-                <span className="text-[10px] text-[#666]">{reaction.count}</span>
+                <span className="text-[10px] text-[#5A6660]">{reaction.count}</span>
               </button>
             ))}
           </div>
@@ -427,7 +427,7 @@ export default function MessageBubble({
         <div className={`flex items-center gap-1.5 mt-1 px-1 ${
           message.isOwn ? 'justify-end' : 'justify-start'
         }`}>
-          <span className="text-[10px] text-[#999]">
+          <span className="text-[10px] text-[#94A09A]">
             {format(message.timestamp, 'h:mm a')}
           </span>
           {message.isOwn && message.status && (

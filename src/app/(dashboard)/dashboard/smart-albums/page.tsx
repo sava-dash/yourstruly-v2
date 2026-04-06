@@ -109,7 +109,7 @@ export default function SmartAlbumsPage() {
               {albumType === 'events' && 'Event detection coming soon'}
             </p>
             <Link
-              href="/dashboard/gallery"
+              href="/dashboard/my-story?tab=photos"
               className="inline-block px-6 py-3 bg-[#2D5A3D] text-white rounded-xl hover:bg-[#234A31] transition-colors"
             >
               Go to Gallery

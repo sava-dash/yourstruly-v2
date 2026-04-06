@@ -204,15 +204,15 @@ function CreateEventModal({
     <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
       <div className="bg-white rounded-2xl p-6 w-full max-w-lg max-h-[90vh] overflow-y-auto">
         <div className="flex items-center justify-between mb-6">
-          <h2 className="text-xl font-bold text-[#2d2d2d]">Propose Event</h2>
+          <h2 className="text-xl font-bold text-[#1A1F1C]">Propose Event</h2>
           <button onClick={onClose} className="p-2 hover:bg-[#2D5A3D]/10 rounded-lg">
-            <X size={20} className="text-[#666]" />
+            <X size={20} className="text-[#5A6660]" />
           </button>
         </div>
 
         <div className="space-y-4">
           <div>
-            <label className="block text-sm text-[#666] mb-1.5">Event Title *</label>
+            <label className="block text-sm text-[#5A6660] mb-1.5">Event Title *</label>
             <input
               type="text"
               value={title}
@@ -223,7 +223,7 @@ function CreateEventModal({
           </div>
 
           <div>
-            <label className="block text-sm text-[#666] mb-1.5">Description</label>
+            <label className="block text-sm text-[#5A6660] mb-1.5">Description</label>
             <textarea
               value={description}
               onChange={e => setDescription(e.target.value)}
@@ -234,9 +234,9 @@ function CreateEventModal({
           </div>
 
           <div>
-            <label className="block text-sm text-[#666] mb-1.5">Location</label>
+            <label className="block text-sm text-[#5A6660] mb-1.5">Location</label>
             <div className="relative">
-              <MapPin size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-[#666]" />
+              <MapPin size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-[#5A6660]" />
               <input
                 type="text"
                 value={location}
@@ -249,7 +249,7 @@ function CreateEventModal({
 
           <div>
             <div className="flex items-center justify-between mb-2">
-              <label className="text-sm text-[#666]">Proposed Times *</label>
+              <label className="text-sm text-[#5A6660]">Proposed Times *</label>
               <button
                 onClick={addSlot}
                 className="text-sm text-[#2D5A3D] hover:text-[#234A31] flex items-center gap-1"
@@ -266,21 +266,21 @@ function CreateEventModal({
                     type="date"
                     value={format(slot.date, 'yyyy-MM-dd')}
                     onChange={e => updateSlot(index, { date: new Date(e.target.value) })}
-                    className="flex-1 min-w-[140px] px-3 py-2 bg-white border border-[#2D5A3D]/10 rounded-lg text-sm text-[#2d2d2d]"
+                    className="flex-1 min-w-[140px] px-3 py-2 bg-white border border-[#2D5A3D]/10 rounded-lg text-sm text-[#1A1F1C]"
                   />
                   <div className="flex items-center gap-2">
                     <input
                       type="time"
                       value={slot.startTime}
                       onChange={e => updateSlot(index, { startTime: e.target.value })}
-                      className="w-32 px-3 py-2 bg-white border border-[#2D5A3D]/10 rounded-lg text-sm text-[#2d2d2d]"
+                      className="w-32 px-3 py-2 bg-white border border-[#2D5A3D]/10 rounded-lg text-sm text-[#1A1F1C]"
                     />
-                    <span className="text-[#2d2d2d] font-medium">to</span>
+                    <span className="text-[#1A1F1C] font-medium">to</span>
                     <input
                       type="time"
                       value={slot.endTime}
                       onChange={e => updateSlot(index, { endTime: e.target.value })}
-                      className="w-32 px-3 py-2 bg-white border border-[#2D5A3D]/10 rounded-lg text-sm text-[#2d2d2d]"
+                      className="w-32 px-3 py-2 bg-white border border-[#2D5A3D]/10 rounded-lg text-sm text-[#1A1F1C]"
                     />
                   </div>
                   {slots.length > 1 && (
@@ -356,7 +356,7 @@ function EventCard({
       <div className="flex items-start justify-between mb-4">
         <div>
           <div className="flex items-center gap-2 mb-1">
-            <h3 className="font-semibold text-[#2d2d2d]">{event.title}</h3>
+            <h3 className="font-semibold text-[#1A1F1C]">{event.title}</h3>
             <span className={`status-badge ${
               event.status === 'confirmed' 
                 ? 'status-badge-green' 
@@ -368,14 +368,14 @@ function EventCard({
             </span>
           </div>
           {event.description && (
-            <p className="text-sm text-[#666]">{event.description}</p>
+            <p className="text-sm text-[#5A6660]">{event.description}</p>
           )}
         </div>
       </div>
 
       {event.location && (
         <>
-          <div className="flex items-center gap-2.5 text-sm text-[#2d2d2d] mb-3">
+          <div className="flex items-center gap-2.5 text-sm text-[#1A1F1C] mb-3">
             <MapPin size={14} className="text-[#2D5A3D] flex-shrink-0" />
             <span>{event.location}</span>
           </div>
@@ -388,12 +388,12 @@ function EventCard({
         <div className="p-4 bg-[#2D5A3D]/10 rounded-xl">
           <div className="flex items-center gap-3 text-[#2D5A3D] font-semibold">
             <CalendarCheck size={18} className="flex-shrink-0" />
-            <span className="text-[#2d2d2d]">{formatSlot(event.finalSlot)}</span>
+            <span className="text-[#1A1F1C]">{formatSlot(event.finalSlot)}</span>
           </div>
         </div>
       ) : event.status === 'voting' && (
         <div className="space-y-2">
-          <p className="text-xs font-medium text-[#666] mb-2">Vote on available times:</p>
+          <p className="text-xs font-medium text-[#5A6660] mb-2">Vote on available times:</p>
           {event.proposedSlots.map((slot, index) => {
             const votes = getSlotVotes(index)
             const myVote = myResponse?.votes.find(v => v.slotIndex === index)
@@ -412,7 +412,7 @@ function EventCard({
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-3">
                     <Clock size={16} className="text-[#2D5A3D] flex-shrink-0" />
-                    <span className="text-sm font-semibold text-[#2d2d2d]">
+                    <span className="text-sm font-semibold text-[#1A1F1C]">
                       {formatSlot(slot)}
                     </span>
                   </div>
@@ -473,7 +473,7 @@ function EventCard({
 
       {/* Responses */}
       <div className="mt-4 pt-4 border-t border-[#2D5A3D]/10">
-        <div className="flex items-center gap-2 text-xs text-[#666]">
+        <div className="flex items-center gap-2 text-xs text-[#5A6660]">
           <Users size={12} />
           {event.responses.length} responded · Proposed by {event.proposedByName}
         </div>
@@ -515,19 +515,19 @@ function MiniCalendar({
   return (
     <div className="content-card mb-6">
       <div className="flex items-center justify-between mb-4">
-        <h3 className="font-semibold text-[#2d2d2d]">This Week</h3>
+        <h3 className="font-semibold text-[#1A1F1C]">This Week</h3>
         <div className="flex gap-1">
           <button
             onClick={() => setCurrentDate(addDays(currentDate, -7))}
             className="p-1.5 hover:bg-[#2D5A3D]/10 rounded-lg"
           >
-            <ChevronLeft size={16} className="text-[#666]" />
+            <ChevronLeft size={16} className="text-[#5A6660]" />
           </button>
           <button
             onClick={() => setCurrentDate(addDays(currentDate, 7))}
             className="p-1.5 hover:bg-[#2D5A3D]/10 rounded-lg"
           >
-            <ChevronRight size={16} className="text-[#666]" />
+            <ChevronRight size={16} className="text-[#5A6660]" />
           </button>
         </div>
       </div>
@@ -538,11 +538,11 @@ function MiniCalendar({
           const isToday = isSameDay(day, new Date())
           return (
             <div key={i} className="text-center">
-              <div className="text-[10px] text-[#666] uppercase tracking-wide">
+              <div className="text-[10px] text-[#5A6660] uppercase tracking-wide">
                 {format(day, 'EEE')}
               </div>
               <div className={`text-sm font-semibold mt-0.5 ${
-                isToday ? 'text-[#2D5A3D]' : 'text-[#2d2d2d]'
+                isToday ? 'text-[#2D5A3D]' : 'text-[#1A1F1C]'
               }`}>
                 {format(day, 'd')}
               </div>
@@ -580,7 +580,7 @@ function MiniCalendar({
                     </button>
                   ))}
                   {dayEvents.length > 2 && (
-                    <div className="text-[9px] text-[#666] text-center font-medium">
+                    <div className="text-[9px] text-[#5A6660] text-center font-medium">
                       +{dayEvents.length - 2} more
                     </div>
                   )}
@@ -599,11 +599,11 @@ function MiniCalendar({
       <div className="flex items-center gap-4 mt-3 pt-3 border-t border-[#2D5A3D]/10">
         <div className="flex items-center gap-1.5">
           <div className="w-2.5 h-2.5 rounded-sm bg-[#2D5A3D]" />
-          <span className="text-[10px] text-[#666]">Confirmed</span>
+          <span className="text-[10px] text-[#5A6660]">Confirmed</span>
         </div>
         <div className="flex items-center gap-1.5">
           <div className="w-2.5 h-2.5 rounded-sm bg-[#C4A235]" />
-          <span className="text-[10px] text-[#666]">Voting</span>
+          <span className="text-[10px] text-[#5A6660]">Voting</span>
         </div>
       </div>
     </div>

@@ -47,7 +47,7 @@ export default function AlbumDetailPage({ params }: PageProps) {
 
     if (albumError || !albumData) {
       console.error('Error loading album:', albumError)
-      router.push('/dashboard/albums')
+      router.push('/dashboard/capsules')
       return
     }
 
@@ -98,7 +98,7 @@ export default function AlbumDetailPage({ params }: PageProps) {
       .eq('id', album.id)
 
     if (!error) {
-      router.push('/dashboard/albums')
+      router.push('/dashboard/capsules')
     }
   }
 
@@ -277,7 +277,7 @@ export default function AlbumDetailPage({ params }: PageProps) {
     <div className="pb-8 pb-24">
       {/* Back Button */}
       <Link 
-        href="/dashboard/albums"
+        href="/dashboard/capsules"
         className="inline-flex items-center gap-2 text-gray-600 hover:text-gray-800 mb-6 transition-colors"
       >
         <ChevronLeft size={20} />

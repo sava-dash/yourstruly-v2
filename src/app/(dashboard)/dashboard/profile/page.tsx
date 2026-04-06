@@ -439,50 +439,11 @@ export default function ProfilePage() {
           </div>
         </div>
 
-        {/* 3-Column Layout */}
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-          
-          {/* Left Column - Personality & Interests */}
-          <div className="lg:col-span-3 space-y-4">
-            {/* Personality */}
-            <ProfileCard title="Personality" icon={Brain} section="personality">
-              {profile.personality_type && (
-                <div className="mb-3">
-                  <span className="text-sm text-gray-500">Type</span>
-                  <p className="font-medium text-[#2D5A3D]">{profile.personality_type}</p>
-                </div>
-              )}
-              <div className="mb-3">
-                <span className="text-sm text-gray-500 block mb-2">Traits</span>
-                <TagList items={profile.personality_traits} />
-              </div>
-              <button
-                onClick={() => setShowQuiz(true)}
-                className="w-full mt-3 py-2.5 px-4 bg-gradient-to-r from-[#2D5A3D]/10 to-[#8DACAB]/10 hover:from-[#2D5A3D]/20 hover:to-[#8DACAB]/20 text-[#2D5A3D] font-medium rounded-xl flex items-center justify-center gap-2 transition-all border border-[#2D5A3D]/10"
-              >
-                <Sparkles size={16} />
-                {profile.personality_type ? 'Retake Quiz' : 'Take Personality Quiz'}
-              </button>
-            </ProfileCard>
+        {/* Single-column layout — clean and organized */}
+        <div className="max-w-2xl mx-auto space-y-6">
 
-            {/* Interests */}
-            <ProfileCard title="Interests" icon={Heart} iconColor="text-[#B8562E]" bgColor="bg-[#B8562E]/10" section="interests">
-              <TagList items={profile.interests} colorClass="bg-[#B8562E]/10 text-[#B8562E]" />
-            </ProfileCard>
-
-            {/* Hobbies */}
-            <ProfileCard title="Hobbies" icon={Sparkles} iconColor="text-[#C4A235]" bgColor="bg-[#C4A235]/10" section="hobbies">
-              <TagList items={profile.hobbies} colorClass="bg-[#C4A235]/20 text-[#8B7B0A]" />
-            </ProfileCard>
-
-            {/* Skills */}
-            <ProfileCard title="Skills" icon={Star} iconColor="text-[#8DACAB]" bgColor="bg-[#8DACAB]/10" section="skills">
-              <TagList items={profile.skills} colorClass="bg-[#8DACAB]/20 text-[#5d8585]" />
-            </ProfileCard>
-          </div>
-
-          {/* Center Column - Hero Section */}
-          <div className="lg:col-span-6">
+          {/* Hero Section */}
+          <div>
             {/* Main Profile Card - Compact */}
             <div className="glass-card-page glass-card-page-strong p-5 mb-4 group relative">
               <button
@@ -535,39 +496,13 @@ export default function ProfilePage() {
                   </div>
                 </div>
 
-                {/* Essence Fingerprint - 80px */}
-                <div className="flex-shrink-0 flex flex-col items-center">
-                  {hasProfileData({
-                    personality_type: profile.personality_type,
-                    personality_traits: profile.personality_traits,
-                    interests: profile.interests,
-                    hobbies: profile.hobbies,
-                    life_goals: profile.life_goals,
-                    occupation: profile.occupation,
-                    biography: profile.biography,
-                  }) ? (
-                    <>
-                      <EssenceFingerprintLoader 
-                        essenceVector={essenceVector} 
-                        size={80}
-                      />
-                      <p className="text-[10px] text-[#2D5A3D]/60 mt-0.5">Essence</p>
-                    </>
-                  ) : (
-                    <div className="w-[80px] h-[80px] rounded-full border-2 border-dashed border-[#2D5A3D]/20 
-                                    flex flex-col items-center justify-center text-center p-2">
-                      <Sparkles className="w-5 h-5 text-[#2D5A3D]/30 mb-1" />
-                      <p className="text-[8px] text-[#2D5A3D]/50 leading-tight">Add profile data</p>
-                    </div>
-                  )}
-                </div>
               </div>
 
-              {/* Biography - Compact */}
-              <div className="border-t border-[#2D5A3D]/10 pt-3">
+              {/* Biography */}
+              <div className="border-t border-[#2D5A3D]/10 pt-3 mt-3">
                 <div className="flex items-center gap-2 mb-2">
                   <User size={14} className="text-[#2D5A3D]" />
-                  <h3 className="font-semibold text-[#2d2d2d] text-sm">About Me</h3>
+                  <h3 className="font-semibold text-[#2d2d2d] text-sm">Bio</h3>
                   <button
                     onClick={(e) => { e.stopPropagation(); openEdit('bio'); }}
                     className="ml-auto p-1 opacity-0 group-hover:opacity-100 text-[#2D5A3D]/50 hover:text-[#2D5A3D] hover:bg-[#2D5A3D]/10 rounded-lg transition-all"
@@ -583,88 +518,48 @@ export default function ProfilePage() {
               </div>
             </div>
 
-            {/* Favorites Section - Compact */}
-            <ProfileCard title="Favorites" icon={Star} iconColor="text-[#B8562E]" bgColor="bg-[#B8562E]/10" section="favorites">
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <div className="flex items-center gap-1.5 mb-1.5">
-                    <BookOpen size={12} className="text-[#2D5A3D]" />
-                    <span className="text-xs font-medium text-gray-600">Books</span>
-                  </div>
-                  <TagList items={profile.favorite_books} colorClass="bg-[#2D5A3D]/10 text-[#2D5A3D]" />
-                </div>
-                <div>
-                  <div className="flex items-center gap-1.5 mb-1.5">
-                    <Film size={12} className="text-[#4A3552]" />
-                    <span className="text-xs font-medium text-gray-600">Movies</span>
-                  </div>
-                  <TagList items={profile.favorite_movies} colorClass="bg-[#4A3552]/10 text-[#4A3552]" />
-                </div>
-                <div>
-                  <div className="flex items-center gap-1.5 mb-1.5">
-                    <Music size={12} className="text-[#8DACAB]" />
-                    <span className="text-xs font-medium text-gray-600">Music</span>
-                  </div>
-                  <TagList items={profile.favorite_music} colorClass="bg-[#8DACAB]/20 text-[#5d8585]" />
-                </div>
-                <div>
-                  <div className="flex items-center gap-1.5 mb-1.5">
-                    <Utensils size={12} className="text-[#B8562E]" />
-                    <span className="text-xs font-medium text-gray-600">Foods</span>
-                  </div>
-                  <TagList items={profile.favorite_foods} colorClass="bg-[#B8562E]/10 text-[#B8562E]" />
-                </div>
-              </div>
-            </ProfileCard>
-
-            {/* Life Philosophy & Life Goals - Split Row */}
-            <div className="grid grid-cols-2 gap-4">
-              {/* Life Philosophy */}
-              <ProfileCard title="Life Philosophy" icon={Quote} iconColor="text-[#4A3552]" bgColor="bg-[#4A3552]/10" section="philosophy">
-                {profile.personal_motto ? (
-                  <p className="text-[#4A3552] italic text-sm">"{profile.personal_motto}"</p>
-                ) : (
-                  <p className="text-gray-400 text-sm italic">No motto set</p>
-                )}
-                {profile.favorite_quote && (
-                  <div className="mt-3 pt-3 border-t border-[#4A3552]/10">
-                    <span className="text-xs text-gray-500 block mb-1">Favorite Quote</span>
-                    <p className="text-xs text-[#4A3552]/80 italic">"{profile.favorite_quote}"</p>
-                  </div>
-                )}
-              </ProfileCard>
-
-              {/* Life Goals */}
-              <ProfileCard title="Life Goals" icon={Target} iconColor="text-[#4A3552]" bgColor="bg-[#4A3552]/10" section="goals">
-                <TagList items={profile.life_goals} colorClass="bg-[#4A3552]/10 text-[#4A3552]" />
-              </ProfileCard>
-            </div>
+            {/* Moved to My Faves page: Favorites, Life Philosophy, Life Goals */}
           </div>
 
-          {/* Right Column - Location & Professional */}
-          <div className="lg:col-span-3 space-y-4">
-            {/* Location */}
-            <ProfileCard title="Location" icon={MapPin} section="location">
-              <div className="space-y-2">
-                {profile.address && (
-                  <p className="text-gray-700">{profile.address}</p>
-                )}
-                <p className="text-gray-700">{formatLocation()}</p>
-                {profile.zipcode && (
-                  <p className="text-gray-500 text-sm">{profile.zipcode}</p>
-                )}
-                {!profile.city && !profile.country && !profile.address && (
-                  <p className="text-gray-400 text-sm italic">No location added</p>
-                )}
-              </div>
-            </ProfileCard>
-
+          {/* Details — consistent vertical gap */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 items-start">
             {/* Languages */}
             <ProfileCard title="Languages" icon={BookOpen} iconColor="text-[#2D5A3D]" bgColor="bg-[#2D5A3D]/10" section="languages">
               <TagList items={profile.languages} colorClass="bg-[#2D5A3D]/10 text-[#2D5A3D]" />
             </ProfileCard>
 
-            {/* Religion */}
+            {/* Personality */}
+            <ProfileCard title="Personality" icon={Brain} section="personality">
+              {profile.personality_type && (
+                <p className="font-medium text-[#2D5A3D] mb-2">{profile.personality_type}</p>
+              )}
+              {profile.personality_traits?.length > 0 && (
+                <TagList items={profile.personality_traits} />
+              )}
+              <button
+                onClick={() => setShowQuiz(true)}
+                className="w-full mt-3 py-2 px-3 bg-[#2D5A3D]/8 hover:bg-[#2D5A3D]/15 text-[#2D5A3D] font-medium rounded-xl flex items-center justify-center gap-2 transition-all text-xs border border-[#2D5A3D]/10"
+              >
+                <Sparkles size={13} />
+                {profile.personality_type ? 'Retake Quiz' : 'Take Personality Quiz'}
+              </button>
+            </ProfileCard>
+
+            {/* Life Philosophy */}
+            <ProfileCard title="Life Philosophy" icon={Quote} iconColor="text-[#4A3552]" bgColor="bg-[#4A3552]/10" section="philosophy">
+              {profile.personal_motto ? (
+                <p className="text-[#4A3552] italic text-sm">&ldquo;{profile.personal_motto}&rdquo;</p>
+              ) : (
+                <p className="text-gray-400 text-sm italic">No motto set</p>
+              )}
+              {profile.favorite_quote && (
+                <div className="mt-2 pt-2 border-t border-[#4A3552]/10">
+                  <p className="text-xs text-[#4A3552]/80 italic">&ldquo;{profile.favorite_quote}&rdquo;</p>
+                </div>
+              )}
+            </ProfileCard>
+
+            {/* Faith & Beliefs */}
             <ProfileCard title="Faith & Beliefs" icon={Heart} iconColor="text-[#4A3552]" bgColor="bg-[#4A3552]/10" section="religion">
               <TagList items={profile.religions} colorClass="bg-[#4A3552]/10 text-[#4A3552]" />
             </ProfileCard>
@@ -771,6 +666,25 @@ export default function ProfilePage() {
               </div>
             </ProfileCard>
           </div>
+
+          {/* My Faves link */}
+          <Link
+            href="/dashboard/about-me"
+            className="block p-5 rounded-2xl bg-white border border-[#DDE3DF] hover:shadow-md transition-all group"
+          >
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-xl bg-[#2D5A3D]/10 flex items-center justify-center">
+                  <Sparkles size={18} className="text-[#2D5A3D]" />
+                </div>
+                <div>
+                  <h3 className="text-sm font-semibold text-[#1A1F1C]">My Faves</h3>
+                  <p className="text-xs text-[#94A09A]">Personality, favorites, recipes, life philosophy</p>
+                </div>
+              </div>
+              <ChevronLeft size={16} className="text-[#94A09A] rotate-180 group-hover:translate-x-1 transition-transform" />
+            </div>
+          </Link>
         </div>
       </div>
 
@@ -969,6 +883,32 @@ function EditModal({
                       I agree to receive SMS notifications from YoursTruly when someone wants to interview me about my life story. Message and data rates may apply. Reply STOP to unsubscribe.
                     </span>
                   </label>
+                </div>
+              </div>
+              {/* Location fields */}
+              <div className="border-t border-gray-100 pt-4 mt-2">
+                <label className="block text-sm text-[#666] mb-1.5 font-medium">Location</label>
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className="block text-[11px] text-[#94A09A] mb-1">City</label>
+                    <input value={profile.city} onChange={e => setProfile(p => ({ ...p, city: e.target.value }))} className="form-input" placeholder="City" />
+                  </div>
+                  <div>
+                    <label className="block text-[11px] text-[#94A09A] mb-1">State</label>
+                    <input value={profile.state} onChange={e => setProfile(p => ({ ...p, state: e.target.value }))} className="form-input" placeholder="State" />
+                  </div>
+                  <div>
+                    <label className="block text-[11px] text-[#94A09A] mb-1">Country</label>
+                    <input value={profile.country} onChange={e => setProfile(p => ({ ...p, country: e.target.value }))} className="form-input" placeholder="Country" />
+                  </div>
+                  <div>
+                    <label className="block text-[11px] text-[#94A09A] mb-1">Zip Code</label>
+                    <input value={profile.zipcode} onChange={e => setProfile(p => ({ ...p, zipcode: e.target.value }))} className="form-input" placeholder="Zip" />
+                  </div>
+                </div>
+                <div className="mt-3">
+                  <label className="block text-[11px] text-[#94A09A] mb-1">Address</label>
+                  <input value={profile.address} onChange={e => setProfile(p => ({ ...p, address: e.target.value }))} className="form-input" placeholder="Street address" />
                 </div>
               </div>
             </>

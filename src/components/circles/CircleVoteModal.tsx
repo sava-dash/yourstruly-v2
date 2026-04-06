@@ -62,8 +62,8 @@ export default function CircleVoteModal({
       case 'setting_change':
         return {
           icon: Shield,
-          color: 'text-[#4A3552]',
-          bgColor: 'bg-[#4A3552]/10',
+          color: 'text-[#2D5A3D]',
+          bgColor: 'bg-[#2D5A3D]/10',
           label: 'Change Settings'
         }
     }
@@ -128,9 +128,9 @@ export default function CircleVoteModal({
               <Icon size={24} className={typeInfo.color} />
             </div>
             <div>
-              <h2 className="text-lg font-semibold text-[#2d2d2d]">{typeInfo.label}</h2>
+              <h2 className="text-lg font-semibold text-[#1A1F1C]">{typeInfo.label}</h2>
               {vote.target_member_name && (
-                <p className="text-sm text-[#666]">Target: {vote.target_member_name}</p>
+                <p className="text-sm text-[#5A6660]">Target: {vote.target_member_name}</p>
               )}
             </div>
           </div>
@@ -145,7 +145,7 @@ export default function CircleVoteModal({
         {/* Status */}
         <div className="flex items-center justify-between mb-6">
           {getStatusBadge(vote.status)}
-          <span className="text-sm text-[#666]">
+          <span className="text-sm text-[#5A6660]">
             Started by {vote.created_by_name}
           </span>
         </div>
@@ -153,15 +153,15 @@ export default function CircleVoteModal({
         {/* Description */}
         {vote.description && (
           <div className="p-4 bg-[#2D5A3D]/5 rounded-xl mb-6">
-            <p className="text-sm text-[#2d2d2d]">{vote.description}</p>
+            <p className="text-sm text-[#1A1F1C]">{vote.description}</p>
           </div>
         )}
 
         {/* Vote Progress */}
         <div className="mb-6">
           <div className="flex items-center justify-between mb-2">
-            <span className="text-sm font-medium text-[#2d2d2d]">Vote Progress</span>
-            <span className="text-sm text-[#666]">
+            <span className="text-sm font-medium text-[#1A1F1C]">Vote Progress</span>
+            <span className="text-sm text-[#5A6660]">
               {vote.yes_votes} of {vote.required_votes} needed to pass
             </span>
           </div>
@@ -178,11 +178,11 @@ export default function CircleVoteModal({
           <div className="flex items-center justify-between text-sm">
             <div className="flex items-center gap-2">
               <ThumbsUp size={14} className="text-green-600" />
-              <span className="text-[#2d2d2d]">{vote.yes_votes} Yes</span>
+              <span className="text-[#1A1F1C]">{vote.yes_votes} Yes</span>
             </div>
             <div className="flex items-center gap-2">
               <ThumbsDown size={14} className="text-red-500" />
-              <span className="text-[#2d2d2d]">{vote.no_votes} No</span>
+              <span className="text-[#1A1F1C]">{vote.no_votes} No</span>
             </div>
           </div>
         </div>
@@ -190,7 +190,7 @@ export default function CircleVoteModal({
         {/* Your Vote Status */}
         {vote.has_voted && vote.my_vote && (
           <div className="p-4 bg-[#C4A235]/10 rounded-xl mb-6">
-            <p className="text-sm text-[#2d2d2d]">
+            <p className="text-sm text-[#1A1F1C]">
               You voted: <strong>{vote.my_vote === 'yes' ? '👍 Yes' : '👎 No'}</strong>
             </p>
           </div>
@@ -198,7 +198,7 @@ export default function CircleVoteModal({
 
         {/* Expiration */}
         {vote.status === 'active' && (
-          <p className="text-sm text-[#888] mb-6">
+          <p className="text-sm text-[#94A09A] mb-6">
             Voting ends: {formatDate(vote.expires_at)}
           </p>
         )}
@@ -225,7 +225,7 @@ export default function CircleVoteModal({
 
         {!isAdmin && vote.status === 'active' && (
           <div className="p-4 bg-gray-100 rounded-xl text-center">
-            <p className="text-sm text-[#666]">Only admins can vote on circle decisions</p>
+            <p className="text-sm text-[#5A6660]">Only admins can vote on circle decisions</p>
           </div>
         )}
 

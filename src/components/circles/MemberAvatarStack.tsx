@@ -53,7 +53,7 @@ export default function MemberAvatarStack({
       'from-[#2D5A3D] to-[#5a8a70]',
       'from-[#C4A235] to-[#e8d84a]',
       'from-[#B8562E] to-[#d87a55]',
-      'from-[#4A3552] to-[#6a4a78]',
+      'from-[#2D5A3D] to-[#3a7a52]',
       'from-[#8DACAB] to-[#a8c4c3]',
     ]
     const hash = (name || '').split('').reduce((acc, char) => acc + char.charCodeAt(0), 0)
@@ -95,7 +95,7 @@ export default function MemberAvatarStack({
             ${overlapClasses[size]}
             rounded-full border-2 border-white shadow-sm
             bg-[#f0f0f0] flex items-center justify-center
-            text-[#666] font-medium
+            text-[#5A6660] font-medium
           `}
           style={{ zIndex: 0 }}
           title={`+${overflow} more member${overflow > 1 ? 's' : ''}`}

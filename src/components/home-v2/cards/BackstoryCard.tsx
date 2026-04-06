@@ -35,15 +35,45 @@ export function BackstoryCard({ promptText, category, data, onSave, saved }: Bac
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth', block: 'nearest' })
   }, [messages])
 
-  // Start conversation with AI's first question
+  // Start conversation — or continue if pre-seeded from concierge
   useEffect(() => {
     if (messages.length === 0 && !saved) {
+      // No messages yet — start with AI's first question
       const initialMessage = category === 'photo'
         ? `Tell me about this photo! ${promptText}`
         : `I'd love to hear about this. ${promptText} Take your time — just share whatever comes to mind.`
       setMessages([{ role: 'assistant', content: initialMessage }])
+    } else if (messages.length > 0 && messages[messages.length - 1].role === 'user' && !saved) {
+      // Pre-seeded from concierge — user's story is first, generate AI follow-up
+      generateFollowUp(messages)
     }
   }, [])
+
+  // Generate AI follow-up for pre-seeded conversations
+  const generateFollowUp = async (currentMessages: Message[]) => {
+    setIsSending(true)
+    try {
+      const res = await fetch('/api/conversation-engine', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          messages: currentMessages.map(m => ({ role: m.role, content: m.content })),
+          context: `The user just shared a memory about: "${promptText}". Ask a warm, specific follow-up question to draw out more detail. Keep it to 1-2 sentences.`,
+        }),
+      })
+      if (res.ok) {
+        const data = await res.json()
+        const aiResponse = data.response || data.message || data.content
+        if (aiResponse) {
+          setMessages(prev => [...prev, { role: 'assistant', content: aiResponse }])
+        }
+      }
+    } catch {
+      // Fallback follow-up
+      setMessages(prev => [...prev, { role: 'assistant', content: 'That\'s wonderful. What stands out most when you think about that moment?' }])
+    }
+    setIsSending(false)
+  }
 
   // TTS for assistant messages
   const speakMessage = useCallback((text: string) => {
@@ -260,7 +290,7 @@ export function BackstoryCard({ promptText, category, data, onSave, saved }: Bac
             <button
               onClick={handleSave}
               disabled={saving}
-              className="w-full mt-3 py-2.5 rounded-xl text-sm font-medium bg-[#2D5A3D] text-white hover:bg-[#234A31] disabled:opacity-40 transition-colors flex items-center justify-center gap-2"
+              className="w-full mt-3 py-2.5 rounded-xl text-sm font-medium bg-[#2D5A3D] text-white hover:bg-[#234A31] disabled:opacity-40 transition-all active:scale-[0.96] flex items-center justify-center gap-2"
             >
               {saving ? <Loader2 size={14} className="animate-spin" /> : <><Check size={14} /> Save & Continue →</>}
             </button>

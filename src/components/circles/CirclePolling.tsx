@@ -103,16 +103,16 @@ function CreatePollModal({
     <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
       <div className="bg-white rounded-2xl p-6 w-full max-w-lg max-h-[90vh] overflow-y-auto">
         <div className="flex items-center justify-between mb-6">
-          <h2 className="text-xl font-bold text-[#2d2d2d]">Create Poll</h2>
+          <h2 className="text-xl font-bold text-[#1A1F1C]">Create Poll</h2>
           <button onClick={onClose} className="p-2 hover:bg-[#2D5A3D]/10 rounded-lg">
-            <X size={20} className="text-[#666]" />
+            <X size={20} className="text-[#5A6660]" />
           </button>
         </div>
 
         <div className="space-y-4">
           {/* Question */}
           <div>
-            <label className="block text-sm text-[#666] mb-1.5">Question *</label>
+            <label className="block text-sm text-[#5A6660] mb-1.5">Question *</label>
             <input
               type="text"
               value={question}
@@ -125,8 +125,8 @@ function CreatePollModal({
           {/* Options */}
           <div>
             <div className="flex items-center justify-between mb-2">
-              <label className="text-sm text-[#666]">Options *</label>
-              <span className="text-xs text-[#999]">{validOptionsCount}/10</span>
+              <label className="text-sm text-[#5A6660]">Options *</label>
+              <span className="text-xs text-[#94A09A]">{validOptionsCount}/10</span>
             </div>
             
             <div className="space-y-2">
@@ -174,7 +174,7 @@ function CreatePollModal({
                 onChange={e => setIsMultipleChoice(e.target.checked)}
                 className="w-4 h-4 rounded border-[#2D5A3D]/30 text-[#2D5A3D] focus:ring-[#2D5A3D]"
               />
-              <span className="text-sm text-[#2d2d2d]">Allow multiple selections</span>
+              <span className="text-sm text-[#1A1F1C]">Allow multiple selections</span>
             </label>
 
             <label className="flex items-center gap-3 cursor-pointer">
@@ -185,8 +185,8 @@ function CreatePollModal({
                 className="w-4 h-4 rounded border-[#2D5A3D]/30 text-[#2D5A3D] focus:ring-[#2D5A3D]"
               />
               <div className="flex items-center gap-2">
-                <Lock size={14} className="text-[#666]" />
-                <span className="text-sm text-[#2d2d2d]">Anonymous voting</span>
+                <Lock size={14} className="text-[#5A6660]" />
+                <span className="text-sm text-[#1A1F1C]">Anonymous voting</span>
               </div>
             </label>
 
@@ -197,12 +197,12 @@ function CreatePollModal({
                 onChange={e => setHasExpiry(e.target.checked)}
                 className="w-4 h-4 rounded border-[#2D5A3D]/30 text-[#2D5A3D] focus:ring-[#2D5A3D]"
               />
-              <span className="text-sm text-[#2d2d2d]">Set expiration</span>
+              <span className="text-sm text-[#1A1F1C]">Set expiration</span>
             </label>
 
             {hasExpiry && (
               <div className="ml-7 flex items-center gap-2">
-                <span className="text-sm text-[#666]">Expires in</span>
+                <span className="text-sm text-[#5A6660]">Expires in</span>
                 <select
                   value={expiryDays}
                   onChange={e => setExpiryDays(Number(e.target.value))}
@@ -281,14 +281,14 @@ function PollCard({
       <div className="flex items-start justify-between mb-4">
         <div className="flex-1">
           <div className="flex items-center gap-2 mb-1">
-            <h3 className="font-semibold text-[#2d2d2d]">{poll.question}</h3>
+            <h3 className="font-semibold text-[#1A1F1C]">{poll.question}</h3>
             {poll.isAnonymous && (
               <span title="Anonymous poll">
-                <Lock size={14} className="text-[#666]" />
+                <Lock size={14} className="text-[#5A6660]" />
               </span>
             )}
           </div>
-          <div className="flex items-center gap-3 text-xs text-[#666]">
+          <div className="flex items-center gap-3 text-xs text-[#5A6660]">
             <span>by {poll.createdByName}</span>
             <span>·</span>
             <span>{format(poll.createdAt, 'MMM d')}</span>
@@ -316,7 +316,7 @@ function PollCard({
             <div className="flex gap-1">
               <button
                 onClick={onClose}
-                className="p-1.5 text-[#666] hover:bg-[#2D5A3D]/10 rounded-lg"
+                className="p-1.5 text-[#5A6660] hover:bg-[#2D5A3D]/10 rounded-lg"
                 title="Close poll"
               >
                 <Lock size={14} />
@@ -368,16 +368,16 @@ function PollCard({
                   ) : (
                     <div className="w-5 h-5 rounded-full border-2 border-[#2D5A3D]/30" />
                   )}
-                  <span className={`text-sm ${isMyVote ? 'font-medium text-[#2D5A3D]' : 'text-[#2d2d2d]'}`}>
+                  <span className={`text-sm ${isMyVote ? 'font-medium text-[#2D5A3D]' : 'text-[#1A1F1C]'}`}>
                     {option.text}
                   </span>
                 </div>
                 
                 <div className="flex items-center gap-2">
-                  <span className="text-sm font-medium text-[#666]">
+                  <span className="text-sm font-medium text-[#5A6660]">
                     {percentage}%
                   </span>
-                  <span className="text-xs text-[#999]">
+                  <span className="text-xs text-[#94A09A]">
                     ({option.votes.length})
                   </span>
                 </div>
@@ -389,7 +389,7 @@ function PollCard({
 
       {/* Footer */}
       <div className="mt-4 pt-3 border-t border-[#2D5A3D]/10 flex items-center justify-between">
-        <div className="flex items-center gap-2 text-xs text-[#666]">
+        <div className="flex items-center gap-2 text-xs text-[#5A6660]">
           <Users size={12} />
           {totalVotes} vote{totalVotes !== 1 ? 's' : ''}
           {poll.isMultipleChoice && (
@@ -446,8 +446,8 @@ export default function CirclePolling({
       {/* Header */}
       <div className="section-header mb-4">
         <div className="section-title">
-          <div className="section-title-icon bg-[#4A3552]/10">
-            <BarChart3 size={18} className="text-[#4A3552]" />
+          <div className="section-title-icon bg-[#2D5A3D]/10">
+            <BarChart3 size={18} className="text-[#2D5A3D]" />
           </div>
           <span>Polls</span>
         </div>

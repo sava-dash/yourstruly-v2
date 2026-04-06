@@ -21,18 +21,18 @@ const PROFILE_OPTIONS: Record<string, string[]> = {
 }
 
 const cardVariants = {
-  hidden: { opacity: 0, x: 120, scale: 0.88 },
+  hidden: { opacity: 0, scale: 0.97 },
   visible: (i: number) => ({
-    opacity: 1, x: 0, scale: 1,
-    transition: { type: 'spring' as const, stiffness: 220, damping: 18, mass: 0.8, delay: 0.08 + i * 0.1 },
+    opacity: 1, scale: 1,
+    transition: { type: 'spring' as const, stiffness: 300, damping: 25, delay: 0.05 + i * 0.05 },
   }),
   exit: (i: number) => ({
-    opacity: 0, x: 100, scale: 0.92,
-    transition: { type: 'spring' as const, stiffness: 300, damping: 26, delay: i * 0.04 },
+    opacity: 0, scale: 0.97,
+    transition: { duration: 0.2, delay: i * 0.03 },
   }),
 }
 
-const CARD_W = 530
+const CARD_W_DEFAULT = 530
 const CARD_H = 600
 
 interface CardChainProps {
@@ -40,24 +40,17 @@ interface CardChainProps {
   onCardSave: (cardId: string, data: Record<string, any>) => void
   onAddCard: (type: CardType) => void
   onMediaUploaded: (files: { url: string; name: string; type: string }[]) => void
+  cardWidth?: number
 }
 
-export function CardChain({ row, onCardSave, onAddCard, onMediaUploaded }: CardChainProps) {
+export function CardChain({ row, onCardSave, onAddCard, onMediaUploaded, cardWidth }: CardChainProps) {
+  const CARD_W = cardWidth ?? CARD_W_DEFAULT
   const containerRef = useRef<HTMLDivElement>(null)
 
-  // Scroll to next card after saving
-  const scrollToNext = useCallback((currentIndex: number) => {
-    const nextIndex = currentIndex + 1
-    // +1 because the prompt card is the first element in the flex row (not part of this component)
-    // Each card is CARD_W + 16px gap
-    if (nextIndex < row.cards.length) {
-      const el = containerRef.current?.parentElement
-      if (el) {
-        // Scroll by one card width + gap
-        el.scrollBy({ left: CARD_W + 16, behavior: 'smooth' })
-      }
-    }
-  }, [row.cards.length])
+  // Scroll to next card after saving (no-op in translate mode — parent handles advancement)
+  const scrollToNext = useCallback((_currentIndex: number) => {
+    // Parent now handles card advancement via focusedCardIdx
+  }, [])
 
   const handleSave = useCallback((cardId: string, data: Record<string, any>, index: number) => {
     onCardSave(cardId, data)
@@ -82,8 +75,8 @@ export function CardChain({ row, onCardSave, onAddCard, onMediaUploaded }: CardC
           flexShrink: 0, width: `${CARD_W}px`, height: `${CARD_H}px`,
           borderRadius: '24px', overflow: 'hidden', background: '#FFFFFF',
           border: '1px solid #DDE3DF',
-          boxShadow: '0 4px 20px rgba(0,0,0,0.08)',
-          display: 'flex', flexDirection: 'column', scrollSnapAlign: 'start',
+          boxShadow: '0 4px 16px rgba(0,0,0,0.06), 0 1px 4px rgba(0,0,0,0.03)',
+          display: 'flex', flexDirection: 'column',
         }}
       >
         {children}

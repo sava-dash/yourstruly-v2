@@ -36,7 +36,7 @@ export default function VoiceMemoryPage() {
         {/* Header */}
         <div className="page-header flex items-center justify-between">
           <div className="flex items-center gap-4">
-            <Link href="/dashboard/memories" className="page-header-back">
+            <Link href="/dashboard/my-story" className="page-header-back">
               <ChevronLeft size={20} />
             </Link>
             <div>

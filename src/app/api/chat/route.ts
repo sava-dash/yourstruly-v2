@@ -2,21 +2,26 @@ import { createClient } from '@/lib/supabase/server'
 import { NextRequest, NextResponse } from 'next/server'
 import { generateEmbedding, generateChatResponse, checkProviderConfig } from '@/lib/ai/providers'
 
-// System prompt for the AI
-const SYSTEM_PROMPT = `You are a warm, thoughtful AI companion for YoursTruly - a digital legacy platform where people document their lives, memories, and relationships.
+// System prompt for the AI — both personal companion and platform support
+const SYSTEM_PROMPT = `You are the AI Concierge for YoursTruly — a digital legacy platform where people preserve memories, stories, and connections with loved ones.
 
-You have access to the user's personal content: their memories, contacts, life events, pets, and more. When answering questions, draw from this context to give personalized, meaningful responses.
+You serve TWO roles:
+
+ROLE 1 — PERSONAL COMPANION:
+You have access to the user's personal content: memories, contacts, life events, pets, and more. When they ask about their life, draw from this context to give personalized, meaningful responses.
+
+ROLE 2 — PLATFORM SUPPORT:
+You know everything about how YoursTruly works. When users ask "how do I...", "what is...", "where can I find...", or need help with any feature, provide clear, helpful guidance based on the platform knowledge provided below.
 
 Guidelines:
-- Be warm and personal, like a trusted friend who knows their story
-- Reference specific details from their memories and relationships when relevant
+- Be warm and personal, like a trusted friend
+- For personal questions: reference specific details from their memories and relationships
+- For support questions: give clear, step-by-step answers about platform features
 - If you don't have enough context, say so honestly but kindly
-- Help them reflect on and appreciate their life journey
-- Keep responses concise but heartfelt (2-3 paragraphs max)
-- When mentioning specific memories or people, be specific about dates and details
-- Use a conversational, caring tone - you're helping them explore their own life
+- Keep responses concise (2-3 paragraphs max)
+- Use a conversational, caring tone
 
-You're not just an AI - you're their digital companion helping them preserve and explore their life story.`
+You're their companion AND their guide to the platform.`
 
 // Search user's content using vector similarity
 async function searchUserContent(
@@ -155,11 +160,41 @@ export async function POST(request: NextRequest) {
     // Generate embedding for the query
     const queryEmbedding = await generateEmbedding(message)
 
-    // Search for relevant content
+    // Search for relevant personal content
     const searchResults = await searchUserContent(supabase, user.id, queryEmbedding)
 
-    // Build context from search results
-    const context = formatContext(searchResults)
+    // Search for relevant support knowledge (keyword-based fallback + semantic)
+    let supportContext = ''
+    try {
+      const messageLower = message.toLowerCase()
+      const { data: supportArticles } = await supabase
+        .from('support_knowledge')
+        .select('title, content, category')
+        .eq('is_active', true)
+        .order('sort_order')
+
+      if (supportArticles?.length) {
+        // Keyword match: check if any keywords appear in the message
+        const matched = supportArticles.filter(article => {
+          const titleMatch = article.title.toLowerCase().split(' ').some((w: string) => w.length > 3 && messageLower.includes(w))
+          return titleMatch
+        }).slice(0, 3)
+
+        // Also include articles whose content is likely relevant to support questions
+        const isSupport = /\b(how|help|what is|where|can i|how do|feature|setting|problem|issue|tutorial)\b/i.test(message)
+        const supportKnowledge = isSupport ? (matched.length > 0 ? matched : supportArticles.slice(0, 3)) : matched
+
+        if (supportKnowledge.length > 0) {
+          supportContext = '\n\n## Platform Knowledge\n' + supportKnowledge.map((a: any) =>
+            `### ${a.title}\n${a.content}`
+          ).join('\n\n')
+        }
+      }
+    } catch {}
+
+    // Build combined context
+    const personalContext = formatContext(searchResults)
+    const context = personalContext + supportContext
 
     // Build conversation history (excluding the message we just added)
     const conversationHistory = (history || [])

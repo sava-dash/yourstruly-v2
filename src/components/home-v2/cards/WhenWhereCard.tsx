@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useRef, useCallback } from 'react'
+import { useState, useRef, useCallback, useEffect } from 'react'
 import { MapPin, Calendar, Check, Loader2, Pencil } from 'lucide-react'
 
 interface WhenWhereCardProps {
@@ -17,8 +17,25 @@ export function WhenWhereCard({ data, onSave, saved }: WhenWhereCardProps) {
   )
   const [suggestions, setSuggestions] = useState<{ place_name: string; id: string; center: [number, number] }[]>([])
   const [saving, setSaving] = useState(false)
-  const [editing, setEditing] = useState(!saved) // start in edit mode if not saved
+  const [editing, setEditing] = useState(!saved)
   const debounceRef = useRef<ReturnType<typeof setTimeout>>(null)
+
+  // Auto-geocode pre-filled location (from concierge) to get coords for map
+  useEffect(() => {
+    if (location && !coords) {
+      const token = process.env.NEXT_PUBLIC_MAPBOX_TOKEN
+      if (!token) return
+      fetch(`https://api.mapbox.com/geocoding/v5/mapbox.places/${encodeURIComponent(location)}.json?access_token=${token}&types=place,locality,region,country&limit=1`)
+        .then(r => r.json())
+        .then(data => {
+          if (data.features?.[0]?.center) {
+            const [lng, lat] = data.features[0].center
+            setCoords({ lat, lng })
+          }
+        })
+        .catch(() => {})
+    }
+  }, []) // Only on mount — don't re-run on every location change
 
   const fetchSuggestions = useCallback(async (query: string) => {
     if (query.length < 2) { setSuggestions([]); return }
@@ -67,16 +84,16 @@ export function WhenWhereCard({ data, onSave, saved }: WhenWhereCardProps) {
   // Saved view with map + edit button
   if (saved && !editing) {
     return (
-      <div className="h-full flex flex-col p-5 gap-4">
+      <div className="h-full flex flex-col p-5 gap-4 cursor-pointer" onClick={() => setEditing(true)}>
         <div className="flex items-center justify-between">
           <h3 className="text-xs font-semibold uppercase tracking-wider text-[#5A6660] flex items-center gap-1.5">
             <MapPin size={12} /> When & Where
           </h3>
           <button
             onClick={() => setEditing(true)}
-            className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-[#F5F1EA] hover:bg-[#E6F0EA] text-[#5A6660] hover:text-[#1A1F1C] text-xs transition-colors"
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#2D5A3D]/10 hover:bg-[#2D5A3D]/20 text-[#2D5A3D] text-xs font-medium transition-colors"
           >
-            <Pencil size={11} /> Edit
+            <Pencil size={11} /> Edit Location
           </button>
         </div>
 
@@ -88,9 +105,9 @@ export function WhenWhereCard({ data, onSave, saved }: WhenWhereCardProps) {
               alt={location}
               className="w-full h-full object-cover"
             />
-            <div className="absolute bottom-0 inset-x-0 bg-gradient-to-t from-black/70 to-transparent p-4">
-              <p className="text-white text-sm font-medium">{location}</p>
-              {date && <p className="text-white/70 text-xs mt-1">{date}</p>}
+            <div className="absolute bottom-0 inset-x-0 bg-gradient-to-t from-black/70 to-transparent p-5">
+              <p className="text-white text-2xl font-bold leading-tight">{location}</p>
+              {date && <p className="text-white/80 text-base font-medium mt-1">{date}</p>}
             </div>
           </div>
         ) : (
@@ -99,8 +116,8 @@ export function WhenWhereCard({ data, onSave, saved }: WhenWhereCardProps) {
               <MapPin size={20} className="text-[#3D6B52]" />
             </div>
             <div className="text-center">
-              {location && <p className="text-[#1A1F1C] text-sm font-medium">{location}</p>}
-              {date && <p className="text-[#94A09A] text-xs mt-1">{date}</p>}
+              {location && <p className="text-[#1A1F1C] text-2xl font-bold leading-tight">{location}</p>}
+              {date && <p className="text-[#94A09A] text-base font-medium mt-2">{date}</p>}
               {!location && !date && <p className="text-[#94A09A] text-sm">No location set</p>}
             </div>
           </div>
@@ -192,7 +209,7 @@ export function WhenWhereCard({ data, onSave, saved }: WhenWhereCardProps) {
       <button
         onClick={handleSave}
         disabled={(!location.trim() && !date.trim()) || saving}
-        className="w-full py-3 rounded-xl text-sm font-medium transition-colors flex items-center justify-center gap-2 bg-[#2D5A3D] text-white hover:bg-[#234A31] disabled:opacity-40"
+        className="w-full py-3 rounded-xl text-sm font-medium transition-all flex items-center justify-center gap-2 bg-[#2D5A3D] text-white hover:bg-[#234A31] disabled:opacity-40 active:scale-[0.96]"
       >
         {saving ? <Loader2 size={14} className="animate-spin" /> : saved ? 'Update →' : 'Next →'}
       </button>

@@ -139,8 +139,8 @@ export default function MessageThread({
           )}
           
           <div>
-            <h3 className="font-semibold text-[#2d2d2d]">{conversation.name}</h3>
-            <div className="flex items-center gap-2 text-xs text-[#666]">
+            <h3 className="font-semibold text-[#1A1F1C]">{conversation.name}</h3>
+            <div className="flex items-center gap-2 text-xs text-[#5A6660]">
               {conversation.type === 'memory-thread' && conversation.linkedMemoryTitle && (
                 <>
                   <span className="flex items-center gap-1">
@@ -169,12 +169,12 @@ export default function MessageThread({
         {/* Actions */}
         <div className="flex items-center gap-1">
           <button 
-            className="w-9 h-9 rounded-lg flex items-center justify-center text-[#666] hover:bg-[#2D5A3D]/10 hover:text-[#2D5A3D] transition-colors"
+            className="w-9 h-9 rounded-lg flex items-center justify-center text-[#5A6660] hover:bg-[#2D5A3D]/10 hover:text-[#2D5A3D] transition-colors"
             title="View members & details"
           >
             <Info size={18} />
           </button>
-          <button className="w-9 h-9 rounded-lg flex items-center justify-center text-[#666] hover:bg-[#2D5A3D]/10 hover:text-[#2D5A3D] transition-colors">
+          <button className="w-9 h-9 rounded-lg flex items-center justify-center text-[#5A6660] hover:bg-[#2D5A3D]/10 hover:text-[#2D5A3D] transition-colors">
             <MoreVertical size={18} />
           </button>
         </div>
@@ -199,7 +199,7 @@ export default function MessageThread({
             {/* Date Separator */}
             <div className="flex items-center gap-4 mb-4">
               <div className="flex-1 h-px bg-[#2D5A3D]/10" />
-              <span className="text-xs font-medium text-[#666] bg-[#FAF7E8] px-3 py-1 rounded-full">
+              <span className="text-xs font-medium text-[#5A6660] bg-[#FAF7E8] px-3 py-1 rounded-full">
                 {formatDateSeparator(date)}
               </span>
               <div className="flex-1 h-px bg-[#2D5A3D]/10" />

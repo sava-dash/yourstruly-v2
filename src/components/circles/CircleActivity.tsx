@@ -58,7 +58,7 @@ function ActivityItem({ activity, currentUserId }: { activity: Activity; current
       case 'poll_created':
       case 'poll_voted':
       case 'poll_closed':
-        return <BarChart3 size={14} className="text-[#4A3552]" />
+        return <BarChart3 size={14} className="text-[#2D5A3D]" />
       case 'event_proposed':
       case 'event_confirmed':
       case 'event_voted':
@@ -70,7 +70,7 @@ function ActivityItem({ activity, currentUserId }: { activity: Activity; current
       case 'member_promoted':
         return <Crown size={14} className="text-[#C4A235]" />
       case 'member_demoted':
-        return <Shield size={14} className="text-[#666]" />
+        return <Shield size={14} className="text-[#5A6660]" />
       case 'message_sent':
         return <MessageCircle size={14} className="text-[#2D5A3D]" />
       case 'content_liked':
@@ -78,7 +78,7 @@ function ActivityItem({ activity, currentUserId }: { activity: Activity; current
       case 'content_commented':
         return <MessageCircle size={14} className="text-[#2D5A3D]" />
       default:
-        return <Bell size={14} className="text-[#666]" />
+        return <Bell size={14} className="text-[#5A6660]" />
     }
   }
 
@@ -91,7 +91,7 @@ function ActivityItem({ activity, currentUserId }: { activity: Activity; current
       case 'poll_created':
       case 'poll_voted':
       case 'poll_closed':
-        return 'bg-[#4A3552]/10'
+        return 'bg-[#2D5A3D]/10'
       case 'event_proposed':
       case 'event_confirmed':
       case 'event_voted':
@@ -118,11 +118,11 @@ function ActivityItem({ activity, currentUserId }: { activity: Activity; current
       case 'wisdom_shared':
         return <><strong>{actor}</strong> shared wisdom: <span className="text-[#2D5A3D]">{activity.targetName}</span></>
       case 'poll_created':
-        return <><strong>{actor}</strong> created a poll: <span className="text-[#4A3552]">{activity.targetName}</span></>
+        return <><strong>{actor}</strong> created a poll: <span className="text-[#2D5A3D]">{activity.targetName}</span></>
       case 'poll_voted':
-        return <><strong>{actor}</strong> voted on <span className="text-[#4A3552]">{activity.targetName}</span></>
+        return <><strong>{actor}</strong> voted on <span className="text-[#2D5A3D]">{activity.targetName}</span></>
       case 'poll_closed':
-        return <><strong>{actor}</strong> closed the poll: <span className="text-[#4A3552]">{activity.targetName}</span></>
+        return <><strong>{actor}</strong> closed the poll: <span className="text-[#2D5A3D]">{activity.targetName}</span></>
       case 'event_proposed':
         return <><strong>{actor}</strong> proposed an event: <span className="text-[#8a7c08]">{activity.targetName}</span> with {activity.metadata?.slotCount} time options</>
       case 'event_confirmed':
@@ -167,10 +167,10 @@ function ActivityItem({ activity, currentUserId }: { activity: Activity; current
       
       {/* Content */}
       <div className="flex-1 min-w-0">
-        <p className="text-sm text-[#2d2d2d] leading-relaxed">
+        <p className="text-sm text-[#1A1F1C] leading-relaxed">
           {getMessage()}
         </p>
-        <p className="text-xs text-[#999] mt-1">
+        <p className="text-xs text-[#94A09A] mt-1">
           {formatTime(activity.timestamp)}
         </p>
       </div>
@@ -191,7 +191,7 @@ function DateSeparator({ date }: { date: Date }) {
   return (
     <div className="flex items-center gap-3 py-2">
       <div className="flex-1 h-px bg-[#2D5A3D]/10" />
-      <span className="text-xs font-medium text-[#666] px-2">
+      <span className="text-xs font-medium text-[#5A6660] px-2">
         {formatDateLabel(date)}
       </span>
       <div className="flex-1 h-px bg-[#2D5A3D]/10" />
@@ -233,7 +233,7 @@ export default function CircleActivity({ activities, currentUserId }: CircleActi
         <div className="w-12 h-12 rounded-full bg-[#2D5A3D]/10 flex items-center justify-center mx-auto mb-3">
           <Bell size={20} className="text-[#2D5A3D]" />
         </div>
-        <p className="text-sm text-[#666]">No recent activity</p>
+        <p className="text-sm text-[#5A6660]">No recent activity</p>
       </div>
     )
   }
@@ -242,7 +242,7 @@ export default function CircleActivity({ activities, currentUserId }: CircleActi
     <div className="content-card">
       <div className="flex items-center gap-2 mb-4">
         <Bell size={18} className="text-[#2D5A3D]" />
-        <h3 className="font-semibold text-[#2d2d2d]">Recent Activity</h3>
+        <h3 className="font-semibold text-[#1A1F1C]">Recent Activity</h3>
       </div>
       
       <div className="space-y-1">

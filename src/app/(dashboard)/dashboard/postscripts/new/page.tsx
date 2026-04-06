@@ -6,7 +6,7 @@ import { useRouter } from 'next/navigation'
 import { 
   ChevronLeft, ChevronRight, User, Users, Calendar, Gift,
   MessageSquare, Send, Check, X, Search, Mail, Phone, ImagePlus, Trash2,
-  Mic, Brain, Sparkles
+  Mic, Brain, Sparkles, DollarSign
 } from 'lucide-react'
 import Link from 'next/link'
 import '@/styles/home.css'
@@ -736,13 +736,16 @@ export default function NewPostScriptPage() {
             />
           </div>
 
-          {/* Attachments Grid - 2x2 */}
+          {/* Enhance Your PostScript */}
+          <div>
+            <p className="text-xs font-semibold text-[#94A09A] uppercase tracking-wider mb-3">Enhance Your PostScript</p>
+          </div>
           <div className="grid grid-cols-2 gap-4">
             {/* Photos Tile */}
             <div className="h-36">
               <label className="text-sm font-medium text-gray-700 mb-2 flex items-center gap-1.5">
                 <ImagePlus size={14} className="text-[#B8562E]" />
-                Attach Photos <span className="text-gray-400 font-normal">(max 5)</span>
+                Add Photos <span className="text-gray-400 font-normal">(max 5)</span>
               </label>
               
               {form.attachments.length > 0 ? (
@@ -797,7 +800,7 @@ export default function NewPostScriptPage() {
             <div className="h-36">
               <label className="text-sm font-medium text-gray-700 mb-2 flex items-center gap-1.5">
                 <Gift size={14} className="text-[#C4A235]" />
-                Add Gift <span className="text-gray-400 font-normal">(optional)</span>
+                Send Gift <span className="text-gray-400 font-normal">(optional)</span>
               </label>
               
               {form.gift ? (
@@ -822,15 +825,29 @@ export default function NewPostScriptPage() {
                   </button>
                 </div>
               ) : (
-                <button
-                  onClick={() => setShowGiftModal(true)}
-                  className="w-full h-[calc(100%-28px)] rounded-xl border-2 border-dashed border-gray-300 
-                           hover:border-[#B8562E] hover:bg-[#B8562E]/5 
-                           flex flex-col items-center justify-center cursor-pointer transition-all"
-                >
-                  <Gift size={28} className="text-gray-400 mb-1" />
-                  <span className="text-sm text-gray-400">Browse Gifts</span>
-                </button>
+                <div className="h-[calc(100%-28px)] grid grid-cols-2 gap-2">
+                  <button
+                    onClick={() => setShowGiftModal(true)}
+                    className="rounded-xl border border-[#DDE3DF] hover:border-[#2D5A3D]/30 hover:bg-[#2D5A3D]/3
+                             flex flex-col items-center justify-center cursor-pointer transition-all"
+                  >
+                    <Gift size={22} className="text-[#2D5A3D] mb-1" />
+                    <span className="text-xs font-medium text-[#1A1F1C]">Send Gift</span>
+                    <span className="text-[10px] text-[#94A09A]">Browse catalog</span>
+                  </button>
+                  <button
+                    onClick={() => {
+                      // Pre-select Gift of Choice mode in the modal
+                      setShowGiftModal(true)
+                    }}
+                    className="rounded-xl border border-[#DDE3DF] hover:border-[#C4A235]/30 hover:bg-[#C4A235]/3
+                             flex flex-col items-center justify-center cursor-pointer transition-all"
+                  >
+                    <DollarSign size={22} className="text-[#C4A235] mb-1" />
+                    <span className="text-xs font-medium text-[#1A1F1C]">Gift of Choice</span>
+                    <span className="text-[10px] text-[#94A09A]">They pick</span>
+                  </button>
+                </div>
               )}
             </div>
 
@@ -838,7 +855,7 @@ export default function NewPostScriptPage() {
             <div className="h-36">
               <label className="text-sm font-medium text-gray-700 mb-2 flex items-center gap-1.5">
                 <Sparkles size={14} className="text-[#2D5A3D]" />
-                Attach Memories <span className="text-gray-400 font-normal">(optional)</span>
+                Link Memories <span className="text-gray-400 font-normal">(optional)</span>
               </label>
               
               {form.memories.length > 0 ? (
@@ -877,7 +894,7 @@ export default function NewPostScriptPage() {
             <div className="h-36">
               <label className="text-sm font-medium text-gray-700 mb-2 flex items-center gap-1.5">
                 <Brain size={14} className="text-[#8DACAB]" />
-                Attach Wisdom <span className="text-gray-400 font-normal">(optional)</span>
+                Link Wisdom <span className="text-gray-400 font-normal">(optional)</span>
               </label>
               
               {form.wisdom.length > 0 ? (

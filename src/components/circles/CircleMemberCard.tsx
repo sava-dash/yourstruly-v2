@@ -88,14 +88,14 @@ export default function CircleMemberCard({
         {/* Info */}
         <div>
           <div className="flex items-center gap-2">
-            <span className="font-medium text-[#2d2d2d]">
+            <span className="font-medium text-[#1A1F1C]">
               {member.full_name}
-              {isCurrentUser && <span className="text-[#666] font-normal ml-1">(you)</span>}
+              {isCurrentUser && <span className="text-[#5A6660] font-normal ml-1">(you)</span>}
             </span>
             {getRoleBadge(member.role)}
           </div>
-          <p className="text-sm text-[#666]">{member.email}</p>
-          <p className="text-xs text-[#888] mt-0.5">Joined {formatDate(member.joined_at)}</p>
+          <p className="text-sm text-[#5A6660]">{member.email}</p>
+          <p className="text-xs text-[#94A09A] mt-0.5">Joined {formatDate(member.joined_at)}</p>
         </div>
       </div>
 

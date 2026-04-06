@@ -57,7 +57,7 @@ export function FieldInputCard({ contactName, data, onSave, saved }: FieldInputC
       <button
         onClick={handleSave}
         disabled={!hasContent || saving || saved}
-        className={`w-full py-2 rounded-xl text-sm font-medium transition-colors flex items-center justify-center gap-2 ${
+        className={`w-full py-2 rounded-xl text-sm font-medium transition-all active:scale-[0.96] flex items-center justify-center gap-2 ${
           saved
             ? 'bg-[#E6F0EA] text-[#2D5A3D] border border-[#2D5A3D]/30'
             : 'bg-[#2D5A3D] text-white hover:bg-[#234A31] disabled:opacity-40'
