@@ -40,3 +40,7 @@ yarn-error.log*
 *.tsbuildinfo
 next-env.d.ts
 !.env.example
+
+# AWS CLI install artifacts
+/aws/
+/awscliv2.zip

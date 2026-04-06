@@ -19,7 +19,7 @@ COPY --from=deps /app/node_modules ./node_modules
 COPY . .
 
 # Next.js collects anonymous telemetry data - disable it
-ENV NEXT_TELEMETRY_DISABLED 1
+ENV NEXT_TELEMETRY_DISABLED=1
 
 # Build arguments for public env vars (needed at build time)
 # NO defaults for critical vars — build will fail if you forget them.

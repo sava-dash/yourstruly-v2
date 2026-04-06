@@ -95,7 +95,12 @@ export default function AboutMePage() {
 
   const handleAddFavorite = async (category: string, data: any) => {
     const { data: { user } } = await supabase.auth.getUser()
-    if (!user) return
+    if (!user) {
+      console.error('[Favorites] No user — cannot save')
+      return
+    }
+
+    console.log('[Favorites] Attempting to save:', { category, item: data.item, userId: user.id })
 
     const { data: inserted, error } = await supabase.from('favorites').insert({
       user_id: user.id,
@@ -110,7 +115,8 @@ export default function AboutMePage() {
     }).select().single()
 
     if (error) {
-      console.error('Failed to save favorite:', error)
+      console.error('[Favorites] DB save failed:', error.message, error.details, error.hint, error.code)
+      alert(`Failed to save favorite: ${error.message}\n\nDetails: ${error.details || 'none'}\nCheck browser console for more info.`)
       // Fallback: add to local state even if DB fails (migration may not be applied)
       setFavorites(prev => [...prev, {
         id: `local-${Date.now()}`,
@@ -165,8 +171,14 @@ export default function AboutMePage() {
         supabase.from('knowledge_entries').select('id, prompt_text, response_text, audio_url, tags, created_at').eq('user_id', user.id).eq('category', 'recipes').order('created_at', { ascending: false }),
       ])
 
+      console.log('[Favorites] Loaded:', {
+        favCount: favRes.data?.length || 0,
+        favError: favRes.error?.message,
+        userId: user.id,
+      })
       if (profileRes.data) setProfile(profileRes.data)
       if (favRes.data) setFavorites(favRes.data)
+      if (favRes.error) console.error('[Favorites] Load error:', favRes.error)
       if (recipeRes.data) setRecipes(recipeRes.data)
       setLoading(false)
     }

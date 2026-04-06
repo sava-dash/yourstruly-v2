@@ -51,6 +51,25 @@ npm test
 npm run lint
 ```
 
+## Deployment to AWS
+
+The app deploys to AWS ECS via `./deploy.sh`. Docker requires sudo and AWS credentials live in the user's `~/.aws/` directory, so the deploy command must preserve environment + PATH:
+
+```bash
+# Full deploy (build + push + ECS redeploy)
+sudo -E env "PATH=$PATH" ./deploy.sh
+
+# Skip git push (if already pushed)
+sudo -E env "PATH=$PATH" ./deploy.sh --skip-push
+
+# Skip docker build (if image already built locally)
+sudo -E env "PATH=$PATH" ./deploy.sh --skip-push --skip-build
+```
+
+**IMPORTANT**: Always use `sudo -E env "PATH=$PATH"` — NOT plain `sudo`. Plain sudo strips the AWS_* env vars and PATH, causing "NoCredentials" and "aws: command not found" errors. The `-E` flag preserves HOME so AWS CLI finds `~/.aws/credentials`.
+
+Deploy target: `https://app.yourstruly.love` (AWS ECS cluster `yourstruly-cluster`, service `yourstruly-service`, region `us-east-2`).
+
 - ALWAYS run tests after making code changes
 - ALWAYS verify build succeeds before committing
 

@@ -65,7 +65,7 @@ export function UnifiedEngagementModal({
     return {
       name: 'Interviewer',
       description: 'A warm interviewer gathering your story',
-      voice: 'coral',
+      voice: 'yourstruly-voice.mp3',
       style: 'warm',
       systemPrompt: `You're a warm interviewer helping capture a meaningful memory.
 

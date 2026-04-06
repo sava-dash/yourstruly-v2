@@ -93,12 +93,13 @@ export default function HomeV2Page() {
 
   const { subscription } = useSubscription()
   const { stats: dashboardStats, refreshStats: refreshDashboardStats } = useDashboardData(user?.id || null)
-  const { totalXp, xpAnimating } = useXpState(user?.id || null)
+  const { totalXp, xpAnimating, addXp } = useXpState(user?.id || null)
   const { config: gamificationConfig } = useGamificationConfig()
   const streakDays = 0
 
   const [expandedRowId, setExpandedRowId] = useState<string | null>(null)
   const expandedRowIdRef = useRef<string | null>(null)
+  const [shuffleKey, setShuffleKey] = useState(0)
   const scrollRowRefs = useRef<Map<string, HTMLDivElement>>(new Map())
   // Keep ref in sync with state
   useEffect(() => { expandedRowIdRef.current = expandedRowId }, [expandedRowId])
@@ -167,8 +168,6 @@ export default function HomeV2Page() {
     const newRows = new Map<string, PromptRow>()
 
     // IMPORTANT: Preserve the currently expanded row even if answerPrompt removed it from rawPrompts.
-    // This prevents the blur-freeze bug where the expanded row disappears and all remaining rows
-    // stay blurred with pointerEvents: none.
     const currentExpandedId = expandedRowIdRef.current
     if (currentExpandedId) {
       const existingExpanded = rows.get(currentExpandedId)
@@ -178,7 +177,12 @@ export default function HomeV2Page() {
       }
     }
 
-    for (const prompt of rawPrompts) {
+    // Client-side shuffle using shuffleKey as seed — works even if DB migration not applied
+    const shuffledPrompts = shuffleKey > 0
+      ? [...rawPrompts].sort(() => Math.random() - 0.5)
+      : rawPrompts
+
+    for (const prompt of shuffledPrompts) {
       if (prompt.type === 'tag_person') continue
       if (prompt.photoId) {
         if (seenPhotoIds.has(prompt.photoId)) continue
@@ -202,7 +206,7 @@ export default function HomeV2Page() {
       })
     }
     setRows(newRows)
-  }, [rawPrompts])
+  }, [rawPrompts, shuffleKey])
 
   // Open: expand row, scroll to first chain card
   const handleSelect = useCallback((promptId: string) => {
@@ -288,6 +292,27 @@ export default function HomeV2Page() {
       }
     } catch (err) { console.error('Auto-save failed:', err) }
 
+    // Award XP for saving a card
+    const xpAmounts: Record<string, number> = {
+      'when-where': 15,
+      'text-voice-video': 25,
+      'quote': 10,
+      'comment': 5,
+      'tag-people': 10,
+      'people-present': 10,
+      'field-input': 10,
+      'pill-select': 10,
+      'song': 15,
+      'invite-collaborator': 20,
+      'list-item': 10,
+    }
+    const row = rows.get(promptId)
+    const card = row?.cards.find(c => c.id === cardId)
+    if (card) {
+      const xp = xpAmounts[card.type] || 10
+      addXp(xp, `card_saved:${card.type}`, cardId)
+    }
+
     // Auto-advance: scroll to next card in the carousel after save
     requestAnimationFrame(() => {
       const scrollEl = scrollRowRefs.current.get(promptId)
@@ -298,7 +323,7 @@ export default function HomeV2Page() {
         if (next) next.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' })
       }
     })
-  }, [rows, answerPrompt, supabase])
+  }, [rows, answerPrompt, supabase, addXp])
 
 
   const handleAddCard = useCallback((promptId: string, type: CardType) => {
@@ -475,7 +500,7 @@ export default function HomeV2Page() {
       <main className="dashboard-main home-v2-main" style={{ minHeight: '100vh' }}>
         {/* Shuffle — top right */}
         <div style={{ display: 'flex', justifyContent: 'flex-end', padding: '8px 24px 0' }}>
-          <motion.button whileTap={{ scale: 0.96 }} onClick={() => shuffle()} style={{
+          <motion.button whileTap={{ scale: 0.96 }} onClick={() => { shuffle(); setShuffleKey(k => k + 1) }} style={{
             display: 'flex', alignItems: 'center', gap: '6px', padding: '8px 16px',
             borderRadius: '12px', background: 'white', border: '1px solid #DDE3DF',
             color: '#5A6660', fontSize: '13px', cursor: 'pointer',
@@ -603,7 +628,7 @@ export default function HomeV2Page() {
                   </div>
                 </motion.div>
                 {index < allPrompts.length - 1 && !hasExpandedRow && (
-                  <div style={{ height: '1px', background: 'rgba(45,90,61,0.06)', margin: '-12px 64px 0' }} />
+                  <div style={{ height: '1px', background: 'rgba(45,90,61,0.08)', margin: '32px 64px' }} />
                 )}
                 </React.Fragment>
               )

@@ -2,10 +2,9 @@
 
 import { useState, useEffect, useCallback, useMemo, Suspense } from 'react';
 import { createClient } from '@/lib/supabase/client';
-import { useRouter, useSearchParams } from 'next/navigation';
+import { useRouter } from 'next/navigation';
 import { Loader2 } from 'lucide-react';
 import { QuickOnboardingFlow } from '@/components/onboarding/QuickOnboardingFlow';
-import { HeroUIOnboarding } from '@/components/onboarding/HeroUIOnboarding';
 import { OnboardingErrorBoundary } from '@/components/ui/OnboardingErrorBoundary';
 
 interface OnboardingData {
@@ -28,26 +27,8 @@ function OnboardingPageContent() {
   const [loading, setLoading] = useState(true);
   const [user, setUser] = useState<any>(null);
   const [firstName, setFirstName] = useState('');
-  const [useHeroUI, setUseHeroUI] = useState(false);
   const router = useRouter();
-  const searchParams = useSearchParams();
   const supabase = useMemo(() => createClient(), []);
-
-  // Check for version parameter on mount
-  useEffect(() => {
-    const version = searchParams.get('v');
-    const storedVersion = localStorage.getItem('onboarding-version');
-    
-    if (version === 'hero') {
-      setUseHeroUI(true);
-      localStorage.setItem('onboarding-version', 'hero');
-    } else if (version === 'classic') {
-      setUseHeroUI(false);
-      localStorage.setItem('onboarding-version', 'classic');
-    } else if (storedVersion === 'hero') {
-      setUseHeroUI(true);
-    }
-  }, [searchParams]);
 
   useEffect(() => {
     let mounted = true;
@@ -183,10 +164,11 @@ function OnboardingPageContent() {
           });
         }
 
-        router.push('/dashboard');
+        // Hard navigation ensures profile update + cookies are fresh
+        window.location.href = '/dashboard';
       } catch (error) {
         console.error('Error completing onboarding:', error);
-        router.push('/dashboard');
+        window.location.href = '/dashboard';
       }
     },
     [user, router, supabase]
@@ -200,22 +182,8 @@ function OnboardingPageContent() {
     );
   }
 
-  const toggleVersion = () => {
-    const newVersion = !useHeroUI;
-    setUseHeroUI(newVersion);
-    localStorage.setItem('onboarding-version', newVersion ? 'hero' : 'classic');
-  };
-
   return (
     <OnboardingErrorBoundary>
-      {/* Version toggle button */}
-      <button
-        onClick={toggleVersion}
-        className="fixed top-4 left-4 z-50 px-4 py-2 bg-white/90 backdrop-blur-sm rounded-full text-xs font-medium text-[#2D5A3D] border border-[#2D5A3D]/20 hover:bg-[#2D5A3D]/10 transition-colors shadow-lg"
-      >
-        {useHeroUI ? '🎨 HeroUI' : '⚡ Classic'} • Click to switch
-      </button>
-
       <Suspense
         fallback={
           <div className="min-h-screen bg-[#FAFAF7] flex items-center justify-center">
@@ -223,20 +191,12 @@ function OnboardingPageContent() {
           </div>
         }
       >
-        {useHeroUI ? (
-          <HeroUIOnboarding
-            onComplete={handleOnboardingComplete}
-            onSkip={handleSkipOnboarding}
-            firstName={firstName}
-          />
-        ) : (
-          <QuickOnboardingFlow
-            onComplete={handleOnboardingComplete}
-            onSkipAll={handleSkipOnboarding}
-            userId={user?.id}
-            initialName={firstName}
-          />
-        )}
+        <QuickOnboardingFlow
+          onComplete={handleOnboardingComplete}
+          onSkipAll={handleSkipOnboarding}
+          userId={user?.id}
+          initialName={firstName}
+        />
       </Suspense>
     </OnboardingErrorBoundary>
   );

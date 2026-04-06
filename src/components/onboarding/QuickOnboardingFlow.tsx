@@ -62,7 +62,7 @@ const ALL_STEPS: QuickStep[] = [
   'globe',
   // interests, contacts, why-here, photo-upload are now embedded in the globe step
   // religion removed
-  'heartfelt',
+  // heartfelt (onboarding cards) removed — users will learn cards on the dashboard
   'ready',
 ];
 
@@ -70,7 +70,6 @@ const ALL_STEPS: QuickStep[] = [
 const PROGRESS_STEPS: QuickStep[] = [
   'birth-info',
   'globe',
-  'heartfelt',
   'ready',
 ];
 

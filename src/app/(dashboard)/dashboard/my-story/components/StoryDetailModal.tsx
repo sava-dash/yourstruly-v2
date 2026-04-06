@@ -941,62 +941,62 @@ function seededRandom(seed: string) {
   }
 }
 
-// Deterministic layout — places pieces in a loose collage
+// Horizontal layout — places pieces in a scrollable row like memorylane.so
+// Each piece flows left-to-right with slight rotation; all visible at once
 function layoutPieces(pieces: Omit<Piece, 'x' | 'y' | 'width' | 'height' | 'rotation' | 'z'>[], seed: string, isMobile: boolean): Piece[] {
+  const rng = seededRandom(seed)
+
   if (isMobile) {
     // Vertical stack on mobile
-    return pieces.map((p, i) => ({
-      ...p,
-      x: 50,
-      y: (i * 15) + 8,
-      width: sizeFor(p.kind).w * 1.1,
-      height: sizeFor(p.kind).h * 1.1,
-      rotation: ((seededRandom(p.id)() - 0.5) * 4), // -2 to +2 deg
-      z: i,
-    }))
+    return pieces.map((p, i) => {
+      const { w, h } = sizeFor(p.kind)
+      return {
+        ...p,
+        x: 50, y: (i * 18) + 10,
+        width: w * 1.1, height: h * 1.1,
+        rotation: (seededRandom(p.id)() - 0.5) * 4,
+        z: i,
+      }
+    })
   }
 
-  const rng = seededRandom(seed)
-  const placed: Piece[] = []
-  const canvasW = 100 // percentages
-  const canvasH = 100
-
-  // Sort by priority: title first (center), then photos, then text, then metadata
+  // Desktop: horizontal flow — pieces placed left-to-right with vertical offset
+  // Sort by importance: title first, then photos interspersed with text
   const priority: Record<PieceKind, number> = {
-    title: 0, photo: 1, quote: 2, conversation: 3, location: 4, date: 5, people: 6, song: 7, collaborator: 8,
+    title: 0, date: 1, photo: 2, quote: 3, conversation: 4, location: 5, people: 6, song: 7, collaborator: 8,
   }
   const sorted = [...pieces].sort((a, b) => priority[a.kind] - priority[b.kind])
+
+  // Calculate positions — pieces flow left-to-right
+  // Each piece gets an x position based on cumulative width + spacing
+  const placed: Piece[] = []
+  const gap = 60 // px between pieces
+  let currentX = 80 // start offset from left edge
 
   for (let i = 0; i < sorted.length; i++) {
     const p = sorted[i]
     const { w, h } = sizeFor(p.kind)
-    // Convert px to rough percentages (assume 1200px canvas)
-    const wPct = (w / 1200) * 100
-    const hPct = (h / 700) * 100
 
-    // Initial target position — cover photo/title at center, others spiral outward
-    let x = 50, y = 50
-    if (i > 0) {
-      // Spiral outward with some randomness
-      const angle = (i * 2.4) + rng() * 1.2 // golden angle-ish
-      const radius = Math.min(10 + i * 6, 35)
-      x = 50 + Math.cos(angle) * radius + (rng() - 0.5) * 8
-      y = 50 + Math.sin(angle) * radius + (rng() - 0.5) * 8
-    }
-    // Clamp to keep pieces in frame
-    x = Math.max(wPct / 2 + 2, Math.min(100 - wPct / 2 - 2, x))
-    y = Math.max(hPct / 2 + 5, Math.min(100 - hPct / 2 - 5, y))
+    // Vertical position: alternate above/below center line with slight jitter
+    const rowOffset = (i % 3) - 1 // -1, 0, 1 (staggered rows)
+    const jitter = (rng() - 0.5) * 40
+    const y = 50 + (rowOffset * 15) + (jitter / 10)
 
-    // Rotation: stable per-piece, more for photos, less for text
-    const rotAmplitude = p.kind === 'photo' ? 8 : p.kind === 'title' ? 2 : 5
+    // Rotation: photos get more, text less
+    const rotAmplitude = p.kind === 'photo' ? 6 : p.kind === 'title' ? 1 : 3
     const rotation = (rng() - 0.5) * 2 * rotAmplitude
 
     placed.push({
       ...p,
-      x, y, width: w, height: h,
+      x: currentX + w / 2, // store center x in px (not percentage for horizontal flow)
+      y, // y still as percentage
+      width: w,
+      height: h,
       rotation,
       z: i,
     })
+
+    currentX += w + gap
   }
 
   return placed
@@ -1072,23 +1072,46 @@ function SlideshowOverlay({
       })
     }
 
-    // Conversation exchanges
-    exchanges.forEach((ex, i) => {
-      raw.push({
-        id: `conv-${memory.id}-${i}`,
-        kind: 'conversation',
-        question: ex.question,
-        answer: ex.answer,
+    // Conversation exchanges — if parsed exchanges exist, use them
+    if (exchanges.length > 0) {
+      exchanges.forEach((ex, i) => {
+        raw.push({
+          id: `conv-${memory.id}-${i}`,
+          kind: 'conversation',
+          question: ex.question,
+          answer: ex.answer,
+        })
       })
-    })
+    } else if (memory.description) {
+      // Fallback: split description into paragraphs and show each as a conversation card
+      const paragraphs = cleanDescription(memory.description)
+      paragraphs.slice(0, 4).forEach((para, i) => {
+        raw.push({
+          id: `desc-${memory.id}-${i}`,
+          kind: 'conversation',
+          question: i === 0 ? 'The Story' : 'Continued',
+          answer: para,
+        })
+      })
+    }
 
-    // Location
-    if (memory.location_lat != null && memory.location_lng != null) {
+    // Location — try memory location first, fall back to first photo's EXIF
+    let locLat = memory.location_lat
+    let locLng = memory.location_lng
+    let locName = memory.location_name
+    if ((locLat == null || locLng == null) && photos.length > 0) {
+      const photoWithLoc = photos.find(p => p.exif_lat != null && p.exif_lng != null)
+      if (photoWithLoc) {
+        locLat = photoWithLoc.exif_lat ?? null
+        locLng = photoWithLoc.exif_lng ?? null
+      }
+    }
+    if (locLat != null && locLng != null) {
       raw.push({
         id: `loc-${memory.id}`,
         kind: 'location',
-        mapUrl: staticMapUrl(memory.location_lat, memory.location_lng, 11, 400, 300),
-        locationName: memory.location_name || undefined,
+        mapUrl: staticMapUrl(locLat, locLng, 11, 400, 300),
+        locationName: locName || undefined,
       })
     }
 
@@ -1102,6 +1125,15 @@ function SlideshowOverlay({
           text: c.response_text,
         })
       }
+    })
+
+    // Debug: log what pieces got built so we can see what's missing
+    console.log('[Slideshow] Built pieces:', raw.map(p => p.kind), {
+      exchanges: exchanges.length,
+      hasLocation: memory.location_lat != null,
+      hasDescription: !!memory.description,
+      photosCount: photos.length,
+      collaboratorsCount: collaborators.length,
     })
 
     // Stable layout using memory ID as seed
@@ -1143,18 +1175,30 @@ function SlideshowOverlay({
         <X size={18} />
       </button>
 
-      {/* Canvas with pieces */}
-      <div className={`relative w-full h-full ${isMobile ? 'overflow-y-auto' : 'overflow-hidden'}`}>
-        {pieces.map((piece, idx) => (
-          <CollagePiece
-            key={piece.id}
-            piece={piece}
-            isMobile={isMobile}
-            onZoom={() => setZoomedId(piece.id)}
-            entryDelay={idx * 60}
-            dimmed={!!zoomedId}
-          />
-        ))}
+      {/* Canvas with pieces — horizontal scroll on desktop */}
+      <div
+        className={`relative w-full h-full ${isMobile ? 'overflow-y-auto' : 'overflow-x-auto overflow-y-hidden'}`}
+        style={{ scrollbarWidth: 'thin' }}
+      >
+        <div
+          className="relative h-full"
+          style={{
+            // Calculate total width needed so pieces don't clip
+            width: isMobile ? '100%' : `${Math.max(1200, pieces.reduce((acc, p) => Math.max(acc, p.x + p.width / 2 + 100), 0))}px`,
+            minWidth: '100%',
+          }}
+        >
+          {pieces.map((piece, idx) => (
+            <CollagePiece
+              key={piece.id}
+              piece={piece}
+              isMobile={isMobile}
+              onZoom={() => setZoomedId(piece.id)}
+              entryDelay={idx * 60}
+              dimmed={!!zoomedId}
+            />
+          ))}
+        </div>
       </div>
 
       {/* Zoom overlay */}
@@ -1199,7 +1243,7 @@ function CollagePiece({ piece, isMobile, onZoom, entryDelay, dimmed }: {
       }
     : {
         position: 'absolute',
-        left: `${piece.x}%`,
+        left: `${piece.x}px`, // px for horizontal flow
         top: `${piece.y}%`,
         width: piece.width,
         transform: `translate(-50%, -50%) rotate(${piece.rotation}deg)`,
