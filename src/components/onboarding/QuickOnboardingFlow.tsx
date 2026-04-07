@@ -20,6 +20,7 @@ import { OnboardingCards } from './OnboardingCards';
 import { ConversationEngine } from '@/components/conversation-engine';
 import { BubblePickerInterests, BubblePickerTraits, ALL_INTERESTS as BUBBLE_INTERESTS, TRAIT_ITEMS as BUBBLE_TRAITS } from './BubblePicker';
 import { CURATED_TRAITS, CURATED_INTERESTS } from './curated-options';
+import { GoogleContactsImport } from '@/components/contacts';
 
 // ============================================
 // TYPES
@@ -426,6 +427,8 @@ function MapboxGlobeReveal({
 
   // Contacts (family/friends) state
   const [contactEntries, setContactEntries] = useState<{ name: string; relationship: string }[]>([]);
+  // Names that were imported via Google (already persisted to DB by GoogleContactsImport) — skip in saveContacts to avoid duplicates
+  const [googleImportedNames, setGoogleImportedNames] = useState<Set<string>>(new Set());
   const [contactName, setContactName] = useState('');
   const [contactRelation, setContactRelation] = useState('');
 
@@ -783,16 +786,17 @@ function MapboxGlobeReveal({
     { category: 'Other', options: ['Neighbor', 'Other'] },
   ];
 
-  // Save contacts to Supabase
+  // Save contacts to Supabase (skip Google-imported entries — those are already persisted by GoogleContactsImport)
   const saveContacts = useCallback(async () => {
-    if (contactEntries.length === 0) return;
+    const manualEntries = contactEntries.filter(c => !googleImportedNames.has(c.name));
+    if (manualEntries.length === 0) return;
     try {
       const { createClient } = await import('@/lib/supabase/client');
       const supabase = createClient();
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return;
 
-      const rows = contactEntries.map(c => ({
+      const rows = manualEntries.map(c => ({
         user_id: user.id,
         full_name: c.name,
         relationship_type: c.relationship.toLowerCase().replace(/ /g, '_'),
@@ -802,7 +806,7 @@ function MapboxGlobeReveal({
     } catch (err) {
       console.error('Failed to save contacts:', err);
     }
-  }, [contactEntries]);
+  }, [contactEntries, googleImportedNames]);
 
   // Save why-here as a memory (selections + freeform text)
   const saveWhyHere = useCallback(async () => {
@@ -1461,6 +1465,46 @@ function MapboxGlobeReveal({
               <p>The people you shared life with are part of what makes those moments live on. Add the people who matter most.</p>
             </div>
             <div className="globe-side-panel-items" style={{ gap: '0', padding: '8px 16px', overflowY: 'auto' }}>
+              {/* Google import — quickly bring in contacts you already have */}
+              <div className="contact-google-import-row">
+                <GoogleContactsImport
+                  onImportComplete={async () => {
+                    try {
+                      const { createClient } = await import('@/lib/supabase/client');
+                      const supabase = createClient();
+                      const { data: { user } } = await supabase.auth.getUser();
+                      if (!user) return;
+                      const { data } = await supabase
+                        .from('contacts')
+                        .select('full_name, relationship_type')
+                        .eq('user_id', user.id);
+                      if (!data) return;
+                      // Merge any names not already in contactEntries
+                      setContactEntries(prev => {
+                        const existing = new Set(prev.map(e => e.name));
+                        const additions = data
+                          .filter(row => row.full_name && !existing.has(row.full_name))
+                          .map(row => ({
+                            name: row.full_name as string,
+                            relationship: ((row.relationship_type as string) || 'other')
+                              .replace(/_/g, ' ')
+                              .replace(/\b\w/g, c => c.toUpperCase()),
+                          }));
+                        return [...prev, ...additions];
+                      });
+                      setGoogleImportedNames(prev => {
+                        const next = new Set(prev);
+                        data.forEach(row => { if (row.full_name) next.add(row.full_name as string); });
+                        return next;
+                      });
+                    } catch (err) {
+                      console.error('Failed to merge Google-imported contacts:', err);
+                    }
+                  }}
+                />
+                <span className="contact-google-import-hint">or add people manually below</span>
+              </div>
+
               {/* Existing contact rows */}
               {contactEntries.map((entry, i) => (
                 <div key={i} className="contact-entry-row">
@@ -2555,6 +2599,44 @@ function MapboxGlobeReveal({
         .globe-custom-add-btn:disabled {
           opacity: 0.4;
           cursor: default;
+        }
+
+        /* Google import row — sits above the manual contact entry */
+        .contact-google-import-row {
+          display: flex;
+          flex-direction: column;
+          align-items: stretch;
+          gap: 6px;
+          padding: 12px;
+          margin-bottom: 10px;
+          border-radius: 14px;
+          background: rgba(245, 243, 238, 0.6);
+          border: 1px solid rgba(64, 106, 86, 0.15);
+        }
+        .contact-google-import-row .btn-secondary {
+          width: 100%;
+          justify-content: center;
+          padding: 10px 14px;
+          border-radius: 12px;
+          border: 1.5px solid rgba(64, 106, 86, 0.25);
+          background: #ffffff;
+          color: #2D5A3D;
+          font-size: 14px;
+          font-weight: 600;
+          cursor: pointer;
+          transition: background 0.2s, border-color 0.2s;
+          display: inline-flex;
+          align-items: center;
+          gap: 8px;
+        }
+        .contact-google-import-row .btn-secondary:hover {
+          background: rgba(64, 106, 86, 0.06);
+          border-color: rgba(64, 106, 86, 0.4);
+        }
+        .contact-google-import-hint {
+          font-size: 12px;
+          color: rgba(45, 45, 45, 0.5);
+          text-align: center;
         }
 
         /* Contact entry rows */

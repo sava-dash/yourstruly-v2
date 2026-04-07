@@ -123,10 +123,10 @@ export default function TopNav({ user, profile }: TopNavProps) {
           <div className="flex items-center gap-1">
             <Link href="/dashboard" className="mr-4 flex-shrink-0">
               {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img 
-                src="/images/logo-yours.png" 
-                alt="YoursTruly" 
-                className="h-7 w-auto"
+              <img
+                src="/images/logo-yours.svg"
+                alt="YoursTruly"
+                className="h-10 w-auto"
               />
             </Link>
 
@@ -182,7 +182,7 @@ export default function TopNav({ user, profile }: TopNavProps) {
                 </SlideUpButton>
                 
                 {toolsOpen && (
-                  <div className="absolute top-full left-0 mt-1 w-48 glass-modal rounded-refined p-1.5 dropdown-menu" role="menu">
+                  <div className="absolute top-full left-0 mt-1 w-48 bg-white border border-black/5 shadow-2xl rounded-refined p-1.5 dropdown-menu" role="menu">
                     {toolsItems.map((item) => {
                       const Icon = item.icon
                       const isActive = pathname === item.href
@@ -229,7 +229,7 @@ export default function TopNav({ user, profile }: TopNavProps) {
                 </SlideUpButton>
                 
                 {peopleOpen && (
-                  <div className="absolute top-full left-0 mt-1 w-44 glass-modal rounded-refined p-1.5 dropdown-menu" role="menu">
+                  <div className="absolute top-full left-0 mt-1 w-44 bg-white border border-black/5 shadow-2xl rounded-refined p-1.5 dropdown-menu" role="menu">
                     {peopleItems.map((item) => {
                       const Icon = item.icon
                       const isActive = pathname === item.href
@@ -337,7 +337,7 @@ export default function TopNav({ user, profile }: TopNavProps) {
               </button>
 
               {userOpen && (
-                <div className="absolute top-full right-0 mt-1 w-56 glass-modal rounded-refined p-1.5 dropdown-menu" role="menu">
+                <div className="absolute top-full right-0 mt-1 w-56 bg-white border border-black/5 shadow-2xl rounded-refined p-1.5 dropdown-menu" role="menu">
                   <div className="px-3 py-2 border-b border-[#2D5A3D]/10 mb-1">
                     <p className="text-sm font-medium text-gray-900 truncate">{profile?.full_name || 'Welcome!'}</p>
                     <p className="text-xs text-gray-500 truncate">{user.email}</p>
@@ -391,7 +391,7 @@ export default function TopNav({ user, profile }: TopNavProps) {
 
       {/* Mobile Menu */}
       {mobileOpen && (
-        <div className="lg:hidden fixed inset-0 top-14 glass-modal z-40 overflow-y-auto">
+        <div className="lg:hidden fixed inset-0 top-14 bg-white shadow-2xl z-40 overflow-y-auto">
           <div className="p-4 space-y-1">
             {/* Primary items (Home) */}
             {primaryNav.map((item) => {

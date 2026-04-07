@@ -24,7 +24,7 @@ export default function ConversationList({
   const filters: { id: FilterType; label: string; icon: LucideIcon }[] = [
     { id: 'all', label: 'All', icon: MessageSquare },
     { id: 'circles', label: 'Circles', icon: CircleDot },
-    { id: 'memory-threads', label: 'Memory Threads', icon: Brain },
+    { id: 'memory-threads', label: 'Threads', icon: Brain },
     { id: 'direct', label: 'Direct', icon: Users },
   ]
 
@@ -75,20 +75,20 @@ export default function ConversationList({
       </div>
 
       {/* Filter Tabs */}
-      <div className="px-4 py-3 border-b border-[#2D5A3D]/10 flex-shrink-0">
-        <div className="flex gap-2 overflow-x-auto scrollbar-hide">
+      <div className="px-3 py-3 border-b border-[#2D5A3D]/10 flex-shrink-0">
+        <div className="flex gap-1.5 overflow-hidden">
           {filters.map(({ id, label, icon: Icon }) => (
             <button
               key={id}
               onClick={() => setFilter(id)}
-              className={`flex items-center gap-1.5 px-4 py-2 text-xs font-medium transition-all rounded-full ${
+              className={`flex-1 min-w-0 flex items-center justify-center gap-1 px-2 py-1.5 text-[11px] font-medium transition-all rounded-full whitespace-nowrap ${
                 filter === id
                   ? 'bg-[#2D5A3D] text-white'
                   : 'bg-[#F8F6EE] text-[#5A6660] hover:bg-white hover:text-[#2D5A3D] border border-[#2D5A3D]/10'
               }`}
             >
-              <Icon size={13} />
-              <span>{label}</span>
+              <Icon size={12} className="flex-shrink-0" />
+              <span className="truncate">{label}</span>
             </button>
           ))}
         </div>

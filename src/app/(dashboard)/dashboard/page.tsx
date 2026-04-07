@@ -503,7 +503,7 @@ export default function HomeV2Page() {
       <main className="dashboard-main home-v2-main" style={{ minHeight: '100vh' }}>
         {/* Shuffle — top right */}
         <div style={{ display: 'flex', justifyContent: 'flex-end', padding: '8px 24px 0' }}>
-          <motion.button whileTap={{ scale: 0.96 }} onClick={() => { shuffle(); setShuffleKey(k => k + 1) }} style={{
+          <motion.button whileTap={{ scale: 0.96 }} onClick={() => { shuffle(); setShuffleKey(k => k + 1) }} title="Shuffle to see more cards" aria-label="Shuffle to see more cards" style={{
             display: 'flex', alignItems: 'center', gap: '6px', padding: '8px 16px',
             borderRadius: '12px', background: 'white', border: '1px solid #DDE3DF',
             color: '#5A6660', fontSize: '13px', cursor: 'pointer',

@@ -535,9 +535,6 @@ export default function AboutMePage() {
           <h2 className="text-lg font-semibold text-[#1A1F1C] mb-2" style={{ fontFamily: 'var(--font-dm-serif, DM Serif Display, serif)', fontStyle: 'italic' }}>
             &ldquo;{EMPTY_QUOTES[Math.floor(Math.random() * EMPTY_QUOTES.length)]}&rdquo;
           </h2>
-          <p className="text-sm text-[#94A09A] max-w-md mx-auto">
-            Answer engagement prompts on the Home screen to fill in your personality, interests, and favorites. Over time, this page becomes a rich portrait of who you are.
-          </p>
         </div>
       )}
     </div>

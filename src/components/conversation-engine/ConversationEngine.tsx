@@ -126,26 +126,8 @@ export function ConversationEngine({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [initialMessage]);
 
-  // TTS for assistant messages
-  const speakMessage = useCallback(
-    (text: string) => {
-      if (isMuted || !('speechSynthesis' in window)) return;
-      window.speechSynthesis.cancel();
-      const utterance = new SpeechSynthesisUtterance(text);
-      utterance.rate = 0.9;
-      utterance.pitch = 1.0;
-      const voices = window.speechSynthesis.getVoices();
-      const preferred = voices.find(
-        (v) =>
-          v.name.includes('Samantha') ||
-          v.name.includes('Google') ||
-          v.name.includes('Natural'),
-      );
-      if (preferred) utterance.voice = preferred;
-      window.speechSynthesis.speak(utterance);
-    },
-    [isMuted],
-  );
+  // TTS disabled — pending VibeVoice integration
+  const speakMessage = useCallback((_text: string) => {}, []);
 
   useEffect(() => {
     const last = messages[messages.length - 1];
@@ -508,15 +490,6 @@ export function ConversationEngine({
         />
 
         <div className="ce-input-actions">
-          {/* Mute toggle */}
-          <button
-            onClick={() => setIsMuted(!isMuted)}
-            className="ce-icon-btn ce-mute-btn"
-            title={isMuted ? 'Unmute' : 'Mute'}
-          >
-            {isMuted ? <VolumeX size={18} /> : <Volume2 size={18} />}
-          </button>
-
           {/* Mic */}
           <button
             onClick={isRecording ? stopRecording : startRecording}

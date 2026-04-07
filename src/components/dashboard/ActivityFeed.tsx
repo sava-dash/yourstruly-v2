@@ -106,7 +106,7 @@ function ActivityItemCard({ activity, index }: { activity: ActivityItem; index: 
     >
       <Link 
         href={activity.link}
-        className="flex items-start gap-3 px-3 py-2.5 rounded-xl bg-white/60 hover:bg-white border border-transparent hover:border-[#2D5A3D]/10 hover:shadow-sm transition-all group"
+        className="flex items-start gap-3 px-3 py-2.5 rounded-xl bg-white hover:bg-gray-50 border border-transparent hover:border-[#2D5A3D]/10 hover:shadow-sm transition-all group"
         style={{ minHeight: '60px' }}
       >
         {/* Icon */}
@@ -198,7 +198,7 @@ export default function ActivityFeed({ xpCompletions = [] }: ActivityFeedProps) 
   }, [])
 
   return (
-    <div className="bg-white rounded-[20px] shadow-sm overflow-hidden border border-gray-100 flex flex-col" style={{ maxHeight: '320px' }}>
+    <div className="bg-white rounded-[20px] shadow-2xl overflow-hidden border border-gray-100 flex flex-col" style={{ maxHeight: '320px' }}>
       {/* Header */}
       <div className="flex-shrink-0 flex items-center justify-between px-4 py-2.5 border-b border-gray-100">
         <div className="flex items-center gap-2">

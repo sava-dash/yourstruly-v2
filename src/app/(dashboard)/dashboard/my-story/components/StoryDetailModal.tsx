@@ -281,17 +281,9 @@ export default function StoryDetailModal({ item, onClose }: StoryDetailModalProp
     setIsPlaying(false); setCurrentExchangeIdx(-1); setPlayingPart(null)
   }, [])
 
-  const speakText = useCallback((text: string): Promise<void> => {
-    return new Promise((resolve) => {
-      if (!('speechSynthesis' in window)) { resolve(); return }
-      window.speechSynthesis.cancel()
-      const u = new SpeechSynthesisUtterance(text); u.rate = 0.95
-      const voices = window.speechSynthesis.getVoices()
-      const pref = voices.find(v => v.name.includes('Samantha') || v.name.includes('Google US English') || (v.lang.startsWith('en') && v.localService)) || voices.find(v => v.lang.startsWith('en-US'))
-      if (pref) u.voice = pref
-      u.onend = () => resolve(); u.onerror = () => resolve()
-      window.speechSynthesis.speak(u)
-    })
+  const speakText = useCallback((_text: string): Promise<void> => {
+    // TTS disabled — pending VibeVoice integration. Resolve immediately so playback skips.
+    return Promise.resolve()
   }, [])
 
   const playAudioUrl = useCallback((url: string): Promise<void> => {
@@ -385,309 +377,17 @@ export default function StoryDetailModal({ item, onClose }: StoryDetailModalProp
             {/*  MEMORY                                                     */}
             {/* ========================================================= */}
             {!loading && item.type === 'memory' && memory && (
-              <>
-                {/* Hero slideshow */}
-                {photos.length > 0 && (
-                  <div className="relative aspect-[4/3] sm:aspect-[16/10] bg-[#1A1F1C] overflow-hidden">
-                    {/* Crossfade images */}
-                    {photos.map((photo, i) => (
-                      <motion.div
-                        key={photo.id}
-                        initial={false}
-                        animate={{ opacity: i === slideshow.index ? 1 : 0, scale: i === slideshow.index ? 1 : 1.05 }}
-                        transition={{ duration: 1.2, ease: 'easeInOut' }}
-                        className="absolute inset-0"
-                      >
-                        <Image
-                          src={photo.file_url}
-                          alt={memory.title}
-                          fill
-                          unoptimized
-                          className="object-cover"
-                          sizes="(max-width: 768px) 100vw, 672px"
-                          priority={i === 0}
-                        />
-                      </motion.div>
-                    ))}
-
-                    {/* Warm vignette */}
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/10 to-black/30 pointer-events-none" />
-                    {/* Sepia warmth overlay */}
-                    <div className="absolute inset-0 bg-[#D4A574]/[0.06] mix-blend-multiply pointer-events-none" />
-
-                    {/* Title + meta */}
-                    <div className="absolute bottom-0 left-0 right-0 p-5 sm:p-7">
-                      <motion.h1
-                        initial={{ opacity: 0, y: 10 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ delay: 0.2 }}
-                        className="text-2xl sm:text-3xl font-bold text-white leading-tight drop-shadow-lg mb-2"
-                        style={{ fontFamily: 'var(--font-dm-serif, DM Serif Display, serif)' }}
-                      >
-                        {memory.title}
-                      </motion.h1>
-                      <div className="flex items-center gap-2 text-white/70 text-sm flex-wrap">
-                        {memory.location_name && (
-                          <span className="flex items-center gap-1.5 bg-white/10 backdrop-blur-sm rounded-full px-3 py-1">
-                            <MapPin size={13} />
-                            {memory.location_name}
-                          </span>
-                        )}
-                        <span className="flex items-center gap-1.5 bg-white/10 backdrop-blur-sm rounded-full px-3 py-1 text-white/60 text-xs">
-                          {timeAgo(memory.memory_date || memory.created_at)}
-                        </span>
-                      </div>
-                    </div>
-
-                    {/* Slideshow arrows */}
-                    {photos.length > 1 && (
-                      <>
-                        <button onClick={slideshow.prev} className="absolute left-3 top-1/2 -translate-y-1/2 p-2.5 bg-black/30 hover:bg-black/50 backdrop-blur-sm rounded-full text-white/80 hover:text-white transition-all">
-                          <ChevronLeft size={20} />
-                        </button>
-                        <button onClick={slideshow.next} className="absolute right-3 top-1/2 -translate-y-1/2 p-2.5 bg-black/30 hover:bg-black/50 backdrop-blur-sm rounded-full text-white/80 hover:text-white transition-all">
-                          <ChevronRight size={20} />
-                        </button>
-                        {/* Progress dots */}
-                        <div className="absolute bottom-[88px] left-1/2 -translate-x-1/2 flex gap-1.5">
-                          {photos.map((_, i) => (
-                            <button key={i} onClick={() => slideshow.goTo(i)} className={`rounded-full transition-all duration-500 ${i === slideshow.index ? 'bg-white w-6 h-1.5' : 'bg-white/40 w-1.5 h-1.5 hover:bg-white/60'}`} />
-                          ))}
-                        </div>
-                      </>
-                    )}
-
-                    {/* Favorite */}
-                    <button onClick={toggleFavorite} className={`absolute top-4 right-4 p-2.5 rounded-full backdrop-blur-sm transition-all ${isFavorite ? 'bg-white/90 text-[#B8562E] shadow-lg' : 'bg-black/20 text-white/70 hover:text-white hover:bg-black/40'}`}>
-                      <Heart size={18} fill={isFavorite ? 'currentColor' : 'none'} />
-                    </button>
-
-                    {/* Photo counter */}
-                    {photos.length > 1 && (
-                      <div className="absolute top-4 left-4 px-3 py-1 bg-black/30 backdrop-blur-sm rounded-full text-white/80 text-xs font-medium">
-                        {slideshow.index + 1} / {photos.length}
-                      </div>
-                    )}
-                  </div>
-                )}
-
-                {/* No-photo header */}
-                {photos.length === 0 && (
-                  <div className="px-7 pt-8 pb-2">
-                    <div className="w-12 h-12 rounded-2xl bg-[#2D5A3D]/10 flex items-center justify-center mb-4">
-                      <Sparkles size={22} className="text-[#2D5A3D]" />
-                    </div>
-                    <h1 className="text-2xl sm:text-3xl font-bold text-[#1A1F1C] leading-tight" style={{ fontFamily: 'var(--font-dm-serif, DM Serif Display, serif)' }}>
-                      {memory.title}
-                    </h1>
-                    <div className="flex items-center gap-3 mt-3 text-[#94A09A] text-sm">
-                      <span className="flex items-center gap-1"><Calendar size={14} />{formatDateJournal(memory.memory_date || memory.created_at)}</span>
-                      {memory.location_name && <span className="flex items-center gap-1"><MapPin size={14} />{memory.location_name}</span>}
-                    </div>
-                  </div>
-                )}
-
-                {/* Film-strip thumbnails */}
-                {photos.length > 1 && (
-                  <div className="px-5 pt-4">
-                    <div className="flex gap-1.5 overflow-x-auto pb-1 scrollbar-none">
-                      {photos.map((m, i) => (
-                        <button
-                          key={m.id}
-                          onClick={() => slideshow.goTo(i)}
-                          className={`relative flex-shrink-0 w-14 h-14 rounded-lg overflow-hidden transition-all duration-300 ${i === slideshow.index ? 'ring-2 ring-[#2D5A3D] ring-offset-2 ring-offset-[#FDFCF9] opacity-100' : 'opacity-40 hover:opacity-70'}`}
-                        >
-                          <Image src={m.file_url} alt="" fill unoptimized className="object-cover" sizes="56px" />
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-                )}
-
-                {/* Mood + labels row */}
-                {(memory.mood || memory.ai_category) && (
-                  <div className="px-7 pt-4 flex flex-wrap items-center gap-2">
-                    {memory.mood && (
-                      <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium" style={{ background: 'linear-gradient(135deg, rgba(45,90,61,0.08), rgba(196,162,53,0.08))', color: '#2D5A3D' }}>
-                        <Sparkles size={12} /> {memory.mood}
-                      </span>
-                    )}
-                    {memory.ai_category && (
-                      <span className="px-3 py-1.5 rounded-full bg-[#C4A235]/10 text-[#C4A235] text-xs font-medium">{memory.ai_category}</span>
-                    )}
-                    {(memory.ai_labels || []).slice(0, 3).map(label => (
-                      <span key={label} className="px-2.5 py-1 rounded-full bg-[#F0F0EC] text-[#5A6660] text-xs">{label}</span>
-                    ))}
-                  </div>
-                )}
-
-                {/* AI Summary — warm quote card */}
-                {memory.ai_summary && (
-                  <div className="mx-5 sm:mx-7 mt-5">
-                    <div className="relative p-5 rounded-2xl overflow-hidden" style={{ background: 'linear-gradient(135deg, #F8F0E3 0%, #EDE8DD 100%)' }}>
-                      <Quote size={40} className="absolute top-3 right-4 text-[#C4A235]/15" />
-                      <p className="text-[#3A3228] leading-relaxed italic text-[15px] relative z-10">{memory.ai_summary}</p>
-                    </div>
-                  </div>
-                )}
-
-                {/* Description / Conversation */}
-                <div className="px-5 sm:px-7 py-5">
-                  {parsed && parsed.exchanges.length > 0 ? (
-                    <>
-                      {/* Play button */}
-                      <button
-                        onClick={playAllExchanges}
-                        className="flex items-center gap-3 w-full px-5 py-4 mb-5 rounded-2xl transition-all border"
-                        style={{ background: 'linear-gradient(135deg, rgba(45,90,61,0.04), rgba(196,162,53,0.04))', borderColor: 'rgba(45,90,61,0.12)' }}
-                      >
-                        <div className={`w-11 h-11 rounded-full flex items-center justify-center transition-colors ${isPlaying ? 'bg-[#2D5A3D]' : 'bg-[#2D5A3D]/12'}`}>
-                          {isPlaying ? <Square size={16} className="text-white" fill="white" /> : <Play size={18} className="text-[#2D5A3D] ml-0.5" />}
-                        </div>
-                        <div className="text-left flex-1">
-                          <span className="text-[#1A1F1C] font-medium text-sm">{isPlaying ? `Playing ${playingPart === 'question' ? 'Q' : 'A'}${currentExchangeIdx + 1} of ${parsed.exchanges.length}` : 'Listen to this Conversation'}</span>
-                          <p className="text-xs text-[#94A09A]">{isPlaying ? 'Tap to stop' : `${parsed.exchanges.length} exchanges`}</p>
-                        </div>
-                      </button>
-
-                      {/* Summary */}
-                      {parsed.summary && (
-                        <div className="mb-6 p-4 rounded-2xl" style={{ background: 'linear-gradient(135deg, #F8F0E3 0%, transparent 100%)' }}>
-                          <div className="flex items-start gap-3">
-                            <Quote size={18} className="text-[#C4A235] flex-shrink-0 mt-0.5" />
-                            <p className="text-[#3A3228] leading-relaxed italic">{parsed.summary}</p>
-                          </div>
-                        </div>
-                      )}
-
-                      {/* Exchanges */}
-                      <div className="space-y-5">
-                        {parsed.exchanges.map((ex, i) => (
-                          <motion.div
-                            key={i}
-                            initial={{ opacity: 0, y: 10 }}
-                            animate={{ opacity: currentExchangeIdx >= 0 && currentExchangeIdx !== i ? 0.35 : 1, y: 0 }}
-                            transition={{ delay: i * 0.05, duration: 0.3 }}
-                          >
-                            <div className="flex items-start gap-2.5 mb-2">
-                              <div className={`w-7 h-7 rounded-full flex items-center justify-center flex-shrink-0 text-xs font-bold transition-colors ${currentExchangeIdx === i && playingPart === 'question' ? 'bg-[#2D5A3D] text-white' : 'bg-[#2D5A3D]/10 text-[#2D5A3D]'}`}>Q</div>
-                              <p className="text-sm text-[#5A6660] pt-1 font-medium">{ex.question}</p>
-                            </div>
-                            <div className={`ml-9 rounded-2xl p-4 transition-all duration-300 ${currentExchangeIdx === i && playingPart === 'answer' ? 'bg-[#2D5A3D]/8 border border-[#2D5A3D]/15 shadow-sm' : 'bg-[#F5F0EA]'}`}>
-                              <p className="text-[#3A3228] text-sm leading-relaxed">{ex.answer}</p>
-                            </div>
-                          </motion.div>
-                        ))}
-                      </div>
-                    </>
-                  ) : memory.description ? (() => {
-                    const paragraphs = cleanDescription(memory.description)
-                    return (
-                      <div className="space-y-4">
-                        {paragraphs.map((para, i) => (
-                          <motion.div
-                            key={i}
-                            initial={{ opacity: 0, y: 8 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            transition={{ delay: 0.1 + i * 0.06 }}
-                            className="flex items-start gap-3"
-                          >
-                            <div className="w-1.5 h-1.5 rounded-full bg-[#C4A235]/40 mt-2.5 flex-shrink-0" />
-                            <p className="text-[#3A3228] leading-[1.8] text-[15px]">{para}</p>
-                          </motion.div>
-                        ))}
-                      </div>
-                    )
-                  })() : null}
-                </div>
-
-                {/* Mini map */}
-                {hasLocation && (
-                  <div className="mx-5 sm:mx-7 mb-5">
-                    <div className="rounded-2xl overflow-hidden border border-[#E8E2D8]">
-                      <div className="relative h-[140px] bg-[#F0EDE6]">
-                        <Image
-                          src={staticMapUrl(loc.lat!, loc.lng!)}
-                          alt={loc.name || 'Location'}
-                          fill
-                          unoptimized
-                          className="object-cover"
-                          sizes="600px"
-                        />
-                      </div>
-                      {loc.name && (
-                        <div className="flex items-center gap-2 px-4 py-2.5 bg-[#FAF8F4]">
-                          <MapPin size={14} className="text-[#2D5A3D] flex-shrink-0" />
-                          <span className="text-xs text-[#5A6660] font-medium truncate">{loc.name}</span>
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                )}
-
-                {/* Collaborator contributions */}
-                {collaborators.filter(c => c.status === 'completed' && c.response_text).length > 0 && (
-                  <div className="px-5 sm:px-7 pb-5">
-                    <div className="flex items-center gap-3 mb-4">
-                      <div className="flex-1 h-px bg-[#E8E2D8]" />
-                      <span className="text-[10px] text-[#B8B0A4] uppercase tracking-widest font-semibold">Others&apos; Perspectives</span>
-                      <div className="flex-1 h-px bg-[#E8E2D8]" />
-                    </div>
-                    <div className="space-y-4">
-                      {collaborators.filter(c => c.status === 'completed' && c.response_text).map(collab => (
-                        <motion.div
-                          key={collab.id}
-                          initial={{ opacity: 0, y: 10 }}
-                          animate={{ opacity: 1, y: 0 }}
-                          className="rounded-2xl p-5 border border-[#E8E2D8]"
-                          style={{ background: 'linear-gradient(135deg, #FAFAF7 0%, #F5F0EA 100%)' }}
-                        >
-                          <div className="flex items-center gap-2.5 mb-3">
-                            <div className="w-8 h-8 rounded-full bg-[#2D5A3D]/10 flex items-center justify-center text-xs font-bold text-[#2D5A3D]">
-                              {(collab.contributor_name || collab.contact_name).charAt(0)}
-                            </div>
-                            <div>
-                              <p className="text-sm font-semibold text-[#1A1F1C]">{collab.contributor_name || collab.contact_name}</p>
-                              {collab.completed_at && (
-                                <p className="text-[10px] text-[#94A09A]">{timeAgo(collab.completed_at)}</p>
-                              )}
-                            </div>
-                          </div>
-                          <p className="text-[#3A3228] leading-[1.8] text-[15px] italic">{collab.response_text}</p>
-                        </motion.div>
-                      ))}
-                    </div>
-                  </div>
-                )}
-
-                {/* Slideshow play button */}
-                {(photos.length > 0 || (parsed && parsed.exchanges.length > 0)) && (
-                  <div className="px-5 sm:px-7 pb-4">
-                    <button
-                      onClick={() => setSlideshowMode(true)}
-                      className="w-full flex items-center justify-center gap-3 py-4 rounded-2xl border border-[#2D5A3D]/15 hover:border-[#2D5A3D]/30 transition-all"
-                      style={{ background: 'linear-gradient(135deg, rgba(45,90,61,0.03), rgba(196,162,53,0.03))' }}
-                    >
-                      <div className="w-10 h-10 rounded-full bg-[#2D5A3D] flex items-center justify-center">
-                        <Play size={16} className="text-white ml-0.5" />
-                      </div>
-                      <div className="text-left">
-                        <span className="text-sm font-semibold text-[#1A1F1C]">Play Slideshow</span>
-                        <p className="text-xs text-[#94A09A]">Auto-play through this memory</p>
-                      </div>
-                    </button>
-                  </div>
-                )}
-
-                {/* Journal-style date footer */}
-                <div className="px-7 pb-6 pt-2">
-                  <div className="flex items-center gap-3">
-                    <div className="flex-1 h-px bg-[#E8E2D8]" />
-                    <span className="text-[11px] text-[#B8B0A4] tracking-wide italic">{formatDateJournal(memory.memory_date || memory.created_at)}</span>
-                    <div className="flex-1 h-px bg-[#E8E2D8]" />
-                  </div>
-                </div>
-              </>
+              <MemoryReadView
+                memory={memory}
+                photos={photos}
+                parsed={parsed}
+                collaborators={collaborators}
+                isFavorite={isFavorite}
+                onToggleFavorite={toggleFavorite}
+                hasLocation={hasLocation}
+                loc={loc}
+                cleanDescription={cleanDescription}
+              />
             )}
 
             {/* ========================================================= */}
@@ -1411,4 +1111,316 @@ function PieceContent({ piece, zoomed }: { piece: Piece; zoomed: boolean }) {
     default:
       return null
   }
+}
+
+/* ------------------------------------------------------------------ */
+/*  MemoryReadView — vertical scroll "Read Mode"                       */
+/* ------------------------------------------------------------------ */
+function MemoryReadView({
+  memory,
+  photos,
+  parsed,
+  collaborators,
+  isFavorite,
+  onToggleFavorite,
+  hasLocation,
+  loc,
+  cleanDescription,
+}: {
+  memory: FullMemory
+  photos: FullMedia[]
+  parsed: { summary: string; exchanges: ParsedExchange[] } | null
+  collaborators: { id: string; contact_name: string; contributor_name: string | null; response_text: string | null; status: string; completed_at: string | null }[]
+  isFavorite: boolean
+  onToggleFavorite: () => void
+  hasLocation: unknown
+  loc: { lat: number | null; lng: number | null; name: string | null } | null
+  cleanDescription: (text: string | null) => string[]
+}) {
+  const [zoomedPhoto, setZoomedPhoto] = useState<FullMedia | null>(null)
+
+  const imagePhotos = useMemo(
+    () => photos.filter(p => (p.mime_type || p.file_type || '').startsWith('image')),
+    [photos]
+  )
+  const coverPhoto = imagePhotos.find(p => p.is_cover) || imagePhotos[0] || null
+  const otherPhotos = imagePhotos.filter(p => p.id !== coverPhoto?.id)
+
+  const paragraphs = useMemo(() => {
+    if (parsed && parsed.exchanges.length > 0) return []
+    return cleanDescription(memory.description)
+  }, [parsed, memory.description, cleanDescription])
+
+  const completedCollabs = collaborators.filter(c => c.status === 'completed' && c.response_text)
+
+  return (
+    <>
+      <article className="flex flex-col">
+        {/* HERO */}
+        {coverPhoto ? (
+          <div className="relative mx-4 mt-4 sm:mx-6 sm:mt-6">
+            <div className="relative w-full aspect-[4/3] sm:aspect-[16/10] rounded-2xl overflow-hidden shadow-lg">
+              <Image
+                src={coverPhoto.file_url}
+                alt={memory.title}
+                fill
+                className="object-cover"
+                sizes="(max-width: 768px) 100vw, 700px"
+                priority
+              />
+              <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/10 to-transparent" />
+              <div className="absolute inset-x-0 bottom-0 p-5 sm:p-7">
+                <div className="flex items-center gap-2 text-white/80 text-xs mb-2">
+                  <Calendar size={12} />
+                  <span>{formatDateJournal(memory.memory_date || memory.created_at)}</span>
+                  {memory.location_name && (
+                    <>
+                      <span className="opacity-50">•</span>
+                      <MapPin size={12} />
+                      <span className="truncate max-w-[160px]">{memory.location_name}</span>
+                    </>
+                  )}
+                </div>
+                <h1
+                  className="text-2xl sm:text-3xl font-semibold text-white leading-tight drop-shadow-lg"
+                  style={{ fontFamily: 'var(--font-dm-serif, DM Serif Display, serif)' }}
+                >
+                  {memory.title}
+                </h1>
+              </div>
+              <button
+                onClick={onToggleFavorite}
+                className="absolute top-3 right-3 p-2.5 rounded-full bg-white/90 backdrop-blur-sm shadow-lg hover:bg-white transition-colors"
+                aria-label="Favorite"
+              >
+                <Heart
+                  size={16}
+                  className={isFavorite ? 'text-[#B8562E] fill-[#B8562E]' : 'text-[#5A6660]'}
+                />
+              </button>
+            </div>
+          </div>
+        ) : (
+          <div className="px-6 pt-6 pb-2">
+            <div className="flex items-center gap-2 text-[#94A09A] text-xs mb-2">
+              <Calendar size={12} />
+              <span>{formatDateJournal(memory.memory_date || memory.created_at)}</span>
+              {memory.location_name && (
+                <>
+                  <span className="opacity-50">•</span>
+                  <MapPin size={12} />
+                  <span>{memory.location_name}</span>
+                </>
+              )}
+            </div>
+            <div className="flex items-start justify-between gap-4">
+              <h1
+                className="text-2xl sm:text-3xl font-semibold text-[#1A1F1C] leading-tight"
+                style={{ fontFamily: 'var(--font-dm-serif, DM Serif Display, serif)' }}
+              >
+                {memory.title}
+              </h1>
+              <button
+                onClick={onToggleFavorite}
+                className="p-2 rounded-full hover:bg-[#F0EBE2] transition-colors flex-shrink-0"
+                aria-label="Favorite"
+              >
+                <Heart
+                  size={18}
+                  className={isFavorite ? 'text-[#B8562E] fill-[#B8562E]' : 'text-[#5A6660]'}
+                />
+              </button>
+            </div>
+          </div>
+        )}
+
+        {/* STORY */}
+        {(paragraphs.length > 0 || (parsed && parsed.exchanges.length > 0)) && (
+          <section className="px-6 sm:px-10 pt-8 pb-2">
+            {parsed && parsed.exchanges.length > 0 ? (
+              <div className="space-y-5">
+                {parsed.exchanges.map((ex, i) => (
+                  <div key={i}>
+                    <p className="text-xs uppercase tracking-wider text-[#94A09A] mb-1.5 flex items-center gap-1.5">
+                      <Sparkles size={11} /> {ex.question}
+                    </p>
+                    <p
+                      className="text-[#3A3228] text-[17px] leading-[1.75]"
+                      style={{ fontFamily: 'var(--font-dm-serif, DM Serif Display, serif)' }}
+                    >
+                      {ex.answer}
+                    </p>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="space-y-4">
+                {paragraphs.map((p, i) => (
+                  <p
+                    key={i}
+                    className="text-[#3A3228] text-[17px] leading-[1.75]"
+                    style={{ fontFamily: 'var(--font-dm-serif, DM Serif Display, serif)' }}
+                  >
+                    {p}
+                  </p>
+                ))}
+              </div>
+            )}
+          </section>
+        )}
+
+        {/* PHOTO GRID — asymmetric */}
+        {otherPhotos.length > 0 && (
+          <section className="px-4 sm:px-6 pt-8">
+            <h3 className="text-xs font-semibold uppercase tracking-wider text-[#5A6660] mb-3 px-2">
+              Photos
+            </h3>
+            <div className="grid grid-cols-6 auto-rows-[90px] sm:auto-rows-[110px] gap-2">
+              {otherPhotos.map((photo, i) => {
+                // asymmetric pattern — tasteful variety
+                const patterns = [
+                  'col-span-4 row-span-2',
+                  'col-span-2 row-span-1',
+                  'col-span-2 row-span-1',
+                  'col-span-3 row-span-2',
+                  'col-span-3 row-span-1',
+                  'col-span-3 row-span-1',
+                ]
+                const cls = patterns[i % patterns.length]
+                return (
+                  <button
+                    key={photo.id}
+                    onClick={() => setZoomedPhoto(photo)}
+                    className={`${cls} relative rounded-xl overflow-hidden group focus:outline-none focus:ring-2 focus:ring-[#2D5A3D]/40`}
+                  >
+                    <Image
+                      src={photo.file_url}
+                      alt=""
+                      fill
+                      className="object-cover group-hover:scale-[1.03] transition-transform duration-500"
+                      sizes="(max-width: 768px) 50vw, 350px"
+                    />
+                  </button>
+                )
+              })}
+            </div>
+          </section>
+        )}
+
+        {/* MAP */}
+        {Boolean(hasLocation) && loc && loc.lat != null && loc.lng != null && staticMapUrl(loc.lat, loc.lng) && (
+          <section className="px-4 sm:px-6 pt-8">
+            <h3 className="text-xs font-semibold uppercase tracking-wider text-[#5A6660] mb-3 px-2 flex items-center gap-1.5">
+              <MapPin size={12} /> Where it happened
+            </h3>
+            <div className="relative rounded-2xl overflow-hidden shadow-sm border border-[#E8E2D8]">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src={staticMapUrl(loc.lat, loc.lng, 10, 800, 300)}
+                alt={loc.name || 'Location'}
+                className="w-full h-auto block"
+              />
+              {loc.name && (
+                <div className="absolute bottom-0 inset-x-0 p-3 bg-gradient-to-t from-black/70 to-transparent">
+                  <p className="text-white text-sm font-medium">{loc.name}</p>
+                </div>
+              )}
+            </div>
+          </section>
+        )}
+
+        {/* COLLABORATOR VOICES */}
+        {completedCollabs.length > 0 && (
+          <section className="px-6 sm:px-10 pt-10">
+            <h3 className="text-xs font-semibold uppercase tracking-wider text-[#5A6660] mb-4 flex items-center gap-1.5">
+              <MessageCircle size={12} /> Their voices
+            </h3>
+            <div className="space-y-5">
+              {completedCollabs.map(c => (
+                <blockquote
+                  key={c.id}
+                  className="relative pl-5 border-l-2 border-[#2D5A3D]/30"
+                >
+                  <Quote
+                    size={18}
+                    className="absolute -left-[10px] top-0 bg-[#FDFCF9] text-[#2D5A3D]/40"
+                  />
+                  <p
+                    className="text-[#3A3228] text-[16px] leading-[1.7] italic"
+                    style={{ fontFamily: 'var(--font-dm-serif, DM Serif Display, serif)' }}
+                  >
+                    {c.response_text}
+                  </p>
+                  <footer className="mt-2 text-xs text-[#94A09A]">
+                    — {c.contributor_name || c.contact_name}
+                  </footer>
+                </blockquote>
+              ))}
+            </div>
+          </section>
+        )}
+
+        {/* TAGS */}
+        {(memory.ai_labels && memory.ai_labels.length > 0) && (
+          <section className="px-6 sm:px-10 pt-8">
+            <div className="flex flex-wrap gap-1.5">
+              {memory.ai_labels.slice(0, 8).map((label, i) => (
+                <span
+                  key={i}
+                  className="px-2.5 py-1 rounded-full text-[11px] bg-[#F0EBE2] text-[#5A6660]"
+                >
+                  {label}
+                </span>
+              ))}
+            </div>
+          </section>
+        )}
+
+        {/* FOOTER */}
+        <div className="px-6 sm:px-10 pt-10 pb-8">
+          <div className="pt-6 border-t border-[#E8E2D8] text-center">
+            <p className="text-xs text-[#94A09A]">
+              {timeAgo(memory.created_at)} · Saved to your story
+            </p>
+          </div>
+        </div>
+      </article>
+
+      {/* Photo zoom overlay */}
+      <AnimatePresence>
+        {zoomedPhoto && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-[60] bg-black/90 flex items-center justify-center p-4"
+            onClick={() => setZoomedPhoto(null)}
+          >
+            <button
+              onClick={() => setZoomedPhoto(null)}
+              className="absolute top-4 right-4 p-2.5 bg-white/10 hover:bg-white/20 rounded-full text-white transition-colors"
+              aria-label="Close"
+            >
+              <X size={20} />
+            </button>
+            <motion.div
+              initial={{ scale: 0.92 }}
+              animate={{ scale: 1 }}
+              exit={{ scale: 0.92 }}
+              className="relative max-w-5xl max-h-[90vh] w-full h-full"
+              onClick={e => e.stopPropagation()}
+            >
+              <Image
+                src={zoomedPhoto.file_url}
+                alt=""
+                fill
+                className="object-contain"
+                sizes="100vw"
+              />
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </>
+  )
 }

@@ -74,19 +74,8 @@ export function HeartfeltConversation({
   const inputRef = useRef<HTMLTextAreaElement>(null);
   const recognitionRef = useRef<SpeechRecognitionInstance | null>(null);
 
-  // TODO: Replace browser SpeechSynthesis with PersonaPlex voice server (ws://personaplex:8000/api/chat)
-  const speakMessage = useCallback((text: string) => {
-    if ('speechSynthesis' in window) {
-      window.speechSynthesis.cancel();
-      const utterance = new SpeechSynthesisUtterance(text);
-      utterance.rate = 0.9;
-      utterance.pitch = 1.0;
-      const voices = window.speechSynthesis.getVoices();
-      const preferred = voices.find(v => v.name.includes('Samantha') || v.name.includes('Google') || v.name.includes('Natural'));
-      if (preferred) utterance.voice = preferred;
-      window.speechSynthesis.speak(utterance);
-    }
-  }, []);
+  // TTS disabled — pending VibeVoice integration
+  const speakMessage = useCallback((_text: string) => {}, []);
 
   // Count user messages to track exchanges
   const userMessageCount = messages.filter(m => m.role === 'user').length;

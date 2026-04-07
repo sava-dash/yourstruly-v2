@@ -1,7 +1,8 @@
 'use client'
 
-import { useState, useEffect, useRef, useCallback } from 'react'
-import { Mic, Square, Send, Check, Loader2, Sparkles, Volume2, VolumeX } from 'lucide-react'
+import { useState, useEffect, useRef } from 'react'
+import { Mic, Square, Send, Check, Loader2, Sparkles } from 'lucide-react'
+import { motion } from 'framer-motion'
 import type { PromptCategory } from '../types'
 
 interface Message {
@@ -24,7 +25,6 @@ export function BackstoryCard({ promptText, category, data, onSave, saved }: Bac
   const [saving, setSaving] = useState(false)
   const [isRecording, setIsRecording] = useState(false)
   const [liveTranscript, setLiveTranscript] = useState('')
-  const [isMuted, setIsMuted] = useState(false)
   const messagesEndRef = useRef<HTMLDivElement>(null)
   const inputRef = useRef<HTMLTextAreaElement>(null)
   const mediaRecorderRef = useRef<MediaRecorder | null>(null)
@@ -75,24 +75,7 @@ export function BackstoryCard({ promptText, category, data, onSave, saved }: Bac
     setIsSending(false)
   }
 
-  // TTS for assistant messages
-  const speakMessage = useCallback((text: string) => {
-    if (isMuted || !('speechSynthesis' in window)) return
-    window.speechSynthesis.cancel()
-    const utterance = new SpeechSynthesisUtterance(text)
-    utterance.rate = 0.9
-    const voices = window.speechSynthesis.getVoices()
-    const preferred = voices.find(v => v.name.includes('Samantha') || v.name.includes('Google') || v.name.includes('Natural'))
-    if (preferred) utterance.voice = preferred
-    window.speechSynthesis.speak(utterance)
-  }, [isMuted])
-
-  useEffect(() => {
-    const last = messages[messages.length - 1]
-    if (last?.role === 'assistant' && !isSending && messages.length > 1) {
-      speakMessage(last.content)
-    }
-  }, [messages, isSending, speakMessage])
+  // TTS disabled — pending VibeVoice integration
 
   // Send message
   const handleSend = async () => {
@@ -101,8 +84,9 @@ export function BackstoryCard({ promptText, category, data, onSave, saved }: Bac
     setInput('')
     setIsSending(true)
 
-    const updated = [...messages, { role: 'user' as const, content: userMessage }]
-    setMessages(updated)
+    // Optimistically add the user message so it shows immediately
+    const withUser = [...messages, { role: 'user' as const, content: userMessage }]
+    setMessages(withUser)
 
     try {
       const res = await fetch('/api/conversation-engine', {
@@ -110,12 +94,14 @@ export function BackstoryCard({ promptText, category, data, onSave, saved }: Bac
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           message: userMessage,
-          engineState: { messages: updated, turnCount: updated.filter(m => m.role === 'user').length },
+          // Send the PREVIOUS messages (without user) — the engine appends the user message itself
+          engineState: { messages, turnCount: messages.filter(m => m.role === 'user').length },
           context: category === 'photo' ? 'photo_backstory' : 'engagement',
         }),
       })
       const data = await res.json()
       if (data.engineState?.messages) {
+        // Engine returns the full conversation (prev + user + assistant) — replace local state
         setMessages(data.engineState.messages)
       } else if (data.response) {
         setMessages(prev => [...prev, { role: 'assistant', content: data.response }])
@@ -201,6 +187,7 @@ export function BackstoryCard({ promptText, category, data, onSave, saved }: Bac
 
   const userTurnCount = messages.filter(m => m.role === 'user').length
   const canSave = userTurnCount >= 1
+  const shouldNudgeToSave = userTurnCount >= 3
 
   return (
     <div className="h-full flex flex-col">
@@ -209,12 +196,6 @@ export function BackstoryCard({ promptText, category, data, onSave, saved }: Bac
         <h3 className="text-xs font-semibold uppercase tracking-wider text-[#5A6660] flex items-center gap-1.5">
           <Sparkles size={12} /> {category === 'photo' ? 'Tell the Story' : 'Your Story'}
         </h3>
-        <button
-          onClick={() => setIsMuted(!isMuted)}
-          className="p-1.5 rounded-lg hover:bg-[#E6F0EA] transition-colors text-[#94A09A]"
-        >
-          {isMuted ? <VolumeX size={14} /> : <Volume2 size={14} />}
-        </button>
       </div>
 
       {/* Messages */}
@@ -247,6 +228,20 @@ export function BackstoryCard({ promptText, category, data, onSave, saved }: Bac
       {/* Input area */}
       {!saved ? (
         <div className="px-4 pb-4 pt-2 border-t border-[#DDE3DF]">
+          {/* Nudge to save — appears after 3 user responses, stays visible */}
+          {shouldNudgeToSave && (
+            <motion.div
+              initial={{ opacity: 0, y: -8 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="mb-3 px-3 py-2 rounded-xl bg-[#E6F0EA] border border-[#2D5A3D]/15 flex items-center gap-2"
+            >
+              <Sparkles size={14} className="text-[#2D5A3D] flex-shrink-0" />
+              <span className="text-xs text-[#2D5A3D] flex-1 leading-snug">
+                You can save anytime — or keep going if there&apos;s more to share
+              </span>
+            </motion.div>
+          )}
+
           {/* Live transcript preview */}
           {liveTranscript && (
             <p className="text-xs text-[#94A09A] italic mb-1 px-1">{liveTranscript}</p>
