@@ -15,6 +15,7 @@ import {
   Users,
   CheckCircle2
 } from 'lucide-react'
+import { RELATIONSHIP_OPTIONS } from '@/lib/relationships'
 
 interface GoogleContact {
   sourceId: string
@@ -47,45 +48,6 @@ type ImportStep = 'idle' | 'auth' | 'fetching' | 'selecting' | 'saving' | 'compl
 interface GoogleContactsImportProps {
   onImportComplete?: () => void
 }
-
-const RELATIONSHIP_OPTIONS = [
-  { category: 'Family', options: [
-    { id: 'mother', label: 'Mother' },
-    { id: 'father', label: 'Father' },
-    { id: 'spouse', label: 'Spouse' },
-    { id: 'partner', label: 'Partner' },
-    { id: 'son', label: 'Son' },
-    { id: 'daughter', label: 'Daughter' },
-    { id: 'brother', label: 'Brother' },
-    { id: 'sister', label: 'Sister' },
-    { id: 'grandmother', label: 'Grandmother' },
-    { id: 'grandfather', label: 'Grandfather' },
-    { id: 'grandson', label: 'Grandson' },
-    { id: 'granddaughter', label: 'Granddaughter' },
-    { id: 'aunt', label: 'Aunt' },
-    { id: 'uncle', label: 'Uncle' },
-    { id: 'cousin', label: 'Cousin' },
-    { id: 'niece', label: 'Niece' },
-    { id: 'nephew', label: 'Nephew' },
-    { id: 'in_law', label: 'In-Law' },
-  ]},
-  { category: 'Friends', options: [
-    { id: 'best_friend', label: 'Best Friend' },
-    { id: 'close_friend', label: 'Close Friend' },
-    { id: 'friend', label: 'Friend' },
-    { id: 'childhood_friend', label: 'Childhood Friend' },
-  ]},
-  { category: 'Professional', options: [
-    { id: 'colleague', label: 'Colleague' },
-    { id: 'boss', label: 'Boss' },
-    { id: 'mentor', label: 'Mentor' },
-    { id: 'business_partner', label: 'Business Partner' },
-  ]},
-  { category: 'Other', options: [
-    { id: 'neighbor', label: 'Neighbor' },
-    { id: 'other', label: 'Other' },
-  ]},
-]
 
 export function GoogleContactsImport({ onImportComplete }: GoogleContactsImportProps) {
   const [isOpen, setIsOpen] = useState(false)

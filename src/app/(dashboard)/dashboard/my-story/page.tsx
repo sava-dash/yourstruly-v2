@@ -11,6 +11,7 @@ import StoryDetailModal from './components/StoryDetailModal'
 import { type StoryItem, type ContentType } from './components/StoryCard'
 import MilestonePrompt from '@/components/photobook/MilestonePrompt'
 import AddContentModal from './components/AddContentModal'
+import MemoryReflectionSlideshow from '@/components/my-story/MemoryReflectionSlideshow'
 import '@/styles/page-styles.css'
 
 // Lazy load the map view — heavyweight dependency
@@ -104,6 +105,8 @@ function toWisdomItems(entries: RawWisdom[]): StoryItem[] {
 function toPhotoItems(media: RawMedia[]): StoryItem[] {
   // Use the same filter logic as the gallery page:
   // exclude audio, exclude interviews, include everything else
+  // (photos linked to a memory are intentionally shown in BOTH tabs —
+  // once as a photo entry, once under their parent memory).
   const filtered = media.filter((m) => {
     if (!m.file_url) return false
     const mem = m.memory
@@ -346,8 +349,44 @@ export default function MyStoryPage() {
   )
 
   const [showAddModal, setShowAddModal] = useState(false)
+  const [reflectIndex, setReflectIndex] = useState<number | null>(null)
+
+  // Route memory clicks to the reflection slideshow;
+  // photos and wisdom still use the detail modal.
+  const handleItemSelect = useCallback((item: StoryItem) => {
+    if (item.type === 'memory') {
+      const idx = memories
+        .slice()
+        .sort((a, b) => {
+          const ad = new Date(a.memory_date || a.created_at).getTime()
+          const bd = new Date(b.memory_date || b.created_at).getTime()
+          return ad - bd
+        })
+        .findIndex(m => m.id === item.id)
+      setReflectIndex(idx >= 0 ? idx : 0)
+    } else {
+      setSelectedItem(item)
+    }
+  }, [memories])
 
   const isEmpty = memories.length === 0 && wisdom.length === 0 && media.length === 0
+
+  // Memory refs for the reflection slideshow — just real memories,
+  // sorted oldest → newest so reminiscing flows like a timeline.
+  const reflectionMemories = useMemo(() => {
+    return memories
+      .slice()
+      .sort((a, b) => {
+        const aDate = new Date(a.memory_date || a.created_at).getTime()
+        const bDate = new Date(b.memory_date || b.created_at).getTime()
+        return aDate - bDate
+      })
+      .map(m => ({
+        id: m.id,
+        title: m.title,
+        date: m.memory_date || m.created_at,
+      }))
+  }, [memories])
 
   return (
     <div className="page-container">
@@ -498,15 +537,15 @@ export default function MyStoryPage() {
         {/* Content area */}
         {!isLoading && !isEmpty && (
           <>
-            {viewMode === 'grid' && <StoryGrid items={filteredItems} onSelect={setSelectedItem} />}
-            {viewMode === 'thread' && <StoryThread items={filteredItems} onSelect={setSelectedItem} />}
+            {viewMode === 'grid' && <StoryGrid items={filteredItems} onSelect={handleItemSelect} />}
+            {viewMode === 'thread' && <StoryThread items={filteredItems} onSelect={handleItemSelect} />}
             {viewMode === 'map' && (
               <div className="rounded-xl overflow-hidden border border-[#DDE3DF]" style={{ height: 'calc(100vh - 260px)', minHeight: 500 }}>
                 {mapMemories.length > 0 ? (
                   <MapView
                     memories={mapMemories}
                     onSelectMemory={(mem) => {
-                      setSelectedItem({
+                      handleItemSelect({
                         id: mem.id,
                         type: 'memory',
                         title: mem.title || 'Memory',
@@ -543,6 +582,14 @@ export default function MyStoryPage() {
 
         {/* Milestone Prompt for Photobook */}
         <MilestonePrompt memoryCount={memories.length} userId={userId} />
+
+        {/* Reflection Slideshow — at-your-own-pace memory walkthrough */}
+        <MemoryReflectionSlideshow
+          memories={reflectionMemories}
+          initialIndex={reflectIndex ?? 0}
+          isOpen={reflectIndex !== null}
+          onClose={() => setReflectIndex(null)}
+        />
       </div>
     </div>
   )

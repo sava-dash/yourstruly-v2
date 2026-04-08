@@ -21,6 +21,10 @@ export default function WeeklyChallenges() {
 
   useEffect(() => {
     fetchChallenges()
+    // Refetch when other parts of the app signal challenge-worthy activity
+    // (e.g. after saving a cardchain)
+    const onRefresh = () => fetchChallenges()
+    window.addEventListener('yt:challenges-refresh', onRefresh)
     // Detect dark mode from closest feed-page ancestor
     const el = document.querySelector('.feed-page')
     if (el) setIsDark(el.getAttribute('data-theme') === 'dark')
@@ -30,7 +34,10 @@ export default function WeeklyChallenges() {
       if (feedEl) setIsDark(feedEl.getAttribute('data-theme') === 'dark')
     })
     if (el) observer.observe(el, { attributes: true, attributeFilter: ['data-theme'] })
-    return () => observer.disconnect()
+    return () => {
+      window.removeEventListener('yt:challenges-refresh', onRefresh)
+      observer.disconnect()
+    }
   }, [])
 
   const fetchChallenges = async () => {
@@ -63,7 +70,7 @@ export default function WeeklyChallenges() {
   }
 
   return (
-    <div style={{
+    <div data-tour="weekly-challenges" style={{
       padding: 0,
       overflow: 'hidden',
       background: t.cardBg,

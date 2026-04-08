@@ -201,7 +201,33 @@ export async function POST(
     }
     
     // === MEMORY CREATION (non-wisdom prompts) ===
-    if (shouldCreateMemory && hasContent) {
+    // Guard against double-save: if this prompt has already produced a memory
+    // (e.g. from a per-card auto-save earlier in the chain), reuse it instead
+    // of creating a second one. The cardchain UI can trigger answerPrompt more
+    // than once per prompt (per-card save + final Save & Finish), so this is
+    // the authoritative dedup point.
+    if (shouldCreateMemory && hasContent && prompt.result_memory_id) {
+      console.log('=== SKIPPING MEMORY CREATION — prompt already has result_memory_id:', prompt.result_memory_id);
+      memoryCreated = true;
+      memoryId = prompt.result_memory_id;
+
+      // Still update the memory with fresh content if this call has new text
+      // (the second call usually has the fuller response aggregated from all cards)
+      let updatedDescription = body.responseText;
+      if (!updatedDescription && body.responseAudioUrl) {
+        try { updatedDescription = await transcribeAudio(body.responseAudioUrl); } catch {}
+      }
+      if (updatedDescription) {
+        await supabase
+          .from('memories')
+          .update({
+            description: updatedDescription,
+            audio_url: body.responseAudioUrl || null,
+            video_url: body.responseVideoUrl || null,
+          })
+          .eq('id', prompt.result_memory_id);
+      }
+    } else if (shouldCreateMemory && hasContent) {
       // Build tags based on prompt type and context
       const tags: string[] = [];
       
@@ -278,26 +304,32 @@ export async function POST(
     }
 
     // === XP AWARDING ===
-    // Award XP for answering the prompt
+    // Only award XP once per prompt — skip if prompt was already answered previously
+    // (happens when cardchain triggers answerPrompt more than once per prompt).
+    const alreadyAnswered = !!(prompt.result_memory_id || prompt.result_knowledge_id || prompt.status === 'answered');
     try {
-      const xpAmount = XP_REWARDS[prompt.type] || 10;
-      console.log('=== AWARDING XP ===');
-      console.log('Amount:', xpAmount, 'Type:', prompt.type);
-
-      const { data: xpResult, error: xpError } = await supabase.rpc('award_xp', {
-        p_user_id: user.id,
-        p_amount: xpAmount,
-        p_action: 'answer_prompt',
-        p_description: `Answered ${prompt.type} prompt`,
-        p_reference_type: 'prompt',
-        p_reference_id: promptId,
-      });
-
-      if (xpError) {
-        console.error('Failed to award XP:', xpError);
+      if (alreadyAnswered) {
+        console.log('=== SKIPPING XP — prompt already answered previously ===');
       } else {
-        xpAwarded = xpAmount;
-        console.log('XP awarded successfully. New total:', xpResult);
+        const xpAmount = XP_REWARDS[prompt.type] || 10;
+        console.log('=== AWARDING XP ===');
+        console.log('Amount:', xpAmount, 'Type:', prompt.type);
+
+        const { data: xpResult, error: xpError } = await supabase.rpc('award_xp', {
+          p_user_id: user.id,
+          p_amount: xpAmount,
+          p_action: 'answer_prompt',
+          p_description: `Answered ${prompt.type} prompt`,
+          p_reference_type: 'prompt',
+          p_reference_id: promptId,
+        });
+
+        if (xpError) {
+          console.error('Failed to award XP:', xpError);
+        } else {
+          xpAwarded = xpAmount;
+          console.log('XP awarded successfully. New total:', xpResult);
+        }
       }
 
       // Record daily activity for streak tracking

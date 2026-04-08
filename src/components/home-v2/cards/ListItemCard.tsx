@@ -64,7 +64,7 @@ export function ListItemCard({ category, promptText, data, onSave, saved }: List
     setEnriching(true)
     try {
       if (config.searchApi === 'music') {
-        const res = await fetch(`https://itunes.apple.com/search?term=${encodeURIComponent(name)}&entity=song&limit=5`)
+        const res = await fetch(`https://itunes.apple.com/search?term=${encodeURIComponent(name)}&entity=song&limit=20`)
         const data = await res.json()
         setSearchResults((data.results || []).map((r: any) => ({
           name: `${r.trackName} — ${r.artistName}`,
@@ -93,16 +93,31 @@ export function ListItemCard({ category, promptText, data, onSave, saved }: List
           if (detail.imdbID) setExternalUrl(`https://www.imdb.com/title/${detail.imdbID}`)
         }
       } else if (config.searchApi === 'books') {
-        const res = await fetch(`https://www.googleapis.com/books/v1/volumes?q=${encodeURIComponent(name)}&maxResults=5`)
+        // Search Google Books — matches by title OR author. Returns more results
+        // so author searches (e.g. "Stephen King") have enough to browse.
+        const res = await fetch(`https://www.googleapis.com/books/v1/volumes?q=${encodeURIComponent(name)}&maxResults=20&printType=books`)
         const data = await res.json()
-        setSearchResults((data.items || []).slice(0, 5).map((r: any) => ({
-          name: `${r.volumeInfo?.title} — ${r.volumeInfo?.authors?.[0] || 'Unknown'}`,
-          imageUrl: r.volumeInfo?.imageLinks?.thumbnail?.replace('http:', 'https:'),
-          externalUrl: r.volumeInfo?.previewLink,
-        })))
-        const thumb = data.items?.[0]?.volumeInfo?.imageLinks?.thumbnail
-        if (thumb) setImageUrl(thumb.replace('http:', 'https:'))
-        if (data.items?.[0]?.volumeInfo?.previewLink) setExternalUrl(data.items[0].volumeInfo.previewLink)
+        const items = (data.items || []).filter((r: any) => r.volumeInfo?.title)
+        setSearchResults(items.slice(0, 20).map((r: any) => {
+          const authors = r.volumeInfo?.authors || []
+          const authorStr = authors.length > 0 ? authors.slice(0, 2).join(', ') : 'Unknown'
+          return {
+            name: `${r.volumeInfo.title} — ${authorStr}`,
+            artist: authorStr,
+            imageUrl: r.volumeInfo?.imageLinks?.thumbnail?.replace('http:', 'https:'),
+            externalUrl: r.volumeInfo?.previewLink || r.volumeInfo?.infoLink,
+          }
+        }))
+        // Only auto-fill the cover if the top hit's title actually matches what the user typed
+        // (prevents random hit data overwriting a half-typed query)
+        const top = items[0]
+        if (top && top.volumeInfo?.title?.toLowerCase().includes(name.toLowerCase().slice(0, 4))) {
+          const thumb = top.volumeInfo?.imageLinks?.thumbnail
+          if (thumb) setImageUrl(thumb.replace('http:', 'https:'))
+          if (top.volumeInfo?.previewLink || top.volumeInfo?.infoLink) {
+            setExternalUrl(top.volumeInfo.previewLink || top.volumeInfo.infoLink)
+          }
+        }
       }
     } catch {}
     setEnriching(false)
@@ -241,7 +256,7 @@ export function ListItemCard({ category, promptText, data, onSave, saved }: List
         </div>
         {/* Search suggestions dropdown */}
         {searchResults.length > 0 && item.length >= 2 && (
-          <div className="absolute top-full left-0 right-0 mt-1 bg-white rounded-xl shadow-lg border border-[#DDE3DF] z-20 overflow-hidden max-h-[160px] overflow-y-auto">
+          <div className="absolute top-full left-0 right-0 mt-1 bg-white rounded-xl shadow-lg border border-[#DDE3DF] z-20 max-h-[240px] overflow-y-auto overscroll-contain">
             {searchResults.map((result, i) => (
               <button
                 key={i}
@@ -267,6 +282,9 @@ export function ListItemCard({ category, promptText, data, onSave, saved }: List
         value={story}
         onChange={(e) => setStory(e.target.value)}
         placeholder="Why is this special to you?"
+        spellCheck
+        autoCapitalize="sentences"
+        autoCorrect="on"
         className="w-full px-3 py-2.5 bg-[#FAFAF7] rounded-xl border border-[#DDE3DF] text-[#1A1F1C] text-sm focus:outline-none focus:ring-2 focus:ring-[#3D6B52]/30 placeholder-[#94A09A] resize-none flex-1 min-h-[60px]"
       />
 

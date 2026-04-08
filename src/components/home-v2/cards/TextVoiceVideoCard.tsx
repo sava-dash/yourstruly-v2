@@ -104,6 +104,9 @@ export function TextVoiceVideoCard({ label = 'Your Story', placeholder = 'Share 
           value={text}
           onChange={(e) => setText(e.target.value)}
           placeholder={placeholder}
+          spellCheck
+          autoCapitalize="sentences"
+          autoCorrect="on"
           className="w-full h-full min-h-[100px] px-3 py-2.5 bg-[#FAFAF7] rounded-xl border border-[#DDE3DF] text-[#1A1F1C] text-sm focus:outline-none focus:ring-2 focus:ring-[#3D6B52]/30 focus:border-[#3D6B52]/50 placeholder-[#94A09A] resize-none"
           style={interimText ? { color: 'transparent', caretColor: '#1A1F1C' } : undefined}
         />

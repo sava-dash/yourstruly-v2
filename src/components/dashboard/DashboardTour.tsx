@@ -5,42 +5,30 @@ import { createPortal } from 'react-dom'
 import { motion, AnimatePresence } from 'framer-motion'
 import { ChevronRight, ChevronLeft, X } from 'lucide-react'
 
-const TOUR_STEPS = [
+const TOUR_STEPS: {
+  target: string
+  title: string
+  content: string
+  placement: 'top' | 'bottom' | 'left' | 'right'
+  beforeShow?: () => void
+}[] = [
   {
-    target: '[data-tour="category-tabs"]',
-    title: 'Category Tabs',
-    content: 'Switch between Memories, Wisdom, Media, Interviews, and items shared with you. Each tab filters your feed.',
-    placement: 'bottom' as const,
+    target: '[data-tour="nav"]',
+    title: 'Your Navigation',
+    content: 'Jump anywhere from the top bar — Home, My Story, People, Memories, and more. Your whole life story, one click away.',
+    placement: 'bottom',
   },
   {
-    target: '[data-tour="category-submenu"]',
-    title: 'Quick Actions',
-    content: 'Each category reveals quick action buttons. Add a memory, upload photos, start an interview, or get a random prompt.',
-    placement: 'bottom' as const,
-    beforeShow: () => {
-      // Click "Memories" tab to show a submenu with actions
-      const tabs = document.querySelectorAll('[data-tour="category-tabs"] button')
-      const memoriesTab = Array.from(tabs).find(t => t.textContent?.includes('Memories')) as HTMLElement
-      memoriesTab?.click()
-    },
+    target: '[data-tour="weekly-challenges"]',
+    title: 'Weekly Challenges',
+    content: 'Bite-sized prompts that refresh every week. Finish them to earn XP, level up, and keep your story growing without ever feeling stuck.',
+    placement: 'right',
   },
   {
-    target: '[data-tour="filter-dropdown"]',
-    title: 'Reminisce By',
-    content: 'Filter your content by People, Places, Moods, or Categories. Browse through your memories organized the way you think about them.',
-    placement: 'bottom' as const,
-  },
-  {
-    target: '[data-tour="engagement-prompts"]',
-    title: 'Engagement Prompts',
-    content: 'Your personal storytelling coach! Tap here to see prompts that help you capture more of your story. Answer them to earn XP and level up.',
-    placement: 'right' as const,
-  },
-  {
-    target: '[data-tour="first-tile"]',
-    title: 'Your Content Tiles',
-    content: 'Click any tile to see its full details. From there you can add more context: a backstory, location, tagged people, or a voice recording.',
-    placement: 'left' as const,
+    target: '[data-tour="engagement-card"]',
+    title: 'Engagement Cards',
+    content: 'Each card is a prompt from your personal storytelling coach. Tap to expand — answer with text, voice, or video, and watch your story come to life.',
+    placement: 'left',
   },
 ]
 
@@ -241,7 +229,7 @@ export function DashboardTourProvider({ children }: { children: React.ReactNode 
     const seen = localStorage.getItem(TOUR_STORAGE_KEY)
     if (!seen) {
       const timer = setTimeout(() => {
-        if (document.querySelector('[data-tour="category-tabs"]')) {
+        if (document.querySelector('[data-tour="nav"]')) {
           setActive(true)
           setStepIdx(0)
           localStorage.setItem(TOUR_STORAGE_KEY, 'true')

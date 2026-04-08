@@ -80,6 +80,8 @@ export function BackstoryCard({ promptText, category, data, onSave, saved }: Bac
   // Send message
   const handleSend = async () => {
     if (!input.trim() || isSending) return
+    // Stop any live voice transcription on submit — user must tap mic again to resume
+    if (isRecording) stopRecording()
     const userMessage = input.trim()
     setInput('')
     setIsSending(true)
@@ -178,6 +180,8 @@ export function BackstoryCard({ promptText, category, data, onSave, saved }: Bac
 
   // Save the full conversation
   const handleSave = async () => {
+    // Stop any live voice transcription on save — user must tap mic again to resume
+    if (isRecording) stopRecording()
     const userMessages = messages.filter(m => m.role === 'user').map(m => m.content).join('\n\n')
     if (!userMessages.trim()) return
     setSaving(true)
@@ -266,6 +270,9 @@ export function BackstoryCard({ promptText, category, data, onSave, saved }: Bac
               onKeyDown={(e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleSend() } }}
               placeholder="Type your response..."
               rows={1}
+              spellCheck
+              autoCapitalize="sentences"
+              autoCorrect="on"
               className="flex-1 px-3 py-2.5 bg-[#FAFAF7] rounded-xl border border-[#DDE3DF] text-[#1A1F1C] text-sm focus:outline-none focus:ring-1 focus:ring-[#3D6B52]/30 placeholder-[#94A09A] resize-none"
               style={{ maxHeight: '80px' }}
             />

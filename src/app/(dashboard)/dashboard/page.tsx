@@ -105,6 +105,7 @@ export default function HomeV2Page() {
   useEffect(() => { expandedRowIdRef.current = expandedRowId }, [expandedRowId])
   const [sidebarOpen, setSidebarOpen] = useState(false)
   const [rows, setRows] = useState<Map<string, PromptRow>>(new Map())
+  const [xpToast, setXpToast] = useState<{ amount: number; message: string } | null>(null)
 
   // Pick up pre-filled memory from AI Concierge via custom event
   const insertConciergeDraft = useCallback((draft: { title: string; description: string; location?: string; date?: string; people?: string[]; mood?: string }) => {
@@ -246,6 +247,16 @@ export default function HomeV2Page() {
 
     const responseText = textParts.join('\n\n') || 'Completed'
 
+    // Tally XP earned from all saved cards so the user sees a single summary
+    const xpAmounts: Record<string, number> = {
+      'when-where': 15, 'text-voice-video': 25, 'quote': 10, 'comment': 5,
+      'tag-people': 10, 'people-present': 10, 'field-input': 10,
+      'pill-select': 10, 'song': 15, 'invite-collaborator': 20,
+      'list-item': 10, 'media-upload': 5, 'media-item': 5,
+      'backstory': 25,
+    }
+    const totalEarned = savedCards.reduce((sum, c) => sum + (xpAmounts[c.type] ?? 10), 0)
+
     // Close the expanded view immediately
     setExpandedRowId(null)
 
@@ -256,13 +267,24 @@ export default function HomeV2Page() {
       return next
     })
 
-    // Mark as answered in the backend (removes from rawPrompts)
+    // Mark as answered in the backend (removes from rawPrompts, creates/updates memory)
     try {
       await answerPrompt(row.promptId, { type: 'text', text: responseText })
     } catch (err) {
       console.error('Failed to finish prompt:', err)
     }
-  }, [expandedRowId, rows, answerPrompt])
+
+    // Celebrate: show XP toast, refresh dashboard stats + weekly challenges
+    if (totalEarned > 0) {
+      setXpToast({ amount: totalEarned, message: "Memory saved" })
+      setTimeout(() => setXpToast(null), 3500)
+    }
+    // Refresh stats counters + weekly challenges so streak/progress update visually
+    try { refreshDashboardStats?.() } catch {}
+    if (typeof window !== 'undefined') {
+      window.dispatchEvent(new CustomEvent('yt:challenges-refresh'))
+    }
+  }, [expandedRowId, rows, answerPrompt, refreshDashboardStats])
 
   const handleCardSave = useCallback(async (promptId: string, cardId: string, data: Record<string, any>) => {
     setRows(prev => {
@@ -544,6 +566,7 @@ export default function HomeV2Page() {
               return (
                 <React.Fragment key={row.promptId}>
                 <motion.div
+                  data-tour={index === 0 ? 'engagement-card' : undefined}
                   animate={{
                     opacity: isBehind ? 0.3 : 1,
                     filter: isBehind ? 'blur(4px)' : 'blur(0px)',
@@ -849,6 +872,57 @@ export default function HomeV2Page() {
         `}</style>
       </main>
 
+      {/* XP toast — shown after cardchain Save & Finish */}
+      <AnimatePresence>
+        {xpToast && (
+          <motion.div
+            initial={{ opacity: 0, y: 40, scale: 0.9 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: 20, scale: 0.95 }}
+            transition={{ type: 'spring', damping: 24, stiffness: 320 }}
+            style={{
+              position: 'fixed',
+              bottom: '32px',
+              left: '50%',
+              transform: 'translateX(-50%)',
+              zIndex: 100,
+              display: 'flex',
+              alignItems: 'center',
+              gap: '14px',
+              padding: '14px 22px',
+              borderRadius: '999px',
+              background: 'linear-gradient(135deg, #2D5A3D 0%, #3D6B52 100%)',
+              boxShadow: '0 12px 40px rgba(45, 90, 61, 0.35), 0 2px 8px rgba(0,0,0,0.15)',
+              color: '#FFFFFF',
+              fontFamily: 'var(--font-inter-tight, Inter, sans-serif)',
+              pointerEvents: 'none',
+            }}
+          >
+            <div
+              style={{
+                width: '36px',
+                height: '36px',
+                borderRadius: '50%',
+                background: 'rgba(255,255,255,0.18)',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                fontSize: '18px',
+              }}
+            >
+              ⚡
+            </div>
+            <div>
+              <div style={{ fontSize: '13px', opacity: 0.85, lineHeight: 1.2 }}>
+                {xpToast.message}
+              </div>
+              <div style={{ fontSize: '18px', fontWeight: 700, lineHeight: 1.2 }}>
+                +{xpToast.amount} XP
+              </div>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
     </div>
   )

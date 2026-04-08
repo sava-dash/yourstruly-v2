@@ -181,7 +181,7 @@ export function WhenWhereCard({ data, onSave, saved }: WhenWhereCardProps) {
         {/* Date */}
         <div>
           <label className="text-[10px] font-semibold uppercase tracking-wider text-[#94A09A] mb-1.5 block">
-            When was this taken?
+            When was this roughly?
           </label>
           <input
             type="text"

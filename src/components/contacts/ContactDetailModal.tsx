@@ -4,10 +4,11 @@ import { useState, useEffect, useCallback } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import Link from 'next/link'
 import {
-  X, Mail, Phone, MessageSquare, Share2, Edit2, Save, Trash2,
+  X, Mail, Phone, MessageSquare, Edit2, Save, Trash2,
   Calendar, MapPin, User, Heart, Users, Loader2, Camera, FileText,
   Video, Send, Plus
 } from 'lucide-react'
+import { RELATIONSHIP_OPTIONS, getRelationshipLabel } from '@/lib/relationships'
 
 // ============================================
 // TYPES
@@ -66,58 +67,8 @@ interface ContactDetailModalProps {
 }
 
 // ============================================
-// CONSTANTS
-// ============================================
-const RELATIONSHIP_OPTIONS = [
-  { category: 'Family', options: [
-    { id: 'mother', label: 'Mother' },
-    { id: 'father', label: 'Father' },
-    { id: 'spouse', label: 'Spouse' },
-    { id: 'partner', label: 'Partner' },
-    { id: 'son', label: 'Son' },
-    { id: 'daughter', label: 'Daughter' },
-    { id: 'brother', label: 'Brother' },
-    { id: 'sister', label: 'Sister' },
-    { id: 'grandmother', label: 'Grandmother' },
-    { id: 'grandfather', label: 'Grandfather' },
-    { id: 'grandson', label: 'Grandson' },
-    { id: 'granddaughter', label: 'Granddaughter' },
-    { id: 'aunt', label: 'Aunt' },
-    { id: 'uncle', label: 'Uncle' },
-    { id: 'cousin', label: 'Cousin' },
-    { id: 'niece', label: 'Niece' },
-    { id: 'nephew', label: 'Nephew' },
-    { id: 'in_law', label: 'In-Law' },
-  ]},
-  { category: 'Friends', options: [
-    { id: 'best_friend', label: 'Best Friend' },
-    { id: 'close_friend', label: 'Close Friend' },
-    { id: 'friend', label: 'Friend' },
-    { id: 'childhood_friend', label: 'Childhood Friend' },
-  ]},
-  { category: 'Professional', options: [
-    { id: 'colleague', label: 'Colleague' },
-    { id: 'boss', label: 'Boss' },
-    { id: 'mentor', label: 'Mentor' },
-    { id: 'business_partner', label: 'Business Partner' },
-  ]},
-  { category: 'Other', options: [
-    { id: 'neighbor', label: 'Neighbor' },
-    { id: 'other', label: 'Other' },
-  ]},
-]
-
-// ============================================
 // HELPERS
 // ============================================
-function getRelationshipLabel(id: string): string {
-  for (const group of RELATIONSHIP_OPTIONS) {
-    const found = group.options.find(o => o.id === id)
-    if (found) return found.label
-  }
-  return id || 'Unknown'
-}
-
 function getRelationshipCategory(id: string): string {
   for (const group of RELATIONSHIP_OPTIONS) {
     if (group.options.some(o => o.id === id)) return group.category
@@ -479,13 +430,6 @@ export default function ContactDetailModal({
               >
                 <MessageSquare size={15} />
                 <span>Message</span>
-              </Link>
-              <Link
-                href="/dashboard/my-story"
-                className="flex items-center gap-1.5 px-3 py-2 text-sm text-[#2D5A3D] bg-[#2D5A3D]/5 hover:bg-[#2D5A3D]/10 rounded-xl transition-colors"
-              >
-                <Share2 size={15} />
-                <span>Share</span>
               </Link>
             </div>
           </div>

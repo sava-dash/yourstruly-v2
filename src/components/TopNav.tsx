@@ -116,7 +116,7 @@ export default function TopNav({ user, profile }: TopNavProps) {
 
   return (
     <>
-      <nav className="fixed top-0 left-0 right-0 h-14 glass-nav z-50 px-4 font-inter-tight">
+      <nav data-tour="nav" className="fixed top-0 left-0 right-0 h-14 glass-nav z-50 px-4 font-inter-tight">
         <div className="h-full max-w-[1800px] mx-auto flex items-center justify-between">
           
           {/* Left: Logo + Primary Nav */}
