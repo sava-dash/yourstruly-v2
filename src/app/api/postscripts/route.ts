@@ -100,11 +100,15 @@ export async function POST(request: NextRequest) {
     }
   }
 
+  // Generate a unique access token for recipient viewing
+  const accessToken = crypto.randomUUID().replace(/-/g, '') + crypto.randomUUID().replace(/-/g, '').slice(0, 8)
+
   // Create postscript - ensure empty strings become null for date fields
   const { data: postscript, error } = await supabase
     .from('postscripts')
     .insert({
       user_id: user.id,
+      access_token: accessToken,
       recipient_contact_id: recipient_contact_id || null,
       circle_id: circle_id || null,
       recipient_name,

@@ -7,15 +7,20 @@ export async function GET() {
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
-  const { data, error } = await supabase
-    .from('profiles')
-    .select('total_xp')
-    .eq('id', user.id)
-    .single()
+  const [profileRes, xpRes] = await Promise.all([
+    supabase.from('profiles').select('total_xp').eq('id', user.id).single(),
+    supabase.from('user_xp').select('available_xp').eq('user_id', user.id).single(),
+  ])
 
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 })
+  if (profileRes.error) return NextResponse.json({ error: profileRes.error.message }, { status: 500 })
 
-  return NextResponse.json({ totalXp: data?.total_xp ?? 0 })
+  // Use available_xp (spendable) as the display value if it exists,
+  // otherwise fall back to total_xp (lifetime). This keeps the dashboard
+  // XP counter in sync with the credits trade modal.
+  const availableXp = xpRes.data?.available_xp
+  const totalXp = profileRes.data?.total_xp ?? 0
+
+  return NextResponse.json({ totalXp: availableXp ?? totalXp })
 }
 
 // POST /api/xp — add XP points

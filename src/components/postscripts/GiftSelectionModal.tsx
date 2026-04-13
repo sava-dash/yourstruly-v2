@@ -47,6 +47,8 @@ export interface GiftSelection {
   // Gift of Choice fields
   giftType: 'product' | 'choice'
   flexGiftAmount?: number
+  // Multi-gift cart (payment deferred to after PostScript save)
+  cartItems?: { product: GiftProduct; qty: number }[]
 }
 
 interface GiftSelectionModalProps {
@@ -163,69 +165,75 @@ export function GiftSelectionModal({
   const [selectedPriceRange, setSelectedPriceRange] = useState<string>('all')
   const [showFlowersOnly, setShowFlowersOnly] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
+  const [isLoadingMore, setIsLoadingMore] = useState(false)
   const [products, setProducts] = useState<GiftProduct[]>([])
   const [hasMore, setHasMore] = useState(false)
-  const [currentPage, setCurrentPage] = useState(1)
   const [categories, setCategories] = useState<{ id: string; name: string; count: number }[]>([])
   const [error, setError] = useState<string | null>(null)
+  // Mini cart for multiple gift selections
+  const [cart, setCart] = useState<{ product: GiftProduct; qty: number }[]>([])
 
   const PER_PAGE = 48
+  const pageRef = React.useRef(1)
+  const fetchVersionRef = React.useRef(0)
 
-  // Fetch products from API
-  const fetchGifts = async (page: number, append: boolean) => {
-    setIsLoading(true)
-    if (!append) setError(null)
-
-    try {
-      const params = new URLSearchParams()
-      if (selectedCategory && selectedCategory !== 'all') {
-        params.append('occasion', selectedCategory)
-      }
-      if (searchQuery) {
-        params.append('search', searchQuery)
-      }
-      if (showFlowersOnly) {
-        params.append('provider', 'floristone')
-      }
-      params.append('page', page.toString())
-      params.append('perPage', PER_PAGE.toString())
-
-      const response = await fetch(`/api/marketplace/curated?${params}`)
-
-      if (!response.ok) {
-        throw new Error('Failed to fetch products')
-      }
-
-      const data = await response.json()
-      // Exclude prints/prodigi — they need customization
-      const giftableProducts = (data.products || []).filter(
-        (p: any) => p.provider !== 'prodigi' && p.provider !== 'prints'
-      )
-      setProducts(prev => append ? [...prev, ...giftableProducts] : giftableProducts)
-      setHasMore(data.hasMore || false)
-      setCategories(data.categories || [])
-    } catch (err) {
-      console.error('Error fetching products:', err)
-      if (!append) setError('Failed to load products. Please try again.')
-    } finally {
-      setIsLoading(false)
-    }
+  // Build params from current filter state
+  const buildParams = (page: number) => {
+    const params = new URLSearchParams()
+    if (selectedCategory && selectedCategory !== 'all') params.append('occasion', selectedCategory)
+    if (searchQuery) params.append('search', searchQuery)
+    if (showFlowersOnly) params.append('provider', 'floristone')
+    params.append('page', page.toString())
+    params.append('perPage', PER_PAGE.toString())
+    return params
   }
 
-  // Reset and fetch when filters change
+  // Initial fetch + filter change fetch
   useEffect(() => {
     if (!isOpen || step !== 'browse') return
-    setCurrentPage(1)
-    fetchGifts(1, false)
+    const version = ++fetchVersionRef.current
+    pageRef.current = 1
+    setError(null)
+    setIsLoading(true)
+    setProducts([])
+
+    fetch(`/api/marketplace/curated?${buildParams(1)}`)
+      .then(r => r.ok ? r.json() : Promise.reject('Failed'))
+      .then(data => {
+        if (fetchVersionRef.current !== version) return // stale
+        const giftable = (data.products || []).filter(
+          (p: any) => p.provider !== 'prodigi' && p.provider !== 'prints'
+        )
+        setProducts(giftable)
+        setHasMore(data.hasMore || false)
+        setCategories(data.categories || [])
+      })
+      .catch(() => { if (fetchVersionRef.current === version) setError('Failed to load products.') })
+      .finally(() => { if (fetchVersionRef.current === version) setIsLoading(false) })
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isOpen, step, selectedCategory, searchQuery, showFlowersOnly])
 
-  const loadMore = () => {
-    if (!isLoading && hasMore) {
-      const next = currentPage + 1
-      setCurrentPage(next)
-      fetchGifts(next, true)
+  // Load more — completely independent, no state deps that trigger the effect
+  const loadMore = React.useCallback(async () => {
+    if (isLoadingMore || !hasMore) return
+    const nextPage = pageRef.current + 1
+    pageRef.current = nextPage
+    setIsLoadingMore(true)
+
+    try {
+      const r = await fetch(`/api/marketplace/curated?${buildParams(nextPage)}`)
+      if (!r.ok) throw new Error()
+      const data = await r.json()
+      const giftable = (data.products || []).filter(
+        (p: any) => p.provider !== 'prodigi' && p.provider !== 'prints'
+      )
+      setProducts(prev => [...prev, ...giftable])
+      setHasMore(data.hasMore || false)
+    } catch {} finally {
+      setIsLoadingMore(false)
     }
-  }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isLoadingMore, hasMore, selectedCategory, searchQuery, showFlowersOnly])
 
   // Reset state when modal opens/closes
   useEffect(() => {
@@ -244,8 +252,8 @@ export function GiftSelectionModal({
       setSelectedCategory('all')
       setSelectedPriceRange('all')
       setShowFlowersOnly(false)
-      setCurrentPage(1)
       setHasMore(false)
+      setCart([])
       setError(null)
     }
   }, [isOpen, isNearTermDelivery])
@@ -553,12 +561,18 @@ export function GiftSelectionModal({
                       <p className="text-sm text-[#2D5A3D] font-medium">From $25</p>
                     </div>
                   </button>
-                  {filteredProducts.map(product => (
+                  {filteredProducts.map(product => {
+                    const inCart = cart.some(c => c.product.id === product.id)
+                    return (
                     <button
                       key={product.id}
-                      onClick={() => handleProductSelect(product)}
-                      className="group text-left bg-white border border-gray-200 rounded-xl overflow-hidden
-                               hover:border-[#B8562E]/50 hover:shadow-lg transition-all"
+                      onClick={() => {
+                        if (inCart) return
+                        setCart(prev => [...prev, { product, qty: 1 }])
+                      }}
+                      className={`group text-left bg-white border rounded-xl overflow-hidden transition-all ${
+                        inCart ? 'border-[#2D5A3D] ring-1 ring-[#2D5A3D]/20' : 'border-gray-200 hover:border-[#2D5A3D]/40 hover:shadow-lg'
+                      }`}
                     >
                       <div className="aspect-square bg-gray-100 relative overflow-hidden">
                         <img
@@ -566,40 +580,38 @@ export function GiftSelectionModal({
                           alt={product.name}
                           className="w-full h-full object-cover group-hover:scale-105 transition-transform"
                         />
-                        <div className={`absolute top-2 left-2 px-2 py-1 rounded-full text-xs font-medium
-                                       ${getProviderColor(product.provider)}`}>
-                          {getProviderLabel(product.provider)}
-                        </div>
                         {product.isBestseller && (
                           <div className="absolute top-2 right-2 px-2 py-1 rounded-full text-xs font-medium
                                          bg-amber-100 text-amber-700">
-                            ⭐ Bestseller
+                            Bestseller
+                          </div>
+                        )}
+                        {inCart && (
+                          <div className="absolute top-2 left-2 w-6 h-6 rounded-full bg-[#2D5A3D] flex items-center justify-center">
+                            <CheckCircle2 className="w-4 h-4 text-white" />
                           </div>
                         )}
                       </div>
-                      <div className="p-4">
-                        <h3 className="font-semibold text-gray-900 mb-1 line-clamp-1">{product.name}</h3>
-                        {product.brandName && (
-                          <p className="text-xs text-gray-400 mb-2">{product.brandName}</p>
-                        )}
-                        <p className="text-sm text-gray-500 mb-3 line-clamp-2">{product.description}</p>
+                      <div className="p-3">
+                        <h3 className="font-semibold text-gray-900 mb-1 line-clamp-1 text-sm">{product.name}</h3>
                         <div className="flex items-center justify-between">
-                          <span className="text-lg font-bold text-[#B8562E]">
+                          <span className="text-base font-bold text-[#2D5A3D]">
                             {formatPrice(product.price, product.currency)}
                           </span>
-                          <span className="text-xs text-gray-400 flex items-center gap-1">
-                            <ShoppingBag className="w-3 h-3" />
-                            Select
-                          </span>
+                          {!inCart && (
+                            <span className="text-[10px] text-gray-400 flex items-center gap-0.5">
+                              <ShoppingBag className="w-3 h-3" /> Add
+                            </span>
+                          )}
                         </div>
                       </div>
                     </button>
-                  ))}
+                  )})}
                 </div>
               )}
 
               {/* Load More */}
-              {hasMore && products.length > 0 && !isLoading && (
+              {hasMore && products.length > 0 && !isLoadingMore && (
                 <div className="flex justify-center pt-4">
                   <button
                     onClick={loadMore}
@@ -609,7 +621,7 @@ export function GiftSelectionModal({
                   </button>
                 </div>
               )}
-              {isLoading && products.length > 0 && (
+              {isLoadingMore && (
                 <div className="flex justify-center pt-4">
                   <Loader2 className="w-6 h-6 animate-spin text-gray-400" />
                 </div>
@@ -806,10 +818,69 @@ export function GiftSelectionModal({
         {/* Footer */}
         <div className="px-6 py-4 border-t border-gray-100 bg-gray-50">
           {step === 'browse' && (
-            <div className="flex items-center justify-center">
-              <button onClick={onClose} className="px-6 py-2 text-gray-500 hover:text-gray-700 text-sm transition-colors">
-                Cancel
-              </button>
+            <div className="space-y-2">
+              {/* Mini cart */}
+              {cart.length > 0 && (
+                <div className="space-y-1.5 max-h-32 overflow-y-auto">
+                  {cart.map((item, i) => (
+                    <div key={item.product.id} className="flex items-center gap-2 text-sm">
+                      <img src={item.product.thumbnail} alt="" className="w-8 h-8 rounded object-cover flex-shrink-0" />
+                      <span className="flex-1 min-w-0 truncate text-gray-800">{item.product.name}</span>
+                      <div className="flex items-center gap-1 flex-shrink-0">
+                        <button
+                          onClick={() => setCart(prev => prev.map((c, j) => j === i ? { ...c, qty: Math.max(1, c.qty - 1) } : c))}
+                          className="w-5 h-5 rounded bg-gray-100 text-gray-600 text-xs flex items-center justify-center hover:bg-gray-200"
+                        >−</button>
+                        <span className="w-5 text-center text-xs font-medium">{item.qty}</span>
+                        <button
+                          onClick={() => setCart(prev => prev.map((c, j) => j === i ? { ...c, qty: c.qty + 1 } : c))}
+                          className="w-5 h-5 rounded bg-gray-100 text-gray-600 text-xs flex items-center justify-center hover:bg-gray-200"
+                        >+</button>
+                      </div>
+                      <span className="text-xs font-medium text-gray-600 w-14 text-right">{formatPrice(item.product.price * item.qty)}</span>
+                      <button
+                        onClick={() => setCart(prev => prev.filter((_, j) => j !== i))}
+                        className="p-0.5 text-gray-400 hover:text-red-500 flex-shrink-0"
+                      >
+                        <X className="w-3.5 h-3.5" />
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              )}
+              <div className="flex items-center justify-between">
+                <div>
+                  {cart.length > 0 && (
+                    <p className="text-sm font-semibold text-gray-800">
+                      {cart.length} item{cart.length !== 1 ? 's' : ''} &middot; {formatPrice(cart.reduce((sum, c) => sum + c.product.price * c.qty, 0))}
+                    </p>
+                  )}
+                </div>
+                <div className="flex gap-2">
+                  <button onClick={onClose} className="px-4 py-2 text-gray-500 hover:text-gray-700 text-sm transition-colors">
+                    Cancel
+                  </button>
+                  {cart.length > 0 && (
+                    <button
+                      onClick={() => {
+                        const selection: GiftSelection = {
+                          giftType: 'product',
+                          product: cart[0].product,
+                          quantity: cart.reduce((sum, c) => sum + c.qty, 0),
+                          deliveryTiming: 'with_postscript',
+                          cartItems: cart,
+                        }
+                        onSelect(selection)
+                        onClose()
+                      }}
+                      className="px-5 py-2 bg-[#2D5A3D] text-white rounded-lg text-sm font-medium hover:bg-[#244B32] transition-colors flex items-center gap-1.5"
+                    >
+                      <Gift className="w-4 h-4" />
+                      Attach {cart.length} gift{cart.length !== 1 ? 's' : ''}
+                    </button>
+                  )}
+                </div>
+              </div>
             </div>
           )}
 

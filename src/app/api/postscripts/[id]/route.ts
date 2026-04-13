@@ -247,3 +247,39 @@ export async function DELETE(
 
   return NextResponse.json({ success: true })
 }
+
+// PATCH - generate access token or update fields
+export async function PATCH(
+  request: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  const supabase = await createClient()
+  const { id } = await params
+
+  const { data: { user }, error: authError } = await supabase.auth.getUser()
+  if (authError || !user) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  }
+
+  const body = await request.json()
+
+  if (body.generate_access_token) {
+    const { createAdminClient } = await import('@/lib/supabase/admin')
+    const { randomUUID } = await import('crypto')
+    const admin = createAdminClient()
+    const token = randomUUID().replace(/-/g, '') + randomUUID().replace(/-/g, '').slice(0, 8)
+
+    const { error } = await admin
+      .from('postscripts')
+      .update({ access_token: token })
+      .eq('id', id)
+      .eq('user_id', user.id)
+
+    if (error) {
+      return NextResponse.json({ error: 'Failed to generate token' }, { status: 500 })
+    }
+    return NextResponse.json({ access_token: token })
+  }
+
+  return NextResponse.json({ error: 'No action specified' }, { status: 400 })
+}

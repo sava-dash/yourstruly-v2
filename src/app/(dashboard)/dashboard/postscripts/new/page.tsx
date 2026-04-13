@@ -393,7 +393,10 @@ export default function NewPostScriptPage() {
           video_url: form.video_url,
           audio_url: audioUrl,
           attachments: uploadedAttachments,
-          gift: form.gift,
+          has_gift: !!form.gift,
+          gift_type: form.gift?.giftType || null,
+          gift_details: form.gift ? JSON.stringify({ name: form.gift.name, price: form.gift.price, image_url: form.gift.image_url }) : null,
+          gift_budget: form.gift?.price || null,
           memories: form.memories.map(m => ({ id: m.id, title: m.title })),
           wisdom: form.wisdom.map(w => ({ id: w.id, title: w.title })),
           status
@@ -406,7 +409,14 @@ export default function NewPostScriptPage() {
         throw new Error(data.error || 'Failed to save')
       }
 
-      router.push('/dashboard/postscripts')
+      // If gifts attached, go to checkout first (they can skip to detail page)
+      // Otherwise go directly to detail page
+      const postscriptId = data.postscript?.id
+      if (postscriptId && form.gift) {
+        router.push(`/dashboard/postscripts/${postscriptId}?checkout=true`)
+      } else {
+        router.push(postscriptId ? `/dashboard/postscripts/${postscriptId}` : '/dashboard/postscripts')
+      }
     } catch (err: any) {
       setError(err.message)
       setSaving(false)
@@ -779,6 +789,8 @@ export default function NewPostScriptPage() {
         <ThemePicker
           selectedTheme={form.theme}
           onChange={(themeId) => setForm({ ...form, theme: themeId })}
+          previewTitle={form.title || undefined}
+          previewMessage={form.message || undefined}
         />
       </div>
     )
@@ -1136,19 +1148,24 @@ export default function NewPostScriptPage() {
           {/* Gift */}
           {form.gift && (
             <div className="p-4">
-              <p className="text-xs text-gray-500 uppercase tracking-wider mb-2">Gift Included</p>
-              <div className="flex items-center gap-3 bg-gradient-to-r from-[#B8562E]/5 to-[#C4A235]/5 rounded-xl p-3">
-                <img 
-                  src={form.gift.image_url} 
-                  alt={form.gift.name}
-                  className="w-14 h-14 rounded-lg object-cover"
-                />
-                <div>
+              <p className="text-xs text-gray-500 uppercase tracking-wider mb-2">Gift Attached</p>
+              <div className="flex items-center gap-3 bg-gradient-to-r from-[#2D5A3D]/5 to-[#C4A235]/5 rounded-xl p-3">
+                {form.gift.image_url && (
+                  <img
+                    src={form.gift.image_url}
+                    alt={form.gift.name}
+                    className="w-14 h-14 rounded-lg object-cover"
+                  />
+                )}
+                <div className="flex-1">
                   <p className="font-medium text-gray-900">{form.gift.name}</p>
-                  <p className="text-[#B8562E] font-semibold">${form.gift.price.toFixed(2)}</p>
+                  <p className="text-[#2D5A3D] font-semibold">${form.gift.price.toFixed(2)}</p>
                 </div>
-                <Gift size={20} className="text-[#B8562E] ml-auto" />
+                <Gift size={20} className="text-[#C4A235] ml-auto" />
               </div>
+              <p className="text-xs text-gray-500 mt-2 flex items-center gap-1">
+                Payment will be collected after saving. You can skip payment and send without gifts.
+              </p>
             </div>
           )}
 
@@ -1189,32 +1206,45 @@ export default function NewPostScriptPage() {
   // Handle gift selection from the modal
   function handleGiftSelect(selection: GiftSelection) {
     if (selection.giftType === 'choice') {
-      // Gift of Choice
-      setForm({ 
-        ...form, 
+      setForm(f => ({
+        ...f,
         gift: {
           id: 'gift-of-choice',
           name: `Gift of Choice - $${selection.flexGiftAmount}`,
           price: selection.flexGiftAmount || 50,
-          image_url: 'https://assets.ongoody.com/store/gift-of-choice-card.png',
-          provider: 'Goody',
+          image_url: '',
+          provider: 'YoursTruly',
           giftType: 'choice',
           flexGiftAmount: selection.flexGiftAmount,
         }
-      })
-    } else if (selection.product) {
-      // Specific product
-      setForm({ 
-        ...form, 
+      }))
+    } else if (selection.cartItems && selection.cartItems.length > 0) {
+      // Multi-gift from cart — store first item as primary, all in metadata
+      const total = selection.cartItems.reduce((s, c) => s + c.product.price * c.qty, 0)
+      const names = selection.cartItems.map(c => c.qty > 1 ? `${c.product.name} x${c.qty}` : c.product.name)
+      setForm(f => ({
+        ...f,
         gift: {
-          id: selection.product.id,
-          name: selection.product.name,
-          price: selection.product.price,
-          image_url: selection.product.thumbnail,
-          provider: selection.product.provider,
+          id: selection.cartItems![0].product.id,
+          name: names.length === 1 ? names[0] : `${names.length} gifts`,
+          price: total,
+          image_url: selection.cartItems![0].product.thumbnail,
+          provider: 'YoursTruly',
           giftType: 'product',
         }
-      })
+      }))
+    } else if (selection.product) {
+      setForm(f => ({
+        ...f,
+        gift: {
+          id: selection.product!.id,
+          name: selection.product!.name,
+          price: selection.product!.price,
+          image_url: selection.product!.thumbnail,
+          provider: selection.product!.provider,
+          giftType: 'product',
+        }
+      }))
     }
     setShowGiftModal(false)
   }
@@ -1258,7 +1288,7 @@ export default function NewPostScriptPage() {
         <div className="home-blob home-blob-3" />
       </div>
 
-      <div className="relative z-10 p-6 max-w-lg mx-auto">
+      <div className="relative z-10 p-6 max-w-4xl mx-auto">
         {/* Header */}
         <header className="flex items-center gap-4 mb-6">
           <Link 
@@ -1284,12 +1314,82 @@ export default function NewPostScriptPage() {
           ))}
         </div>
 
-        {/* Step Content */}
-        <div className="bg-white/90 backdrop-blur-sm rounded-3xl p-6 shadow-sm">
-          {step === 1 && renderRecipientStep()}
-          {step === 2 && renderOccasionStep()}
-          {step === 3 && renderMessageStep()}
-          {step === 4 && renderReviewStep()}
+        {/* Step Content + Summary Sidebar */}
+        <div className="flex gap-6">
+          {/* Summary sidebar — visible from step 2 onward on desktop */}
+          {step > 1 && (
+            <div className="hidden lg:block w-56 flex-shrink-0">
+              <div className="sticky top-20 space-y-3">
+                <h3 className="text-xs font-semibold uppercase tracking-wider text-gray-400 mb-2">Your PostScript</h3>
+
+                {/* Recipient */}
+                {form.recipient_name && (
+                  <div className="bg-white rounded-xl border border-gray-100 p-3">
+                    <p className="text-[10px] text-gray-400 uppercase tracking-wider mb-1">To</p>
+                    <p className="text-sm font-medium text-gray-800 truncate">{form.recipient_name}</p>
+                    {form.recipient_email && <p className="text-xs text-gray-400 truncate">{form.recipient_email}</p>}
+                  </div>
+                )}
+
+                {/* Delivery */}
+                {(form.delivery_date || form.delivery_event || form.delivery_type === 'after_passing') && (
+                  <div className="bg-white rounded-xl border border-gray-100 p-3">
+                    <p className="text-[10px] text-gray-400 uppercase tracking-wider mb-1">When</p>
+                    <p className="text-sm text-gray-700">
+                      {form.delivery_type === 'date' && form.delivery_date
+                        ? new Date(form.delivery_date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
+                        : form.delivery_type === 'event' && form.delivery_event
+                          ? EVENT_OPTIONS.find(e => e.key === form.delivery_event)?.label || form.delivery_event
+                          : form.delivery_type === 'after_passing'
+                            ? 'After I\'m gone'
+                            : ''}
+                    </p>
+                    {form.delivery_time && form.delivery_type === 'date' && (
+                      <p className="text-xs text-gray-400">at {form.delivery_time}</p>
+                    )}
+                  </div>
+                )}
+
+                {/* Message preview */}
+                {form.title && (
+                  <div className="bg-white rounded-xl border border-gray-100 p-3">
+                    <p className="text-[10px] text-gray-400 uppercase tracking-wider mb-1">Message</p>
+                    <p className="text-sm font-medium text-gray-800 truncate">{form.title}</p>
+                    {form.message && <p className="text-xs text-gray-400 line-clamp-2 mt-0.5">{form.message.slice(0, 80)}...</p>}
+                  </div>
+                )}
+
+                {/* Gift */}
+                {form.gift && (
+                  <div className="bg-white rounded-xl border border-gray-100 p-3">
+                    <p className="text-[10px] text-gray-400 uppercase tracking-wider mb-1">Gift</p>
+                    <p className="text-sm text-gray-700 truncate">{form.gift.name}</p>
+                    <p className="text-xs text-[#2D5A3D] font-semibold">${form.gift.price}</p>
+                  </div>
+                )}
+
+                {/* Attachments count */}
+                {(form.attachments.length > 0 || form.memories.length > 0 || form.wisdom.length > 0) && (
+                  <div className="bg-white rounded-xl border border-gray-100 p-3">
+                    <p className="text-[10px] text-gray-400 uppercase tracking-wider mb-1">Attachments</p>
+                    <div className="text-xs text-gray-500 space-y-0.5">
+                      {form.attachments.length > 0 && <p>{form.attachments.length} photo{form.attachments.length !== 1 ? 's' : ''}</p>}
+                      {form.memories.length > 0 && <p>{form.memories.length} memor{form.memories.length !== 1 ? 'ies' : 'y'}</p>}
+                      {form.wisdom.length > 0 && <p>{form.wisdom.length} wisdom</p>}
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+
+          {/* Main step content */}
+          <div className="flex-1 min-w-0 bg-white/90 backdrop-blur-sm rounded-3xl p-6 shadow-sm">
+            {step === 1 && renderRecipientStep()}
+            {step === 2 && renderOccasionStep()}
+            {step === 3 && renderMessageStep()}
+            {step === 4 && renderReviewStep()}
+          </div>
         </div>
 
         {/* Navigation */}

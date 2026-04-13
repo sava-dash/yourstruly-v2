@@ -57,14 +57,7 @@ export async function GET(
     )
   }
 
-  // Check if the postscript has been sent/delivered
-  // Draft postscripts shouldn't be viewable by recipients
-  if (postscript.status === 'draft') {
-    return NextResponse.json(
-      { error: 'This PostScript is not yet available.' },
-      { status: 403 }
-    )
-  }
+  // Allow viewing for all statuses — sender previews drafts, recipients see sent/opened
 
   // Transform sender data
   const sender = Array.isArray(postscript.sender) 

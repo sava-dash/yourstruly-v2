@@ -116,6 +116,7 @@ export default function PostScriptDetailPage({ params }: { params: Promise<{ id:
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
   const [deleting, setDeleting] = useState(false)
   const [showGiftModal, setShowGiftModal] = useState(false)
+  const [showCheckoutPrompt, setShowCheckoutPrompt] = useState(searchParams.get('checkout') === 'true')
   const [giftMessage, setGiftMessage] = useState<{ type: 'success' | 'error', text: string } | null>(null)
 
   // Handle gift payment callback from Stripe
@@ -250,11 +251,12 @@ export default function PostScriptDetailPage({ params }: { params: Promise<{ id:
     : Calendar
 
   return (
-    <div className="page-container">
-      {/* Warm background */}
-      <div className="page-background">
-        <div className="page-blob page-blob-1" style={{ background: 'linear-gradient(135deg, #B8562E40, #C4A23530)' }} />
-        <div className="page-blob page-blob-2" />
+    <div
+      className="min-h-screen px-4 py-6"
+      style={{ background: 'radial-gradient(ellipse at top, #2A201A 0%, #1A1410 60%, #0F0B08 100%)' }}
+    >
+      {/* Warm dark background — matches slideshow */}
+      <div>
         <div className="page-blob page-blob-3" />
       </div>
 
@@ -285,7 +287,7 @@ export default function PostScriptDetailPage({ params }: { params: Promise<{ id:
         <header className="flex items-center justify-between mb-6">
           <Link 
             href="/dashboard/postscripts" 
-            className="page-header-back"
+            className="p-2 rounded-lg text-[#D4C8A0]/70 hover:text-[#C4A235] hover:bg-white/5 transition-colors"
           >
             <ChevronLeft size={20} />
           </Link>
@@ -293,16 +295,16 @@ export default function PostScriptDetailPage({ params }: { params: Promise<{ id:
           <div className="flex items-center gap-2">
             <button
               onClick={() => router.push(`/dashboard/postscripts/new?edit=${id}`)}
-              className="p-2.5 bg-white/80 backdrop-blur-sm text-gray-500 hover:text-[#B8562E] 
-                       rounded-xl transition-all border border-gray-200 shadow-sm hover:border-[#B8562E]/30"
+              className="p-2.5 bg-white/10 backdrop-blur-sm text-[#D4C8A0]/70 hover:text-[#C4A235]
+                       rounded-xl transition-all border border-[#C4A235]/15 hover:border-[#C4A235]/30"
               title="Edit PostScript"
             >
               <Edit2 size={18} />
             </button>
             <button
               onClick={() => setShowDeleteConfirm(true)}
-              className="p-2.5 bg-white/80 backdrop-blur-sm text-gray-500 hover:text-red-500 
-                       rounded-xl transition-all border border-gray-200 shadow-sm hover:border-red-200"
+              className="p-2.5 bg-white/10 backdrop-blur-sm text-[#D4C8A0]/70 hover:text-red-400
+                       rounded-xl transition-all border border-[#C4A235]/15 hover:border-red-400/30"
               title="Delete PostScript"
             >
               <Trash2 size={18} />
@@ -310,138 +312,150 @@ export default function PostScriptDetailPage({ params }: { params: Promise<{ id:
           </div>
         </header>
 
-        {/* Hero Card with Recipient Info */}
-        <div className="glass-card-page-strong overflow-hidden mb-6">
-          {/* Coral gradient header */}
-          <div className="bg-gradient-to-br from-[#B8562E] via-[#D97B4A] to-[#C4A235] p-6 text-white">
+        {/* Hero — warm dark style matching slideshow */}
+        <div
+          className="rounded-2xl overflow-hidden mb-6"
+          style={{
+            background: 'linear-gradient(165deg, rgba(62,48,35,0.92) 0%, rgba(42,32,26,0.96) 100%)',
+            border: '1px solid rgba(196,162,53,0.15)',
+            boxShadow: '0 12px 40px rgba(0,0,0,0.2)',
+          }}
+        >
+          <div className="p-6 sm:p-8">
             <div className="flex items-start gap-4">
               {/* Recipient Avatar */}
               {postscript.recipient?.avatar_url ? (
-                <img 
-                  src={postscript.recipient.avatar_url} 
+                <img
+                  src={postscript.recipient.avatar_url}
                   alt={postscript.recipient_name}
-                  className="w-16 h-16 rounded-2xl object-cover border-2 border-white/30 shadow-lg"
+                  className="w-14 h-14 rounded-full object-cover ring-2 ring-[#C4A235]/30"
+                  style={{ boxShadow: '0 4px 12px rgba(0,0,0,0.4)' }}
                 />
               ) : (
-                <div className="w-16 h-16 rounded-2xl bg-white/20 backdrop-blur-sm flex items-center justify-center 
-                              text-white font-bold text-xl border-2 border-white/30 shadow-lg">
+                <div
+                  className="w-14 h-14 rounded-full bg-gradient-to-br from-[#C4A235]/30 to-[#8B7320]/20 text-[#E8D84A] text-lg font-semibold flex items-center justify-center ring-2 ring-[#C4A235]/30"
+                  style={{ boxShadow: '0 4px 12px rgba(0,0,0,0.4)' }}
+                >
                   {initials}
                 </div>
               )}
-              
+
               <div className="flex-1 min-w-0">
-                <h1 className="text-2xl font-bold mb-1 truncate">{postscript.title}</h1>
-                <p className="text-white/90 flex items-center gap-2">
-                  <span>To: {postscript.recipient_name}</span>
+                <h1
+                  className="text-2xl sm:text-3xl text-[#F5F0E8] leading-tight mb-1"
+                  style={{ fontFamily: 'var(--font-dm-serif, DM Serif Display, serif)' }}
+                >
+                  {postscript.title}
+                </h1>
+                <p className="text-[#D4C8A0]/80 text-sm flex items-center gap-2">
+                  <span>To {postscript.recipient_name}</span>
                   {postscript.recipient?.relationship_type && (
                     <>
-                      <span className="text-white/50">•</span>
-                      <span className="text-white/70">{postscript.recipient.relationship_type}</span>
+                      <span className="text-[#D4C8A0]/40">·</span>
+                      <span>{postscript.recipient.relationship_type}</span>
                     </>
                   )}
                 </p>
               </div>
 
               {/* Status Badge */}
-              <div className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-medium ${status.bg} ${status.text} border ${status.border}`}>
-                <StatusIcon size={14} />
+              <div className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium ${status.bg} ${status.text} border ${status.border}`}>
+                <StatusIcon size={12} />
                 <span>{status.label}</span>
               </div>
             </div>
-          </div>
 
-          {/* Delivery Info Bar */}
-          <div className="px-6 py-4 bg-[#F5F3EE]/50 border-b border-gray-100 flex flex-wrap items-center gap-4">
-            <div className="flex items-center gap-2 text-gray-700">
-              <DeliveryIcon size={16} className="text-[#B8562E]" />
-              <span className="text-sm font-medium">{getDeliveryText()}</span>
+            {/* Delivery info — inline */}
+            <div className="mt-5 pt-4 border-t border-[#C4A235]/10 flex flex-wrap items-center gap-4">
+              <div className="flex items-center gap-2 text-[#D4C8A0]/80 text-sm">
+                <DeliveryIcon size={14} className="text-[#C4A235]/60" />
+                <span>{getDeliveryText()}</span>
+              </div>
+              {postscript.delivery_recurring && (
+                <div className="flex items-center gap-1.5 text-[#C4A235]/70 text-sm">
+                  <RefreshCw size={12} />
+                  <span>Repeats annually</span>
+                </div>
+              )}
             </div>
-            
-            {postscript.delivery_recurring && (
-              <div className="flex items-center gap-1.5 text-amber-600 text-sm">
-                <RefreshCw size={14} />
-                <span>Repeats annually</span>
-              </div>
-            )}
-            
-            {postscript.requires_confirmation && (
-              <div className="flex items-center gap-1.5 text-[#2D5A3D] text-sm">
-                <Users size={14} />
-                <span>Requires confirmation</span>
-              </div>
-            )}
           </div>
         </div>
 
-        {/* Content Grid */}
-        <div className="grid md:grid-cols-3 gap-6">
-          {/* Main Content - Message */}
-          <div className="md:col-span-2 space-y-6">
+        {/* Content — single column, full width */}
+        <div className="space-y-4">
             {/* Message Card */}
-            <div className="glass-card-page p-6">
-              <h3 className="text-xs font-semibold text-[#B8562E] uppercase tracking-wider mb-4 flex items-center gap-2">
-                <div className="w-6 h-6 rounded-lg bg-[#B8562E]/10 flex items-center justify-center">
-                  <Mail size={12} className="text-[#B8562E]" />
-                </div>
-                Message
-              </h3>
-              <div className="prose prose-sm max-w-none">
-                {postscript.message ? (
-                  <p className="text-gray-700 whitespace-pre-wrap leading-relaxed">{postscript.message}</p>
-                ) : (
-                  <p className="text-gray-400 italic">No message content yet</p>
+            <div
+              className="rounded-2xl p-6 sm:p-8"
+              style={{
+                background: 'linear-gradient(165deg, rgba(62,48,35,0.85) 0%, rgba(42,32,26,0.92) 100%)',
+                border: '1px solid rgba(196,162,53,0.12)',
+                boxShadow: '0 8px 32px rgba(0,0,0,0.15)',
+              }}
+            >
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-[13px] font-semibold tracking-wide text-[#D4C8A0] flex items-center gap-2"
+                  style={{ fontFamily: 'var(--font-dm-serif, DM Serif Display, serif)' }}
+                >
+                  <Mail size={13} className="text-[#C4A235]/60" />
+                  Your Message
+                </h3>
+                {(postscript.status === 'draft' || postscript.status === 'scheduled') && (
+                  <button
+                    onClick={() => router.push(`/dashboard/postscripts/new?edit=${postscript.id}`)}
+                    className="text-xs text-[#C4A235]/70 hover:text-[#C4A235] flex items-center gap-1 transition-colors"
+                  >
+                    <Edit2 size={11} /> Edit
+                  </button>
                 )}
               </div>
+              {postscript.message ? (
+                <p
+                  className="text-[#E8DCC4] text-[15px] sm:text-[16px] leading-[1.8] whitespace-pre-wrap"
+                  style={{ fontFamily: 'var(--font-dm-serif, DM Serif Display, serif)' }}
+                >
+                  {postscript.message}
+                </p>
+              ) : (
+                <p className="text-[#D4C8A0]/40 italic text-sm">No message content yet</p>
+              )}
             </div>
 
             {/* Video Preview */}
             {postscript.video_url && (
-              <div className="glass-card-page p-6">
-                <h3 className="text-xs font-semibold text-[#B8562E] uppercase tracking-wider mb-4 flex items-center gap-2">
-                  <div className="w-6 h-6 rounded-lg bg-[#B8562E]/10 flex items-center justify-center">
-                    <Video size={12} className="text-[#B8562E]" />
-                  </div>
-                  Video Message
-                </h3>
-                <video 
-                  src={postscript.video_url} 
-                  controls 
+              <SectionCard title="Video Message" icon={Video}>
+                <video
+                  src={postscript.video_url}
+                  controls
                   className="w-full rounded-xl bg-black"
-                  poster="/video-poster.jpg"
                 />
-              </div>
+              </SectionCard>
             )}
 
-            {/* Attachments Grid */}
+            {/* Attachments / Photos Grid */}
             {postscript.attachments && postscript.attachments.length > 0 && (
-              <div className="glass-card-page p-6">
-                <h3 className="text-xs font-semibold text-[#B8562E] uppercase tracking-wider mb-4 flex items-center gap-2">
-                  <div className="w-6 h-6 rounded-lg bg-[#B8562E]/10 flex items-center justify-center">
-                    <Paperclip size={12} className="text-[#B8562E]" />
-                  </div>
-                  Attachments ({postscript.attachments.length})
-                </h3>
-                <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+              <SectionCard title={`Attachments (${postscript.attachments.length})`} icon={Paperclip}>
+                <div className="grid grid-cols-2 gap-2">
                   {postscript.attachments.map(att => {
                     const isImage = att.file_type?.startsWith('image/')
                     return (
-                      <a 
+                      <a
                         key={att.id}
-                        href={att.file_url} 
-                        target="_blank" 
+                        href={att.file_url}
+                        target="_blank"
                         rel="noopener noreferrer"
-                        className="group relative bg-[#F5F3EE] hover:bg-[#E8E7D8] rounded-xl p-3 transition-all border border-transparent hover:border-[#B8562E]/20"
+                        className="relative rounded-xl overflow-hidden group"
+                        style={{ border: '1px solid rgba(196,162,53,0.12)' }}
                       >
                         {isImage ? (
-                          <img 
-                            src={att.file_url} 
-                            alt={att.file_name}
-                            className="w-full aspect-square object-cover rounded-lg"
+                          <img
+                            src={att.file_url}
+                            alt={att.file_name || ''}
+                            className="w-full aspect-square object-cover group-hover:scale-105 transition-transform duration-500"
                           />
                         ) : (
-                          <div className="aspect-square flex flex-col items-center justify-center">
-                            <Paperclip size={24} className="text-[#B8562E]/50 mb-2" />
-                            <span className="text-xs text-gray-600 text-center truncate w-full px-2">
+                          <div className="aspect-square flex flex-col items-center justify-center bg-[#3E3023]/50">
+                            <Paperclip size={20} className="text-[#C4A235]/50 mb-2" />
+                            <span className="text-[11px] text-[#D4C8A0]/60 text-center truncate w-full px-2">
                               {att.file_name || 'File'}
                             </span>
                           </div>
@@ -450,36 +464,65 @@ export default function PostScriptDetailPage({ params }: { params: Promise<{ id:
                     )
                   })}
                 </div>
-              </div>
+              </SectionCard>
             )}
-          </div>
 
-          {/* Sidebar */}
-          <div className="space-y-6">
-            {/* Recipient Details Card */}
-            <div className="glass-card-page p-5">
-              <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-4">Recipient</h3>
+            {/* Gift Details */}
+            {postscript.has_gift && (
+              <SectionCard title="Gift" icon={Gift}>
+                {(() => {
+                  let gi: { name?: string; price?: number; image_url?: string } = {}
+                  try { gi = JSON.parse(postscript.gift_details || '{}') } catch {}
+                  return (
+                    <div className="flex items-center gap-3">
+                      {gi.image_url && (
+                        <img src={gi.image_url} alt="" className="w-14 h-14 rounded-xl object-cover ring-1 ring-[#C4A235]/20" />
+                      )}
+                      <div className="flex-1 min-w-0">
+                        <p className="text-[#E8DCC4] text-sm font-medium truncate">{gi.name || postscript.gift_type || 'Gift'}</p>
+                        <p className="text-[#C4A235] font-semibold text-sm">
+                          {postscript.gift_budget ? `$${postscript.gift_budget}` : gi.price ? `$${gi.price}` : ''}
+                        </p>
+                      </div>
+                    </div>
+                  )
+                })()}
+              </SectionCard>
+            )}
+          {/* Recipient + Gift + Timeline — horizontal row */}
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            {/* Recipient */}
+            <div
+              className="rounded-2xl p-5"
+              style={{
+                background: 'linear-gradient(165deg, rgba(62,48,35,0.85) 0%, rgba(42,32,26,0.92) 100%)',
+                border: '1px solid rgba(196,162,53,0.12)',
+              }}
+            >
+              <h3 className="text-[13px] font-semibold tracking-wide text-[#D4C8A0] mb-4"
+                style={{ fontFamily: 'var(--font-dm-serif, DM Serif Display, serif)' }}
+              >Recipient</h3>
               <div className="space-y-3">
                 <div className="flex items-center gap-3">
-                  <div className="w-8 h-8 rounded-lg bg-[#B8562E]/10 flex items-center justify-center">
-                    <User size={14} className="text-[#B8562E]" />
+                  <div className="w-8 h-8 rounded-lg bg-[#C4A235]/10 flex items-center justify-center">
+                    <User size={14} className="text-[#C4A235]/60" />
                   </div>
-                  <span className="text-gray-800 font-medium">{postscript.recipient_name}</span>
+                  <span className="text-[#E8DCC4] font-medium text-sm">{postscript.recipient_name}</span>
                 </div>
                 {postscript.recipient_email && (
                   <div className="flex items-center gap-3">
-                    <div className="w-8 h-8 rounded-lg bg-gray-100 flex items-center justify-center">
-                      <Mail size={14} className="text-gray-500" />
+                    <div className="w-8 h-8 rounded-lg bg-[#C4A235]/10 flex items-center justify-center">
+                      <Mail size={14} className="text-[#C4A235]/60" />
                     </div>
-                    <span className="text-gray-600 text-sm">{postscript.recipient_email}</span>
+                    <span className="text-[#D4C8A0]/70 text-sm">{postscript.recipient_email}</span>
                   </div>
                 )}
                 {postscript.recipient_phone && (
                   <div className="flex items-center gap-3">
                     <div className="w-8 h-8 rounded-lg bg-gray-100 flex items-center justify-center">
-                      <Phone size={14} className="text-gray-500" />
+                      <Phone size={14} className="text-[#C4A235]/60" />
                     </div>
-                    <span className="text-gray-600 text-sm">{postscript.recipient_phone}</span>
+                    <span className="text-[#D4C8A0]/70 text-sm">{postscript.recipient_phone}</span>
                   </div>
                 )}
               </div>
@@ -487,84 +530,80 @@ export default function PostScriptDetailPage({ params }: { params: Promise<{ id:
 
             {/* Gift Info Card */}
             {postscript.has_gift ? (
-              <div className="glass-card-page p-5">
-                <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-4 flex items-center gap-2">
-                  <Gift size={12} className="text-[#C4A235]" />
-                  Gift Included
-                </h3>
-                <div className="space-y-2 text-sm">
-                  {postscript.gift_type && (
-                    <p className="text-gray-700">
-                      <span className="text-gray-500">Type:</span> {postscript.gift_type}
-                    </p>
-                  )}
-                  {postscript.gift_budget && (
-                    <p className="text-gray-700">
-                      <span className="text-gray-500">Budget:</span> ${postscript.gift_budget}
-                    </p>
-                  )}
-                  {postscript.gift_details && (
-                    <p className="text-gray-600 mt-2">{postscript.gift_details}</p>
-                  )}
-                </div>
-              </div>
-            ) : (postscript.status === 'draft' || postscript.status === 'scheduled') && (
+              <GiftInfoCard postscript={postscript} />
+            ) : (postscript.status === 'draft' || postscript.status === 'scheduled') ? (
               <button
                 onClick={() => setShowGiftModal(true)}
-                className="w-full glass-card-page p-5 text-left hover:bg-rose-50/50 transition-colors group"
+                className="w-full rounded-2xl p-5 text-left transition-colors group"
+                style={{
+                  background: 'linear-gradient(165deg, rgba(62,48,35,0.85) 0%, rgba(42,32,26,0.92) 100%)',
+                  border: '1px solid rgba(196,162,53,0.15)',
+                }}
               >
                 <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-rose-500 to-pink-600 flex items-center justify-center group-hover:scale-105 transition-transform">
-                    <Gift size={20} className="text-white" />
+                  <div className="w-10 h-10 rounded-xl bg-[#C4A235]/15 flex items-center justify-center group-hover:bg-[#C4A235]/25 transition-colors">
+                    <Gift size={20} className="text-[#C4A235]" />
                   </div>
                   <div>
-                    <h3 className="font-medium text-gray-900">Add a Gift</h3>
-                    <p className="text-sm text-gray-500">Surprise them with something special</p>
+                    <h3 className="font-medium text-[#E8DCC4]">Add a Gift</h3>
+                    <p className="text-sm text-[#D4C8A0]/50">Surprise them with something special</p>
                   </div>
                 </div>
               </button>
-            )}
+            ) : null}
 
             {/* Timestamps Card */}
-            <div className="glass-card-page p-5">
-              <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-4">Timeline</h3>
+            <SectionCard title="Timeline" icon={Clock}>
               <div className="space-y-3 text-sm">
                 <div className="flex justify-between">
-                  <span className="text-gray-500">Created</span>
-                  <span className="text-gray-700">{formatShortDate(postscript.created_at)}</span>
+                  <span className="text-[#D4C8A0]/60">Created</span>
+                  <span className="text-[#E8DCC4]">{formatShortDate(postscript.created_at)}</span>
                 </div>
                 {postscript.sent_at && (
                   <div className="flex justify-between">
-                    <span className="text-gray-500">Sent</span>
-                    <span className="text-gray-700">{formatShortDate(postscript.sent_at)}</span>
+                    <span className="text-[#D4C8A0]/60">Sent</span>
+                    <span className="text-[#E8DCC4]">{formatShortDate(postscript.sent_at)}</span>
                   </div>
                 )}
                 {postscript.opened_at && (
                   <div className="flex justify-between">
-                    <span className="text-gray-500">Opened</span>
-                    <span className="text-green-600 font-medium">{formatShortDate(postscript.opened_at)}</span>
+                    <span className="text-[#D4C8A0]/60">Opened</span>
+                    <span className="text-green-400 font-medium">{formatShortDate(postscript.opened_at)}</span>
                   </div>
                 )}
               </div>
-            </div>
-
-            {/* Preview Button */}
-            <button 
-              onClick={() => {
-                if (postscript.access_token) {
-                  window.open(`/postscript/${postscript.access_token}`, '_blank')
-                } else {
-                  alert('Preview not available - access token missing')
-                }
-              }}
-              className="w-full flex items-center justify-center gap-2 px-5 py-3 bg-white/90 backdrop-blur-sm 
-                         text-[#B8562E] rounded-xl font-medium hover:bg-white transition-all
-                         border border-[#B8562E]/20 hover:border-[#B8562E]/40 shadow-sm"
-            >
-              <Eye size={18} />
-              Preview as Recipient
-            </button>
+            </SectionCard>
           </div>
+
+          {/* Preview Button — full width */}
+          <button
+            onClick={async () => {
+              let token = postscript.access_token
+              if (!token) {
+                try {
+                  const res = await fetch(`/api/postscripts/${postscript.id}`, {
+                    method: 'PATCH',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ generate_access_token: true }),
+                  })
+                  if (res.ok) {
+                    const data = await res.json()
+                    token = data.access_token
+                    if (token) setPostscript({ ...postscript, access_token: token })
+                  }
+                } catch {}
+              }
+              if (token) {
+                window.open(`/postscript/${token}`, '_blank')
+              }
+            }}
+            className="w-full flex items-center justify-center gap-2 px-5 py-3
+                       text-[#C4A235] rounded-xl font-medium transition-all
+                       border border-[#C4A235]/25 hover:border-[#C4A235]/40 hover:bg-[#C4A235]/5"
+          >
+            <Eye size={18} />
+            Preview as Recipient
+          </button>
         </div>
       </div>
 
@@ -619,10 +658,125 @@ export default function PostScriptDetailPage({ params }: { params: Promise<{ id:
         deliveryDate={postscript.delivery_date ? new Date(postscript.delivery_date) : null}
         deliveryType={postscript.delivery_type === 'after_passing' ? 'passing' : postscript.delivery_type}
         onGiftAdded={(gift) => {
-          // Refresh postscript data after gift is added
           fetchPostScript()
         }}
       />
+
+      {/* Checkout prompt — shown after saving a PostScript with gifts */}
+      {showCheckoutPrompt && postscript.has_gift && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm">
+          <div className="bg-white rounded-2xl max-w-md w-full mx-4 p-8 text-center shadow-2xl">
+            <div className="w-16 h-16 rounded-full bg-[#2D5A3D]/10 flex items-center justify-center mx-auto mb-4">
+              <Gift size={28} className="text-[#2D5A3D]" />
+            </div>
+            <h2 className="text-xl font-bold text-gray-900 mb-2">PostScript Saved!</h2>
+            <p className="text-gray-600 mb-6">
+              Your message is scheduled. Would you like to complete the gift payment now?
+            </p>
+            {(() => {
+              let giftInfo: { name?: string; price?: number } = {}
+              try { giftInfo = JSON.parse(postscript.gift_details || '{}') } catch {}
+              return giftInfo.name ? (
+                <div className="bg-gray-50 rounded-xl p-3 mb-6 text-left flex items-center gap-3">
+                  <Gift size={16} className="text-[#C4A235] flex-shrink-0" />
+                  <div>
+                    <p className="text-sm font-medium text-gray-800">{giftInfo.name}</p>
+                    {postscript.gift_budget && <p className="text-xs text-[#2D5A3D] font-semibold">${postscript.gift_budget}</p>}
+                  </div>
+                </div>
+              ) : null
+            })()}
+            <div className="space-y-2">
+              <button
+                onClick={async () => {
+                  setShowCheckoutPrompt(false)
+                  // Create a Stripe checkout for the gift
+                  try {
+                    const res = await fetch(`/api/postscripts/${postscript.id}/gifts/checkout`, {
+                      method: 'POST',
+                      headers: { 'Content-Type': 'application/json' },
+                      body: JSON.stringify({
+                        amount: postscript.gift_budget || 50,
+                        gift_type: postscript.gift_type,
+                      }),
+                    })
+                    if (res.ok) {
+                      const data = await res.json()
+                      if (data.url) {
+                        window.location.href = data.url
+                        return
+                      }
+                    }
+                  } catch {}
+                  // Fallback: just dismiss and show gift modal
+                  setShowGiftModal(true)
+                }}
+                className="w-full py-3 bg-[#2D5A3D] text-white rounded-xl font-medium hover:bg-[#244B32] transition-colors"
+              >
+                Pay for Gift Now
+              </button>
+              <button
+                onClick={() => {
+                  setShowCheckoutPrompt(false)
+                  router.replace(`/dashboard/postscripts/${id}`, { scroll: false })
+                }}
+                className="w-full py-2.5 text-gray-500 hover:text-gray-700 text-sm font-medium transition-colors"
+              >
+                Finish payment later
+              </button>
+              <p className="text-[11px] text-gray-400 leading-tight">
+                Your message will still be delivered at your scheduled time without gifts if payment is incomplete.
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
+  )
+}
+
+function GiftInfoCard({ postscript }: { postscript: PostScript }) {
+  let giftInfo: { name?: string; price?: number; image_url?: string } = {}
+  try { giftInfo = JSON.parse(postscript.gift_details || '{}') } catch {}
+  return (
+    <SectionCard title="Gift Attached" icon={Gift}>
+      <div className="flex items-center gap-3">
+        {giftInfo.image_url && (
+          <img src={giftInfo.image_url} alt="" className="w-14 h-14 rounded-xl object-cover ring-1 ring-[#C4A235]/20" />
+        )}
+        <div className="flex-1 min-w-0">
+          <p className="text-[#E8DCC4] text-sm font-medium truncate">{giftInfo.name || postscript.gift_type || 'Gift'}</p>
+          <p className="text-[#C4A235] font-semibold text-sm">
+            {postscript.gift_budget ? `$${postscript.gift_budget}` : giftInfo.price ? `$${giftInfo.price}` : ''}
+          </p>
+        </div>
+      </div>
+      <p className="text-[11px] text-[#D4C8A0]/40 mt-2">Payment required before delivery</p>
+    </SectionCard>
+  )
+}
+
+/** Reusable section card — matches slideshow SectionCard style */
+function SectionCard({ title, icon: Icon, children }: { title: string; icon: typeof Gift; children: React.ReactNode }) {
+  return (
+    <section
+      className="rounded-2xl overflow-hidden"
+      style={{
+        background: 'linear-gradient(165deg, rgba(62,48,35,0.85) 0%, rgba(42,32,26,0.92) 100%)',
+        border: '1px solid rgba(196,162,53,0.15)',
+        boxShadow: '0 8px 32px rgba(0,0,0,0.15), inset 0 1px 0 rgba(255,245,220,0.06)',
+      }}
+    >
+      <div className="px-5 pt-4 pb-2 flex items-center gap-2.5">
+        <Icon size={14} className="text-[#C4A235]/70" />
+        <h3
+          className="text-[13px] font-semibold tracking-wide text-[#D4C8A0]"
+          style={{ fontFamily: 'var(--font-dm-serif, DM Serif Display, serif)' }}
+        >
+          {title}
+        </h3>
+      </div>
+      <div className="px-5 pb-5">{children}</div>
+    </section>
   )
 }
