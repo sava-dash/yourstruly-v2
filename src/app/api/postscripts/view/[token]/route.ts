@@ -54,7 +54,17 @@ export async function GET(
     )
   }
 
-  // Allow viewing for all statuses — sender previews drafts, recipients see sent/opened
+  // Fetch linked memories and wisdom
+  const [memoriesRes, wisdomRes] = await Promise.all([
+    supabase
+      .from('postscript_memory_attachments')
+      .select('memory_id, memory_title, memory_image_url')
+      .eq('postscript_id', postscript.id),
+    supabase
+      .from('postscript_wisdom_attachments')
+      .select('wisdom_id, wisdom_title, wisdom_category')
+      .eq('postscript_id', postscript.id),
+  ])
 
   // Resolve sender name from profiles table
   let senderName = 'Someone special'
@@ -85,7 +95,17 @@ export async function GET(
       opened_at: postscript.opened_at,
       sender_name: senderName,
       sender_avatar: senderAvatar,
-      attachments: postscript.attachments || []
+      attachments: postscript.attachments || [],
+      memories: (memoriesRes.data || []).map((m: any) => ({
+        id: m.memory_id,
+        title: m.memory_title,
+        imageUrl: m.memory_image_url,
+      })),
+      wisdom: (wisdomRes.data || []).map((w: any) => ({
+        id: w.wisdom_id,
+        title: w.wisdom_title,
+        category: w.wisdom_category,
+      }))
     }
   })
 }

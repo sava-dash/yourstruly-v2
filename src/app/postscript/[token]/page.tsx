@@ -23,6 +23,16 @@ interface PostScriptData {
     file_type: string
     file_name: string
   }>
+  memories?: Array<{
+    id: string
+    title: string
+    imageUrl?: string
+  }>
+  wisdom?: Array<{
+    id: string
+    title: string
+    category?: string
+  }>
 }
 
 export default function PostScriptRecipientPage({ params }: { params: Promise<{ token: string }> }) {
@@ -68,7 +78,9 @@ export default function PostScriptRecipientPage({ params }: { params: Promise<{ 
         gift_type: ps.gift_type,
         gift_details: ps.gift_details,
         video_url: ps.video_url,
-        attachments: ps.attachments
+        attachments: ps.attachments,
+        memories: ps.memories,
+        wisdom: ps.wisdom,
       })
     } catch (err) {
       console.error('Error loading postscript:', err)
@@ -232,6 +244,47 @@ export default function PostScriptRecipientPage({ params }: { params: Promise<{ 
                       </a>
                     )
                   })}
+                </div>
+              </div>
+            )}
+
+            {/* Linked Memories */}
+            {postscript.memories && postscript.memories.length > 0 && (
+              <div className="mt-8">
+                <p className="text-xs uppercase tracking-wider text-[#8B7355] mb-3 flex items-center gap-2">
+                  <Heart className="w-4 h-4" /> Shared Memories
+                </p>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  {postscript.memories.map(mem => (
+                    <div key={mem.id} className="flex items-center gap-3 p-3 rounded-xl border border-[#D4C8A0]/20 bg-[#F8F2E6]/50">
+                      {mem.imageUrl && (
+                        <img src={mem.imageUrl} alt="" className="w-12 h-12 rounded-lg object-cover flex-shrink-0" />
+                      )}
+                      <p className="text-sm text-[#3D3428] font-medium line-clamp-2">{mem.title}</p>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Linked Wisdom */}
+            {postscript.wisdom && postscript.wisdom.length > 0 && (
+              <div className="mt-8">
+                <p className="text-xs uppercase tracking-wider text-[#8B7355] mb-3 flex items-center gap-2">
+                  <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" /></svg>
+                  Words of Wisdom
+                </p>
+                <div className="space-y-2">
+                  {postscript.wisdom.map(w => (
+                    <div key={w.id} className="p-3 rounded-xl border border-[#D4C8A0]/20 bg-[#F8F2E6]/50">
+                      <p className="text-sm text-[#3D3428] italic" style={{ fontFamily: '"Georgia", serif' }}>
+                        &ldquo;{w.title}&rdquo;
+                      </p>
+                      {w.category && (
+                        <p className="text-[10px] text-[#8B7355] mt-1 uppercase tracking-wider">{w.category}</p>
+                      )}
+                    </div>
+                  ))}
                 </div>
               </div>
             )}
