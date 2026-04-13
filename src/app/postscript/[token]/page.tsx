@@ -248,42 +248,30 @@ export default function PostScriptRecipientPage({ params }: { params: Promise<{ 
               </div>
             )}
 
-            {/* Linked Memories */}
+            {/* Linked Memories — clickable to expand full detail */}
             {postscript.memories && postscript.memories.length > 0 && (
               <div className="mt-8">
                 <p className="text-xs uppercase tracking-wider text-[#8B7355] mb-3 flex items-center gap-2">
                   <Heart className="w-4 h-4" /> Shared Memories
                 </p>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div className="space-y-3">
                   {postscript.memories.map(mem => (
-                    <div key={mem.id} className="flex items-center gap-3 p-3 rounded-xl border border-[#D4C8A0]/20 bg-[#F8F2E6]/50">
-                      {mem.imageUrl && (
-                        <img src={mem.imageUrl} alt="" className="w-12 h-12 rounded-lg object-cover flex-shrink-0" />
-                      )}
-                      <p className="text-sm text-[#3D3428] font-medium line-clamp-2">{mem.title}</p>
-                    </div>
+                    <SharedMemoryCard key={mem.id} memory={mem} token={token} />
                   ))}
                 </div>
               </div>
             )}
 
-            {/* Linked Wisdom */}
+            {/* Linked Wisdom — clickable to expand full detail */}
             {postscript.wisdom && postscript.wisdom.length > 0 && (
               <div className="mt-8">
                 <p className="text-xs uppercase tracking-wider text-[#8B7355] mb-3 flex items-center gap-2">
-                  <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" /></svg>
+                  <Paperclip className="w-4 h-4" />
                   Words of Wisdom
                 </p>
-                <div className="space-y-2">
+                <div className="space-y-3">
                   {postscript.wisdom.map(w => (
-                    <div key={w.id} className="p-3 rounded-xl border border-[#D4C8A0]/20 bg-[#F8F2E6]/50">
-                      <p className="text-sm text-[#3D3428] italic" style={{ fontFamily: '"Georgia", serif' }}>
-                        &ldquo;{w.title}&rdquo;
-                      </p>
-                      {w.category && (
-                        <p className="text-[10px] text-[#8B7355] mt-1 uppercase tracking-wider">{w.category}</p>
-                      )}
-                    </div>
+                    <SharedWisdomCard key={w.id} wisdom={w} token={token} />
                   ))}
                 </div>
               </div>
@@ -428,6 +416,121 @@ function RecipientReply({ token, senderName }: { token: string; senderName: stri
           </button>
         </div>
       </div>
+    </div>
+  )
+}
+
+/** Expandable memory card — loads full memory detail on click */
+function SharedMemoryCard({ memory, token }: { memory: { id: string; title: string; imageUrl?: string }; token: string }) {
+  const [expanded, setExpanded] = useState(false)
+  const [detail, setDetail] = useState<any>(null)
+  const [loading, setLoading] = useState(false)
+
+  const loadDetail = async () => {
+    if (detail) { setExpanded(!expanded); return }
+    setLoading(true)
+    setExpanded(true)
+    try {
+      const res = await fetch(`/api/postscripts/view/${token}/memory/${memory.id}`)
+      if (res.ok) {
+        const data = await res.json()
+        setDetail(data.memory)
+      }
+    } catch {}
+    setLoading(false)
+  }
+
+  return (
+    <div className="rounded-xl border border-[#D4C8A0]/20 bg-[#F8F2E6]/50 overflow-hidden">
+      <button onClick={loadDetail} className="w-full flex items-center gap-3 p-3 text-left hover:bg-[#F8F2E6] transition-colors">
+        {memory.imageUrl && (
+          <img src={memory.imageUrl} alt="" className="w-14 h-14 rounded-lg object-cover flex-shrink-0" />
+        )}
+        <div className="flex-1 min-w-0">
+          <p className="text-sm text-[#3D3428] font-medium line-clamp-2">{memory.title}</p>
+          <p className="text-[10px] text-[#8B7355] mt-0.5">{expanded ? 'Tap to close' : 'Tap to read more'}</p>
+        </div>
+      </button>
+      {expanded && (
+        <div className="px-4 pb-4 border-t border-[#D4C8A0]/10">
+          {loading ? (
+            <div className="py-4 text-center"><Loader2 className="w-5 h-5 animate-spin text-[#8B7355] mx-auto" /></div>
+          ) : detail ? (
+            <div className="pt-3 space-y-3">
+              {/* Cover image */}
+              {detail.memory_media?.filter((m: any) => m.file_type === 'image').slice(0, 3).map((m: any) => (
+                <img key={m.id} src={m.file_url} alt="" className="w-full rounded-xl object-cover max-h-64" />
+              ))}
+              {/* Summary or description */}
+              {(detail.ai_summary || detail.description) && (
+                <p className="text-sm text-[#4A3F33] leading-relaxed" style={{ fontFamily: '"Georgia", serif' }}>
+                  {detail.ai_summary || detail.description?.slice(0, 500)}
+                </p>
+              )}
+              {detail.location_name && (
+                <p className="text-xs text-[#8B7355] flex items-center gap-1">
+                  <Calendar className="w-3 h-3" />
+                  {detail.location_name}
+                  {detail.memory_date && ` · ${new Date(detail.memory_date).toLocaleDateString('en-US', { month: 'short', year: 'numeric' })}`}
+                </p>
+              )}
+            </div>
+          ) : (
+            <p className="py-3 text-sm text-[#8B7355] italic">Could not load memory details</p>
+          )}
+        </div>
+      )}
+    </div>
+  )
+}
+
+/** Expandable wisdom card — loads full wisdom detail on click */
+function SharedWisdomCard({ wisdom, token }: { wisdom: { id: string; title: string; category?: string }; token: string }) {
+  const [expanded, setExpanded] = useState(false)
+  const [detail, setDetail] = useState<any>(null)
+  const [loading, setLoading] = useState(false)
+
+  const loadDetail = async () => {
+    if (detail) { setExpanded(!expanded); return }
+    setLoading(true)
+    setExpanded(true)
+    try {
+      const res = await fetch(`/api/postscripts/view/${token}/wisdom/${wisdom.id}`)
+      if (res.ok) {
+        const data = await res.json()
+        setDetail(data.wisdom)
+      }
+    } catch {}
+    setLoading(false)
+  }
+
+  return (
+    <div className="rounded-xl border border-[#D4C8A0]/20 bg-[#F8F2E6]/50 overflow-hidden">
+      <button onClick={loadDetail} className="w-full p-3 text-left hover:bg-[#F8F2E6] transition-colors">
+        <p className="text-sm text-[#3D3428] italic" style={{ fontFamily: '"Georgia", serif' }}>
+          &ldquo;{wisdom.title}&rdquo;
+        </p>
+        <p className="text-[10px] text-[#8B7355] mt-1">
+          {wisdom.category && <span className="uppercase tracking-wider">{wisdom.category} · </span>}
+          {expanded ? 'Tap to close' : 'Tap to read more'}
+        </p>
+      </button>
+      {expanded && (
+        <div className="px-4 pb-4 border-t border-[#D4C8A0]/10">
+          {loading ? (
+            <div className="py-4 text-center"><Loader2 className="w-5 h-5 animate-spin text-[#8B7355] mx-auto" /></div>
+          ) : detail ? (
+            <div className="pt-3">
+              <p className="text-xs uppercase tracking-wider text-[#C4A235] mb-2">{detail.prompt_text}</p>
+              <p className="text-sm text-[#4A3F33] leading-relaxed whitespace-pre-wrap" style={{ fontFamily: '"Georgia", serif' }}>
+                {detail.response_text}
+              </p>
+            </div>
+          ) : (
+            <p className="py-3 text-sm text-[#8B7355] italic">Could not load wisdom details</p>
+          )}
+        </div>
+      )}
     </div>
   )
 }
