@@ -64,8 +64,12 @@ export function usePostscriptCredits() {
         return { success: false, message: json.error || 'Failed to trade XP' }
       }
       
-      // Refresh credits after trade
+      // Refresh credits + XP counter after trade
       await fetchCredits()
+      // Notify dashboard to refresh XP display
+      if (typeof window !== 'undefined') {
+        window.dispatchEvent(new CustomEvent('yt:xp-refresh'))
+      }
       return { success: true, message: json.message }
     } catch (err) {
       return { success: false, message: 'Network error' }

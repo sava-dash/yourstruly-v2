@@ -70,8 +70,7 @@ export async function GET(request: NextRequest) {
         gift_type,
         access_token,
         status,
-        user_id,
-        sender:profiles!postscripts_user_id_fkey(full_name)
+        user_id
       `)
       .eq('status', 'scheduled')
       .eq('delivery_type', 'date')
@@ -124,8 +123,14 @@ export async function GET(request: NextRequest) {
             .eq('id', ps.id)
         }
 
-        // Resolve sender name
-        const senderName = (ps.sender as any)?.full_name || 'Someone special'
+        // Resolve sender name from profiles
+        let senderName = 'Someone special'
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('full_name')
+          .eq('id', ps.user_id)
+          .single()
+        if (profile?.full_name) senderName = profile.full_name
 
         // ─── 3. Send the email ───
         const emailResult = await sendPostscriptDeliveredEmail({

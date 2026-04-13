@@ -144,6 +144,13 @@ export function useXpState(userId: string | null) {
     } catch {}
   }, [userId])
 
+  // Listen for XP refresh events (e.g. after trading XP for postscript credits)
+  useEffect(() => {
+    const handler = () => refreshXp()
+    window.addEventListener('yt:xp-refresh', handler)
+    return () => window.removeEventListener('yt:xp-refresh', handler)
+  }, [refreshXp])
+
   const addCompletedTile = useCallback((tile: Omit<CompletedTile, 'answeredAt'>) => {
     setCompletedTiles(prev => {
       if (prev.some(t => t.id === tile.id)) return prev
