@@ -398,7 +398,7 @@ export default function NewPostScriptPage() {
           gift_type: form.gift?.giftType || null,
           gift_details: form.gift ? JSON.stringify({ name: form.gift.name, price: form.gift.price, image_url: form.gift.image_url }) : null,
           gift_budget: form.gift?.price || null,
-          memories: form.memories.map(m => ({ id: m.id, title: m.title })),
+          memories: form.memories.map(m => ({ id: m.id, title: m.title, imageUrl: (m as any).imageUrl || (m as any).image_url })),
           wisdom: form.wisdom.map(w => ({ id: w.id, title: w.title })),
           status
         })
