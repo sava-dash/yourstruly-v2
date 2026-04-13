@@ -35,10 +35,7 @@ export async function GET(
       status,
       opened_at,
       created_at,
-      sender:profiles!postscripts_user_id_fkey(
-        full_name,
-        avatar_url
-      ),
+      user_id,
       attachments:postscript_attachments(
         id,
         file_url,
@@ -50,7 +47,7 @@ export async function GET(
     .single()
 
   if (error || !postscript) {
-    console.log('[PostScript View] Token not found:', token.substring(0, 10) + '...')
+    console.log('[PostScript View] Token not found:', token.substring(0, 10) + '...', error?.message)
     return NextResponse.json(
       { error: 'This PostScript was not found or the link has expired.' },
       { status: 404 }
@@ -59,10 +56,20 @@ export async function GET(
 
   // Allow viewing for all statuses — sender previews drafts, recipients see sent/opened
 
-  // Transform sender data
-  const sender = Array.isArray(postscript.sender) 
-    ? postscript.sender[0] 
-    : postscript.sender
+  // Resolve sender name from profiles table
+  let senderName = 'Someone special'
+  let senderAvatar: string | undefined
+  if (postscript.user_id) {
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('full_name, avatar_url')
+      .eq('id', postscript.user_id)
+      .single()
+    if (profile) {
+      senderName = profile.full_name || senderName
+      senderAvatar = profile.avatar_url || undefined
+    }
+  }
 
   return NextResponse.json({
     postscript: {
@@ -76,8 +83,8 @@ export async function GET(
       video_url: postscript.video_url,
       status: postscript.status,
       opened_at: postscript.opened_at,
-      sender_name: sender?.full_name || 'Someone special',
-      sender_avatar: sender?.avatar_url,
+      sender_name: senderName,
+      sender_avatar: senderAvatar,
       attachments: postscript.attachments || []
     }
   })

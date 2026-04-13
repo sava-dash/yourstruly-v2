@@ -36,8 +36,13 @@ export default async function EngagementPage({ searchParams }: EngagementPagePro
     query = query.eq('type', params.type);
   }
 
+  const category = (params as any).category;
+  if (category && category !== 'all') {
+    query = query.eq('category', category);
+  }
+
   if (params.search) {
-    query = query.or(`prompt_text.ilike.%${params.search}%,id.ilike.%${params.search}%`);
+    query = query.or(`prompt_text.ilike.%${params.search}%,id.ilike.%${params.search}%,category.ilike.%${params.search}%`);
   }
 
   // Apply pagination
