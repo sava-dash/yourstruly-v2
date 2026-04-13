@@ -10,45 +10,22 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
 
-  // Get credit info from function
-  const { data: creditInfo, error: creditError } = await supabase
-    .rpc('get_postscript_credit_info', { p_user_id: user.id })
-    .single()
-
-  if (creditError) {
-    console.error('Error fetching credit info:', creditError)
-    // Fallback to user_xp if function doesn't exist yet
-    const { data: userXp } = await supabase
-      .from('user_xp')
-      .select('postscripts_available, postscripts_used, is_premium, available_xp')
-      .eq('user_id', user.id)
-      .single()
-
-    return NextResponse.json({
-      credits: {
-        total_credits: userXp?.postscripts_available ?? 3,
-        used_this_month: userXp?.postscripts_used ?? 0,
-        is_premium: userXp?.is_premium ?? false,
-        seat_count: 1,
-        monthly_allowance: userXp?.is_premium ? 3 : 0,
-        next_refresh_date: null
-      },
-      xp: {
-        available: userXp?.available_xp ?? 0,
-        trade_cost: 200
-      }
-    })
-  }
-
-  // Get XP balance for trade info
+  // Read credits directly from user_xp table (single source of truth)
   const { data: userXp } = await supabase
     .from('user_xp')
-    .select('available_xp')
+    .select('postscripts_available, postscripts_used, is_premium, available_xp')
     .eq('user_id', user.id)
     .single()
 
   return NextResponse.json({
-    credits: creditInfo,
+    credits: {
+      total_credits: userXp?.postscripts_available ?? 0,
+      used_this_month: userXp?.postscripts_used ?? 0,
+      is_premium: userXp?.is_premium ?? false,
+      seat_count: 1,
+      monthly_allowance: userXp?.is_premium ? 3 : 0,
+      next_refresh_date: null
+    },
     xp: {
       available: userXp?.available_xp ?? 0,
       trade_cost: 200

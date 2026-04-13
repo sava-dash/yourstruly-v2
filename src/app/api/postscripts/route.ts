@@ -85,17 +85,16 @@ export async function POST(request: NextRequest) {
 
   // Check and deduct postscript credit (unless it's a draft or system bypass)
   if (status !== 'draft' && !skip_credit_check) {
-    // Check credit balance
-    const { data: creditBalance, error: creditError } = await supabase
-      .rpc('get_postscript_credits', { p_user_id: user.id })
+    const { data: userXp } = await supabase
+      .from('user_xp')
+      .select('postscripts_available')
+      .eq('user_id', user.id)
+      .single()
 
-    if (creditError) {
-      console.error('Error checking credits:', creditError)
-      // Continue without credit check if function doesn't exist
-    } else if (creditBalance !== null && creditBalance <= 0) {
+    if (userXp && userXp.postscripts_available <= 0) {
       return NextResponse.json(
         { error: 'No postscript credits remaining. Please purchase more credits or trade XP.' },
-        { status: 402 } // Payment Required
+        { status: 402 }
       )
     }
   }
@@ -141,15 +140,15 @@ export async function POST(request: NextRequest) {
   // Deduct credit for non-draft postscripts
   if (status !== 'draft' && !skip_credit_check) {
     const { error: deductError } = await supabase
-      .rpc('use_postscript_credit', { 
-        p_user_id: user.id, 
-        p_postscript_id: postscript.id,
-        p_description: `Created postscript: ${title}`
+      .from('user_xp')
+      .update({
+        postscripts_available: Math.max(0, (await supabase.from('user_xp').select('postscripts_available').eq('user_id', user.id).single()).data?.postscripts_available - 1 || 0),
+        postscripts_used: (await supabase.from('user_xp').select('postscripts_used').eq('user_id', user.id).single()).data?.postscripts_used + 1 || 1,
       })
-    
+      .eq('user_id', user.id)
+
     if (deductError) {
       console.error('Error deducting credit:', deductError)
-      // Don't fail the request, credit tracking is non-critical
     }
   }
 
