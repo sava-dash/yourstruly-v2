@@ -148,7 +148,7 @@ export function GiftSelectionModal({
   }, [deliveryDate, deliveryType])
 
   // State
-  const [step, setStep] = useState<'choose_type' | 'browse' | 'flex_amount' | 'configure' | 'confirm'>('choose_type')
+  const [step, setStep] = useState<'choose_type' | 'browse' | 'flex_amount' | 'configure' | 'confirm'>('browse')
   const [giftType, setGiftType] = useState<'product' | 'choice' | null>(null)
   const [selectedProduct, setSelectedProduct] = useState<GiftProduct | null>(null)
   const [selectedVariant, setSelectedVariant] = useState<string | undefined>()
@@ -164,59 +164,73 @@ export function GiftSelectionModal({
   const [showFlowersOnly, setShowFlowersOnly] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
   const [products, setProducts] = useState<GiftProduct[]>([])
+  const [hasMore, setHasMore] = useState(false)
+  const [currentPage, setCurrentPage] = useState(1)
   const [categories, setCategories] = useState<{ id: string; name: string; count: number }[]>([])
   const [error, setError] = useState<string | null>(null)
 
+  const PER_PAGE = 48
+
   // Fetch products from API
+  const fetchGifts = async (page: number, append: boolean) => {
+    setIsLoading(true)
+    if (!append) setError(null)
+
+    try {
+      const params = new URLSearchParams()
+      if (selectedCategory && selectedCategory !== 'all') {
+        params.append('occasion', selectedCategory)
+      }
+      if (searchQuery) {
+        params.append('search', searchQuery)
+      }
+      if (showFlowersOnly) {
+        params.append('provider', 'floristone')
+      }
+      params.append('page', page.toString())
+      params.append('perPage', PER_PAGE.toString())
+
+      const response = await fetch(`/api/marketplace/curated?${params}`)
+
+      if (!response.ok) {
+        throw new Error('Failed to fetch products')
+      }
+
+      const data = await response.json()
+      // Exclude prints/prodigi — they need customization
+      const giftableProducts = (data.products || []).filter(
+        (p: any) => p.provider !== 'prodigi' && p.provider !== 'prints'
+      )
+      setProducts(prev => append ? [...prev, ...giftableProducts] : giftableProducts)
+      setHasMore(data.hasMore || false)
+      setCategories(data.categories || [])
+    } catch (err) {
+      console.error('Error fetching products:', err)
+      if (!append) setError('Failed to load products. Please try again.')
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
+  // Reset and fetch when filters change
   useEffect(() => {
     if (!isOpen || step !== 'browse') return
-    
-    const fetchProducts = async () => {
-      setIsLoading(true)
-      setError(null)
-      
-      try {
-        const params = new URLSearchParams()
-        if (selectedCategory && selectedCategory !== 'all') {
-          params.append('category', selectedCategory)
-        }
-        if (searchQuery) {
-          params.append('search', searchQuery)
-        }
-        if (selectedPriceRange && selectedPriceRange !== 'all') {
-          params.append('priceRange', selectedPriceRange)
-        }
-        if (showFlowersOnly) {
-          params.append('provider', 'floristone')
-        }
-        params.append('includeCategories', 'true')
-        params.append('limit', '50')
-        
-        const response = await fetch(`/api/goody/curated?${params}`)
-        
-        if (!response.ok) {
-          throw new Error('Failed to fetch products')
-        }
-        
-        const data = await response.json()
-        setProducts(data.products || [])
-        setCategories(data.categories || [])
-      } catch (err) {
-        console.error('Error fetching products:', err)
-        setError('Failed to load products. Please try again.')
-      } finally {
-        setIsLoading(false)
-      }
+    setCurrentPage(1)
+    fetchGifts(1, false)
+  }, [isOpen, step, selectedCategory, searchQuery, showFlowersOnly])
+
+  const loadMore = () => {
+    if (!isLoading && hasMore) {
+      const next = currentPage + 1
+      setCurrentPage(next)
+      fetchGifts(next, true)
     }
-    
-    fetchProducts()
-  }, [isOpen, step, selectedCategory, searchQuery, selectedPriceRange, showFlowersOnly])
+  }
 
   // Reset state when modal opens/closes
   useEffect(() => {
     if (isOpen) {
-      // For near-term, start with type selection; for legacy, go straight to options
-      setStep(isNearTermDelivery ? 'choose_type' : 'choose_type')
+      setStep('browse')
       setGiftType(null)
       setSelectedProduct(null)
       setSelectedVariant(undefined)
@@ -230,6 +244,8 @@ export function GiftSelectionModal({
       setSelectedCategory('all')
       setSelectedPriceRange('all')
       setShowFlowersOnly(false)
+      setCurrentPage(1)
+      setHasMore(false)
       setError(null)
     }
   }, [isOpen, isNearTermDelivery])
@@ -270,13 +286,14 @@ export function GiftSelectionModal({
     }).format(price)
   }
 
-  const getProviderLabel = (provider: ProductProvider) => {
+  const getProviderLabel = (provider: ProductProvider | string) => {
     switch (provider) {
       case 'floristone': return 'Flowers'
       case 'doba': return 'Gifts'
       case 'printful': return 'Custom'
-      case 'goody': return 'Goody'
-      default: return provider
+      case 'goody': return 'Gifts'
+      case 'gifts': return 'Gifts'
+      default: return ''
     }
   }
 
@@ -303,7 +320,7 @@ export function GiftSelectionModal({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
-      <div className="bg-white rounded-2xl w-full max-w-4xl max-h-[90vh] overflow-hidden flex flex-col shadow-2xl">
+      <div className="bg-white rounded-2xl w-full max-w-5xl max-h-[90vh] overflow-hidden flex flex-col shadow-2xl">
         {/* Header */}
         <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100 bg-gradient-to-r from-[#B8562E]/5 to-transparent">
           <div className="flex items-center gap-3">
@@ -312,17 +329,17 @@ export function GiftSelectionModal({
             </div>
             <div>
               <h2 className="text-lg font-semibold text-gray-900">
-                {step === 'choose_type' && 'Add a Gift'}
+                {step === 'browse' && 'Send a Gift'}
                 {step === 'browse' && 'Choose a Gift'}
                 {step === 'flex_amount' && 'Gift of Choice'}
                 {step === 'configure' && 'Configure Gift'}
                 {step === 'confirm' && 'Confirm Gift'}
               </h2>
               <p className="text-sm text-gray-500">
-                {step === 'choose_type' && 'Surprise them with something special'}
-                {preselectedContactName && step !== 'choose_type' && `For ${preselectedContactName}`}
+                {step === 'browse' && (preselectedContactName ? `Choose a gift for ${preselectedContactName}` : 'Choose something special')}
+                {preselectedContactName && step !== 'browse' && `For ${preselectedContactName}`}
               </p>
-              {!isNearTermDelivery && step === 'choose_type' && (
+              {!isNearTermDelivery && step === 'browse' && (
                 <p className="text-xs text-amber-600 mt-1">
                   💡 For future delivery, we recommend Gift of Choice
                 </p>
@@ -341,94 +358,7 @@ export function GiftSelectionModal({
         <div className="flex-1 overflow-y-auto p-6">
           
           {/* Step: Choose Gift Type */}
-          {step === 'choose_type' && (
-            <div className="space-y-6">
-              <p className="text-gray-600 text-center mb-8">
-                How would you like to gift them?
-              </p>
-              
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 max-w-2xl mx-auto">
-                {/* Flowers Option - Always available */}
-                <button
-                  onClick={() => {
-                    setGiftType('product')
-                    setShowFlowersOnly(true)
-                    setStep('browse')
-                  }}
-                  className="group text-left p-6 rounded-2xl border-2 border-gray-200 hover:border-pink-300 
-                           hover:bg-pink-50/50 transition-all"
-                >
-                  <div className="w-14 h-14 rounded-xl bg-pink-100 flex items-center justify-center mb-4
-                                group-hover:bg-pink-200 transition-colors">
-                    <Flower2 className="w-7 h-7 text-pink-600" />
-                  </div>
-                  <h3 className="font-semibold text-lg text-gray-900 mb-2">Send Flowers</h3>
-                  <p className="text-sm text-gray-500">
-                    Beautiful bouquets delivered to their door. Perfect for any occasion.
-                  </p>
-                </button>
-
-                {/* Specific Gift - Only for near-term */}
-                {isNearTermDelivery && (
-                  <button
-                    onClick={() => {
-                      setGiftType('product')
-                      setShowFlowersOnly(false)
-                      setStep('browse')
-                    }}
-                    className="group text-left p-6 rounded-2xl border-2 border-gray-200 hover:border-[#B8562E]/50 
-                             hover:bg-[#B8562E]/5 transition-all"
-                  >
-                    <div className="w-14 h-14 rounded-xl bg-[#B8562E]/10 flex items-center justify-center mb-4
-                                  group-hover:bg-[#B8562E]/20 transition-colors">
-                      <ShoppingBag className="w-7 h-7 text-[#B8562E]" />
-                    </div>
-                    <h3 className="font-semibold text-lg text-gray-900 mb-2">Choose a Gift</h3>
-                    <p className="text-sm text-gray-500">
-                      Browse our curated selection of thoughtful gifts from top brands.
-                    </p>
-                  </button>
-                )}
-
-                {/* Gift of Choice - Emphasized for legacy */}
-                <button
-                  onClick={() => {
-                    setGiftType('choice')
-                    setStep('flex_amount')
-                  }}
-                  className={`group text-left p-6 rounded-2xl border-2 transition-all
-                    ${!isNearTermDelivery 
-                      ? 'border-[#2D5A3D] bg-[#2D5A3D]/5 hover:bg-[#2D5A3D]/10' 
-                      : 'border-gray-200 hover:border-[#2D5A3D]/50 hover:bg-[#2D5A3D]/5'
-                    }`}
-                >
-                  <div className={`w-14 h-14 rounded-xl flex items-center justify-center mb-4 transition-colors
-                    ${!isNearTermDelivery 
-                      ? 'bg-[#2D5A3D]/20 group-hover:bg-[#2D5A3D]/30' 
-                      : 'bg-[#2D5A3D]/10 group-hover:bg-[#2D5A3D]/20'
-                    }`}>
-                    <DollarSign className="w-7 h-7 text-[#2D5A3D]" />
-                  </div>
-                  <div className="flex items-center gap-2 mb-2">
-                    <h3 className="font-semibold text-lg text-gray-900">Gift of Choice</h3>
-                    {!isNearTermDelivery && (
-                      <span className="px-2 py-0.5 bg-[#2D5A3D] text-white text-xs rounded-full">
-                        Recommended
-                      </span>
-                    )}
-                  </div>
-                  <p className="text-sm text-gray-500">
-                    Set an amount and let them choose their perfect gift from hundreds of options.
-                  </p>
-                  {!isNearTermDelivery && (
-                    <p className="text-xs text-[#2D5A3D] mt-2">
-                      ✓ Best for future delivery — gifts may change over time
-                    </p>
-                  )}
-                </button>
-              </div>
-            </div>
-          )}
+          {/* choose_type is skipped — goes straight to browse */}
 
           {/* Step: Flex Amount Selection */}
           {step === 'flex_amount' && (
@@ -506,10 +436,10 @@ export function GiftSelectionModal({
               </div>
 
               <button
-                onClick={() => setStep('choose_type')}
+                onClick={() => setStep('browse')}
                 className="text-[#B8562E] hover:underline text-sm"
               >
-                ← Choose a different gift type
+                ← Back to gifts
               </button>
             </div>
           )}
@@ -517,83 +447,56 @@ export function GiftSelectionModal({
           {/* Step: Browse Products */}
           {step === 'browse' && (
             <div className="space-y-6">
-              {/* Filter Pills */}
-              <div className="flex items-center gap-3 flex-wrap">
-                <button
-                  onClick={() => setShowFlowersOnly(true)}
-                  className={`px-4 py-2 rounded-full text-sm font-medium transition-all flex items-center gap-2
-                    ${showFlowersOnly 
-                      ? 'bg-pink-100 text-pink-700 border-2 border-pink-300' 
-                      : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-                    }`}
-                >
-                  <Flower2 className="w-4 h-4" />
-                  Flowers
-                </button>
-                <button
-                  onClick={() => setShowFlowersOnly(false)}
-                  className={`px-4 py-2 rounded-full text-sm font-medium transition-all flex items-center gap-2
-                    ${!showFlowersOnly 
-                      ? 'bg-[#B8562E]/10 text-[#B8562E] border-2 border-[#B8562E]/30' 
-                      : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-                    }`}
-                >
-                  <ShoppingBag className="w-4 h-4" />
-                  All Gifts
-                </button>
-              </div>
-
-              {/* Search */}
+              {/* Search + Filters */}
               <div className="relative">
                 <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
                 <input
                   type="text"
-                  aria-label="Search" placeholder="Search gifts..."
+                  aria-label="Search" placeholder="Search flowers, gifts..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   className="w-full pl-12 pr-4 py-3 bg-gray-50 border border-gray-200 rounded-xl
-                           focus:ring-2 focus:ring-[#B8562E]/20 focus:border-[#B8562E] outline-none"
+                           focus:ring-2 focus:ring-[#2D5A3D]/20 focus:border-[#2D5A3D] outline-none"
                 />
               </div>
 
-              {/* Categories */}
-              {!showFlowersOnly && categories.length > 0 && (
-                <div className="flex gap-2 overflow-x-auto pb-2">
-                  {categories.map((cat, idx) => {
-                    const isSelected = selectedCategory === cat.id
-                    return (
-                      <button
-                        key={`cat-${cat.id}-${idx}`}
-                        onClick={() => setSelectedCategory(cat.id)}
-                        className={`px-4 py-2 rounded-full text-sm font-medium whitespace-nowrap transition-all flex items-center gap-2
-                          ${isSelected 
-                            ? 'bg-[#B8562E] text-white shadow-md' 
-                            : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-                          }`}
-                      >
-                        <span>{getCategoryIcon(cat.id)}</span>
-                        {cat.name}
-                      </button>
-                    )
-                  })}
-                </div>
-              )}
-
-              {/* Price Range Filter */}
-              <div className="flex gap-2 overflow-x-auto pb-2">
-                {PRICE_RANGES.map(range => {
-                  const isSelected = selectedPriceRange === range.key
+              {/* Category pills — matches marketplace sidebar */}
+              <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-hide">
+                {[
+                  { id: 'all', label: 'All', icon: '✨' },
+                  { id: 'flowers', label: 'Flowers', icon: '🌸' },
+                  { id: 'birthday', label: 'Birthday', icon: '🎂' },
+                  { id: 'anniversary', label: 'Anniversary', icon: '💕' },
+                  { id: 'sympathy', label: 'Sympathy', icon: '🕊️' },
+                  { id: 'thank-you', label: 'Thank You', icon: '🙏' },
+                  { id: 'get-well', label: 'Get Well', icon: '💐' },
+                  { id: 'congratulations', label: 'Congrats', icon: '🎉' },
+                ].map((cat) => {
+                  const isActive = cat.id === 'flowers'
+                    ? showFlowersOnly
+                    : cat.id === 'all'
+                      ? !showFlowersOnly && selectedCategory === 'all'
+                      : selectedCategory === cat.id && !showFlowersOnly
                   return (
                     <button
-                      key={range.key}
-                      onClick={() => setSelectedPriceRange(range.key)}
-                      className={`px-3 py-1.5 rounded-full text-xs font-medium whitespace-nowrap transition-all
-                        ${isSelected 
-                          ? 'bg-[#2D5A3D] text-white' 
+                      key={cat.id}
+                      onClick={() => {
+                        if (cat.id === 'flowers') {
+                          setShowFlowersOnly(true)
+                          setSelectedCategory('all')
+                        } else {
+                          setShowFlowersOnly(false)
+                          setSelectedCategory(cat.id)
+                        }
+                      }}
+                      className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-medium whitespace-nowrap transition-all ${
+                        isActive
+                          ? 'bg-[#2D5A3D] text-white'
                           : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-                        }`}
+                      }`}
                     >
-                      {range.label}
+                      <span className="text-xs">{cat.icon}</span>
+                      {cat.label}
                     </button>
                   )
                 })}
@@ -630,7 +533,26 @@ export function GiftSelectionModal({
                   <Loader2 className="w-8 h-8 animate-spin text-[#B8562E]" />
                 </div>
               ) : (
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
+                  {/* Gift of Choice — inline card at the top */}
+                  <button
+                    onClick={() => {
+                      setGiftType('choice')
+                      setStep('flex_amount')
+                    }}
+                    className="group text-left bg-gradient-to-br from-[#2D5A3D]/5 to-[#C4A235]/5 border-2 border-dashed border-[#2D5A3D]/20 rounded-xl overflow-hidden hover:border-[#2D5A3D]/40 transition-all"
+                  >
+                    <div className="aspect-square flex flex-col items-center justify-center p-6 text-center">
+                      <div className="w-16 h-16 rounded-2xl bg-[#2D5A3D]/10 flex items-center justify-center mb-4 group-hover:bg-[#2D5A3D]/20 transition-colors">
+                        <DollarSign className="w-8 h-8 text-[#2D5A3D]" />
+                      </div>
+                      <h3 className="font-semibold text-gray-900 mb-1">Gift of Choice</h3>
+                      <p className="text-xs text-gray-500">Let them pick their own gift</p>
+                    </div>
+                    <div className="p-4 pt-0">
+                      <p className="text-sm text-[#2D5A3D] font-medium">From $25</p>
+                    </div>
+                  </button>
                   {filteredProducts.map(product => (
                     <button
                       key={product.id}
@@ -676,6 +598,23 @@ export function GiftSelectionModal({
                 </div>
               )}
 
+              {/* Load More */}
+              {hasMore && products.length > 0 && !isLoading && (
+                <div className="flex justify-center pt-4">
+                  <button
+                    onClick={loadMore}
+                    className="px-6 py-2 border border-[#2D5A3D] text-[#2D5A3D] rounded-full text-sm font-medium hover:bg-[#2D5A3D] hover:text-white transition-colors"
+                  >
+                    Load More
+                  </button>
+                </div>
+              )}
+              {isLoading && products.length > 0 && (
+                <div className="flex justify-center pt-4">
+                  <Loader2 className="w-6 h-6 animate-spin text-gray-400" />
+                </div>
+              )}
+
               {!isLoading && filteredProducts.length === 0 && (
                 <div className="text-center py-12">
                   <div className="w-16 h-16 rounded-full bg-gray-100 flex items-center justify-center mx-auto mb-4">
@@ -696,10 +635,10 @@ export function GiftSelectionModal({
               )}
 
               <button
-                onClick={() => setStep('choose_type')}
+                onClick={() => setStep('browse')}
                 className="text-[#B8562E] hover:underline text-sm"
               >
-                ← Choose a different gift type
+                ← Back to gifts
               </button>
             </div>
           )}
@@ -866,31 +805,11 @@ export function GiftSelectionModal({
 
         {/* Footer */}
         <div className="px-6 py-4 border-t border-gray-100 bg-gray-50">
-          {step === 'choose_type' && (
+          {step === 'browse' && (
             <div className="flex items-center justify-center">
-              <button
-                onClick={onClose}
-                className="px-6 py-2 text-gray-600 hover:bg-gray-200 rounded-lg transition-colors"
-              >
+              <button onClick={onClose} className="px-6 py-2 text-gray-500 hover:text-gray-700 text-sm transition-colors">
                 Cancel
               </button>
-            </div>
-          )}
-
-          {step === 'browse' && (
-            <div className="flex items-center justify-between">
-              <p className="text-sm text-gray-500">
-                Powered by <span className="font-medium text-[#B8562E]">Goody</span>
-              </p>
-              <a 
-                href="https://www.ongoody.com" 
-                target="_blank" 
-                rel="noopener noreferrer"
-                className="text-xs text-gray-400 hover:text-gray-600 flex items-center gap-1"
-              >
-                <Store className="w-3 h-3" />
-                Browse more on Goody
-              </a>
             </div>
           )}
 
@@ -904,7 +823,7 @@ export function GiftSelectionModal({
               </div>
               <div className="flex gap-3">
                 <button
-                  onClick={() => setStep('choose_type')}
+                  onClick={() => setStep('browse')}
                   className="px-4 py-2 text-gray-600 hover:bg-gray-200 rounded-lg transition-colors"
                 >
                   Back

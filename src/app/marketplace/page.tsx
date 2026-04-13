@@ -1,44 +1,49 @@
 'use client';
 
-import { useState, useMemo, useEffect } from 'react';
-import { motion } from 'framer-motion';
-import { Search, SlidersHorizontal, ShoppingBag, Heart, X, Loader2, BookOpen, Calendar, Printer, ArrowRight } from 'lucide-react';
+import { useState, useMemo, useCallback } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
+import {
+  Search, ShoppingBag, X, Loader2, SlidersHorizontal,
+} from 'lucide-react';
 import Link from 'next/link';
 import ProductGrid from '@/components/marketplace/ProductGrid';
-import ProviderTabs from '@/components/marketplace/ProviderTabs';
-import { CategoryChips } from '@/components/marketplace/CategorySidebar';
 import { useMarketplaceProducts, useCategories } from '@/hooks/useMarketplace';
 import { ProviderType, Product } from '@/types/marketplace';
-import PostscriptCreditsSection from '@/components/marketplace/PostscriptCreditsSection';
 
-// Price filter options
-const PRICE_RANGES = [
-  { label: 'All Prices', min: 0, max: Infinity },
-  { label: 'Under $50', min: 0, max: 50 },
-  { label: '$50 - $100', min: 50, max: 100 },
-  { label: '$100 - $200', min: 100, max: 200 },
-  { label: '$200+', min: 200, max: Infinity },
+const PROVIDERS: { id: ProviderType | 'all'; label: string; icon: string }[] = [
+  { id: 'all', label: 'All', icon: '✨' },
+  { id: 'flowers', label: 'Flowers', icon: '🌸' },
+  { id: 'gifts', label: 'Gifts', icon: '🎁' },
+  { id: 'prints', label: 'Prints', icon: '🖼️' },
+];
+
+const SORT_OPTIONS = [
+  { value: 'popular', label: 'Popular' },
+  { value: 'newest', label: 'Newest' },
+  { value: 'price-low', label: 'Price: Low → High' },
+  { value: 'price-high', label: 'Price: High → Low' },
 ];
 
 export default function MarketplacePage() {
-  const [activeProvider, setActiveProvider] = useState<ProviderType | 'all'>('all');
-  const [selectedCategory, setSelectedCategory] = useState<string | undefined>();
-  const [searchQuery, setSearchQuery] = useState('');
-  const [priceRange, setPriceRange] = useState<{ label: string; min: number; max: number }>(PRICE_RANGES[0]);
-  const [showMobileFilters, setShowMobileFilters] = useState(false);
-  const [favorites, setFavorites] = useState<string[]>([]);
-  const [cartCount, setCartCount] = useState(0);
-  const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
+  const router = useRouter();
+  const searchParams = useSearchParams();
 
-  // Fetch products from API
+  // Read initial state from URL
+  const [activeProvider, setActiveProvider] = useState<ProviderType | 'all'>(
+    (searchParams.get('provider') as ProviderType | 'all') || 'all'
+  );
+  const [selectedCategory, setSelectedCategory] = useState<string | undefined>(
+    searchParams.get('cat') || undefined
+  );
+  const [searchQuery, setSearchQuery] = useState(searchParams.get('q') || '');
+  const [priceMax, setPriceMax] = useState<number>(500);
+  const [sortBy, setSortBy] = useState('popular');
+  const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false);
+  const [cartCount, setCartCount] = useState(0);
+  const [favorites, setFavorites] = useState<string[]>([]);
+
   const {
-    products: apiProducts,
-    isLoading,
-    error,
-    hasMore,
-    total,
-    loadMore,
-    refetch,
+    products: apiProducts, isLoading, error, hasMore, total, loadMore, refetch,
   } = useMarketplaceProducts({
     provider: activeProvider,
     category: selectedCategory,
@@ -46,367 +51,255 @@ export default function MarketplacePage() {
     perPage: 24,
   });
 
-  // Fetch categories
   const { categories, isLoading: categoriesLoading } = useCategories({
     provider: activeProvider,
   });
 
-  // Filter products by price
+  // Client-side price + sort filtering
   const filteredProducts = useMemo(() => {
-    if (priceRange.min === 0 && priceRange.max === Infinity) {
-      return apiProducts;
-    }
-    return apiProducts.filter(
-      (p) => p.price >= priceRange.min && p.price <= priceRange.max
-    );
-  }, [apiProducts, priceRange]);
+    let result = priceMax < 500
+      ? apiProducts.filter((p) => p.price <= priceMax)
+      : apiProducts;
 
-  // Get product counts by provider
-  const providerCounts = useMemo(() => {
-    // In a real implementation, you'd get these from the API
-    // For now, we'll estimate based on the current fetch
-    return {
-      all: total,
-      flowers: activeProvider === 'flowers' ? total : 0,
-      gifts: activeProvider === 'gifts' ? total : 0,
-      prints: activeProvider === 'prints' ? total : 0,
-    };
-  }, [total, activeProvider]);
+    if (sortBy === 'price-low') result = [...result].sort((a, b) => a.price - b.price);
+    else if (sortBy === 'price-high') result = [...result].sort((a, b) => b.price - a.price);
+    // 'newest' and 'popular' use the API's default order
+    return result;
+  }, [apiProducts, priceMax, sortBy]);
 
-  const handleAddToCart = (product: Product) => {
+  const handleProviderChange = useCallback((provider: ProviderType | 'all') => {
+    setActiveProvider(provider);
+    setSelectedCategory(undefined);
+  }, []);
+
+  const handleAddToCart = useCallback((product: Product) => {
     setCartCount((prev) => prev + 1);
-    // TODO: Implement actual cart logic
-    console.log('Added to cart:', product.name);
-  };
+  }, []);
 
-  const handleToggleFavorite = (productId: string) => {
+  const handleToggleFavorite = useCallback((productId: string) => {
     setFavorites((prev) =>
       prev.includes(productId) ? prev.filter((id) => id !== productId) : [...prev, productId]
     );
-  };
+  }, []);
+
+  const hasActiveFilters = activeProvider !== 'all' || selectedCategory || searchQuery || priceMax < 500;
 
   const clearFilters = () => {
     setActiveProvider('all');
     setSelectedCategory(undefined);
     setSearchQuery('');
-    setPriceRange(PRICE_RANGES[0]);
+    setPriceMax(500);
+    setSortBy('popular');
   };
 
-  const hasActiveFilters = activeProvider !== 'all' || selectedCategory || searchQuery || priceRange.min > 0;
+  // --- Sidebar filter content (shared between desktop sidebar and mobile sheet) ---
+  const filterContent = (
+    <div className="space-y-6">
+      {/* Provider */}
+      <div>
+        <h3 className="text-xs font-semibold uppercase tracking-wider text-gray-500 mb-3">Shop</h3>
+        <div className="space-y-1">
+          {PROVIDERS.map((p) => (
+            <button
+              key={p.id}
+              onClick={() => handleProviderChange(p.id)}
+              className={`w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm text-left transition-colors ${
+                activeProvider === p.id
+                  ? 'bg-[#2D5A3D] text-white font-medium'
+                  : 'text-gray-700 hover:bg-gray-100'
+              }`}
+            >
+              <span className="text-base">{p.icon}</span>
+              {p.label}
+            </button>
+          ))}
+        </div>
+      </div>
 
-  // Provider display names
-  const getProviderLabel = (provider: ProviderType | 'all') => {
-    switch (provider) {
-      case 'flowers': return 'Flowers';
-      case 'gifts': return 'Gifts';
-      case 'prints': return 'Prints';
-      default: return 'All';
-    }
-  };
+      {/* Categories */}
+      {categories.length > 0 && (
+        <div>
+          <h3 className="text-xs font-semibold uppercase tracking-wider text-gray-500 mb-3">Category</h3>
+          <div className="space-y-0.5">
+            <button
+              onClick={() => setSelectedCategory(undefined)}
+              className={`w-full text-left px-3 py-1.5 rounded-lg text-sm transition-colors ${
+                !selectedCategory ? 'text-[#2D5A3D] font-medium bg-[#2D5A3D]/5' : 'text-gray-600 hover:bg-gray-50'
+              }`}
+            >
+              All
+            </button>
+            {categories.map((cat, idx) => (
+              <button
+                key={`${cat.id}-${idx}`}
+                onClick={() => setSelectedCategory(cat.id)}
+                className={`w-full text-left px-3 py-1.5 rounded-lg text-sm transition-colors ${
+                  selectedCategory === cat.id ? 'text-[#2D5A3D] font-medium bg-[#2D5A3D]/5' : 'text-gray-600 hover:bg-gray-50'
+                }`}
+              >
+                {cat.name}
+              </button>
+            ))}
+            {categoriesLoading && <Loader2 size={14} className="animate-spin text-gray-400 mx-3 my-2" />}
+          </div>
+        </div>
+      )}
+
+      {/* Price */}
+      <div>
+        <h3 className="text-xs font-semibold uppercase tracking-wider text-gray-500 mb-3">
+          Price {priceMax < 500 ? `(under $${priceMax})` : ''}
+        </h3>
+        <input
+          type="range"
+          min={10}
+          max={500}
+          step={10}
+          value={priceMax}
+          onChange={(e) => setPriceMax(Number(e.target.value))}
+          className="w-full accent-[#2D5A3D]"
+        />
+        <div className="flex justify-between text-xs text-gray-400 mt-1">
+          <span>$10</span>
+          <span>{priceMax >= 500 ? 'Any' : `$${priceMax}`}</span>
+        </div>
+      </div>
+
+      {/* Sort — shown in mobile filter sheet only (desktop has it in toolbar) */}
+      <div className="sm:hidden">
+        <h3 className="text-xs font-semibold uppercase tracking-wider text-gray-500 mb-3">Sort by</h3>
+        <select
+          value={sortBy}
+          onChange={(e) => setSortBy(e.target.value)}
+          className="w-full px-3 py-2 rounded-lg border border-gray-200 text-sm text-gray-700 bg-white focus:outline-none focus:ring-2 focus:ring-[#2D5A3D]/20"
+        >
+          {SORT_OPTIONS.map((o) => (
+            <option key={o.value} value={o.value}>{o.label}</option>
+          ))}
+        </select>
+      </div>
+
+      {/* Clear */}
+      {hasActiveFilters && (
+        <button
+          onClick={clearFilters}
+          className="w-full py-2 text-sm text-gray-500 hover:text-gray-700 transition-colors"
+        >
+          Clear all filters
+        </button>
+      )}
+    </div>
+  );
 
   return (
-    <div className="min-h-screen relative z-10">
-      {/* Header Section */}
-      <div className="glass-warm border-b border-white/10">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-          {/* Title and cart */}
-          <div className="flex items-center justify-between mb-6">
-            <div>
-              <h1 className="font-playfair text-3xl md:text-4xl font-bold text-gray-800 mb-2">
-                Keepsakes & Gifts
-              </h1>
-              <p className="text-gray-800/60 font-handwritten text-lg">
-                Thoughtful gifts to accompany your messages
-              </p>
-            </div>
-            
-            {/* Cart button */}
-            <button className="relative p-3 glass rounded-xl hover:bg-white/15 transition-colors">
-              <ShoppingBag size={24} className="text-[#d4a574]" />
+    <div className="min-h-screen bg-[#FAFAF7]">
+      {/* ── Header ── */}
+      <div className="bg-white border-b border-gray-100">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-5">
+          <div className="flex items-center justify-between mb-4">
+            <h1
+              className="text-2xl font-bold text-[#1A1F1C]"
+              style={{ fontFamily: 'var(--font-dm-serif, DM Serif Display, serif)' }}
+            >
+              Keepsakes & Gifts
+            </h1>
+            <Link
+              href="/marketplace/cart"
+              className="relative p-2.5 rounded-xl hover:bg-gray-100 transition-colors"
+            >
+              <ShoppingBag size={22} className="text-[#5A6660]" />
               {cartCount > 0 && (
-                <span className="absolute -top-1 -right-1 w-5 h-5 bg-[#B8562E] text-gray-800 text-xs font-bold rounded-full flex items-center justify-center">
+                <span className="absolute -top-0.5 -right-0.5 w-5 h-5 bg-[#2D5A3D] text-white text-[10px] font-bold rounded-full flex items-center justify-center">
                   {cartCount}
                 </span>
               )}
-            </button>
+            </Link>
           </div>
 
-          {/* Search bar */}
-          <div className="relative max-w-2xl mb-6">
-            <Search size={20} className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-800/40" />
+          {/* Search */}
+          <div className="relative max-w-xl">
+            <Search size={18} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400" />
             <input
               type="text"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              aria-label="Search" placeholder="Search for flowers, gifts, or personalized prints..."
-              className="w-full pl-12 pr-4 py-3.5 glass rounded-xl text-gray-800 placeholder:text-gray-800/40 focus:outline-none focus:ring-2 focus:ring-[#d4a574]/30 transition-all"
+              placeholder="Search flowers, gifts, prints..."
+              className="w-full pl-10 pr-10 py-2.5 rounded-xl border border-gray-200 bg-white text-sm text-gray-800 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-[#2D5A3D]/20 focus:border-[#2D5A3D]"
             />
             {searchQuery && (
-              <button
-                onClick={() => setSearchQuery('')}
-                className="absolute right-4 top-1/2 -translate-y-1/2 p-1 text-gray-800/40 hover:text-gray-800"
-              >
+              <button onClick={() => setSearchQuery('')} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600">
                 <X size={16} />
               </button>
             )}
           </div>
-
-          {/* Horizontal Category Tabs */}
-          <div className="flex flex-wrap gap-2">
-            <ProviderTabs
-              activeProvider={activeProvider}
-              onChange={(provider) => {
-                setActiveProvider(provider);
-                setSelectedCategory(undefined);
-              }}
-              counts={providerCounts}
-              variant="pills"
-            />
-          </div>
         </div>
       </div>
 
-      {/* Printing Section */}
-      <div className="bg-gradient-to-r from-[#2D5A3D]/5 via-[#C4A235]/5 to-[#B8562E]/5 border-b border-white/10">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-          <div className="flex items-center gap-2 mb-4">
-            <Printer size={20} className="text-[#B8562E]" />
-            <h2 className="font-playfair text-xl font-semibold text-gray-800">
-              📚 Printing & Keepsakes
-            </h2>
-          </div>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-            {/* Photo Book Card */}
-            <Link
-              href="/dashboard/photobook/create?source=marketplace&product=photobook"
-              className="group glass rounded-2xl p-5 hover:bg-white/80 transition-all border border-[#2D5A3D]/10 hover:border-[#2D5A3D]/30 hover:shadow-lg"
-            >
-              <div className="flex items-start gap-4">
-                <div className="w-14 h-14 rounded-xl bg-gradient-to-br from-[#C4A235] to-[#B8562E] flex items-center justify-center flex-shrink-0">
-                  <BookOpen size={28} className="text-white" />
-                </div>
-                <div className="flex-1 min-w-0">
-                  <h3 className="font-semibold text-gray-800 group-hover:text-[#B8562E] transition-colors flex items-center gap-2">
-                    Photo Book
-                    <ArrowRight size={16} className="opacity-0 group-hover:opacity-100 transition-opacity" />
-                  </h3>
-                  <p className="text-sm text-gray-600 mt-1">
-                    Turn your memories into a beautiful printed book with QR-linked videos
-                  </p>
-                  <p className="text-xs text-[#2D5A3D] mt-2 font-medium">
-                    Starting at $24.99
-                  </p>
-                </div>
-              </div>
-            </Link>
-
-            {/* Calendar Card */}
-            <Link
-              href="/dashboard/photobook/create?source=marketplace&product=calendar"
-              className="group glass rounded-2xl p-5 hover:bg-white/80 transition-all border border-[#2D5A3D]/10 hover:border-[#2D5A3D]/30 hover:shadow-lg"
-            >
-              <div className="flex items-start gap-4">
-                <div className="w-14 h-14 rounded-xl bg-gradient-to-br from-[#2D5A3D] to-[#5A8A76] flex items-center justify-center flex-shrink-0">
-                  <Calendar size={28} className="text-white" />
-                </div>
-                <div className="flex-1 min-w-0">
-                  <h3 className="font-semibold text-gray-800 group-hover:text-[#2D5A3D] transition-colors flex items-center gap-2">
-                    Photo Calendar
-                    <ArrowRight size={16} className="opacity-0 group-hover:opacity-100 transition-opacity" />
-                  </h3>
-                  <p className="text-sm text-gray-600 mt-1">
-                    Create a custom wall calendar featuring your favorite moments
-                  </p>
-                  <p className="text-xs text-[#2D5A3D] mt-2 font-medium">
-                    Starting at $19.99
-                  </p>
-                </div>
-              </div>
-            </Link>
-
-            {/* Prints Card */}
-            <Link
-              href="/dashboard/photobook/create?source=marketplace&product=prints"
-              className="group glass rounded-2xl p-5 hover:bg-white/80 transition-all border border-[#2D5A3D]/10 hover:border-[#2D5A3D]/30 hover:shadow-lg"
-            >
-              <div className="flex items-start gap-4">
-                <div className="w-14 h-14 rounded-xl bg-gradient-to-br from-[#B8562E] to-[#E07A4E] flex items-center justify-center flex-shrink-0">
-                  <span className="text-2xl">🖼️</span>
-                </div>
-                <div className="flex-1 min-w-0">
-                  <h3 className="font-semibold text-gray-800 group-hover:text-[#B8562E] transition-colors flex items-center gap-2">
-                    Photo Prints
-                    <ArrowRight size={16} className="opacity-0 group-hover:opacity-100 transition-opacity" />
-                  </h3>
-                  <p className="text-sm text-gray-600 mt-1">
-                    High-quality prints in various sizes to frame and display
-                  </p>
-                  <p className="text-xs text-[#2D5A3D] mt-2 font-medium">
-                    Starting at $4.99
-                  </p>
-                </div>
-              </div>
-            </Link>
-          </div>
-        </div>
-      </div>
-
-      {/* Postscript Credits Section */}
-      <PostscriptCreditsSection />
-
-      {/* Horizontal Categories Bar */}
-      <div className="glass-subtle border-b border-white/5 sticky top-14 z-20">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3">
-          <div className="flex items-center gap-4 overflow-x-auto scrollbar-hide">
-            <button
-              onClick={() => setSelectedCategory(undefined)}
-              className={`px-4 py-2 rounded-full text-sm whitespace-nowrap transition-colors ${
-                !selectedCategory
-                  ? 'bg-[#2D5A3D] text-white'
-                  : 'bg-white/50 text-gray-700 hover:bg-white'
-              }`}
-            >
-              All Categories
-            </button>
-            {categoriesLoading ? (
-              <Loader2 size={16} className="animate-spin text-gray-400" />
-            ) : (
-              categories.map((cat, idx) => (
-                <button
-                  key={`${cat.provider || 'cat'}-${cat.id}-${idx}`}
-                  onClick={() => setSelectedCategory(cat.id)}
-                  className={`px-4 py-2 rounded-full text-sm whitespace-nowrap transition-colors ${
-                    selectedCategory === cat.id
-                      ? 'bg-[#2D5A3D] text-white'
-                      : 'bg-white/50 text-gray-700 hover:bg-white'
-                  }`}
-                >
-                  {cat.name}
-                </button>
-              ))
-            )}
-          </div>
-        </div>
-      </div>
-
-      {/* Price Filter Bar */}
-      <div className="bg-white/30 border-b border-white/10">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3">
-          <div className="flex items-center gap-2 overflow-x-auto scrollbar-hide">
-            <span className="text-sm text-gray-600 mr-2">Price:</span>
-            {PRICE_RANGES.map((range) => (
-              <button
-                key={range.label}
-                onClick={() => setPriceRange(range)}
-                className={`px-3 py-1.5 rounded-full text-sm whitespace-nowrap transition-colors ${
-                  priceRange.label === range.label
-                    ? 'bg-[#d4a574] text-white'
-                    : 'bg-white/50 text-gray-700 hover:bg-white'
-                }`}
-              >
-                {range.label}
-              </button>
-            ))}
-          </div>
-        </div>
-      </div>
-
-      {/* Main Content */}
+      {/* ── Main: Sidebar + Grid ── */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
         <div className="flex gap-8">
-          {/* Product Grid - Full Width */}
-          <main className="flex-1 min-w-0 w-full">
-            {/* Filter bar */}
-            <div className="flex items-center justify-between mb-6">
-              <div className="flex items-center gap-4">
-                <h2 className="font-playfair text-xl font-semibold text-gray-800">
-                  {searchQuery ? 'Search Results' : selectedCategory ? categories.find(c => c.id === selectedCategory)?.name || selectedCategory : `All ${getProviderLabel(activeProvider)}`}
+          {/* Sidebar — desktop only */}
+          <aside className="hidden lg:block w-56 flex-shrink-0">
+            <div className="sticky top-20">
+              {filterContent}
+            </div>
+          </aside>
+
+          {/* Product area */}
+          <main className="flex-1 min-w-0">
+            {/* Toolbar */}
+            <div className="flex items-center justify-between mb-5">
+              <div className="flex items-center gap-3">
+                <h2 className="text-lg font-semibold text-[#1A1F1C]">
+                  {searchQuery
+                    ? 'Search Results'
+                    : selectedCategory
+                      ? categories.find((c) => c.id === selectedCategory)?.name || 'Products'
+                      : activeProvider !== 'all'
+                        ? PROVIDERS.find((p) => p.id === activeProvider)?.label || 'Products'
+                        : 'All Products'}
                 </h2>
-                <span className="text-sm text-gray-800/50">
-                  {isLoading && filteredProducts.length === 0 ? 'Loading...' : `${filteredProducts.length} items`}
+                <span className="text-sm text-gray-400">
+                  {isLoading && filteredProducts.length === 0 ? '' : `${filteredProducts.length} items`}
                 </span>
               </div>
 
               <div className="flex items-center gap-2">
+                {/* Sort */}
+                <select
+                  value={sortBy}
+                  onChange={(e) => setSortBy(e.target.value)}
+                  className="hidden sm:block px-3 py-1.5 rounded-lg border border-gray-200 text-sm text-gray-600 bg-white focus:outline-none focus:ring-2 focus:ring-[#2D5A3D]/20 cursor-pointer"
+                >
+                  {SORT_OPTIONS.map((o) => (
+                    <option key={o.value} value={o.value}>{o.label}</option>
+                  ))}
+                </select>
+
                 {/* Clear filters */}
                 {hasActiveFilters && (
-                  <button
-                    onClick={clearFilters}
-                    className="flex items-center gap-1 px-3 py-2 text-sm text-gray-800/60 hover:text-gray-800 transition-colors"
-                  >
-                    <X size={14} />
-                    Clear filters
+                  <button onClick={clearFilters} className="hidden sm:flex items-center gap-1 px-3 py-1.5 text-xs text-gray-500 hover:text-gray-700 rounded-full border border-gray-200 hover:border-gray-300 transition-colors">
+                    <X size={12} /> Clear
                   </button>
                 )}
-                
-                {/* Mobile filter button */}
+
+                {/* Mobile filter toggle */}
                 <button
-                  onClick={() => setShowMobileFilters(true)}
-                  className="lg:hidden p-2 glass rounded-lg hover:bg-white/15 transition-colors"
+                  onClick={() => setMobileFiltersOpen(true)}
+                  className="lg:hidden flex items-center gap-1.5 px-3 py-2 rounded-xl border border-gray-200 text-sm text-gray-600 hover:bg-gray-50 transition-colors"
                 >
-                  <SlidersHorizontal size={20} />
+                  <SlidersHorizontal size={16} />
+                  Filters
+                  {hasActiveFilters && <span className="w-1.5 h-1.5 rounded-full bg-[#2D5A3D]" />}
                 </button>
               </div>
             </div>
 
-            {/* Active filters */}
-            {hasActiveFilters && (
-              <div className="flex flex-wrap items-center gap-2 mb-6">
-                {activeProvider !== 'all' && (
-                  <span className="inline-flex items-center gap-1 px-3 py-1.5 glass text-gray-800 rounded-full text-sm">
-                    {getProviderLabel(activeProvider)}
-                    <button
-                      onClick={() => setActiveProvider('all')}
-                      className="ml-1 p-0.5 hover:bg-white/20 rounded-full"
-                    >
-                      <X size={12} />
-                    </button>
-                  </span>
-                )}
-                {selectedCategory && (
-                  <span className="inline-flex items-center gap-1 px-3 py-1.5 bg-[#d4a574]/20 text-[#8b6914] rounded-full text-sm">
-                    {categories.find(c => c.id === selectedCategory)?.name || selectedCategory}
-                    <button
-                      onClick={() => setSelectedCategory(undefined)}
-                      className="ml-1 p-0.5 hover:bg-[#d4a574]/30 rounded-full"
-                    >
-                      <X size={12} />
-                    </button>
-                  </span>
-                )}
-                {priceRange.min > 0 && (
-                  <span className="inline-flex items-center gap-1 px-3 py-1.5 glass text-gray-800 rounded-full text-sm">
-                    {priceRange.label}
-                    <button
-                      onClick={() => setPriceRange(PRICE_RANGES[0])}
-                      className="ml-1 p-0.5 hover:bg-white/20 rounded-full"
-                    >
-                      <X size={12} />
-                    </button>
-                  </span>
-                )}
-                {searchQuery && (
-                  <span className="inline-flex items-center gap-1 px-3 py-1.5 glass text-gray-800 rounded-full text-sm">
-                    &quot;{searchQuery}&quot;
-                    <button
-                      onClick={() => setSearchQuery('')}
-                      className="ml-1 p-0.5 hover:bg-white/20 rounded-full"
-                    >
-                      <X size={12} />
-                    </button>
-                  </span>
-                )}
-              </div>
-            )}
-
-            {/* Error state */}
+            {/* Error */}
             {error && (
-              <div className="text-center py-12 bg-red-50 rounded-2xl mb-6">
-                <p className="text-red-600 mb-2">{error}</p>
-                <button
-                  onClick={refetch}
-                  className="px-4 py-2 bg-red-100 text-red-700 rounded-lg hover:bg-red-200 transition-colors"
-                >
+              <div className="text-center py-10 bg-red-50 rounded-2xl mb-6">
+                <p className="text-red-600 mb-2 text-sm">{error}</p>
+                <button onClick={refetch} className="px-4 py-1.5 bg-red-100 text-red-700 rounded-lg text-sm hover:bg-red-200">
                   Try Again
                 </button>
               </div>
@@ -415,22 +308,19 @@ export default function MarketplacePage() {
             {/* Products */}
             <ProductGrid
               products={filteredProducts}
-              variant="polaroid"
-              columns={4}
+              variant="default"
+              columns={3}
               onAddToCart={handleAddToCart}
               onToggleFavorite={handleToggleFavorite}
               favoriteIds={favorites}
               isLoading={isLoading && filteredProducts.length === 0}
               emptyState={{
                 title: 'No products found',
-                description: searchQuery 
-                  ? `No results for &quot;${searchQuery}&quot;. Try a different search term.`
-                  : 'Try adjusting your filters or search for something else.',
+                description: searchQuery
+                  ? `No results for "${searchQuery}".`
+                  : 'Try adjusting your filters.',
                 action: hasActiveFilters ? (
-                  <button
-                    onClick={clearFilters}
-                    className="px-6 py-2 bg-[#d4a574] text-[#1a1512] rounded-xl font-medium hover:bg-[#c9886d] transition-colors"
-                  >
+                  <button onClick={clearFilters} className="px-5 py-2 bg-[#2D5A3D] text-white rounded-xl text-sm font-medium hover:bg-[#244B32] transition-colors">
                     Clear all filters
                   </button>
                 ) : undefined,
@@ -443,22 +333,47 @@ export default function MarketplacePage() {
                 <button
                   onClick={loadMore}
                   disabled={isLoading}
-                  className="px-8 py-3 border-2 border-[#2D5A3D] text-[#2D5A3D] rounded-full font-medium hover:bg-[#2D5A3D] hover:text-white transition-colors disabled:opacity-50"
+                  className="px-8 py-2.5 border border-[#2D5A3D] text-[#2D5A3D] rounded-full text-sm font-medium hover:bg-[#2D5A3D] hover:text-white transition-colors disabled:opacity-50"
                 >
                   {isLoading ? (
-                    <span className="flex items-center gap-2">
-                      <Loader2 size={16} className="animate-spin" />
-                      Loading...
-                    </span>
+                    <span className="flex items-center gap-2"><Loader2 size={14} className="animate-spin" /> Loading...</span>
                   ) : (
-                    'Load More Products'
+                    'Load More'
                   )}
                 </button>
               </div>
             )}
+
+            {/* Keepsakes section removed — will live under Prints provider filter */}
           </main>
         </div>
       </div>
+
+      {/* ── Mobile filter sheet ── */}
+      {mobileFiltersOpen && (
+        <div className="fixed inset-0 z-50 lg:hidden">
+          <div className="absolute inset-0 bg-black/40" onClick={() => setMobileFiltersOpen(false)} />
+          <div className="absolute bottom-0 inset-x-0 bg-white rounded-t-2xl max-h-[80vh] overflow-y-auto animate-in slide-in-from-bottom duration-300">
+            <div className="sticky top-0 bg-white px-5 pt-4 pb-3 border-b border-gray-100 flex items-center justify-between">
+              <h3 className="text-base font-semibold text-gray-800">Filters</h3>
+              <button onClick={() => setMobileFiltersOpen(false)} className="p-1.5 rounded-full hover:bg-gray-100">
+                <X size={18} className="text-gray-500" />
+              </button>
+            </div>
+            <div className="px-5 py-4">
+              {filterContent}
+            </div>
+            <div className="sticky bottom-0 bg-white px-5 py-3 border-t border-gray-100">
+              <button
+                onClick={() => setMobileFiltersOpen(false)}
+                className="w-full py-2.5 bg-[#2D5A3D] text-white rounded-xl text-sm font-medium"
+              >
+                Show {filteredProducts.length} results
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

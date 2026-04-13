@@ -166,8 +166,14 @@ export default function ProductDetailPage() {
       icon: '🖼️',
       delivery: 'Made to order, ships in 3-5 days'
     },
-    goody: { 
-      name: 'Curated Gifts', 
+    goody: {
+      name: 'Curated Gifts',
+      color: '#2D5A3D',
+      icon: '🎁',
+      delivery: 'Ships within 1-2 business days'
+    },
+    gifts: {
+      name: 'Curated Gifts',
       color: '#2D5A3D',
       icon: '🎁',
       delivery: 'Ships within 1-2 business days'

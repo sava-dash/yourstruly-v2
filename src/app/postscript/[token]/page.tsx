@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect, use } from 'react'
-import { Heart, Calendar, User, Gift, Video, Paperclip, ArrowLeft } from 'lucide-react'
+import { Heart, Calendar, User, Gift, Video, Paperclip, ArrowLeft, Send, Loader2, Check } from 'lucide-react'
 import { EnvelopeMessage } from '@/components/postscripts'
 import Link from 'next/link'
 import '@/styles/page-styles.css'
@@ -251,16 +251,101 @@ export default function PostScriptRecipientPage({ params }: { params: Promise<{ 
           </div>
         </div>
 
+        {/* Reply Section */}
+        <RecipientReply token={token} senderName={postscript.sender_name} />
+
         {/* CTA */}
         <div className="text-center mt-8">
           <p className="text-gray-500 mb-4">Want to create your own PostScripts?</p>
-          <Link 
+          <Link
             href="/signup"
             className="inline-flex items-center gap-2 px-6 py-3 bg-[#2D5A3D] text-white rounded-xl font-medium hover:bg-[#355a48] transition-colors"
           >
             <Heart className="w-4 h-4" />
             Start Your Legacy
           </Link>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+/** Inline reply form for recipients */
+function RecipientReply({ token, senderName }: { token: string; senderName: string }) {
+  const [reply, setReply] = useState('')
+  const [sending, setSending] = useState(false)
+  const [sent, setSent] = useState(false)
+  const [isOpen, setIsOpen] = useState(false)
+
+  if (sent) {
+    return (
+      <div className="mt-8 p-6 bg-[#2D5A3D]/5 rounded-2xl text-center border border-[#2D5A3D]/10">
+        <Check className="w-8 h-8 text-[#2D5A3D] mx-auto mb-2" />
+        <p className="text-[#2D5A3D] font-medium">Your reply has been sent</p>
+        <p className="text-sm text-gray-500 mt-1">{senderName} will receive your words.</p>
+      </div>
+    )
+  }
+
+  if (!isOpen) {
+    return (
+      <div className="mt-8 text-center">
+        <button
+          onClick={() => setIsOpen(true)}
+          className="inline-flex items-center gap-2 px-6 py-3 bg-white border border-[#2D5A3D]/20 text-[#2D5A3D] rounded-xl font-medium hover:bg-[#2D5A3D]/5 transition-colors"
+        >
+          <Send className="w-4 h-4" />
+          Write Back to {senderName}
+        </button>
+      </div>
+    )
+  }
+
+  const handleSend = async () => {
+    if (!reply.trim()) return
+    setSending(true)
+    try {
+      const res = await fetch(`/api/postscripts/view/${token}/reply`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ reply: reply.trim() }),
+      })
+      if (res.ok) {
+        setSent(true)
+      }
+    } catch {}
+    setSending(false)
+  }
+
+  return (
+    <div className="mt-8 p-6 bg-white rounded-2xl border border-gray-100 shadow-sm">
+      <h3 className="text-base font-semibold text-gray-800 mb-1">Write Back</h3>
+      <p className="text-sm text-gray-500 mb-4">Your reply will be delivered to {senderName}.</p>
+      <textarea
+        value={reply}
+        onChange={(e) => setReply(e.target.value)}
+        placeholder="What would you like to say back?"
+        rows={4}
+        maxLength={2000}
+        className="w-full px-4 py-3 border border-gray-200 rounded-xl text-gray-800 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-[#2D5A3D]/20 focus:border-[#2D5A3D] resize-none"
+      />
+      <div className="flex items-center justify-between mt-3">
+        <span className="text-xs text-gray-400">{reply.length}/2000</span>
+        <div className="flex gap-2">
+          <button
+            onClick={() => setIsOpen(false)}
+            className="px-4 py-2 text-sm text-gray-500 hover:text-gray-700 transition-colors"
+          >
+            Cancel
+          </button>
+          <button
+            onClick={handleSend}
+            disabled={!reply.trim() || sending}
+            className="flex items-center gap-2 px-5 py-2 bg-[#2D5A3D] text-white rounded-xl text-sm font-medium hover:bg-[#244B32] disabled:opacity-50 transition-colors"
+          >
+            {sending ? <Loader2 size={14} className="animate-spin" /> : <Send size={14} />}
+            Send Reply
+          </button>
         </div>
       </div>
     </div>

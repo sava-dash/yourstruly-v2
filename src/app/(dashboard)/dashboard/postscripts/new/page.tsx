@@ -13,6 +13,8 @@ import '@/styles/home.css'
 import { EVENT_OPTIONS } from '@/lib/postscripts/events'
 import { AttachmentSelectorModal, type SelectedAttachment } from '@/components/postscripts'
 import { GiftSelectionModal, type GiftSelection } from '@/components/postscripts/GiftSelectionModal'
+import AiDraftHelper from '@/components/postscripts/AiDraftHelper'
+import ThemePicker from '@/components/postscripts/ThemePicker'
 
 interface Contact {
   id: string
@@ -58,9 +60,11 @@ interface FormData {
   // Occasion
   delivery_type: 'date' | 'event' | 'after_passing'
   delivery_date: string
+  delivery_time: string
   delivery_event: string
   delivery_recurring: boolean
   requires_confirmation: boolean
+  theme: string
   // Message
   title: string
   message: string
@@ -104,9 +108,11 @@ export default function NewPostScriptPage() {
     recipient_phone: '',
     delivery_type: 'date',
     delivery_date: '',
+    delivery_time: '08:00',
     delivery_event: '',
     delivery_recurring: false,
     requires_confirmation: false,
+    theme: 'classic',
     title: '',
     message: '',
     video_url: '',
@@ -301,8 +307,10 @@ export default function NewPostScriptPage() {
   function canProceed(): boolean {
     switch (step) {
       case 1:
-        // Either have a contact/circle selected, or manual name entry
-        return form.recipient_name.trim().length > 0 || form.circle_id !== null
+        // Need a recipient AND a delivery method (email or phone), unless it's a circle
+        if (form.circle_id) return true
+        if (!form.recipient_name.trim()) return false
+        return !!(form.recipient_email.trim() || form.recipient_phone.trim())
       case 2:
         if (form.delivery_type === 'date') {
           return form.delivery_date.length > 0
@@ -375,9 +383,11 @@ export default function NewPostScriptPage() {
           recipient_phone: form.recipient_phone,
           delivery_type: form.delivery_type,
           delivery_date: form.delivery_date,
+          delivery_time: form.delivery_time,
           delivery_event: form.delivery_event,
           delivery_recurring: form.delivery_recurring,
           requires_confirmation: form.requires_confirmation,
+          theme: form.theme,
           title: form.title,
           message: form.message,
           video_url: form.video_url,
@@ -421,24 +431,77 @@ export default function NewPostScriptPage() {
 
         {/* Selected Recipient */}
         {hasSelection && (
-          <div className="bg-[#B8562E]/5 border border-[#B8562E]/20 rounded-2xl p-4 flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <div className={`w-10 h-10 rounded-full flex items-center justify-center font-medium
-                ${form.circle_id 
-                  ? 'bg-[#8DACAB] text-white' 
-                  : 'bg-[#B8562E] text-white'}`}>
-                {form.circle_id ? <Users size={20} /> : form.recipient_name.slice(0, 2).toUpperCase()}
+          <div className="space-y-3">
+            <div className="bg-[#B8562E]/5 border border-[#B8562E]/20 rounded-2xl p-4 flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <div className={`w-10 h-10 rounded-full flex items-center justify-center font-medium
+                  ${form.circle_id
+                    ? 'bg-[#8DACAB] text-white'
+                    : 'bg-[#B8562E] text-white'}`}>
+                  {form.circle_id ? <Users size={20} /> : form.recipient_name.slice(0, 2).toUpperCase()}
+                </div>
+                <div>
+                  <p className="font-medium text-gray-900">{form.recipient_name}</p>
+                  <p className="text-sm text-gray-500">
+                    {form.circle_id ? 'Circle' : (form.recipient_email || form.recipient_phone || 'No delivery info')}
+                  </p>
+                </div>
               </div>
-              <div>
-                <p className="font-medium text-gray-900">{form.recipient_name}</p>
-                <p className="text-sm text-gray-500">
-                  {form.circle_id ? 'Circle' : (form.recipient_email || 'No email')}
-                </p>
-              </div>
+              <button onClick={clearRecipient} className="p-2 hover:bg-gray-100 rounded-full">
+                <X size={18} className="text-gray-500" />
+              </button>
             </div>
-            <button onClick={clearRecipient} className="p-2 hover:bg-gray-100 rounded-full">
-              <X size={18} className="text-gray-500" />
-            </button>
+
+            {/* Delivery info prompt — shown when contact was selected without email/phone */}
+            {!form.circle_id && form.recipient_contact_id && !(contacts.find(c => c.id === form.recipient_contact_id)?.email || contacts.find(c => c.id === form.recipient_contact_id)?.phone) && (
+              <div className="bg-amber-50 border border-amber-200 rounded-xl p-4 space-y-3">
+                <p className="text-sm text-amber-800 font-medium flex items-center gap-2">
+                  <Mail size={14} />
+                  How should this message be delivered?
+                </p>
+                <p className="text-xs text-amber-700">
+                  We need an email or phone number to deliver your PostScript to {form.recipient_name}.
+                </p>
+                <div className="space-y-2">
+                  <div className="relative">
+                    <Mail size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+                    <input
+                      type="email"
+                      value={form.recipient_email}
+                      onChange={(e) => setForm(f => ({ ...f, recipient_email: e.target.value }))}
+                      placeholder="Email address"
+                      className="w-full pl-9 pr-3 py-2.5 bg-white border border-gray-200 rounded-lg text-sm
+                               focus:ring-2 focus:ring-amber-300/50 focus:border-amber-400 outline-none"
+                    />
+                  </div>
+                  <div className="relative">
+                    <Phone size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+                    <input
+                      type="tel"
+                      value={form.recipient_phone}
+                      onChange={(e) => setForm(f => ({ ...f, recipient_phone: e.target.value }))}
+                      placeholder="Phone number (optional)"
+                      className="w-full pl-9 pr-3 py-2.5 bg-white border border-gray-200 rounded-lg text-sm
+                               focus:ring-2 focus:ring-amber-300/50 focus:border-amber-400 outline-none"
+                    />
+                  </div>
+                  {(form.recipient_email || form.recipient_phone) && form.recipient_contact_id && (
+                    <button
+                      onClick={async () => {
+                        // Save the contact info back to the contact record
+                        const updates: Record<string, string> = {}
+                        if (form.recipient_email) updates.email = form.recipient_email
+                        if (form.recipient_phone) updates.phone = form.recipient_phone
+                        await supabase.from('contacts').update(updates).eq('id', form.recipient_contact_id!)
+                      }}
+                      className="text-xs text-amber-700 hover:text-amber-900 underline"
+                    >
+                      Save to contact
+                    </button>
+                  )}
+                </div>
+              </div>
+            )}
           </div>
         )}
 
@@ -690,11 +753,33 @@ export default function NewPostScriptPage() {
         {form.delivery_type === 'after_passing' && (
           <div className="bg-amber-50 border border-amber-200 rounded-xl p-4">
             <p className="text-amber-800 text-sm">
-              <strong>Note:</strong> This message will be delivered after your passing. 
+              <strong>Note:</strong> This message will be delivered after your passing.
               You'll need to designate trusted contacts who can confirm delivery.
             </p>
           </div>
         )}
+
+        {/* Delivery Time */}
+        {form.delivery_type === 'date' && form.delivery_date && (
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">Delivery Time</label>
+            <div className="flex items-center gap-3">
+              <input
+                type="time"
+                value={form.delivery_time}
+                onChange={(e) => setForm({ ...form, delivery_time: e.target.value })}
+                className="px-4 py-3 bg-white border border-gray-200 rounded-xl focus:ring-2 focus:ring-[#B8562E]/20 focus:border-[#B8562E] outline-none text-gray-900"
+              />
+              <span className="text-sm text-gray-500">recipient&apos;s local time</span>
+            </div>
+          </div>
+        )}
+
+        {/* Stationery Theme */}
+        <ThemePicker
+          selectedTheme={form.theme}
+          onChange={(themeId) => setForm({ ...form, theme: themeId })}
+        />
       </div>
     )
   }
@@ -712,6 +797,21 @@ export default function NewPostScriptPage() {
         </div>
 
         <div className="space-y-4">
+          {/* AI Writing Assistant */}
+          <AiDraftHelper
+            recipientName={form.recipient_name}
+            relationship={contacts.find(c => c.id === form.recipient_contact_id)?.relationship_type || undefined}
+            occasion={form.delivery_event || undefined}
+            deliveryType={form.delivery_type}
+            onDraftGenerated={(draft, title) => {
+              setForm(f => ({
+                ...f,
+                message: draft,
+                title: title || f.title,
+              }))
+            }}
+          />
+
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">Title *</label>
             <input
@@ -719,7 +819,7 @@ export default function NewPostScriptPage() {
               value={form.title}
               onChange={(e) => setForm({ ...form, title: e.target.value })}
               placeholder="e.g., Happy 18th Birthday!"
-              className="w-full px-4 py-3 bg-white border border-gray-200 rounded-xl 
+              className="w-full px-4 py-3 bg-white border border-gray-200 rounded-xl
                        focus:ring-2 focus:ring-[#B8562E]/20 focus:border-[#B8562E] outline-none text-gray-900 placeholder:text-gray-400"
             />
           </div>
@@ -731,7 +831,7 @@ export default function NewPostScriptPage() {
               onChange={(e) => setForm({ ...form, message: e.target.value })}
               placeholder="Write from the heart..."
               rows={8}
-              className="w-full px-4 py-3 bg-white border border-gray-200 rounded-xl 
+              className="w-full px-4 py-3 bg-white border border-gray-200 rounded-xl
                        focus:ring-2 focus:ring-[#B8562E]/20 focus:border-[#B8562E] outline-none resize-none text-gray-900 placeholder:text-gray-400"
             />
           </div>
@@ -825,29 +925,15 @@ export default function NewPostScriptPage() {
                   </button>
                 </div>
               ) : (
-                <div className="h-[calc(100%-28px)] grid grid-cols-2 gap-2">
-                  <button
-                    onClick={() => setShowGiftModal(true)}
-                    className="rounded-xl border border-[#DDE3DF] hover:border-[#2D5A3D]/30 hover:bg-[#2D5A3D]/3
-                             flex flex-col items-center justify-center cursor-pointer transition-all"
-                  >
-                    <Gift size={22} className="text-[#2D5A3D] mb-1" />
-                    <span className="text-xs font-medium text-[#1A1F1C]">Send Gift</span>
-                    <span className="text-[10px] text-[#94A09A]">Browse catalog</span>
-                  </button>
-                  <button
-                    onClick={() => {
-                      // Pre-select Gift of Choice mode in the modal
-                      setShowGiftModal(true)
-                    }}
-                    className="rounded-xl border border-[#DDE3DF] hover:border-[#C4A235]/30 hover:bg-[#C4A235]/3
-                             flex flex-col items-center justify-center cursor-pointer transition-all"
-                  >
-                    <DollarSign size={22} className="text-[#C4A235] mb-1" />
-                    <span className="text-xs font-medium text-[#1A1F1C]">Gift of Choice</span>
-                    <span className="text-[10px] text-[#94A09A]">They pick</span>
-                  </button>
-                </div>
+                <button
+                  onClick={() => setShowGiftModal(true)}
+                  className="h-[calc(100%-28px)] w-full rounded-xl border border-[#DDE3DF] hover:border-[#2D5A3D]/30 hover:bg-[#2D5A3D]/3
+                           flex flex-col items-center justify-center cursor-pointer transition-all"
+                >
+                  <Gift size={22} className="text-[#2D5A3D] mb-1" />
+                  <span className="text-xs font-medium text-[#1A1F1C]">Send a Gift</span>
+                  <span className="text-[10px] text-[#94A09A]">Flowers, gifts, or gift of choice</span>
+                </button>
               )}
             </div>
 

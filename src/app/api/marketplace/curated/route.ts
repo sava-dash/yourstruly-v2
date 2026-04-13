@@ -152,10 +152,17 @@ export async function GET(request: NextRequest) {
     // Sort by curated score (highest first)
     allProducts.sort((a, b) => (b.curatedScore || 0) - (a.curatedScore || 0));
     
-    // Remove duplicates by ID
-    const uniqueProducts = allProducts.filter((p, idx, arr) => 
-      arr.findIndex(x => x.id === p.id) === idx
-    );
+    // Remove duplicates by ID, then by name (catches same product from different sources)
+    const seenIds = new Set<string>();
+    const seenNames = new Set<string>();
+    const uniqueProducts = allProducts.filter((p) => {
+      if (seenIds.has(p.id)) return false;
+      const normName = p.name.toLowerCase().trim();
+      if (seenNames.has(normName)) return false;
+      seenIds.add(p.id);
+      seenNames.add(normName);
+      return true;
+    });
     
     // Calculate pagination
     const total = uniqueProducts.length;
@@ -216,7 +223,7 @@ function normalizeDbProduct(row: {
     currency: row.currency || 'USD',
     images: row.images || [],
     thumbnail: row.images?.[0] || '',
-    provider: 'goody', // DB products are Goody marketplace products
+    provider: 'gifts' as any, // Normalize to frontend provider name
     category: row.occasions?.[0] || 'gifts',
     inStock: row.in_stock,
     curatedScore: row.curated_score || 80,

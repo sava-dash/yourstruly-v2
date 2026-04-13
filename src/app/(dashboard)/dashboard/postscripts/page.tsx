@@ -280,28 +280,54 @@ export default function PostScriptsPage() {
         </div>
 
         <p className="text-xs text-[#94A09A] mb-4">
-          Schedule messages for your loved ones
+          Words that will arrive exactly when they're needed most
         </p>
 
-        {/* Stats Cards */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-6">
-          <div className="bg-white border border-[#DDE3DF] rounded-xl shadow-sm p-4">
-            <div className="text-2xl font-bold text-[#1A1F1C]">{stats.total}</div>
-            <div className="text-xs text-[#94A09A]">Total</div>
-          </div>
-          <div className="bg-white border border-[#DDE3DF] rounded-xl shadow-sm p-4">
-            <div className="text-2xl font-bold text-[#2D5A3D]">{stats.scheduled || 0}</div>
-            <div className="text-xs text-[#94A09A]">Scheduled</div>
-          </div>
-          <div className="bg-white border border-[#DDE3DF] rounded-xl shadow-sm p-4">
-            <div className="text-2xl font-bold text-blue-600">{stats.sent || 0}</div>
-            <div className="text-xs text-[#94A09A]">Sent</div>
-          </div>
-          <div className="bg-white border border-[#DDE3DF] rounded-xl shadow-sm p-4">
-            <div className="text-2xl font-bold text-green-600">{stats.opened || 0}</div>
-            <div className="text-xs text-[#94A09A]">Opened</div>
-          </div>
+        {/* Stats Row — compact */}
+        <div className="flex items-center gap-4 mb-6 text-sm">
+          <span className="text-[#1A1F1C] font-semibold">{stats.total} messages</span>
+          <span className="text-[#94A09A]">&middot;</span>
+          <span className="text-[#2D5A3D]">{stats.scheduled || 0} scheduled</span>
+          <span className="text-[#94A09A]">&middot;</span>
+          <span className="text-blue-600">{stats.sent || 0} sent</span>
+          <span className="text-[#94A09A]">&middot;</span>
+          <span className="text-green-600">{stats.opened || 0} opened</span>
         </div>
+
+        {/* Upcoming Deliveries */}
+        {(() => {
+          const upcoming = postscripts
+            .filter(ps => ps.status === 'scheduled' && ps.delivery_date)
+            .sort((a, b) => new Date(a.delivery_date!).getTime() - new Date(b.delivery_date!).getTime())
+            .slice(0, 3)
+          if (upcoming.length === 0) return null
+          return (
+            <div className="mb-6 p-4 bg-gradient-to-r from-[#2D5A3D]/5 to-[#C4A235]/5 rounded-xl border border-[#2D5A3D]/10">
+              <h3 className="text-xs font-semibold uppercase tracking-wider text-[#5A6660] mb-3">Coming Up</h3>
+              <div className="space-y-2">
+                {upcoming.map(ps => {
+                  const days = getDaysUntilDelivery(ps.delivery_date)
+                  return (
+                    <Link key={ps.id} href={`/dashboard/postscripts/${ps.id}`} className="flex items-center justify-between p-2 rounded-lg hover:bg-white/60 transition-colors">
+                      <div className="flex items-center gap-3">
+                        <div className="w-8 h-8 rounded-full bg-[#2D5A3D]/10 flex items-center justify-center text-[#2D5A3D]">
+                          <Send size={14} />
+                        </div>
+                        <div>
+                          <p className="text-sm font-medium text-[#1A1F1C]">{ps.title}</p>
+                          <p className="text-xs text-[#94A09A]">To {ps.recipient_name}</p>
+                        </div>
+                      </div>
+                      <span className="text-xs font-medium text-[#2D5A3D]">
+                        {days === 0 ? 'Today' : days === 1 ? 'Tomorrow' : `${days} days`}
+                      </span>
+                    </Link>
+                  )
+                })}
+              </div>
+            </div>
+          )
+        })()}
 
         {/* Filter Tabs & View Toggle */}
         <div className="flex items-center justify-between mb-5 gap-2">

@@ -3002,7 +3002,6 @@ export function QuickOnboardingFlow({
   const UNIFIED_STEPS: { key: string; label: string }[] = [
     { key: 'birth-info', label: 'Basics' },
     ...GLOBE_SUB_STEPS.map(s => ({ key: `globe-${s.key}`, label: s.label })),
-    { key: 'heartfelt', label: 'Try It' },
     { key: 'ready', label: 'Done' },
   ];
 
@@ -3088,8 +3087,8 @@ export function QuickOnboardingFlow({
                 updateData({ uploadedImagesCount: gd.uploadedPhotosCount });
               }
             }
-            // Skip past embedded globe steps, jump to heartfelt
-            setStep('heartfelt');
+            // Globe complete — go to ready (final step)
+            setStep('ready');
             setDirection(1);
           }}
           selectedPills={selectedPills}
@@ -3136,7 +3135,7 @@ export function QuickOnboardingFlow({
   };
 
   const isFullWidthStep =
-    step === 'heartfelt' || step === 'ready';
+    step === 'ready';
 
   return (
     <div className="yt-onboard-root">
@@ -3152,7 +3151,7 @@ export function QuickOnboardingFlow({
           const unifiedCurrentIdx = (() => {
             if (step === 'birth-info') return 0;
             // Globe sub-steps all done if we're past globe
-            if (step === 'heartfelt') return UNIFIED_STEPS.length - 2;
+            // heartfelt step removed
             if (step === 'ready') return UNIFIED_STEPS.length - 1;
             return 0;
           })();
@@ -3274,7 +3273,7 @@ export function QuickOnboardingFlow({
 
         {/* Skip all */}
         {step !== 'ready' &&
-          step !== 'heartfelt' &&
+          true &&
           onSkipAll && (
             <button className="skip-all-btn" onClick={onSkipAll}>
               Skip setup

@@ -152,14 +152,14 @@ export default function ProductGrid({
   }
 
   return (
-    <motion.div
-      variants={containerVariants}
-      initial="hidden"
-      animate="visible"
-      className={`grid ${gridClasses[columns]} ${gapClasses[gap]}`}
-    >
-      {products.map((product) => (
-        <motion.div key={product.id} variants={itemVariants}>
+    <div className={`grid ${gridClasses[columns]} ${gapClasses[gap]}`}>
+      {products.map((product, i) => (
+        <motion.div
+          key={product.id}
+          initial={{ opacity: 0, y: 16 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.25, delay: Math.min(i % 12, 8) * 0.04 }}
+        >
           <ProductCard
             product={product}
             variant={variant}
@@ -169,7 +169,7 @@ export default function ProductGrid({
           />
         </motion.div>
       ))}
-    </motion.div>
+    </div>
   );
 }
 
