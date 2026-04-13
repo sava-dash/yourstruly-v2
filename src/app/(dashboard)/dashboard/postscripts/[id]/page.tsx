@@ -36,6 +36,8 @@ interface PostScript {
   sent_at: string | null
   opened_at: string | null
   access_token: string | null
+  reply_text: string | null
+  reply_at: string | null
   recipient?: {
     id: string
     full_name: string
@@ -574,6 +576,24 @@ export default function PostScriptDetailPage({ params }: { params: Promise<{ id:
               </div>
             </SectionCard>
           </div>
+
+          {/* Recipient Reply */}
+          {(postscript.reply_text || (() => { try { return JSON.parse(postscript.gift_details || '{}')._reply } catch { return null } })()) && (
+            <SectionCard title="Reply from Recipient" icon={Send}>
+              <blockquote
+                className="text-[#E8DCC4] text-[15px] leading-[1.8] italic"
+                style={{ fontFamily: '"Georgia", serif' }}
+              >
+                &ldquo;{postscript.reply_text || (() => { try { return JSON.parse(postscript.gift_details || '{}')._reply } catch { return '' } })()}&rdquo;
+              </blockquote>
+              <p className="text-[11px] text-[#D4C8A0]/40 mt-3">
+                — {postscript.recipient_name}, {postscript.reply_at
+                  ? new Date(postscript.reply_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
+                  : (() => { try { const d = JSON.parse(postscript.gift_details || '{}')._reply_at; return d ? new Date(d).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) : '' } catch { return '' } })()
+                }
+              </p>
+            </SectionCard>
+          )}
 
           {/* Preview Button — full width */}
           <button

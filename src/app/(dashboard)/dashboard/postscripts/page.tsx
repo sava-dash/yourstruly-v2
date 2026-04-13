@@ -26,6 +26,7 @@ interface PostScript {
   status: 'draft' | 'scheduled' | 'sent' | 'opened'
   created_at: string
   audio_url?: string | null
+  reply_text?: string | null
   recipient?: {
     id: string
     full_name: string
@@ -163,6 +164,11 @@ function PostScriptCard({ postscript }: { postscript: PostScript }) {
           </div>
 
           <div className="flex items-center gap-2 text-[#94A09A]">
+            {postscript.reply_text && (
+              <span className="flex items-center gap-0.5 text-xs text-[#2D5A3D] font-medium">
+                <Send size={10} /> replied
+              </span>
+            )}
             {hasAudio && <Mic size={12} />}
             {postscript.attachments && postscript.attachments.length > 0 && (
               <span className="flex items-center gap-0.5 text-xs">
