@@ -166,7 +166,7 @@ export default function PostScriptRecipientPage({ params }: { params: Promise<{ 
   // Parse gift details
   const giftInfo = (() => {
     if (!postscript.has_gift || !postscript.gift_details) return null
-    try { return JSON.parse(postscript.gift_details) as { name?: string; price?: number; image_url?: string } }
+    try { return JSON.parse(postscript.gift_details) as { name?: string; price?: number; image_url?: string; gift_paid?: boolean } }
     catch { return null }
   })()
 
@@ -289,8 +289,8 @@ export default function PostScriptRecipientPage({ params }: { params: Promise<{ 
               </div>
             )}
 
-            {/* Gift — tasteful notice, no price or product details */}
-            {postscript.has_gift && (
+            {/* Gift — only show if payment was completed (gift_paid flag in details) */}
+            {postscript.has_gift && giftInfo?.gift_paid && (
               <div className="mt-8 p-5 rounded-xl text-center" style={{ background: 'linear-gradient(135deg, rgba(196,162,53,0.08), rgba(45,90,61,0.06))' }}>
                 <Gift className="w-8 h-8 text-[#C4A235] mx-auto mb-3" />
                 <p

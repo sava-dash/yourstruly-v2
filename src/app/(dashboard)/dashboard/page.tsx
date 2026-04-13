@@ -1206,6 +1206,8 @@ export default function HomeV2Page() {
                 </React.Fragment>
               )
             })}
+            {/* Infinite scroll sentinel — loads more prompts when visible */}
+            <LoadMoreSentinel onVisible={shuffle} isLoading={promptsLoading} />
             {/* Bottom spacer so last card can snap to top */}
             <div style={{ height: `calc(100vh - ${CARD_H + 140}px)`, flexShrink: 0 }} />
           </div>
@@ -1479,6 +1481,37 @@ export default function HomeV2Page() {
 
 
 /* ─── Prompt Card — light theme, portrait, used in both states ─── */
+/** Sentinel that triggers loading more prompts when scrolled into view */
+function LoadMoreSentinel({ onVisible, isLoading }: { onVisible: () => void; isLoading: boolean }) {
+  const ref = React.useRef<HTMLDivElement>(null)
+  const hasTriggered = React.useRef(false)
+
+  React.useEffect(() => {
+    if (!ref.current) return
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting && !isLoading && !hasTriggered.current) {
+          hasTriggered.current = true
+          onVisible()
+          // Reset after a delay so it can trigger again
+          setTimeout(() => { hasTriggered.current = false }, 5000)
+        }
+      },
+      { threshold: 0.1 }
+    )
+    observer.observe(ref.current)
+    return () => observer.disconnect()
+  }, [onVisible, isLoading])
+
+  return (
+    <div ref={ref} className="flex items-center justify-center py-8" style={{ flexShrink: 0 }}>
+      {isLoading && (
+        <div className="w-6 h-6 border-2 border-[#2D5A3D] border-t-transparent rounded-full animate-spin" />
+      )}
+    </div>
+  )
+}
+
 function PromptCard({ row, onClick, onClose, isExpanded, index }: {
   row: PromptRow
   onClick?: () => void
