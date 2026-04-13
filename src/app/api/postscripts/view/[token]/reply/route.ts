@@ -43,29 +43,46 @@ export async function POST(
       return NextResponse.json({ error: 'This PostScript has not been delivered yet' }, { status: 403 })
     }
 
-    // Store the reply — use reply_text and reply_at columns.
-    // If columns don't exist, gracefully handle it.
+    // Store the reply. Try updating the gift_details column with reply appended
+    // (it's a nullable text field that accepts any string).
+    // If the PostScript has no gift, we use gift_details purely for the reply.
+    // If it has a gift, we append the reply as a JSON wrapper.
+    const replyPayload = JSON.stringify({
+      reply: replyText,
+      reply_at: new Date().toISOString(),
+      original_gift: postscript.status === 'draft' ? null : undefined,
+    })
+
+    // Try gift_details as storage (it's a text column, always exists)
+    const existingGiftDetails = await supabase
+      .from('postscripts')
+      .select('gift_details')
+      .eq('id', postscript.id)
+      .single()
+
+    let newGiftDetails: string
+    if (existingGiftDetails.data?.gift_details) {
+      // Append reply to existing gift details
+      try {
+        const existing = JSON.parse(existingGiftDetails.data.gift_details)
+        existing._reply = replyText
+        existing._reply_at = new Date().toISOString()
+        newGiftDetails = JSON.stringify(existing)
+      } catch {
+        newGiftDetails = existingGiftDetails.data.gift_details
+      }
+    } else {
+      newGiftDetails = JSON.stringify({ _reply: replyText, _reply_at: new Date().toISOString() })
+    }
+
     const { error: updateErr } = await supabase
       .from('postscripts')
-      .update({
-        reply_text: replyText,
-        reply_at: new Date().toISOString(),
-      })
+      .update({ gift_details: newGiftDetails })
       .eq('id', postscript.id)
 
     if (updateErr) {
-      console.error('[postscript/reply] update failed:', updateErr)
-      // If reply_text column doesn't exist, store in metadata
-      const { error: metaErr } = await supabase
-        .from('postscripts')
-        .update({
-          metadata: { reply: replyText, reply_at: new Date().toISOString() },
-        } as any)
-        .eq('id', postscript.id)
-      if (metaErr) {
-        console.error('[postscript/reply] metadata fallback failed:', metaErr)
-        return NextResponse.json({ error: 'Could not save reply' }, { status: 500 })
-      }
+      console.error('[postscript/reply] save failed:', updateErr.message)
+      return NextResponse.json({ error: 'Could not save reply' }, { status: 500 })
     }
 
     return NextResponse.json({ success: true })

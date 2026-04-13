@@ -151,103 +151,128 @@ export default function PostScriptRecipientPage({ params }: { params: Promise<{ 
     )
   }
 
-  // Show full content after envelope is opened
+  // Parse gift details
+  const giftInfo = (() => {
+    if (!postscript.has_gift || !postscript.gift_details) return null
+    try { return JSON.parse(postscript.gift_details) as { name?: string; price?: number; image_url?: string } }
+    catch { return null }
+  })()
+
+  // Show full content — letter unfolds from envelope
   return (
-    <div className="min-h-screen bg-[#FAFAF7] relative overflow-hidden">
-      <div className="home-background" />
-      <div className="home-blob home-blob-1" />
-      <div className="home-blob home-blob-2" />
-      
+    <div
+      className="min-h-screen relative overflow-hidden"
+      style={{ background: 'radial-gradient(ellipse at top, #2A201A 0%, #1A1410 60%, #0F0B08 100%)' }}
+    >
       <div className="relative z-10 max-w-2xl mx-auto p-4 py-12">
-        {/* Header */}
-        <div className="text-center mb-8">
-          <div className="w-16 h-16 rounded-full bg-[#2D5A3D]/20 flex items-center justify-center mx-auto mb-4 overflow-hidden">
-            {postscript.sender_avatar ? (
-              <img src={postscript.sender_avatar}
-                alt="" className="w-full h-full object-cover" />
-            ) : (
-              <User className="w-8 h-8 text-[#2D5A3D]" />
-            )}
-          </div>
-          <p className="text-gray-500">A PostScript from</p>
-          <h1 className="text-2xl font-semibold text-[#2d2d2d]">{postscript.sender_name}</h1>
+        {/* Sender header */}
+        <div className="text-center mb-8 animate-in fade-in duration-700">
+          <p className="text-[#D4C8A0]/60 text-sm">A PostScript from</p>
+          <h1
+            className="text-2xl text-[#F5F0E8] mt-1"
+            style={{ fontFamily: 'var(--font-dm-serif, DM Serif Display, serif)' }}
+          >
+            {postscript.sender_name}
+          </h1>
         </div>
 
-        {/* Letter Card */}
-        <div className="glass-card glass-card-strong p-8 paper-texture-cream">
-          <h2 className="text-2xl font-semibold text-[#2d2d2d] mb-6 font-playfair">
-            {postscript.title}
-          </h2>
-          
-          <div className="prose prose-lg text-gray-700 whitespace-pre-wrap">
-            {postscript.message}
-          </div>
+        {/* Letter card — warm parchment style */}
+        <div
+          className="rounded-2xl overflow-hidden animate-in slide-in-from-bottom-4 fade-in duration-1000"
+          style={{
+            background: 'linear-gradient(165deg, #FDF8F0 0%, #F8F2E6 50%, #F5EFE0 100%)',
+            boxShadow: '0 20px 60px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.5)',
+            border: '1px solid rgba(196,162,53,0.15)',
+          }}
+        >
+          <div className="p-8 sm:p-10">
+            {/* Title */}
+            <h2
+              className="text-2xl sm:text-3xl text-[#3D3428] mb-6 leading-tight"
+              style={{ fontFamily: 'var(--font-dm-serif, DM Serif Display, serif)' }}
+            >
+              {postscript.title}
+            </h2>
 
-          {/* Video */}
-          {postscript.video_url && (
-            <div className="mt-8">
-              <h3 className="text-lg font-medium text-[#2d2d2d] mb-3 flex items-center gap-2">
-                <Video className="w-5 h-5 text-[#2D5A3D]" />
-                Video Message
-              </h3>
-              <video 
-                src={postscript.video_url} 
-                controls 
-                className="w-full rounded-xl"
-              />
+            {/* Message body */}
+            <div
+              className="text-[#4A3F33] text-[16px] leading-[1.85] whitespace-pre-wrap"
+              style={{ fontFamily: '"Georgia", serif' }}
+            >
+              {postscript.message}
             </div>
-          )}
 
-          {/* Attachments */}
-          {postscript.attachments && postscript.attachments.length > 0 && (
-            <div className="mt-8">
-              <h3 className="text-lg font-medium text-[#2d2d2d] mb-3 flex items-center gap-2">
-                <Paperclip className="w-5 h-5 text-[#2D5A3D]" />
-                Attachments
-              </h3>
-              <div className="space-y-2">
-                {postscript.attachments.map(att => (
-                  <a
-                    key={att.id}
-                    href={att.file_url}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="block p-3 bg-[#2D5A3D]/5 rounded-lg hover:bg-[#2D5A3D]/10 transition-colors"
-                  >
-                    {att.file_name}
-                  </a>
-                ))}
+            {/* Video */}
+            {postscript.video_url && (
+              <div className="mt-8">
+                <p className="text-xs uppercase tracking-wider text-[#8B7355] mb-3 flex items-center gap-2">
+                  <Video className="w-4 h-4" /> Video Message
+                </p>
+                <video src={postscript.video_url} controls className="w-full rounded-xl" />
               </div>
-            </div>
-          )}
+            )}
 
-          {/* Gift */}
-          {postscript.has_gift && (
-            <div className="mt-8 p-6 bg-gradient-to-r from-[#C4A235]/10 to-[#2D5A3D]/10 rounded-xl">
-              <h3 className="text-lg font-medium text-[#2d2d2d] mb-2 flex items-center gap-2">
-                <Gift className="w-5 h-5 text-[#C4A235]" />
-                A Gift For You
-              </h3>
-              {postscript.gift_type && (
-                <p className="text-gray-600">{postscript.gift_type}</p>
-              )}
-              {postscript.gift_details && (
-                <p className="text-gray-500 text-sm mt-2">{postscript.gift_details}</p>
-              )}
-            </div>
-          )}
+            {/* Attachments */}
+            {postscript.attachments && postscript.attachments.length > 0 && (
+              <div className="mt-8">
+                <p className="text-xs uppercase tracking-wider text-[#8B7355] mb-3 flex items-center gap-2">
+                  <Paperclip className="w-4 h-4" /> Attachments
+                </p>
+                <div className="grid grid-cols-2 gap-2">
+                  {postscript.attachments.map(att => {
+                    const isImage = att.file_type?.startsWith('image/')
+                    return (
+                      <a key={att.id} href={att.file_url} target="_blank" rel="noopener noreferrer"
+                        className="rounded-xl overflow-hidden border border-[#D4C8A0]/30 hover:border-[#C4A235]/50 transition-colors">
+                        {isImage ? (
+                          <img src={att.file_url} alt="" className="w-full aspect-square object-cover" />
+                        ) : (
+                          <div className="p-3 text-sm text-[#8B7355]">{att.file_name}</div>
+                        )}
+                      </a>
+                    )
+                  })}
+                </div>
+              </div>
+            )}
 
-          {/* Footer */}
-          <div className="mt-8 pt-6 border-t border-[#2D5A3D]/10 text-center">
-            <p className="text-gray-400 text-sm flex items-center justify-center gap-2">
-              <Calendar className="w-4 h-4" />
-              Delivered on {new Date(postscript.delivery_date).toLocaleDateString('en-US', {
-                month: 'long',
-                day: 'numeric',
-                year: 'numeric'
-              })}
-            </p>
-            <p className="text-[#2D5A3D]/50 text-xs mt-3 italic tracking-wide">Live on.</p>
+            {/* Gift — parsed properly */}
+            {postscript.has_gift && (
+              <div className="mt-8 p-5 rounded-xl" style={{ background: 'linear-gradient(135deg, rgba(196,162,53,0.08), rgba(45,90,61,0.06))' }}>
+                <p className="text-xs uppercase tracking-wider text-[#C4A235] mb-3 flex items-center gap-2">
+                  <Gift className="w-4 h-4" /> A Gift For You
+                </p>
+                {giftInfo ? (
+                  <div className="flex items-center gap-4">
+                    {giftInfo.image_url && (
+                      <img src={giftInfo.image_url} alt="" className="w-16 h-16 rounded-xl object-cover border border-[#D4C8A0]/30" />
+                    )}
+                    <div>
+                      <p className="font-medium text-[#3D3428]">{giftInfo.name}</p>
+                      {giftInfo.price && <p className="text-[#2D5A3D] font-semibold">${giftInfo.price}</p>}
+                    </div>
+                  </div>
+                ) : (
+                  <p className="text-[#8B7355]">{postscript.gift_type || 'A special gift awaits you'}</p>
+                )}
+              </div>
+            )}
+
+            {/* Footer / sign-off */}
+            <div className="mt-10 pt-6 border-t border-[#D4C8A0]/20 text-center">
+              <p className="text-[#8B7355] text-sm flex items-center justify-center gap-2">
+                <Calendar className="w-4 h-4" />
+                {postscript.delivery_date
+                  ? `Delivered ${new Date(postscript.delivery_date).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}`
+                  : 'A message written with love'}
+              </p>
+              <p
+                className="text-[#C4A235]/40 text-xs mt-4 italic tracking-[0.2em]"
+                style={{ fontFamily: 'var(--font-dm-serif, DM Serif Display, serif)' }}
+              >
+                Live on.
+              </p>
+            </div>
           </div>
         </div>
 
@@ -255,11 +280,11 @@ export default function PostScriptRecipientPage({ params }: { params: Promise<{ 
         <RecipientReply token={token} senderName={postscript.sender_name} />
 
         {/* CTA */}
-        <div className="text-center mt-8">
-          <p className="text-gray-500 mb-4">Want to create your own PostScripts?</p>
+        <div className="text-center mt-10">
+          <p className="text-[#D4C8A0]/40 mb-4 text-sm">Want to create your own PostScripts?</p>
           <Link
             href="/signup"
-            className="inline-flex items-center gap-2 px-6 py-3 bg-[#2D5A3D] text-white rounded-xl font-medium hover:bg-[#355a48] transition-colors"
+            className="inline-flex items-center gap-2 px-6 py-3 bg-[#C4A235]/20 text-[#C4A235] rounded-xl font-medium hover:bg-[#C4A235]/30 transition-colors border border-[#C4A235]/25"
           >
             <Heart className="w-4 h-4" />
             Start Your Legacy
@@ -279,10 +304,10 @@ function RecipientReply({ token, senderName }: { token: string; senderName: stri
 
   if (sent) {
     return (
-      <div className="mt-8 p-6 bg-[#2D5A3D]/5 rounded-2xl text-center border border-[#2D5A3D]/10">
-        <Check className="w-8 h-8 text-[#2D5A3D] mx-auto mb-2" />
-        <p className="text-[#2D5A3D] font-medium">Your reply has been sent</p>
-        <p className="text-sm text-gray-500 mt-1">{senderName} will receive your words.</p>
+      <div className="mt-8 p-6 rounded-2xl text-center" style={{ background: 'rgba(45,90,61,0.15)', border: '1px solid rgba(45,90,61,0.2)' }}>
+        <Check className="w-8 h-8 text-[#8DACAB] mx-auto mb-2" />
+        <p className="text-[#D4C8A0] font-medium">Your reply has been sent</p>
+        <p className="text-sm text-[#D4C8A0]/50 mt-1">{senderName} will receive your words.</p>
       </div>
     )
   }
@@ -292,7 +317,7 @@ function RecipientReply({ token, senderName }: { token: string; senderName: stri
       <div className="mt-8 text-center">
         <button
           onClick={() => setIsOpen(true)}
-          className="inline-flex items-center gap-2 px-6 py-3 bg-white border border-[#2D5A3D]/20 text-[#2D5A3D] rounded-xl font-medium hover:bg-[#2D5A3D]/5 transition-colors"
+          className="inline-flex items-center gap-2 px-6 py-3 border border-[#C4A235]/25 text-[#C4A235] rounded-xl font-medium hover:bg-[#C4A235]/5 transition-colors"
         >
           <Send className="w-4 h-4" />
           Write Back to {senderName}
@@ -318,30 +343,38 @@ function RecipientReply({ token, senderName }: { token: string; senderName: stri
   }
 
   return (
-    <div className="mt-8 p-6 bg-white rounded-2xl border border-gray-100 shadow-sm">
-      <h3 className="text-base font-semibold text-gray-800 mb-1">Write Back</h3>
-      <p className="text-sm text-gray-500 mb-4">Your reply will be delivered to {senderName}.</p>
+    <div
+      className="mt-8 p-6 rounded-2xl"
+      style={{
+        background: 'linear-gradient(165deg, rgba(62,48,35,0.85) 0%, rgba(42,32,26,0.92) 100%)',
+        border: '1px solid rgba(196,162,53,0.15)',
+      }}
+    >
+      <h3 className="text-base font-semibold text-[#E8DCC4] mb-1"
+        style={{ fontFamily: 'var(--font-dm-serif, DM Serif Display, serif)' }}
+      >Write Back</h3>
+      <p className="text-sm text-[#D4C8A0]/50 mb-4">Your reply will be delivered to {senderName}.</p>
       <textarea
         value={reply}
         onChange={(e) => setReply(e.target.value)}
         placeholder="What would you like to say back?"
         rows={4}
         maxLength={2000}
-        className="w-full px-4 py-3 border border-gray-200 rounded-xl text-gray-800 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-[#2D5A3D]/20 focus:border-[#2D5A3D] resize-none"
+        className="w-full px-4 py-3 border border-[#C4A235]/15 rounded-xl bg-[#2A201A] text-[#E8DCC4] placeholder:text-[#D4C8A0]/30 focus:outline-none focus:ring-2 focus:ring-[#C4A235]/20 focus:border-[#C4A235]/30 resize-none"
       />
       <div className="flex items-center justify-between mt-3">
-        <span className="text-xs text-gray-400">{reply.length}/2000</span>
+        <span className="text-xs text-[#D4C8A0]/30">{reply.length}/2000</span>
         <div className="flex gap-2">
           <button
             onClick={() => setIsOpen(false)}
-            className="px-4 py-2 text-sm text-gray-500 hover:text-gray-700 transition-colors"
+            className="px-4 py-2 text-sm text-[#D4C8A0]/50 hover:text-[#D4C8A0] transition-colors"
           >
             Cancel
           </button>
           <button
             onClick={handleSend}
             disabled={!reply.trim() || sending}
-            className="flex items-center gap-2 px-5 py-2 bg-[#2D5A3D] text-white rounded-xl text-sm font-medium hover:bg-[#244B32] disabled:opacity-50 transition-colors"
+            className="flex items-center gap-2 px-5 py-2 bg-[#2D5A3D] text-white rounded-xl text-sm font-medium hover:bg-[#355A48] disabled:opacity-50 transition-colors"
           >
             {sending ? <Loader2 size={14} className="animate-spin" /> : <Send size={14} />}
             Send Reply
