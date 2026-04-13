@@ -236,25 +236,19 @@ export default function PostScriptRecipientPage({ params }: { params: Promise<{ 
               </div>
             )}
 
-            {/* Gift — parsed properly */}
+            {/* Gift — tasteful notice, no price or product details */}
             {postscript.has_gift && (
-              <div className="mt-8 p-5 rounded-xl" style={{ background: 'linear-gradient(135deg, rgba(196,162,53,0.08), rgba(45,90,61,0.06))' }}>
-                <p className="text-xs uppercase tracking-wider text-[#C4A235] mb-3 flex items-center gap-2">
-                  <Gift className="w-4 h-4" /> A Gift For You
+              <div className="mt-8 p-5 rounded-xl text-center" style={{ background: 'linear-gradient(135deg, rgba(196,162,53,0.08), rgba(45,90,61,0.06))' }}>
+                <Gift className="w-8 h-8 text-[#C4A235] mx-auto mb-3" />
+                <p
+                  className="text-[#3D3428] font-medium text-lg"
+                  style={{ fontFamily: 'var(--font-dm-serif, DM Serif Display, serif)' }}
+                >
+                  A gift is on its way to you
                 </p>
-                {giftInfo ? (
-                  <div className="flex items-center gap-4">
-                    {giftInfo.image_url && (
-                      <img src={giftInfo.image_url} alt="" className="w-16 h-16 rounded-xl object-cover border border-[#D4C8A0]/30" />
-                    )}
-                    <div>
-                      <p className="font-medium text-[#3D3428]">{giftInfo.name}</p>
-                      {giftInfo.price && <p className="text-[#2D5A3D] font-semibold">${giftInfo.price}</p>}
-                    </div>
-                  </div>
-                ) : (
-                  <p className="text-[#8B7355]">{postscript.gift_type || 'A special gift awaits you'}</p>
-                )}
+                <p className="text-[#8B7355] text-sm mt-1">
+                  {postscript.sender_name} included something special with this message.
+                </p>
               </div>
             )}
 
