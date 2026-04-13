@@ -155,14 +155,18 @@ export async function POST(request: NextRequest) {
 
   // Add attachments if provided
   if (attachments.length > 0) {
-    const attachmentRecords = attachments.map((att: any) => ({
-      postscript_id: postscript.id,
-      file_url: att.file_url,
-      file_key: att.file_key,
-      file_type: att.file_type,
-      file_name: att.file_name,
-      file_size: att.file_size
-    }))
+    const attachmentRecords = attachments.map((att: any) => {
+      let fileKey = att.file_key || att.file_url
+      try { fileKey = new URL(att.file_url).pathname.split('/').slice(-2).join('/') } catch {}
+      return {
+        postscript_id: postscript.id,
+        file_url: att.file_url,
+        file_key: fileKey,
+        file_type: att.file_type,
+        file_name: att.file_name,
+        file_size: att.file_size
+      }
+    })
 
     const { error: attError } = await supabase
       .from('postscript_attachments')

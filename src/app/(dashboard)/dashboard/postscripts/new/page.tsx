@@ -331,7 +331,7 @@ export default function NewPostScriptPage() {
 
     try {
       // Upload attachments first if any
-      const uploadedAttachments: Array<{ file_url: string; file_type: string; file_name: string; file_size: number }> = []
+      const uploadedAttachments: Array<{ file_url: string; file_key: string; file_type: string; file_name: string; file_size: number }> = []
       
       for (const att of form.attachments) {
         const formData = new FormData()
@@ -344,9 +344,10 @@ export default function NewPostScriptPage() {
         })
         
         if (uploadRes.ok) {
-          const { url } = await uploadRes.json()
+          const { url, path } = await uploadRes.json()
           uploadedAttachments.push({
             file_url: url,
+            file_key: path || url.split('/').slice(-2).join('/'),
             file_type: att.file.type,
             file_name: att.file.name,
             file_size: att.file.size
