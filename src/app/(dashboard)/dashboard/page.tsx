@@ -20,12 +20,19 @@ import { InviteCollaboratorCard } from '@/components/home-v2/cards/InviteCollabo
 import { SongCard } from '@/components/home-v2/cards/SongCard'
 import { PeoplePresentCard } from '@/components/home-v2/cards/PeoplePresentCard'
 import { ListItemCard } from '@/components/home-v2/cards/ListItemCard'
-import { RefreshCw, X, Heart, Camera, Brain, User, BookOpen, Sparkles, Menu, Trash2, ChevronLeft, ChevronRight } from 'lucide-react'
+import { RefreshCw, X, Heart, Camera, Brain, User, BookOpen, Sparkles, Menu, Trash2, ChevronLeft, ChevronRight, Clock, LayoutGrid } from 'lucide-react'
 import type { PromptRow, ChainCard, CardType, PromptCategory } from '@/components/home-v2/types'
 import { categorizePrompt, generateInitialCards } from '@/components/home-v2/types'
 import { useDashboardData } from './hooks/useDashboardData'
 import { useXpState } from './hooks/useXpState'
 import { useGamificationConfig } from '@/hooks/useGamificationConfig'
+import { TYPE_CONFIG, getFieldLabel, LIFE_CHAPTERS } from './constants'
+import { trackEngagement } from './analytics'
+import { EngagementErrorBoundary } from './components/EngagementErrorBoundary'
+import { CelebrationModal } from './components/CelebrationModal'
+import { HistoryPanel } from './components/HistoryPanel'
+import { CategoriesPanel } from './components/CategoriesPanel'
+import { VisibilityModal } from './components/VisibilityModal'
 
 const BadgeDisplay = dynamic(() => import('@/components/dashboard/BadgeDisplay'), { ssr: false })
 const WeeklyChallenges = dynamic(() => import('@/components/dashboard/WeeklyChallenges'), { ssr: false })
@@ -83,17 +90,22 @@ export default function HomeV2Page() {
   const [profile, setProfile] = useState<any>(null)
   const mainRef = useRef<HTMLDivElement>(null)
 
+  // Declared early so it can be passed to useEngagementPrompts as the
+  // lifeChapter arg — flipping the filter triggers a fresh server-side
+  // fetch that returns the FULL chapter pool (not the slotted subset).
+  const [categoryFilter, setCategoryFilter] = useState<string | null>(null)
+
   const {
     prompts: rawPrompts,
     isLoading: promptsLoading,
     shuffle,
     answerPrompt,
     stats: engagementStats,
-  } = useEngagementPrompts(30, null)
+  } = useEngagementPrompts(100, categoryFilter)
 
   const { subscription } = useSubscription()
   const { stats: dashboardStats, refreshStats: refreshDashboardStats } = useDashboardData(user?.id || null)
-  const { totalXp, xpAnimating, addXp } = useXpState(user?.id || null)
+  const { totalXp, xpAnimating, addXp, refreshXp } = useXpState(user?.id || null)
   const { config: gamificationConfig } = useGamificationConfig()
   const streakDays = 0
 
@@ -105,7 +117,31 @@ export default function HomeV2Page() {
   useEffect(() => { expandedRowIdRef.current = expandedRowId }, [expandedRowId])
   const [sidebarOpen, setSidebarOpen] = useState(false)
   const [rows, setRows] = useState<Map<string, PromptRow>>(new Map())
-  const [xpToast, setXpToast] = useState<{ amount: number; message: string } | null>(null)
+  const [errorToast, setErrorToast] = useState<string | null>(null)
+  const [finishingRowId, setFinishingRowId] = useState<string | null>(null)
+  const [celebration, setCelebration] = useState<{
+    open: boolean
+    xpEarned: number
+    reflection: string | null
+    loading: boolean
+    promptText: string
+    promptCategory: string
+  }>({ open: false, xpEarned: 0, reflection: null, loading: false, promptText: '', promptCategory: '' })
+  const [visibility, setVisibility] = useState<{
+    open: boolean
+    memoryId: string | null
+    promptText: string
+    mentionedPeople: { id: string; name: string }[]
+    onComplete: () => void
+  }>({ open: false, memoryId: null, promptText: '', mentionedPeople: [], onComplete: () => {} })
+  const [historyOpen, setHistoryOpen] = useState(false)
+  const [categoriesOpen, setCategoriesOpen] = useState(false)
+  // (categoryFilter is declared above the useEngagementPrompts call so
+  // it can drive the hook's lifeChapter arg.)
+  // All categories/life chapters known to the template library. Fetched
+  // once on mount so the right panel can list chapters the user hasn't
+  // loaded any prompts for yet (those tiles click-to-shuffle).
+  const [availableCategories, setAvailableCategories] = useState<string[]>([])
 
   // Pick up pre-filled memory from AI Concierge via custom event
   const insertConciergeDraft = useCallback((draft: { title: string; description: string; location?: string; date?: string; people?: string[]; mood?: string }) => {
@@ -164,6 +200,36 @@ export default function HomeV2Page() {
     load()
   }, [])
 
+  // Load the full set of chapter/category keys the system knows about
+  // so the right panel can show every chapter even when no prompt of
+  // that type is currently loaded into the feed.
+  useEffect(() => {
+    let cancelled = false
+    const loadCategories = async () => {
+      // Start with the hard-coded life chapters as the canonical floor.
+      const keys = new Set<string>(LIFE_CHAPTERS.map((c) => c.id))
+
+      // Merge in anything else the template library uses. Two columns
+      // contribute: prompt_templates.category and prompt_templates.life_chapter.
+      try {
+        const { data: templates } = await supabase
+          .from('prompt_templates')
+          .select('category, life_chapter')
+          .eq('is_active', true)
+        for (const t of templates || []) {
+          if ((t as any).category) keys.add(((t as any).category as string).trim())
+          if ((t as any).life_chapter) keys.add(((t as any).life_chapter as string).trim())
+        }
+      } catch (err) {
+        console.warn('[categories] prompt_templates fetch failed', err)
+      }
+
+      if (!cancelled) setAvailableCategories(Array.from(keys).filter(Boolean))
+    }
+    loadCategories()
+    return () => { cancelled = true }
+  }, [])
+
   useEffect(() => {
     const seenPhotoIds = new Set<string>()
     const newRows = new Map<string, PromptRow>()
@@ -201,8 +267,13 @@ export default function HomeV2Page() {
       // Chain order for photo: when-where → backstory → tag-people → plus
       newRows.set(prompt.id, {
         promptId: prompt.id, promptText: prompt.promptText, promptType: prompt.type,
-        category, photoUrl: prompt.photoUrl, photoId: prompt.photoId,
+        category,
+        dbCategory: prompt.category || null,
+        lifeChapter: prompt.lifeChapter || null,
+        photoUrl: prompt.photoUrl, photoId: prompt.photoId,
         contactName: prompt.contactName, contactId: prompt.contactId,
+        contactPhotoUrl: prompt.contactPhotoUrl,
+        missingField: prompt.missingField,
         metadata: prompt.metadata, cards, expanded: false,
       })
     }
@@ -212,6 +283,12 @@ export default function HomeV2Page() {
   // Open: expand row, scroll to first chain card
   const handleSelect = useCallback((promptId: string) => {
     setExpandedRowId(promptId)
+    const row = rows.get(promptId)
+    trackEngagement('card_expanded', {
+      promptId,
+      promptType: row?.promptType,
+      category: row?.category,
+    })
     // After state update and render, scroll to the first chain card
     requestAnimationFrame(() => {
       const scrollEl = scrollRowRefs.current.get(promptId)
@@ -222,7 +299,7 @@ export default function HomeV2Page() {
         }
       }
     })
-  }, [])
+  }, [rows])
 
   // Close: collapse back to feed
   const handleBack = useCallback(() => {
@@ -232,59 +309,182 @@ export default function HomeV2Page() {
   // Save & Finish: mark prompt as answered, remove from feed
   const handleFinish = useCallback(async () => {
     if (!expandedRowId) return
+    // Double-submit guard: ignore repeat clicks while a finish is in flight
+    if (finishingRowId) return
     const row = rows.get(expandedRowId)
     if (!row) { setExpandedRowId(null); return }
 
     // Collect all saved card data into a summary
     const savedCards = row.cards.filter(c => c.saved && c.type !== 'plus')
     const textParts: string[] = []
+    const mediaUrls: { url: string; name?: string; type?: string; mediaId?: string }[] = []
+    let chainLocation: { name?: string; lat?: number; lng?: number } | undefined
+    let chainDate: string | undefined
     for (const card of savedCards) {
-      if (card.data.text) textParts.push(card.data.text)
-      if (card.data.location) textParts.push(`Location: ${card.data.location}`)
-      if (card.data.date) textParts.push(`Date: ${card.data.date}`)
+      if (card.type === 'media-item' && card.data?.url) {
+        mediaUrls.push({
+          url: card.data.url,
+          name: card.data.name,
+          type: card.data.type,
+          mediaId: card.data.mediaId,
+        })
+        continue
+      }
+      // If this card has a full conversation (BackstoryCard), format as Q&A.
+      // Each exchange pairs a Q + A in one block so parseStory can parse them.
+      if (card.data.messages && Array.isArray(card.data.messages) && card.data.messages.length > 1) {
+        const msgs = card.data.messages as { role: string; content: string }[]
+        const exchanges: string[] = []
+        let qNum = 0
+        let currentQ = ''
+        for (const msg of msgs) {
+          if (msg.role === 'assistant') {
+            qNum++
+            currentQ = `**Q${qNum}:** ${msg.content}`
+          } else if (msg.role === 'user') {
+            const aBlock = `**A${qNum || 1}:** ${msg.content}`
+            if (currentQ) {
+              exchanges.push(`${currentQ}\n\n${aBlock}`)
+              currentQ = ''
+            } else {
+              exchanges.push(aBlock)
+            }
+          }
+        }
+        // If there's an unanswered trailing question, include it
+        if (currentQ) exchanges.push(currentQ)
+        if (exchanges.length > 0) {
+          textParts.push(`## Conversation\n\n${exchanges.join('\n\n---\n\n')}`)
+        }
+      } else if (card.data.text) {
+        textParts.push(card.data.text)
+      }
+      if (card.data.location) {
+        textParts.push(`Location: ${card.data.location}`)
+        if (!chainLocation) chainLocation = { name: card.data.location, lat: card.data.lat, lng: card.data.lng }
+      }
+      if (card.data.date) {
+        textParts.push(`Date: ${card.data.date}`)
+        if (!chainDate) chainDate = card.data.date
+      }
       if (card.data.song?.name) textParts.push(`Song: ${card.data.song.name} by ${card.data.song.artist}`)
     }
 
+    // Collect people tagged via PeoplePresentCard
+    const chainPeople = savedCards
+      .filter((c) => c.type === 'people-present' && c.data?.people)
+      .flatMap((c) => (c.data.people as { id: string; name: string }[]) || [])
+
     const responseText = textParts.join('\n\n') || 'Completed'
 
-    // Tally XP earned from all saved cards so the user sees a single summary
-    const xpAmounts: Record<string, number> = {
-      'when-where': 15, 'text-voice-video': 25, 'quote': 10, 'comment': 5,
-      'tag-people': 10, 'people-present': 10, 'field-input': 10,
-      'pill-select': 10, 'song': 15, 'invite-collaborator': 20,
-      'list-item': 10, 'media-upload': 5, 'media-item': 5,
-      'backstory': 25,
+    // Per-chain XP: one grant for completing the prompt, regardless of how
+    // many cards are in the chain. Falls back to 10 for unknown types.
+    const totalEarned = TYPE_CONFIG[row.promptType]?.xp ?? 10
+
+    // Lock finish for this row
+    setFinishingRowId(row.promptId)
+
+    // Mark as answered in the backend BEFORE removing from local rows.
+    // If this fails, we keep the row so the user can retry instead of
+    // silently losing their work. The server awards the per-chain XP
+    // (one grant per prompt type) via XP_REWARDS — single source of truth.
+    let answerResult: any = null
+    try {
+      answerResult = await answerPrompt(row.promptId, {
+        type: 'text',
+        text: responseText,
+        data: {
+          mediaUrls,
+          locationName: chainLocation?.name,
+          locationLat: chainLocation?.lat,
+          locationLng: chainLocation?.lng,
+          memoryDate: chainDate,
+          taggedPeople: chainPeople.length > 0 ? chainPeople : undefined,
+        },
+      })
+    } catch (err) {
+      console.error('Failed to finish prompt:', err)
+      setFinishingRowId(null)
+      setErrorToast("Couldn't save memory — check your connection and try again.")
+      setTimeout(() => setErrorToast(null), 5000)
+      trackEngagement('card_finish_failed', {
+        promptId: row.promptId,
+        promptType: row.promptType,
+        error: (err as Error)?.message,
+      })
+      return
     }
-    const totalEarned = savedCards.reduce((sum, c) => sum + (xpAmounts[c.type] ?? 10), 0)
 
-    // Close the expanded view immediately
+    // Media is attached server-side via attachChainMedia (using the admin
+    // client to bypass RLS). The mediaUrls are already in the request
+    // body's responseData, so no client-side insert needed.
+
+    const resultMemoryId = answerResult?.memoryId as string | undefined
+
+    // ── Collect people mentioned for sharing options ──
+    const mentionedPeople = savedCards
+      .filter((c) => c.type === 'people-present' && c.data?.people)
+      .flatMap((c) => (c.data.people as { id: string; name: string }[]) || [])
+
+    // Success — close expanded view, remove row
     setExpandedRowId(null)
-
-    // Remove from local rows
     setRows(prev => {
       const next = new Map(prev)
       next.delete(row.promptId)
       return next
     })
+    setFinishingRowId(null)
 
-    // Mark as answered in the backend (removes from rawPrompts, creates/updates memory)
-    try {
-      await answerPrompt(row.promptId, { type: 'text', text: responseText })
-    } catch (err) {
-      console.error('Failed to finish prompt:', err)
-    }
+    trackEngagement('card_finished', {
+      promptId: row.promptId,
+      promptType: row.promptType,
+      cardsSaved: savedCards.length,
+      xpEarned: totalEarned,
+    })
 
-    // Celebrate: show XP toast, refresh dashboard stats + weekly challenges
-    if (totalEarned > 0) {
-      setXpToast({ amount: totalEarned, message: "Memory saved" })
-      setTimeout(() => setXpToast(null), 3500)
-    }
-    // Refresh stats counters + weekly challenges so streak/progress update visually
+    // ── Start generating the AI reflection NOW — don't wait for the
+    // visibility popup to close. By the time the user picks private/
+    // shared/circles, the reflection will be ready.
+    const reflectionPromise = fetch('/api/engagement/reflect', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        memoryText: responseText,
+        promptText: row.promptText,
+        promptType: row.promptType,
+        contactName: row.contactName,
+        memoryId: resultMemoryId,
+      }),
+    })
+      .then((res) => (res.ok ? res.json() : null))
+      .then((data) => (data?.reflection as string) || null)
+      .catch(() => null)
+
+    // ── Visibility popup → celebration modal ──
+    setVisibility({
+      open: true,
+      memoryId: resultMemoryId || null,
+      promptText: row.promptText,
+      mentionedPeople,
+      onComplete: () => {
+        // Show celebration — reflection may already be resolved
+        setCelebration({ open: true, xpEarned: totalEarned, reflection: null, loading: true, promptText: row.promptText, promptCategory: row.category })
+        reflectionPromise.then((reflection) => {
+          setCelebration((prev) => prev.open ? { ...prev, reflection, loading: false } : prev)
+        })
+      },
+    })
+
+    // Optimistic XP update so the counter animates immediately,
+    // then refresh from server to reconcile with the truth.
+    try { addXp(totalEarned, 'prompt_answered', row.promptId) } catch {}
     try { refreshDashboardStats?.() } catch {}
+    // Delayed refresh to let the server finish awarding XP
+    setTimeout(() => { try { refreshXp?.() } catch {} }, 2000)
     if (typeof window !== 'undefined') {
       window.dispatchEvent(new CustomEvent('yt:challenges-refresh'))
     }
-  }, [expandedRowId, rows, answerPrompt, refreshDashboardStats])
+  }, [expandedRowId, finishingRowId, rows, answerPrompt, addXp, refreshDashboardStats, refreshXp, supabase, user])
 
   const handleCardSave = useCallback(async (promptId: string, cardId: string, data: Record<string, any>) => {
     setRows(prev => {
@@ -302,6 +502,9 @@ export default function HomeV2Page() {
       if (!row) return
       const card = row.cards.find(c => c.id === cardId)
       if (!card) return
+      // Auto-save intermediate content. The server grants per-chain XP on the
+      // first successful call and guards repeats via alreadyAnswered — so XP
+      // lands at most once per prompt no matter which card triggers the save.
       if (card.type === 'text-voice-video' || card.type === 'quote' || card.type === 'comment') {
         await answerPrompt(promptId, { type: 'text', text: data.text || '' })
       } else if (card.type === 'when-where' && row.photoId) {
@@ -312,27 +515,84 @@ export default function HomeV2Page() {
         const selected = data.selected || []
         await answerPrompt(promptId, { type: 'selection', text: selected.join(', '), data: { value: selected.join(', ') } })
       }
-    } catch (err) { console.error('Auto-save failed:', err) }
-
-    // Award XP for saving a card
-    const xpAmounts: Record<string, number> = {
-      'when-where': 15,
-      'text-voice-video': 25,
-      'quote': 10,
-      'comment': 5,
-      'tag-people': 10,
-      'people-present': 10,
-      'field-input': 10,
-      'pill-select': 10,
-      'song': 15,
-      'invite-collaborator': 20,
-      'list-item': 10,
+    } catch (err) {
+      console.error('Auto-save failed:', err)
+      setErrorToast("Couldn't save that card — we'll keep it here so you can retry.")
+      setTimeout(() => setErrorToast(null), 5000)
+      // Roll back the "saved" flag so the card stays editable
+      setRows(prev => {
+        const next = new Map(prev)
+        const r = next.get(promptId)
+        if (!r) return prev
+        next.set(promptId, {
+          ...r,
+          cards: r.cards.map(c => (c.id === cardId ? { ...c, saved: false } : c)),
+        })
+        return next
+      })
+      trackEngagement('card_save_failed', { promptId, error: (err as Error)?.message })
+      return
     }
-    const row = rows.get(promptId)
-    const card = row?.cards.find(c => c.id === cardId)
-    if (card) {
-      const xp = xpAmounts[card.type] || 10
-      addXp(xp, `card_saved:${card.type}`, cardId)
+
+    // No per-card XP grant — chain XP is awarded once on Save & Finish.
+    const rowForAnalytics = rows.get(promptId)
+    const cardForAnalytics = rowForAnalytics?.cards.find(c => c.id === cardId)
+    if (cardForAnalytics) {
+      trackEngagement('card_saved', {
+        cardType: cardForAnalytics.type,
+        promptType: rowForAnalytics?.promptType,
+      })
+    }
+
+    // When the user saves the main story card, extract mentioned people
+    // and feed them into the "who was there" card on this row. Matched
+    // contacts auto-select; unmatched names become pending custom entries
+    // that need a relationship pick before the card can save.
+    if (cardForAnalytics && cardForAnalytics.type === 'text-voice-video') {
+      const storyText = (data.text as string | undefined)?.trim()
+      if (storyText && storyText.length > 8) {
+        ;(async () => {
+          try {
+            const res = await fetch('/api/voice/extract', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ transcript: storyText }),
+            })
+            if (!res.ok) return
+            const extracted = await res.json()
+            const resolved: Array<{
+              name: string
+              contactId: string | null
+              contactName: string | null
+              isNew: boolean
+            }> = extracted?.resolvedPeople || []
+            if (resolved.length === 0) return
+            setRows(prev => {
+              const next = new Map(prev)
+              const r = next.get(promptId)
+              if (!r) return prev
+              const updatedCards = r.cards.map(c => {
+                if (c.type !== 'people-present') return c
+                const existing = (c.data?.detectedPeople as any[]) || []
+                const byName = new Map<string, any>()
+                for (const p of existing) byName.set((p.name || '').toLowerCase(), p)
+                for (const p of resolved) byName.set((p.name || '').toLowerCase(), p)
+                return {
+                  ...c,
+                  data: {
+                    ...c.data,
+                    detectedPeople: Array.from(byName.values()),
+                  },
+                }
+              })
+              next.set(promptId, { ...r, cards: updatedCards })
+              return next
+            })
+          } catch (err) {
+            console.warn('[voice/extract] failed', err)
+          }
+        })()
+      }
     }
 
     // Auto-advance: scroll to next card in carousel
@@ -348,7 +608,7 @@ export default function HomeV2Page() {
       console.log('[CardChain] Auto-advance', { from: scrollEl.scrollLeft, to: target, nextOffsetLeft: next.offsetLeft })
       scrollEl.scrollTo({ left: target, behavior: 'smooth' })
     }, 400)
-  }, [rows, answerPrompt, supabase, addXp])
+  }, [rows, answerPrompt, supabase])
 
 
   const handleAddCard = useCallback((promptId: string, type: CardType) => {
@@ -381,13 +641,15 @@ export default function HomeV2Page() {
     })
   }, [])
 
-  const handleMediaUploaded = useCallback((promptId: string, files: { url: string; name: string; type: string }[]) => {
+  const handleMediaUploaded = useCallback((promptId: string, files: { url: string; name: string; type: string; path?: string; faces?: any[]; mediaId?: string }[]) => {
     setRows(prev => {
       const next = new Map(prev)
       const row = next.get(promptId)
       if (!row) return prev
       const newCards: ChainCard[] = files.map(file => ({
-        id: uid(), type: 'media-item' as CardType, data: file, saved: true,
+        id: uid(), type: 'media-item' as CardType,
+        data: { url: file.url, name: file.name, type: file.type, path: file.path, faces: file.faces, mediaId: file.mediaId },
+        saved: true,
         addedBy: user ? { userId: user.id, name: profile?.full_name || 'You' } : undefined,
         createdAt: new Date().toISOString(),
       }))
@@ -400,7 +662,25 @@ export default function HomeV2Page() {
     })
   }, [user, profile])
 
-  const allPrompts = Array.from(rows.values())
+  const allRows = Array.from(rows.values())
+  // Per-category counts for the right panel.
+  // Floor = every category known to the template library (so zero-count
+  // tiles still show up with a shuffle hint). On top of that we layer
+  // live counts from what's currently in the feed. When a chapter
+  // filter is active the feed IS the chapter pool, so counts reflect
+  // exactly what the user is looking at.
+  const categoryCounts: Record<string, number> = { all: allRows.length }
+  for (const key of availableCategories) {
+    categoryCounts[key] = 0
+  }
+  for (const r of allRows) {
+    const key = (r.dbCategory || r.category || 'general').toString()
+    categoryCounts[key] = (categoryCounts[key] || 0) + 1
+  }
+  // Server-side filtering: when categoryFilter is set, the hook already
+  // refetched with p_life_chapter = categoryFilter, so rawPrompts only
+  // contains chapter hits. No client-side filter needed.
+  const allPrompts = allRows
   const expandedRow = expandedRowId ? rows.get(expandedRowId) : null
 
   // Sidebar data
@@ -521,15 +801,120 @@ export default function HomeV2Page() {
         <WeeklyChallenges />
       </aside>
 
+      {/* ── Edge toggles for slide-out panels ── */}
+      <button
+        onClick={() => setHistoryOpen(true)}
+        className="edge-toggle edge-toggle-left"
+        aria-label="Open history"
+        title="Your history"
+      >
+        <Clock size={14} />
+        <span className="edge-toggle-label">History</span>
+      </button>
+      <button
+        onClick={() => setCategoriesOpen(true)}
+        className="edge-toggle edge-toggle-right"
+        aria-label="Browse chapters"
+        title="Browse chapters"
+      >
+        <LayoutGrid size={14} />
+        <span className="edge-toggle-label">Chapters</span>
+        {categoryFilter && <span className="edge-toggle-dot" aria-hidden="true" />}
+      </button>
+
       {/* ── Main Content — snap-scroll viewport ── */}
       <main className="dashboard-main home-v2-main" style={{ minHeight: '100vh' }}>
-        {/* Shuffle — top right */}
-        <div style={{ display: 'flex', justifyContent: 'flex-end', padding: '8px 24px 0' }}>
-          <motion.button whileTap={{ scale: 0.96 }} onClick={() => { shuffle(); setShuffleKey(k => k + 1) }} title="Shuffle to see more cards" aria-label="Shuffle to see more cards" style={{
-            display: 'flex', alignItems: 'center', gap: '6px', padding: '8px 16px',
-            borderRadius: '12px', background: 'white', border: '1px solid #DDE3DF',
-            color: '#5A6660', fontSize: '13px', cursor: 'pointer',
-          }}>
+        {/* Top action row: filter pill (when active) + shuffle */}
+        <div
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            gap: '12px',
+            padding: '10px 24px 0',
+          }}
+        >
+          {/* Filter pill — inline, only shown when a chapter filter is active */}
+          <div style={{ flex: '0 1 auto', minWidth: 0 }}>
+            <AnimatePresence>
+              {categoryFilter && (
+                <motion.div
+                  initial={{ opacity: 0, x: -8 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  exit={{ opacity: 0, x: -8 }}
+                  transition={{ duration: 0.2 }}
+                  style={{
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: '8px',
+                    padding: '7px 6px 7px 14px',
+                    borderRadius: '999px',
+                    background: '#2D5A3D',
+                    color: '#FFFFFF',
+                    boxShadow: '0 4px 12px rgba(45,90,61,0.22)',
+                    fontSize: '13px',
+                    fontWeight: 600,
+                    maxWidth: '100%',
+                  }}
+                >
+                  <LayoutGrid size={13} />
+                  <span
+                    style={{
+                      textTransform: 'capitalize',
+                      whiteSpace: 'nowrap',
+                      overflow: 'hidden',
+                      textOverflow: 'ellipsis',
+                    }}
+                  >
+                    {categoryFilter.replace(/_/g, ' ')}
+                  </span>
+                  <button
+                    onClick={() => setCategoryFilter(null)}
+                    aria-label="Clear filter"
+                    style={{
+                      width: '22px',
+                      height: '22px',
+                      borderRadius: '50%',
+                      background: 'rgba(255,255,255,0.2)',
+                      border: 'none',
+                      color: '#FFFFFF',
+                      cursor: 'pointer',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      flexShrink: 0,
+                    }}
+                  >
+                    <X size={12} />
+                  </button>
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </div>
+
+          <motion.button
+            whileTap={{ scale: 0.96 }}
+            onClick={() => {
+              trackEngagement('shuffle_clicked', { count: allPrompts.length })
+              shuffle()
+              setShuffleKey((k) => k + 1)
+            }}
+            title="Shuffle to see more cards"
+            aria-label="Shuffle to see more cards"
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '6px',
+              padding: '8px 16px',
+              borderRadius: '12px',
+              background: 'white',
+              border: '1px solid #DDE3DF',
+              color: '#5A6660',
+              fontSize: '13px',
+              cursor: 'pointer',
+              flexShrink: 0,
+            }}
+          >
             <RefreshCw size={14} /> Shuffle
           </motion.button>
         </div>
@@ -537,8 +922,9 @@ export default function HomeV2Page() {
         {/* On This Day — memory resurfacing */}
         <OnThisDayRow />
 
-        {/* Loading */}
-        {promptsLoading && (
+        {/* Loading — only show skeletons when there's no expanded chain
+            (background refetches shouldn't yank the card chain away) */}
+        {promptsLoading && !expandedRowId && (
           <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '20px', paddingTop: '40px' }}>
             {[1, 2, 3].map(i => (
               <div key={i} className="card-skeleton" style={{ height: `${CARD_H}px`, borderRadius: '24px', background: 'linear-gradient(90deg, #FAFAF7 25%, #EDE8DB 50%, #FAFAF7 75%)', backgroundSize: '200% 100%', animation: 'shimmer 1.5s infinite' }} />
@@ -546,8 +932,63 @@ export default function HomeV2Page() {
           </div>
         )}
 
-        {/* Vertical feed — one row per prompt, vertical snap scroll */}
-        {!promptsLoading && (
+        {/* Empty state — no prompts available (not while chain is open) */}
+        {!promptsLoading && allPrompts.length === 0 && !expandedRowId && (
+          <div
+            style={{
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: '16px',
+              padding: '80px 24px',
+              textAlign: 'center',
+              color: '#5A6660',
+            }}
+          >
+            <div style={{ fontSize: '56px' }}>🌿</div>
+            <h2
+              style={{
+                margin: 0,
+                fontSize: '22px',
+                fontWeight: 700,
+                color: '#1A1F1C',
+                fontFamily: 'var(--font-dm-serif, DM Serif Display, serif)',
+              }}
+            >
+              You're all caught up
+            </h2>
+            <p style={{ margin: 0, fontSize: '14px', maxWidth: '340px', lineHeight: 1.55 }}>
+              No memory prompts waiting right now. New ones surface as you add
+              photos, tag people, and capture stories — come back later or
+              shuffle to see if anything fresh is ready.
+            </p>
+            <button
+              onClick={() => { trackEngagement('shuffle_clicked', { from: 'empty_state' }); shuffle(); setShuffleKey(k => k + 1) }}
+              style={{
+                marginTop: '4px',
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '8px',
+                padding: '10px 20px',
+                borderRadius: '12px',
+                background: '#2D5A3D',
+                color: '#FFFFFF',
+                border: 'none',
+                fontSize: '14px',
+                fontWeight: 600,
+                cursor: 'pointer',
+              }}
+            >
+              <RefreshCw size={14} /> Shuffle prompts
+            </button>
+          </div>
+        )}
+
+        {/* Vertical feed — always render when a chain is expanded, even
+            during background refetches that might temporarily empty the list */}
+        {(!promptsLoading || expandedRowId) && (allPrompts.length > 0 || expandedRowId) && (
+          <EngagementErrorBoundary onReset={() => setExpandedRowId(null)}>
           <div
             ref={mainRef}
             className="snap-container"
@@ -753,6 +1194,7 @@ export default function HomeV2Page() {
                           onMediaUploaded={(files) => handleMediaUploaded(row.promptId, files)}
                           onDelete={card.addedBy ? () => handleDeleteCard(row.promptId, card.id) : undefined}
                           onFinish={card.type === 'plus' ? handleFinish : undefined}
+                          isFinishing={finishingRowId === row.promptId}
                         />
                       </div>
                     ))}
@@ -767,12 +1209,69 @@ export default function HomeV2Page() {
             {/* Bottom spacer so last card can snap to top */}
             <div style={{ height: `calc(100vh - ${CARD_H + 140}px)`, flexShrink: 0 }} />
           </div>
+          </EngagementErrorBoundary>
         )}
 
         <style jsx global>{`
           @keyframes shimmer {
             0% { background-position: -200% 0; }
             100% { background-position: 200% 0; }
+          }
+
+          /* ── Edge toggle buttons for slide-out panels ── */
+          .edge-toggle {
+            position: fixed;
+            top: 50%;
+            transform: translateY(-50%);
+            padding: 10px 10px;
+            background: #FFFFFF;
+            border: 1px solid #DDE3DF;
+            box-shadow: 0 6px 18px rgba(0, 0, 0, 0.1);
+            color: #2D5A3D;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 4px;
+            cursor: pointer;
+            z-index: 22;
+            transition: background 0.15s ease, transform 0.15s ease;
+          }
+          .edge-toggle:hover {
+            background: #F7FAF8;
+          }
+          .edge-toggle-label {
+            font-size: 9px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.06em;
+            line-height: 1;
+            color: #5A6660;
+          }
+          .edge-toggle-left {
+            left: 0;
+            border-left: none;
+            border-radius: 0 14px 14px 0;
+          }
+          .edge-toggle-right {
+            right: 0;
+            border-right: none;
+            border-radius: 14px 0 0 14px;
+          }
+          .edge-toggle-dot {
+            position: absolute;
+            top: 8px;
+            right: 8px;
+            width: 7px;
+            height: 7px;
+            border-radius: 50%;
+            background: #C4A235;
+            box-shadow: 0 0 0 2px #FFFFFF;
+          }
+          /* On desktop, shift the left toggle past the sidebar so it sits
+             on the edge of the main content area */
+          @media (min-width: 1025px) {
+            .edge-toggle-left { left: 280px; }
           }
 
           /* ── Profile card light theme ── */
@@ -872,54 +1371,104 @@ export default function HomeV2Page() {
         `}</style>
       </main>
 
-      {/* XP toast — shown after cardchain Save & Finish */}
+      {/* Visibility / sharing popup — shown before celebration */}
+      <VisibilityModal
+        open={visibility.open}
+        memoryId={visibility.memoryId}
+        promptText={visibility.promptText}
+        mentionedPeople={visibility.mentionedPeople}
+        onComplete={() => {
+          setVisibility((prev) => ({ ...prev, open: false }))
+          visibility.onComplete()
+        }}
+        onSkip={() => {
+          setVisibility((prev) => ({ ...prev, open: false }))
+          visibility.onComplete()
+        }}
+      />
+
+      {/* Celebration modal — centered, AI reflection, replaces old XP toast */}
+      <CelebrationModal
+        open={celebration.open}
+        xpEarned={celebration.xpEarned}
+        reflection={celebration.reflection}
+        loading={celebration.loading}
+        promptText={celebration.promptText}
+        promptCategory={celebration.promptCategory}
+        onClose={() => setCelebration({ open: false, xpEarned: 0, reflection: null, loading: false, promptText: '', promptCategory: '' })}
+      />
+
+      {/* Slide-out panels */}
+      <HistoryPanel open={historyOpen} onClose={() => setHistoryOpen(false)} />
+      <CategoriesPanel
+        open={categoriesOpen}
+        onClose={() => setCategoriesOpen(false)}
+        activeCategory={categoryFilter}
+        counts={categoryCounts}
+        onSelect={(cat) => setCategoryFilter(cat)}
+        onShufflePull={async () => {
+          // Clicking a chapter with 0 loaded prompts should try to pull
+          // fresh ones from the library before the filter shows an
+          // empty state.
+          trackEngagement('shuffle_clicked', { from: 'category_panel' })
+          await shuffle()
+          setShuffleKey((k) => k + 1)
+        }}
+      />
+
+      {/* Error toast — save failures, keep row in feed so user can retry */}
       <AnimatePresence>
-        {xpToast && (
+        {errorToast && (
           <motion.div
+            role="alert"
+            aria-live="assertive"
             initial={{ opacity: 0, y: 40, scale: 0.9 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 20, scale: 0.95 }}
             transition={{ type: 'spring', damping: 24, stiffness: 320 }}
             style={{
               position: 'fixed',
-              bottom: '32px',
+              bottom: '96px',
               left: '50%',
               transform: 'translateX(-50%)',
-              zIndex: 100,
+              zIndex: 101,
               display: 'flex',
               alignItems: 'center',
-              gap: '14px',
-              padding: '14px 22px',
-              borderRadius: '999px',
-              background: 'linear-gradient(135deg, #2D5A3D 0%, #3D6B52 100%)',
-              boxShadow: '0 12px 40px rgba(45, 90, 61, 0.35), 0 2px 8px rgba(0,0,0,0.15)',
+              gap: '12px',
+              padding: '12px 20px',
+              borderRadius: '14px',
+              maxWidth: 'calc(100vw - 32px)',
+              background: '#B8562E',
+              boxShadow: '0 12px 40px rgba(184, 86, 46, 0.35), 0 2px 8px rgba(0,0,0,0.15)',
               color: '#FFFFFF',
               fontFamily: 'var(--font-inter-tight, Inter, sans-serif)',
-              pointerEvents: 'none',
+              fontSize: '13px',
+              fontWeight: 500,
+              lineHeight: 1.35,
             }}
           >
-            <div
+            <span aria-hidden="true" style={{ fontSize: '16px' }}>⚠️</span>
+            <span>{errorToast}</span>
+            <button
+              onClick={() => setErrorToast(null)}
+              aria-label="Dismiss error"
               style={{
-                width: '36px',
-                height: '36px',
+                marginLeft: '8px',
+                padding: 0,
+                width: '24px',
+                height: '24px',
                 borderRadius: '50%',
-                background: 'rgba(255,255,255,0.18)',
+                background: 'rgba(255,255,255,0.2)',
+                border: 'none',
+                color: '#FFFFFF',
+                cursor: 'pointer',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
-                fontSize: '18px',
               }}
             >
-              ⚡
-            </div>
-            <div>
-              <div style={{ fontSize: '13px', opacity: 0.85, lineHeight: 1.2 }}>
-                {xpToast.message}
-              </div>
-              <div style={{ fontSize: '18px', fontWeight: 700, lineHeight: 1.2 }}>
-                +{xpToast.amount} XP
-              </div>
-            </div>
+              <X size={14} />
+            </button>
           </motion.div>
         )}
       </AnimatePresence>
@@ -1056,11 +1605,33 @@ function PromptCard({ row, onClick, onClose, isExpanded, index }: {
           {row.promptText}
         </p>
 
-        {row.contactName && (
-          <p style={{ fontSize: '13px', color: '#94A09A', margin: '8px 0 0' }}>
-            About {row.contactName}
-          </p>
-        )}
+        {(() => {
+          // Only surface the "About NAME" subtitle when it actually adds
+          // information. If the prompt text already mentions the contact
+          // (by full name OR first name), showing "About NAME" is
+          // redundant. If the prompt text mentions a DIFFERENT name than
+          // row.contactName (happens when the prompt template was
+          // substituted with one contact but contact_id resolves to
+          // another), the subtitle would be a mismatch — so suppress it.
+          if (!row.contactName) return null
+          const fullName = row.contactName.trim()
+          const firstName = fullName.split(/\s+/)[0]
+          const promptLower = (row.promptText || '').toLowerCase()
+          if (!firstName) return null
+          if (promptLower.includes(fullName.toLowerCase())) return null
+          if (promptLower.includes(firstName.toLowerCase())) return null
+          // Heuristic: if the prompt text contains any capitalized word
+          // that looks like a person name (not the first word), the
+          // template already has a name baked in — don't add a
+          // conflicting subtitle.
+          const inlineName = (row.promptText || '').match(/(?:^|\s)([A-Z][a-z]{2,})(?=['’]s|\s|$)/g)
+          if (inlineName && inlineName.length > 0) return null
+          return (
+            <p style={{ fontSize: '13px', color: '#94A09A', margin: '8px 0 0' }}>
+              About {fullName}
+            </p>
+          )
+        })()}
 
         {/* Bottom caption area */}
         <div style={{
@@ -1093,7 +1664,7 @@ const PROFILE_OPTIONS: Record<string, string[]> = {
   languages: ['English', 'Spanish', 'French', 'Mandarin', 'Arabic', 'Hindi', 'Portuguese', 'German', 'Japanese', 'Korean'],
 }
 
-function CardChainCard({ card, row, index, onCardSave, onAddCard, onMediaUploaded, onDelete, onFinish }: {
+function CardChainCard({ card, row, index, onCardSave, onAddCard, onMediaUploaded, onDelete, onFinish, isFinishing }: {
   card: ChainCard
   row: PromptRow
   index: number
@@ -1102,6 +1673,7 @@ function CardChainCard({ card, row, index, onCardSave, onAddCard, onMediaUploade
   onMediaUploaded: (files: { url: string; name: string; type: string }[]) => void
   onDelete?: () => void
   onFinish?: () => void
+  isFinishing?: boolean
 }) {
   const handleSave = useCallback((data: Record<string, any>) => {
     onCardSave(card.id, data)
@@ -1157,9 +1729,29 @@ function CardChainCard({ card, row, index, onCardSave, onAddCard, onMediaUploade
       case 'media-upload':
         return <MediaUploadCard onUpload={onMediaUploaded} />
       case 'media-item':
-        return <MediaItemCard url={card.data.url} name={card.data.name} type={card.data.type} addedBy={card.addedBy} />
+        return (
+          <MediaItemCard
+            url={card.data.url}
+            name={card.data.name}
+            type={card.data.type}
+            addedBy={card.addedBy}
+            mediaPath={card.data.path}
+            detectedFaces={card.data.faces}
+            mediaId={card.data.mediaId}
+          />
+        )
       case 'field-input':
-        return <FieldInputCard contactName={row.contactName} data={card.data} onSave={handleSave} saved={card.saved} />
+        return (
+          <FieldInputCard
+            contactName={row.contactName}
+            contactPhotoUrl={row.contactPhotoUrl}
+            missingField={row.missingField}
+            missingFieldLabel={getFieldLabel(row.missingField)}
+            data={card.data}
+            onSave={handleSave}
+            saved={card.saved}
+          />
+        )
       case 'pill-select':
         return <PillSelectCard label={row.promptText} options={PROFILE_OPTIONS[row.promptType] || PROFILE_OPTIONS.skills} data={card.data} onSave={handleSave} saved={card.saved} />
       case 'quote':
@@ -1191,7 +1783,15 @@ function CardChainCard({ card, row, index, onCardSave, onAddCard, onMediaUploade
       case 'song':
         return <SongCard data={card.data} onSave={handleSave} saved={card.saved} />
       case 'plus':
-        return <PlusCard onAdd={onAddCard} onFinish={onFinish} category={row.category} />
+        return (
+          <PlusCard
+            onAdd={onAddCard}
+            onFinish={onFinish}
+            category={row.category}
+            isFinishing={isFinishing}
+            xpReward={TYPE_CONFIG[row.promptType]?.xp ?? 10}
+          />
+        )
       default:
         return null
     }

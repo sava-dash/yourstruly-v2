@@ -64,7 +64,7 @@ interface RawMedia {
 const TABS: { key: TabKey; label: string }[] = [
   { key: 'all', label: 'All' },
   { key: 'memories', label: 'Memories' },
-  { key: 'photos', label: 'Photos' },
+  { key: 'photos', label: 'Media' },
   { key: 'wisdom', label: 'Wisdom' },
 ]
 
@@ -77,14 +77,15 @@ const VIEW_MODES: { key: ViewMode; icon: typeof Grid3X3; label: string }[] = [
 /** Transform raw DB rows into unified StoryItem objects */
 function toMemoryItems(memories: RawMemory[]): StoryItem[] {
   return memories.map((m) => {
-    const cover = m.memory_media?.find((mm) => mm.is_cover) ?? m.memory_media?.[0]
+    const cover = m.memory_media?.find((mm: any) => mm.is_cover) ?? m.memory_media?.[0]
     return {
       id: m.id,
       type: 'memory' as ContentType,
       title: m.title || 'Untitled Memory',
       subtitle: m.description?.slice(0, 120) ?? undefined,
-      imageUrl: cover?.file_url ?? undefined,
+      imageUrl: (cover as any)?.file_url ?? undefined,
       date: m.memory_date || m.created_at,
+      savedAt: m.created_at,
       mood: m.mood,
       locationName: m.location_name ?? undefined,
     }
@@ -98,6 +99,7 @@ function toWisdomItems(entries: RawWisdom[]): StoryItem[] {
     title: w.prompt_text || 'Untitled Wisdom',
     subtitle: w.response_text?.slice(0, 120) ?? undefined,
     date: w.created_at,
+    savedAt: w.created_at,
     category: w.category,
   }))
 }
@@ -111,12 +113,12 @@ function toPhotoItems(media: RawMedia[]): StoryItem[] {
     if (!m.file_url) return false
     const mem = m.memory
     if (mem && (mem as any).memory_type === 'interview') return false
-    const ft = m.file_type?.toLowerCase() || ''
+    // file_type is a simple enum: 'image' | 'video' | 'audio'
+    const ft = (m.file_type || '').toLowerCase()
+    if (ft === 'audio') return false
     const url = m.file_url.toLowerCase()
-    // Exclude audio files
-    if (ft.startsWith('audio/')) return false
     if (url.endsWith('.mp3') || url.endsWith('.wav') || url.endsWith('.m4a')) return false
-    return true // include everything else (images, videos, etc.)
+    return true // include images and videos
   })
 
   console.log('My Story: toPhotoItems input:', media.length, 'filtered:', filtered.length,
@@ -124,12 +126,19 @@ function toPhotoItems(media: RawMedia[]): StoryItem[] {
 
   return filtered.map((m) => {
     const locName = m.memory?.location_name || null
+    // Prefer the parent memory's memory_date so a photo attached to an
+    // old memory sorts with that memory, not with today's upload time.
+    const date =
+      (m.memory as any)?.memory_date ||
+      m.taken_at ||
+      m.created_at
     return {
       id: m.id,
       type: 'photo' as ContentType,
       title: locName || 'Photo',
       imageUrl: m.file_url,
-      date: m.taken_at || m.created_at,
+      date,
+      savedAt: m.created_at,
       locationName: locName ?? undefined,
     }
   })
@@ -236,12 +245,22 @@ export default function MyStoryPage() {
       if (!user || cancelled) return
       setUserId(user.id)
 
+      // Types we want to hide from the Memories tab. Filtered client-side
+      // because .or('memory_type.is.null,memory_type.not.in.(...)') gets
+      // mis-parsed by PostgREST — the commas inside the IN list confuse
+      // the OR parser and the whole query either errors or returns nothing.
+      const HIDDEN_MEMORY_TYPES = new Set([
+        'wisdom',
+        'onboarding_gallery',
+        'media_upload',
+        'interview',
+      ])
+
       const [memoriesRes, wisdomRes, mediaRes] = await Promise.all([
         supabase
           .from('memories')
           .select('*, memory_media(id, file_url, file_type, is_cover)')
           .eq('user_id', user.id)
-          .not('memory_type', 'in', '("wisdom","onboarding_gallery","media_upload","interview")')
           .order('memory_date', { ascending: false, nullsFirst: false }),
         supabase
           .from('knowledge_entries')
@@ -269,7 +288,12 @@ export default function MyStoryPage() {
       if (wisdomRes.error) console.error('My Story: wisdom fetch error:', wisdomRes.error)
       if (mediaRes.error) console.error('My Story: media fetch error:', mediaRes.error)
 
-      setMemories((memoriesRes.data as RawMemory[]) || [])
+      // Client-side exclude of non-display memory types. NULL memory_type
+      // (legacy cardchain rows) passes through.
+      const visibleMemories = ((memoriesRes.data as RawMemory[]) || []).filter(
+        (m: any) => !m.memory_type || !HIDDEN_MEMORY_TYPES.has(m.memory_type)
+      )
+      setMemories(visibleMemories)
       setWisdom((wisdomRes.data as RawWisdom[]) || [])
       // Normalize the joined memory field (Supabase returns it as array for singular joins)
       const normalizedMedia = (mediaRes.data || []).map((item: any) => ({
@@ -284,15 +308,25 @@ export default function MyStoryPage() {
     return () => { cancelled = true }
   }, [])
 
-  // Transform raw data into StoryItems
-  const memoryItems = useMemo(() => toMemoryItems(memories), [memories])
-  const wisdomItems = useMemo(() => toWisdomItems(wisdom), [wisdom])
-  const photoItems = useMemo(() => toPhotoItems(media), [media])
+  // Transform raw data into StoryItems. Every tab re-sorts by its
+  // resolved `date` field so ordering is stable even if the server-side
+  // ORDER BY diverges from the display date the user sees.
+  const byDateDesc = (a: StoryItem, b: StoryItem) =>
+    new Date(b.date).getTime() - new Date(a.date).getTime()
+  const memoryItems = useMemo(() => toMemoryItems(memories).sort(byDateDesc), [memories])
+  const wisdomItems = useMemo(() => toWisdomItems(wisdom).sort(byDateDesc), [wisdom])
+  const photoItems = useMemo(() => toPhotoItems(media).sort(byDateDesc), [media])
 
-  // Combine and sort by date (newest first) for "All" tab
+  // Combine everything for "All" tab, sorted by WHEN SAVED (latest first)
+  // so the user's most recent completions always show at the top regardless
+  // of what historical date the memory refers to.
   const allItems = useMemo(() => {
     return [...memoryItems, ...wisdomItems, ...photoItems].sort(
-      (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()
+      (a, b) => {
+        const aTime = new Date(a.savedAt || a.date).getTime()
+        const bTime = new Date(b.savedAt || b.date).getTime()
+        return bTime - aTime
+      }
     )
   }, [memoryItems, wisdomItems, photoItems])
 
@@ -528,7 +562,7 @@ export default function MyStoryPage() {
                 onClick={() => setShowAddModal(true)}
                 className="px-4 py-2 rounded-lg border border-[#2D5A3D] text-[#2D5A3D] text-sm font-medium hover:bg-[#2D5A3D]/5 transition-colors"
               >
-                Add Photos
+                Add Media
               </button>
             </div>
           </div>

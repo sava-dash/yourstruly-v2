@@ -221,7 +221,13 @@ export async function POST(
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    const { contactId, x, y } = await request.json()
+    const body = await request.json()
+    // Accept both camelCase (contactId) and snake_case (contact_id)
+    const contactId = body.contactId || body.contact_id
+    const boxLeft = body.box_left ?? (body.x != null ? Math.max(0, body.x - 0.05) : 0.45)
+    const boxTop = body.box_top ?? (body.y != null ? Math.max(0, body.y - 0.05) : 0.45)
+    const boxWidth = body.box_width ?? 0.1
+    const boxHeight = body.box_height ?? 0.1
 
     if (!contactId) {
       return NextResponse.json({ error: 'contactId required' }, { status: 400 })
@@ -234,10 +240,10 @@ export async function POST(
         media_id: mediaId,
         user_id: user.id,
         contact_id: contactId,
-        box_left: Math.max(0, (x || 0.5) - 0.05),
-        box_top: Math.max(0, (y || 0.5) - 0.05),
-        box_width: 0.1,
-        box_height: 0.1,
+        box_left: boxLeft,
+        box_top: boxTop,
+        box_width: boxWidth,
+        box_height: boxHeight,
         is_auto_detected: false,
       })
       .select('id')

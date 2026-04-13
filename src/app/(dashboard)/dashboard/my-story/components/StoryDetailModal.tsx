@@ -10,7 +10,10 @@ import {
   Lightbulb, Briefcase, Baby, Users,
   Activity, Moon, Palette, Compass, Utensils, GraduationCap, HelpCircle
 } from 'lucide-react'
+import dynamic from 'next/dynamic'
 import { type StoryItem, type ContentType } from './StoryCard'
+
+const FaceTagger = dynamic(() => import('@/components/media/FaceTagger'), { ssr: false })
 
 /* ------------------------------------------------------------------ */
 /*  Wisdom categories                                                  */
@@ -200,6 +203,7 @@ export default function StoryDetailModal({ item, onClose }: StoryDetailModalProp
   const [photoParentLoc, setPhotoParentLoc] = useState<{ location_name: string | null; location_lat: number | null; location_lng: number | null } | null>(null)
   const [collaborators, setCollaborators] = useState<{ id: string; contact_name: string; contributor_name: string | null; response_text: string | null; status: string; completed_at: string | null }[]>([])
   const [slideshowMode, setSlideshowMode] = useState(false)
+  const [taggingMode, setTaggingMode] = useState(false)
 
   // Audio
   const [isPlaying, setIsPlaying] = useState(false)
@@ -525,21 +529,30 @@ export default function StoryDetailModal({ item, onClose }: StoryDetailModalProp
             {/* ========================================================= */}
             {!loading && item.type === 'photo' && (
               <>
-                <div className="relative bg-[#1A1F1C] flex items-center justify-center overflow-hidden" style={{ minHeight: 340, maxHeight: '75vh' }}>
-                  {/* Warm film overlay */}
-                  <div className="absolute inset-0 bg-[#D4A574]/[0.04] mix-blend-multiply pointer-events-none z-10" />
-                  <Image
-                    src={photoMedia?.file_url || item.imageUrl || ''}
-                    alt={item.title}
-                    width={672}
-                    height={700}
-                    unoptimized
-                    className="object-contain w-full h-full relative z-0"
-                    style={{ maxHeight: '75vh' }}
-                  />
-                </div>
+                {taggingMode && photoMedia ? (
+                  <div className="relative" style={{ minHeight: 340 }}>
+                    <FaceTagger
+                      mediaId={photoMedia.id}
+                      imageUrl={photoMedia.file_url || item.imageUrl || ''}
+                    />
+                  </div>
+                ) : (
+                  <div className="relative bg-[#1A1F1C] flex items-center justify-center overflow-hidden" style={{ minHeight: 340, maxHeight: '75vh' }}>
+                    {/* Warm film overlay */}
+                    <div className="absolute inset-0 bg-[#D4A574]/[0.04] mix-blend-multiply pointer-events-none z-10" />
+                    <Image
+                      src={photoMedia?.file_url || item.imageUrl || ''}
+                      alt={item.title}
+                      width={672}
+                      height={700}
+                      unoptimized
+                      className="object-contain w-full h-full relative z-0"
+                      style={{ maxHeight: '75vh' }}
+                    />
+                  </div>
+                )}
                 <div className="p-5 sm:p-6">
-                  <div className="flex items-center gap-3 text-sm text-[#94A09A]">
+                  <div className="flex items-center gap-3 text-sm text-[#94A09A] flex-wrap">
                     <span className="flex items-center gap-1.5 bg-[#F5F0EA] rounded-full px-3 py-1.5">
                       <Calendar size={13} />{formatDateShort(item.date)}
                     </span>
@@ -547,6 +560,19 @@ export default function StoryDetailModal({ item, onClose }: StoryDetailModalProp
                       <span className="flex items-center gap-1.5 bg-[#F5F0EA] rounded-full px-3 py-1.5">
                         <MapPin size={13} />{item.locationName}
                       </span>
+                    )}
+                    {/* Tag People button */}
+                    {photoMedia && (
+                      <button
+                        onClick={() => setTaggingMode(t => !t)}
+                        className={`flex items-center gap-1.5 rounded-full px-3 py-1.5 text-sm font-medium transition-colors ${
+                          taggingMode
+                            ? 'bg-[#2D5A3D] text-white'
+                            : 'bg-[#F5F0EA] text-[#5A6660] hover:bg-[#E8E2D8]'
+                        }`}
+                      >
+                        <Users size={13} />{taggingMode ? 'Done Tagging' : 'Tag People'}
+                      </button>
                     )}
                     <span className="text-[#B8B0A4] text-xs ml-auto">{timeAgo(item.date)}</span>
                   </div>

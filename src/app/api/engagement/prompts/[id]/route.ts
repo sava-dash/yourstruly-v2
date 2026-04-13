@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
+import { createAdminClient } from '@/lib/supabase/admin';
 import type { AnswerPromptRequest, AnswerPromptResponse } from '@/types/engagement';
 import { transcribeAudio } from '@/lib/ai/transcription';
 // Using shared transcription lib for consistency
@@ -100,21 +101,53 @@ export async function POST(
     let memoryId: string | null = null;
     let contactUpdated = false;
     let xpAwarded = 0;
+    let mediaAttached = 0;
+
+    // Uploaded media URLs collected from cardchain media-item cards
+    const incomingMediaUrls: { url: string; name?: string; type?: string; mediaId?: string }[] = Array.isArray(
+      (body.responseData as any)?.mediaUrls
+    )
+      ? ((body.responseData as any).mediaUrls as any[]).filter(
+          (m) => m && typeof m.url === 'string' && m.url.trim().length > 0
+        )
+      : [];
+    const responseLocationName = (body.responseData as any)?.locationName as string | undefined;
+    const responseLocationLat = (body.responseData as any)?.locationLat as number | undefined;
+    const responseLocationLng = (body.responseData as any)?.locationLng as number | undefined;
+    // Normalize partial dates like "2016" or "March 2020" into valid ISO dates
+    const rawMemoryDate = (body.responseData as any)?.memoryDate as string | undefined;
+    let responseMemoryDate: string | undefined;
+    if (rawMemoryDate) {
+      const trimmed = rawMemoryDate.trim();
+      if (/^\d{4}$/.test(trimmed)) {
+        responseMemoryDate = `${trimmed}-01-01`;
+      } else if (/^\d{4}-\d{2}$/.test(trimmed)) {
+        responseMemoryDate = `${trimmed}-01`;
+      } else {
+        const d = new Date(trimmed);
+        responseMemoryDate = isNaN(d.getTime()) ? undefined : d.toISOString().split('T')[0];
+      }
+    }
 
     // === UNIFIED MEMORY CREATION FOR ALL CONTENT-GENERATING PROMPTS ===
-    // All user-generated content goes into the Memories table
     console.log('=== MEMORY CREATION CHECK ===');
     console.log('prompt.type:', prompt.type);
     console.log('body.responseText length:', body.responseText?.length || 0);
     console.log('body.responseAudioUrl:', body.responseAudioUrl || 'none');
+    console.log('[DEBUG] incomingMediaUrls:', JSON.stringify(incomingMediaUrls.map(m => ({ url: m.url?.slice(-30), mediaId: m.mediaId }))));
+    console.log('[DEBUG] responseLocationName:', responseLocationName, 'lat:', responseLocationLat, 'lng:', responseLocationLng);
+    console.log('[DEBUG] prompt.result_memory_id:', prompt.result_memory_id);
     console.log('body.responseVideoUrl:', body.responseVideoUrl || 'none');
     
     // These prompt types create MEMORY records (not wisdom)
     const MEMORY_CREATING_TYPES = [
-      'memory_prompt',   // general memories
-      'photo_backstory', // photo stories  
-      'favorites_firsts', // favorites and firsts
-      'postscript',      // future messages
+      'memory_prompt',     // general memories
+      'photo_backstory',   // photo stories
+      'favorites_firsts',  // favorites and firsts
+      'postscript',        // future messages
+      'connect_dots',      // "then & now" comparison memories
+      'highlight',         // short spotlights
+      'daily_checkin',     // quick daily thoughts
     ];
     
     // These prompt types create KNOWLEDGE/WISDOM entries (separate from memories)
@@ -129,6 +162,155 @@ export async function POST(
     
     console.log('shouldCreateMemory:', shouldCreateMemory, 'shouldCreateKnowledge:', shouldCreateKnowledge, 'hasContent:', hasContent);
 
+    // Insert rows into memory_media for cardchain-uploaded files.
+    // Uses the ADMIN client (service role) because memory_media has RLS
+    // enabled and the anon-key client's INSERT is denied. This mirrors
+    // what save-conversation does.
+    // - If `memoryIdArg` is given, link them to that memory so they appear inside it.
+    // - Otherwise insert with memory_id=null so they still show in the Media tab.
+    // Deduplicates against existing rows by file_url so re-saves are idempotent.
+    const attachChainMedia = async (memoryIdArg: string | null): Promise<number> => {
+      console.log('[attachChainMedia] called with memoryId:', memoryIdArg, 'mediaCount:', incomingMediaUrls.length);
+      if (incomingMediaUrls.length === 0) return 0;
+      try {
+        const adminClient = createAdminClient();
+        // Skip any file URLs already recorded for this user to avoid duplicates
+        // on re-finish or multi-call flows.
+        const { data: existing } = await adminClient
+          .from('memory_media')
+          .select('file_url')
+          .eq('user_id', user.id)
+          .in('file_url', incomingMediaUrls.map((m) => m.url));
+        // STEP 1: Check for orphan rows — the upload endpoint creates
+        // memory_media rows with memory_id=NULL. If we have a memory to
+        // link them to, UPDATE rather than re-insert.
+        // Prefer direct mediaId linking (reliable) over URL matching (fragile).
+        const allUrls = incomingMediaUrls.map((m) => m.url);
+        const knownMediaIds = incomingMediaUrls
+          .map((m) => m.mediaId)
+          .filter((id): id is string => !!id);
+        if (memoryIdArg) {
+          let orphanRows: any[] = [];
+          // Try ID-based lookup first
+          if (knownMediaIds.length > 0) {
+            const { data: idRows } = await adminClient
+              .from('memory_media')
+              .select('id, file_url')
+              .eq('user_id', user.id)
+              .is('memory_id', null)
+              .in('id', knownMediaIds);
+            orphanRows = idRows || [];
+          }
+          // Fall back to URL-based lookup for any without mediaId
+          if (orphanRows.length < incomingMediaUrls.length) {
+            const foundIds = new Set(orphanRows.map((r: any) => r.id));
+            const remainingUrls = allUrls.filter((url) => {
+              return !orphanRows.some((r: any) => r.file_url === url);
+            });
+            if (remainingUrls.length > 0) {
+              const { data: urlRows } = await adminClient
+                .from('memory_media')
+                .select('id, file_url')
+                .eq('user_id', user.id)
+                .is('memory_id', null)
+                .in('file_url', remainingUrls);
+              for (const r of urlRows || []) {
+                if (!foundIds.has(r.id)) {
+                  orphanRows.push(r);
+                  foundIds.add(r.id);
+                }
+              }
+            }
+          }
+          const orphanIds = orphanRows.map((r: any) => r.id);
+          const orphanUrlSet = new Set(orphanRows.map((r: any) => r.file_url));
+
+          if (orphanIds.length > 0) {
+            // First orphan becomes cover
+            await adminClient
+              .from('memory_media')
+              .update({ memory_id: memoryIdArg, is_cover: true })
+              .in('id', orphanIds.slice(0, 1));
+            if (orphanIds.length > 1) {
+              await adminClient
+                .from('memory_media')
+                .update({ memory_id: memoryIdArg })
+                .in('id', orphanIds.slice(1));
+            }
+            console.log('[attachChainMedia] linked', orphanIds.length, 'orphan rows to memory', memoryIdArg);
+
+            // Insert anything NOT in orphans AND NOT in existing table
+            const allExisting = new Set([
+              ...orphanUrlSet,
+              ...((existing || []).map((e: any) => e.file_url)),
+            ]);
+            const brandNew = incomingMediaUrls
+              .filter((m) => !allExisting.has(m.url))
+              .map((m, i) => {
+                const hint = (m.type || m.url || '').toLowerCase();
+                const fileType = hint.startsWith('video') || /\.(mp4|mov|webm|m4v)(\?|$)/.test(hint)
+                  ? 'video'
+                  : hint.startsWith('audio') || /\.(mp3|wav|m4a|ogg)(\?|$)/.test(hint)
+                    ? 'audio'
+                    : 'image';
+                // Derive file_key from URL path
+                let fileKey = m.url;
+                try { fileKey = new URL(m.url).pathname.split('/').slice(-2).join('/'); } catch {}
+                return {
+                  memory_id: memoryIdArg,
+                  user_id: user.id,
+                  file_url: m.url,
+                  file_key: fileKey,
+                  file_type: fileType,
+                  is_cover: false,
+                  sort_order: orphanIds.length + i,
+                };
+              });
+            if (brandNew.length > 0) {
+              await adminClient.from('memory_media').insert(brandNew);
+            }
+            return orphanIds.length + brandNew.length;
+          }
+        }
+
+        // STEP 2: No orphans — fresh insert for URLs not already in DB
+        const existingSet = new Set((existing || []).map((e: any) => e.file_url));
+        const toInsert = incomingMediaUrls
+          .filter((m) => !existingSet.has(m.url))
+          .map((m, i) => {
+            const hint = (m.type || m.url || '').toLowerCase();
+            const fileType = hint.startsWith('video') || /\.(mp4|mov|webm|m4v)(\?|$)/.test(hint)
+              ? 'video'
+              : hint.startsWith('audio') || /\.(mp3|wav|m4a|ogg)(\?|$)/.test(hint)
+                ? 'audio'
+                : 'image';
+            let fileKey = m.url;
+            try { fileKey = new URL(m.url).pathname.split('/').slice(-2).join('/'); } catch {}
+            return {
+              memory_id: memoryIdArg,
+              user_id: user.id,
+              file_url: m.url,
+              file_key: fileKey,
+              file_type: fileType,
+              is_cover: memoryIdArg ? i === 0 : false,
+              sort_order: i,
+            };
+          });
+        if (toInsert.length === 0) return 0;
+        console.log('[attachChainMedia] inserting', toInsert.length, 'rows for memory', memoryIdArg);
+        const { error: insErr } = await adminClient.from('memory_media').insert(toInsert);
+        if (insErr) {
+          console.error('[attachChainMedia] INSERT FAILED:', insErr);
+          return 0;
+        }
+        console.log('[attachChainMedia] SUCCESS: attached', toInsert.length, 'media to memory', memoryIdArg);
+        return toInsert.length;
+      } catch (e) {
+        console.error('attachChainMedia crashed:', e);
+        return 0;
+      }
+    };
+
     // Fetch photo metadata for photo_backstory prompts (to inherit date/location)
     let photoMeta: any = null;
     if (prompt.type === 'photo_backstory' && prompt.photo_id) {
@@ -140,11 +322,49 @@ export async function POST(
       photoMeta = mediaData;
       console.log('Photo metadata for backstory:', photoMeta);
     }
+
+    // For non-backstory prompts, check if any of the uploaded photos
+    // have EXIF GPS data (reverse-geocoded during upload). Use the
+    // first photo's location as a fallback for the memory's location
+    // when the user didn't fill in the when-where card.
+    let uploadedPhotoMeta: { location_name?: string; lat?: number; lng?: number; taken_at?: string } | null = null;
+    if (!photoMeta && incomingMediaUrls.length > 0) {
+      try {
+        const adminClient = createAdminClient();
+        const { data: mediaRows } = await adminClient
+          .from('memory_media')
+          .select('exif_lat, exif_lng, taken_at')
+          .eq('user_id', user.id)
+          .in('file_url', incomingMediaUrls.map((m) => m.url))
+          .not('exif_lat', 'is', null)
+          .limit(1);
+        const row = (mediaRows || [])[0] as any;
+        if (row?.exif_lat && row?.exif_lng) {
+          // Reverse-geocode was already done during upload and stored in
+          // the response, but the memory_media table doesn't have
+          // location_name. Re-geocode from the EXIF coords.
+          let locName: string | null = null;
+          try {
+            const { reverseGeocode } = await import('@/lib/geo/reverseGeocode');
+            locName = await reverseGeocode(row.exif_lat, row.exif_lng);
+          } catch {}
+          uploadedPhotoMeta = {
+            location_name: locName || undefined,
+            lat: row.exif_lat,
+            lng: row.exif_lng,
+            taken_at: row.taken_at || undefined,
+          };
+          console.log('Uploaded photo EXIF metadata:', uploadedPhotoMeta);
+        }
+      } catch (e) {
+        console.warn('Failed to fetch uploaded photo EXIF:', e);
+      }
+    }
     
     // === KNOWLEDGE ENTRY CREATION (wisdom prompts - separate from memories) ===
     if (shouldCreateKnowledge && hasContent) {
-      console.log('=== CREATING KNOWLEDGE ENTRY (not memory) ===');
-      
+      console.log('=== CREATING/UPDATING KNOWLEDGE ENTRY (not wisdom-as-memory) ===');
+
       // Transcribe audio if we have audio but no text
       let responseText = body.responseText;
       if (!responseText && body.responseAudioUrl) {
@@ -157,31 +377,61 @@ export async function POST(
           // Continue without transcription - audio will still be saved
         }
       }
-      
+
       const tags: string[] = ['wisdom'];
       if (prompt.personalization_context?.interest) tags.push(prompt.personalization_context.interest);
       if (prompt.personalization_context?.skill) tags.push(prompt.personalization_context.skill);
       if (prompt.category) tags.push(prompt.category);
-      
+
       const category = prompt.category || 'life_lessons';
 
-      const { data: newKnowledge, error: knowledgeError } = await supabase
+      // Dedup guard: the cardchain may call answerPrompt more than once per
+      // prompt (per-card auto-save + final Save & Continue). Reuse the
+      // existing knowledge entry if one already exists for this source
+      // prompt instead of creating duplicates.
+      let newKnowledge: any = null;
+      let knowledgeError: any = null;
+      const { data: existingKnowledge } = await supabase
         .from('knowledge_entries')
-        .insert({
-          user_id: user.id,
-          category: category,
-          subcategory: prompt.personalization_context?.skill || prompt.personalization_context?.interest,
-          prompt_text: prompt.prompt_text,
-          response_text: responseText || null,
-          audio_url: body.responseAudioUrl || null,
-          related_interest: prompt.personalization_context?.interest || null,
-          related_skill: prompt.personalization_context?.skill || null,
-          related_hobby: prompt.personalization_context?.hobby || null,
-          source_prompt_id: promptId,
-          tags: tags,
-        })
-        .select()
-        .single();
+        .select('id')
+        .eq('source_prompt_id', promptId)
+        .eq('user_id', user.id)
+        .maybeSingle();
+
+      if (existingKnowledge?.id) {
+        const { data: updated, error: updErr } = await supabase
+          .from('knowledge_entries')
+          .update({
+            response_text: responseText || null,
+            audio_url: body.responseAudioUrl || null,
+            tags,
+          })
+          .eq('id', existingKnowledge.id)
+          .select()
+          .single();
+        newKnowledge = updated;
+        knowledgeError = updErr;
+      } else {
+        const { data: inserted, error: insErr } = await supabase
+          .from('knowledge_entries')
+          .insert({
+            user_id: user.id,
+            category: category,
+            subcategory: prompt.personalization_context?.skill || prompt.personalization_context?.interest,
+            prompt_text: prompt.prompt_text,
+            response_text: responseText || null,
+            audio_url: body.responseAudioUrl || null,
+            related_interest: prompt.personalization_context?.interest || null,
+            related_skill: prompt.personalization_context?.skill || null,
+            related_hobby: prompt.personalization_context?.hobby || null,
+            source_prompt_id: promptId,
+            tags: tags,
+          })
+          .select()
+          .single();
+        newKnowledge = inserted;
+        knowledgeError = insErr;
+      }
 
       if (knowledgeError) {
         console.error('=== KNOWLEDGE ENTRY INSERT FAILED ===');
@@ -197,6 +447,10 @@ export async function POST(
           .from('engagement_prompts')
           .update({ result_knowledge_id: newKnowledge.id })
           .eq('id', promptId);
+
+        // Attach any cardchain-uploaded media so it shows up in the Media tab.
+        // Knowledge entries don't own media directly, so memory_id is null.
+        mediaAttached += await attachChainMedia(null);
       }
     }
     
@@ -212,20 +466,57 @@ export async function POST(
       memoryId = prompt.result_memory_id;
 
       // Still update the memory with fresh content if this call has new text
-      // (the second call usually has the fuller response aggregated from all cards)
+      // (the second call usually has the fuller response aggregated from all cards).
+      // Also patch in location + date which may not have been available during
+      // the initial auto-save (when-where card saves after the text card).
       let updatedDescription = body.responseText;
       if (!updatedDescription && body.responseAudioUrl) {
         try { updatedDescription = await transcribeAudio(body.responseAudioUrl); } catch {}
       }
+      const updatePayload: Record<string, any> = {};
       if (updatedDescription) {
-        await supabase
+        updatePayload.description = updatedDescription;
+        updatePayload.audio_url = body.responseAudioUrl || null;
+        updatePayload.video_url = body.responseVideoUrl || null;
+      }
+      if (responseLocationName) updatePayload.location_name = responseLocationName;
+      if (responseLocationLat != null) updatePayload.location_lat = responseLocationLat;
+      if (responseLocationLng != null) updatePayload.location_lng = responseLocationLng;
+      if (responseMemoryDate) updatePayload.memory_date = responseMemoryDate;
+      if (Object.keys(updatePayload).length > 0) {
+        console.log('[DEBUG] Updating memory', prompt.result_memory_id, 'with:', JSON.stringify(Object.keys(updatePayload)));
+        const adminClient = createAdminClient();
+        const { error: updateErr } = await adminClient
           .from('memories')
-          .update({
-            description: updatedDescription,
-            audio_url: body.responseAudioUrl || null,
-            video_url: body.responseVideoUrl || null,
-          })
+          .update(updatePayload)
           .eq('id', prompt.result_memory_id);
+        if (updateErr) {
+          console.error('[DEBUG] Memory update FAILED:', updateErr);
+        }
+      }
+
+      // Attach any newly uploaded cardchain media to the existing memory
+      mediaAttached += await attachChainMedia(prompt.result_memory_id);
+
+      // Link tagged people to the existing memory
+      const taggedPeopleExisting = (body.responseData as any)?.taggedPeople as { id: string; name: string }[] | undefined;
+      if (taggedPeopleExisting && taggedPeopleExisting.length > 0) {
+        const { data: memMedia } = await supabase
+          .from('memory_media')
+          .select('id')
+          .eq('memory_id', prompt.result_memory_id)
+          .limit(1);
+        const mediaId = memMedia?.[0]?.id;
+        if (mediaId) {
+          const faceTagRows = taggedPeopleExisting.map((p) => ({
+            media_id: mediaId,
+            contact_id: p.id,
+            user_id: user.id,
+            is_confirmed: true,
+            source: 'cardchain_tag',
+          }));
+          await supabase.from('memory_face_tags').upsert(faceTagRows, { onConflict: 'media_id,contact_id', ignoreDuplicates: true });
+        }
       }
     } else if (shouldCreateMemory && hasContent) {
       // Build tags based on prompt type and context
@@ -259,12 +550,18 @@ export async function POST(
           user_id: user.id,
           title: prompt.prompt_text?.substring(0, 100) || 'Memory',
           description: memoryDescription || '🎤 Voice memory recorded',
+          // `memory_type` must be set explicitly — the My Story query uses
+          // NOT IN (...) which excludes NULL rows in Postgres, so cardchain
+          // memories with null memory_type would silently disappear.
+          memory_type: prompt.type === 'photo_backstory' ? 'photo_story' : 'memory',
           audio_url: body.responseAudioUrl || null,
           video_url: body.responseVideoUrl || null,
-          memory_date: photoMeta?.taken_at || new Date().toISOString(),
-          location_name: photoMeta?.location_name || null,
-          location_lat: photoMeta?.location_lat || null,
-          location_lng: photoMeta?.location_lng || null,
+          // Location priority: 1) photo_backstory's linked photo EXIF
+          // 2) uploaded photo EXIF 3) when-where card input 4) null
+          memory_date: photoMeta?.taken_at || uploadedPhotoMeta?.taken_at || responseMemoryDate || new Date().toISOString(),
+          location_name: photoMeta?.location_name || uploadedPhotoMeta?.location_name || responseLocationName || null,
+          location_lat: photoMeta?.location_lat ?? uploadedPhotoMeta?.lat ?? responseLocationLat ?? null,
+          location_lng: photoMeta?.location_lng ?? uploadedPhotoMeta?.lng ?? responseLocationLng ?? null,
           tags,
         })
         .select()
@@ -298,17 +595,53 @@ export async function POST(
             .eq('id', prompt.photo_id);
           console.log('Linked photo to memory');
         }
+
+        // Attach any cardchain-uploaded media to the new memory.
+        // First row becomes the cover so the memory has a thumbnail.
+        mediaAttached += await attachChainMedia(newMemory.id);
+
+        // Link tagged people (from PeoplePresentCard) to the memory
+        // so the slideshow "People" section can display them.
+        const taggedPeople = (body.responseData as any)?.taggedPeople as { id: string; name: string }[] | undefined;
+        if (taggedPeople && taggedPeople.length > 0) {
+          // Get any media IDs for this memory to attach face tags to
+          const { data: memMedia } = await supabase
+            .from('memory_media')
+            .select('id')
+            .eq('memory_id', newMemory.id)
+            .limit(1);
+          const mediaId = memMedia?.[0]?.id;
+          if (mediaId) {
+            const faceTagRows = taggedPeople.map((p) => ({
+              media_id: mediaId,
+              contact_id: p.id,
+              user_id: user.id,
+              is_confirmed: true,
+              source: 'cardchain_tag',
+            }));
+            await supabase.from('memory_face_tags').insert(faceTagRows);
+          }
+        }
       }
     } else if (!shouldCreateKnowledge) {
       console.log('Skipping memory creation - shouldCreateMemory:', shouldCreateMemory, 'hasContent:', hasContent);
+      // Even if we didn't create a memory or knowledge entry (e.g. missing_info,
+      // tag_person, profile updates), uploaded media should still appear in the
+      // user's Media tab. Attach with memory_id=null.
+      mediaAttached += await attachChainMedia(null);
     }
 
     // === XP AWARDING ===
     // Only award XP once per prompt — skip if prompt was already answered previously
     // (happens when cardchain triggers answerPrompt more than once per prompt).
+    // Also skip if the caller passes skipXp=true — the card-chain dashboard awards
+    // XP per-card on the client via /api/xp, so the server must not double-count.
     const alreadyAnswered = !!(prompt.result_memory_id || prompt.result_knowledge_id || prompt.status === 'answered');
+    const skipXp = (body as any).skipXp === true;
     try {
-      if (alreadyAnswered) {
+      if (skipXp) {
+        console.log('=== SKIPPING XP — caller opted out (skipXp=true) ===');
+      } else if (alreadyAnswered) {
         console.log('=== SKIPPING XP — prompt already answered previously ===');
       } else {
         const xpAmount = XP_REWARDS[prompt.type] || 10;
@@ -415,7 +748,8 @@ export async function POST(
       contactId: prompt.contact_id || undefined,
       contactUpdated,
       xpAwarded,
-    };
+      mediaAttached,
+    } as AnswerPromptResponse & { mediaAttached: number };
 
     console.log('=== ANSWER RESPONSE ===');
     console.log('memoryId:', memoryId);

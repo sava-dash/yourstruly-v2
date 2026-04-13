@@ -140,9 +140,9 @@ export function EnhancedOnboardingFlow({ onComplete, onSkipAll }: EnhancedOnboar
 
   // Step navigation
   const stepOrder: OnboardingStep[] = [
-    'welcome', 'name', 'interests', 'hobbies', 'skills', 
-    'personality', 'life-goals', 'religion', 'location', 
-    'favorite-quote', 'background', 'heartfelt-question', 
+    'welcome', 'name', 'interests', 'hobbies', 'skills',
+    'personality', 'life-goals', 'religion', 'location',
+    'favorite-quote', 'background',
     'image-upload', 'celebration'
   ];
   
@@ -368,32 +368,14 @@ export function EnhancedOnboardingFlow({ onComplete, onSkipAll }: EnhancedOnboar
               value={data.background}
               onChange={(background) => updateData({ background })}
               onBack={goBack}
-              onContinue={() => setStep('heartfelt-question')}
+              onContinue={() => setStep('image-upload')}
             />
-          )}
-
-          {step === 'heartfelt-question' && (
-            <motion.div
-              key="heartfelt"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              className="w-full"
-            >
-              <HeartfeltConversation
-                whyHere={data.background}
-                whatDrives={data.lifeGoals}
-                userName={data.name}
-                onComplete={handleHeartfeltComplete}
-                onSkip={() => setStep('image-upload')}
-              />
-            </motion.div>
           )}
 
           {step === 'image-upload' && (
             <ImageUploadStep
               key="image-upload"
-              onBack={() => setStep('heartfelt-question')}
+              onBack={() => setStep('background')}
               onContinue={handleImageUploadComplete}
               onSkip={() => setStep('celebration')}
             />

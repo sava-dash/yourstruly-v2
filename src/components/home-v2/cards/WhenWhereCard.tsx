@@ -204,8 +204,6 @@ export function WhenWhereCard({ data, onSave, saved }: WhenWhereCardProps) {
         )}
       </div>
 
-      <p className="text-center text-xs text-[#B8562E]">🎉 Earn +15 XP</p>
-
       <button
         onClick={handleSave}
         disabled={(!location.trim() && !date.trim()) || saving}

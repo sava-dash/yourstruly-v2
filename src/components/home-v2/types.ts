@@ -49,10 +49,17 @@ export interface PromptRow {
   promptText: string
   promptType: string
   category: PromptCategory
+  /** Raw fine-grained category from the DB (e.g. "childhood", "relationships", "career") */
+  dbCategory?: string | null
+  /** Life chapter tag from the DB, if any */
+  lifeChapter?: string | null
   photoUrl?: string
   photoId?: string
   contactName?: string
   contactId?: string
+  contactPhotoUrl?: string
+  /** Raw missing-field identifier from the prompt RPC (e.g. "birth_date") */
+  missingField?: string
   metadata?: Record<string, any>
   /** The chain of cards for this prompt */
   cards: ChainCard[]
@@ -104,9 +111,9 @@ export function generateInitialCards(category: PromptCategory, promptType: strin
     case 'wisdom':
       return ['text-voice-video', 'media-upload', 'plus']
     case 'contact':
-      return ['field-input']
+      return ['field-input', 'plus']
     case 'profile':
-      return ['pill-select']
+      return ['pill-select', 'plus']
     case 'favorites':
       return ['list-item', 'plus']
     default:

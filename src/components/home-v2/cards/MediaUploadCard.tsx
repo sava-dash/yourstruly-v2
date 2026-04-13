@@ -3,8 +3,20 @@
 import { useState, useRef } from 'react'
 import { Upload, Image as ImageIcon, Loader2, Check, AlertCircle } from 'lucide-react'
 
+interface UploadedFile {
+  url: string
+  name: string
+  type: string
+  /** Storage path */
+  path?: string
+  /** Detected faces from Rekognition */
+  faces?: any[]
+  /** memory_media row ID — created during upload for face tagging */
+  mediaId?: string
+}
+
 interface MediaUploadCardProps {
-  onUpload: (files: { url: string; name: string; type: string }[]) => void
+  onUpload: (files: UploadedFile[]) => void
 }
 
 type UploadStatus = 'idle' | 'uploading' | 'success' | 'error'
@@ -24,7 +36,7 @@ export function MediaUploadCard({ onUpload }: MediaUploadCardProps) {
     const total = files.length
     setProgress({ current: 0, total })
 
-    const uploaded: { url: string; name: string; type: string }[] = []
+    const uploaded: UploadedFile[] = []
     const failures: string[] = []
 
     for (const file of Array.from(files)) {
@@ -41,7 +53,14 @@ export function MediaUploadCard({ onUpload }: MediaUploadCardProps) {
         }
         const data = await res.json()
         if (data.url) {
-          uploaded.push({ url: data.url, name: file.name, type: file.type })
+          uploaded.push({
+            url: data.url,
+            name: file.name,
+            type: file.type,
+            path: data.path,
+            faces: data.faces,
+            mediaId: data.mediaId,
+          })
         }
       } catch (err: any) {
         failures.push(err?.message || `Failed: ${file.name}`)

@@ -242,7 +242,7 @@ Respond in this exact JSON format:
   // Handle wisdom
   if (parsed.classification === 'WISDOM' && parsed.wisdomStatement) {
     newState.wisdomEntries = [
-      ...engineState.wisdomEntries,
+      ...(engineState.wisdomEntries || []),
       { statement: parsed.wisdomStatement },
     ];
   }

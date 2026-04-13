@@ -19,6 +19,15 @@ interface ResolvedPerson {
   contactName: string | null;
   relationship: string | null;
   isNew: boolean;
+  /** True when the match was made via a relationship word ("my father"
+      → user's father contact). The client should confirm before
+      auto-selecting, since the spoken word might refer to someone
+      other than the default relationship holder. */
+  matchedByRelation?: boolean;
+  /** True when the spoken name is itself a relation word (e.g. "father",
+      "mom") rather than a proper name. Used by the client to skip the
+      "create a new contact called Father" flow when no match is found. */
+  isRelationWord?: boolean;
 }
 
 const SYSTEM_PROMPT = `You are a structured data extractor for a personal memory/story app. Given a voice transcript and optional context, extract the following fields as JSON:
@@ -145,39 +154,106 @@ export async function POST(request: NextRequest) {
 
       const allContacts = contacts || [];
 
+      // Nickname → canonical relationship_type.
+      // Both sides are canonical (mother/father/etc.), so we can also look
+      // up by the canonical form directly below.
       const relationshipMap: Record<string, string> = {
-        'mom': 'mother', 'mama': 'mother', 'ma': 'mother', 'mommy': 'mother',
-        'dad': 'father', 'papa': 'father', 'pa': 'father', 'daddy': 'father',
-        'grandma': 'grandmother', 'nana': 'grandmother', 'granny': 'grandmother', 'gram': 'grandmother',
-        'grandpa': 'grandfather', 'granddad': 'grandfather', 'gramps': 'grandfather',
-        'wife': 'spouse', 'husband': 'spouse', 'hubby': 'spouse',
-        'bro': 'brother', 'sis': 'sister',
+        'mom': 'mother', 'mama': 'mother', 'ma': 'mother', 'mommy': 'mother', 'mother': 'mother', 'mum': 'mother', 'mummy': 'mother',
+        'dad': 'father', 'papa': 'father', 'pa': 'father', 'daddy': 'father', 'father': 'father', 'pop': 'father', 'pops': 'father',
+        'grandma': 'grandmother', 'nana': 'grandmother', 'granny': 'grandmother', 'gram': 'grandmother', 'grandmother': 'grandmother', 'grammy': 'grandmother',
+        'grandpa': 'grandfather', 'granddad': 'grandfather', 'gramps': 'grandfather', 'grandfather': 'grandfather',
+        'wife': 'spouse', 'husband': 'spouse', 'hubby': 'spouse', 'spouse': 'spouse', 'partner': 'partner',
+        'bro': 'brother', 'brother': 'brother',
+        'sis': 'sister', 'sister': 'sister',
+        'son': 'son', 'daughter': 'daughter', 'kid': 'child', 'child': 'child',
+        'uncle': 'uncle', 'aunt': 'aunt', 'auntie': 'aunt',
+        'cousin': 'cousin',
+        'nephew': 'nephew', 'niece': 'niece',
+        'mother-in-law': 'mother_in_law', 'father-in-law': 'father_in_law',
+        'brother-in-law': 'brother_in_law', 'sister-in-law': 'sister_in_law',
+        'stepmom': 'stepmother', 'stepdad': 'stepfather', 'stepmother': 'stepmother', 'stepfather': 'stepfather',
+        'stepbrother': 'stepbrother', 'stepsister': 'stepsister',
+        'boyfriend': 'partner', 'girlfriend': 'partner',
+        'friend': 'friend', 'bff': 'friend', 'bestie': 'friend',
       };
 
-      resolvedPeople = peopleNames.map((spokenName: string) => {
-        const nameLower = spokenName.toLowerCase().trim();
+      // Strip leading articles / possessives Claude sometimes emits
+      // ("my mother", "The father") so we can key the map cleanly.
+      const normalizeSpoken = (s: string): string =>
+        s.toLowerCase().trim().replace(/^(my|our|the|a|an)\s+/i, '').trim();
 
-        // Exact match on full_name or nickname
+      resolvedPeople = peopleNames.map((spokenName: string) => {
+        const nameLower = normalizeSpoken(spokenName);
+        const isRelationWord = nameLower in relationshipMap;
+
+        // 1. Exact match on full_name or nickname
         const exact = allContacts.find(c =>
           c.full_name?.toLowerCase() === nameLower || c.nickname?.toLowerCase() === nameLower
         );
-        if (exact) return { name: spokenName, contactId: exact.id, contactName: exact.full_name, relationship: exact.relationship_type, isNew: false };
-
-        // First-name match
-        const firstName = allContacts.find(c => {
-          const fn = c.full_name?.split(' ')[0]?.toLowerCase();
-          return fn === nameLower || c.nickname?.toLowerCase() === nameLower;
-        });
-        if (firstName) return { name: spokenName, contactId: firstName.id, contactName: firstName.full_name, relationship: firstName.relationship_type, isNew: false };
-
-        // Relationship word match ("Mom" → mother)
-        const mapped = relationshipMap[nameLower];
-        if (mapped) {
-          const rel = allContacts.find(c => c.relationship_type?.toLowerCase() === mapped);
-          if (rel) return { name: spokenName, contactId: rel.id, contactName: rel.full_name, relationship: rel.relationship_type, isNew: false };
+        if (exact) {
+          return {
+            name: spokenName,
+            contactId: exact.id,
+            contactName: exact.full_name,
+            relationship: exact.relationship_type,
+            isNew: false,
+          };
         }
 
-        return { name: spokenName, contactId: null, contactName: null, relationship: null, isNew: true };
+        // 2. First-name / nickname match (skip if the spoken name is a
+        //    pure relation word — we don't want "mother" colliding with
+        //    a random person whose first name happens to be Mother)
+        if (!isRelationWord) {
+          const firstName = allContacts.find(c => {
+            const fn = c.full_name?.split(' ')[0]?.toLowerCase();
+            return fn === nameLower || c.nickname?.toLowerCase() === nameLower;
+          });
+          if (firstName) {
+            return {
+              name: spokenName,
+              contactId: firstName.id,
+              contactName: firstName.full_name,
+              relationship: firstName.relationship_type,
+              isNew: false,
+            };
+          }
+        }
+
+        // 3. Relation word → canonical type → find contact by relationship_type
+        if (isRelationWord) {
+          const canonical = relationshipMap[nameLower];
+          const rel = allContacts.find(c => c.relationship_type?.toLowerCase() === canonical);
+          if (rel) {
+            return {
+              name: spokenName,
+              contactId: rel.id,
+              contactName: rel.full_name,
+              relationship: rel.relationship_type,
+              isNew: false,
+              matchedByRelation: true, // flag → client shows "Did you mean?" confirmation
+              isRelationWord: true,
+            };
+          }
+          // Relation word with no contact → flag so the client skips the
+          // "create a new contact called Father" flow entirely.
+          return {
+            name: spokenName,
+            contactId: null,
+            contactName: null,
+            relationship: canonical,
+            isNew: true,
+            isRelationWord: true,
+          };
+        }
+
+        // 4. Proper name not in contacts → normal "new contact" flow
+        return {
+          name: spokenName,
+          contactId: null,
+          contactName: null,
+          relationship: null,
+          isNew: true,
+        };
       });
     }
 

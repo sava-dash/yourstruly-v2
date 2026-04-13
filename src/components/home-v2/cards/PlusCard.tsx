@@ -8,6 +8,9 @@ interface PlusCardProps {
   onAdd: (type: CardType) => void
   onFinish?: () => void
   category: string
+  isFinishing?: boolean
+  /** XP awarded on Save & Finish (per-chain, shown on the button) */
+  xpReward?: number
 }
 
 const ADD_OPTIONS: { type: CardType; label: string; icon: any; description: string }[] = [
@@ -19,7 +22,7 @@ const ADD_OPTIONS: { type: CardType; label: string; icon: any; description: stri
   { type: 'invite-collaborator', label: 'Invite Collaborator', icon: UserPlus, description: 'Invite someone to add their perspective' },
 ]
 
-export function PlusCard({ onAdd, onFinish, category }: PlusCardProps) {
+export function PlusCard({ onAdd, onFinish, category, isFinishing = false, xpReward }: PlusCardProps) {
   // Filter options based on category
   const options = ADD_OPTIONS.filter(opt => {
     if (category === 'contact') return false
@@ -30,15 +33,35 @@ export function PlusCard({ onAdd, onFinish, category }: PlusCardProps) {
   // Show options directly — no extra click needed
   return (
     <div className="h-full flex flex-col justify-center p-4">
-      {/* Save & Finish button at top */}
+      {/* Save & Finish button at top — chain XP lives here */}
       {onFinish && (
         <motion.button
-          whileTap={{ scale: 0.96 }}
-          onClick={onFinish}
-          className="w-full flex items-center justify-center gap-2 py-3.5 mb-4 rounded-xl bg-[#2D5A3D] text-white text-sm font-semibold hover:bg-[#234A31] transition-colors shadow-sm"
+          whileTap={isFinishing ? undefined : { scale: 0.96 }}
+          onClick={isFinishing ? undefined : onFinish}
+          disabled={isFinishing}
+          aria-busy={isFinishing}
+          className={`w-full flex items-center justify-center gap-2 py-3.5 mb-4 rounded-xl text-white text-sm font-semibold transition-colors shadow-sm ${
+            isFinishing
+              ? 'bg-[#2D5A3D]/60 cursor-not-allowed'
+              : 'bg-[#2D5A3D] hover:bg-[#234A31]'
+          }`}
         >
           <CheckCircle size={16} />
-          Save & Finish
+          {isFinishing
+            ? 'Saving…'
+            : (
+              <span className="flex items-center gap-2">
+                Save &amp; Continue
+                {typeof xpReward === 'number' && xpReward > 0 && (
+                  <span
+                    className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-bold"
+                    style={{ background: 'rgba(255,255,255,0.18)' }}
+                  >
+                    ⚡ +{xpReward} XP
+                  </span>
+                )}
+              </span>
+            )}
         </motion.button>
       )}
 

@@ -10,7 +10,7 @@ interface UseEngagementPromptsReturn {
   error: Error | null;
   stats: EngagementStats | null;
   shuffle: () => Promise<void>;
-  answerPrompt: (promptId: string, response: PromptResponse) => Promise<void>;
+  answerPrompt: (promptId: string, response: PromptResponse, opts?: { skipXp?: boolean }) => Promise<any>;
   skipPrompt: (promptId: string) => Promise<void>;
   dismissPrompt: (promptId: string) => Promise<void>;
   refetch: () => Promise<void>;
@@ -23,19 +23,26 @@ export function useEngagementPrompts(count: number = 5, lifeChapter: string | nu
   const [error, setError] = useState<Error | null>(null);
 
   const isFetching = useRef(false);
+  const hasTriedAiFallback = useRef(false);
   const promptsRef = useRef(prompts);
   promptsRef.current = prompts;
 
   const supabase = createClient();
 
-  // Fetch prompts with related data
-  const fetchPrompts = useCallback(async (regenerate: boolean = false) => {
+  // Fetch prompts with related data.
+  // `background=true` skips the loading state so the feed doesn't
+  // flash to skeletons while the user is mid-interaction.
+  const fetchPrompts = useCallback(async (regenerate: boolean = false, background: boolean = false) => {
     // Prevent concurrent fetches
     if (isFetching.current) return;
     isFetching.current = true;
-    
+
+    // A manual regenerate re-arms the AI fallback so the user can
+    // trigger another batch after tapping Shuffle.
+    if (regenerate) hasTriedAiFallback.current = false;
+
     try {
-      setIsLoading(true);
+      if (!background) setIsLoading(true);
       setError(null);
 
       // Use getSession instead of getUser to avoid lock contention
@@ -55,6 +62,30 @@ export function useEngagementPrompts(count: number = 5, lifeChapter: string | nu
       if (fetchError) throw fetchError;
 
       if (!rawPrompts || rawPrompts.length === 0) {
+        // Genuinely empty pool — fall through to the AI generator so the
+        // user never runs out of cards. We only try once per mount to
+        // avoid infinite loops if the endpoint fails.
+        if (!hasTriedAiFallback.current) {
+          hasTriedAiFallback.current = true;
+          try {
+            console.log('[useEngagementPrompts] pool empty — calling AI fallback generator', { lifeChapter });
+            const genRes = await fetch('/api/engagement/generate-ai-prompts', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ count: 25, chapter: lifeChapter || undefined }),
+            });
+            const genData = await genRes.json().catch(() => ({}));
+            console.log('[useEngagementPrompts] AI fallback generated:', genData);
+            if (genRes.ok && (genData?.generated ?? 0) > 0) {
+              // Re-run shuffle now that fresh rows exist
+              isFetching.current = false;
+              await fetchPrompts(true);
+              return;
+            }
+          } catch (aiErr) {
+            console.error('[useEngagementPrompts] AI fallback failed', aiErr);
+          }
+        }
         setPrompts([]);
         await fetchStats();
         return;
@@ -121,20 +152,14 @@ export function useEngagementPrompts(count: number = 5, lifeChapter: string | nu
         createdAt: p.created_at,
       }));
 
-      // Client-side dedup: remove prompts with duplicate prompt text
+      // Client-side dedup: only remove exact duplicate prompt_text. The
+      // legacy BLOCKED_PATTERNS filter was disabled at the SQL level in
+      // 20260322_relationship_prompts_and_cleanup.sql — duplicating the
+      // block on the client was just discarding rows for no reason.
       const seenTexts = new Set<string>();
-      // Filter out prompts that duplicate onboarding questions
-      const BLOCKED_PATTERNS = [
-        /where were you born/i,
-        /where you were born/i,
-        /all the places you'?ve lived/i,
-        /places have you lived/i,
-      ];
       const dedupedPrompts = transformedPrompts.filter(p => {
         const text = p.promptText?.toLowerCase().trim();
         if (!text || seenTexts.has(text)) return false;
-        // Block prompts that repeat onboarding questions
-        if (BLOCKED_PATTERNS.some(pattern => pattern.test(p.promptText || ''))) return false;
         seenTexts.add(text);
         return true;
       });
@@ -204,7 +229,7 @@ export function useEngagementPrompts(count: number = 5, lifeChapter: string | nu
   }, [fetchPrompts]);
 
   // Answer a prompt - calls API route which handles all the saving logic
-  const answerPrompt = useCallback(async (promptId: string, response: PromptResponse) => {
+  const answerPrompt = useCallback(async (promptId: string, response: PromptResponse, opts?: { skipXp?: boolean }) => {
     try {
       // Call the API route (not just the RPC) so it can handle
       // creating knowledge entries, updating photos, etc.
@@ -217,6 +242,7 @@ export function useEngagementPrompts(count: number = 5, lifeChapter: string | nu
           responseAudioUrl: response.audioUrl,
           responseVideoUrl: response.videoUrl,
           responseData: response.data,
+          skipXp: opts?.skipXp === true,
         }),
       });
 
@@ -235,7 +261,7 @@ export function useEngagementPrompts(count: number = 5, lifeChapter: string | nu
         // Fetch more if running low (using fresh count, not stale closure)
         if (filtered.length <= 2) {
           // Schedule fetch after state settles
-          setTimeout(() => fetchPrompts(), 100);
+          setTimeout(() => fetchPrompts(false, true), 100);
         }
         return filtered;
       });
@@ -267,7 +293,7 @@ export function useEngagementPrompts(count: number = 5, lifeChapter: string | nu
       setPrompts(prev => {
         const filtered = prev.filter(p => p.id !== promptId);
         if (filtered.length <= 2) {
-          setTimeout(() => fetchPrompts(), 100);
+          setTimeout(() => fetchPrompts(false, true), 100);
         }
         return filtered;
       });
@@ -292,7 +318,7 @@ export function useEngagementPrompts(count: number = 5, lifeChapter: string | nu
       setPrompts(prev => {
         const filtered = prev.filter(p => p.id !== promptId);
         if (filtered.length <= 2) {
-          setTimeout(() => fetchPrompts(), 100);
+          setTimeout(() => fetchPrompts(false, true), 100);
         }
         return filtered;
       });
@@ -303,8 +329,14 @@ export function useEngagementPrompts(count: number = 5, lifeChapter: string | nu
     }
   }, [fetchPrompts, supabase]);
 
-  // Fetch prompts when category changes
+  // Fetch prompts when category changes.
+  // Force-reset `isFetching` so the new fetch isn't skipped when the
+  // previous (different-category) fetch is still in flight. The old
+  // results are stale and will be overwritten by the new fetch.
   useEffect(() => {
+    isFetching.current = false;
+    hasTriedAiFallback.current = false;
+
     const checkAuthAndFetch = async () => {
       try {
         const { data: { session } } = await supabase.auth.getSession();

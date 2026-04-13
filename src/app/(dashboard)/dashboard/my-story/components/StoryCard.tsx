@@ -10,7 +10,10 @@ export interface StoryItem {
   title: string
   subtitle?: string
   imageUrl?: string
+  /** When the memory happened (memory_date, taken_at, etc.) */
   date: string
+  /** When the user saved this entry (DB created_at) — for "latest first" */
+  savedAt?: string
   mood?: string | null
   category?: string
   locationName?: string

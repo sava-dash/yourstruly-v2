@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
+import { createAdminClient } from '@/lib/supabase/admin'
 import exifr from 'exifr'
 import { detectFaces, getDominantEmotion, searchFaces } from '@/lib/aws/rekognition'
 import { reverseGeocode } from '@/lib/geo/reverseGeocode'
@@ -176,11 +177,79 @@ export async function POST(request: NextRequest) {
     }
   }
 
-  return NextResponse.json({ 
+  // Create a memory_media row so the file is immediately visible in the
+  // Media tab and FaceTagger can attach tags using the mediaId. Uses the
+  // admin client to bypass RLS (memory_media INSERT is restricted).
+  // The memory_id is left NULL — handleFinish will link it to a memory
+  // later via attachChainMedia's dedup-and-update path.
+  let mediaId: string | null = null
+  if (bucket === 'memories') {
+    try {
+      const adminClient = createAdminClient()
+      // Only use columns that exist on memory_media. The table does NOT
+      // have location_name — that lives on the parent memory. Including
+      // a non-existent column causes the entire INSERT to fail silently.
+      const { data: mediaRow, error: mediaInsertErr } = await adminClient
+        .from('memory_media')
+        .insert({
+          user_id: user.id,
+          file_url: publicUrl,
+          file_key: fileName,
+          file_type: fileType,
+          is_cover: false,
+          sort_order: 0,
+          taken_at: exifData.takenAt || null,
+          exif_lat: exifData.lat || null,
+          exif_lng: exifData.lng || null,
+        })
+        .select('id')
+        .single()
+      if (mediaInsertErr) {
+        console.error('[Upload] memory_media insert FAILED:', mediaInsertErr)
+      } else if (mediaRow) {
+        mediaId = mediaRow.id
+        console.log('[Upload] memory_media row created:', mediaId)
+
+        // Auto-tag faces with high-confidence matches from previous tagging.
+        // This creates memory_face_tags rows so FaceTagger shows them as pre-tagged.
+        if (detectedFaces.length > 0) {
+          const autoTags: Record<string, any>[] = []
+          for (const face of detectedFaces) {
+            const bestMatch = face.suggestions?.find(s => s.similarity >= 80)
+            autoTags.push({
+              media_id: mediaId,
+              user_id: user.id,
+              contact_id: bestMatch?.contactId || null,
+              box_left: face.boundingBox.x,
+              box_top: face.boundingBox.y,
+              box_width: face.boundingBox.width,
+              box_height: face.boundingBox.height,
+              confidence: face.confidence,
+              is_auto_detected: true,
+              source: bestMatch ? 'rekognition_match' : 'rekognition_detect',
+            })
+          }
+          if (autoTags.length > 0) {
+            const { error: tagErr } = await adminClient.from('memory_face_tags').insert(autoTags)
+            if (tagErr) {
+              console.error('[Upload] face tag insert failed:', tagErr)
+            } else {
+              console.log(`[Upload] Auto-tagged ${autoTags.filter(t => t.contact_id).length} of ${autoTags.length} faces`)
+            }
+          }
+        }
+      }
+    } catch (mediaErr) {
+      console.error('[Upload] memory_media insert failed:', mediaErr)
+    }
+  }
+
+  return NextResponse.json({
     url: publicUrl,
     path: uploadData.path,
     bucket,
     exif: exifData,
     faces: detectedFaces,
+    mediaId,
   })
 }

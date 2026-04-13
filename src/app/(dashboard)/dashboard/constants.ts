@@ -113,5 +113,60 @@ export const EVENT_OPTIONS = [
 ]
 
 // Helper functions
-export const isContactPrompt = (type: string) => 
+export const isContactPrompt = (type: string) =>
   type === 'quick_question' || type === 'missing_info'
+
+// XP amounts per CardType in a chain — single source of truth.
+// Keep in sync with types/home-v2/types.ts CardType union.
+export const CARD_XP: Record<string, number> = {
+  'when-where': 15,
+  'text-voice-video': 25,
+  'backstory': 25,
+  'quote': 10,
+  'comment': 5,
+  'tag-people': 10,
+  'people-present': 10,
+  'field-input': 10,
+  'pill-select': 10,
+  'song': 15,
+  'invite-collaborator': 20,
+  'list-item': 10,
+  'media-upload': 5,
+  'media-item': 5,
+}
+
+export const getCardXp = (type: string): number => CARD_XP[type] ?? 10
+
+// Friendly labels for `missing_field` values returned by the prompt RPC.
+// Keys are raw DB column-ish identifiers; values are human-readable labels
+// to display on the Update Info card (e.g. "Add Sarah's birthday").
+export const FIELD_LABELS: Record<string, string> = {
+  birth_date: 'Birthday',
+  birthday: 'Birthday',
+  email: 'Email Address',
+  phone: 'Phone Number',
+  phone_number: 'Phone Number',
+  address: 'Address',
+  home_address: 'Home Address',
+  relationship: 'Relationship',
+  relationship_type: 'Relationship',
+  occupation: 'Occupation',
+  job: 'Occupation',
+  company: 'Company',
+  hometown: 'Hometown',
+  nickname: 'Nickname',
+  middle_name: 'Middle Name',
+  last_name: 'Last Name',
+  maiden_name: 'Maiden Name',
+  anniversary: 'Anniversary',
+  notes: 'Notes',
+}
+
+export const getFieldLabel = (raw?: string | null): string => {
+  if (!raw) return 'Missing Info'
+  if (FIELD_LABELS[raw]) return FIELD_LABELS[raw]
+  // Fall back: convert snake_case → Title Case
+  return raw
+    .replace(/_/g, ' ')
+    .replace(/\b\w/g, (c) => c.toUpperCase())
+}

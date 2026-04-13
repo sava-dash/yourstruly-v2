@@ -130,6 +130,20 @@ export function useXpState(userId: string | null) {
     }
   }, [userId])
 
+  // Refetch XP from the server so the counter stays current after
+  // chain saves (where the server awards XP but the client doesn't
+  // call addXp).
+  const refreshXp = useCallback(async () => {
+    if (!userId) return
+    try {
+      const res = await fetch('/api/xp')
+      if (res.ok) {
+        const data = await res.json()
+        setTotalXp(data.totalXp ?? 0)
+      }
+    } catch {}
+  }, [userId])
+
   const addCompletedTile = useCallback((tile: Omit<CompletedTile, 'answeredAt'>) => {
     setCompletedTiles(prev => {
       if (prev.some(t => t.id === tile.id)) return prev
@@ -146,6 +160,7 @@ export function useXpState(userId: string | null) {
     lastXpGain,
     completedTiles,
     addXp,
+    refreshXp,
     addCompletedTile,
     loaded,
   }
