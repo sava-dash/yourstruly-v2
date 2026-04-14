@@ -29,9 +29,15 @@ export default function AddContentModal({ isOpen, onClose, onContentAdded }: Add
   const [selectedPrompt, setSelectedPrompt] = useState<Prompt | null>(null)
   const [showDigitize, setShowDigitize] = useState(false)
 
-  // Fetch 3 random prompts for the selected category
-  // Photo prompt types to exclude
-  const PHOTO_TYPES = ['photo_backstory', 'tag_person']
+  // Prompt types to exclude — these are better handled via forms (contact info,
+  // field-based data) or require a photo context and aren't suited for voice input.
+  const EXCLUDED_TYPES = [
+    'photo_backstory', 'tag_person',
+    'missing_info', 'quick_question', 'contact_info',
+    'personality', 'religion', 'skills', 'languages',
+    'favorite_books', 'favorite_movies', 'favorite_music', 'favorite_foods',
+    'daily_checkin', 'recipe',
+  ]
 
   const fetchPrompts = useCallback(async (category: 'memory' | 'wisdom') => {
     setLoadingPrompts(true)
@@ -40,17 +46,17 @@ export default function AddContentModal({ isOpen, onClose, onContentAdded }: Add
       const { data: { user } } = await supabase.auth.getUser()
       if (!user) return
 
-      // Query engagement_prompts directly, excluding photo types and answered prompts
+      // Query engagement_prompts directly, excluding form-based + photo types
       const typeFilter = category === 'wisdom'
         ? ['knowledge', 'recipes_wisdom']
-        : ['memory', 'life_story', 'childhood', 'family', 'relationship', 'career', 'milestone']
+        : ['memory', 'life_story', 'childhood', 'family', 'relationship', 'career', 'milestone', 'memory_prompt']
 
       const { data } = await supabase
         .from('engagement_prompts')
         .select('id, prompt_text, type')
         .eq('user_id', user.id)
         .eq('status', 'pending')
-        .not('type', 'in', `(${PHOTO_TYPES.join(',')})`)
+        .not('type', 'in', `(${EXCLUDED_TYPES.join(',')})`)
         .in('type', typeFilter)
         .limit(20)
 
@@ -64,7 +70,7 @@ export default function AddContentModal({ isOpen, onClose, onContentAdded }: Add
           .select('id, prompt_text, type')
           .eq('user_id', user.id)
           .eq('status', 'pending')
-          .not('type', 'in', `(${PHOTO_TYPES.join(',')})`)
+          .not('type', 'in', `(${EXCLUDED_TYPES.join(',')})`)
           .limit(20)
 
         if (anyData && anyData.length > 0) {
