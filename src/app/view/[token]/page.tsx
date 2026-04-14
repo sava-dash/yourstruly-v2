@@ -129,10 +129,21 @@ function AccessDeniedView({ error }: { error: ErrorData }) {
         return <Eye className="w-16 h-16 text-amber-500" />
       case 'Not authorized':
         return <Lock className="w-16 h-16 text-red-400" />
+      case 'revoked':
+        return <Heart className="w-16 h-16 text-[#C35F33]" />
       default:
         return <AlertCircle className="w-16 h-16 text-red-400" />
     }
   }
+
+  const headline =
+    error.reason === 'revoked'
+      ? 'This memory has been removed'
+      : error.error || 'Access Denied'
+  const body =
+    error.reason === 'revoked'
+      ? 'The author of this photobook has removed this memory. If you believe this is a mistake, reach out to them directly.'
+      : error.message || 'This content is not available.'
 
   return (
     <div className="min-h-screen bg-cream-50 flex items-center justify-center p-4">
@@ -140,12 +151,8 @@ function AccessDeniedView({ error }: { error: ErrorData }) {
         <div className="mb-6 flex justify-center">
           {getIcon()}
         </div>
-        <h1 className="text-2xl font-bold text-gray-800 mb-2">
-          {error.error || 'Access Denied'}
-        </h1>
-        <p className="text-gray-600 mb-6">
-          {error.message || 'This content is not available.'}
-        </p>
+        <h1 className="text-2xl font-bold text-gray-800 mb-2">{headline}</h1>
+        <p className="text-gray-600 mb-6">{body}</p>
         <Link 
           href="/"
           className="inline-flex items-center gap-2 bg-brand-green text-white px-6 py-3 rounded-full hover:bg-brand-green/90 transition-colors"

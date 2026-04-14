@@ -40,14 +40,27 @@ export async function GET(
       )
     }
     
-    // If no results or access denied
+    // If no results, try backwards-compat fallback: older photobooks encoded
+    // raw memory/wisdom UUIDs in their QR codes before the share-token system
+    // existed. Resolve those as a last resort.
     if (!accessCheck || accessCheck.length === 0) {
+      const fallback = await resolveLegacyIdFallback(supabase, token)
+      if (fallback) {
+        return NextResponse.json({
+          access: 'granted',
+          contentType: fallback.contentType,
+          content: fallback.content,
+          sharedBy: fallback.sharedBy,
+          viewer: { isLoggedIn: !!userId, userId: userId || null },
+          legacyFallback: true,
+        })
+      }
       return NextResponse.json(
         { error: 'Invalid token' },
         { status: 404 }
       )
     }
-    
+
     const access = accessCheck[0]
     
     // Log the access attempt
@@ -61,11 +74,17 @@ export async function GET(
     })
     
     if (!access.can_access) {
+      // Normalize 'Token revoked' -> 'revoked' so the viewer can show the
+      // author-friendly "removed by the author" copy.
+      const normalizedReason =
+        access.denial_reason === 'Token revoked'
+          ? 'revoked'
+          : access.denial_reason
       return NextResponse.json(
-        { 
+        {
           error: 'Access Denied',
-          reason: access.denial_reason,
-          message: getDenialMessage(access.denial_reason)
+          reason: normalizedReason,
+          message: getDenialMessage(access.denial_reason),
         },
         { status: 403 }
       )
@@ -166,12 +185,73 @@ export async function GET(
   }
 }
 
+/**
+ * Backwards-compat: older photobooks printed `/view/{memoryId}` or
+ * `/view/wisdom/{wisdomId}` directly. When such a raw UUID hits this endpoint
+ * (the new viewer normalises those to `/view/{token}`), try resolving against
+ * the `memories` and `wisdom_entries` tables. Public read only — anyone who
+ * scans the printed book already had physical access to it.
+ */
+async function resolveLegacyIdFallback(
+  supabase: Awaited<ReturnType<typeof createClient>>,
+  maybeId: string
+): Promise<
+  | {
+      contentType: 'memory' | 'wisdom'
+      content: unknown
+      sharedBy: { full_name: string; avatar_url?: string } | null
+    }
+  | null
+> {
+  // Only attempt UUID lookups — protects against SQL/regex oddities.
+  const uuidRe = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
+  if (!uuidRe.test(maybeId)) return null
+
+  const { data: memory } = await supabase
+    .from('memories')
+    .select(
+      `
+      *,
+      memory_media (id, file_url, file_type, is_cover, width, height, duration),
+      profiles:user_id (full_name, avatar_url)
+    `
+    )
+    .eq('id', maybeId)
+    .maybeSingle()
+
+  if (memory) {
+    return {
+      contentType: 'memory',
+      content: memory,
+      sharedBy: (memory as { profiles?: { full_name: string; avatar_url?: string } })
+        .profiles || null,
+    }
+  }
+
+  const { data: wisdom } = await supabase
+    .from('wisdom_entries')
+    .select(`*, profiles:user_id (full_name, avatar_url)`)
+    .eq('id', maybeId)
+    .maybeSingle()
+
+  if (wisdom) {
+    return {
+      contentType: 'wisdom',
+      content: wisdom,
+      sharedBy: (wisdom as { profiles?: { full_name: string; avatar_url?: string } })
+        .profiles || null,
+    }
+  }
+
+  return null
+}
+
 function getDenialMessage(reason: string | null): string {
   switch (reason) {
     case 'Token not found':
       return 'This QR code link is invalid or has been removed.'
     case 'Token revoked':
-      return 'This QR code has been disabled by the owner.'
+      return 'This memory has been removed by the author.'
     case 'Token expired':
       return 'This QR code has expired. Please ask the owner to create a new one.'
     case 'Max views reached':

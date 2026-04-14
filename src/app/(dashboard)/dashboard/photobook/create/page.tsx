@@ -615,7 +615,8 @@ function ArrangeStep({
   canRedo,
   onUndo,
   onRedo,
-  saveHistory
+  saveHistory,
+  shareTokenMap,
 }: {
   pages: PageData[]
   setPages: (pages: PageData[]) => void
@@ -630,6 +631,7 @@ function ArrangeStep({
   onUndo: () => void
   onRedo: () => void
   saveHistory: (pages: PageData[]) => void
+  shareTokenMap: Record<string, string>
 }) {
   const [selectedPageId, setSelectedPageId] = useState<string | null>(pages[0]?.id || null)
   const [showLayoutPicker, setShowLayoutPicker] = useState(false)
@@ -1783,9 +1785,9 @@ function ArrangeStep({
                 if (slot.type === 'qr') {
                   const qrSlot = selectedPage.slots.find(s => s.type === 'qr')
                   const qrUrl = qrSlot?.qrWisdomId
-                    ? buildQRTargetUrl({ wisdomId: qrSlot.qrWisdomId })
+                    ? buildQRTargetUrl({ wisdomId: qrSlot.qrWisdomId }, shareTokenMap)
                     : qrSlot?.qrMemoryId
-                      ? buildQRTargetUrl({ memoryId: qrSlot.qrMemoryId })
+                      ? buildQRTargetUrl({ memoryId: qrSlot.qrMemoryId }, shareTokenMap)
                       : null
                   return (
                     <div
@@ -2132,7 +2134,7 @@ function ArrangeStep({
                             )}
                             <div className="absolute bottom-1 right-1 bg-white p-1 rounded shadow-sm">
                               <QRPreview
-                                value={buildQRTargetUrl({ memoryId: memory.id })}
+                                value={buildQRTargetUrl({ memoryId: memory.id }, shareTokenMap)}
                                 size={32}
                                 alt={`QR preview for ${memory.title}`}
                               />
@@ -2166,7 +2168,7 @@ function ArrangeStep({
                       >
                         <div className="flex-shrink-0 bg-[#F2F1E5] p-2 rounded-lg self-start">
                           <QRPreview
-                            value={buildQRTargetUrl({ wisdomId: w.id })}
+                            value={buildQRTargetUrl({ wisdomId: w.id }, shareTokenMap)}
                             size={48}
                             alt={`QR preview for wisdom ${w.prompt_text}`}
                           />
@@ -2283,11 +2285,13 @@ function ArrangeStep({
 function PreviewStep({
   pages,
   selectedMemories,
-  product
+  product,
+  shareTokenMap,
 }: {
   pages: PageData[]
   selectedMemories: Memory[]
   product: Product
+  shareTokenMap: Record<string, string>
 }) {
   const [currentSpread, setCurrentSpread] = useState(0)
   const [showPrintPreview, setShowPrintPreview] = useState(false)
@@ -2380,7 +2384,7 @@ function PreviewStep({
             className="w-[300px] aspect-square bg-white shadow-xl rounded-l-sm"
           >
             {leftPage ? (
-              <PagePreview page={leftPage} />
+              <PagePreview page={leftPage} shareTokenMap={shareTokenMap} />
             ) : (
               <div className="w-full h-full flex items-center justify-center text-[#94A09A]">
                 <BookOpen className="w-12 h-12" />
@@ -2399,7 +2403,7 @@ function PreviewStep({
             className="w-[300px] aspect-square bg-white shadow-xl rounded-r-sm"
           >
             {rightPage ? (
-              <PagePreview page={rightPage} />
+              <PagePreview page={rightPage} shareTokenMap={shareTokenMap} />
             ) : (
               <div className="w-full h-full flex items-center justify-center text-[#94A09A]">
                 {pages.length % 2 === 1 ? (
@@ -2507,7 +2511,7 @@ function PreviewStep({
                     className="bg-white rounded-lg overflow-hidden shadow-md"
                   >
                     <div className="aspect-square relative">
-                      <PagePreview page={page} printSize={getPrintDimensions().pixelWidth} />
+                      <PagePreview page={page} printSize={getPrintDimensions().pixelWidth} shareTokenMap={shareTokenMap} />
                     </div>
                     <div className="p-2 bg-[#406A56]/5 text-center">
                       <span className="text-xs font-medium text-[#406A56]">Page {page.pageNumber}</span>
@@ -2539,25 +2543,48 @@ function PreviewStep({
   )
 }
 
-// Build the public URL a QR code should encode. Memories and wisdom go to
-// different routes; default base URL falls back to production for SSR safety.
-// NOTE: `/view/{memoryId}` and `/view/wisdom/{wisdomId}` are the existing
-// patterns in the codebase. The actual /view/[token] route expects share
-// tokens — the QR URL contract below is what the photobook already relied on
-// for memories; wisdom mirrors the same pattern and may need a companion API
-// route in a follow-up PR (documented in the PR report).
-const buildQRTargetUrl = (opts: { memoryId?: string; wisdomId?: string }): string => {
+// Build the public URL a QR code should encode.
+//
+// Preferred path: a share token was minted via
+// /api/photobook/projects/[id]/share-tokens and lives in `tokenMap` keyed by
+// `memory:<id>` or `wisdom:<id>`. The URL resolves to /view/{token}, which the
+// /api/qr/[token] resolver can validate and revoke.
+//
+// Legacy/pre-mint fallback: we emit `/view/{id}` (memories) or
+// `/view/wisdom/{id}` (wisdom). The QR resolver has a backwards-compat path
+// that still resolves raw UUIDs so old printed books keep working. These
+// URLs also cover the instant during the editor session before the token
+// mint POST completes.
+const buildQRTargetUrl = (
+  opts: { memoryId?: string; wisdomId?: string },
+  tokenMap?: Record<string, string>
+): string => {
   const baseUrl =
     typeof window !== 'undefined' && window.location?.origin
       ? window.location.origin
       : process.env.NEXT_PUBLIC_APP_URL || 'https://app.yourstruly.love'
+  const key = opts.memoryId
+    ? `memory:${opts.memoryId}`
+    : opts.wisdomId
+      ? `wisdom:${opts.wisdomId}`
+      : null
+  const minted = key && tokenMap ? tokenMap[key] : undefined
+  if (minted) return `${baseUrl}/view/${minted}`
   if (opts.wisdomId) return `${baseUrl}/view/wisdom/${opts.wisdomId}`
   if (opts.memoryId) return `${baseUrl}/view/${opts.memoryId}`
   return baseUrl
 }
 
 // Page Preview Component
-function PagePreview({ page, printSize }: { page: PageData; printSize?: number }) {
+function PagePreview({
+  page,
+  printSize,
+  shareTokenMap,
+}: {
+  page: PageData
+  printSize?: number
+  shareTokenMap?: Record<string, string>
+}) {
   const template = getTemplateById(page.layoutId)
 
   if (!template) {
@@ -2599,7 +2626,7 @@ function PagePreview({ page, printSize }: { page: PageData; printSize?: number }
                   {pageSlot.memoryId && (
                     <div className="absolute bottom-1 right-1 bg-white p-0.5 rounded shadow-sm">
                       <QRPreview
-                        value={buildQRTargetUrl({ memoryId: pageSlot.memoryId })}
+                        value={buildQRTargetUrl({ memoryId: pageSlot.memoryId }, shareTokenMap)}
                         size={24}
                         alt="Memory QR"
                       />
@@ -2649,9 +2676,9 @@ function PagePreview({ page, printSize }: { page: PageData; printSize?: number }
         if (slot.type === 'qr') {
           const qrSlot = page.slots.find(s => s.type === 'qr')
           const qrUrl = qrSlot?.qrWisdomId
-            ? buildQRTargetUrl({ wisdomId: qrSlot.qrWisdomId })
+            ? buildQRTargetUrl({ wisdomId: qrSlot.qrWisdomId }, shareTokenMap)
             : qrSlot?.qrMemoryId
-              ? buildQRTargetUrl({ memoryId: qrSlot.qrMemoryId })
+              ? buildQRTargetUrl({ memoryId: qrSlot.qrMemoryId }, shareTokenMap)
               : null
           return (
             <div key={slot.id} style={style} className="flex items-center justify-center">
@@ -2933,6 +2960,10 @@ export default function CreatePhotobookPage() {
   const [checkoutProjectId, setCheckoutProjectId] = useState<string | null>(null)
   const [projectId, setProjectId] = useState<string | null>(null)
   const [userId, setUserId] = useState<string | null>(null)
+  // Share tokens minted for this project's memories/wisdom. Keyed by
+  // `memory:<id>` / `wisdom:<id>` -> token string. Consumed by buildQRTargetUrl
+  // so the printed QR encodes /view/{token} (revocable) instead of raw UUIDs.
+  const [shareTokenMap, setShareTokenMap] = useState<Record<string, string>>({})
   
   // Load user, memories, and products
   useEffect(() => {
@@ -3069,6 +3100,62 @@ export default function CreatePhotobookPage() {
       setHistoryIndex(0)
     }
   }, [pages, history.length])
+
+  // Mint share tokens for every memory/wisdom referenced on any page, so the
+  // printed QR encodes /view/{token} instead of a raw UUID. Idempotent on the
+  // server — repeat calls return the existing token.
+  useEffect(() => {
+    if (!projectId) return
+    const targets: Array<{ type: 'memory' | 'wisdom'; id: string }> = []
+    const seen = new Set<string>()
+    for (const page of pages) {
+      for (const slot of page.slots) {
+        const candidates: Array<{ type: 'memory' | 'wisdom'; id: string }> = []
+        if (slot.memoryId) candidates.push({ type: 'memory', id: slot.memoryId })
+        if (slot.qrMemoryId) candidates.push({ type: 'memory', id: slot.qrMemoryId })
+        if (slot.qrWisdomId) candidates.push({ type: 'wisdom', id: slot.qrWisdomId })
+        for (const c of candidates) {
+          const key = `${c.type}:${c.id}`
+          if (!seen.has(key) && !shareTokenMap[key]) {
+            seen.add(key)
+            targets.push(c)
+          }
+        }
+      }
+    }
+    if (targets.length === 0) return
+
+    let cancelled = false
+    ;(async () => {
+      const mintOne = async (target: { type: 'memory' | 'wisdom'; id: string }) => {
+        try {
+          const res = await fetch(`/api/photobook/projects/${projectId}/share-tokens`, {
+            method: 'POST',
+            headers: { 'content-type': 'application/json' },
+            body: JSON.stringify({ target }),
+          })
+          if (!res.ok) return null
+          const json = (await res.json()) as { token?: string }
+          if (!json.token) return null
+          return { key: `${target.type}:${target.id}`, token: json.token }
+        } catch {
+          return null
+        }
+      }
+      const minted = await Promise.all(targets.map(mintOne))
+      if (cancelled) return
+      const next: Record<string, string> = {}
+      for (const m of minted) {
+        if (m) next[m.key] = m.token
+      }
+      if (Object.keys(next).length > 0) {
+        setShareTokenMap(prev => ({ ...prev, ...next }))
+      }
+    })()
+    return () => {
+      cancelled = true
+    }
+  }, [projectId, pages, shareTokenMap])
 
   // Keyboard shortcuts for undo/redo
   useEffect(() => {
@@ -3503,6 +3590,7 @@ export default function CreatePhotobookPage() {
                 onUndo={handleUndo}
                 onRedo={handleRedo}
                 saveHistory={saveHistory}
+                shareTokenMap={shareTokenMap}
               />
             )}
             
@@ -3511,6 +3599,7 @@ export default function CreatePhotobookPage() {
                 pages={pages}
                 selectedMemories={memories}
                 product={selectedProduct}
+                shareTokenMap={shareTokenMap}
               />
             )}
             
