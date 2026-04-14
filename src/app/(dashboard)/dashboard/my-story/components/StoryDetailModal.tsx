@@ -7,9 +7,10 @@ import { motion, AnimatePresence } from 'framer-motion'
 import {
   X, Heart, MapPin, Calendar, Sparkles, ChevronLeft, ChevronRight,
   Play, Pause, Square, Quote, Tag, Volume2, MessageCircle, Send,
-  Lightbulb, Briefcase, Baby, Users,
+  Lightbulb, Briefcase, Baby, Users, BookOpen,
   Activity, Moon, Palette, Compass, Utensils, GraduationCap, HelpCircle
 } from 'lucide-react'
+import { useRouter } from 'next/navigation'
 import dynamic from 'next/dynamic'
 import { type StoryItem, type ContentType } from './StoryCard'
 
@@ -194,6 +195,8 @@ function useSlideshow(count: number, intervalMs = 5000) {
 /*  COMPONENT                                                          */
 /* ================================================================== */
 export default function StoryDetailModal({ item, onClose }: StoryDetailModalProps) {
+  const router = useRouter()
+  const [creatingBackstory, setCreatingBackstory] = useState(false)
   const [loading, setLoading] = useState(true)
   const [memory, setMemory] = useState<FullMemory | null>(null)
   const [memoryMedia, setMemoryMedia] = useState<FullMedia[]>([])
@@ -572,6 +575,41 @@ export default function StoryDetailModal({ item, onClose }: StoryDetailModalProp
                         }`}
                       >
                         <Users size={13} />{taggingMode ? 'Done Tagging' : 'Tag People'}
+                      </button>
+                    )}
+                    {/* Add Backstory button — creates a photo_backstory prompt and opens dashboard */}
+                    {photoMedia && !taggingMode && (
+                      <button
+                        onClick={async () => {
+                          if (creatingBackstory) return
+                          setCreatingBackstory(true)
+                          try {
+                            const res = await fetch('/api/engagement/generate-photo-prompt', {
+                              method: 'POST',
+                              headers: { 'Content-Type': 'application/json' },
+                              body: JSON.stringify({ mediaId: photoMedia.id, photoUrl: photoMedia.file_url }),
+                            })
+                            if (res.ok) {
+                              const data = await res.json()
+                              const promptId = data.promptId || data.id
+                              if (promptId) {
+                                router.push(`/dashboard?expand=${promptId}`)
+                                return
+                              }
+                            }
+                            // Fallback: just go to dashboard
+                            router.push('/dashboard')
+                          } catch {
+                            router.push('/dashboard')
+                          } finally {
+                            setCreatingBackstory(false)
+                          }
+                        }}
+                        disabled={creatingBackstory}
+                        className="flex items-center gap-1.5 rounded-full px-3 py-1.5 text-sm font-medium bg-gradient-to-r from-[#B8562E]/10 to-[#C4A235]/10 border border-[#B8562E]/30 text-[#B8562E] hover:from-[#B8562E]/15 hover:to-[#C4A235]/15 transition-all disabled:opacity-50"
+                      >
+                        <BookOpen size={13} />
+                        {creatingBackstory ? 'Creating...' : 'Add Backstory'}
                       </button>
                     )}
                     <span className="text-[#B8B0A4] text-xs ml-auto">{timeAgo(item.date)}</span>

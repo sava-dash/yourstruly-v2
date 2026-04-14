@@ -280,6 +280,21 @@ export default function HomeV2Page() {
     setRows(newRows)
   }, [rawPrompts, shuffleKey])
 
+  // Auto-expand a row when ?expand={promptId} is in the URL
+  // (used by "Add Backstory" button in My Story to dive into a photo memory)
+  useEffect(() => {
+    if (typeof window === 'undefined') return
+    const params = new URLSearchParams(window.location.search)
+    const expandId = params.get('expand')
+    if (expandId && rows.has(expandId)) {
+      setExpandedRowId(expandId)
+      // Clean up URL
+      const url = new URL(window.location.href)
+      url.searchParams.delete('expand')
+      window.history.replaceState({}, '', url.toString())
+    }
+  }, [rows])
+
   // Open: expand row, scroll to first chain card
   const handleSelect = useCallback((promptId: string) => {
     setExpandedRowId(promptId)

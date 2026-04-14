@@ -107,7 +107,8 @@ export function generateInitialCards(category: PromptCategory, promptType: strin
     case 'memory':
       return ['when-where', 'text-voice-video', 'people-present', 'media-upload', 'plus']
     case 'photo':
-      return ['when-where', 'text-voice-video', 'tag-people', 'plus'] // backstory uses BackstoryCard via CardChain
+      // Photo backstory flow: when/where → story → who was there → more media → save
+      return ['when-where', 'text-voice-video', 'people-present', 'tag-people', 'media-upload', 'plus']
     case 'wisdom':
       return ['text-voice-video', 'media-upload', 'plus']
     case 'contact':
