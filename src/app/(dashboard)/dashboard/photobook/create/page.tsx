@@ -49,6 +49,17 @@ import { PRODIGI_PHOTOBOOK_SKUS } from '@/components/photobook/types'
 import { getEnabledProducts, getEnabledTemplates, DbProduct } from '@/lib/photobook/db'
 import QRPreview from '@/components/photobook/QRPreview'
 import CheckoutFlow from '@/components/photobook/CheckoutFlow'
+import CoverDesigner, {
+  CoverDesignState,
+  DEFAULT_COVER_DESIGN,
+  CoverPhotoOption,
+} from '@/components/photobook/CoverDesigner'
+import ThemePicker, { buildPagesFromTheme, ThemePage } from '@/components/photobook/ThemePicker'
+import FlipBookPreview, { FlipPage, FlipCover } from '@/components/photobook/FlipBookPreview'
+import CMYKWarnings from '@/components/photobook/CMYKWarnings'
+import VersionHistoryPanel from '@/components/photobook/VersionHistoryPanel'
+import { PhotobookTheme } from '@/lib/photobook/themes'
+import { PhotoInput as CMYKPhotoInput } from '@/lib/photobook/cmyk-check'
 
 // ============================================================================
 // TYPES
@@ -2964,6 +2975,15 @@ export default function CreatePhotobookPage() {
   // `memory:<id>` / `wisdom:<id>` -> token string. Consumed by buildQRTargetUrl
   // so the printed QR encodes /view/{token} (revocable) instead of raw UUIDs.
   const [shareTokenMap, setShareTokenMap] = useState<Record<string, string>>({})
+
+  // --- Cover / theme / preview / cmyk / versions ---------------------
+  const [coverDesign, setCoverDesign] = useState<CoverDesignState>(DEFAULT_COVER_DESIGN)
+  const [activeThemeId, setActiveThemeId] = useState<string | null>(null)
+  const [showThemePicker, setShowThemePicker] = useState(false)
+  const [showCoverDesigner, setShowCoverDesigner] = useState(false)
+  const [showFlipPreview, setShowFlipPreview] = useState(false)
+  const [showCmyk, setShowCmyk] = useState(false)
+  const [showVersions, setShowVersions] = useState(false)
   
   // Load user, memories, and products
   useEffect(() => {
@@ -3557,6 +3577,49 @@ export default function CreatePhotobookPage() {
         </div>
       </div>
       
+      {/* Editor toolbar (available on design + preview steps) */}
+      {(currentStep === 1 || currentStep === 2) && (
+        <div className="max-w-7xl mx-auto px-4 pt-4">
+          <div className="flex flex-wrap items-center gap-2">
+            <button
+              type="button"
+              onClick={() => setShowThemePicker(true)}
+              className="min-h-[44px] px-4 rounded-xl bg-white border-2 border-[#DDE3DF] hover:border-[#406A56] text-sm font-medium text-[#2A3E33] flex items-center gap-2"
+            >
+              <Sparkles className="w-4 h-4 text-[#C35F33]" /> Themes
+            </button>
+            <button
+              type="button"
+              onClick={() => setShowCoverDesigner(true)}
+              className="min-h-[44px] px-4 rounded-xl bg-white border-2 border-[#DDE3DF] hover:border-[#406A56] text-sm font-medium text-[#2A3E33] flex items-center gap-2"
+            >
+              <BookOpen className="w-4 h-4 text-[#406A56]" /> Cover
+            </button>
+            <button
+              type="button"
+              onClick={() => setShowFlipPreview(true)}
+              className="min-h-[44px] px-4 rounded-xl bg-white border-2 border-[#DDE3DF] hover:border-[#406A56] text-sm font-medium text-[#2A3E33] flex items-center gap-2"
+            >
+              <Eye className="w-4 h-4 text-[#406A56]" /> Preview as book
+            </button>
+            <button
+              type="button"
+              onClick={() => setShowCmyk(true)}
+              className="min-h-[44px] px-4 rounded-xl bg-white border-2 border-[#DDE3DF] hover:border-[#406A56] text-sm font-medium text-[#2A3E33] flex items-center gap-2"
+            >
+              <AlertTriangle className="w-4 h-4 text-[#C35F33]" /> Check colors
+            </button>
+            <button
+              type="button"
+              onClick={() => setShowVersions(true)}
+              className="min-h-[44px] px-4 rounded-xl bg-white border-2 border-[#DDE3DF] hover:border-[#406A56] text-sm font-medium text-[#2A3E33] flex items-center gap-2"
+            >
+              <Undo2 className="w-4 h-4 text-[#406A56]" /> Versions
+            </button>
+          </div>
+        </div>
+      )}
+
       {/* Content */}
       <div className="max-w-7xl mx-auto px-4 py-8">
         <AnimatePresence mode="wait">
@@ -3641,6 +3704,122 @@ export default function CreatePhotobookPage() {
           </div>
         </div>
       )}
+
+      {/* Theme picker modal */}
+      {showThemePicker && (
+        <div className="fixed inset-0 z-[90] bg-black/50 flex items-center justify-center p-4" role="dialog" aria-modal="true">
+          <div className="bg-white rounded-2xl shadow-2xl max-w-4xl w-full max-h-[90vh] overflow-y-auto">
+            <div className="flex items-center justify-between p-4 border-b border-[#DDE3DF]">
+              <h3 className="font-semibold text-[#2A3E33]">Themed templates</h3>
+              <button type="button" onClick={() => setShowThemePicker(false)} aria-label="Close themes" className="min-w-[44px] min-h-[44px] rounded-full hover:bg-[#F2F1E5] flex items-center justify-center">
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+            <div className="p-4">
+              <ThemePicker
+                selectedThemeId={activeThemeId}
+                currentPages={pages as unknown as ThemePage[]}
+                onApply={({ theme, pages: themePages }: { theme: PhotobookTheme; pages: ThemePage[] }) => {
+                  saveHistory(pages)
+                  const next = themePages as unknown as PageData[]
+                  setPages(next)
+                  setActiveThemeId(theme.id)
+                  setCoverDesign((c) => ({
+                    ...c,
+                    title: c.title || theme.coverPreset.title,
+                    subtitle: c.subtitle || theme.coverPreset.subtitle,
+                    backText: c.backText || theme.coverPreset.backText,
+                    spineText: c.spineText || theme.coverPreset.spineText,
+                    textColor: theme.coverPreset.textColor,
+                    fontPair: theme.coverPreset.fontPair,
+                  }))
+                  setShowThemePicker(false)
+                  // Also rebuild pages in place without dependency on the helper
+                  void buildPagesFromTheme
+                }}
+              />
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Cover designer modal */}
+      {showCoverDesigner && (
+        <div className="fixed inset-0 z-[90] bg-black/50 flex items-center justify-center p-4" role="dialog" aria-modal="true">
+          <div className="bg-white rounded-2xl shadow-2xl max-w-4xl w-full max-h-[90vh] overflow-y-auto">
+            <div className="flex items-center justify-between p-4 border-b border-[#DDE3DF]">
+              <h3 className="font-semibold text-[#2A3E33]">Design your cover</h3>
+              <button type="button" onClick={() => setShowCoverDesigner(false)} aria-label="Close cover designer" className="min-w-[44px] min-h-[44px] rounded-full hover:bg-[#F2F1E5] flex items-center justify-center">
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+            <div className="p-4">
+              <CoverDesigner
+                projectId={projectId}
+                initial={coverDesign}
+                photoOptions={memories.flatMap((m): CoverPhotoOption[] =>
+                  (m.memory_media || [])
+                    .filter((mm) => mm.file_type === 'image' || !mm.file_type?.startsWith('video'))
+                    .map((mm) => ({ mediaId: mm.id, fileUrl: mm.file_url, memoryTitle: m.title }))
+                ).slice(0, 60)}
+                onSaved={(c) => {
+                  setCoverDesign(c)
+                  setShowCoverDesigner(false)
+                }}
+              />
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* 3D flip-book preview */}
+      <FlipBookPreview
+        open={showFlipPreview}
+        onClose={() => setShowFlipPreview(false)}
+        cover={{
+          title: coverDesign.title,
+          subtitle: coverDesign.subtitle,
+          backText: coverDesign.backText,
+          frontImageUrl: coverDesign.frontImageUrl,
+          textColor: coverDesign.textColor,
+          fontPair: coverDesign.fontPair,
+        } as FlipCover}
+        pages={pages.map((p): FlipPage => {
+          const photoSlot = p.slots.find((s) => s.type === 'photo' && s.fileUrl)
+          const textSlot = p.slots.find((s) => s.type === 'text' && s.text)
+          return {
+            id: p.id,
+            imageUrl: photoSlot?.fileUrl ?? null,
+            caption: textSlot?.text ?? null,
+          }
+        })}
+      />
+
+      {/* CMYK warnings */}
+      <CMYKWarnings
+        open={showCmyk}
+        onClose={() => setShowCmyk(false)}
+        photos={pages.flatMap((p, pi): CMYKPhotoInput[] =>
+          p.slots
+            .filter((s) => s.type === 'photo' && s.fileUrl && s.mediaId)
+            .map((s) => ({
+              mediaId: s.mediaId as string,
+              thumbnailUrl: s.fileUrl as string,
+              pageNumber: pi + 1,
+            }))
+        )}
+      />
+
+      {/* Version history */}
+      <VersionHistoryPanel
+        open={showVersions}
+        onClose={() => setShowVersions(false)}
+        projectId={projectId}
+        onRestored={() => {
+          // Simplest recovery: reload to pick up the restored pages.
+          if (typeof window !== 'undefined') window.location.reload()
+        }}
+      />
 
       {checkoutOpen && checkoutProjectId && (
         <CheckoutFlow
