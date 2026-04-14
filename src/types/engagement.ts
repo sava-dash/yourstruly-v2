@@ -10,6 +10,12 @@ export interface EngagementPrompt {
   priority: number;
   photoUrl?: string;
   photoId?: string;
+  photoMetadata?: {
+    taken_at?: string;
+    exif_lat?: number;
+    exif_lng?: number;
+    location_name?: string;
+  };
   contactId?: string;
   contactName?: string;
   contactPhotoUrl?: string;

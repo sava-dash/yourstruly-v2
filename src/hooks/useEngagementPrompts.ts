@@ -100,18 +100,28 @@ export function useEngagementPrompts(count: number = 5, lifeChapter: string | nu
         .filter((p: any) => p.contact_id)
         .map((p: any) => p.contact_id);
 
-      // Fetch related photos
+      // Fetch related photos (with EXIF metadata for when-where pre-fill)
       let photosMap: Record<string, string> = {};
+      let photoMetaMap: Record<string, { taken_at?: string; exif_lat?: number; exif_lng?: number; location_name?: string }> = {};
       if (photoIds.length > 0) {
         const { data: photos } = await supabase
           .from('memory_media')
-          .select('id, file_url')
+          .select('id, file_url, taken_at, exif_lat, exif_lng')
           .in('id', photoIds);
-        
+
         if (photos) {
-          photosMap = Object.fromEntries(
-            photos.map((p: any) => [p.id, p.file_url])
-          );
+          photosMap = Object.fromEntries(photos.map((p: any) => [p.id, p.file_url]));
+          photoMetaMap = Object.fromEntries(photos.map((p: any) => [p.id, {
+            taken_at: p.taken_at,
+            exif_lat: p.exif_lat,
+            exif_lng: p.exif_lng,
+          }]));
+          // Reverse-geocode any photos with coords but no location name
+          for (const p of photos) {
+            if (p.exif_lat && p.exif_lng && photoMetaMap[p.id]) {
+              // Best-effort: skip if we don't have a geocoder client-side
+            }
+          }
         }
       }
 
@@ -142,6 +152,7 @@ export function useEngagementPrompts(count: number = 5, lifeChapter: string | nu
         priority: p.priority,
         photoUrl: p.photo_id ? photosMap[p.photo_id] : undefined,
         photoId: p.photo_id,
+        photoMetadata: p.photo_id ? photoMetaMap[p.photo_id] : undefined,
         contactId: p.contact_id,
         contactName: p.contact_id ? contactsMap[p.contact_id]?.name : undefined,
         contactPhotoUrl: p.contact_id ? contactsMap[p.contact_id]?.photo : undefined,

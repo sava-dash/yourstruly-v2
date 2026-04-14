@@ -260,9 +260,23 @@ export default function HomeV2Page() {
       if (existing) { newRows.set(prompt.id, existing); continue }
       const category = categorizePrompt(prompt.type)
       const cardTypes = generateInitialCards(category, prompt.type)
-      const cards: ChainCard[] = cardTypes.map(type => ({
-        id: uid(), type, data: {}, saved: false, createdAt: new Date().toISOString(),
-      }))
+      // Pre-fill when-where from photo EXIF metadata if available
+      const photoMeta = (prompt as any).photoMetadata || {}
+      const cards: ChainCard[] = cardTypes.map(type => {
+        if (type === 'when-where' && (photoMeta.location_name || photoMeta.exif_lat || photoMeta.taken_at)) {
+          const d = photoMeta.taken_at ? new Date(photoMeta.taken_at).toISOString().split('T')[0] : ''
+          return {
+            id: uid(), type, saved: false, createdAt: new Date().toISOString(),
+            data: {
+              location: photoMeta.location_name || '',
+              lat: photoMeta.exif_lat || undefined,
+              lng: photoMeta.exif_lng || undefined,
+              date: d,
+            },
+          }
+        }
+        return { id: uid(), type, data: {}, saved: false, createdAt: new Date().toISOString() }
+      })
       // No extra media-item card for photos — the photo is shown on the prompt card itself
       // Chain order for photo: when-where → backstory → tag-people → plus
       newRows.set(prompt.id, {

@@ -57,6 +57,36 @@ export async function POST(request: NextRequest) {
     const fileName = `${userId}/${Date.now()}-${Math.random().toString(36).slice(2, 11)}.${fileExt}`
     const buffer = Buffer.from(await file.arrayBuffer())
 
+    // Extract EXIF metadata for images (GPS + date taken) so "Add Backstory"
+    // can pre-fill the When & Where card with the actual capture details.
+    let exifData: { lat?: number; lng?: number; takenAt?: string; locationName?: string } = {}
+    if (fileType === 'image') {
+      try {
+        const exifr = (await import('exifr')).default
+        const exif = await exifr.parse(buffer, { gps: true })
+        if (exif) {
+          if (exif.latitude && exif.longitude) {
+            exifData.lat = exif.latitude
+            exifData.lng = exif.longitude
+            try {
+              const { reverseGeocode } = await import('@/lib/geo/reverseGeocode')
+              const name = await reverseGeocode(exif.latitude, exif.longitude)
+              if (name) exifData.locationName = name
+            } catch {}
+          }
+          const dateField = exif.DateTimeOriginal || exif.CreateDate
+          if (dateField) {
+            const d = dateField instanceof Date ? dateField : new Date(dateField)
+            const minDate = new Date('1990-01-01')
+            const maxDate = new Date(new Date().getFullYear() + 1, 11, 31)
+            if (d >= minDate && d <= maxDate) exifData.takenAt = d.toISOString()
+          }
+        }
+      } catch (e) {
+        console.log('[mobile-upload] EXIF extraction failed:', e)
+      }
+    }
+
     const { error: uploadError } = await admin.storage
       .from('memories')
       .upload(fileName, buffer, { contentType: file.type, upsert: false })
@@ -68,7 +98,7 @@ export async function POST(request: NextRequest) {
 
     const { data: { publicUrl } } = admin.storage.from('memories').getPublicUrl(fileName)
 
-    // Create memory_media row
+    // Create memory_media row with EXIF metadata
     const { data: mediaRow, error: insertErr } = await admin
       .from('memory_media')
       .insert({
@@ -78,6 +108,9 @@ export async function POST(request: NextRequest) {
         file_type: fileType,
         is_cover: false,
         sort_order: 0,
+        taken_at: exifData.takenAt || null,
+        exif_lat: exifData.lat || null,
+        exif_lng: exifData.lng || null,
       })
       .select('id')
       .single()
