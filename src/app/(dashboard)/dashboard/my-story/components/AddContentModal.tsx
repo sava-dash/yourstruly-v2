@@ -2,7 +2,8 @@
 
 import { useState, useEffect, useCallback } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { X, Heart, Brain, ImagePlus, Mic, ChevronRight, Scan, Sparkles, RefreshCw } from 'lucide-react'
+import { X, Heart, Brain, ImagePlus, Mic, ChevronRight, Scan, Sparkles, RefreshCw, Smartphone, QrCode, Loader2 } from 'lucide-react'
+import { QRCodeSVG } from 'qrcode.react'
 import { createClient } from '@/lib/supabase/client'
 import { VoiceVideoChat } from '@/components/voice'
 import GalleryUpload from '@/components/gallery/GalleryUpload'
@@ -335,6 +336,11 @@ export default function AddContentModal({ isOpen, onClose, onContentAdded }: Add
                       Scan printed photos — we&apos;ll detect, crop, and enhance them
                     </p>
                   </div>
+
+                  {/* Upload from phone via QR */}
+                  <div className="mt-4 pt-4 border-t border-[#DDE3DF]">
+                    <MobileUploadQR onComplete={() => { onContentAdded?.() }} />
+                  </div>
                 </motion.div>
               )}
 
@@ -350,5 +356,62 @@ export default function AddContentModal({ isOpen, onClose, onContentAdded }: Add
         onComplete={() => { setShowDigitize(false); onContentAdded?.(); onClose() }}
       />
     </>
+  )
+}
+
+/** Shows a QR code that mobile devices can scan to upload photos to the account */
+function MobileUploadQR({ onComplete }: { onComplete: () => void }) {
+  const [qrUrl, setQrUrl] = useState<string | null>(null)
+  const [loading, setLoading] = useState(false)
+  const [expiresAt, setExpiresAt] = useState<string | null>(null)
+
+  const generate = async () => {
+    setLoading(true)
+    try {
+      const res = await fetch('/api/mobile-upload/token', { method: 'POST' })
+      if (res.ok) {
+        const data = await res.json()
+        setQrUrl(data.url)
+        setExpiresAt(data.expiresAt)
+      }
+    } catch {}
+    setLoading(false)
+  }
+
+  if (!qrUrl) {
+    return (
+      <button
+        onClick={generate}
+        disabled={loading}
+        className="w-full flex items-center justify-center gap-2 py-3 rounded-xl border-2 border-dashed border-[#2D5A3D]/40 text-[#2D5A3D] hover:bg-[#2D5A3D]/5 transition-colors text-sm font-medium disabled:opacity-50"
+      >
+        {loading ? <Loader2 size={18} className="animate-spin" /> : <Smartphone size={18} />}
+        {loading ? 'Generating...' : 'Upload from Phone'}
+      </button>
+    )
+  }
+
+  return (
+    <div className="flex flex-col items-center gap-3 p-4 bg-white rounded-2xl border border-[#DDE3DF]">
+      <p className="text-sm font-medium text-gray-800 flex items-center gap-2">
+        <Smartphone size={16} className="text-[#2D5A3D]" />
+        Scan with your phone
+      </p>
+      <div className="bg-white p-3 rounded-xl border border-gray-200">
+        <QRCodeSVG value={qrUrl} size={180} level="M" />
+      </div>
+      <p className="text-xs text-gray-500 text-center max-w-xs">
+        Open your phone&apos;s camera and point it at the code. You&apos;ll be able to upload photos directly to your account.
+      </p>
+      <p className="text-[10px] text-gray-400">
+        Expires in 1 hour
+      </p>
+      <button
+        onClick={generate}
+        className="text-xs text-[#2D5A3D] hover:underline flex items-center gap-1"
+      >
+        <RefreshCw size={10} /> Generate new code
+      </button>
+    </div>
   )
 }
