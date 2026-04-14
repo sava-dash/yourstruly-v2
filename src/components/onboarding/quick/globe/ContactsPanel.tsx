@@ -25,6 +25,7 @@ export interface ContactsPanelProps {
   contactRelation: string;
   setContactRelation: React.Dispatch<React.SetStateAction<string>>;
   onContinue: () => void | Promise<void>;
+  onBack?: () => void;
 }
 
 export function ContactsPanel({
@@ -36,6 +37,7 @@ export function ContactsPanel({
   contactRelation,
   setContactRelation,
   onContinue,
+  onBack,
 }: ContactsPanelProps) {
   return (
     <motion.div
@@ -151,6 +153,11 @@ export function ContactsPanel({
         </div>
       </div>
       <div className="globe-side-panel-footer">
+        {onBack && (
+          <button type="button" onClick={onBack} className="globe-back-btn" aria-label="Back">
+            ‹ Back
+          </button>
+        )}
         <button
           className="globe-continue-btn"
           onClick={async () => { await onContinue(); }}

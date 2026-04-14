@@ -172,14 +172,14 @@ export function QuickOnboardingFlow({
   // Globe sub-phase for progress bar
   const [globeSubPhase, setGlobeSubPhase] = useState<GlobeSubPhase>('map');
 
-  // Globe step progress: map → places → contacts → interests → why-here
+  // Globe step progress: map → places → contacts → interests → photos → why
   const GLOBE_SUB_STEPS: { key: GlobeSubPhase; label: string }[] = [
     { key: 'map', label: 'Map' },
     { key: 'places-lived', label: 'Places' },
     { key: 'contacts', label: 'People' },
     { key: 'interests', label: 'Interests' },
-    { key: 'why-here', label: 'Why' },
     { key: 'photo-upload', label: 'Photos' },
+    { key: 'why-here', label: 'Why' },
   ];
   const globeSubIdx = GLOBE_SUB_STEPS.findIndex(s => s.key === globeSubPhase);
 
@@ -283,6 +283,7 @@ export function QuickOnboardingFlow({
           selectedPills={selectedPills}
           onTogglePill={handleBubbleToggle}
           onSubPhaseChange={setGlobeSubPhase}
+          onBack={goBack}
         />
       </>
     );

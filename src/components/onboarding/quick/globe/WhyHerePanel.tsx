@@ -17,6 +17,7 @@ export interface WhyHerePanelProps {
   whyHereSelections: Set<string>;
   setWhyHereSelections: React.Dispatch<React.SetStateAction<Set<string>>>;
   onContinue: () => void | Promise<void>;
+  onBack?: () => void;
 }
 
 export function WhyHerePanel({
@@ -25,6 +26,7 @@ export function WhyHerePanel({
   whyHereSelections,
   setWhyHereSelections,
   onContinue,
+  onBack,
 }: WhyHerePanelProps) {
   return (
     <motion.div
@@ -91,6 +93,11 @@ export function WhyHerePanel({
         />
       </div>
       <div className="globe-side-panel-footer">
+        {onBack && (
+          <button type="button" onClick={onBack} className="globe-back-btn" aria-label="Back">
+            ‹ Back
+          </button>
+        )}
         <button
           className="globe-continue-btn"
           onClick={async () => {

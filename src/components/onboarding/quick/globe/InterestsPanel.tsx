@@ -11,6 +11,7 @@ export interface InterestsPanelProps {
   customInterestInput: string;
   setCustomInterestInput: React.Dispatch<React.SetStateAction<string>>;
   onContinue: () => void;
+  onBack?: () => void;
 }
 
 export function InterestsPanel({
@@ -21,6 +22,7 @@ export function InterestsPanel({
   customInterestInput,
   setCustomInterestInput,
   onContinue,
+  onBack,
 }: InterestsPanelProps) {
   return (
     <motion.div
@@ -83,6 +85,11 @@ export function InterestsPanel({
         </button>
       </div>
       <div className="globe-side-panel-footer">
+        {onBack && (
+          <button type="button" onClick={onBack} className="globe-back-btn" aria-label="Back">
+            ‹ Back
+          </button>
+        )}
         <button
           className="globe-continue-btn"
           onClick={onContinue}

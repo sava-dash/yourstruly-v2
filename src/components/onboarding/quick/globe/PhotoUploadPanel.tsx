@@ -20,6 +20,7 @@ export interface PhotoUploadPanelProps {
   onUploadComplete: (hasGeo: boolean) => void;
   /** Called when user skips with zero photos. */
   onSkipEmpty: () => void;
+  onBack?: () => void;
 }
 
 export function PhotoUploadPanel({
@@ -27,6 +28,7 @@ export function PhotoUploadPanel({
   setUploadedPhotos,
   onUploadComplete,
   onSkipEmpty,
+  onBack,
 }: PhotoUploadPanelProps) {
   const [isDraggingPhotos, setIsDraggingPhotos] = useState(false);
   const [isUploadingPhotos, setIsUploadingPhotos] = useState(false);
@@ -192,6 +194,17 @@ export function PhotoUploadPanel({
         )}
       </div>
       <div className="globe-side-panel-footer">
+        {onBack && (
+          <button
+            type="button"
+            onClick={onBack}
+            className="globe-back-btn"
+            disabled={isUploadingPhotos}
+            aria-label="Back"
+          >
+            ‹ Back
+          </button>
+        )}
         <button
           className="globe-continue-btn"
           disabled={isUploadingPhotos}

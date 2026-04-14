@@ -46,6 +46,7 @@ export function MapboxGlobeReveal({
   selectedPills,
   onTogglePill,
   onSubPhaseChange,
+  onBack,
 }: {
   name: string;
   birthday: string;
@@ -62,6 +63,8 @@ export function MapboxGlobeReveal({
   selectedPills: Set<string>;
   onTogglePill: (label: string) => void;
   onSubPhaseChange?: (subPhase: GlobeSubPhase) => void;
+  /** Called when user hits back from the first interactive phase (places-lived). */
+  onBack?: () => void;
 }) {
   const formatBirthday = (dateStr: string): string => {
     if (!dateStr) return '';
@@ -560,6 +563,47 @@ export function MapboxGlobeReveal({
     }
   }, []);
 
+  // ── Back-navigation history (interactive phases only) ──
+  // Tracks the sequence of *interactive* phases the user has visited so that a
+  // back button can unwind the flow. Non-interactive/animation phases are not
+  // pushed (loading, spinning, flying, pinned, globe-spin-out, adventure-message,
+  // places-flying). The current phase is NOT on the stack — only predecessors.
+  type InteractivePhase =
+    | 'places-lived'
+    | 'contacts'
+    | 'interests'
+    | 'photo-upload'
+    | 'photo-map'
+    | 'why-here';
+  const historyRef = useRef<InteractivePhase[]>([]);
+  const lastInteractiveRef = useRef<InteractivePhase | null>(null);
+
+  // Keep history in sync whenever we enter a new interactive phase.
+  useEffect(() => {
+    const interactiveSet: InteractivePhase[] = [
+      'places-lived', 'contacts', 'interests', 'photo-upload', 'photo-map', 'why-here',
+    ];
+    const current = interactiveSet.includes(phase as InteractivePhase)
+      ? (phase as InteractivePhase)
+      : null;
+    if (!current) return;
+    if (lastInteractiveRef.current && lastInteractiveRef.current !== current) {
+      historyRef.current.push(lastInteractiveRef.current);
+    }
+    lastInteractiveRef.current = current;
+  }, [phase]);
+
+  const goBack = useCallback(() => {
+    const prev = historyRef.current.pop();
+    if (prev) {
+      lastInteractiveRef.current = null; // let the effect re-sync without re-pushing
+      setPhase(prev);
+    } else if (onBack) {
+      // At the first interactive phase → hand off to parent (birth-info).
+      onBack();
+    }
+  }, [onBack]);
+
   useEffect(() => {
     if (!mapContainer.current || mapRef.current) return;
 
@@ -771,6 +815,7 @@ export function MapboxGlobeReveal({
             onPlaceInputChange={handlePlaceInputChange}
             onAddPlace={handleAddPlace}
             onSpinOutAndContinue={spinOutAndContinue}
+            onBack={goBack}
           />
         )}
       </AnimatePresence>
@@ -956,6 +1001,7 @@ export function MapboxGlobeReveal({
             contactRelation={contactRelation}
             setContactRelation={setContactRelation}
             onContinue={async () => { await saveContacts(); setPhase('interests'); }}
+            onBack={goBack}
           />
         )}
       </AnimatePresence>
@@ -970,7 +1016,8 @@ export function MapboxGlobeReveal({
             setCustomInterests={setCustomInterests}
             customInterestInput={customInterestInput}
             setCustomInterestInput={setCustomInterestInput}
-            onContinue={() => { setPhase('why-here'); }}
+            onContinue={() => { setPhase('photo-upload'); }}
+            onBack={goBack}
           />
         )}
       </AnimatePresence>
@@ -985,8 +1032,9 @@ export function MapboxGlobeReveal({
             setWhyHereSelections={setWhyHereSelections}
             onContinue={async () => {
               await saveWhyHere();
-              setPhase('photo-upload');
+              setPhase('lets-go');
             }}
+            onBack={goBack}
           />
         )}
       </AnimatePresence>
@@ -998,9 +1046,10 @@ export function MapboxGlobeReveal({
             uploadedPhotos={uploadedPhotos}
             setUploadedPhotos={setUploadedPhotos}
             onUploadComplete={(hasGeo) => {
-              setPhase(hasGeo ? 'photo-map' : 'lets-go');
+              setPhase(hasGeo ? 'photo-map' : 'why-here');
             }}
-            onSkipEmpty={() => setPhase('lets-go')}
+            onSkipEmpty={() => setPhase('why-here')}
+            onBack={goBack}
           />
         )}
       </AnimatePresence>
@@ -1064,13 +1113,21 @@ export function MapboxGlobeReveal({
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
                   transition={{ delay: buttonDelay }}
-                  style={{ padding: '0 24px 20px' }}
+                  style={{ padding: '0 24px 20px', display: 'flex', gap: '8px', alignItems: 'center' }}
                 >
                   <button
+                    type="button"
+                    onClick={goBack}
+                    className="globe-back-btn"
+                    aria-label="Back"
+                  >
+                    ‹ Back
+                  </button>
+                  <button
                     className="globe-continue-btn"
-                    style={{ margin: 0, width: '100%' }}
+                    style={{ margin: 0, flex: 1 }}
                     onClick={() => {
-                      setPhase('lets-go');
+                      setPhase('why-here');
                     }}
                   >
                     I&apos;m ready to continue <ChevronRight size={18} />
@@ -1583,11 +1640,39 @@ export function MapboxGlobeReveal({
           padding: 16px 24px 24px;
           padding-bottom: calc(24px + env(safe-area-inset-bottom));
           border-top: 1px solid rgba(0, 0, 0, 0.06);
+          display: flex;
+          gap: 8px;
+          align-items: center;
         }
 
         .globe-side-panel-footer .globe-continue-btn {
           margin: 0;
-          width: 100%;
+          flex: 1;
+          width: auto;
+        }
+
+        /* Back button — matches WhyHereStep's nav-back-btn but tuned for globe overlays */
+        .globe-back-btn {
+          display: inline-flex;
+          align-items: center;
+          justify-content: center;
+          padding: 0 14px;
+          height: 50px;
+          min-width: 56px;
+          background: rgba(255, 255, 255, 0.92);
+          border: 1.5px solid rgba(64, 106, 86, 0.22);
+          border-radius: 14px;
+          color: rgba(45, 45, 45, 0.65);
+          font-size: 14px;
+          font-weight: 600;
+          cursor: pointer;
+          flex-shrink: 0;
+          transition: border-color 0.2s, color 0.2s, background 0.2s;
+        }
+        .globe-back-btn:hover {
+          border-color: #2D5A3D;
+          color: #2D5A3D;
+          background: #fff;
         }
 
         /* Custom input row */

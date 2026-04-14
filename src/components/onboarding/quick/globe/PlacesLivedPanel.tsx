@@ -26,6 +26,7 @@ export interface PlacesLivedPanelProps {
   onPlaceInputChange: (val: string) => void;
   onAddPlace: (cityName: string, coords?: [number, number]) => void | Promise<void>;
   onSpinOutAndContinue: () => void | Promise<void>;
+  onBack?: () => void;
 }
 
 export function PlacesLivedPanel({
@@ -40,6 +41,7 @@ export function PlacesLivedPanel({
   onPlaceInputChange,
   onAddPlace,
   onSpinOutAndContinue,
+  onBack,
 }: PlacesLivedPanelProps) {
   return (
     <motion.div
@@ -191,6 +193,25 @@ export function PlacesLivedPanel({
               >
                 {placesAdded.length > 0 ? "I'm done" : 'Skip'}
               </button>
+              {onBack && (
+                <button
+                  type="button"
+                  onClick={onBack}
+                  style={{
+                    padding: '6px',
+                    border: 'none',
+                    background: 'none',
+                    color: 'rgba(45,45,45,0.45)',
+                    fontSize: '13px',
+                    fontWeight: 500,
+                    cursor: 'pointer',
+                    textAlign: 'center',
+                  }}
+                  aria-label="Back"
+                >
+                  ‹ Back
+                </button>
+              )}
             </>
           )}
         </div>
