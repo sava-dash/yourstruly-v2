@@ -5,6 +5,7 @@
  * Works in both browser (Canvas API) and server (node-canvas) environments.
  */
 
+import QRCode from 'qrcode'
 import type { LayoutTemplate, LayoutSlot, SlotPosition } from './templates'
 
 // =============================================================================
@@ -392,18 +393,25 @@ async function renderQRSlot(
     return
   }
 
-  // Generate QR code using a service or library
-  // Using a QR code API for simplicity - in production, use a library like 'qrcode'
-  const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=${Math.round(size)}x${Math.round(size)}&data=${encodeURIComponent(content.value)}`
-  
+  // Generate QR locally using the `qrcode` package. Error Correction Level 'H'
+  // (~30% redundancy) ensures prints stay scannable after fold/wear. We render
+  // at the device pixel size of the slot so print DPI is preserved by the
+  // surrounding renderExport pipeline (no external network call).
   try {
-    const img = await loadImage(qrUrl)
+    const pixelSize = Math.max(64, Math.round(size))
+    const qrDataUrl = await QRCode.toDataURL(content.value, {
+      errorCorrectionLevel: 'H',
+      margin: 1,
+      width: pixelSize,
+      color: { dark: '#000000', light: '#FFFFFF' },
+    })
+    const img = await loadImage(qrDataUrl)
     ctx.drawImage(img, centerX, centerY, size, size)
   } catch (error) {
     console.error('Failed to generate QR code:', error)
     ctx.fillStyle = '#ffebee'
     ctx.fillRect(centerX, centerY, size, size)
-    ctx.fillStyle = '#ef5350'
+    ctx.fillStyle = '#c35f33'
     ctx.font = '14px system-ui'
     ctx.textAlign = 'center'
     ctx.textBaseline = 'middle'

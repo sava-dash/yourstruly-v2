@@ -34,7 +34,10 @@ import {
   Copy,
   Square,
   CheckSquare,
-  Monitor
+  Monitor,
+  Shield,
+  Lightbulb,
+  CheckCircle2
 } from 'lucide-react'
 import { 
   LAYOUT_TEMPLATES, 
@@ -44,6 +47,7 @@ import {
 } from '@/lib/photobook/templates'
 import { PRODIGI_PHOTOBOOK_SKUS } from '@/components/photobook/types'
 import { getEnabledProducts, getEnabledTemplates, DbProduct } from '@/lib/photobook/db'
+import QRPreview from '@/components/photobook/QRPreview'
 
 // ============================================================================
 // TYPES
@@ -100,10 +104,21 @@ interface SlotData {
   mediaId?: string
   fileUrl?: string
   text?: string
+  /** QR target: a memory (legacy field, preserved for back-compat) */
   qrMemoryId?: string
+  /** QR target: a wisdom / knowledge entry (new, polymorphic addition) */
+  qrWisdomId?: string
   textStyle?: TextStyle
   crop?: CropData
   cropZoom?: CropZoomData
+}
+
+interface WisdomEntry {
+  id: string
+  prompt_text: string
+  response_text: string | null
+  category: string | null
+  created_at: string
 }
 
 // Extended crop data for slot storage
@@ -202,6 +217,13 @@ const DEFAULT_TEXT_STYLE: TextStyle = {
 
 function getFontSizePx(size: string): number {
   return FONT_SIZES.find(f => f.value === size)?.px || 16
+}
+
+/** Parse a product size string like "8×8"" or "11×8.5"" into inches. */
+function parsePrintInches(size: string): { width: number; height: number } {
+  const m = size.match(/(\d+(?:\.\d+)?)\s*×\s*(\d+(?:\.\d+)?)/)
+  if (!m) return { width: 8, height: 8 }
+  return { width: parseFloat(m[1]), height: parseFloat(m[2]) }
 }
 
 // ============================================================================
@@ -317,7 +339,7 @@ function ProductStep({
   if (isLoading) {
     return (
       <div className="max-w-6xl mx-auto text-center py-16">
-        <Loader2 className="w-8 h-8 mx-auto animate-spin text-[#2D5A3D]" />
+        <Loader2 className="w-8 h-8 mx-auto animate-spin text-[#406A56]" />
         <p className="text-[#5A6660] mt-4">Loading products...</p>
       </div>
     )
@@ -327,7 +349,7 @@ function ProductStep({
     return (
       <div className="max-w-6xl mx-auto text-center py-16">
         <Package className="w-16 h-16 mx-auto text-[#94A09A]" />
-        <h3 className="text-lg font-medium text-[#2D5A3D] mt-4">No Products Available</h3>
+        <h3 className="text-lg font-medium text-[#406A56] mt-4">No Products Available</h3>
         <p className="text-[#5A6660] mt-2">Please check back later or contact support.</p>
       </div>
     )
@@ -358,18 +380,18 @@ function ProductStep({
                 onClick={() => onSelect(product)}
                 className={`cursor-pointer overflow-hidden transition-all ${
                   isSelected 
-                    ? 'ring-2 ring-[#2D5A3D] ring-offset-2 ring-offset-[#FAFAF7]' 
+                    ? 'ring-2 ring-[#406A56] ring-offset-2 ring-offset-[#FAFAF7]' 
                     : ''
                 }`}
               >
                 {/* Product Icon Header */}
                 <div className={`p-6 ${
                   isSelected 
-                    ? 'bg-gradient-to-br from-[#2D5A3D] to-[#234A31]' 
-                    : 'bg-gradient-to-br from-[#2D5A3D]/10 to-[#2D5A3D]/5'
+                    ? 'bg-gradient-to-br from-[#406A56] to-[#345548]' 
+                    : 'bg-gradient-to-br from-[#406A56]/10 to-[#406A56]/5'
                 }`}>
                   <div className={`w-16 h-16 rounded-2xl flex items-center justify-center mx-auto ${
-                    isSelected ? 'bg-white/20 text-white' : 'bg-white text-[#2D5A3D]'
+                    isSelected ? 'bg-white/20 text-white' : 'bg-white text-[#406A56]'
                   }`}>
                     {product.icon}
                   </div>
@@ -379,11 +401,11 @@ function ProductStep({
                 <div className="p-5">
                   <div className="flex items-start justify-between mb-2">
                     <div>
-                      <h3 className="font-bold text-[#2D5A3D]">{product.name}</h3>
+                      <h3 className="font-bold text-[#406A56]">{product.name}</h3>
                       <p className="text-sm text-[#5A6660]">{product.size}</p>
                     </div>
                     {isSelected && (
-                      <div className="w-6 h-6 rounded-full bg-[#2D5A3D] flex items-center justify-center">
+                      <div className="w-6 h-6 rounded-full bg-[#406A56] flex items-center justify-center">
                         <Check className="w-4 h-4 text-white" />
                       </div>
                     )}
@@ -404,7 +426,7 @@ function ProductStep({
                   {/* Price */}
                   <div className="pt-4 border-t border-[#DDE3DF]">
                     <div className="flex items-baseline justify-between">
-                      <span className="text-2xl font-bold text-[#2D5A3D]">${displayPrice}</span>
+                      <span className="text-2xl font-bold text-[#406A56]">${displayPrice}</span>
                       <span className="text-xs text-[#94A09A]">
                         {product.minPages}-{product.maxPages} pages
                       </span>
@@ -458,7 +480,7 @@ function ContentStep({
           <div className="flex items-center gap-4">
             <div className={`px-4 py-2 rounded-xl font-medium ${
               selectedCount >= minRequired
-                ? 'bg-[#2D5A3D]/10 text-[#2D5A3D]'
+                ? 'bg-[#406A56]/10 text-[#406A56]'
                 : 'bg-[#C4A235]/10 text-[#C4A235]'
             }`}>
               {selectedCount} selected
@@ -469,7 +491,7 @@ function ContentStep({
               ) : selectedCount > maxAllowed ? (
                 <span className="text-[#B8562E]">Too many selected (max {maxAllowed})</span>
               ) : (
-                <span className="text-[#2D5A3D]">Ready to continue</span>
+                <span className="text-[#406A56]">Ready to continue</span>
               )}
             </div>
           </div>
@@ -479,10 +501,10 @@ function ContentStep({
         </div>
         
         {/* Progress bar */}
-        <div className="mt-4 h-2 bg-[#2D5A3D]/10 rounded-full overflow-hidden">
+        <div className="mt-4 h-2 bg-[#406A56]/10 rounded-full overflow-hidden">
           <motion.div
             className={`h-full rounded-full ${
-              selectedCount >= minRequired ? 'bg-[#2D5A3D]' : 'bg-[#C4A235]'
+              selectedCount >= minRequired ? 'bg-[#406A56]' : 'bg-[#C4A235]'
             }`}
             initial={{ width: 0 }}
             animate={{ width: `${Math.min((selectedCount / minRequired) * 100, 100)}%` }}
@@ -494,16 +516,16 @@ function ContentStep({
       {/* Memory Grid */}
       {isLoading ? (
         <div className="flex items-center justify-center py-20">
-          <Loader2 className="w-8 h-8 animate-spin text-[#2D5A3D]" />
+          <Loader2 className="w-8 h-8 animate-spin text-[#406A56]" />
         </div>
       ) : memories.length === 0 ? (
         <GlassCard variant="warm" padding="lg" className="text-center">
           <ImageIcon className="w-16 h-16 mx-auto text-[#94A09A] mb-4" />
-          <h3 className="text-lg font-semibold text-[#2D5A3D] mb-2">No Memories Yet</h3>
+          <h3 className="text-lg font-semibold text-[#406A56] mb-2">No Memories Yet</h3>
           <p className="text-[#5A6660] mb-4">Create some memories first to build your photobook</p>
           <button
             onClick={() => window.location.href = '/dashboard/memories'}
-            className="px-4 py-2 bg-[#2D5A3D] text-white rounded-xl hover:bg-[#234A31] transition-colors"
+            className="px-4 py-2 bg-[#406A56] text-white rounded-xl hover:bg-[#345548] transition-colors"
           >
             Go to Memories
           </button>
@@ -522,8 +544,8 @@ function ContentStep({
                 onClick={() => onToggle(memory.id)}
                 className={`relative aspect-square rounded-xl overflow-hidden cursor-pointer ring-2 transition-all ${
                   isSelected 
-                    ? 'ring-[#2D5A3D] ring-offset-2' 
-                    : 'ring-transparent hover:ring-[#2D5A3D]/30'
+                    ? 'ring-[#406A56] ring-offset-2' 
+                    : 'ring-transparent hover:ring-[#406A56]/30'
                 }`}
               >
                 {coverMedia?.file_url ? (
@@ -533,7 +555,7 @@ function ContentStep({
                     className="w-full h-full object-cover"
                   />
                 ) : (
-                  <div className="w-full h-full bg-[#2D5A3D]/10 flex items-center justify-center">
+                  <div className="w-full h-full bg-[#406A56]/10 flex items-center justify-center">
                     <ImageIcon className="w-8 h-8 text-[#94A09A]" />
                   </div>
                 )}
@@ -541,14 +563,14 @@ function ContentStep({
                 {/* Overlay */}
                 <div className={`absolute inset-0 transition-all ${
                   isSelected 
-                    ? 'bg-[#2D5A3D]/40' 
+                    ? 'bg-[#406A56]/40' 
                     : 'bg-black/0 hover:bg-black/20'
                 }`} />
                 
                 {/* Selection indicator */}
                 <div className={`absolute top-2 right-2 w-6 h-6 rounded-full flex items-center justify-center transition-all ${
                   isSelected 
-                    ? 'bg-[#2D5A3D] text-white' 
+                    ? 'bg-[#406A56] text-white' 
                     : 'bg-white/80 text-transparent'
                 }`}>
                   <Check className="w-4 h-4" />
@@ -584,6 +606,9 @@ function ArrangeStep({
   pages,
   setPages,
   selectedMemories,
+  wisdomEntries,
+  mediaFaces,
+  selectedProduct,
   onAutoArrange,
   canUndo,
   canRedo,
@@ -594,6 +619,10 @@ function ArrangeStep({
   pages: PageData[]
   setPages: (pages: PageData[]) => void
   selectedMemories: Memory[]
+  wisdomEntries: WisdomEntry[]
+  /** Map of mediaId → primary face bounding box (0-1 normalized) */
+  mediaFaces: Map<string, { x: number; y: number; width: number; height: number }>
+  selectedProduct: Product | null
   onAutoArrange: () => void
   canUndo: boolean
   canRedo: boolean
@@ -605,10 +634,28 @@ function ArrangeStep({
   const [showLayoutPicker, setShowLayoutPicker] = useState(false)
   const [layoutPickerMode, setLayoutPickerMode] = useState<'add' | 'change'>('add')
   const [showQRPicker, setShowQRPicker] = useState(false)
+  const [qrPickerTab, setQrPickerTab] = useState<'memories' | 'wisdom'>('memories')
   const [showBackgroundPicker, setShowBackgroundPicker] = useState(false)
   const [showPhotoPicker, setShowPhotoPicker] = useState(false)
   const [activeSlotId, setActiveSlotId] = useState<string | null>(null)
   const [activeTextSlotId, setActiveTextSlotId] = useState<string | null>(null)
+  // Print-safe-zone overlay toggle (persisted via localStorage)
+  const [showSafetyLines, setShowSafetyLines] = useState<boolean>(() => {
+    if (typeof window === 'undefined') return false
+    try {
+      return window.localStorage.getItem('photobook:showSafetyLines') === '1'
+    } catch {
+      return false
+    }
+  })
+  useEffect(() => {
+    if (typeof window === 'undefined') return
+    try {
+      window.localStorage.setItem('photobook:showSafetyLines', showSafetyLines ? '1' : '0')
+    } catch {
+      /* ignore storage errors (private mode etc.) */
+    }
+  }, [showSafetyLines])
 
   // Bulk page selection state
   const [selectedPageIds, setSelectedPageIds] = useState<Set<string>>(new Set())
@@ -858,11 +905,12 @@ function ArrangeStep({
       page.slots.forEach(slot => {
         if (slot.memoryId) used.add(slot.memoryId)
         if (slot.qrMemoryId) used.add(slot.qrMemoryId)
+        // qrWisdomId intentionally not added to memory-ids set
       })
     })
     return used
   }, [pages])
-  
+
   const addPage = (layoutId: string = 'full-photo') => {
     const template = getTemplateById(layoutId)
     // Initialize text slots with the last used text style for consistency
@@ -973,13 +1021,36 @@ function ArrangeStep({
       if (p.id !== pageId) return p
 
       const existingSlotIndex = p.slots.findIndex(s => s.slotId === slotId)
+
+      // Face-centered smart cropping: if we have a detected face for this
+      // media, bias the initial offset so the face sits near the slot center.
+      // Face bbox is normalized 0-1 (left/top/width/height). We compute the
+      // face midpoint, then translate the percent-offset the existing
+      // transform expects (range ~ -50..50, where 0 = centered). Falls back
+      // to center-crop (0,0) when no face data is present.
+      let initialOffsetX = 0
+      let initialOffsetY = 0
+      if (photo) {
+        const face = mediaFaces.get(photo.mediaId)
+        if (face && face.width > 0 && face.height > 0) {
+          const faceCenterX = face.x + face.width / 2 // 0..1
+          const faceCenterY = face.y + face.height / 2 // 0..1
+          // Convert "where in the image the face is" to a translate that
+          // moves that point toward the slot center. Deltas from 0.5 are
+          // scaled into the same -50..50 space used by drag handlers, but
+          // clamped to -25..25 to avoid extreme crops.
+          initialOffsetX = Math.max(-25, Math.min(25, (0.5 - faceCenterX) * 100))
+          initialOffsetY = Math.max(-25, Math.min(25, (0.5 - faceCenterY) * 100))
+        }
+      }
+
       const newSlot = photo ? {
         slotId,
         type: 'photo' as const,
         memoryId: photo.memoryId,
         mediaId: photo.mediaId,
         fileUrl: photo.fileUrl,
-        cropZoom: { scale: 1, offsetX: 0, offsetY: 0 }
+        cropZoom: { scale: 1, offsetX: initialOffsetX, offsetY: initialOffsetY }
       } : null
 
       if (existingSlotIndex >= 0) {
@@ -999,7 +1070,10 @@ function ArrangeStep({
     saveHistory(newPages)
   }
   
-  const addQRToPage = (pageId: string, memoryId: string) => {
+  const addQRToPage = (
+    pageId: string,
+    target: { memoryId?: string; wisdomId?: string }
+  ) => {
     setPages(pages.map(p => {
       if (p.id !== pageId) return p
       return {
@@ -1007,7 +1081,8 @@ function ArrangeStep({
         slots: [...p.slots.filter(s => s.type !== 'qr'), {
           slotId: 'qr-code',
           type: 'qr' as const,
-          qrMemoryId: memoryId
+          qrMemoryId: target.memoryId,
+          qrWisdomId: target.wisdomId,
         }]
       }
     }))
@@ -1019,7 +1094,7 @@ function ArrangeStep({
     {/* Mobile simplified view */}
     <div className="block md:hidden">
       <div className="rounded-2xl bg-[#F5F0EA] border border-[#DDE3DF] p-6 text-center">
-        <Monitor className="w-12 h-12 mx-auto text-[#2D5A3D] mb-4" />
+        <Monitor className="w-12 h-12 mx-auto text-[#406A56] mb-4" />
         <h3 className="text-lg font-semibold text-[#1A1F1C] mb-2">Desktop Recommended</h3>
         <p className="text-[#5A6660] text-sm mb-6">
           For the best book-making experience, use a tablet or desktop. You can still select photos and layouts on mobile.
@@ -1035,7 +1110,7 @@ function ArrangeStep({
           {/* Auto-arrange button for mobile */}
           <button
             onClick={onAutoArrange}
-            className="w-full py-3 bg-[#2D5A3D] text-white rounded-xl font-medium flex items-center justify-center gap-2"
+            className="w-full py-3 bg-[#406A56] text-white rounded-xl font-medium flex items-center justify-center gap-2"
           >
             <Wand2 className="w-4 h-4" />
             Auto-Arrange Photos
@@ -1078,7 +1153,7 @@ function ArrangeStep({
           {/* Add page on mobile */}
           <button
             onClick={() => addPage('full-photo')}
-            className="w-full py-3 border border-[#2D5A3D] text-[#2D5A3D] rounded-xl font-medium flex items-center justify-center gap-2"
+            className="w-full py-3 border border-[#406A56] text-[#406A56] rounded-xl font-medium flex items-center justify-center gap-2"
           >
             <Plus className="w-4 h-4" />
             Add Page
@@ -1089,14 +1164,14 @@ function ArrangeStep({
             <button
               onClick={onUndo}
               disabled={!canUndo}
-              className="flex-1 py-2 border border-[#DDE3DF] rounded-xl text-[#2D5A3D] text-sm font-medium flex items-center justify-center gap-1 disabled:opacity-30"
+              className="flex-1 py-2 border border-[#DDE3DF] rounded-xl text-[#406A56] text-sm font-medium flex items-center justify-center gap-1 disabled:opacity-30"
             >
               <Undo2 className="w-4 h-4" /> Undo
             </button>
             <button
               onClick={onRedo}
               disabled={!canRedo}
-              className="flex-1 py-2 border border-[#DDE3DF] rounded-xl text-[#2D5A3D] text-sm font-medium flex items-center justify-center gap-1 disabled:opacity-30"
+              className="flex-1 py-2 border border-[#DDE3DF] rounded-xl text-[#406A56] text-sm font-medium flex items-center justify-center gap-1 disabled:opacity-30"
             >
               <Redo2 className="w-4 h-4" /> Redo
             </button>
@@ -1111,11 +1186,11 @@ function ArrangeStep({
       <div className="w-48 flex-shrink-0 bg-[#F5F0EA]/50 rounded-2xl p-4 overflow-y-auto">
         {/* Header with select all/none */}
         <div className="flex items-center justify-between mb-2">
-          <h3 className="font-semibold text-[#2D5A3D] text-sm">Pages</h3>
+          <h3 className="font-semibold text-[#406A56] text-sm">Pages</h3>
           <div className="flex items-center gap-2">
             <button
               onClick={selectAllPages}
-              className="text-xs text-[#5A6660] hover:text-[#2D5A3D]"
+              className="text-xs text-[#5A6660] hover:text-[#406A56]"
               title="Select All"
             >
               All
@@ -1123,7 +1198,7 @@ function ArrangeStep({
             <span className="text-[#94A09A]">|</span>
             <button
               onClick={deselectAllPages}
-              className="text-xs text-[#5A6660] hover:text-[#2D5A3D]"
+              className="text-xs text-[#5A6660] hover:text-[#406A56]"
               title="Deselect All"
             >
               None
@@ -1137,7 +1212,7 @@ function ArrangeStep({
           <div className="flex gap-1 mb-3">
             <button
               onClick={duplicateSelectedPages}
-              className="flex-1 py-1.5 px-2 bg-[#2D5A3D]/10 hover:bg-[#2D5A3D]/20 rounded-lg text-[#2D5A3D] text-xs font-medium flex items-center justify-center gap-1 transition-colors"
+              className="flex-1 py-1.5 px-2 bg-[#406A56]/10 hover:bg-[#406A56]/20 rounded-lg text-[#406A56] text-xs font-medium flex items-center justify-center gap-1 transition-colors"
               title="Duplicate Selected"
             >
               <Copy className="w-3 h-3" />
@@ -1175,9 +1250,9 @@ function ArrangeStep({
                 value={page}
                 className={`group relative cursor-pointer rounded-lg overflow-hidden border-2 transition-all ${
                   selectedPageId === page.id && !isSelected
-                    ? 'border-[#2D5A3D] ring-1 ring-[#2D5A3D]/20'
+                    ? 'border-[#406A56] ring-1 ring-[#406A56]/20'
                     : isSelected
-                    ? 'border-[#2D5A3D] ring-2 ring-[#2D5A3D]/30'
+                    ? 'border-[#406A56] ring-2 ring-[#406A56]/30'
                     : 'border-[#DDE3DF] hover:border-[#DDE3DF]'
                 }`}
                 onClick={(e) => {
@@ -1191,7 +1266,7 @@ function ArrangeStep({
                   <div
                     className={`w-5 h-5 rounded border-2 flex items-center justify-center transition-all ${
                       isSelected
-                        ? 'bg-[#2D5A3D] border-[#2D5A3D]'
+                        ? 'bg-[#406A56] border-[#406A56]'
                         : 'bg-white/90 border-[#DDE3DF] opacity-0 group-hover:opacity-100'
                     }`}
                   >
@@ -1237,7 +1312,7 @@ function ArrangeStep({
 
                 {/* QR indicator */}
                 {page.slots.some(s => s.type === 'qr') && (
-                  <div className="absolute bottom-1 left-1 p-1 bg-[#2D5A3D] rounded">
+                  <div className="absolute bottom-1 left-1 p-1 bg-[#406A56] rounded">
                     <QrCode className="w-3 h-3 text-white" />
                   </div>
                 )}
@@ -1252,7 +1327,7 @@ function ArrangeStep({
             setLayoutPickerMode('add')
             setShowLayoutPicker(true)
           }}
-          className="w-full mt-4 aspect-square rounded-lg border-2 border-dashed border-[#DDE3DF] hover:border-[#2D5A3D]/50 hover:bg-[#2D5A3D]/5 flex flex-col items-center justify-center text-[#94A09A] hover:text-[#2D5A3D] transition-all"
+          className="w-full mt-4 aspect-square rounded-lg border-2 border-dashed border-[#DDE3DF] hover:border-[#406A56]/50 hover:bg-[#406A56]/5 flex flex-col items-center justify-center text-[#94A09A] hover:text-[#406A56] transition-all"
         >
           <Plus className="w-6 h-6" />
           <span className="text-xs mt-1">Add Page</span>
@@ -1261,7 +1336,7 @@ function ArrangeStep({
         {/* Auto-Arrange Button */}
         <button
           onClick={onAutoArrange}
-          className="w-full mt-3 py-2 rounded-lg bg-[#2D5A3D]/10 hover:bg-[#2D5A3D]/20 text-[#2D5A3D] text-sm font-medium flex items-center justify-center gap-2 transition-colors"
+          className="w-full mt-3 py-2 rounded-lg bg-[#406A56]/10 hover:bg-[#406A56]/20 text-[#406A56] text-sm font-medium flex items-center justify-center gap-2 transition-colors"
         >
           <Wand2 className="w-4 h-4" />
           Auto-Arrange
@@ -1278,14 +1353,14 @@ function ArrangeStep({
                 setLayoutPickerMode('change')
                 setShowLayoutPicker(true)
               }}
-              className="px-3 py-2 bg-[#2D5A3D]/10 hover:bg-[#2D5A3D]/20 rounded-lg text-[#2D5A3D] text-sm font-medium flex items-center gap-2"
+              className="px-3 py-2 bg-[#406A56]/10 hover:bg-[#406A56]/20 rounded-lg text-[#406A56] text-sm font-medium flex items-center gap-2"
             >
               <Layout className="w-4 h-4" />
               Change Layout
             </button>
             <button
               onClick={() => setShowQRPicker(true)}
-              className="px-3 py-2 bg-[#2D5A3D]/10 hover:bg-[#2D5A3D]/20 rounded-lg text-[#2D5A3D] text-sm font-medium flex items-center gap-2"
+              className="px-3 py-2 bg-[#406A56]/10 hover:bg-[#406A56]/20 rounded-lg text-[#406A56] text-sm font-medium flex items-center gap-2"
             >
               <QrCode className="w-4 h-4" />
               Add QR Code
@@ -1295,7 +1370,7 @@ function ArrangeStep({
             <div className="relative">
               <button
                 onClick={() => setShowBackgroundPicker(!showBackgroundPicker)}
-                className="px-3 py-2 bg-[#2D5A3D]/10 hover:bg-[#2D5A3D]/20 rounded-lg text-[#2D5A3D] text-sm font-medium flex items-center gap-2"
+                className="px-3 py-2 bg-[#406A56]/10 hover:bg-[#406A56]/20 rounded-lg text-[#406A56] text-sm font-medium flex items-center gap-2"
               >
                 <div 
                   className="w-4 h-4 rounded border border-[#DDE3DF]"
@@ -1309,7 +1384,7 @@ function ArrangeStep({
               {/* Background Color Dropdown */}
               {showBackgroundPicker && (
                 <div className="absolute top-full left-0 mt-2 p-3 bg-white rounded-xl shadow-xl border border-[#DDE3DF] z-50 w-64">
-                  <h4 className="text-xs font-semibold text-[#2D5A3D] uppercase mb-2">Page Background</h4>
+                  <h4 className="text-xs font-semibold text-[#406A56] uppercase mb-2">Page Background</h4>
                   <div className="grid grid-cols-6 gap-1.5">
                     {BACKGROUND_COLORS.map(bg => (
                       <button
@@ -1322,7 +1397,7 @@ function ArrangeStep({
                         }}
                         className={`w-8 h-8 rounded border-2 transition-all hover:scale-110 ${
                           selectedPage?.background === bg.value 
-                            ? 'border-[#2D5A3D] ring-2 ring-[#2D5A3D]/30' 
+                            ? 'border-[#406A56] ring-2 ring-[#406A56]/30' 
                             : 'border-transparent hover:border-[#DDE3DF]'
                         }`}
                         style={{ background: bg.value }}
@@ -1332,7 +1407,7 @@ function ArrangeStep({
                   </div>
                   <button
                     onClick={() => setShowBackgroundPicker(false)}
-                    className="mt-2 w-full text-xs text-[#5A6660] hover:text-[#2D5A3D]"
+                    className="mt-2 w-full text-xs text-[#5A6660] hover:text-[#406A56]"
                   >
                     Close
                   </button>
@@ -1340,12 +1415,27 @@ function ArrangeStep({
               )}
             </div>
 
+            {/* Show safety lines toggle (print bleed + safe zone overlay) */}
+            <button
+              onClick={() => setShowSafetyLines(v => !v)}
+              aria-pressed={showSafetyLines}
+              title="Show safety lines — bleed and safe zone guides for print"
+              className={`px-3 py-2 rounded-lg text-sm font-medium flex items-center gap-2 min-h-[44px] transition-colors ${
+                showSafetyLines
+                  ? 'bg-[#406A56] text-white'
+                  : 'bg-[#406A56]/10 hover:bg-[#406A56]/20 text-[#406A56]'
+              }`}
+            >
+              <Shield className="w-4 h-4" />
+              {showSafetyLines ? 'Hide safety lines' : 'Show safety lines'}
+            </button>
+
             {/* Undo/Redo buttons */}
             <div className="flex items-center gap-1 ml-2 pl-2 border-l border-[#DDE3DF]">
               <button
                 onClick={onUndo}
                 disabled={!canUndo}
-                className="px-2 py-2 rounded-lg text-[#2D5A3D] hover:bg-[#2D5A3D]/10 disabled:opacity-30 disabled:cursor-not-allowed flex items-center gap-1"
+                className="px-2 py-2 rounded-lg text-[#406A56] hover:bg-[#406A56]/10 disabled:opacity-30 disabled:cursor-not-allowed flex items-center gap-1"
                 title="Undo (Ctrl+Z)"
               >
                 <Undo2 className="w-4 h-4" />
@@ -1354,7 +1444,7 @@ function ArrangeStep({
               <button
                 onClick={onRedo}
                 disabled={!canRedo}
-                className="px-2 py-2 rounded-lg text-[#2D5A3D] hover:bg-[#2D5A3D]/10 disabled:opacity-30 disabled:cursor-not-allowed flex items-center gap-1"
+                className="px-2 py-2 rounded-lg text-[#406A56] hover:bg-[#406A56]/10 disabled:opacity-30 disabled:cursor-not-allowed flex items-center gap-1"
                 title="Redo (Ctrl+Shift+Z)"
               >
                 <Redo2 className="w-4 h-4" />
@@ -1376,7 +1466,7 @@ function ArrangeStep({
             <select
               value={activeStyle.fontFamily}
               onChange={(e) => updateTextStyle(selectedPageId!, activeTextSlotId!, { fontFamily: e.target.value })}
-              className="px-2 py-1.5 bg-[#F5F0EA] border border-[#DDE3DF] rounded-lg text-sm text-[#2D5A3D] focus:outline-none focus:ring-2 focus:ring-[#2D5A3D]/30 cursor-pointer"
+              className="px-2 py-1.5 bg-[#F5F0EA] border border-[#DDE3DF] rounded-lg text-sm text-[#406A56] focus:outline-none focus:ring-2 focus:ring-[#406A56]/30 cursor-pointer"
             >
               {FONT_FAMILIES.map(f => (
                 <option key={f.value} value={f.value} style={{ fontFamily: f.value }}>{f.label}</option>
@@ -1387,7 +1477,7 @@ function ArrangeStep({
             <select
               value={activeStyle.fontSize}
               onChange={(e) => updateTextStyle(selectedPageId!, activeTextSlotId!, { fontSize: e.target.value })}
-              className="px-2 py-1.5 bg-[#F5F0EA] border border-[#DDE3DF] rounded-lg text-sm text-[#2D5A3D] focus:outline-none focus:ring-2 focus:ring-[#2D5A3D]/30 cursor-pointer"
+              className="px-2 py-1.5 bg-[#F5F0EA] border border-[#DDE3DF] rounded-lg text-sm text-[#406A56] focus:outline-none focus:ring-2 focus:ring-[#406A56]/30 cursor-pointer"
             >
               {FONT_SIZES.map(s => (
                 <option key={s.value} value={s.value}>{s.label}</option>
@@ -1395,7 +1485,7 @@ function ArrangeStep({
             </select>
             
             {/* Divider */}
-            <div className="w-px h-6 bg-[#2D5A3D]/20" />
+            <div className="w-px h-6 bg-[#406A56]/20" />
             
             {/* Bold */}
             <button
@@ -1404,8 +1494,8 @@ function ArrangeStep({
               })}
               className={`p-1.5 rounded-lg transition-colors ${
                 activeStyle.fontWeight === 'bold' 
-                  ? 'bg-[#2D5A3D] text-white' 
-                  : 'bg-[#F5F0EA] text-[#2D5A3D] hover:bg-[#2D5A3D]/10'
+                  ? 'bg-[#406A56] text-white' 
+                  : 'bg-[#F5F0EA] text-[#406A56] hover:bg-[#406A56]/10'
               }`}
               title="Bold"
             >
@@ -1419,8 +1509,8 @@ function ArrangeStep({
               })}
               className={`p-1.5 rounded-lg transition-colors ${
                 activeStyle.fontStyle === 'italic' 
-                  ? 'bg-[#2D5A3D] text-white' 
-                  : 'bg-[#F5F0EA] text-[#2D5A3D] hover:bg-[#2D5A3D]/10'
+                  ? 'bg-[#406A56] text-white' 
+                  : 'bg-[#F5F0EA] text-[#406A56] hover:bg-[#406A56]/10'
               }`}
               title="Italic"
             >
@@ -1428,7 +1518,7 @@ function ArrangeStep({
             </button>
             
             {/* Divider */}
-            <div className="w-px h-6 bg-[#2D5A3D]/20" />
+            <div className="w-px h-6 bg-[#406A56]/20" />
             
             {/* Alignment */}
             <div className="flex bg-[#F5F0EA] rounded-lg p-0.5">
@@ -1438,8 +1528,8 @@ function ArrangeStep({
                   onClick={() => updateTextStyle(selectedPageId, activeTextSlotId, { textAlign: align })}
                   className={`p-1.5 rounded transition-colors ${
                     activeStyle.textAlign === align 
-                      ? 'bg-[#2D5A3D] text-white' 
-                      : 'text-[#2D5A3D] hover:bg-[#2D5A3D]/10'
+                      ? 'bg-[#406A56] text-white' 
+                      : 'text-[#406A56] hover:bg-[#406A56]/10'
                   }`}
                   title={`Align ${align}`}
                 >
@@ -1451,7 +1541,7 @@ function ArrangeStep({
             </div>
             
             {/* Divider */}
-            <div className="w-px h-6 bg-[#2D5A3D]/20" />
+            <div className="w-px h-6 bg-[#406A56]/20" />
             
             {/* Text Color */}
             <div className="flex items-center gap-1">
@@ -1463,7 +1553,7 @@ function ArrangeStep({
                     onClick={() => updateTextStyle(selectedPageId, activeTextSlotId, { color })}
                     className={`w-5 h-5 rounded border-2 transition-all ${
                       activeStyle.color === color 
-                        ? 'border-[#2D5A3D] scale-110' 
+                        ? 'border-[#406A56] scale-110' 
                         : 'border-transparent hover:border-[#DDE3DF]'
                     }`}
                     style={{ backgroundColor: color }}
@@ -1476,7 +1566,7 @@ function ArrangeStep({
         )}
         
         {/* Page Canvas */}
-        <div className="flex-1 bg-[#2D5A3D]/5 rounded-2xl p-8 flex items-center justify-center">
+        <div className="flex-1 bg-[#406A56]/5 rounded-2xl p-8 flex items-center justify-center">
           {selectedPage && selectedTemplate ? (
             <div 
               className="relative shadow-2xl"
@@ -1506,8 +1596,8 @@ function ArrangeStep({
                     <div
                       key={slot.id}
                       style={style}
-                      className={`bg-[#F0F0EC] cursor-pointer hover:ring-2 hover:ring-[#2D5A3D] transition-all overflow-hidden group relative ${
-                        isCropZoomActive ? 'ring-2 ring-[#2D5A3D]' : ''
+                      className={`bg-[#F0F0EC] cursor-pointer hover:ring-2 hover:ring-[#406A56] transition-all overflow-hidden group relative ${
+                        isCropZoomActive ? 'ring-2 ring-[#406A56]' : ''
                       }`}
                       onClick={() => {
                         if (!pageSlot?.fileUrl) {
@@ -1547,7 +1637,7 @@ function ArrangeStep({
                           {/* Auto QR Code - bottom right corner */}
                           {pageSlot.memoryId && (
                             <div className="absolute bottom-2 right-2 bg-white p-1 rounded shadow-lg">
-                              <QrCode className="w-8 h-8 text-[#2D5A3D]" />
+                              <QrCode className="w-8 h-8 text-[#406A56]" />
                             </div>
                           )}
 
@@ -1565,8 +1655,8 @@ function ArrangeStep({
                               }}
                               className={`p-1.5 rounded transition-colors ${
                                 cropZoomSlotId === slot.id
-                                  ? 'bg-[#2D5A3D] text-white'
-                                  : 'bg-white/90 text-[#2D5A3D] hover:bg-white'
+                                  ? 'bg-[#406A56] text-white'
+                                  : 'bg-white/90 text-[#406A56] hover:bg-white'
                               }`}
                               title="Crop & Zoom"
                             >
@@ -1595,7 +1685,7 @@ function ArrangeStep({
                               <div className="space-y-2">
                                 {/* Zoom slider */}
                                 <div className="flex items-center gap-2">
-                                  <ZoomOut className="w-3 h-3 text-[#2D5A3D]" />
+                                  <ZoomOut className="w-3 h-3 text-[#406A56]" />
                                   <input
                                     type="range"
                                     min="0.5"
@@ -1607,10 +1697,10 @@ function ArrangeStep({
                                       updateCropZoom(selectedPage.id, slot.id, { scale: newScale })
                                     }}
                                     onClick={(e) => e.stopPropagation()}
-                                    className="flex-1 h-1.5 bg-[#2D5A3D]/20 rounded-lg appearance-none cursor-pointer accent-[#2D5A3D]"
+                                    className="flex-1 h-1.5 bg-[#406A56]/20 rounded-lg appearance-none cursor-pointer accent-[#406A56]"
                                   />
-                                  <ZoomIn className="w-3 h-3 text-[#2D5A3D]" />
-                                  <span className="text-xs text-[#2D5A3D] w-10 text-right">
+                                  <ZoomIn className="w-3 h-3 text-[#406A56]" />
+                                  <span className="text-xs text-[#406A56] w-10 text-right">
                                     {cropZoomValues.scale.toFixed(1)}x
                                   </span>
                                 </div>
@@ -1626,7 +1716,7 @@ function ArrangeStep({
                                       e.stopPropagation()
                                       updateCropZoom(selectedPage.id, slot.id, { scale: 1, offsetX: 0, offsetY: 0 })
                                     }}
-                                    className="text-[#2D5A3D] hover:underline"
+                                    className="text-[#406A56] hover:underline"
                                   >
                                     Reset
                                   </button>
@@ -1654,7 +1744,7 @@ function ArrangeStep({
                       key={slot.id}
                       style={style}
                       className={`flex items-center justify-center p-2 transition-all ${
-                        isActive ? 'ring-2 ring-[#2D5A3D] ring-offset-2 bg-white/50' : ''
+                        isActive ? 'ring-2 ring-[#406A56] ring-offset-2 bg-white/50' : ''
                       }`}
                     >
                       <textarea
@@ -1691,31 +1781,94 @@ function ArrangeStep({
                 
                 if (slot.type === 'qr') {
                   const qrSlot = selectedPage.slots.find(s => s.type === 'qr')
+                  const qrUrl = qrSlot?.qrWisdomId
+                    ? buildQRTargetUrl({ wisdomId: qrSlot.qrWisdomId })
+                    : qrSlot?.qrMemoryId
+                      ? buildQRTargetUrl({ memoryId: qrSlot.qrMemoryId })
+                      : null
                   return (
                     <div
                       key={slot.id}
                       style={style}
                       className="flex items-center justify-center bg-[#F0F0EC]"
                     >
-                      {qrSlot ? (
+                      {qrUrl ? (
                         <div className="text-center">
-                          <QrCode className="w-16 h-16 text-[#2D5A3D] mx-auto" />
-                          <span className="text-xs text-[#5A6660] mt-2 block">QR Code</span>
+                          <QRPreview value={qrUrl} size={96} alt="QR code preview" />
+                          <span className="text-xs text-[#5A6660] mt-2 block">
+                            {qrSlot?.qrWisdomId ? 'Wisdom QR' : 'Memory QR'}
+                          </span>
                         </div>
                       ) : (
                         <button
                           onClick={() => setShowQRPicker(true)}
-                          className="text-[#94A09A] hover:text-[#2D5A3D]"
+                          className="text-[#94A09A] hover:text-[#406A56] flex flex-col items-center gap-1"
                         >
                           <QrCode className="w-12 h-12" />
+                          <span className="text-xs font-medium">Add QR code</span>
                         </button>
                       )}
                     </div>
                   )
                 }
-                
+
                 return null
               })}
+
+              {/* Print-safe-zone overlay (toggle in toolbar). Uses the same
+                  3mm bleed / 6mm safe-zone constants as renderExport. Bleed
+                  is drawn in Terra Cotta; the safe zone in YT Green. */}
+              {showSafetyLines && selectedProduct && (() => {
+                const dims = parsePrintInches(selectedProduct.size)
+                const bleedMm = 3
+                const safeMm = 6
+                const bleedPctX = (bleedMm / 25.4) / dims.width * 100
+                const bleedPctY = (bleedMm / 25.4) / dims.height * 100
+                const safePctX = (safeMm / 25.4) / dims.width * 100
+                const safePctY = (safeMm / 25.4) / dims.height * 100
+                return (
+                  <>
+                    <div
+                      aria-hidden
+                      className="pointer-events-none absolute"
+                      style={{
+                        left: `${bleedPctX}%`,
+                        top: `${bleedPctY}%`,
+                        right: `${bleedPctX}%`,
+                        bottom: `${bleedPctY}%`,
+                        border: '2px dashed #C35F33',
+                        boxSizing: 'border-box',
+                      }}
+                    />
+                    <div
+                      aria-hidden
+                      className="pointer-events-none absolute"
+                      style={{
+                        left: `${safePctX}%`,
+                        top: `${safePctY}%`,
+                        right: `${safePctX}%`,
+                        bottom: `${safePctY}%`,
+                        border: '2px dashed #406A56',
+                        boxSizing: 'border-box',
+                      }}
+                    />
+                    <div
+                      className="pointer-events-none absolute left-2 bottom-2 bg-white/90 border border-[#DDE3DF] rounded-lg px-2 py-1 text-[11px] leading-tight shadow-sm"
+                      style={{ fontFamily: 'var(--font-inter-tight), Inter, sans-serif' }}
+                    >
+                      <div className="flex items-center gap-1 text-[#C35F33]">
+                        <span className="inline-block w-3 border-t-2 border-dashed border-[#C35F33]" />
+                        Bleed ({bleedMm}mm)
+                      </div>
+                      <div className="flex items-center gap-1 text-[#406A56]">
+                        <span className="inline-block w-3 border-t-2 border-dashed border-[#406A56]" />
+                        Safe zone ({safeMm}mm)
+                      </div>
+                      <div className="text-[#5A6660] mt-0.5">Keep important content inside the green line</div>
+                    </div>
+                  </>
+                )
+              })()}
             </div>
           ) : (
             <div className="text-center text-[#94A09A]">
@@ -1730,7 +1883,7 @@ function ArrangeStep({
       {/* Right Sidebar - Photo Library */}
       <div className="w-56 flex-shrink-0 bg-[#F5F0EA]/50 rounded-2xl p-4 overflow-y-auto">
         <div className="flex items-center justify-between mb-3">
-          <h3 className="font-semibold text-[#2D5A3D] text-sm">Photos</h3>
+          <h3 className="font-semibold text-[#406A56] text-sm">Photos</h3>
           <span className="text-xs text-[#5A6660]">
             {availablePhotos.filter(p => !usedMediaIds.has(p.mediaId)).length} available
           </span>
@@ -1760,8 +1913,8 @@ function ArrangeStep({
                 }}
                 className={`relative aspect-square rounded-lg overflow-hidden cursor-pointer transition-all ${
                   isUsed 
-                    ? 'opacity-40 ring-2 ring-[#2D5A3D]/30' 
-                    : 'hover:ring-2 hover:ring-[#2D5A3D]'
+                    ? 'opacity-40 ring-2 ring-[#406A56]/30' 
+                    : 'hover:ring-2 hover:ring-[#406A56]'
                 }`}
                 title={photo.memoryTitle}
               >
@@ -1806,12 +1959,12 @@ function ArrangeStep({
               onClick={(e) => e.stopPropagation()}
             >
               <div className="flex items-center justify-between mb-6">
-                <h3 className="text-xl font-bold text-[#2D5A3D]">Choose Layout</h3>
+                <h3 className="text-xl font-bold text-[#406A56]">Choose Layout</h3>
                 <button
                   onClick={() => setShowLayoutPicker(false)}
-                  className="p-2 hover:bg-[#2D5A3D]/10 rounded-lg"
+                  className="p-2 hover:bg-[#406A56]/10 rounded-lg"
                 >
-                  <X className="w-5 h-5 text-[#2D5A3D]" />
+                  <X className="w-5 h-5 text-[#406A56]" />
                 </button>
               </div>
               
@@ -1833,14 +1986,14 @@ function ArrangeStep({
                           }
                           setShowLayoutPicker(false)
                         }}
-                        className="aspect-square bg-white rounded-xl p-3 hover:ring-2 hover:ring-[#2D5A3D] transition-all group"
+                        className="aspect-square bg-white rounded-xl p-3 hover:ring-2 hover:ring-[#406A56] transition-all group"
                       >
                         {/* Mini layout preview */}
                         <div className="w-full h-full relative bg-[#F0F0EC] rounded">
                           {template.slots.filter(s => s.type === 'photo').slice(0, 4).map((slot, i) => (
                             <div
                               key={i}
-                              className="absolute bg-[#2D5A3D]/20 rounded-sm"
+                              className="absolute bg-[#406A56]/20 rounded-sm"
                               style={{
                                 left: `${slot.position.x}%`,
                                 top: `${slot.position.y}%`,
@@ -1850,7 +2003,7 @@ function ArrangeStep({
                             />
                           ))}
                         </div>
-                        <p className="text-xs text-[#2D5A3D] mt-2 text-center group-hover:font-medium">
+                        <p className="text-xs text-[#406A56] mt-2 text-center group-hover:font-medium">
                           {template.name}
                         </p>
                       </button>
@@ -1880,52 +2033,161 @@ function ArrangeStep({
               className="bg-[#F5F0EA] rounded-2xl p-6 max-w-2xl w-full max-h-[80vh] overflow-y-auto"
               onClick={(e) => e.stopPropagation()}
             >
-              <div className="flex items-center justify-between mb-6">
+              <div className="flex items-center justify-between mb-4">
                 <div>
-                  <h3 className="text-xl font-bold text-[#2D5A3D]">Add QR Code</h3>
-                  <p className="text-sm text-[#5A6660]">Link to a memory's digital content</p>
+                  <h3 className="text-xl font-bold text-[#406A56]" style={{ fontFamily: 'var(--font-playfair), Georgia, serif' }}>Add a QR Code</h3>
+                  <p className="text-sm text-[#5A6660]">
+                    Link this page to a memory or a wisdom entry. When scanned, the QR opens the digital version.
+                  </p>
                 </div>
                 <button
                   onClick={() => setShowQRPicker(false)}
-                  className="p-2 hover:bg-[#2D5A3D]/10 rounded-lg"
+                  aria-label="Close QR picker"
+                  className="p-2 hover:bg-[#406A56]/10 rounded-lg"
                 >
-                  <X className="w-5 h-5 text-[#2D5A3D]" />
+                  <X className="w-5 h-5 text-[#406A56]" />
                 </button>
               </div>
-              
-              <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-                {selectedMemories.map((memory) => {
-                  const coverMedia = memory.memory_media?.find(m => m.is_cover) || memory.memory_media?.[0]
-                  
-                  return (
-                    <button
-                      key={memory.id}
-                      onClick={() => selectedPage && addQRToPage(selectedPage.id, memory.id)}
-                      className="text-left bg-white rounded-xl overflow-hidden hover:ring-2 hover:ring-[#2D5A3D] transition-all"
-                    >
-                      <div className="aspect-video bg-[#2D5A3D]/10">
-                        {coverMedia?.file_url ? (
-                          <img
-                            src={coverMedia.file_url}
-                            alt={memory.title}
-                            className="w-full h-full object-cover"
-                          />
-                        ) : (
-                          <div className="w-full h-full flex items-center justify-center">
-                            <ImageIcon className="w-8 h-8 text-[#94A09A]" />
-                          </div>
-                        )}
-                      </div>
-                      <div className="p-3">
-                        <p className="font-medium text-[#2D5A3D] text-sm truncate">{memory.title}</p>
-                        <p className="text-xs text-[#94A09A]">
-                          {memory.memory_media?.length || 0} photos
-                        </p>
-                      </div>
-                    </button>
-                  )
-                })}
+
+              {/* Tab selector: Memories | Wisdom & Advice */}
+              <div className="flex gap-2 mb-4 bg-white/60 p-1 rounded-xl w-fit">
+                <button
+                  onClick={() => setQrPickerTab('memories')}
+                  className={`px-4 py-2 rounded-lg text-sm font-medium min-h-[44px] flex items-center gap-2 transition-colors ${
+                    qrPickerTab === 'memories'
+                      ? 'bg-[#406A56] text-white'
+                      : 'text-[#406A56] hover:bg-[#406A56]/10'
+                  }`}
+                >
+                  <ImageIcon className="w-4 h-4" />
+                  Memories ({selectedMemories.length})
+                </button>
+                <button
+                  onClick={() => setQrPickerTab('wisdom')}
+                  className={`px-4 py-2 rounded-lg text-sm font-medium min-h-[44px] flex items-center gap-2 transition-colors ${
+                    qrPickerTab === 'wisdom'
+                      ? 'bg-[#406A56] text-white'
+                      : 'text-[#406A56] hover:bg-[#406A56]/10'
+                  }`}
+                >
+                  <Lightbulb className="w-4 h-4" />
+                  Wisdom & Advice ({wisdomEntries.length})
+                </button>
               </div>
+
+              {/* Scan-size hint (geometry-based) */}
+              {selectedProduct && (() => {
+                // Find the QR slot percentage for the selected page, or use a
+                // sensible default (25% of the smaller page dimension).
+                const qrSlot = selectedTemplate?.slots.find(s => s.type === 'qr')
+                const dims = parsePrintInches(selectedProduct.size)
+                const qrPct = qrSlot
+                  ? Math.min(qrSlot.position.width, qrSlot.position.height) / 100
+                  : 0.25
+                const printSizeIn = Math.min(dims.width, dims.height) * qrPct
+                const ok = printSizeIn >= 0.75
+                return (
+                  <div
+                    className={`mb-4 px-3 py-2 rounded-lg text-sm flex items-center gap-2 ${
+                      ok ? 'bg-[#D3E1DF]/60 text-[#406A56]' : 'bg-[#F9E4D8] text-[#C35F33]'
+                    }`}
+                  >
+                    {ok ? <CheckCircle2 className="w-4 h-4" /> : <AlertTriangle className="w-4 h-4" />}
+                    <span>
+                      Prints at about {printSizeIn.toFixed(2)}". {ok
+                        ? 'This QR will scan reliably at this size.'
+                        : 'Too small — readers may struggle to scan. Consider a larger QR slot.'}
+                    </span>
+                  </div>
+                )
+              })()}
+
+              {qrPickerTab === 'memories' && (
+                selectedMemories.length === 0 ? (
+                  <p className="text-sm text-[#5A6660] py-8 text-center">
+                    No memories selected yet. Go back to Step 2 to pick some.
+                  </p>
+                ) : (
+                  <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                    {selectedMemories.map((memory) => {
+                      const coverMedia = memory.memory_media?.find(m => m.is_cover) || memory.memory_media?.[0]
+                      return (
+                        <button
+                          key={memory.id}
+                          onClick={() => selectedPage && addQRToPage(selectedPage.id, { memoryId: memory.id })}
+                          className="text-left bg-white rounded-xl overflow-hidden hover:ring-2 hover:ring-[#406A56] transition-all"
+                        >
+                          <div className="aspect-video bg-[#406A56]/10 relative">
+                            {coverMedia?.file_url ? (
+                              <img
+                                src={coverMedia.file_url}
+                                alt={memory.title}
+                                className="w-full h-full object-cover"
+                              />
+                            ) : (
+                              <div className="w-full h-full flex items-center justify-center">
+                                <ImageIcon className="w-8 h-8 text-[#94A09A]" />
+                              </div>
+                            )}
+                            <div className="absolute bottom-1 right-1 bg-white p-1 rounded shadow-sm">
+                              <QRPreview
+                                value={buildQRTargetUrl({ memoryId: memory.id })}
+                                size={32}
+                                alt={`QR preview for ${memory.title}`}
+                              />
+                            </div>
+                          </div>
+                          <div className="p-3">
+                            <p className="font-medium text-[#406A56] text-sm truncate">{memory.title}</p>
+                            <p className="text-xs text-[#94A09A]">
+                              {memory.memory_media?.length || 0} photos
+                            </p>
+                          </div>
+                        </button>
+                      )
+                    })}
+                  </div>
+                )
+              )}
+
+              {qrPickerTab === 'wisdom' && (
+                wisdomEntries.length === 0 ? (
+                  <p className="text-sm text-[#5A6660] py-8 text-center">
+                    No wisdom entries yet. Add some from the dashboard first.
+                  </p>
+                ) : (
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    {wisdomEntries.map((w) => (
+                      <button
+                        key={w.id}
+                        onClick={() => selectedPage && addQRToPage(selectedPage.id, { wisdomId: w.id })}
+                        className="text-left bg-white rounded-xl p-3 hover:ring-2 hover:ring-[#406A56] transition-all flex gap-3"
+                      >
+                        <div className="flex-shrink-0 bg-[#F2F1E5] p-2 rounded-lg self-start">
+                          <QRPreview
+                            value={buildQRTargetUrl({ wisdomId: w.id })}
+                            size={48}
+                            alt={`QR preview for wisdom ${w.prompt_text}`}
+                          />
+                        </div>
+                        <div className="min-w-0 flex-1">
+                          <p className="font-medium text-[#406A56] text-sm line-clamp-2" style={{ fontFamily: 'var(--font-playfair), Georgia, serif' }}>
+                            {w.prompt_text}
+                          </p>
+                          {w.response_text && (
+                            <p className="text-xs text-[#5A6660] line-clamp-2 mt-1">{w.response_text}</p>
+                          )}
+                          {w.category && (
+                            <span className="inline-block mt-1 text-[11px] text-[#94A09A] uppercase tracking-wide">
+                              {w.category}
+                            </span>
+                          )}
+                        </div>
+                      </button>
+                    ))}
+                  </div>
+                )
+              )}
             </motion.div>
           </motion.div>
         )}
@@ -1950,14 +2212,14 @@ function ArrangeStep({
             >
               <div className="flex items-center justify-between mb-6">
                 <div>
-                  <h3 className="text-xl font-bold text-[#2D5A3D]">Select Photo</h3>
+                  <h3 className="text-xl font-bold text-[#406A56]">Select Photo</h3>
                   <p className="text-sm text-[#5A6660]">Choose a photo for this slot</p>
                 </div>
                 <button
                   onClick={() => { setShowPhotoPicker(false); setActiveSlotId(null) }}
-                  className="p-2 hover:bg-[#2D5A3D]/10 rounded-lg"
+                  className="p-2 hover:bg-[#406A56]/10 rounded-lg"
                 >
-                  <X className="w-5 h-5 text-[#2D5A3D]" />
+                  <X className="w-5 h-5 text-[#406A56]" />
                 </button>
               </div>
               
@@ -1979,7 +2241,7 @@ function ArrangeStep({
                       className={`relative aspect-square rounded-xl overflow-hidden transition-all ${
                         isUsed 
                           ? 'opacity-40 cursor-not-allowed' 
-                          : 'hover:ring-2 hover:ring-[#2D5A3D] cursor-pointer'
+                          : 'hover:ring-2 hover:ring-[#406A56] cursor-pointer'
                       }`}
                     >
                       <img
@@ -2094,7 +2356,7 @@ function PreviewStep({
         <button
           onClick={() => setCurrentSpread(Math.max(0, currentSpread - 1))}
           disabled={currentSpread === 0}
-          className="absolute left-0 top-1/2 -translate-y-1/2 -translate-x-12 p-3 bg-[#2D5A3D] text-white rounded-full disabled:opacity-30 disabled:cursor-not-allowed hover:bg-[#234A31] transition-colors z-10"
+          className="absolute left-0 top-1/2 -translate-y-1/2 -translate-x-12 p-3 bg-[#406A56] text-white rounded-full disabled:opacity-30 disabled:cursor-not-allowed hover:bg-[#345548] transition-colors z-10"
         >
           <ChevronLeft className="w-6 h-6" />
         </button>
@@ -2102,7 +2364,7 @@ function PreviewStep({
         <button
           onClick={() => setCurrentSpread(Math.min(totalSpreads - 1, currentSpread + 1))}
           disabled={currentSpread === totalSpreads - 1}
-          className="absolute right-0 top-1/2 -translate-y-1/2 translate-x-12 p-3 bg-[#2D5A3D] text-white rounded-full disabled:opacity-30 disabled:cursor-not-allowed hover:bg-[#234A31] transition-colors z-10"
+          className="absolute right-0 top-1/2 -translate-y-1/2 translate-x-12 p-3 bg-[#406A56] text-white rounded-full disabled:opacity-30 disabled:cursor-not-allowed hover:bg-[#345548] transition-colors z-10"
         >
           <ChevronRight className="w-6 h-6" />
         </button>
@@ -2126,7 +2388,7 @@ function PreviewStep({
           </motion.div>
           
           {/* Spine */}
-          <div className="w-2 bg-gradient-to-r from-[#2D5A3D]/20 to-[#2D5A3D]/10" />
+          <div className="w-2 bg-gradient-to-r from-[#406A56]/20 to-[#406A56]/10" />
           
           {/* Right Page */}
           <motion.div
@@ -2157,8 +2419,8 @@ function PreviewStep({
               onClick={() => setCurrentSpread(i)}
               className={`w-2 h-2 rounded-full transition-all ${
                 i === currentSpread 
-                  ? 'w-6 bg-[#2D5A3D]' 
-                  : 'bg-[#2D5A3D]/30 hover:bg-[#2D5A3D]/50'
+                  ? 'w-6 bg-[#406A56]' 
+                  : 'bg-[#406A56]/30 hover:bg-[#406A56]/50'
               }`}
             />
           ))}
@@ -2169,7 +2431,7 @@ function PreviewStep({
       <div className="flex justify-center mt-6">
         <button
           onClick={() => setShowPrintPreview(true)}
-          className="px-6 py-3 bg-[#2D5A3D] text-white rounded-xl hover:bg-[#234A31] flex items-center gap-2 shadow-lg"
+          className="px-6 py-3 bg-[#406A56] text-white rounded-xl hover:bg-[#345548] flex items-center gap-2 shadow-lg"
         >
           <Printer className="w-5 h-5" />
           Print Preview (300 DPI)
@@ -2180,8 +2442,8 @@ function PreviewStep({
       <div className="flex flex-wrap items-center justify-center gap-4 mt-6">
         {/* Page count */}
         <div className="flex items-center gap-2 px-4 py-2 bg-white/80 rounded-xl border border-[#DDE3DF]">
-          <BookOpen className="w-5 h-5 text-[#2D5A3D]" />
-          <span className="text-sm font-medium text-[#2D5A3D]">{pages.length} pages</span>
+          <BookOpen className="w-5 h-5 text-[#406A56]" />
+          <span className="text-sm font-medium text-[#406A56]">{pages.length} pages</span>
           <span className="text-xs text-[#5A6660]">• {selectedMemories.length} memories</span>
         </div>
         
@@ -2213,7 +2475,7 @@ function PreviewStep({
             >
               <div className="flex items-center justify-between mb-6">
                 <div>
-                  <h3 className="text-xl font-bold text-[#2D5A3D]">Print Preview</h3>
+                  <h3 className="text-xl font-bold text-[#406A56]">Print Preview</h3>
                   <p className="text-sm text-[#5A6660]">
                     Actual print size: {getPrintDimensions().width}×{getPrintDimensions().height}" at 300 DPI
                     ({getPrintDimensions().pixelWidth}×{getPrintDimensions().pixelHeight}px)
@@ -2222,16 +2484,16 @@ function PreviewStep({
                 <div className="flex items-center gap-2">
                   <button
                     onClick={() => window.print()}
-                    className="px-4 py-2 bg-[#2D5A3D] text-white rounded-lg hover:bg-[#234A31] flex items-center gap-2"
+                    className="px-4 py-2 bg-[#406A56] text-white rounded-lg hover:bg-[#345548] flex items-center gap-2"
                   >
                     <Printer className="w-4 h-4" />
                     Print
                   </button>
                   <button
                     onClick={() => setShowPrintPreview(false)}
-                    className="p-2 hover:bg-[#2D5A3D]/10 rounded-lg"
+                    className="p-2 hover:bg-[#406A56]/10 rounded-lg"
                   >
-                    <X className="w-5 h-5 text-[#2D5A3D]" />
+                    <X className="w-5 h-5 text-[#406A56]" />
                   </button>
                 </div>
               </div>
@@ -2246,8 +2508,8 @@ function PreviewStep({
                     <div className="aspect-square relative">
                       <PagePreview page={page} printSize={getPrintDimensions().pixelWidth} />
                     </div>
-                    <div className="p-2 bg-[#2D5A3D]/5 text-center">
-                      <span className="text-xs font-medium text-[#2D5A3D]">Page {page.pageNumber}</span>
+                    <div className="p-2 bg-[#406A56]/5 text-center">
+                      <span className="text-xs font-medium text-[#406A56]">Page {page.pageNumber}</span>
                     </div>
                   </div>
                 ))}
@@ -2276,11 +2538,21 @@ function PreviewStep({
   )
 }
 
-// Generate QR code URL for a memory
-const getQRCodeUrl = (memoryId: string) => {
-  const baseUrl = typeof window !== 'undefined' ? window.location.origin : 'https://yourstruly.love'
-  const viewUrl = `${baseUrl}/view/${memoryId}`
-  return `https://api.qrserver.com/v1/create-qr-code/?size=60x60&data=${encodeURIComponent(viewUrl)}&format=png&margin=1`
+// Build the public URL a QR code should encode. Memories and wisdom go to
+// different routes; default base URL falls back to production for SSR safety.
+// NOTE: `/view/{memoryId}` and `/view/wisdom/{wisdomId}` are the existing
+// patterns in the codebase. The actual /view/[token] route expects share
+// tokens — the QR URL contract below is what the photobook already relied on
+// for memories; wisdom mirrors the same pattern and may need a companion API
+// route in a follow-up PR (documented in the PR report).
+const buildQRTargetUrl = (opts: { memoryId?: string; wisdomId?: string }): string => {
+  const baseUrl =
+    typeof window !== 'undefined' && window.location?.origin
+      ? window.location.origin
+      : process.env.NEXT_PUBLIC_APP_URL || 'https://app.yourstruly.love'
+  if (opts.wisdomId) return `${baseUrl}/view/wisdom/${opts.wisdomId}`
+  if (opts.memoryId) return `${baseUrl}/view/${opts.memoryId}`
+  return baseUrl
 }
 
 // Page Preview Component
@@ -2325,10 +2597,10 @@ function PagePreview({ page, printSize }: { page: PageData; printSize?: number }
                   {/* Auto QR Code - bottom right corner of each photo */}
                   {pageSlot.memoryId && (
                     <div className="absolute bottom-1 right-1 bg-white p-0.5 rounded shadow-sm">
-                      <img
-                        src={getQRCodeUrl(pageSlot.memoryId)}
-                        alt="QR"
-                        className="w-6 h-6"
+                      <QRPreview
+                        value={buildQRTargetUrl({ memoryId: pageSlot.memoryId })}
+                        size={24}
+                        alt="Memory QR"
                       />
                     </div>
                   )}
@@ -2375,14 +2647,15 @@ function PagePreview({ page, printSize }: { page: PageData; printSize?: number }
 
         if (slot.type === 'qr') {
           const qrSlot = page.slots.find(s => s.type === 'qr')
+          const qrUrl = qrSlot?.qrWisdomId
+            ? buildQRTargetUrl({ wisdomId: qrSlot.qrWisdomId })
+            : qrSlot?.qrMemoryId
+              ? buildQRTargetUrl({ memoryId: qrSlot.qrMemoryId })
+              : null
           return (
             <div key={slot.id} style={style} className="flex items-center justify-center">
-              {qrSlot?.qrMemoryId ? (
-                <img
-                  src={getQRCodeUrl(qrSlot.qrMemoryId)}
-                  alt="QR Code"
-                  className="w-16 h-16"
-                />
+              {qrUrl ? (
+                <QRPreview value={qrUrl} size={64} alt="QR Code" />
               ) : (
                 <QrCode className="w-12 h-12 text-[#94A09A]" />
               )}
@@ -2436,7 +2709,7 @@ function CheckoutStep({
         {/* Shipping Form */}
         <div className="lg:col-span-3">
           <GlassCard variant="warm" padding="lg">
-            <h3 className="text-lg font-semibold text-[#2D5A3D] mb-6">Shipping Address</h3>
+            <h3 className="text-lg font-semibold text-[#406A56] mb-6">Shipping Address</h3>
             
             <div className="space-y-4">
               <div>
@@ -2447,7 +2720,7 @@ function CheckoutStep({
                   type="text"
                   value={address.name}
                   onChange={(e) => setAddress({ ...address, name: e.target.value })}
-                  className="w-full px-4 py-3 bg-white border border-[#DDE3DF] rounded-xl focus:outline-none focus:ring-2 focus:ring-[#2D5A3D]/30 text-[#2D5A3D]"
+                  className="w-full px-4 py-3 bg-white border border-[#DDE3DF] rounded-xl focus:outline-none focus:ring-2 focus:ring-[#406A56]/30 text-[#406A56]"
                   placeholder="John Doe"
                 />
               </div>
@@ -2460,7 +2733,7 @@ function CheckoutStep({
                   type="text"
                   value={address.line1}
                   onChange={(e) => setAddress({ ...address, line1: e.target.value })}
-                  className="w-full px-4 py-3 bg-white border border-[#DDE3DF] rounded-xl focus:outline-none focus:ring-2 focus:ring-[#2D5A3D]/30 text-[#2D5A3D]"
+                  className="w-full px-4 py-3 bg-white border border-[#DDE3DF] rounded-xl focus:outline-none focus:ring-2 focus:ring-[#406A56]/30 text-[#406A56]"
                   placeholder="123 Main Street"
                 />
               </div>
@@ -2473,7 +2746,7 @@ function CheckoutStep({
                   type="text"
                   value={address.line2 || ''}
                   onChange={(e) => setAddress({ ...address, line2: e.target.value })}
-                  className="w-full px-4 py-3 bg-white border border-[#DDE3DF] rounded-xl focus:outline-none focus:ring-2 focus:ring-[#2D5A3D]/30 text-[#2D5A3D]"
+                  className="w-full px-4 py-3 bg-white border border-[#DDE3DF] rounded-xl focus:outline-none focus:ring-2 focus:ring-[#406A56]/30 text-[#406A56]"
                   placeholder="Apt 4B (optional)"
                 />
               </div>
@@ -2487,7 +2760,7 @@ function CheckoutStep({
                     type="text"
                     value={address.city}
                     onChange={(e) => setAddress({ ...address, city: e.target.value })}
-                    className="w-full px-4 py-3 bg-white border border-[#DDE3DF] rounded-xl focus:outline-none focus:ring-2 focus:ring-[#2D5A3D]/30 text-[#2D5A3D]"
+                    className="w-full px-4 py-3 bg-white border border-[#DDE3DF] rounded-xl focus:outline-none focus:ring-2 focus:ring-[#406A56]/30 text-[#406A56]"
                     placeholder="New York"
                   />
                 </div>
@@ -2499,7 +2772,7 @@ function CheckoutStep({
                     type="text"
                     value={address.state}
                     onChange={(e) => setAddress({ ...address, state: e.target.value })}
-                    className="w-full px-4 py-3 bg-white border border-[#DDE3DF] rounded-xl focus:outline-none focus:ring-2 focus:ring-[#2D5A3D]/30 text-[#2D5A3D]"
+                    className="w-full px-4 py-3 bg-white border border-[#DDE3DF] rounded-xl focus:outline-none focus:ring-2 focus:ring-[#406A56]/30 text-[#406A56]"
                     placeholder="NY"
                   />
                 </div>
@@ -2514,7 +2787,7 @@ function CheckoutStep({
                     type="text"
                     value={address.postalCode}
                     onChange={(e) => setAddress({ ...address, postalCode: e.target.value })}
-                    className="w-full px-4 py-3 bg-white border border-[#DDE3DF] rounded-xl focus:outline-none focus:ring-2 focus:ring-[#2D5A3D]/30 text-[#2D5A3D]"
+                    className="w-full px-4 py-3 bg-white border border-[#DDE3DF] rounded-xl focus:outline-none focus:ring-2 focus:ring-[#406A56]/30 text-[#406A56]"
                     placeholder="10001"
                   />
                 </div>
@@ -2525,7 +2798,7 @@ function CheckoutStep({
                   <select
                     value={address.country}
                     onChange={(e) => setAddress({ ...address, country: e.target.value })}
-                    className="w-full px-4 py-3 bg-white border border-[#DDE3DF] rounded-xl focus:outline-none focus:ring-2 focus:ring-[#2D5A3D]/30 text-[#2D5A3D]"
+                    className="w-full px-4 py-3 bg-white border border-[#DDE3DF] rounded-xl focus:outline-none focus:ring-2 focus:ring-[#406A56]/30 text-[#406A56]"
                   >
                     <option value="">Select country</option>
                     <option value="US">United States</option>
@@ -2544,16 +2817,16 @@ function CheckoutStep({
         {/* Order Summary */}
         <div className="lg:col-span-2">
           <GlassCard variant="warm" padding="lg" className="sticky top-24">
-            <h3 className="text-lg font-semibold text-[#2D5A3D] mb-6">Order Summary</h3>
+            <h3 className="text-lg font-semibold text-[#406A56] mb-6">Order Summary</h3>
             
             <div className="space-y-4">
               {/* Product */}
               <div className="flex items-center gap-4 pb-4 border-b border-[#DDE3DF]">
-                <div className="w-16 h-16 rounded-xl bg-[#2D5A3D]/10 flex items-center justify-center text-[#2D5A3D]">
+                <div className="w-16 h-16 rounded-xl bg-[#406A56]/10 flex items-center justify-center text-[#406A56]">
                   {product.icon}
                 </div>
                 <div className="flex-1">
-                  <p className="font-medium text-[#2D5A3D]">{product.name}</p>
+                  <p className="font-medium text-[#406A56]">{product.name}</p>
                   <p className="text-sm text-[#5A6660]">{pageCount} pages</p>
                 </div>
               </div>
@@ -2574,7 +2847,7 @@ function CheckoutStep({
                   <span>Shipping</span>
                   <span>${shipping.toFixed(2)}</span>
                 </div>
-                <div className="flex justify-between pt-4 border-t border-[#DDE3DF] text-lg font-bold text-[#2D5A3D]">
+                <div className="flex justify-between pt-4 border-t border-[#DDE3DF] text-lg font-bold text-[#406A56]">
                   <span>Total</span>
                   <span>${finalTotal.toFixed(2)}</span>
                 </div>
@@ -2584,7 +2857,7 @@ function CheckoutStep({
               <button
                 onClick={onSubmit}
                 disabled={!isAddressComplete || isSubmitting}
-                className="w-full py-4 bg-[#2D5A3D] text-white font-semibold rounded-xl hover:bg-[#234A31] disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 mt-6 min-h-[44px] touch-manipulation active:scale-[0.98] transition-transform"
+                className="w-full py-4 bg-[#406A56] text-white font-semibold rounded-xl hover:bg-[#345548] disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 mt-6 min-h-[44px] touch-manipulation active:scale-[0.98] transition-transform"
               >
                 {isSubmitting ? (
                   <>
@@ -2634,6 +2907,8 @@ export default function CreatePhotobookPage() {
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null)
   const [memories, setMemories] = useState<Memory[]>([])
   const [selectedMemoryIds, setSelectedMemoryIds] = useState<Set<string>>(new Set())
+  const [wisdomEntries, setWisdomEntries] = useState<WisdomEntry[]>([])
+  const [mediaFaces, setMediaFaces] = useState<Map<string, { x: number; y: number; width: number; height: number }>>(new Map())
   const [pages, setPages] = useState<PageData[]>([])
   const [shippingAddress, setShippingAddress] = useState<ShippingAddress>({
     name: '',
@@ -2686,6 +2961,64 @@ export default function CreatePhotobookPage() {
         .order('memory_date', { ascending: false })
 
       setMemories(memoriesData || [])
+
+      // Load wisdom (knowledge_entries) for the QR picker "Wisdom & Advice" tab.
+      try {
+        const { data: wisdomData } = await supabase
+          .from('knowledge_entries')
+          .select('id, prompt_text, response_text, category, created_at')
+          .eq('user_id', user.id)
+          .order('created_at', { ascending: false })
+        setWisdomEntries((wisdomData as WisdomEntry[] | null) || [])
+      } catch (err) {
+        console.warn('Failed to load wisdom entries:', err)
+        setWisdomEntries([])
+      }
+
+      // Load face bounding boxes for the user's media (for face-centered
+      // smart cropping). We pull the highest-confidence face per media and
+      // keep only x/y/w/h (normalized 0-1) to keep the map small.
+      try {
+        const mediaIds = (memoriesData || [])
+          .flatMap(m => m.memory_media || [])
+          .map(mm => mm.id)
+        if (mediaIds.length > 0) {
+          const { data: faceRows } = await supabase
+            .from('memory_face_tags')
+            .select('media_id, box_left, box_top, box_width, box_height, confidence')
+            .in('media_id', mediaIds)
+            .order('confidence', { ascending: false })
+          if (faceRows) {
+            // Aggregate: if multiple faces, use midpoint of all face centers
+            // (weighted equally) so we don't bias to just one face.
+            const grouped = new Map<string, { sumX: number; sumY: number; sumW: number; sumH: number; n: number }>()
+            for (const row of faceRows as Array<{ media_id: string; box_left: number | null; box_top: number | null; box_width: number | null; box_height: number | null }>) {
+              const x = Number(row.box_left) || 0
+              const y = Number(row.box_top) || 0
+              const w = Number(row.box_width) || 0
+              const h = Number(row.box_height) || 0
+              if (!w || !h) continue
+              const g = grouped.get(row.media_id) || { sumX: 0, sumY: 0, sumW: 0, sumH: 0, n: 0 }
+              g.sumX += x; g.sumY += y; g.sumW += w; g.sumH += h; g.n += 1
+              grouped.set(row.media_id, g)
+            }
+            const map = new Map<string, { x: number; y: number; width: number; height: number }>()
+            grouped.forEach((g, mediaId) => {
+              map.set(mediaId, {
+                x: g.sumX / g.n,
+                y: g.sumY / g.n,
+                width: g.sumW / g.n,
+                height: g.sumH / g.n,
+              })
+            })
+            setMediaFaces(map)
+          }
+        }
+      } catch (err) {
+        // Face data is optional — fall back to center-crop silently.
+        console.warn('Failed to load face bounding boxes:', err)
+      }
+
       setIsLoading(false)
       
       // Load products from database (falls back to hardcoded if table doesn't exist)
@@ -3108,7 +3441,7 @@ export default function CreatePhotobookPage() {
           <div className="flex items-center justify-between mb-4">
             <button
               onClick={() => router.push('/dashboard')}
-              className="flex items-center gap-2 text-[#5A6660] hover:text-[#2D5A3D]"
+              className="flex items-center gap-2 text-[#5A6660] hover:text-[#406A56]"
             >
               <ArrowLeft className="w-5 h-5" />
               <span>Back to Dashboard</span>
@@ -3132,14 +3465,14 @@ export default function CreatePhotobookPage() {
                   disabled={!isClickable && index > currentStep}
                   className={`flex items-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-2.5 rounded-xl transition-all min-h-[44px] touch-manipulation ${
                     isActive
-                      ? 'bg-[#2D5A3D] text-white'
+                      ? 'bg-[#406A56] text-white'
                       : isComplete
-                        ? 'bg-[#2D5A3D]/10 text-[#2D5A3D]'
+                        ? 'bg-[#406A56]/10 text-[#406A56]'
                         : 'text-[#94A09A]'
                   } ${isClickable ? 'cursor-pointer hover:opacity-80 active:scale-95' : 'cursor-not-allowed'}`}
                 >
                   <div className={`w-7 h-7 sm:w-8 sm:h-8 rounded-full flex items-center justify-center flex-shrink-0 ${
-                    isComplete ? 'bg-[#2D5A3D] text-white' : ''
+                    isComplete ? 'bg-[#406A56] text-white' : ''
                   }`}>
                     {isComplete ? (
                       <Check className="w-4 h-4" />
@@ -3180,6 +3513,9 @@ export default function CreatePhotobookPage() {
                 pages={pages}
                 setPages={setPages}
                 selectedMemories={memories}
+                wisdomEntries={wisdomEntries}
+                mediaFaces={mediaFaces}
+                selectedProduct={selectedProduct}
                 onAutoArrange={autoArrange}
                 canUndo={canUndo}
                 canRedo={canRedo}
@@ -3218,7 +3554,7 @@ export default function CreatePhotobookPage() {
             <button
               onClick={() => goToStep(currentStep - 1)}
               disabled={currentStep === 0}
-              className="px-4 sm:px-6 py-3 text-[#2D5A3D] hover:bg-[#2D5A3D]/10 rounded-xl disabled:opacity-30 disabled:cursor-not-allowed flex items-center gap-2 min-h-[44px] touch-manipulation active:scale-95 transition-transform"
+              className="px-4 sm:px-6 py-3 text-[#406A56] hover:bg-[#406A56]/10 rounded-xl disabled:opacity-30 disabled:cursor-not-allowed flex items-center gap-2 min-h-[44px] touch-manipulation active:scale-95 transition-transform"
             >
               <ChevronLeft className="w-5 h-5" />
               <span className="hidden sm:inline">Back</span>
@@ -3227,7 +3563,7 @@ export default function CreatePhotobookPage() {
             <button
               onClick={() => goToStep(currentStep + 1)}
               disabled={!canProceed()}
-              className="px-6 sm:px-8 py-3 bg-[#2D5A3D] text-white font-semibold rounded-xl hover:bg-[#234A31] disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 min-h-[44px] touch-manipulation active:scale-95 transition-transform"
+              className="px-6 sm:px-8 py-3 bg-[#406A56] text-white font-semibold rounded-xl hover:bg-[#345548] disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 min-h-[44px] touch-manipulation active:scale-95 transition-transform"
             >
               {currentStep === 2 ? 'Proceed to Checkout' : 'Continue'}
               <ChevronRight className="w-5 h-5" />
