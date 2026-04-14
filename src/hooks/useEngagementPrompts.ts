@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { createClient } from '@/lib/supabase/client';
+import { fetchPromptEnrichmentMaps } from '@/lib/engagement/enrich-prompts';
 import type { EngagementPrompt, PromptResponse, EngagementStats } from '@/types/engagement';
 
 interface UseEngagementPromptsReturn {
@@ -68,14 +69,12 @@ export function useEngagementPrompts(count: number = 5, lifeChapter: string | nu
         if (!hasTriedAiFallback.current) {
           hasTriedAiFallback.current = true;
           try {
-            console.log('[useEngagementPrompts] pool empty — calling AI fallback generator', { lifeChapter });
             const genRes = await fetch('/api/engagement/generate-ai-prompts', {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
               body: JSON.stringify({ count: 25, chapter: lifeChapter || undefined }),
             });
             const genData = await genRes.json().catch(() => ({}));
-            console.log('[useEngagementPrompts] AI fallback generated:', genData);
             if (genRes.ok && (genData?.generated ?? 0) > 0) {
               // Re-run shuffle now that fresh rows exist
               isFetching.current = false;
@@ -91,54 +90,9 @@ export function useEngagementPrompts(count: number = 5, lifeChapter: string | nu
         return;
       }
 
-      // Collect IDs we need to fetch
-      const photoIds = rawPrompts
-        .filter((p: any) => p.photo_id)
-        .map((p: any) => p.photo_id);
-      
-      const contactIds = rawPrompts
-        .filter((p: any) => p.contact_id)
-        .map((p: any) => p.contact_id);
-
-      // Fetch related photos (with EXIF metadata for when-where pre-fill)
-      let photosMap: Record<string, string> = {};
-      let photoMetaMap: Record<string, { taken_at?: string; exif_lat?: number; exif_lng?: number; location_name?: string }> = {};
-      if (photoIds.length > 0) {
-        const { data: photos } = await supabase
-          .from('memory_media')
-          .select('id, file_url, taken_at, exif_lat, exif_lng')
-          .in('id', photoIds);
-
-        if (photos) {
-          photosMap = Object.fromEntries(photos.map((p: any) => [p.id, p.file_url]));
-          photoMetaMap = Object.fromEntries(photos.map((p: any) => [p.id, {
-            taken_at: p.taken_at,
-            exif_lat: p.exif_lat,
-            exif_lng: p.exif_lng,
-          }]));
-          // Reverse-geocode any photos with coords but no location name
-          for (const p of photos) {
-            if (p.exif_lat && p.exif_lng && photoMetaMap[p.id]) {
-              // Best-effort: skip if we don't have a geocoder client-side
-            }
-          }
-        }
-      }
-
-      // Fetch related contacts
-      let contactsMap: Record<string, { name: string; photo?: string }> = {};
-      if (contactIds.length > 0) {
-        const { data: contacts } = await supabase
-          .from('contacts')
-          .select('id, full_name, avatar_url')
-          .in('id', contactIds);
-        
-        if (contacts && contacts.length > 0) {
-          contactsMap = Object.fromEntries(
-            contacts.map((c: any) => [c.id, { name: c.full_name, photo: c.avatar_url }])
-          );
-        }
-      }
+      // Fetch photo + contact lookup maps (shared helper)
+      const { photosMap, photoMetaMap, contactsMap } =
+        await fetchPromptEnrichmentMaps(supabase, rawPrompts);
 
       // Transform data with resolved URLs
       const transformedPrompts: EngagementPrompt[] = rawPrompts.map((p: any) => ({
@@ -264,7 +218,6 @@ export function useEngagementPrompts(count: number = 5, lifeChapter: string | nu
       }
 
       const result = await res.json();
-      console.log('Answer prompt result:', result);
 
       // Remove from local state
       setPrompts(prev => {

@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
+import { fetchPromptEnrichmentMaps } from '@/lib/engagement/enrich-prompts';
 import type { GetPromptsResponse, ShufflePromptsRequest } from '@/types/engagement';
 
 // GET /api/engagement/prompts
@@ -50,42 +51,17 @@ export async function GET(request: NextRequest) {
       }
     }
 
-    // Enrich prompts with related data (photos, contacts)
-    const enrichedPrompts = await Promise.all(
-      (prompts || []).map(async (prompt: any) => {
-        let photoUrl = null;
-        let contactName = null;
-        let contactPhotoUrl = null;
-
-        // Fetch photo if present
-        if (prompt.photo_id) {
-          const { data: photo } = await supabase
-            .from('memory_media')
-            .select('file_url')
-            .eq('id', prompt.photo_id)
-            .single();
-          photoUrl = photo?.file_url;
-        }
-
-        // Fetch contact if present
-        if (prompt.contact_id) {
-          const { data: contact } = await supabase
-            .from('contacts')
-            .select('full_name, avatar_url')
-            .eq('id', prompt.contact_id)
-            .single();
-          contactName = contact?.full_name;
-          contactPhotoUrl = contact?.avatar_url;
-        }
-
-        return {
-          ...prompt,
-          photo_url: photoUrl,
-          contact_name: contactName,
-          contact_photo_url: contactPhotoUrl,
-        };
-      })
+    // Enrich prompts with related data (photos, contacts) via shared helper
+    const { photosMap, contactsMap } = await fetchPromptEnrichmentMaps(
+      supabase,
+      prompts || [],
     );
+    const enrichedPrompts = (prompts || []).map((prompt: any) => ({
+      ...prompt,
+      photo_url: prompt.photo_id ? photosMap[prompt.photo_id] ?? null : null,
+      contact_name: prompt.contact_id ? contactsMap[prompt.contact_id]?.name ?? null : null,
+      contact_photo_url: prompt.contact_id ? contactsMap[prompt.contact_id]?.photo ?? null : null,
+    }));
 
     const response: GetPromptsResponse = {
       prompts: enrichedPrompts,

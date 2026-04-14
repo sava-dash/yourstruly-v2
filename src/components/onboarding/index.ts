@@ -1,4 +1,3 @@
-export { EnhancedOnboardingFlow } from './EnhancedOnboardingFlow';
 export { QuickOnboardingFlow } from './QuickOnboardingFlow';
 export { HeartfeltQuestion } from './HeartfeltQuestion';
 export { HeartfeltConversation } from './HeartfeltConversation';

@@ -36,10 +36,6 @@ export async function POST(
 
     const { id: promptId } = await params;
     const body: AnswerPromptRequest = await request.json();
-    
-    console.log('=== ANSWER PROMPT API ===');
-    console.log('Prompt ID:', promptId);
-    console.log('Request body:', JSON.stringify(body, null, 2));
 
     // Verify prompt belongs to user
     const { data: prompt, error: fetchError } = await supabase
@@ -53,8 +49,6 @@ export async function POST(
       console.error('Prompt not found:', promptId, fetchError);
       return NextResponse.json({ error: 'Prompt not found' }, { status: 404 });
     }
-    
-    console.log('Found prompt:', JSON.stringify(prompt, null, 2));
 
     // Call answer_prompt function
     const { data: answeredPrompt, error: answerError } = await supabase
@@ -130,15 +124,6 @@ export async function POST(
     }
 
     // === UNIFIED MEMORY CREATION FOR ALL CONTENT-GENERATING PROMPTS ===
-    console.log('=== MEMORY CREATION CHECK ===');
-    console.log('prompt.type:', prompt.type);
-    console.log('body.responseText length:', body.responseText?.length || 0);
-    console.log('body.responseAudioUrl:', body.responseAudioUrl || 'none');
-    console.log('[DEBUG] incomingMediaUrls:', JSON.stringify(incomingMediaUrls.map(m => ({ url: m.url?.slice(-30), mediaId: m.mediaId }))));
-    console.log('[DEBUG] responseLocationName:', responseLocationName, 'lat:', responseLocationLat, 'lng:', responseLocationLng);
-    console.log('[DEBUG] prompt.result_memory_id:', prompt.result_memory_id);
-    console.log('body.responseVideoUrl:', body.responseVideoUrl || 'none');
-    
     // These prompt types create MEMORY records (not wisdom)
     const MEMORY_CREATING_TYPES = [
       'memory_prompt',     // general memories
@@ -159,8 +144,6 @@ export async function POST(
     const shouldCreateMemory = MEMORY_CREATING_TYPES.includes(prompt.type);
     const shouldCreateKnowledge = KNOWLEDGE_CREATING_TYPES.includes(prompt.type);
     const hasContent = !!(body.responseText || body.responseAudioUrl);
-    
-    console.log('shouldCreateMemory:', shouldCreateMemory, 'shouldCreateKnowledge:', shouldCreateKnowledge, 'hasContent:', hasContent);
 
     // Insert rows into memory_media for cardchain-uploaded files.
     // Uses the ADMIN client (service role) because memory_media has RLS
@@ -170,7 +153,6 @@ export async function POST(
     // - Otherwise insert with memory_id=null so they still show in the Media tab.
     // Deduplicates against existing rows by file_url so re-saves are idempotent.
     const attachChainMedia = async (memoryIdArg: string | null): Promise<number> => {
-      console.log('[attachChainMedia] called with memoryId:', memoryIdArg, 'mediaCount:', incomingMediaUrls.length);
       if (incomingMediaUrls.length === 0) return 0;
       try {
         const adminClient = createAdminClient();
@@ -237,7 +219,6 @@ export async function POST(
                 .update({ memory_id: memoryIdArg })
                 .in('id', orphanIds.slice(1));
             }
-            console.log('[attachChainMedia] linked', orphanIds.length, 'orphan rows to memory', memoryIdArg);
 
             // Insert anything NOT in orphans AND NOT in existing table
             const allExisting = new Set([
@@ -297,13 +278,11 @@ export async function POST(
             };
           });
         if (toInsert.length === 0) return 0;
-        console.log('[attachChainMedia] inserting', toInsert.length, 'rows for memory', memoryIdArg);
         const { error: insErr } = await adminClient.from('memory_media').insert(toInsert);
         if (insErr) {
           console.error('[attachChainMedia] INSERT FAILED:', insErr);
           return 0;
         }
-        console.log('[attachChainMedia] SUCCESS: attached', toInsert.length, 'media to memory', memoryIdArg);
         return toInsert.length;
       } catch (e) {
         console.error('attachChainMedia crashed:', e);
@@ -320,7 +299,6 @@ export async function POST(
         .eq('id', prompt.photo_id)
         .single();
       photoMeta = mediaData;
-      console.log('Photo metadata for backstory:', photoMeta);
     }
 
     // For non-backstory prompts, check if any of the uploaded photos
@@ -354,7 +332,6 @@ export async function POST(
             lng: row.exif_lng,
             taken_at: row.taken_at || undefined,
           };
-          console.log('Uploaded photo EXIF metadata:', uploadedPhotoMeta);
         }
       } catch (e) {
         console.warn('Failed to fetch uploaded photo EXIF:', e);
@@ -363,15 +340,11 @@ export async function POST(
     
     // === KNOWLEDGE ENTRY CREATION (wisdom prompts - separate from memories) ===
     if (shouldCreateKnowledge && hasContent) {
-      console.log('=== CREATING/UPDATING KNOWLEDGE ENTRY (not wisdom-as-memory) ===');
-
       // Transcribe audio if we have audio but no text
       let responseText = body.responseText;
       if (!responseText && body.responseAudioUrl) {
-        console.log('Transcribing audio for knowledge entry...');
         try {
           responseText = await transcribeAudio(body.responseAudioUrl);
-          console.log('Transcription successful, length:', responseText?.length);
         } catch (transcribeError) {
           console.error('Transcription failed:', transcribeError);
           // Continue without transcription - audio will still be saved
@@ -439,8 +412,6 @@ export async function POST(
       } else if (newKnowledge) {
         knowledgeEntry = newKnowledge;
         knowledgeEntryId = newKnowledge.id;
-        console.log('=== KNOWLEDGE ENTRY CREATED ===');
-        console.log('Knowledge Entry ID:', newKnowledge.id);
 
         // Update prompt with result knowledge ID
         await supabase
@@ -461,7 +432,6 @@ export async function POST(
     // than once per prompt (per-card save + final Save & Finish), so this is
     // the authoritative dedup point.
     if (shouldCreateMemory && hasContent && prompt.result_memory_id) {
-      console.log('=== SKIPPING MEMORY CREATION — prompt already has result_memory_id:', prompt.result_memory_id);
       memoryCreated = true;
       memoryId = prompt.result_memory_id;
 
@@ -484,7 +454,6 @@ export async function POST(
       if (responseLocationLng != null) updatePayload.location_lng = responseLocationLng;
       if (responseMemoryDate) updatePayload.memory_date = responseMemoryDate;
       if (Object.keys(updatePayload).length > 0) {
-        console.log('[DEBUG] Updating memory', prompt.result_memory_id, 'with:', JSON.stringify(Object.keys(updatePayload)));
         const adminClient = createAdminClient();
         const { error: updateErr } = await adminClient
           .from('memories')
@@ -532,18 +501,14 @@ export async function POST(
       // Transcribe audio if we have audio but no text
       let memoryDescription = body.responseText;
       if (!memoryDescription && body.responseAudioUrl) {
-        console.log('Transcribing audio for memory...');
         try {
           memoryDescription = await transcribeAudio(body.responseAudioUrl);
-          console.log('Memory transcription successful, length:', memoryDescription?.length);
         } catch (transcribeError) {
           console.error('Memory transcription failed:', transcribeError);
           memoryDescription = '🎤 Voice memory recorded';
         }
       }
-      
-      console.log('Creating memory with tags:', tags);
-      
+
       const { data: newMemory, error: memoryError } = await supabase
         .from('memories')
         .insert({
@@ -575,9 +540,7 @@ export async function POST(
       } else if (newMemory) {
         memoryCreated = true;
         memoryId = newMemory.id;
-        console.log('=== MEMORY CREATED ===');
-        console.log('Memory ID:', newMemory.id);
-        
+
         // Update prompt with result memory ID
         await supabase
           .from('engagement_prompts')
@@ -593,7 +556,6 @@ export async function POST(
               description: body.responseText
             })
             .eq('id', prompt.photo_id);
-          console.log('Linked photo to memory');
         }
 
         // Attach any cardchain-uploaded media to the new memory.
@@ -624,7 +586,6 @@ export async function POST(
         }
       }
     } else if (!shouldCreateKnowledge) {
-      console.log('Skipping memory creation - shouldCreateMemory:', shouldCreateMemory, 'hasContent:', hasContent);
       // Even if we didn't create a memory or knowledge entry (e.g. missing_info,
       // tag_person, profile updates), uploaded media should still appear in the
       // user's Media tab. Attach with memory_id=null.
@@ -639,16 +600,10 @@ export async function POST(
     const alreadyAnswered = !!(prompt.result_memory_id || prompt.result_knowledge_id || prompt.status === 'answered');
     const skipXp = (body as any).skipXp === true;
     try {
-      if (skipXp) {
-        console.log('=== SKIPPING XP — caller opted out (skipXp=true) ===');
-      } else if (alreadyAnswered) {
-        console.log('=== SKIPPING XP — prompt already answered previously ===');
-      } else {
+      if (!skipXp && !alreadyAnswered) {
         const xpAmount = XP_REWARDS[prompt.type] || 10;
-        console.log('=== AWARDING XP ===');
-        console.log('Amount:', xpAmount, 'Type:', prompt.type);
 
-        const { data: xpResult, error: xpError } = await supabase.rpc('award_xp', {
+        const { error: xpError } = await supabase.rpc('award_xp', {
           p_user_id: user.id,
           p_amount: xpAmount,
           p_action: 'answer_prompt',
@@ -661,20 +616,17 @@ export async function POST(
           console.error('Failed to award XP:', xpError);
         } else {
           xpAwarded = xpAmount;
-          console.log('XP awarded successfully. New total:', xpResult);
         }
       }
 
       // Record daily activity for streak tracking
-      const { data: streakResult, error: streakError } = await supabase.rpc('record_daily_activity', {
+      const { error: streakError } = await supabase.rpc('record_daily_activity', {
         p_user_id: user.id,
         p_activity_type: 'engagement_prompt',
       });
 
       if (streakError) {
         console.error('Failed to record daily activity:', streakError);
-      } else {
-        console.log('Daily activity recorded. Streak:', streakResult);
       }
     } catch (xpCatchError) {
       console.error('Error in XP awarding:', xpCatchError);
@@ -750,11 +702,6 @@ export async function POST(
       xpAwarded,
       mediaAttached,
     } as AnswerPromptResponse & { mediaAttached: number };
-
-    console.log('=== ANSWER RESPONSE ===');
-    console.log('memoryId:', memoryId);
-    console.log('contactId:', prompt.contact_id);
-    console.log('type:', prompt.type);
 
     return NextResponse.json(response);
 
