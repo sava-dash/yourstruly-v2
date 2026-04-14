@@ -48,6 +48,7 @@ import {
 import { PRODIGI_PHOTOBOOK_SKUS } from '@/components/photobook/types'
 import { getEnabledProducts, getEnabledTemplates, DbProduct } from '@/lib/photobook/db'
 import QRPreview from '@/components/photobook/QRPreview'
+import CheckoutFlow from '@/components/photobook/CheckoutFlow'
 
 // ============================================================================
 // TYPES
@@ -2928,6 +2929,8 @@ export default function CreatePhotobookPage() {
   // UI state
   const [isLoading, setIsLoading] = useState(true)
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const [checkoutOpen, setCheckoutOpen] = useState(false)
+  const [checkoutProjectId, setCheckoutProjectId] = useState<string | null>(null)
   const [projectId, setProjectId] = useState<string | null>(null)
   const [userId, setUserId] = useState<string | null>(null)
   
@@ -3364,44 +3367,22 @@ export default function CreatePhotobookPage() {
     return subtotal + markup + shipping
   }
   
-  // Handle checkout
+  // Handle checkout: save the project, then hand off to the CheckoutFlow
+  // overlay which renders+uploads each page, creates a PaymentIntent,
+  // collects payment via Stripe Elements, and submits to Prodigi.
   const handleCheckout = async () => {
     setIsSubmitting(true)
-    
     try {
-      // Save project first
       const project = await saveProject()
-      if (!project) throw new Error('Failed to save project')
-      
-      // Create Stripe checkout session
-      const response = await fetch('/api/photobook/checkout', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          projectId: project.id,
-          productId: selectedProduct?.id,
-          amount: Math.round(calculateTotal() * 100), // cents
-          shippingAddress
-        })
-      })
-      
-      const data = await response.json()
-      
-      if (!response.ok) {
-        throw new Error(data.error || 'Checkout failed')
-      }
-      
-      if (data.url) {
-        window.location.href = data.url
-      } else {
-        throw new Error('No checkout URL returned')
-      }
+      if (!project) throw new Error('We couldn\'t save your book. Please try again.')
+      setCheckoutProjectId(project.id)
+      setCheckoutOpen(true)
     } catch (error) {
       console.error('Checkout error:', error)
-      alert(`Checkout failed: ${error instanceof Error ? error.message : 'Unknown error'}`)
+      alert(error instanceof Error ? error.message : 'Something went wrong. Please try again.')
+    } finally {
+      setIsSubmitting(false)
     }
-    
-    setIsSubmitting(false)
   }
   
   // Step validation (updated for 4 steps)
@@ -3570,6 +3551,30 @@ export default function CreatePhotobookPage() {
             </button>
           </div>
         </div>
+      )}
+
+      {checkoutOpen && checkoutProjectId && (
+        <CheckoutFlow
+          open={checkoutOpen}
+          onClose={() => setCheckoutOpen(false)}
+          projectId={checkoutProjectId}
+          pages={pages.map(p => ({
+            id: p.id,
+            pageNumber: p.pageNumber,
+            layoutId: p.layoutId,
+            slots: p.slots.map(s => ({
+              slotId: s.slotId,
+              type: s.type,
+              fileUrl: s.fileUrl,
+              text: s.text,
+              qrMemoryId: s.qrMemoryId,
+              qrWisdomId: s.qrWisdomId,
+            })),
+            background: p.background,
+          }))}
+          shippingAddress={shippingAddress}
+          totalDisplay={calculateTotal()}
+        />
       )}
     </div>
   )

@@ -180,7 +180,9 @@ export async function POST(
   }
 
   try {
-    // Fetch project with pages to get asset URLs
+    // Fetch project with pages to get asset URLs.
+    // NOTE: the column is `content_json` (JSONB), not `content` — the prior
+    // select silently returned empty strings, so Prodigi got no assets.
     const { data: project } = await supabase
       .from('photobook_projects')
       .select(`
@@ -189,7 +191,7 @@ export async function POST(
           id,
           page_number,
           page_type,
-          content
+          content_json
         )
       `)
       .eq('id', order.project_id)
@@ -199,17 +201,41 @@ export async function POST(
       return NextResponse.json({ error: 'Project not found' }, { status: 404 })
     }
 
-    // Build assets array from page content
-    // Content is expected to have image URLs for each page
-    const assets = project.photobook_pages
-      ?.sort((a: { page_number: number }, b: { page_number: number }) => a.page_number - b.page_number)
-      .map((page: { page_number: number; page_type: string; content: { image_url?: string } }) => ({
-        printArea: page.page_type === 'front_cover' ? 'cover' 
-          : page.page_type === 'back_cover' ? 'backCover' 
-          : `page${page.page_number}`,
-        url: page.content?.image_url || '',
+    // Build assets array from rendered page URLs uploaded before checkout.
+    type PageRow = {
+      page_number: number
+      page_type: string
+      content_json: { rendered_url?: string; image_url?: string } | null
+    }
+    const sortedPages: PageRow[] = (project.photobook_pages || [])
+      .slice()
+      .sort((a: PageRow, b: PageRow) => a.page_number - b.page_number)
+
+    const assets = sortedPages
+      .map((page) => ({
+        printArea:
+          page.page_type === 'front_cover'
+            ? 'cover'
+            : page.page_type === 'back_cover'
+              ? 'backCover'
+              : `page${page.page_number}`,
+        // Prefer rendered_url (set by the asset upload endpoint).
+        // Fall back to legacy image_url if present.
+        url: page.content_json?.rendered_url || page.content_json?.image_url || '',
       }))
-      .filter((asset: { url: string }) => asset.url) || []
+      .filter((asset) => asset.url)
+
+    // If ANY page is missing a rendered URL, bail cleanly — Prodigi would
+    // otherwise receive a partial/blank book.
+    if (assets.length === 0 || assets.length < sortedPages.length) {
+      return NextResponse.json(
+        {
+          error:
+            'Your book is not fully prepared for printing yet. Please return to the editor and try placing the order again.',
+        },
+        { status: 409 }
+      )
+    }
 
     // Submit order to Prodigi
     const prodigiOrder = await createProdigiOrder({
@@ -260,22 +286,38 @@ export async function POST(
 
   } catch (error) {
     console.error('Failed to submit order to Prodigi:', error)
-    
-    // Update order status to error
+
+    // Update order status to error with raw message for support forensics.
+    const rawMessage = error instanceof Error ? error.message : 'Unknown error'
     const adminSupabase = createAdminClient()
     await adminSupabase
       .from('photobook_orders')
       .update({
         status: 'error',
-        error_message: error instanceof Error ? error.message : 'Unknown error',
+        error_message: rawMessage,
         updated_at: new Date().toISOString(),
       })
       .eq('id', id)
 
-    return NextResponse.json(
-      { error: 'Failed to submit order to fulfillment provider' },
-      { status: 500 }
-    )
+    // Map the raw Prodigi error into plain English for the user.
+    const lower = rawMessage.toLowerCase()
+    let friendly =
+      'We couldn\'t send your book to the printer. Our team has been notified and will follow up by email.'
+    if (lower.includes('sku') || lower.includes('product not found') || lower.includes('attribute')) {
+      friendly =
+        'The book size you picked is temporarily unavailable at our printer. Please try a different size or contact support.'
+    } else if (lower.includes('asset') || lower.includes('image') || lower.includes('url')) {
+      friendly =
+        'One of your pages didn\'t upload correctly. Please go back to the editor and try placing the order again.'
+    } else if (lower.includes('address') || lower.includes('postal') || lower.includes('zip') || lower.includes('country')) {
+      friendly =
+        'Your shipping address was rejected by the printer. Please double-check your address and try again.'
+    } else if (lower.includes('unauthor') || lower.includes('auth') || lower.includes('api key') || lower.includes('forbidden')) {
+      friendly =
+        'We had trouble connecting to our printer just now. Please try again in a few minutes — your payment is safe.'
+    }
+
+    return NextResponse.json({ error: friendly }, { status: 502 })
   }
 }
 
