@@ -30,11 +30,21 @@ export async function GET() {
   const latestUnread = latestUnreadRows && latestUnreadRows.length > 0 ? latestUnreadRows[0] : null;
   // Priority hint so UI surfaces (e.g. MemoryOfTheDayBanner) can defensively
   // render only for the notification type they're designed for.
-  type Priority = 'memory-of-the-day' | 'weekly-story' | 'other' | null;
+  type Priority =
+    | 'memory-of-the-day'
+    | 'weekly-story'
+    | 'postscript-reminder'
+    | 'other'
+    | null;
   let priority: Priority = null;
   if (latestUnread) {
     const t = (latestUnread as { type?: string }).type;
-    priority = t === 'memory-of-the-day' || t === 'weekly-story' ? t : 'other';
+    priority =
+      t === 'memory-of-the-day' ||
+      t === 'weekly-story' ||
+      t === 'postscript-reminder'
+        ? t
+        : 'other';
   }
 
   return NextResponse.json({ today, latestUnread, priority });

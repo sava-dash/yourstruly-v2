@@ -8,11 +8,16 @@
  */
 import React, { useMemo } from 'react'
 import { formatDistanceToNowStrict, format as formatDate } from 'date-fns'
+import { inferContactForEvent, holidayKindFromLabel } from '@/lib/postscripts/event-contact-mapping'
 
 export interface SuggestionContact {
   id: string
   full_name: string
   date_of_birth?: string | null
+  /** Needed so holiday suggestions (Mother's/Father's/Valentine's Day) can
+   * auto-pick the right recipient. Optional — pages that don't load it still
+   * fall back to a name heuristic. */
+  relationship_type?: string | null
 }
 
 export interface SuggestionProfile {
@@ -216,11 +221,20 @@ export function buildSuggestions(
   for (const h of computeHolidayOccurrences(today)) {
     const days = daysBetween(today, h.date)
     if (days > holidayHorizon) continue
-    const key = h.label.toLowerCase().includes('christmas')
+    const lower = h.label.toLowerCase()
+    // Map label → the app's canonical event_type token. Mother's/Father's/
+    // Valentine's get their own tokens so the /new deep-link hydrates the
+    // "event" correctly instead of landing on a generic "other".
+    const kind = holidayKindFromLabel(h.label) // 'mothers_day' | 'fathers_day' | 'valentines' | null
+    const key = kind
+      ? kind
+      : lower.includes('christmas')
       ? 'christmas'
-      : h.label.toLowerCase().includes('new year')
+      : lower.includes('new year')
       ? 'new_year'
       : 'other'
+    // Auto-pick a recipient for the relationship-bound holidays.
+    const match = kind ? inferContactForEvent(kind, contacts) : null
     results.push({
       id: `holiday-${h.label}`,
       emoji: h.emoji,
@@ -228,6 +242,8 @@ export function buildSuggestions(
       date: h.date,
       eventKey: key,
       eventType: 'holiday',
+      contactId: match?.id ?? null,
+      contactName: match?.full_name ?? null,
     })
   }
 
@@ -281,9 +297,25 @@ export default function EventSuggestions({
             >
               <span className="text-xl leading-none" aria-hidden="true">{s.emoji}</span>
               <span className="flex-1 min-w-0">
-                <span className="block text-sm text-[#2d2d2d] truncate">{s.label}</span>
+                <span className="block text-sm text-[#2d2d2d] truncate">
+                  {s.label}
+                  {s.eventType === 'holiday' && s.contactName && (
+                    <span
+                      className="ml-2 text-[#406A56]/80"
+                      style={{
+                        fontFamily: 'var(--font-caveat, "Caveat", cursive)',
+                        fontSize: '15px',
+                      }}
+                    >
+                      → {s.contactName}
+                    </span>
+                  )}
+                </span>
                 <span className="block text-xs text-[#5A6660]">
                   {formatDistanceToNowStrict(s.date, { addSuffix: true })}
+                  {s.eventType === 'holiday' && s.contactName && (
+                    <span className="ml-1 text-[#5A6660]/70"> · Tap to send to {s.contactName}</span>
+                  )}
                 </span>
               </span>
             </button>

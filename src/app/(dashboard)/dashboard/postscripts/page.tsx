@@ -291,9 +291,12 @@ export default function PostScriptsPage() {
       const [{ data: contacts }, { data: profile }] = await Promise.all([
         supabase
           .from('contacts')
-          .select('id, full_name, date_of_birth')
-          .eq('user_id', user.id)
-          .not('date_of_birth', 'is', null),
+          // Bug: holiday suggestions (Mother's/Father's/Valentine's Day) use
+          // relationship_type to auto-pick the intended recipient. We also
+          // need all contacts — not just those with a DOB — so holidays can
+          // resolve even when the user hasn't entered a birthday.
+          .select('id, full_name, date_of_birth, relationship_type')
+          .eq('user_id', user.id),
         supabase
           .from('profiles')
           .select('date_of_birth')

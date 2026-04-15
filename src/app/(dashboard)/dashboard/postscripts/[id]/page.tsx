@@ -120,10 +120,25 @@ export default function PostScriptDetailPage({ params }: { params: Promise<{ id:
   const [showGiftModal, setShowGiftModal] = useState(false)
   const [showCheckoutPrompt, setShowCheckoutPrompt] = useState(searchParams.get('checkout') === 'true')
   const [giftMessage, setGiftMessage] = useState<{ type: 'success' | 'error', text: string } | null>(null)
-  // Bug 2: track any attached postscript_gift rows so we can show a prominent
-  // "Pay for your gift" CTA whenever payment_status !== 'paid'.
-  const [giftRows, setGiftRows] = useState<Array<{ id: string; payment_status: string | null; amount_paid: number | null; price: number | null; name: string | null }>>([])
-  const [payingGift, setPayingGift] = useState(false)
+  // Bug 2: track every attached postscript_gift row so we can render each one
+  // as its own card with its own Pay CTA. Users who attach multiple gifts
+  // (e.g., wine + chocolates) expect to see all of them on the details page.
+  const [giftRows, setGiftRows] = useState<Array<{
+    id: string
+    payment_status: string | null
+    amount_paid: number | null
+    price: number | null
+    name: string | null
+    image_url: string | null
+    gift_type: string | null
+    product_id: string | null
+    flex_gift_amount: number | null
+    quantity: number | null
+  }>>([])
+  // Per-gift payment-in-progress id (null when idle). Keeps the right card's
+  // button spinning while leaving the others clickable.
+  const [payingGiftId, setPayingGiftId] = useState<string | null>(null)
+  const payingGift = payingGiftId !== null
 
   // Handle gift payment callback from Stripe
   useEffect(() => {
@@ -189,23 +204,54 @@ export default function PostScriptDetailPage({ params }: { params: Promise<{ id:
     }
   }
 
-  // Bug 2: shared Pay-for-Gift flow. Builds a checkout payload from the
-  // postscript's gift_details and redirects to Stripe.
-  async function handlePayForGift() {
+  // Bug 2: shared Pay-for-Gift flow. When a specific gift row is passed in
+  // (multi-gift case), the payload is built from that row. Otherwise we fall
+  // back to the legacy single-gift snapshot on `postscript.gift_details`.
+  async function handlePayForGift(row?: {
+    id: string
+    name: string | null
+    price: number | null
+    image_url: string | null
+    gift_type: string | null
+    product_id: string | null
+    flex_gift_amount: number | null
+  }) {
     if (!postscript || payingGift) return
-    setPayingGift(true)
+    // Tag the in-flight payment with the row id (or 'legacy') so only the
+    // clicked card shows a spinner.
+    setPayingGiftId(row?.id ?? 'legacy')
     try {
-      let parsedGift: { name?: string; price?: number; image_url?: string; product_id?: string } = {}
-      try { parsedGift = JSON.parse(postscript.gift_details || '{}') } catch {}
-      const giftType = postscript.gift_type === 'choice' ? 'choice' : 'product'
-      const payload: Record<string, unknown> = { giftType }
-      if (giftType === 'choice') {
-        payload.flexGiftAmount = postscript.gift_budget || parsedGift.price || 50
+      const payload: Record<string, unknown> = {}
+      if (row) {
+        const isChoice =
+          row.gift_type === 'choice' ||
+          (typeof row.flex_gift_amount === 'number' && row.flex_gift_amount > 0)
+        payload.giftType = isChoice ? 'choice' : 'product'
+        if (isChoice) {
+          // flex_gift_amount is in cents per checkout endpoint; convert back.
+          payload.flexGiftAmount =
+            (row.flex_gift_amount != null ? row.flex_gift_amount / 100 : null) ||
+            row.price ||
+            50
+        } else {
+          payload.productId = row.product_id || postscript.id
+          payload.productName = row.name || 'Gift'
+          payload.productImage = row.image_url || undefined
+          payload.productPrice = row.price || 50
+        }
       } else {
-        payload.productId = parsedGift.product_id || postscript.id
-        payload.productName = parsedGift.name || 'Gift'
-        payload.productImage = parsedGift.image_url
-        payload.productPrice = parsedGift.price || postscript.gift_budget || 50
+        let parsedGift: { name?: string; price?: number; image_url?: string; product_id?: string } = {}
+        try { parsedGift = JSON.parse(postscript.gift_details || '{}') } catch {}
+        const giftType = postscript.gift_type === 'choice' ? 'choice' : 'product'
+        payload.giftType = giftType
+        if (giftType === 'choice') {
+          payload.flexGiftAmount = postscript.gift_budget || parsedGift.price || 50
+        } else {
+          payload.productId = parsedGift.product_id || postscript.id
+          payload.productName = parsedGift.name || 'Gift'
+          payload.productImage = parsedGift.image_url
+          payload.productPrice = parsedGift.price || postscript.gift_budget || 50
+        }
       }
       const res = await fetch(`/api/postscripts/${postscript.id}/gifts/checkout`, {
         method: 'POST',
@@ -231,7 +277,7 @@ export default function PostScriptDetailPage({ params }: { params: Promise<{ id:
         text: "We couldn't reach the payment service. Please try again.",
       })
     } finally {
-      setPayingGift(false)
+      setPayingGiftId(null)
     }
   }
 
@@ -553,56 +599,109 @@ export default function PostScriptDetailPage({ params }: { params: Promise<{ id:
               </SectionCard>
             )}
 
-            {/* Gift Details */}
-            {postscript.has_gift && (
-              <SectionCard title="Gift" icon={Gift}>
-                {(() => {
-                  let gi: { name?: string; price?: number; image_url?: string } = {}
-                  try { gi = JSON.parse(postscript.gift_details || '{}') } catch {}
-                  const amountLabel = typeof giftAmount === 'number' && !Number.isNaN(giftAmount)
-                    ? `$${giftAmount.toFixed(2)}`
-                    : ''
-                  return (
-                    <>
-                      <div className="flex items-center gap-3">
-                        {gi.image_url && (
-                          <img src={gi.image_url} alt="" className="w-14 h-14 rounded-xl object-cover ring-1 ring-[#C4A235]/20" />
-                        )}
-                        <div className="flex-1 min-w-0">
-                          <p className="text-[#E8DCC4] text-sm font-medium truncate">{gi.name || postscript.gift_type || 'Gift'}</p>
-                          <p className="text-[#C4A235] font-semibold text-sm">
-                            {postscript.gift_budget ? `$${postscript.gift_budget}` : gi.price ? `$${gi.price}` : ''}
-                          </p>
-                        </div>
-                      </div>
-                      {/* Bug 2: Pay CTA inside the primary Gift card. */}
-                      {giftUnpaid && (
-                        <button
-                          onClick={handlePayForGift}
-                          disabled={payingGift}
-                          className="mt-4 w-full rounded-xl bg-[#C35F33] hover:bg-[#A85128] text-white font-semibold
-                                     px-4 flex items-center justify-center gap-2 transition-colors
-                                     disabled:opacity-60 disabled:cursor-not-allowed"
-                          style={{ minHeight: 52 }}
-                        >
-                          {payingGift ? (
-                            <>
-                              <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                              Starting checkout…
-                            </>
+            {/* Gift Details — Bug 2: loop every attached postscript_gift row.
+                Each card has its own Pay CTA when unpaid; the checkout
+                endpoint creates a separate Stripe session per gift so one CTA
+                per row is the simplest, matching behavior. */}
+            {postscript.has_gift && (() => {
+              // Compose the list of gifts to render. Prefer real rows; if the
+              // record is a legacy one (has_gift=true but zero rows yet) fall
+              // back to a single synthetic card derived from gift_details.
+              let legacy: { name?: string; price?: number; image_url?: string } = {}
+              try { legacy = JSON.parse(postscript.gift_details || '{}') } catch {}
+              const renderRows: Array<{
+                key: string
+                row: typeof giftRows[number] | null
+                name: string
+                price: number | null
+                image_url: string | null
+                paid: boolean
+              }> = giftRows.length > 0
+                ? giftRows.map(r => ({
+                    key: r.id,
+                    row: r,
+                    name: r.name || postscript.gift_type || 'Gift',
+                    price: r.price,
+                    image_url: r.image_url,
+                    paid: (r.payment_status || 'pending') === 'paid',
+                  }))
+                : [{
+                    key: 'legacy',
+                    row: null,
+                    name: legacy.name || postscript.gift_type || 'Gift',
+                    price: postscript.gift_budget ?? legacy.price ?? null,
+                    image_url: legacy.image_url || null,
+                    paid: false,
+                  }]
+              const paidCount = renderRows.filter(r => r.paid).length
+              const unpaidCount = renderRows.length - paidCount
+              const paidTotal = renderRows.filter(r => r.paid).reduce((a, r) => a + (r.price || 0), 0)
+              const unpaidTotal = renderRows.filter(r => !r.paid).reduce((a, r) => a + (r.price || 0), 0)
+              return (
+                <section>
+                  <div className="flex items-baseline justify-between mb-3">
+                    <h2
+                      className="text-[#E8DCC4] text-[22px]"
+                      style={{ fontFamily: 'var(--font-playfair, "Playfair Display", serif)' }}
+                    >
+                      Your gifts
+                    </h2>
+                    <div className="text-[11px] text-[#D4C8A0]/60">
+                      {paidCount > 0 && <span>Paid ${paidTotal.toFixed(2)}</span>}
+                      {paidCount > 0 && unpaidCount > 0 && <span className="mx-2">·</span>}
+                      {unpaidCount > 0 && <span className="text-[#C4A235]">Due ${unpaidTotal.toFixed(2)}</span>}
+                    </div>
+                  </div>
+                  <div className="space-y-3">
+                    {renderRows.map(rr => {
+                      const amountLabel = typeof rr.price === 'number' && !Number.isNaN(rr.price)
+                        ? `$${rr.price.toFixed(2)}`
+                        : ''
+                      const thisPaying = payingGiftId === (rr.row?.id ?? 'legacy')
+                      return (
+                        <SectionCard key={rr.key} title={rr.paid ? 'Gift · Paid' : 'Gift'} icon={Gift}>
+                          <div className="flex items-center gap-3">
+                            {rr.image_url && (
+                              <img src={rr.image_url} alt="" className="w-14 h-14 rounded-xl object-cover ring-1 ring-[#C4A235]/20" />
+                            )}
+                            <div className="flex-1 min-w-0">
+                              <p className="text-[#E8DCC4] text-sm font-medium truncate">{rr.name}</p>
+                              <p className="text-[#C4A235] font-semibold text-sm">
+                                {amountLabel}
+                              </p>
+                            </div>
+                          </div>
+                          {!rr.paid ? (
+                            <button
+                              onClick={() => handlePayForGift(rr.row ?? undefined)}
+                              disabled={payingGift}
+                              className="mt-4 w-full rounded-xl bg-[#C35F33] hover:bg-[#A85128] text-white font-semibold
+                                         px-4 flex items-center justify-center gap-2 transition-colors
+                                         disabled:opacity-60 disabled:cursor-not-allowed"
+                              style={{ minHeight: 52 }}
+                            >
+                              {thisPaying ? (
+                                <>
+                                  <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                                  Starting checkout…
+                                </>
+                              ) : (
+                                <>
+                                  <Gift size={18} />
+                                  {amountLabel ? `Pay for this gift — ${amountLabel}` : 'Pay for this gift'}
+                                </>
+                              )}
+                            </button>
                           ) : (
-                            <>
-                              <Gift size={18} />
-                              {amountLabel ? `Pay for your gift — ${amountLabel}` : 'Pay for your gift'}
-                            </>
+                            <p className="text-[11px] text-[#4ADE80]/80 mt-2">Payment complete</p>
                           )}
-                        </button>
-                      )}
-                    </>
-                  )
-                })()}
-              </SectionCard>
-            )}
+                        </SectionCard>
+                      )
+                    })}
+                  </div>
+                </section>
+              )
+            })()}
           {/* Recipient + Gift + Timeline — horizontal row */}
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
             {/* Recipient */}
@@ -642,14 +741,14 @@ export default function PostScriptDetailPage({ params }: { params: Promise<{ id:
               </div>
             </div>
 
-            {/* Gift Info Card */}
+            {/* Gift Info Card — compact summary. Detailed per-gift cards with
+                their own Pay CTAs live in the "Your gifts" section above. */}
             {postscript.has_gift ? (
               <GiftInfoCard
                 postscript={postscript}
-                unpaid={giftUnpaid}
+                giftCount={giftRows.length}
+                unpaidCount={giftRows.filter(g => (g.payment_status || 'pending') !== 'paid').length || (giftUnpaid ? 1 : 0)}
                 amount={giftAmount}
-                onPay={handlePayForGift}
-                paying={payingGift}
               />
             ) : (postscript.status === 'draft' || postscript.status === 'scheduled') ? (
               <button
@@ -900,56 +999,40 @@ export default function PostScriptDetailPage({ params }: { params: Promise<{ id:
 
 function GiftInfoCard({
   postscript,
-  unpaid,
+  giftCount,
+  unpaidCount,
   amount,
-  onPay,
-  paying,
 }: {
   postscript: PostScript
-  unpaid: boolean
+  giftCount: number
+  unpaidCount: number
   amount: number | null
-  onPay: () => void
-  paying: boolean
 }) {
   let giftInfo: { name?: string; price?: number; image_url?: string } = {}
   try { giftInfo = JSON.parse(postscript.gift_details || '{}') } catch {}
   const amountLabel = typeof amount === 'number' && !Number.isNaN(amount) ? `$${amount.toFixed(2)}` : ''
+  const multi = giftCount > 1
   return (
-    <SectionCard title="Gift Attached" icon={Gift}>
+    <SectionCard title={multi ? `${giftCount} Gifts Attached` : 'Gift Attached'} icon={Gift}>
       <div className="flex items-center gap-3">
-        {giftInfo.image_url && (
+        {giftInfo.image_url && !multi && (
           <img src={giftInfo.image_url} alt="" className="w-14 h-14 rounded-xl object-cover ring-1 ring-[#C4A235]/20" />
         )}
         <div className="flex-1 min-w-0">
-          <p className="text-[#E8DCC4] text-sm font-medium truncate">{giftInfo.name || postscript.gift_type || 'Gift'}</p>
+          <p className="text-[#E8DCC4] text-sm font-medium truncate">
+            {multi ? `${giftCount} gifts` : (giftInfo.name || postscript.gift_type || 'Gift')}
+          </p>
           <p className="text-[#C4A235] font-semibold text-sm">
-            {postscript.gift_budget ? `$${postscript.gift_budget}` : giftInfo.price ? `$${giftInfo.price}` : ''}
+            {multi
+              ? (unpaidCount > 0 ? `${unpaidCount} unpaid` : 'All paid')
+              : (postscript.gift_budget ? `$${postscript.gift_budget}` : giftInfo.price ? `$${giftInfo.price}` : amountLabel)}
           </p>
         </div>
       </div>
-      {/* Bug 2: prominent Pay CTA whenever the gift is still unpaid.
-          Terra Cotta, 52px min-height, label includes the amount. */}
-      {unpaid ? (
-        <button
-          onClick={onPay}
-          disabled={paying}
-          className="mt-4 w-full rounded-xl bg-[#C35F33] hover:bg-[#A85128] text-white font-semibold
-                     px-4 flex items-center justify-center gap-2 transition-colors
-                     disabled:opacity-60 disabled:cursor-not-allowed"
-          style={{ minHeight: 52 }}
-        >
-          {paying ? (
-            <>
-              <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-              Starting checkout…
-            </>
-          ) : (
-            <>
-              <Gift size={18} />
-              {amountLabel ? `Pay for your gift — ${amountLabel}` : 'Pay for your gift'}
-            </>
-          )}
-        </button>
+      {unpaidCount > 0 ? (
+        <p className="text-[11px] text-[#C4A235]/80 mt-3">
+          {multi ? 'See "Your gifts" above to complete payment.' : 'Payment pending — see Gift section above.'}
+        </p>
       ) : (
         <p className="text-[11px] text-[#4ADE80]/80 mt-2">Payment complete</p>
       )}
