@@ -34,6 +34,7 @@ import { HistoryPanel } from './components/HistoryPanel'
 import { CategoriesPanel } from './components/CategoriesPanel'
 import { VisibilityModal } from './components/VisibilityModal'
 
+const MemoryOfTheDayBanner = dynamic(() => import('@/components/dashboard/MemoryOfTheDayBanner'), { ssr: false })
 const BadgeDisplay = dynamic(() => import('@/components/dashboard/BadgeDisplay'), { ssr: false })
 const WeeklyChallenges = dynamic(() => import('@/components/dashboard/WeeklyChallenges'), { ssr: false })
 const OnThisDayRow = dynamic(() => import('@/components/home-v2/OnThisDayRow'), { ssr: false })
@@ -853,6 +854,7 @@ export default function HomeV2Page() {
 
       {/* ── Main Content — snap-scroll viewport ── */}
       <main className="dashboard-main home-v2-main" style={{ minHeight: '100vh' }}>
+        <MemoryOfTheDayBanner />
         {/* Top action row: filter pill (when active) + shuffle */}
         <div
           style={{
