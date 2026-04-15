@@ -62,7 +62,7 @@ export async function POST(request: NextRequest) {
               'Content-Type': 'application/json',
             },
             body: JSON.stringify({
-              from: process.env.RESEND_FROM_EMAIL || 'YoursTruly <noreply@yourstruly.app>',
+              from: process.env.EMAIL_FROM || 'YoursTruly <noreply@yourstruly.love>',
               to: collab.email,
               subject: `${senderName} invited you to add to a memory`,
               html: `
