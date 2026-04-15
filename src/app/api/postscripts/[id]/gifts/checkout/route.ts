@@ -138,6 +138,7 @@ export async function POST(
       price: baseAmount / 100, // Store in dollars
       currency: 'USD',
       quantity,
+      qty: quantity, // Legacy NOT NULL column alongside quantity; keep them in sync
       gift_type: giftType,
       flex_gift_amount: giftType === 'choice' ? flexGiftAmount * 100 : null, // Store in cents
       amount_paid: amountWithMarkup,

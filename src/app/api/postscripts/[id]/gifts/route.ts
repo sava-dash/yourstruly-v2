@@ -96,15 +96,20 @@ export async function POST(
     .from('postscript_gifts')
     .insert({
       postscript_id: id,
+      user_id: user.id, // Required by legacy NOT NULL + RLS
       product_id,
       provider,
       name,
+      title: name, // Legacy NOT NULL column
+      code: product_id || provider, // Legacy NOT NULL column
+      market: provider, // Legacy NOT NULL column
       description,
       image_url,
       price,
       original_price,
       currency,
       quantity,
+      qty: quantity, // Legacy NOT NULL column alongside quantity
       provider_data,
       delivery_timing,
       delivery_date,
