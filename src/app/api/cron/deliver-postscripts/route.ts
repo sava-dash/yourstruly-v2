@@ -32,10 +32,12 @@ interface DeliveryResult {
 }
 
 export async function GET(request: NextRequest) {
-  // Auth: verify cron secret
-  const authHeader = request.headers.get('authorization')
+  // Auth: verify cron secret (reject if misconfigured)
   const cronSecret = process.env.CRON_SECRET
-  if (cronSecret && authHeader !== `Bearer ${cronSecret}`) {
+  if (!cronSecret) {
+    return NextResponse.json({ error: 'CRON_SECRET not configured' }, { status: 500 })
+  }
+  if (request.headers.get('authorization') !== `Bearer ${cronSecret}`) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
 

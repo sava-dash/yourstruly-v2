@@ -20,9 +20,11 @@ const FROM_EMAIL = process.env.EMAIL_FROM || 'YoursTruly <noreply@yourstruly.lov
 const BATCH_SIZE = 50
 
 export async function GET(request: NextRequest) {
-  const authHeader = request.headers.get('authorization')
   const cronSecret = process.env.CRON_SECRET
-  if (cronSecret && authHeader !== `Bearer ${cronSecret}`) {
+  if (!cronSecret) {
+    return NextResponse.json({ error: 'CRON_SECRET not configured' }, { status: 500 })
+  }
+  if (request.headers.get('authorization') !== `Bearer ${cronSecret}`) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
 
