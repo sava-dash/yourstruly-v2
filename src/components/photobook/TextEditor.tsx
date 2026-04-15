@@ -247,7 +247,7 @@ export function TextOverlayToolbar({
   }
 
   return (
-    <div className="text-overlay-toolbar bg-white border-2 border-[#DDE3DF] rounded-xl shadow-lg p-2 flex flex-wrap items-center gap-2">
+    <div className="text-overlay-toolbar bg-white border-2 border-b-0 border-[#DDE3DF] rounded-t-xl shadow-[0_-4px_16px_rgba(64,106,86,0.08)] p-2 flex flex-wrap items-center gap-2">
       <select
         aria-label="Font"
         value={overlay.fontFamily}

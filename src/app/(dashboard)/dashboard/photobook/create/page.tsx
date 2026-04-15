@@ -1778,7 +1778,7 @@ function ArrangeStep({
                 animate={{ height: 'auto', opacity: 1 }}
                 exit={{ height: 0, opacity: 0 }}
                 transition={{ duration: 0.18, ease: 'easeOut' }}
-                className="overflow-hidden mb-3"
+                className="overflow-hidden flex justify-center -mb-px"
               >
                 <TextOverlayToolbar
                   overlay={ov}
