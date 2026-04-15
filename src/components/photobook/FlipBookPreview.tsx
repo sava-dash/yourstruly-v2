@@ -35,6 +35,8 @@ interface Props {
   pages: FlipPage[]
   cover: FlipCover
   onClose: () => void
+  /** When true, show a centered "Preparing your preview…" spinner. */
+  loading?: boolean
 }
 
 const FLIP_MS = 600
@@ -42,7 +44,7 @@ const FLIP_MS = 600
 const PAPER =
   'linear-gradient(135deg, #FBFAF4 0%, #F6F4EA 50%, #FBFAF4 100%)'
 
-export default function FlipBookPreview({ open, pages, cover, onClose }: Props) {
+export default function FlipBookPreview({ open, pages, cover, onClose, loading = false }: Props) {
   // "spread index": 0 = cover, 1..N = inner spreads, last = back cover.
   const spreads = useMemo(() => {
     const innerPairs: Array<[FlipPage, FlipPage | null]> = []
@@ -142,6 +144,24 @@ export default function FlipBookPreview({ open, pages, cover, onClose }: Props) 
             <div className="absolute inset-0 flex rounded-lg overflow-hidden shadow-2xl">
               <FlipPageFace page={currentSpread[0]} side="left" />
               <FlipPageFace page={currentSpread[1]} side="right" />
+            </div>
+          )}
+          {loading && (
+            <div
+              className="absolute inset-0 flex flex-col items-center justify-center rounded-lg bg-white/95 shadow-2xl"
+              role="status"
+              aria-live="polite"
+            >
+              <div
+                className="w-10 h-10 rounded-full border-[3px] border-[#406A56]/20 border-t-[#406A56] animate-spin"
+                aria-hidden
+              />
+              <div
+                className="mt-4 text-sm font-medium text-[#406A56]"
+                style={{ fontFamily: 'Inter Tight, Inter, sans-serif' }}
+              >
+                Preparing your preview…
+              </div>
             </div>
           )}
         </div>

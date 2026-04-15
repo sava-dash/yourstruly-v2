@@ -63,6 +63,11 @@ import CoverDesigner, {
 } from '@/components/photobook/CoverDesigner'
 import ThemePicker, { buildPagesFromTheme, ThemePage } from '@/components/photobook/ThemePicker'
 import FlipBookPreview, { FlipPage, FlipCover } from '@/components/photobook/FlipBookPreview'
+import {
+  renderPagesForPreview,
+  hashPage as hashPreviewPage,
+  type PreviewPage,
+} from '@/components/photobook/renderForPreview'
 import CMYKWarnings from '@/components/photobook/CMYKWarnings'
 import VersionHistoryPanel from '@/components/photobook/VersionHistoryPanel'
 import { PhotobookTheme } from '@/lib/photobook/themes'
@@ -2178,7 +2183,7 @@ function ArrangeStep({
         )}
         
         {/* Page Canvas */}
-        <div className="flex-1 bg-[#406A56]/5 rounded-2xl p-8 flex items-center justify-center">
+        <div className="flex-1 bg-[#406A56]/5 rounded-2xl p-8 flex flex-col items-center justify-center gap-3">
           {selectedPage && selectedTemplate ? (
             <div 
               className="relative shadow-2xl"
@@ -2548,20 +2553,6 @@ function ArrangeStep({
                         boxSizing: 'border-box',
                       }}
                     />
-                    <div
-                      className="pointer-events-none absolute left-2 bottom-2 bg-white/90 border border-[#DDE3DF] rounded-lg px-2 py-1 text-[11px] leading-tight shadow-sm"
-                      style={{ fontFamily: 'var(--font-inter-tight), Inter, sans-serif' }}
-                    >
-                      <div className="flex items-center gap-1 text-[#C35F33]">
-                        <span className="inline-block w-3 border-t-2 border-dashed border-[#C35F33]" />
-                        Bleed ({bleedMm}mm)
-                      </div>
-                      <div className="flex items-center gap-1 text-[#406A56]">
-                        <span className="inline-block w-3 border-t-2 border-dashed border-[#406A56]" />
-                        Safe zone ({safeMm}mm)
-                      </div>
-                      <div className="text-[#5A6660] mt-0.5">Keep important content inside the green line</div>
-                    </div>
                   </>
                 )
               })()}
@@ -2603,6 +2594,35 @@ function ArrangeStep({
               <p>Select a page to edit</p>
             </div>
           )}
+
+          {/* Safety-line legend — sits BELOW the page so it never covers the
+              composition. Only shown when the safety-line toggle is on. */}
+          <AnimatePresence>
+            {showSafetyLines && selectedPage && selectedTemplate && (
+              <motion.div
+                key="safety-legend"
+                initial={{ opacity: 0, y: -4 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -4 }}
+                transition={{ duration: 0.18 }}
+                className="flex items-center gap-3 bg-white border border-[#DDE3DF] rounded-full px-4 py-2 text-xs shadow-sm"
+                style={{ fontFamily: 'var(--font-inter-tight), Inter, sans-serif' }}
+                aria-label="Print safety lines legend"
+              >
+                <span className="flex items-center gap-1.5 text-[#C35F33]">
+                  <span aria-hidden className="inline-block w-4 border-t-2 border-dashed border-[#C35F33]" />
+                  Bleed (3mm)
+                </span>
+                <span aria-hidden className="text-[#94A09A]">·</span>
+                <span className="flex items-center gap-1.5 text-[#406A56]">
+                  <span aria-hidden className="inline-block w-4 border-t-2 border-dashed border-[#406A56]" />
+                  Safe zone (6mm)
+                </span>
+                <span aria-hidden className="text-[#94A09A]">·</span>
+                <span className="text-[#5A6660]">Keep important content inside the green line</span>
+              </motion.div>
+            )}
+          </AnimatePresence>
 
         </div>
 
@@ -3714,8 +3734,76 @@ export default function CreatePhotobookPage() {
   const [showThemePicker, setShowThemePicker] = useState(false)
   const [showCoverDesigner, setShowCoverDesigner] = useState(false)
   const [showFlipPreview, setShowFlipPreview] = useState(false)
+  // Cache of rendered preview pages keyed by page-content hash. Reopening
+  // the modal without edits is instant; only changed pages re-render.
+  const previewCacheRef = useRef<Map<string, string>>(new Map())
+  const [previewPages, setPreviewPages] = useState<FlipPage[]>([])
+  const [previewLoading, setPreviewLoading] = useState(false)
   const [showCmyk, setShowCmyk] = useState(false)
   const [showVersions, setShowVersions] = useState(false)
+
+  // Lazily render real composed pages for the flip-book preview the moment
+  // the modal opens. Pages are hashed by render-affecting content so reopens
+  // hit the in-memory cache instantly; only edited pages re-render.
+  useEffect(() => {
+    if (!showFlipPreview) return
+    let cancelled = false
+    const run = async () => {
+      const previewInputs: PreviewPage[] = pages.map((p) => ({
+        id: p.id,
+        layoutId: p.layoutId,
+        background: p.background,
+        backgroundV2: p.backgroundV2,
+        overlays: p.overlays,
+        slots: p.slots.map((s) => ({
+          slotId: s.slotId,
+          type: s.type,
+          fileUrl: s.fileUrl,
+          text: s.text,
+          qrMemoryId: s.qrMemoryId,
+          qrWisdomId: s.qrWisdomId,
+          border: s.border,
+          filter: s.filter,
+        })),
+      }))
+
+      // Compute hash per page; collect pages that need rendering.
+      const hashes = previewInputs.map((p) => `${p.id}::${hashPreviewPage(p)}`)
+      const cache = previewCacheRef.current
+      const missingIdx: number[] = []
+      hashes.forEach((h, i) => {
+        if (!cache.has(h)) missingIdx.push(i)
+      })
+
+      if (missingIdx.length > 0) {
+        setPreviewLoading(true)
+        try {
+          const rendered = await renderPagesForPreview(
+            missingIdx.map((i) => previewInputs[i])
+          )
+          rendered.forEach((r, k) => {
+            const idx = missingIdx[k]
+            if (r.imageUrl) cache.set(hashes[idx], r.imageUrl)
+          })
+        } finally {
+          if (!cancelled) setPreviewLoading(false)
+        }
+      }
+
+      if (cancelled) return
+      const flipPages: FlipPage[] = previewInputs.map((p, i) => {
+        const textSlot = p.slots.find((s) => s.type === 'text' && s.text)
+        return {
+          id: p.id,
+          imageUrl: cache.get(hashes[i]) ?? null,
+          caption: textSlot?.text ?? null,
+        }
+      })
+      setPreviewPages(flipPages)
+    }
+    run()
+    return () => { cancelled = true }
+  }, [showFlipPreview, pages])
 
   // Lifted from ArrangeStep so the unified toolbar can act on the active page
   // and the text-overlay format toolbar can live in a fixed slot above the
@@ -4584,6 +4672,7 @@ export default function CreatePhotobookPage() {
       <FlipBookPreview
         open={showFlipPreview}
         onClose={() => setShowFlipPreview(false)}
+        loading={previewLoading}
         cover={{
           title: coverDesign.title,
           subtitle: coverDesign.subtitle,
@@ -4592,15 +4681,7 @@ export default function CreatePhotobookPage() {
           textColor: coverDesign.textColor,
           fontPair: coverDesign.fontPair,
         } as FlipCover}
-        pages={pages.map((p): FlipPage => {
-          const photoSlot = p.slots.find((s) => s.type === 'photo' && s.fileUrl)
-          const textSlot = p.slots.find((s) => s.type === 'text' && s.text)
-          return {
-            id: p.id,
-            imageUrl: photoSlot?.fileUrl ?? null,
-            caption: textSlot?.text ?? null,
-          }
-        })}
+        pages={previewPages}
       />
 
       {/* CMYK warnings */}
