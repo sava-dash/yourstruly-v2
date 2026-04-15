@@ -11,6 +11,7 @@ import {
 import Link from 'next/link'
 import '@/styles/home.css'
 import { EVENT_OPTIONS } from '@/lib/postscripts/events'
+import EventSuggestions, { type EventSuggestion } from '@/components/postscripts/EventSuggestions'
 import { AttachmentSelectorModal, type SelectedAttachment } from '@/components/postscripts'
 import { GiftSelectionModal, type GiftSelection } from '@/components/postscripts/GiftSelectionModal'
 import AiDraftHelper from '@/components/postscripts/AiDraftHelper'
@@ -25,6 +26,12 @@ interface Contact {
   phone: string | null
   relationship_type: string | null
   avatar_url: string | null
+  date_of_birth?: string | null
+}
+
+interface OwnerProfile {
+  date_of_birth?: string | null
+  anniversary_date?: string | null
 }
 
 interface Circle {
@@ -104,9 +111,12 @@ export default function NewPostScriptPage() {
   const [step, setStep] = useState(1)
   const [contacts, setContacts] = useState<Contact[]>([])
   const [circles, setCircles] = useState<Circle[]>([])
+  const [ownerProfile, setOwnerProfile] = useState<OwnerProfile | null>(null)
   const [searchQuery, setSearchQuery] = useState('')
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [pastDateWarning, setPastDateWarning] = useState<string | null>(null)
+  const [eventTypeTag, setEventTypeTag] = useState<string | null>(null)
   
   const [form, setForm] = useState<FormData>({
     recipient_type: 'contact',
@@ -236,7 +246,19 @@ export default function NewPostScriptPage() {
   useEffect(() => {
     fetchContacts()
     fetchCircles()
+    fetchOwnerProfile()
   }, [])
+
+  async function fetchOwnerProfile() {
+    const { data: { user } } = await supabase.auth.getUser()
+    if (!user) return
+    const { data } = await supabase
+      .from('profiles')
+      .select('date_of_birth')
+      .eq('id', user.id)
+      .maybeSingle()
+    if (data) setOwnerProfile({ date_of_birth: (data as any).date_of_birth || null })
+  }
 
   // F1: hydrate from existing draft
   useEffect(() => {
@@ -321,7 +343,7 @@ export default function NewPostScriptPage() {
     
     const { data, error } = await supabase
       .from('contacts')
-      .select('id, full_name, email, phone, relationship_type, avatar_url')
+      .select('id, full_name, email, phone, relationship_type, avatar_url, date_of_birth')
       .eq('user_id', user.id)
       .order('full_name')
     
@@ -435,7 +457,9 @@ export default function NewPostScriptPage() {
         if (form.delivery_type === 'date') {
           return form.delivery_date.length > 0
         } else if (form.delivery_type === 'event') {
-          return form.delivery_event.length > 0
+          // Require an event AND a resolved delivery date (either auto-filled
+          // from a suggestion or entered via fallback picker).
+          return form.delivery_event.length > 0 && form.delivery_date.length > 0
         }
         return true
       case 3:
@@ -548,6 +572,7 @@ export default function NewPostScriptPage() {
           delivery_date: effectiveDeliveryDate,
           delivery_time: form.delivery_time,
           delivery_event: form.delivery_event,
+          event_type: eventTypeTag,
           delivery_recurring: form.delivery_recurring,
           requires_confirmation: form.requires_confirmation,
           trigger_type: form.trigger_type,
@@ -999,11 +1024,26 @@ export default function NewPostScriptPage() {
               <input
                 type="date"
                 value={form.delivery_date}
-                onChange={(e) => setForm({ ...form, delivery_date: e.target.value })}
+                onChange={(e) => {
+                  const val = e.target.value
+                  const today = new Date()
+                  const todayIso = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`
+                  if (val && val < todayIso) {
+                    setPastDateWarning('Please choose a date today or later.')
+                    setForm({ ...form, delivery_date: '' })
+                    setTimeout(() => setPastDateWarning(null), 4000)
+                    return
+                  }
+                  setPastDateWarning(null)
+                  setForm({ ...form, delivery_date: val })
+                }}
                 min={new Date().toISOString().split('T')[0]}
-                className="w-full px-4 py-3 bg-white border border-gray-200 rounded-xl 
+                className="w-full px-4 py-3 bg-white border border-gray-200 rounded-xl
                          focus:ring-2 focus:ring-[#B8562E]/20 focus:border-[#B8562E] outline-none text-gray-900 placeholder:text-gray-400"
               />
+              {pastDateWarning && (
+                <p role="alert" className="mt-2 text-sm text-[#B8562E]">{pastDateWarning}</p>
+              )}
             </div>
             <label className="flex items-center gap-3 p-4 bg-gray-50 rounded-xl cursor-pointer">
               <input
@@ -1022,21 +1062,78 @@ export default function NewPostScriptPage() {
 
         {/* Event Selection */}
         {form.delivery_type === 'event' && (
+          <div className="space-y-4">
+            <EventSuggestions
+              contacts={contacts}
+              profile={ownerProfile}
+              onSelect={(s: EventSuggestion) => {
+                // Auto-fill delivery_event + delivery_date from known data.
+                const iso = `${s.date.getFullYear()}-${String(s.date.getMonth() + 1).padStart(2, '0')}-${String(s.date.getDate()).padStart(2, '0')}`
+                setForm({
+                  ...form,
+                  delivery_event: s.eventKey,
+                  delivery_date: iso,
+                  // If the user picks a contact birthday, also bind the recipient when unset.
+                  recipient_contact_id: s.contactId && !form.recipient_contact_id
+                    ? s.contactId
+                    : form.recipient_contact_id,
+                  recipient_name: s.contactId && !form.recipient_name && s.contactName
+                    ? s.contactName
+                    : form.recipient_name,
+                })
+                setEventTypeTag(s.eventType)
+                setPastDateWarning(null)
+              }}
+            />
+            {/* Inline fallback date picker for events we don't know the date of */}
+            {form.delivery_event && !form.delivery_date && (
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  When is this event?
+                </label>
+                <input
+                  type="date"
+                  value={form.delivery_date}
+                  min={new Date().toISOString().split('T')[0]}
+                  onChange={(e) => {
+                    const val = e.target.value
+                    const today = new Date()
+                    const todayIso = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`
+                    if (val && val < todayIso) {
+                      setPastDateWarning('Please choose a date today or later.')
+                      setTimeout(() => setPastDateWarning(null), 4000)
+                      return
+                    }
+                    setPastDateWarning(null)
+                    setForm({ ...form, delivery_date: val })
+                  }}
+                  className="w-full px-4 py-3 bg-white border border-gray-200 rounded-xl
+                           focus:ring-2 focus:ring-[#B8562E]/20 focus:border-[#B8562E] outline-none text-gray-900"
+                />
+                {pastDateWarning && (
+                  <p role="alert" className="mt-2 text-sm text-[#B8562E]">{pastDateWarning}</p>
+                )}
+              </div>
+            )}
           <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
             {EVENT_OPTIONS.map(event => {
               const EventIcon = event.Icon
               return (
                 <button
                   key={event.key}
-                  onClick={() => setForm({ ...form, delivery_event: event.key })}
+                  onClick={() => {
+                    // Manual pick clears auto-filled date unless it still matches
+                    setForm({ ...form, delivery_event: event.key, delivery_date: '' })
+                    setEventTypeTag('other')
+                  }}
                   className={`p-4 rounded-xl border-2 text-center transition-all
-                    ${form.delivery_event === event.key 
-                      ? 'border-[#B8562E] bg-[#B8562E]/5' 
+                    ${form.delivery_event === event.key
+                      ? 'border-[#B8562E] bg-[#B8562E]/5'
                       : 'border-gray-100 hover:border-gray-200'}`}
                 >
                   <div className={`w-10 h-10 mx-auto mb-2 rounded-full flex items-center justify-center
-                    ${form.delivery_event === event.key 
-                      ? 'bg-[#B8562E]/10 text-[#B8562E]' 
+                    ${form.delivery_event === event.key
+                      ? 'bg-[#B8562E]/10 text-[#B8562E]'
                       : 'bg-gray-100 text-gray-500'}`}>
                     <EventIcon size={20} />
                   </div>
@@ -1044,6 +1141,7 @@ export default function NewPostScriptPage() {
                 </button>
               )
             })}
+          </div>
           </div>
         )}
 

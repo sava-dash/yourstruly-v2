@@ -61,6 +61,7 @@ export async function POST(request: NextRequest) {
     delivery_type = 'date',
     delivery_date,
     delivery_event,
+    event_type,
     delivery_recurring = false,
     requires_confirmation = false,
     confirmation_contacts = [],
@@ -81,6 +82,19 @@ export async function POST(request: NextRequest) {
       { error: 'Title and recipient name are required' },
       { status: 400 }
     )
+  }
+
+  // Reject past delivery dates for scheduled (non-draft) postscripts on a
+  // specific date. Drafts are allowed to hold partially-entered dates.
+  if (status !== 'draft' && delivery_type === 'date' && delivery_date) {
+    const today = new Date()
+    const todayIso = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`
+    if (String(delivery_date) < todayIso) {
+      return NextResponse.json(
+        { error: 'Delivery date must be today or later.' },
+        { status: 400 }
+      )
+    }
   }
 
   // Check and deduct postscript credit (unless it's a draft or system bypass)
@@ -120,6 +134,7 @@ export async function POST(request: NextRequest) {
       delivery_type,
       delivery_date: delivery_date || null,
       delivery_event: delivery_event || null,
+      event_type: event_type || null,
       delivery_recurring,
       requires_confirmation,
       confirmation_contacts,
