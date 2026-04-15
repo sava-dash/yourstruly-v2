@@ -52,6 +52,19 @@ export interface SlotContent {
    * Persisted in `content_json`.
    */
   filter?: PhotoFilter
+  /**
+   * Optional photo enhancement (brightness/contrast/saturation). Each value
+   * is -100..+100 with 0 meaning "no change". Applied as pixel ops AFTER the
+   * filter and BEFORE the border so they compose predictably.
+   */
+  enhance?: PhotoEnhance
+}
+
+/** Photo enhancement values in the range -100..+100 (0 = no change). */
+export interface PhotoEnhance {
+  brightness?: number
+  contrast?: number
+  saturation?: number
 }
 
 /** Photo border styles. Drawn over the slot bounds, after the photo pixels. */
@@ -295,6 +308,101 @@ function clamp(v: number): number {
 }
 
 /**
+ * Apply brightness / contrast / saturation adjustments to the rectangle
+ * (x, y, w, h) of the canvas. Each enhance value is in -100..+100 with 0
+ * meaning no change. Applied AFTER the color filter and BEFORE the border.
+ *
+ * - brightness: adds value*2.55 to each RGB channel
+ * - contrast: ((channel - 128) * (1 + value/100)) + 128, clamped
+ * - saturation: shifts S in HSL by value/100, clamped
+ *
+ * Zero-valued channels short-circuit; a no-op call is free.
+ */
+export function applyEnhance(
+  ctx: CanvasRenderingContext2D,
+  x: number,
+  y: number,
+  w: number,
+  h: number,
+  enhance: PhotoEnhance | undefined
+): void {
+  if (!enhance) return
+  const b = enhance.brightness || 0
+  const c = enhance.contrast || 0
+  const s = enhance.saturation || 0
+  if (b === 0 && c === 0 && s === 0) return
+  if (w <= 0 || h <= 0) return
+
+  const ix = Math.max(0, Math.floor(x))
+  const iy = Math.max(0, Math.floor(y))
+  const iw = Math.max(1, Math.floor(w))
+  const ih = Math.max(1, Math.floor(h))
+
+  let imageData: ImageData
+  try {
+    imageData = ctx.getImageData(ix, iy, iw, ih)
+  } catch (err) {
+    console.warn('applyEnhance: getImageData failed, skipping', err)
+    return
+  }
+  const d = imageData.data
+  const brightnessAdd = b * 2.55
+  const contrastFactor = 1 + c / 100
+  const saturationShift = s / 100
+
+  for (let i = 0; i < d.length; i += 4) {
+    let r = d[i], g = d[i + 1], bl = d[i + 2]
+
+    if (b !== 0) {
+      r += brightnessAdd
+      g += brightnessAdd
+      bl += brightnessAdd
+    }
+    if (c !== 0) {
+      r = (r - 128) * contrastFactor + 128
+      g = (g - 128) * contrastFactor + 128
+      bl = (bl - 128) * contrastFactor + 128
+    }
+    if (s !== 0) {
+      // Convert to HSL, shift S, back to RGB (simplified, inline)
+      const rn = clamp(r) / 255, gn = clamp(g) / 255, bn = clamp(bl) / 255
+      const max = Math.max(rn, gn, bn), min = Math.min(rn, gn, bn)
+      const l = (max + min) / 2
+      let h2 = 0, sat = 0
+      const delta = max - min
+      if (delta !== 0) {
+        sat = l > 0.5 ? delta / (2 - max - min) : delta / (max + min)
+        if (max === rn) h2 = ((gn - bn) / delta) % 6
+        else if (max === gn) h2 = (bn - rn) / delta + 2
+        else h2 = (rn - gn) / delta + 4
+        h2 *= 60
+        if (h2 < 0) h2 += 360
+      }
+      sat = Math.max(0, Math.min(1, sat + saturationShift))
+      // HSL -> RGB
+      const cc = (1 - Math.abs(2 * l - 1)) * sat
+      const xx = cc * (1 - Math.abs(((h2 / 60) % 2) - 1))
+      const m = l - cc / 2
+      let rr = 0, gg = 0, bb = 0
+      if (h2 < 60)      { rr = cc; gg = xx; bb = 0 }
+      else if (h2 < 120){ rr = xx; gg = cc; bb = 0 }
+      else if (h2 < 180){ rr = 0; gg = cc; bb = xx }
+      else if (h2 < 240){ rr = 0; gg = xx; bb = cc }
+      else if (h2 < 300){ rr = xx; gg = 0; bb = cc }
+      else              { rr = cc; gg = 0; bb = xx }
+      r = (rr + m) * 255
+      g = (gg + m) * 255
+      bl = (bb + m) * 255
+    }
+
+    d[i] = clamp(r)
+    d[i + 1] = clamp(g)
+    d[i + 2] = clamp(bl)
+  }
+  ctx.putImageData(imageData, ix, iy)
+}
+
+/**
  * Draw a photo border over the slot bounds. Called AFTER the photo pixels (and
  * filter) are committed to the canvas, BEFORE template text/qr/overlays.
  */
@@ -492,6 +600,11 @@ async function renderPhotoSlot(
     // Apply photo filter to the slot pixels (after photo draws, before border).
     if (content.filter && content.filter !== 'original') {
       applyFilter(ctx, x, y, width, height, content.filter)
+    }
+
+    // Apply brightness/contrast/saturation enhancements AFTER filter, BEFORE border.
+    if (content.enhance) {
+      applyEnhance(ctx, x, y, width, height, content.enhance)
     }
 
     // Draw photo border over the slot bounds (after filter, before text/qr/overlays).

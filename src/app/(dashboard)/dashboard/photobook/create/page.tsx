@@ -76,13 +76,14 @@ import type { PageOverlay, PageBackground, TextOverlay } from '@/lib/photobook/o
 import { createTextOverlay, createStickerOverlay } from '@/lib/photobook/overlays'
 import TextEditor, { TextOverlayToolbar } from '@/components/photobook/TextEditor'
 import StickerPicker from '@/components/photobook/StickerPicker'
+import AICaptionSuggester from '@/components/photobook/AICaptionSuggester'
 import BackgroundPickerV2 from '@/components/photobook/BackgroundPicker'
 import IdeaPagePicker, { type IdeaPageApplyMode } from '@/components/photobook/IdeaPagePicker'
 import {
   instantiateIdeaPageOverlays,
   type IdeaPagePreset,
 } from '@/lib/photobook/idea-pages'
-import type { PhotoBorder, PhotoBorderStyle, PhotoFilter } from '@/lib/photobook/renderer'
+import type { PhotoBorder, PhotoBorderStyle, PhotoFilter, PhotoEnhance } from '@/lib/photobook/renderer'
 import {
   AddOnId,
   DEFAULT_PRODUCT_OPTIONS,
@@ -159,6 +160,8 @@ interface SlotData {
   border?: PhotoBorder
   /** Photo filter (canvas pixel op applied on render + export). Defaults to original. */
   filter?: PhotoFilter
+  /** Brightness/contrast/saturation (-100..+100, 0 = no change). */
+  enhance?: PhotoEnhance
 }
 
 interface WisdomEntry {
@@ -500,6 +503,63 @@ function FilterMenu({
           <span className="leading-none">{opt.label}</span>
         </button>
       ))}
+    </div>
+  )
+}
+
+/**
+ * AdjustMenu — three labeled sliders for brightness/contrast/saturation.
+ * Each value is -100..+100 and live-updates the editor preview via onChange.
+ * Reset button zeroes all three in one click.
+ */
+function AdjustMenu({
+  current,
+  onChange,
+}: {
+  current: PhotoEnhance | undefined
+  onChange: (e: PhotoEnhance) => void
+}) {
+  const vals: Required<PhotoEnhance> = {
+    brightness: current?.brightness ?? 0,
+    contrast: current?.contrast ?? 0,
+    saturation: current?.saturation ?? 0,
+  }
+  const update = (key: keyof PhotoEnhance, v: number) => {
+    onChange({ ...vals, [key]: v })
+  }
+  const reset = () => onChange({ brightness: 0, contrast: 0, saturation: 0 })
+  const rows: { key: keyof PhotoEnhance; label: string }[] = [
+    { key: 'brightness', label: 'Brightness' },
+    { key: 'contrast', label: 'Contrast' },
+    { key: 'saturation', label: 'Saturation' },
+  ]
+  return (
+    <div className="space-y-2 py-1">
+      {rows.map((r) => (
+        <label key={r.key} className="block text-[11px] text-[#2A3E33]">
+          <div className="flex items-center justify-between mb-0.5">
+            <span>{r.label}</span>
+            <span className="text-[10px] text-[#5A6660] tabular-nums">{vals[r.key]}</span>
+          </div>
+          <input
+            type="range"
+            min={-100}
+            max={100}
+            step={1}
+            value={vals[r.key]}
+            onChange={(e) => update(r.key, Number(e.target.value))}
+            className="w-full accent-[#406A56]"
+            aria-label={`${r.label} adjustment`}
+          />
+        </label>
+      ))}
+      <button
+        type="button"
+        onClick={reset}
+        className="w-full min-h-[32px] mt-1 rounded border border-[#DDE3DF] text-[11px] font-medium text-[#5A6660] hover:border-[#406A56] hover:text-[#406A56]"
+      >
+        Reset
+      </button>
     </div>
   )
 }
@@ -962,6 +1022,7 @@ function ArrangeStep({
   onOpenPreview,
   onOpenCmyk,
   onOpenVersions,
+  projectId,
 }: {
   pages: PageData[]
   setPages: (pages: PageData[]) => void
@@ -990,6 +1051,7 @@ function ArrangeStep({
   onOpenPreview: () => void
   onOpenCmyk: () => void
   onOpenVersions: () => void
+  projectId: string | null
 }) {
   const [showLayoutPicker, setShowLayoutPicker] = useState(false)
   const [layoutPickerMode, setLayoutPickerMode] = useState<'add' | 'change'>('add')
@@ -1003,7 +1065,7 @@ function ArrangeStep({
   // Per-photo-slot popover for Border + Filter (PR 2). Tracks which slot's
   // popover is open and which submenu ('border' | 'filter' | null) is showing.
   const [photoToolsSlotId, setPhotoToolsSlotId] = useState<string | null>(null)
-  const [photoToolsMenu, setPhotoToolsMenu] = useState<'border' | 'filter' | null>(null)
+  const [photoToolsMenu, setPhotoToolsMenu] = useState<'border' | 'filter' | 'adjust' | null>(null)
   // Print-safe-zone overlay toggle (persisted via localStorage)
   const [showSafetyLines, setShowSafetyLines] = useState<boolean>(() => {
     if (typeof window === 'undefined') return false
@@ -1527,7 +1589,7 @@ function ArrangeStep({
   const updatePhotoSlotField = (
     pageId: string,
     slotId: string,
-    patch: Partial<Pick<SlotData, 'border' | 'filter'>>
+    patch: Partial<Pick<SlotData, 'border' | 'filter' | 'enhance'>>
   ) => {
     const newPages = pages.map(p => {
       if (p.id !== pageId) return p
@@ -1557,6 +1619,11 @@ function ArrangeStep({
   const setSlotFilter = (slotId: string, filter: PhotoFilter) => {
     if (!selectedPageId) return
     updatePhotoSlotField(selectedPageId, slotId, { filter })
+  }
+
+  const setSlotEnhance = (slotId: string, enhance: PhotoEnhance) => {
+    if (!selectedPageId) return
+    updatePhotoSlotField(selectedPageId, slotId, { enhance })
   }
   
   const assignPhotoToSlot = (pageId: string, slotId: string, photo: typeof availablePhotos[0] | null) => {
@@ -2169,8 +2236,8 @@ function ArrangeStep({
                     key={color}
                     onClick={() => updateTextStyle(selectedPageId, activeTextSlotId, { color })}
                     className={`w-5 h-5 rounded border-2 transition-all ${
-                      activeStyle.color === color 
-                        ? 'border-[#406A56] scale-110' 
+                      activeStyle.color === color
+                        ? 'border-[#406A56] scale-110'
                         : 'border-transparent hover:border-[#DDE3DF]'
                     }`}
                     style={{ backgroundColor: color }}
@@ -2179,6 +2246,25 @@ function ArrangeStep({
                 ))}
               </div>
             </div>
+
+            {/* F2: AI caption suggester — only shown when this page has at
+                least one photo with a real mediaId (no metadata otherwise). */}
+            {(() => {
+              if (!projectId) return null
+              const page = pages.find((p) => p.id === selectedPageId)
+              const photoSlot = page?.slots.find((s) => s.type === 'photo' && s.mediaId && s.fileUrl)
+              if (!photoSlot?.mediaId) return null
+              return (
+                <>
+                  <div className="w-px h-6 bg-[#406A56]/20" />
+                  <AICaptionSuggester
+                    projectId={projectId}
+                    mediaId={photoSlot.mediaId}
+                    onApply={(text) => setTextContent(selectedPageId!, activeTextSlotId!, text)}
+                  />
+                </>
+              )
+            })()}
           </div>
         )}
         
@@ -2376,14 +2462,14 @@ function ArrangeStep({
                           {photoToolsSlotId === slot.id && (
                             <div
                               onClick={(e) => e.stopPropagation()}
-                              className="absolute top-2 right-12 z-20 bg-white shadow-xl border border-[#DDE3DF] rounded-lg p-2 w-[190px]"
+                              className="absolute top-2 right-12 z-20 bg-white shadow-xl border border-[#DDE3DF] rounded-lg p-2 w-[220px]"
                             >
                               <div className="flex gap-1 mb-2">
                                 <button
                                   type="button"
                                   onClick={(e) => { e.stopPropagation(); setPhotoToolsMenu('border') }}
                                   aria-pressed={photoToolsMenu === 'border'}
-                                  className={`flex-1 min-h-[36px] px-2 rounded text-xs font-medium flex items-center justify-center gap-1 ${
+                                  className={`flex-1 min-h-[36px] px-1.5 rounded text-[11px] font-medium flex items-center justify-center gap-1 ${
                                     photoToolsMenu === 'border'
                                       ? 'bg-[#406A56] text-white'
                                       : 'bg-[#406A56]/10 text-[#406A56] hover:bg-[#406A56]/20'
@@ -2395,13 +2481,25 @@ function ArrangeStep({
                                   type="button"
                                   onClick={(e) => { e.stopPropagation(); setPhotoToolsMenu('filter') }}
                                   aria-pressed={photoToolsMenu === 'filter'}
-                                  className={`flex-1 min-h-[36px] px-2 rounded text-xs font-medium flex items-center justify-center gap-1 ${
+                                  className={`flex-1 min-h-[36px] px-1.5 rounded text-[11px] font-medium flex items-center justify-center gap-1 ${
                                     photoToolsMenu === 'filter'
                                       ? 'bg-[#406A56] text-white'
                                       : 'bg-[#406A56]/10 text-[#406A56] hover:bg-[#406A56]/20'
                                   }`}
                                 >
                                   <FilterIcon className="w-3.5 h-3.5" /> Filter
+                                </button>
+                                <button
+                                  type="button"
+                                  onClick={(e) => { e.stopPropagation(); setPhotoToolsMenu('adjust') }}
+                                  aria-pressed={photoToolsMenu === 'adjust'}
+                                  className={`flex-1 min-h-[36px] px-1.5 rounded text-[11px] font-medium flex items-center justify-center gap-1 ${
+                                    photoToolsMenu === 'adjust'
+                                      ? 'bg-[#406A56] text-white'
+                                      : 'bg-[#406A56]/10 text-[#406A56] hover:bg-[#406A56]/20'
+                                  }`}
+                                >
+                                  Adjust
                                 </button>
                               </div>
 
@@ -2418,9 +2516,15 @@ function ArrangeStep({
                                   onPick={(f) => setSlotFilter(slot.id, f)}
                                 />
                               )}
+                              {photoToolsMenu === 'adjust' && (
+                                <AdjustMenu
+                                  current={pageSlot?.enhance}
+                                  onChange={(enhance) => setSlotEnhance(slot.id, enhance)}
+                                />
+                              )}
                               {photoToolsMenu === null && (
                                 <p className="text-[11px] text-[#5A6660] px-1 py-2">
-                                  Pick Border or Filter above.
+                                  Pick Border, Filter, or Adjust above.
                                 </p>
                               )}
                             </div>
@@ -4542,6 +4646,7 @@ export default function CreatePhotobookPage() {
                 onOpenPreview={() => setShowFlipPreview(true)}
                 onOpenCmyk={() => setShowCmyk(true)}
                 onOpenVersions={() => setShowVersions(true)}
+                projectId={projectId}
               />
               </div>
             )}

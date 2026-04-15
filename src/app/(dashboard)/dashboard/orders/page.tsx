@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect, useCallback } from 'react'
-import { Package, ArrowLeft, Copy, QrCode, X, Loader2, Shield } from 'lucide-react'
+import { Package, ArrowLeft, Copy, QrCode, X, Loader2, Shield, ExternalLink, CheckCircle2, Truck, HelpCircle } from 'lucide-react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
@@ -13,9 +13,43 @@ interface Order {
   total_cents?: number
   total_amount?: number
   created_at: string
+  updated_at?: string
   project_id?: string | null
   items?: Record<string, unknown>[]
+  prodigi_order_id?: string | null
+  tracking_number?: string | null
+  tracking_url?: string | null
+  shipping_method?: string | null
+  shipped_at?: string | null
+  in_production_at?: string | null
+  delivered_at?: string | null
 }
+
+/** Status -> stage index used to render the timeline progress. */
+const STAGE_BY_STATUS: Record<string, number> = {
+  pending_payment: 0,
+  pending: 0,
+  paid: 0,
+  processing: 1,
+  in_production: 1,
+  shipped: 2,
+  delivered: 3,
+  complete: 3,
+  cancelled: -1,
+  on_hold: 1,
+  error: 0,
+}
+
+/** Estimate delivery from shipped_at + shipping method. */
+function estimateDelivery(shippedAt: string | null | undefined, method: string | null | undefined): string | null {
+  if (!shippedAt) return null
+  const days = method === 'overnight' ? 1 : method === 'express' ? 3 : 7
+  const d = new Date(shippedAt)
+  d.setDate(d.getDate() + days)
+  return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
+}
+
+const SUPPORT_EMAIL = 'support@yourstruly.love'
 
 interface ShareTokenRow {
   id: string
@@ -50,7 +84,33 @@ export default function OrdersPage() {
         .order('created_at', { ascending: false })
 
       if (!error && data) {
-        setOrders(data as Order[])
+        const list = data as Order[]
+        setOrders(list)
+
+        // Fire off rate-limited refreshes for any orders that have a Prodigi
+        // ID and aren't already terminal. The endpoint silently no-ops if
+        // updated_at < 60s ago, so it's safe to call on every mount.
+        const refreshable = list.filter(
+          (o) => o.prodigi_order_id && !['delivered', 'cancelled'].includes(o.status)
+        )
+        await Promise.allSettled(
+          refreshable.map(async (o) => {
+            try {
+              const res = await fetch(`/api/photobook/orders/${o.id}/refresh`, { method: 'POST' })
+              if (!res.ok) return
+              const json = await res.json()
+              if (json.refreshed && json.order) {
+                setOrders((prev) =>
+                  prev.map((row) =>
+                    row.id === o.id ? { ...row, ...json.order } : row
+                  )
+                )
+              }
+            } catch {
+              // Silent — UI shows whatever was cached locally.
+            }
+          })
+        )
       }
       setLoading(false)
     }
@@ -120,31 +180,93 @@ export default function OrdersPage() {
             </Link>
           </div>
         ) : (
-          <div className="space-y-3">
+          <div className="space-y-4">
             {orders.map(order => {
               const hasProject = !!order.project_id
+              const stage = STAGE_BY_STATUS[order.status] ?? 0
+              const cancelled = order.status === 'cancelled'
+              const eta = estimateDelivery(order.shipped_at, order.shipping_method)
+              const stages: { label: string; ts: string | null | undefined }[] = [
+                { label: 'Placed', ts: order.created_at },
+                { label: 'In production', ts: order.in_production_at || (stage >= 1 ? order.updated_at : null) },
+                { label: 'Shipped', ts: order.shipped_at },
+                { label: 'Delivered', ts: order.delivered_at },
+              ]
               return (
                 <div
                   key={order.id}
-                  className="p-4 bg-white/80 backdrop-blur-sm rounded-xl border border-[#D3E1DF] shadow-sm"
+                  className="p-5 bg-[#F2F1E5] backdrop-blur-sm rounded-2xl border border-[#D3E1DF] shadow-sm"
                 >
-                  <div className="flex items-center justify-between mb-2">
-                    <span className="text-sm font-medium text-[#2d2d2d]">
+                  <div className="flex items-center justify-between mb-3">
+                    <h2
+                      className="text-lg font-semibold text-[#2d2d2d]"
+                      style={{ fontFamily: "'Playfair Display', Georgia, serif" }}
+                    >
                       Order #{order.id.slice(0, 8)}
-                    </span>
+                    </h2>
                     <span className="px-2 py-0.5 text-xs font-medium rounded-full bg-[#406A56]/10 text-[#406A56] capitalize">
-                      {order.status}
+                      {order.status.replace('_', ' ')}
                     </span>
                   </div>
-                  <p className="text-xs text-[#666] mb-3">
-                    {new Date(order.created_at).toLocaleDateString('en-US', {
+                  <p className="text-xs text-[#666] mb-4">
+                    Placed {new Date(order.created_at).toLocaleDateString('en-US', {
                       year: 'numeric',
                       month: 'long',
                       day: 'numeric',
                     })}
                   </p>
+
+                  {/* Status timeline (F3). Cancelled orders skip the row. */}
+                  {!cancelled && (
+                    <ol className="grid grid-cols-4 gap-1 mb-4" aria-label="Order status">
+                      {stages.map((s, i) => {
+                        const reached = i <= stage
+                        return (
+                          <li key={s.label} className="flex flex-col items-center text-center">
+                            <div
+                              className={`w-7 h-7 rounded-full flex items-center justify-center mb-1 ${
+                                reached
+                                  ? 'bg-[#406A56] text-white'
+                                  : 'bg-white border border-[#D3E1DF] text-[#94A09A]'
+                              }`}
+                              aria-hidden
+                            >
+                              {reached ? <CheckCircle2 size={14} /> : <span className="text-[10px]">{i + 1}</span>}
+                            </div>
+                            <span className={`text-[11px] leading-tight ${reached ? 'text-[#2d2d2d] font-medium' : 'text-[#94A09A]'}`}>
+                              {s.label}
+                            </span>
+                            {s.ts && reached && (
+                              <span className="text-[10px] text-[#666] mt-0.5">
+                                {new Date(s.ts).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+                              </span>
+                            )}
+                          </li>
+                        )
+                      })}
+                    </ol>
+                  )}
+
+                  {eta && stage >= 2 && stage < 3 && (
+                    <p className="text-sm text-[#406A56] mb-3 flex items-center gap-1.5">
+                      <Truck size={16} /> Estimated delivery: <span className="font-medium">{eta}</span>
+                    </p>
+                  )}
+
+                  {order.tracking_url && (
+                    <a
+                      href={order.tracking_url}
+                      target="_blank"
+                      rel="noreferrer noopener"
+                      className="w-full mb-3 inline-flex items-center justify-center gap-2 px-4 py-3 min-h-[44px] rounded-lg bg-[#C35F33] text-white text-base font-semibold hover:bg-[#a94e28] transition-colors"
+                    >
+                      <Truck size={18} /> Track shipment
+                      <ExternalLink size={14} className="opacity-80" />
+                    </a>
+                  )}
+
                   {hasProject && (
-                    <div className="flex flex-wrap gap-2 mt-3">
+                    <div className="flex flex-wrap gap-2">
                       <button
                         type="button"
                         onClick={() => handleReprint(order)}
@@ -168,6 +290,15 @@ export default function OrdersPage() {
                       </button>
                     </div>
                   )}
+
+                  <div className="mt-3 pt-3 border-t border-[#D3E1DF]">
+                    <a
+                      href={`mailto:${SUPPORT_EMAIL}?subject=${encodeURIComponent(`Help with order #${order.id.slice(0, 8)}`)}`}
+                      className="inline-flex items-center gap-1.5 text-sm text-[#406A56] hover:underline"
+                    >
+                      <HelpCircle size={14} /> Need help with this order?
+                    </a>
+                  </div>
                 </div>
               )
             })}

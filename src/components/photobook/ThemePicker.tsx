@@ -11,9 +11,10 @@
  */
 
 import { useState } from 'react'
-import { Check, Sparkles } from 'lucide-react'
+import { Check, Sparkles, Layers } from 'lucide-react'
 import { PHOTOBOOK_THEMES, PhotobookTheme, FONT_PAIR_STACKS } from '@/lib/photobook/themes'
 import { getTemplateById } from '@/lib/photobook/templates'
+import MyThemesTab from './MyThemesTab'
 
 export interface ApplyThemeResult {
   theme: PhotobookTheme
@@ -92,6 +93,7 @@ interface Props {
 
 export default function ThemePicker({ currentPages, onApply, selectedThemeId }: Props) {
   const [pendingId, setPendingId] = useState<string | null>(null)
+  const [tab, setTab] = useState<'curated' | 'mine'>('curated')
 
   const handleApply = (theme: PhotobookTheme) => {
     const proceed = currentPages.length === 0
@@ -110,6 +112,34 @@ export default function ThemePicker({ currentPages, onApply, selectedThemeId }: 
 
   return (
     <div>
+      {/* Tabs: Curated / My Designs */}
+      <div className="flex gap-1 mb-4 p-1 bg-[#F2F1E5] rounded-xl w-fit">
+        <button
+          type="button"
+          onClick={() => setTab('curated')}
+          aria-pressed={tab === 'curated'}
+          className={`min-h-[44px] px-4 rounded-lg text-sm font-medium flex items-center gap-2 transition-colors ${
+            tab === 'curated' ? 'bg-white text-[#2A3E33] shadow-sm' : 'text-[#5A6660] hover:text-[#2A3E33]'
+          }`}
+        >
+          <Sparkles className="w-4 h-4 text-[#C35F33]" /> Curated
+        </button>
+        <button
+          type="button"
+          onClick={() => setTab('mine')}
+          aria-pressed={tab === 'mine'}
+          className={`min-h-[44px] px-4 rounded-lg text-sm font-medium flex items-center gap-2 transition-colors ${
+            tab === 'mine' ? 'bg-white text-[#2A3E33] shadow-sm' : 'text-[#5A6660] hover:text-[#2A3E33]'
+          }`}
+        >
+          <Layers className="w-4 h-4 text-[#406A56]" /> My Designs
+        </button>
+      </div>
+
+      {tab === 'mine' ? (
+        <MyThemesTab currentPages={currentPages} onApply={onApply} />
+      ) : (
+      <>
       <div className="flex items-center gap-2 mb-4">
         <Sparkles className="w-5 h-5 text-[#C35F33]" />
         <h2
@@ -168,6 +198,8 @@ export default function ThemePicker({ currentPages, onApply, selectedThemeId }: 
           )
         })}
       </div>
+      </>
+      )}
     </div>
   )
 }
