@@ -5,6 +5,7 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { AlertCircle, ChevronRight, X, Mail, Loader2, Check } from 'lucide-react'
 import { InterviewConversation } from '@/components/interview/InterviewConversation'
 import { InterviewMicroFeedback } from '@/components/interview/InterviewMicroFeedback'
+import { VerificationGate } from '@/components/interview/VerificationGate'
 import '@/styles/interview.css'
 
 interface SessionQuestion {
@@ -72,6 +73,9 @@ export default function InterviewPage({ params }: { params: Promise<{ token: str
   const [emailSending, setEmailSending] = useState(false)
   const [emailSent, setEmailSent] = useState(false)
   const [emailError, setEmailError] = useState<string | null>(null)
+
+  // Verification gate (no-op when session does not require verify)
+  const [verified, setVerified] = useState(false)
 
   useEffect(() => {
     loadSession()
@@ -701,17 +705,22 @@ export default function InterviewPage({ params }: { params: Promise<{ token: str
 
     return (
       <div className="interview-page">
-        <InterviewMicroFeedback />
-        <InterviewConversation
-          sessionId={session.id}
-          accessToken={token}
-          userId={session.user_id}
-          question={currentQuestion}
-          contactName={session.contact?.full_name || 'Unknown'}
-          onComplete={handleQuestionComplete}
-          onClose={handleClose}
-          initialProgress={initialProgress}
-        />
+        <VerificationGate token={token} onVerified={() => setVerified(true)} />
+        {verified && (
+          <>
+            <InterviewMicroFeedback />
+            <InterviewConversation
+              sessionId={session.id}
+              accessToken={token}
+              userId={session.user_id}
+              question={currentQuestion}
+              contactName={session.contact?.full_name || 'Unknown'}
+              onComplete={handleQuestionComplete}
+              onClose={handleClose}
+              initialProgress={initialProgress}
+            />
+          </>
+        )}
       </div>
     )
   }

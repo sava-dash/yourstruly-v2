@@ -119,6 +119,23 @@ export default function JournalistPage() {
   const [requireVerification, setRequireVerification] = useState(false)
   const [verificationEmail, setVerificationEmail] = useState('')
 
+  // Optional sender note shown on recipient welcome screen (≤280 chars)
+  const [senderNote, setSenderNote] = useState('')
+
+  // Optional follow-up branch rules attached to the chosen question (≤3)
+  type BranchRuleDraft = { if_answer_contains: string; then_ask: string }
+  const [showBranchComposer, setShowBranchComposer] = useState(false)
+  const [branchRules, setBranchRules] = useState<BranchRuleDraft[]>([])
+  const addBranchRule = () => {
+    setBranchRules(prev => prev.length >= 3 ? prev : [...prev, { if_answer_contains: '', then_ask: '' }])
+  }
+  const updateBranchRule = (idx: number, patch: Partial<BranchRuleDraft>) => {
+    setBranchRules(prev => prev.map((r, i) => i === idx ? { ...r, ...patch } : r))
+  }
+  const removeBranchRule = (idx: number) => {
+    setBranchRules(prev => prev.filter((_, i) => i !== idx))
+  }
+
   // Group view toggle: per-card pivoted view, persisted in localStorage
   const [groupViewIds, setGroupViewIds] = useState<Set<string>>(new Set())
   useEffect(() => {
@@ -340,11 +357,24 @@ export default function JournalistPage() {
             verification_email: requireVerification && verificationEmail.trim()
               ? verificationEmail.trim().toLowerCase()
               : (requireVerification ? (recipient.email || null) : null),
+            sender_note: senderNote.trim() ? senderNote.trim().slice(0, 280) : null,
           })
           .select()
           .single()
 
         if (sessionError) throw sessionError
+
+        // Normalize branch rules — drop empties, cap at 3, split keywords.
+        const cleanBranchRules = branchRules
+          .map(r => ({
+            if_answer_contains: r.if_answer_contains
+              .split(',')
+              .map(s => s.trim().toLowerCase())
+              .filter(Boolean),
+            then_ask: r.then_ask.trim(),
+          }))
+          .filter(r => r.if_answer_contains.length > 0 && r.then_ask.length > 0)
+          .slice(0, 3)
 
         // Add question to session
         await supabase.from('session_questions').insert({
@@ -352,6 +382,7 @@ export default function JournalistPage() {
           question_id: questionId,
           question_text: questionText,
           sort_order: 0,
+          branch_rules: cleanBranchRules.length > 0 ? cleanBranchRules : null,
         })
 
         // Auto-send invite via SMS and/or email
@@ -395,6 +426,9 @@ export default function JournalistPage() {
     setCustomQuestion('')
     setRequireVerification(false)
     setVerificationEmail('')
+    setSenderNote('')
+    setBranchRules([])
+    setShowBranchComposer(false)
   }
 
   const copyLink = (token: string, sessionId: string) => {
@@ -1098,7 +1132,7 @@ export default function JournalistPage() {
                   {/* Recipients summary + back */}
                   <div className="flex items-center justify-between px-6 py-3 bg-white/50">
                     <button
-                      onClick={() => { setStep('recipients'); setSelectedCategory(null); setSelectedQuestion(null); setCustomQuestion('') }}
+                      onClick={() => { setStep('recipients'); setSelectedCategory(null); setSelectedQuestion(null); setCustomQuestion(''); setBranchRules([]); setShowBranchComposer(false) }}
                       className="text-[#2D5A3D] text-sm hover:underline"
                     >
                       ← Change recipients
@@ -1183,8 +1217,93 @@ export default function JournalistPage() {
                     )}
                   </div>
 
+                  {/* Branch-rule composer (optional, ≤3 rules) */}
+                  {(selectedQuestion || customQuestion.trim()) && (
+                    <div className="px-6 pb-3">
+                      <button
+                        type="button"
+                        onClick={() => setShowBranchComposer(v => !v)}
+                        className="text-sm text-[#406A56] hover:underline"
+                      >
+                        {showBranchComposer ? '− Hide follow-up rules' : '+ Add a follow-up rule (optional)'}
+                      </button>
+                      {showBranchComposer && (
+                        <div className="mt-3 space-y-3 bg-[#F2F1E5] border border-[#E8E7DC] rounded-xl p-3">
+                          <p className="text-xs text-[#666]">
+                            If their answer mentions certain words, ask a follow-up. Up to 3 rules.
+                          </p>
+                          {branchRules.map((rule, idx) => (
+                            <div key={idx} className="bg-white border border-[#E8E7DC] rounded-lg p-3 space-y-2 relative">
+                              <button
+                                type="button"
+                                onClick={() => removeBranchRule(idx)}
+                                aria-label="Remove rule"
+                                className="absolute top-2 right-2 text-[#888] hover:text-[#C35F33]"
+                              >
+                                <X size={14} />
+                              </button>
+                              <div>
+                                <label className="block text-xs text-[#666] mb-1">If their answer contains</label>
+                                <input
+                                  type="text"
+                                  value={rule.if_answer_contains}
+                                  onChange={(e) => updateBranchRule(idx, { if_answer_contains: e.target.value })}
+                                  placeholder="comma, separated, words"
+                                  className="w-full px-3 py-2 bg-white border border-[#E8E7DC] rounded-lg text-sm text-[#2d2d2d] placeholder-[#aaa] focus:outline-none focus:ring-2 focus:ring-[#406A56]"
+                                />
+                              </div>
+                              <div>
+                                <label className="block text-xs text-[#666] mb-1">Then ask</label>
+                                <textarea
+                                  value={rule.then_ask}
+                                  onChange={(e) => updateBranchRule(idx, { then_ask: e.target.value })}
+                                  placeholder="Tell me more about that..."
+                                  rows={2}
+                                  className="w-full px-3 py-2 bg-white border border-[#E8E7DC] rounded-lg text-sm text-[#2d2d2d] placeholder-[#aaa] focus:outline-none focus:ring-2 focus:ring-[#406A56] resize-none"
+                                />
+                              </div>
+                            </div>
+                          ))}
+                          {branchRules.length < 3 && (
+                            <button
+                              type="button"
+                              onClick={addBranchRule}
+                              className="text-sm text-[#406A56] hover:underline"
+                            >
+                              + Add another rule
+                            </button>
+                          )}
+                        </div>
+                      )}
+                    </div>
+                  )}
+
                   {/* SMS Consent + Create Button */}
                   <div className="p-4 border-t border-[#E8E7DC] space-y-4">
+                    {/* Sender note (≤280 chars, shown on recipient welcome) */}
+                    <div className="bg-[#F2F1E5] border border-[#E8E7DC] rounded-xl p-3">
+                      <label className="block text-sm font-medium text-[#2d2d2d] mb-1">
+                        Add a personal note (optional)
+                      </label>
+                      <p className="text-xs text-[#666] mb-2">
+                        Shown to your recipient on the welcome screen
+                      </p>
+                      <textarea
+                        value={senderNote}
+                        onChange={(e) => setSenderNote(e.target.value.slice(0, 280))}
+                        rows={3}
+                        maxLength={280}
+                        placeholder="I'd love to hear your story when you have a moment."
+                        className="w-full px-3 py-2 bg-white border border-[#E8E7DC] rounded-lg text-sm text-[#2d2d2d] placeholder-[#aaa] focus:outline-none focus:ring-2 focus:ring-[#406A56] resize-none"
+                      />
+                      <div
+                        className="text-xs mt-1 text-right"
+                        style={{ color: senderNote.length >= 260 ? '#C35F33' : '#888' }}
+                      >
+                        {senderNote.length} / 280
+                      </div>
+                    </div>
+
                     {/* Optional recipient email verification */}
                     <div className="bg-white/70 border border-[#E8E7DC] rounded-xl p-3">
                       <label className="flex items-start gap-2 cursor-pointer">

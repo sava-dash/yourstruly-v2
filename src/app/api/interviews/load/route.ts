@@ -22,7 +22,7 @@ export async function GET(request: NextRequest) {
         sender_note,
         contact:contacts(id, full_name),
         owner:profiles!interview_sessions_user_id_fkey(full_name, display_name, avatar_url),
-        session_questions(id, question_text, status, sort_order)
+        session_questions(id, question_text, status, sort_order, branch_rules)
       `)
       .eq('access_token', token)
       .single()
