@@ -51,14 +51,24 @@ export default function ThemePicker({ selectedTheme, onChange, previewMessage, p
                     <Check size={16} className="text-[#2D5A3D]" />
                   </div>
                 )}
-                {/* Preview eye icon on hover */}
-                <button
+                {/* Preview eye icon on hover — span (not button) to avoid nested <button> */}
+                <span
+                  role="button"
+                  tabIndex={-1}
+                  aria-label={`Preview ${theme.name}`}
                   onClick={(e) => { e.stopPropagation(); setPreviewId(theme.id) }}
-                  className="absolute bottom-1 right-1 p-0.5 rounded bg-black/30 text-white opacity-0 group-hover:opacity-100 hover:bg-black/50 transition-opacity"
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' || e.key === ' ') {
+                      e.preventDefault()
+                      e.stopPropagation()
+                      setPreviewId(theme.id)
+                    }
+                  }}
+                  className="absolute bottom-1 right-1 p-0.5 rounded bg-black/30 text-white opacity-0 group-hover:opacity-100 hover:bg-black/50 transition-opacity cursor-pointer inline-flex items-center justify-center"
                   style={{ opacity: isSelected ? 0.7 : undefined }}
                 >
                   <Eye size={10} />
-                </button>
+                </span>
               </div>
               <span className="text-[10px] text-gray-600 font-medium leading-tight text-center">
                 {theme.name}

@@ -15,6 +15,7 @@ import { AttachmentSelectorModal, type SelectedAttachment } from '@/components/p
 import { GiftSelectionModal, type GiftSelection } from '@/components/postscripts/GiftSelectionModal'
 import AiDraftHelper from '@/components/postscripts/AiDraftHelper'
 import ThemePicker from '@/components/postscripts/ThemePicker'
+import ExecutorContactsTypeahead from '@/components/postscripts/ExecutorContactsTypeahead'
 import { DraftAutoSaver } from '@/lib/postscripts/draft'
 
 interface Contact {
@@ -1068,14 +1069,19 @@ export default function NewPostScriptPage() {
             </p>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div>
-                <label className="block text-sm font-medium text-[#2d2d2d] mb-1">Executor name</label>
-                <input
-                  type="text"
+                <label htmlFor="executor-name" className="block text-sm font-medium text-[#2d2d2d] mb-1">Executor name</label>
+                <ExecutorContactsTypeahead
+                  inputId="executor-name"
+                  contacts={contacts}
                   value={form.executor_name}
-                  onChange={(e) => setForm({ ...form, executor_name: e.target.value })}
-                  placeholder="e.g., Sarah Mitchell"
-                  className="w-full min-h-[44px] px-4 py-3 bg-white border border-[#D3E1DF] rounded-xl text-[#2d2d2d] placeholder:text-gray-400
-                             focus:ring-2 focus:ring-[#406A56]/20 focus:border-[#406A56] outline-none"
+                  onNameChange={(name) => setForm({ ...form, executor_name: name })}
+                  onSelectContact={(c) =>
+                    setForm({
+                      ...form,
+                      executor_name: c.full_name,
+                      executor_email: c.email || form.executor_email,
+                    })
+                  }
                 />
               </div>
               <div>
