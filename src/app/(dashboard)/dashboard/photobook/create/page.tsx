@@ -70,6 +70,7 @@ import {
 } from '@/components/photobook/renderForPreview'
 import CMYKWarnings from '@/components/photobook/CMYKWarnings'
 import VersionHistoryPanel from '@/components/photobook/VersionHistoryPanel'
+import { useAutosave } from '@/components/photobook/useAutosave'
 import { PhotobookTheme } from '@/lib/photobook/themes'
 import { PhotoInput as CMYKPhotoInput } from '@/lib/photobook/cmyk-check'
 import type { PageOverlay, PageBackground, TextOverlay } from '@/lib/photobook/overlays'
@@ -4279,8 +4280,16 @@ export default function CreatePhotobookPage() {
     return () => window.removeEventListener('keydown', handleKeyDown)
   }, [currentStep, historyIndex, history])
 
+  // Autosave dirty flag — set by saveHistory (any page mutation) + any
+  // change to cover/options/add-ons/shipping. Consumed by useAutosave below.
+  const markDirtyRef = useRef<() => void>(() => {})
+
   // History management functions
   const saveHistory = useCallback((newPages: PageData[]) => {
+    // Any mutation that goes through saveHistory is a user-facing edit we
+    // want to persist. Flip the dirty flag so autosave picks it up on the
+    // next 10s tick (or sooner if markDirty short-circuits).
+    markDirtyRef.current?.()
     setHistory(prev => {
       // Remove any future history after current index
       const newHistory = prev.slice(0, historyIndex + 1)
@@ -4453,12 +4462,22 @@ export default function CreatePhotobookPage() {
     if (!userId || !selectedProduct) return null
     
     try {
+      // Derive a simple cover thumbnail from the first photo slot we can
+      // find so the Drafts grid on /dashboard/photobook shows a meaningful
+      // image without waiting for the full renderExport pipeline.
+      let derivedCoverUrl: string | null = null
+      for (const page of pages) {
+        const photo = page.slots.find(s => s.type === 'photo' && s.fileUrl)
+        if (photo?.fileUrl) { derivedCoverUrl = photo.fileUrl; break }
+      }
+
       // Create or update project
       const projectData = {
         user_id: userId,
         title: `${selectedProduct.name} - ${new Date().toLocaleDateString()}`,
         status: 'draft',
         page_count: pages.length,
+        cover_image_url: derivedCoverUrl,
         print_config: {
           size: selectedProduct.size,
           binding: selectedProduct.binding,
@@ -4556,7 +4575,29 @@ export default function CreatePhotobookPage() {
       return null
     }
   }, [userId, selectedProduct, pages, shippingAddress, projectId, usedMemoryIds, productOptions, addOns])
-  
+
+  // Autosave: fires every 10s while dirty, on beforeunload, and exposes the
+  // "Saving… / Saved Xs ago / Unsaved changes" status to the header pill.
+  // Note we gate canSave on userId+selectedProduct (the two preconditions in
+  // saveProject itself). On first edit of a fresh book this will insert a
+  // photobook_projects row and setProjectId, after which subsequent saves
+  // update that row.
+  const autosave = useAutosave({
+    intervalMs: 10_000,
+    canSave: Boolean(userId && selectedProduct),
+    save: saveProject,
+  })
+  useEffect(() => { markDirtyRef.current = autosave.markDirty }, [autosave.markDirty])
+
+  // Mark dirty when non-page editor state changes (page-level changes are
+  // already covered via saveHistory → markDirtyRef). Guard with a mounted
+  // flag so the initial hydration pass doesn't trigger an immediate save.
+  const autosaveMountedRef = useRef(false)
+  useEffect(() => {
+    if (!autosaveMountedRef.current) { autosaveMountedRef.current = true; return }
+    autosave.markDirty()
+  }, [productOptions, addOns, coverDesign, shippingAddress, autosave])
+
   // PR 3: single source of truth for money math. computePricing() lives in
   // src/lib/photobook/product-options.ts so the editor + checkout + order
   // endpoint never duplicate formulas.
@@ -4646,7 +4687,42 @@ export default function CreatePhotobookPage() {
               <span>Back to Dashboard</span>
             </button>
             <h1 className="text-xl font-bold text-[#1A1F1C]" style={{ fontFamily: 'var(--font-dm-serif), Georgia, serif' }}>Create Photobook</h1>
-            <div className="w-32" /> {/* Spacer */}
+            {/* Autosave status pill. Mirrors what's persisted so users
+                never wonder "did my changes save?" Kept ≤36px tall, 13px
+                Inter Tight. YT Green for success, Terra Cotta for failure. */}
+            <div className="w-32 flex justify-end">
+              {selectedProduct && currentStep >= 1 && (
+                <div
+                  className="inline-flex items-center gap-1.5 h-8 px-3 rounded-full bg-white/80 border border-[#DDE3DF]"
+                  style={{ fontFamily: 'var(--font-inter-tight), Inter, sans-serif', fontSize: 13 }}
+                  aria-live="polite"
+                >
+                  {autosave.status === 'saving' && (
+                    <>
+                      <Loader2 className="w-3.5 h-3.5 animate-spin text-[#406A56]" />
+                      <span className="text-[#2A3E33]">Saving…</span>
+                    </>
+                  )}
+                  {autosave.status === 'saved' && (
+                    <>
+                      <Check className="w-3.5 h-3.5 text-[#406A56]" />
+                      <span className="text-[#2A3E33]">
+                        Saved{autosave.relativeLabel ? ` · ${autosave.relativeLabel}` : ''}
+                      </span>
+                    </>
+                  )}
+                  {autosave.status === 'failed' && (
+                    <>
+                      <AlertTriangle className="w-3.5 h-3.5 text-[#C35F33]" />
+                      <span className="text-[#C35F33]">Unsaved changes</span>
+                    </>
+                  )}
+                  {autosave.status === 'idle' && (
+                    <span className="text-[#94A09A]">Not saved yet</span>
+                  )}
+                </div>
+              )}
+            </div>
           </div>
           
           {/* PR 3: cover/finish/binding chips. Visible once a product is
