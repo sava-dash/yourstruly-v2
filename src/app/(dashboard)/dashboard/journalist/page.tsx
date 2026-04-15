@@ -6,7 +6,7 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { 
   Video, Plus, Clock, CheckCircle, ChevronLeft, User, Play,
   Sparkles, ExternalLink, X, Search, Heart, Users, Check,
-  Copy, Mail, MessageSquare
+  Copy, Mail, MessageSquare, Inbox
 } from 'lucide-react'
 import Link from 'next/link'
 import { formatDistanceToNow } from 'date-fns'
@@ -114,6 +114,8 @@ export default function JournalistPage() {
   const [smsConsent, setSmsConsent] = useState(false)
   const [searchQuery, setSearchQuery] = useState('')
   const [statusFilter, setStatusFilter] = useState<'all' | 'active' | 'completed' | 'draft'>('all')
+  // F1: unread inbox count for sidebar badge
+  const [unreadInbox, setUnreadInbox] = useState<number>(0)
 
   // Optional sender-controlled email verification for the recipient
   const [requireVerification, setRequireVerification] = useState(false)
@@ -219,6 +221,21 @@ export default function JournalistPage() {
     setContacts(contactsRes.data || [])
     setQuestions(questionsRes.data || [])
     setCircles(circlesRes.data || [])
+
+    // F1: unread inbox badge
+    try {
+      const supabase = createClient()
+      const { data: { user } } = await supabase.auth.getUser()
+      if (user) {
+        const { count } = await supabase
+          .from('video_responses')
+          .select('id', { count: 'exact', head: true })
+          .eq('user_id', user.id)
+          .is('seen_at', null)
+        setUnreadInbox(count || 0)
+      }
+    } catch { /* non-blocking */ }
+
     setLoading(false)
   }
 
@@ -577,13 +594,28 @@ export default function JournalistPage() {
               </div>
             </div>
 
-            <button
-              onClick={() => setShowNewSession(true)}
-              className="flex items-center gap-2 px-4 py-2 bg-[#2D5A3D] hover:bg-[#244B32] text-white text-sm font-medium rounded-xl transition-colors"
-            >
-              <Plus size={18} />
-              <span className="hidden sm:inline">New Interview</span>
-            </button>
+            <div className="flex items-center gap-2">
+              <Link
+                href="/dashboard/journalist/inbox"
+                aria-label={unreadInbox > 0 ? `Inbox, ${unreadInbox} unread` : 'Inbox'}
+                className="relative flex items-center gap-2 px-4 py-2 bg-white hover:bg-[#D3E1DF] text-[#2D5A3D] text-sm font-medium rounded-xl transition-colors min-h-[44px]"
+              >
+                <Inbox size={18} />
+                <span className="hidden sm:inline">Inbox</span>
+                {unreadInbox > 0 && (
+                  <span className="absolute -top-1 -right-1 min-w-[20px] h-5 px-1 bg-[#C35F33] text-white text-xs font-semibold rounded-full flex items-center justify-center">
+                    {unreadInbox > 99 ? '99+' : unreadInbox}
+                  </span>
+                )}
+              </Link>
+              <button
+                onClick={() => setShowNewSession(true)}
+                className="flex items-center gap-2 px-4 py-2 bg-[#2D5A3D] hover:bg-[#244B32] text-white text-sm font-medium rounded-xl transition-colors min-h-[44px]"
+              >
+                <Plus size={18} />
+                <span className="hidden sm:inline">New Interview</span>
+              </button>
+            </div>
           </div>
         </header>
 

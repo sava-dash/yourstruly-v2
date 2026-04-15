@@ -6,6 +6,7 @@ import { AlertCircle, ChevronRight, X, Mail, Loader2, Check } from 'lucide-react
 import { InterviewConversation } from '@/components/interview/InterviewConversation'
 import { InterviewMicroFeedback } from '@/components/interview/InterviewMicroFeedback'
 import { VerificationGate } from '@/components/interview/VerificationGate'
+import ClaimAccountFlow from '@/components/interview/ClaimAccountFlow'
 import '@/styles/interview.css'
 
 interface SessionQuestion {
@@ -343,6 +344,15 @@ export default function InterviewPage({ params }: { params: Promise<{ token: str
             >
               Want to start your own?
             </a>
+          </div>
+
+          {/* F4: claim your free account and keep a private copy */}
+          <div style={{ marginTop: 20 }}>
+            <ClaimAccountFlow
+              token={token}
+              defaultName={session.contact?.full_name || null}
+              defaultEmail={null}
+            />
           </div>
 
           <p
