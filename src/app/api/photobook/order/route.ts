@@ -4,6 +4,14 @@ import { NextRequest, NextResponse } from 'next/server'
 import { getStripeServer } from '@/lib/stripe'
 import { estimateOrder } from '@/lib/marketplace/providers/prodigi'
 import { randomUUID } from 'crypto'
+import {
+  ADD_ONS,
+  COVER_TYPES,
+  PAPER_FINISH,
+  BINDING,
+  normalizeAddOns,
+  normalizeProductOptions,
+} from '@/lib/photobook/product-options'
 
 // Markup percentage for photobook orders
 const MARKUP_PERCENTAGE = 0.30 // 30%
@@ -83,6 +91,19 @@ export async function POST(request: NextRequest) {
   const idempotencyKey = randomUUID()
 
   try {
+    // PR 3: fold cover/finish/binding + add-on prices into the order cost
+    // and forward the picks to Prodigi as attributes for fulfillment config.
+    const productOptions = normalizeProductOptions(project.product_options)
+    const selectedAddOns = normalizeAddOns(project.add_ons)
+    const optionDelta =
+      (COVER_TYPES.find((c) => c.id === productOptions.coverType)?.priceDelta ?? 0) +
+      (PAPER_FINISH.find((c) => c.id === productOptions.paperFinish)?.priceDelta ?? 0) +
+      (BINDING.find((c) => c.id === productOptions.binding)?.priceDelta ?? 0)
+    const addOnsAmount = selectedAddOns.reduce(
+      (sum, id) => sum + (ADD_ONS.find((a) => a.id === id)?.price ?? 0),
+      0,
+    )
+
     // Get fresh quote for order total
     const quote = await estimateOrder(
       [{
@@ -90,9 +111,12 @@ export async function POST(request: NextRequest) {
         variantId: project.product_sku,
         quantity: 1,
         attributes: {
-          pageCount: project.page_count,
-          coverType: project.cover_type,
-          size: project.size,
+          pageCount: String(project.page_count),
+          coverType: productOptions.coverType,
+          paperFinish: productOptions.paperFinish,
+          binding: productOptions.binding,
+          addOns: selectedAddOns.join(','),
+          size: String(project.size ?? ''),
         },
       }],
       {
@@ -105,9 +129,13 @@ export async function POST(request: NextRequest) {
       }
     )
 
-    // Calculate total with markup
-    const productCostWithMarkup = quote.subtotal * (1 + MARKUP_PERCENTAGE)
-    const totalWithMarkup = productCostWithMarkup + quote.shipping + quote.tax
+    // Calculate total with markup. Option deltas ride along with the print
+    // subtotal (they're hardware/material upgrades), add-ons are billed at
+    // their flat retail price on top.
+    const adjustedSubtotal = Math.max(0, quote.subtotal + optionDelta)
+    const productCostWithMarkup = adjustedSubtotal * (1 + MARKUP_PERCENTAGE)
+    const totalWithMarkup =
+      productCostWithMarkup + addOnsAmount + quote.shipping + quote.tax
     const totalCents = Math.round(totalWithMarkup * 100)
 
     // Create Stripe Payment Intent
@@ -149,8 +177,8 @@ export async function POST(request: NextRequest) {
         shipping_zip: shipping_address.zip,
         shipping_country: shipping_address.countryCode,
         shipping_method,
-        product_cost: quote.subtotal,
-        markup_amount: quote.subtotal * MARKUP_PERCENTAGE,
+        product_cost: adjustedSubtotal + addOnsAmount,
+        markup_amount: adjustedSubtotal * MARKUP_PERCENTAGE,
         shipping_cost: quote.shipping,
         tax_amount: quote.tax,
         total_amount: totalWithMarkup,

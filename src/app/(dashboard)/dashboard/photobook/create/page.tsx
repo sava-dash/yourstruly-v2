@@ -78,6 +78,15 @@ import {
   type IdeaPagePreset,
 } from '@/lib/photobook/idea-pages'
 import type { PhotoBorder, PhotoBorderStyle, PhotoFilter } from '@/lib/photobook/renderer'
+import {
+  AddOnId,
+  DEFAULT_PRODUCT_OPTIONS,
+  ProductOptions,
+  computePricing,
+} from '@/lib/photobook/product-options'
+import ProductOptionsBar from '@/components/photobook/ProductOptionsBar'
+import AddOnsPanel from '@/components/photobook/AddOnsPanel'
+import PricingRail from '@/components/photobook/PricingRail'
 
 // ============================================================================
 // TYPES
@@ -3715,6 +3724,11 @@ export default function CreatePhotobookPage() {
   const [selectedOverlayId, setSelectedOverlayId] = useState<string | null>(null)
   const [showStickerPicker, setShowStickerPicker] = useState(false)
   const [showBackgroundPickerV2, setShowBackgroundPickerV2] = useState(false)
+
+  // PR 3: cover/finish/binding picker + add-on upsells. Persisted to
+  // photobook_projects.{product_options, add_ons}.
+  const [productOptions, setProductOptions] = useState<ProductOptions>(DEFAULT_PRODUCT_OPTIONS)
+  const [addOns, setAddOns] = useState<AddOnId[]>([])
   
   // Load user, memories, and products
   useEffect(() => {
@@ -4114,7 +4128,11 @@ export default function CreatePhotobookPage() {
           copies: 1
         },
         delivery_address: shippingAddress,
-        estimated_price: calculateTotal()
+        estimated_price: calculateTotal(),
+        // PR 3: persist editor selections so they round-trip and reach
+        // the order endpoint for Prodigi attribute pass-through.
+        product_options: productOptions,
+        add_ons: addOns,
       }
       
       let project
@@ -4200,20 +4218,24 @@ export default function CreatePhotobookPage() {
       console.error('Error saving project:', error)
       return null
     }
-  }, [userId, selectedProduct, pages, shippingAddress, projectId, usedMemoryIds])
+  }, [userId, selectedProduct, pages, shippingAddress, projectId, usedMemoryIds, productOptions, addOns])
   
-  // Calculate total price
-  const calculateTotal = () => {
-    if (!selectedProduct) return 0
-    const pageCount = pages.length
-    const basePrice = selectedProduct.basePrice
-    const additionalPages = Math.max(0, pageCount - selectedProduct.minPages)
-    const additionalCost = additionalPages * selectedProduct.pricePerPage
-    const subtotal = basePrice + additionalCost
-    const markup = subtotal * 0.3
-    const shipping = 5.99
-    return subtotal + markup + shipping
-  }
+  // PR 3: single source of truth for money math. computePricing() lives in
+  // src/lib/photobook/product-options.ts so the editor + checkout + order
+  // endpoint never duplicate formulas.
+  const pricingBreakdown = useMemo(() => {
+    if (!selectedProduct) return null
+    return computePricing({
+      basePrice: selectedProduct.basePrice,
+      pricePerPage: selectedProduct.pricePerPage,
+      minPages: selectedProduct.minPages,
+      pageCount: pages.length,
+      options: productOptions,
+      addOns,
+    })
+  }, [selectedProduct, pages.length, productOptions, addOns])
+
+  const calculateTotal = () => pricingBreakdown?.total ?? 0
   
   // Handle checkout: save the project, then hand off to the CheckoutFlow
   // overlay which renders+uploads each page, creates a PaymentIntent,
@@ -4279,6 +4301,15 @@ export default function CreatePhotobookPage() {
             <div className="w-32" /> {/* Spacer */}
           </div>
           
+          {/* PR 3: cover/finish/binding chips. Visible once a product is
+              selected and we're past Step 0. Sits between back/title and the
+              step progress so it's always one tap away. */}
+          {selectedProduct && currentStep >= 1 && (
+            <div className="relative mb-3">
+              <ProductOptionsBar value={productOptions} onChange={setProductOptions} />
+            </div>
+          )}
+
           {/* Step Progress (4 steps now) */}
           <div className="flex items-center justify-between overflow-x-auto gap-1 sm:gap-2">
             {STEPS.map((step, index) => {
@@ -4363,7 +4394,20 @@ export default function CreatePhotobookPage() {
       )}
 
       {/* Content */}
-      <div className="max-w-7xl mx-auto px-4 py-8">
+      <div className="max-w-7xl mx-auto px-4 py-8 relative">
+        {/* PR 3: live pricing rail. Sticky on xl screens, full-width above
+            the editor on smaller widths so the running total is always in
+            view during Design + Preview. */}
+        {selectedProduct && pricingBreakdown && (currentStep === 1 || currentStep === 2) && (
+          <div className="mb-6 xl:mb-0">
+            <PricingRail
+              breakdown={pricingBreakdown}
+              productName={selectedProduct.name}
+              productSize={selectedProduct.size}
+            />
+          </div>
+        )}
+
         <AnimatePresence mode="wait">
           <motion.div
             key={currentStep}
@@ -4382,6 +4426,7 @@ export default function CreatePhotobookPage() {
             )}
             
             {currentStep === 1 && (
+              <div className="xl:pr-96">
               <ArrangeStep
                 pages={pages}
                 setPages={setPages}
@@ -4410,15 +4455,23 @@ export default function CreatePhotobookPage() {
                 onOpenCmyk={() => setShowCmyk(true)}
                 onOpenVersions={() => setShowVersions(true)}
               />
+              </div>
             )}
-            
+
             {currentStep === 2 && selectedProduct && (
-              <PreviewStep
-                pages={pages}
-                selectedMemories={memories}
-                product={selectedProduct}
-                shareTokenMap={shareTokenMap}
-              />
+              <div className="xl:pr-96">
+                <PreviewStep
+                  pages={pages}
+                  selectedMemories={memories}
+                  product={selectedProduct}
+                  shareTokenMap={shareTokenMap}
+                />
+                {/* PR 3: add-on upsells live in the Preview step, right where
+                    users are deciding what to buy. */}
+                <div className="max-w-5xl mx-auto mt-10">
+                  <AddOnsPanel selected={addOns} onChange={setAddOns} />
+                </div>
+              </div>
             )}
             
             {currentStep === 3 && selectedProduct && (

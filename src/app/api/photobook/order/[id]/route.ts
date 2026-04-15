@@ -2,6 +2,10 @@ import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { NextRequest, NextResponse } from 'next/server'
 import { createOrder as createProdigiOrder, getOrderStatus as getProdigiOrderStatus } from '@/lib/marketplace/providers/prodigi'
+import {
+  normalizeAddOns,
+  normalizeProductOptions,
+} from '@/lib/photobook/product-options'
 
 interface RouteContext {
   params: Promise<{ id: string }>
@@ -237,6 +241,12 @@ export async function POST(
       )
     }
 
+    // PR 3: thread cover/finish/binding + add-ons through to Prodigi as
+    // attributes so their print engineers can map our SKU options to their
+    // production lines.
+    const productOptions = normalizeProductOptions(project.product_options)
+    const selectedAddOns = normalizeAddOns(project.add_ons)
+
     // Submit order to Prodigi
     const prodigiOrder = await createProdigiOrder({
       items: [{
@@ -245,6 +255,10 @@ export async function POST(
         assets,
         attributes: {
           pageCount: project.page_count,
+          coverType: productOptions.coverType,
+          paperFinish: productOptions.paperFinish,
+          binding: productOptions.binding,
+          addOns: selectedAddOns,
         },
       }],
       recipient: {
