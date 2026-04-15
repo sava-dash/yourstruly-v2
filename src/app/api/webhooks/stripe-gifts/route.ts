@@ -67,7 +67,9 @@ async function handleGiftCheckout(session: Stripe.Checkout.Session) {
   const recipientEmail = String(md.recipient_email ?? '').toLowerCase();
   const recipientName = String(md.recipient_name ?? '');
   const purchaserName = String(md.purchaser_name ?? '') || 'A friend';
-  const purchaserUserId = md.purchaser_user_id ? String(md.purchaser_user_id) : null;
+  const purchaserUserId = md.purchaser_user_id && String(md.purchaser_user_id).trim() !== ''
+    ? String(md.purchaser_user_id)
+    : null;
   const message = md.message ? String(md.message) : null;
 
   const expiresAt = new Date();

@@ -33,6 +33,22 @@ export async function GET(request: NextRequest) {
   const supabase = createAdminClient();
   const startedAt = Date.now();
 
+  // Shared cron_runs idempotency guard — bail on the duplicate insert.
+  const runDate = new Date().toISOString().slice(0, 10);
+  const { error: lockErr } = await supabase
+    .from('cron_runs')
+    .insert({ name: 'memory-of-the-day', run_date: runDate });
+  if (lockErr) {
+    const code = (lockErr as { code?: string }).code;
+    if (code === '23505') {
+      return NextResponse.json({ ok: true, skipped: 'already-ran-today' });
+    }
+    console.error('[memory-of-the-day] lock insert failed', lockErr);
+    return NextResponse.json({ error: lockErr.message }, { status: 500 });
+  }
+
+  // Uses UTC midnight boundaries. User's local "today" may differ by up to
+  // 24h; acceptable for a daily digest.
   const today = new Date();
   const todayMonth = today.getUTCMonth() + 1;
   const todayDay = today.getUTCDate();

@@ -27,10 +27,17 @@ export async function GET() {
     .order('created_at', { ascending: false })
     .limit(1);
 
-  return NextResponse.json({
-    today,
-    latestUnread: latestUnreadRows && latestUnreadRows.length > 0 ? latestUnreadRows[0] : null,
-  });
+  const latestUnread = latestUnreadRows && latestUnreadRows.length > 0 ? latestUnreadRows[0] : null;
+  // Priority hint so UI surfaces (e.g. MemoryOfTheDayBanner) can defensively
+  // render only for the notification type they're designed for.
+  type Priority = 'memory-of-the-day' | 'weekly-story' | 'other' | null;
+  let priority: Priority = null;
+  if (latestUnread) {
+    const t = (latestUnread as { type?: string }).type;
+    priority = t === 'memory-of-the-day' || t === 'weekly-story' ? t : 'other';
+  }
+
+  return NextResponse.json({ today, latestUnread, priority });
 }
 
 export async function POST(request: NextRequest) {

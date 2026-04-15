@@ -41,6 +41,13 @@ export default function MemoryOfTheDayBanner() {
         const res = await fetch('/api/notifications/today', { credentials: 'include' });
         if (!res.ok) return;
         const data = await res.json();
+        // Defensive: only render when the server's priority hint matches us.
+        // Prevents this banner from flashing in when the latest unread is a
+        // different notification type.
+        if (data.priority && data.priority !== 'memory-of-the-day') {
+          if (!cancelled) setNotification(null);
+          return;
+        }
         const list: NotificationRow[] = data.today ?? [];
         const motd = list.find((n) => n.type === 'memory-of-the-day' && !n.read_at);
         if (!cancelled) setNotification(motd ?? null);

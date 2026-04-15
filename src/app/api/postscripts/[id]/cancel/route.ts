@@ -38,10 +38,14 @@ export async function POST(
     return NextResponse.json({ error: 'PostScript already sent' }, { status: 409 })
   }
 
+  // `delivery_date` is a DATE column in Postgres — parse as UTC midnight
+  // so the cancel-window math is stable regardless of server timezone.
   const now = Date.now()
   const createdMs = ps.created_at ? new Date(ps.created_at).getTime() : 0
-  const deliveryMs = ps.delivery_date ? new Date(ps.delivery_date).getTime() : Infinity
-  const within24h = now - createdMs < 24 * 60 * 60 * 1000
+  const deliveryMs = ps.delivery_date
+    ? new Date(`${ps.delivery_date}T00:00:00Z`).getTime()
+    : Infinity
+  const within24h = new Date(ps.created_at).getTime() > now - 24 * 60 * 60 * 1000 && createdMs > 0
   const futureDelivery = deliveryMs > now
 
   if (!within24h && !futureDelivery) {

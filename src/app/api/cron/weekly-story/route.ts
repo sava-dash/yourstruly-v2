@@ -24,6 +24,7 @@ interface UserRow {
   first_name: string | null;
   full_name: string | null;
   weekly_story_enabled: boolean | null;
+  weekly_story_last_sent_at: string | null;
 }
 
 interface PromptRow {
@@ -37,13 +38,31 @@ interface PromptRow {
 }
 
 export async function GET(request: NextRequest) {
-  const authHeader = request.headers.get('authorization');
   const cronSecret = process.env.CRON_SECRET;
-  if (cronSecret && authHeader !== `Bearer ${cronSecret}`) {
+  if (!cronSecret) {
+    return NextResponse.json({ error: 'CRON_SECRET not configured' }, { status: 500 });
+  }
+  if (request.headers.get('authorization') !== `Bearer ${cronSecret}`) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
   const supabase = createAdminClient();
+
+  // Idempotency guard (shared cron_runs table). If another worker already
+  // inserted today's row, exit early so we don't double-send.
+  const runDate = new Date().toISOString().slice(0, 10);
+  const { error: lockErr } = await supabase
+    .from('cron_runs')
+    .insert({ name: 'weekly-story', run_date: runDate });
+  if (lockErr) {
+    const code = (lockErr as { code?: string }).code;
+    if (code === '23505') {
+      return NextResponse.json({ ok: true, skipped: 'already-ran-today' });
+    }
+    console.error('[weekly-story] lock insert failed', lockErr);
+    return NextResponse.json({ error: lockErr.message }, { status: 500 });
+  }
+
   const resend = getResend();
   if (!resend) {
     return NextResponse.json({ error: 'Resend not configured' }, { status: 500 });
@@ -56,7 +75,7 @@ export async function GET(request: NextRequest) {
 
   const { data: users, error: usersError } = await supabase
     .from('profiles')
-    .select('id, email, first_name, full_name, weekly_story_enabled')
+    .select('id, email, first_name, full_name, weekly_story_enabled, weekly_story_last_sent_at')
     .eq('weekly_story_enabled', true)
     .limit(BATCH_SIZE);
 
@@ -67,8 +86,18 @@ export async function GET(request: NextRequest) {
 
   const thisMonth = new Date().getUTCMonth() + 1;
 
+  const sixDaysMs = 6 * 24 * 60 * 60 * 1000;
   for (const u of (users ?? []) as UserRow[]) {
     if (!u.email) {
+      skipped.push(u.id);
+      continue;
+    }
+    // Per-user 6-day dedup — protects against both manual triggers AND
+    // cron re-fires that slip past the cron_runs guard (different day).
+    if (
+      u.weekly_story_last_sent_at &&
+      Date.now() - new Date(u.weekly_story_last_sent_at).getTime() < sixDaysMs
+    ) {
       skipped.push(u.id);
       continue;
     }
@@ -152,6 +181,11 @@ export async function GET(request: NextRequest) {
         failed.push({ userId: u.id, reason: sendError.message });
         continue;
       }
+      // Record successful send for per-user dedup.
+      await supabase
+        .from('profiles')
+        .update({ weekly_story_last_sent_at: new Date().toISOString() })
+        .eq('id', u.id);
       sent.push(u.id);
     } catch (err) {
       failed.push({ userId: u.id, reason: err instanceof Error ? err.message : 'unknown' });

@@ -11,17 +11,41 @@ const APP_URL = process.env.NEXT_PUBLIC_APP_URL || 'https://app.yourstruly.love'
 // (same questions, recipient, sender_note, new token), sets
 // parent_session_id, and dispatches a fresh invite.
 //
-// Auth: CRON_SECRET as `?secret=` or `Authorization: Bearer`.
+// Auth: `Authorization: Bearer <CRON_SECRET>` only. Query-param secrets
+// are rejected (they get logged by load balancers / access logs).
 export async function GET(req: NextRequest) {
   const secret = process.env.CRON_SECRET;
-  const url = new URL(req.url);
-  const provided = url.searchParams.get('secret')
-    || req.headers.get('authorization')?.replace(/^Bearer\s+/i, '');
-  if (secret && provided !== secret) {
+  if (!secret) {
+    // Fail loud rather than silently accepting unauthenticated cron hits.
+    return NextResponse.json({ error: 'CRON_SECRET not configured' }, { status: 500 });
+  }
+  const authHeader = req.headers.get('authorization') || '';
+  if (authHeader !== `Bearer ${secret}`) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
   const admin = createAdminClient();
+
+  // Idempotency guard: insert a (name, run_date) row. If it already exists,
+  // another worker is handling today's run — exit early with 200 OK.
+  const runDate = new Date().toISOString().slice(0, 10);
+  const { data: lockRow, error: lockErr } = await admin
+    .from('cron_runs')
+    .insert({ name: 'recurring-interviews', run_date: runDate })
+    .select('name')
+    .maybeSingle();
+  if (lockErr) {
+    // Unique-violation means another worker already claimed today.
+    const code = (lockErr as { code?: string }).code;
+    if (code === '23505') {
+      return NextResponse.json({ ok: true, skipped: 'already-ran-today' });
+    }
+    console.error('[recurring-cron] lock insert failed', lockErr);
+    return NextResponse.json({ error: lockErr.message }, { status: 500 });
+  }
+  if (!lockRow) {
+    return NextResponse.json({ ok: true, skipped: 'already-ran-today' });
+  }
 
   const intervals: Record<string, number> = {
     monthly: 30,

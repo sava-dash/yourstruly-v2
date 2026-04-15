@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createAdminClient } from '@/lib/supabase/admin';
+import { findAuthUserIdByEmail } from '@/lib/admin/users';
 
 // POST /api/interviews/claim-account
 // Body: { token, email, fullName }
@@ -40,17 +41,12 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Interview not complete' }, { status: 400 });
     }
 
-    // Find existing user by email or create via admin API
-    let userId: string | null = null;
-    try {
-      const { data: existing } = await admin.auth.admin.listUsers();
-      const found = existing?.users?.find((u: { email?: string | null }) =>
-        (u.email || '').toLowerCase() === email
-      );
-      if (found) userId = found.id;
-    } catch {
-      // fall through to create
-    }
+    // Find existing user by email or create via admin API.
+    // NOTE: We avoid `admin.auth.admin.listUsers()` without pagination — it
+    // silently caps at 1000 rows which fails duplicate-detection at scale.
+    // `findAuthUserIdByEmail` queries the profiles table first (has email
+    // column) and only paginates listUsers as a fallback.
+    let userId: string | null = await findAuthUserIdByEmail(admin, email);
 
     if (!userId) {
       const { data: created, error: createErr } = await admin.auth.admin.createUser({

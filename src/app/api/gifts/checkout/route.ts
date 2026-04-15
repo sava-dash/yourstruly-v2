@@ -69,7 +69,9 @@ export async function POST(req: NextRequest) {
         tier,
         recipient_email: recipientEmail,
         recipient_name: recipientName,
-        purchaser_user_id: purchaserUserId ?? '',
+        // Only include purchaser_user_id when truthy — Stripe metadata is
+        // string-only, and an empty string later becomes a bogus FK value.
+        ...(purchaserUserId ? { purchaser_user_id: purchaserUserId } : {}),
         purchaser_name: purchaserName,
         message,
       },

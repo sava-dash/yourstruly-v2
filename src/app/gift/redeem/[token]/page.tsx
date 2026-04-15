@@ -32,6 +32,20 @@ interface GiftRow {
   status: string;
   message: string | null;
   redeemed_at: string | null;
+  expires_at: string | null;
+}
+
+function formatExpiry(expiresAt: string | null): string | null {
+  if (!expiresAt) return null;
+  const expiryMs = new Date(expiresAt).getTime();
+  if (Number.isNaN(expiryMs)) return null;
+  const diffDays = Math.ceil((expiryMs - Date.now()) / (1000 * 60 * 60 * 24));
+  if (diffDays <= 0) return 'Expired';
+  if (diffDays <= 30) return `Expires in ${diffDays} day${diffDays === 1 ? '' : 's'}`;
+  const date = new Date(expiresAt).toLocaleDateString('en-US', {
+    month: 'long', day: 'numeric', year: 'numeric',
+  });
+  return `Expires ${date}`;
 }
 
 export default async function RedeemPage({ params }: PageProps) {
@@ -39,7 +53,7 @@ export default async function RedeemPage({ params }: PageProps) {
   const supabase = createAdminClient();
   const { data } = await supabase
     .from('gift_subscriptions')
-    .select('id, recipient_email, recipient_name, purchaser_name, tier, status, message, redeemed_at')
+    .select('id, recipient_email, recipient_name, purchaser_name, tier, status, message, redeemed_at, expires_at')
     .eq('redemption_token', token)
     .maybeSingle();
 
@@ -48,6 +62,7 @@ export default async function RedeemPage({ params }: PageProps) {
 
   const tier = getGiftTier(gift.tier);
   const alreadyRedeemed = Boolean(gift.redeemed_at);
+  const expiryLabel = formatExpiry(gift.expires_at);
 
   return (
     <main style={{ background: CREAM, minHeight: '100vh', padding: '48px 16px' }}>
@@ -69,6 +84,19 @@ export default async function RedeemPage({ params }: PageProps) {
           {gift.purchaser_name || 'A friend'} gifted you<br />a year of YoursTruly.
         </h1>
         {tier ? <p style={{ textAlign: 'center', color: MUTED, margin: 0 }}>{tier.name}</p> : null}
+        {expiryLabel && !alreadyRedeemed ? (
+          <p
+            style={{
+              textAlign: 'center',
+              color: '#666',
+              fontFamily: '"Inter Tight", Inter, system-ui, sans-serif',
+              fontSize: 13,
+              margin: '4px 0 0',
+            }}
+          >
+            {expiryLabel}
+          </p>
+        ) : null}
 
         {gift.message ? (
           <blockquote

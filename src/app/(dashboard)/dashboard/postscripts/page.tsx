@@ -96,20 +96,14 @@ function isCancelEligible(ps: PostScript): boolean {
   return (now - created < 24 * 60 * 60 * 1000) || delivery > now
 }
 
-function PostScriptCard({ postscript, onChanged }: { postscript: PostScript; onChanged?: () => void }) {
+function PostScriptCard({
+  postscript,
+  onRequestCancel,
+}: {
+  postscript: PostScript
+  onRequestCancel?: (ps: PostScript) => void
+}) {
   const isCircle = !!postscript.circle_id
-  const [cancelOpen, setCancelOpen] = React.useState(false)
-  const [cancelling, setCancelling] = React.useState(false)
-
-  const handleCancel = async (e: React.MouseEvent) => {
-    e.preventDefault()
-    e.stopPropagation()
-    setCancelling(true)
-    const res = await fetch(`/api/postscripts/${postscript.id}/cancel`, { method: 'POST' })
-    setCancelling(false)
-    setCancelOpen(false)
-    if (res.ok) onChanged?.()
-  }
   const displayName = postscript.circle?.name || postscript.recipient_name
   const initials = displayName
     .split(' ')
@@ -199,9 +193,15 @@ function PostScriptCard({ postscript, onChanged }: { postscript: PostScript; onC
                 {postscript.attachments.length}
               </span>
             )}
-            {isCancelEligible(postscript) && (
+            {isCancelEligible(postscript) && onRequestCancel && (
               <button
-                onClick={(e) => { e.preventDefault(); e.stopPropagation(); setCancelOpen(true) }}
+                onClick={(e) => {
+                  // Block Link navigation AND stop the event from bubbling
+                  // up into the <Link>'s click handler.
+                  e.preventDefault()
+                  e.stopPropagation()
+                  onRequestCancel(postscript)
+                }}
                 className="ml-1 px-2 py-1 rounded-md text-[11px] font-medium text-[#C35F33] border border-[#C35F33]/30 hover:bg-[#C35F33]/10 min-h-[28px]"
                 title="Cancel this scheduled message"
               >
@@ -211,47 +211,25 @@ function PostScriptCard({ postscript, onChanged }: { postscript: PostScript; onC
           </div>
         </div>
       </div>
-      {cancelOpen && (
-        <div
-          className="fixed inset-0 z-50 bg-black/40 flex items-center justify-center p-4"
-          onClick={(e) => { e.preventDefault(); e.stopPropagation(); setCancelOpen(false) }}
-        >
-          <div
-            className="bg-white rounded-2xl p-6 max-w-sm w-full shadow-xl"
-            onClick={(e) => { e.preventDefault(); e.stopPropagation() }}
-          >
-            <h3 className="text-lg font-semibold text-[#2d2d2d] mb-2" style={{ fontFamily: 'var(--font-playfair, "Playfair Display", serif)' }}>
-              Stop the delivery?
-            </h3>
-            <p className="text-sm text-[#666] mb-5">
-              You can always create a new postscript later.
-            </p>
-            <div className="flex gap-3">
-              <button
-                onClick={(e) => { e.preventDefault(); e.stopPropagation(); setCancelOpen(false) }}
-                className="flex-1 min-h-[44px] py-2 px-4 rounded-xl bg-[#F2F1E5] text-[#2d2d2d] font-medium hover:bg-[#E8E4D6]"
-              >
-                Keep it
-              </button>
-              <button
-                onClick={handleCancel}
-                disabled={cancelling}
-                className="flex-1 min-h-[44px] py-2 px-4 rounded-xl bg-[#C35F33] text-white font-medium hover:bg-[#A85128] disabled:opacity-50"
-              >
-                {cancelling ? 'Cancelling…' : 'Yes, stop it'}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
     </Link>
   )
 }
 
 /** Group-row for F5: collapses N postscripts that share group_id into one summary tile. */
-function GroupRow({ group, onChanged }: { group: { groupId: string; items: PostScript[] }; onChanged?: () => void }) {
+function GroupRow({
+  group,
+  onRequestCancel,
+}: {
+  group: { groupId: string; items: PostScript[] }
+  onRequestCancel?: (ps: PostScript) => void
+}) {
   const [open, setOpen] = React.useState(false)
+  const [showAll, setShowAll] = React.useState(false)
   const first = group.items[0]
+  const total = group.items.length
+  // Cap expanded lists at 5 by default to avoid a wall of cards on big groups.
+  const visible = showAll ? group.items : group.items.slice(0, 5)
+  const remaining = Math.max(0, total - visible.length)
   return (
     <div className="bg-white border border-[#406A56]/30 rounded-xl shadow-sm p-4 col-span-1 sm:col-span-2 lg:col-span-3">
       <button
@@ -264,17 +242,27 @@ function GroupRow({ group, onChanged }: { group: { groupId: string; items: PostS
           </div>
           <div className="flex-1 min-w-0">
             <p className="font-semibold text-[#2d2d2d] truncate">{first.title}</p>
-            <p className="text-xs text-[#666]">{group.items.length} recipients · group send</p>
+            <p className="text-xs text-[#666]">{total} recipients · group send</p>
           </div>
         </div>
         {open ? <ChevronDown size={18} className="text-[#666]" /> : <ChevronRight size={18} className="text-[#666]" />}
       </button>
       {open && (
-        <div className="mt-3 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-          {group.items.map(ps => (
-            <PostScriptCard key={ps.id} postscript={ps} onChanged={onChanged} />
-          ))}
-        </div>
+        <>
+          <div className="mt-3 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+            {visible.map(ps => (
+              <PostScriptCard key={ps.id} postscript={ps} onRequestCancel={onRequestCancel} />
+            ))}
+          </div>
+          {total > 5 && (
+            <button
+              onClick={() => setShowAll(s => !s)}
+              className="mt-3 text-sm font-medium text-[#406A56] hover:underline min-h-[44px] px-2"
+            >
+              {showAll ? 'Show less' : `Show ${remaining} more`}
+            </button>
+          )}
+        </>
       )}
     </div>
   )
@@ -287,6 +275,31 @@ export default function PostScriptsPage() {
   const [stats, setStats] = useState({ total: 0, scheduled: 0, sent: 0, opened: 0 })
   const [viewMode, setViewMode] = useState<'grid' | 'timeline'>('grid')
   const { canCreatePostscript, credits } = usePostscriptCredits()
+
+  // F2: cancel modal lifted out of Link wrapper. Lives at page root so the
+  // Link never sees its click events.
+  const [cancelTarget, setCancelTarget] = useState<{ id: string; title: string } | null>(null)
+  const [cancelling, setCancelling] = useState(false)
+  const [cancelError, setCancelError] = useState<string | null>(null)
+
+  const confirmCancel = async () => {
+    if (!cancelTarget) return
+    setCancelling(true)
+    setCancelError(null)
+    try {
+      const res = await fetch(`/api/postscripts/${cancelTarget.id}/cancel`, { method: 'POST' })
+      if (!res.ok) {
+        setCancelError("Couldn't cancel right now. Please try again.")
+        return
+      }
+      setCancelTarget(null)
+      fetchPostScripts()
+    } catch {
+      setCancelError("Couldn't cancel right now. Please try again.")
+    } finally {
+      setCancelling(false)
+    }
+  }
 
   async function fetchPostScripts() {
     setLoading(true)
@@ -525,16 +538,71 @@ export default function PostScriptsPage() {
             return (
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                 {Array.from(groups.entries()).map(([gid, items]) => (
-                  <GroupRow key={gid} group={{ groupId: gid, items }} onChanged={fetchPostScripts} />
+                  <GroupRow
+                    key={gid}
+                    group={{ groupId: gid, items }}
+                    onRequestCancel={(ps) => setCancelTarget({ id: ps.id, title: ps.title })}
+                  />
                 ))}
                 {singles.map(ps => (
-                  <PostScriptCard key={ps.id} postscript={ps} onChanged={fetchPostScripts} />
+                  <PostScriptCard
+                    key={ps.id}
+                    postscript={ps}
+                    onRequestCancel={(p) => setCancelTarget({ id: p.id, title: p.title })}
+                  />
                 ))}
               </div>
             )
           })()
         )}
       </div>
+
+      {/* F2: cancel confirm modal — rendered at page root, outside any Link. */}
+      {cancelTarget && (
+        <div
+          className="fixed inset-0 z-50 bg-black/40 flex items-center justify-center p-4"
+          onClick={() => !cancelling && setCancelTarget(null)}
+        >
+          <div
+            className="bg-white rounded-2xl p-6 max-w-sm w-full shadow-xl"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <h3
+              className="text-lg font-semibold text-[#2d2d2d] mb-2"
+              style={{ fontFamily: 'var(--font-playfair, "Playfair Display", serif)' }}
+            >
+              Stop the delivery?
+            </h3>
+            <p className="text-sm text-[#666] mb-5">
+              You can always create a new postscript later.
+            </p>
+            {cancelError && (
+              <div
+                role="alert"
+                className="mb-4 rounded-lg border border-[#C35F33]/30 bg-[#C35F33]/10 px-3 py-2 text-sm text-[#C35F33]"
+              >
+                {cancelError}
+              </div>
+            )}
+            <div className="flex gap-3">
+              <button
+                onClick={() => setCancelTarget(null)}
+                disabled={cancelling}
+                className="flex-1 min-h-[44px] py-2 px-4 rounded-xl bg-[#F2F1E5] text-[#2d2d2d] font-medium hover:bg-[#E8E4D6] disabled:opacity-50"
+              >
+                Keep it
+              </button>
+              <button
+                onClick={confirmCancel}
+                disabled={cancelling}
+                className="flex-1 min-h-[44px] py-2 px-4 rounded-xl bg-[#C35F33] text-white font-medium hover:bg-[#A85128] disabled:opacity-50"
+              >
+                {cancelling ? 'Cancelling…' : 'Yes, stop it'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }
