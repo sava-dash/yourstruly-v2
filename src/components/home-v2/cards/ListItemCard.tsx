@@ -3,6 +3,7 @@
 import { useState, useCallback, useRef, useEffect } from 'react'
 import { Search, Check, Loader2, Star, X, Music, Film, BookOpen, Utensils, Car, Shirt, MapPin, Quote, Dumbbell, Trophy } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
+import { searchBooks } from '@/lib/search/books'
 
 interface ListItemCardProps {
   category: string // books, movies, music, tv_shows, foods, cars, clothes, places, quotes, hobbies, sports_teams
@@ -95,33 +96,16 @@ export function ListItemCard({ category, promptText, data, onSave, saved }: List
           if (detail.imdbID) setExternalUrl(`https://www.imdb.com/title/${detail.imdbID}`)
         }
       } else if (config.searchApi === 'books') {
-        // Google Books v1 — free-text query matches BOTH title and author automatically.
-        // No auth key needed for basic use. Returns up to 20 results sorted by relevance.
-        const res = await fetch(`https://www.googleapis.com/books/v1/volumes?q=${encodeURIComponent(name)}&maxResults=20&orderBy=relevance&printType=books`)
-        const data = await res.json()
-        const items = (data.items || []).filter((r: any) => r.volumeInfo?.title)
-        setSearchResults(items.slice(0, 20).map((r: any) => {
-          const authors = r.volumeInfo?.authors || []
-          const authorStr = authors.length > 0 ? authors.slice(0, 2).join(', ') : 'Unknown author'
-          const pubDate = r.volumeInfo?.publishedDate || ''
-          const pubYear = pubDate.slice(0, 4)
-          return {
-            name: r.volumeInfo.title,
-            artist: authorStr,
-            year: pubYear,
-            imageUrl: r.volumeInfo?.imageLinks?.thumbnail?.replace('http:', 'https:'),
-            externalUrl: r.volumeInfo?.previewLink || r.volumeInfo?.infoLink,
-          }
-        }))
+        // Multi-source: canonical curated list + Google Books (plain + intitle) + Open Library.
+        // De-duped and capped at 20. Provider failures skipped silently inside helper.
+        const results = await searchBooks(name)
+        setSearchResults(results)
         // Only auto-fill the cover if the top hit's title actually matches what the user typed
         // (prevents random hit data overwriting a half-typed query)
-        const top = items[0]
-        if (top && top.volumeInfo?.title?.toLowerCase().includes(name.toLowerCase().slice(0, 4))) {
-          const thumb = top.volumeInfo?.imageLinks?.thumbnail
-          if (thumb) setImageUrl(thumb.replace('http:', 'https:'))
-          if (top.volumeInfo?.previewLink || top.volumeInfo?.infoLink) {
-            setExternalUrl(top.volumeInfo.previewLink || top.volumeInfo.infoLink)
-          }
+        const top = results[0]
+        if (top && top.name.toLowerCase().includes(name.toLowerCase().slice(0, 4))) {
+          if (top.imageUrl) setImageUrl(top.imageUrl)
+          if (top.externalUrl) setExternalUrl(top.externalUrl)
         }
       }
     } catch {}
