@@ -152,8 +152,24 @@ export default function NewPostScriptPage() {
   // F1: draft autosave + saved-pulse
   const searchParams = useSearchParams()
   const initialDraftId = searchParams.get('draftId')
+  // Bug 1: edit mode — /new?edit={id} loads an existing postscript (including
+  // scheduled ones) and turns Save into a PUT instead of a POST.
+  const editId = searchParams.get('edit')
+  // Bug 3: deep-link from /postscripts EventSuggestions →
+  // /new?contact_id=X&event_type=Y&delivery_date=YYYY-MM-DD
+  const qpContactId = searchParams.get('contact_id')
+  const qpEventType = searchParams.get('event_type')
+  const qpDeliveryDate = searchParams.get('delivery_date')
+  const [editMode, setEditMode] = useState<boolean>(!!editId)
+  const [editOriginalStatus, setEditOriginalStatus] = useState<string | null>(null)
   const [draftId, setDraftId] = useState<string | null>(initialDraftId)
   const [showSavedPulse, setShowSavedPulse] = useState(false)
+  // Bug 5: remembers the most recently picked suggestion for the "Will be
+  // delivered on …" confirmation shown under EventSuggestions.
+  const [lastPickedSuggestion, setLastPickedSuggestion] = useState<{
+    date: Date
+    label: string
+  } | null>(null)
   const draftSaverRef = useRef<DraftAutoSaver | null>(null)
   if (!draftSaverRef.current) {
     draftSaverRef.current = new DraftAutoSaver(
@@ -298,9 +314,110 @@ export default function NewPostScriptPage() {
     return () => { cancelled = true }
   }, [initialDraftId])
 
+  // Bug 1: hydrate from existing postscript when ?edit={id} is present.
+  // Also disables draft autosave for this id so we don't stomp the real record.
+  useEffect(() => {
+    if (!editId) return
+    let cancelled = false
+    ;(async () => {
+      try {
+        const res = await fetch(`/api/postscripts/${editId}`)
+        if (!res.ok) return
+        const { postscript: p } = await res.json()
+        if (cancelled || !p) return
+        setEditOriginalStatus(p.status || null)
+        // Parse attached gift back into the form shape (best-effort).
+        let giftFromRecord: SelectedGift | null = null
+        if (p.has_gift) {
+          let parsed: { name?: string; price?: number; image_url?: string; product_id?: string } = {}
+          try { parsed = JSON.parse(p.gift_details || '{}') } catch {}
+          giftFromRecord = {
+            id: parsed.product_id || p.id,
+            name: parsed.name || p.gift_type || 'Gift',
+            price: Number(p.gift_budget) || Number(parsed.price) || 0,
+            image_url: parsed.image_url || '',
+            provider: 'YoursTruly',
+            giftType: p.gift_type === 'choice' ? 'choice' : 'product',
+            flexGiftAmount: p.gift_type === 'choice' ? (Number(p.gift_budget) || Number(parsed.price) || 0) : undefined,
+          }
+        }
+        setForm(f => ({
+          ...f,
+          recipient_contact_id: p.recipient_contact_id || null,
+          circle_id: p.circle_id || null,
+          recipient_mode: p.circle_id ? 'circle' : 'single',
+          recipient_name: p.recipient_name || '',
+          recipient_email: p.recipient_email || '',
+          recipient_phone: p.recipient_phone || '',
+          title: p.title || '',
+          message: p.message || '',
+          video_url: p.video_url || '',
+          audio_url: p.audio_url || '',
+          delivery_type: p.delivery_type || 'date',
+          trigger_type: p.trigger_type || (p.delivery_type === 'event' ? 'event' : p.delivery_type === 'after_passing' ? 'legacy_executor' : 'date'),
+          executor_name: p.executor_name || '',
+          executor_email: p.executor_email || '',
+          delivery_date: p.delivery_date || '',
+          delivery_time: p.delivery_time || f.delivery_time,
+          delivery_event: p.delivery_event || '',
+          delivery_recurring: !!p.delivery_recurring,
+          requires_confirmation: !!p.requires_confirmation,
+          theme: p.theme || 'classic',
+          gift: giftFromRecord,
+        }))
+        if (p.event_type) setEventTypeTag(p.event_type)
+        // Skip to step 3 (message) because recipient + trigger are already set.
+        // If either is somehow missing, the canProceed guard will still hold.
+        if (p.recipient_name && (p.delivery_date || p.delivery_event || p.delivery_type === 'after_passing')) {
+          setStep(3)
+        } else if (p.recipient_name) {
+          setStep(2)
+        }
+      } catch (err) {
+        console.warn('[edit hydrate]', err)
+      }
+    })()
+    return () => { cancelled = true }
+  }, [editId])
+
+  // Bug 3: pre-fill from deep-link query params (from /postscripts EventSuggestions).
+  useEffect(() => {
+    if (editId) return // edit mode wins
+    if (!qpContactId && !qpEventType && !qpDeliveryDate) return
+    // Wait until contacts load so we can resolve the name + contact info.
+    if (qpContactId && contacts.length === 0) return
+    const contact = qpContactId ? contacts.find(c => c.id === qpContactId) : null
+    setForm(f => ({
+      ...f,
+      recipient_mode: 'single',
+      recipient_contact_id: contact?.id || f.recipient_contact_id,
+      recipient_name: contact?.full_name || f.recipient_name,
+      recipient_email: contact?.email || f.recipient_email,
+      recipient_phone: contact?.phone || f.recipient_phone,
+      delivery_type: qpEventType ? 'event' : f.delivery_type,
+      trigger_type: qpEventType ? 'event' : f.trigger_type,
+      delivery_event: qpEventType || f.delivery_event,
+      delivery_date: qpDeliveryDate || f.delivery_date,
+    }))
+    if (qpEventType) setEventTypeTag(qpEventType === 'birthday' ? 'contact_birthday' : 'holiday')
+    if (qpDeliveryDate) {
+      const d = new Date(qpDeliveryDate + 'T00:00:00')
+      if (!isNaN(d.getTime())) {
+        setLastPickedSuggestion({
+          date: d,
+          label: contact ? `${contact.full_name}'s ${qpEventType || 'event'}` : qpEventType || 'Event',
+        })
+      }
+    }
+    // Start on the message step so the user can jump right to writing.
+    if (contact && qpDeliveryDate) setStep(3)
+    else if (contact) setStep(2)
+  }, [editId, qpContactId, qpEventType, qpDeliveryDate, contacts])
+
   // F1: debounced autosave on form change (skip while final saving)
   useEffect(() => {
     if (saving) return
+    if (editMode) return // Bug 1: editing a real postscript — don't create shadow drafts.
     draftSaverRef.current?.schedule({
       recipient_contact_id: form.recipient_contact_id,
       circle_id: form.circle_id,
@@ -557,8 +674,9 @@ export default function NewPostScriptPage() {
       let firstId: string | null = null
       let firstHadGift = false
 
-      // If we have an existing draft, convert it (PUT) for the first recipient instead of inserting
-      const draftToConvert = !isGroup && draftId ? draftId : null
+      // If we have an existing draft OR we're editing a real postscript, PUT for
+      // the first recipient instead of inserting a new row.
+      const draftToConvert = !isGroup ? (editId || draftId || null) : null
 
       for (const r of recipients) {
         const payload: Record<string, any> = {
@@ -1066,6 +1184,11 @@ export default function NewPostScriptPage() {
             <EventSuggestions
               contacts={contacts}
               profile={ownerProfile}
+              // Bug 3: when a recipient is already chosen, narrow suggestions
+              // to that person's events so we don't surface unrelated birthdays.
+              filterContactId={form.recipient_contact_id || null}
+              selectedDate={lastPickedSuggestion?.date || null}
+              selectedLabel={lastPickedSuggestion?.label || null}
               onSelect={(s: EventSuggestion) => {
                 // Auto-fill delivery_event + delivery_date from known data.
                 const iso = `${s.date.getFullYear()}-${String(s.date.getMonth() + 1).padStart(2, '0')}-${String(s.date.getDate()).padStart(2, '0')}`
@@ -1083,6 +1206,8 @@ export default function NewPostScriptPage() {
                 })
                 setEventTypeTag(s.eventType)
                 setPastDateWarning(null)
+                // Bug 5: remember for the explicit "delivered on …" confirmation.
+                setLastPickedSuggestion({ date: s.date, label: s.label })
               }}
             />
             {/* Inline fallback date picker for events we don't know the date of */}
@@ -1612,6 +1737,22 @@ export default function NewPostScriptPage() {
                 Repeats annually
               </p>
             )}
+            {/* Bug 5: explicit delivery date confirmation (Playfair + YT Green). */}
+            {form.delivery_date && (
+              <p
+                className="mt-2 text-[#406A56]"
+                style={{
+                  fontFamily: 'var(--font-playfair, "Playfair Display", serif)',
+                  fontSize: '20px',
+                  lineHeight: 1.3,
+                }}
+              >
+                Will be delivered on{' '}
+                {new Date(form.delivery_date + 'T00:00:00').toLocaleDateString('en-US', {
+                  month: 'long', day: 'numeric', year: 'numeric',
+                })}
+              </p>
+            )}
           </div>
 
           {/* Message */}
@@ -1774,7 +1915,9 @@ export default function NewPostScriptPage() {
             <ChevronLeft size={20} />
           </Link>
           <div className="flex-1">
-            <h1 className="text-lg font-bold text-gray-900">Create PostScript</h1>
+            <h1 className="text-lg font-bold text-gray-900">
+              {editMode ? 'Edit PostScript' : 'Create PostScript'}
+            </h1>
             <p className="text-sm text-gray-500">Step {step} of 4</p>
           </div>
           {showSavedPulse && (
@@ -1783,6 +1926,21 @@ export default function NewPostScriptPage() {
             </span>
           )}
         </header>
+
+        {/* Bug 1: warn when editing an already-scheduled postscript so the user
+            knows saving will reschedule / interrupt the pending delivery. */}
+        {editMode && editOriginalStatus === 'scheduled' && (
+          <div
+            role="alert"
+            className="mb-5 rounded-xl border border-[#C35F33]/40 bg-[#C35F33]/10 px-4 py-3 text-sm text-[#7A3A1E]"
+          >
+            <p className="font-semibold mb-0.5">Heads up — this postscript is scheduled.</p>
+            <p>
+              Editing it will cancel the pending delivery and re-schedule with your changes.
+              The recipient won&apos;t receive anything until you save again.
+            </p>
+          </div>
+        )}
 
         {/* Progress */}
         <div className="flex gap-2 mb-8">
@@ -1910,7 +2068,7 @@ export default function NewPostScriptPage() {
                 <button
                   onClick={() => handleSave('scheduled')}
                   disabled={saving}
-                  className="flex-1 py-3 px-6 bg-[#B8562E] text-white rounded-xl font-medium 
+                  className="flex-1 py-3 px-6 bg-[#B8562E] text-white rounded-xl font-medium
                            hover:bg-[#A84E2A] transition-colors disabled:opacity-50
                            flex items-center justify-center gap-2"
                 >
@@ -1919,7 +2077,7 @@ export default function NewPostScriptPage() {
                   ) : (
                     <>
                       <Send size={18} />
-                      Schedule
+                      {editMode ? 'Save Changes' : 'Schedule'}
                     </>
                   )}
                 </button>

@@ -120,6 +120,10 @@ export default function PostScriptDetailPage({ params }: { params: Promise<{ id:
   const [showGiftModal, setShowGiftModal] = useState(false)
   const [showCheckoutPrompt, setShowCheckoutPrompt] = useState(searchParams.get('checkout') === 'true')
   const [giftMessage, setGiftMessage] = useState<{ type: 'success' | 'error', text: string } | null>(null)
+  // Bug 2: track any attached postscript_gift rows so we can show a prominent
+  // "Pay for your gift" CTA whenever payment_status !== 'paid'.
+  const [giftRows, setGiftRows] = useState<Array<{ id: string; payment_status: string | null; amount_paid: number | null; price: number | null; name: string | null }>>([])
+  const [payingGift, setPayingGift] = useState(false)
 
   // Handle gift payment callback from Stripe
   useEffect(() => {
@@ -160,6 +164,22 @@ export default function PostScriptDetailPage({ params }: { params: Promise<{ id:
       
       if (data.postscript) {
         setPostscript(data.postscript)
+        // Bug 2: pull the gift rows to know if payment is still pending.
+        if (data.postscript.has_gift) {
+          try {
+            const gRes = await fetch(`/api/postscripts/${id}/gifts`)
+            if (gRes.ok) {
+              const gData = await gRes.json()
+              setGiftRows(Array.isArray(gData.gifts) ? gData.gifts : [])
+            } else {
+              setGiftRows([])
+            }
+          } catch {
+            setGiftRows([])
+          }
+        } else {
+          setGiftRows([])
+        }
       }
     } catch (err) {
       console.error('Error fetching postscript:', err)
@@ -168,6 +188,70 @@ export default function PostScriptDetailPage({ params }: { params: Promise<{ id:
       setLoading(false)
     }
   }
+
+  // Bug 2: shared Pay-for-Gift flow. Builds a checkout payload from the
+  // postscript's gift_details and redirects to Stripe.
+  async function handlePayForGift() {
+    if (!postscript || payingGift) return
+    setPayingGift(true)
+    try {
+      let parsedGift: { name?: string; price?: number; image_url?: string; product_id?: string } = {}
+      try { parsedGift = JSON.parse(postscript.gift_details || '{}') } catch {}
+      const giftType = postscript.gift_type === 'choice' ? 'choice' : 'product'
+      const payload: Record<string, unknown> = { giftType }
+      if (giftType === 'choice') {
+        payload.flexGiftAmount = postscript.gift_budget || parsedGift.price || 50
+      } else {
+        payload.productId = parsedGift.product_id || postscript.id
+        payload.productName = parsedGift.name || 'Gift'
+        payload.productImage = parsedGift.image_url
+        payload.productPrice = parsedGift.price || postscript.gift_budget || 50
+      }
+      const res = await fetch(`/api/postscripts/${postscript.id}/gifts/checkout`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+      })
+      if (res.ok) {
+        const data = await res.json()
+        if (data.checkoutUrl) {
+          window.location.href = data.checkoutUrl
+          return
+        }
+      } else {
+        const errData = await res.json().catch(() => ({}))
+        setGiftMessage({
+          type: 'error',
+          text: errData.error || "We couldn't start checkout. Please try again.",
+        })
+      }
+    } catch {
+      setGiftMessage({
+        type: 'error',
+        text: "We couldn't reach the payment service. Please try again.",
+      })
+    } finally {
+      setPayingGift(false)
+    }
+  }
+
+  // Bug 2: derive a single source of truth for whether a gift is unpaid.
+  const giftUnpaid = !!postscript?.has_gift && (
+    giftRows.length === 0
+      ? true // legacy record with has_gift flag but no checkout row yet → needs payment
+      : giftRows.some(g => (g.payment_status || 'pending') !== 'paid')
+  )
+  // Best-effort amount for the CTA label.
+  const giftAmount: number | null = (() => {
+    if (!postscript) return null
+    if (postscript.gift_budget) return Number(postscript.gift_budget)
+    try {
+      const parsed = JSON.parse(postscript.gift_details || '{}') as { price?: number }
+      if (typeof parsed.price === 'number') return parsed.price
+    } catch {}
+    const row = giftRows.find(g => typeof g.price === 'number')
+    return row?.price ?? null
+  })()
 
   async function handleDelete() {
     setDeleting(true)
@@ -475,18 +559,46 @@ export default function PostScriptDetailPage({ params }: { params: Promise<{ id:
                 {(() => {
                   let gi: { name?: string; price?: number; image_url?: string } = {}
                   try { gi = JSON.parse(postscript.gift_details || '{}') } catch {}
+                  const amountLabel = typeof giftAmount === 'number' && !Number.isNaN(giftAmount)
+                    ? `$${giftAmount.toFixed(2)}`
+                    : ''
                   return (
-                    <div className="flex items-center gap-3">
-                      {gi.image_url && (
-                        <img src={gi.image_url} alt="" className="w-14 h-14 rounded-xl object-cover ring-1 ring-[#C4A235]/20" />
-                      )}
-                      <div className="flex-1 min-w-0">
-                        <p className="text-[#E8DCC4] text-sm font-medium truncate">{gi.name || postscript.gift_type || 'Gift'}</p>
-                        <p className="text-[#C4A235] font-semibold text-sm">
-                          {postscript.gift_budget ? `$${postscript.gift_budget}` : gi.price ? `$${gi.price}` : ''}
-                        </p>
+                    <>
+                      <div className="flex items-center gap-3">
+                        {gi.image_url && (
+                          <img src={gi.image_url} alt="" className="w-14 h-14 rounded-xl object-cover ring-1 ring-[#C4A235]/20" />
+                        )}
+                        <div className="flex-1 min-w-0">
+                          <p className="text-[#E8DCC4] text-sm font-medium truncate">{gi.name || postscript.gift_type || 'Gift'}</p>
+                          <p className="text-[#C4A235] font-semibold text-sm">
+                            {postscript.gift_budget ? `$${postscript.gift_budget}` : gi.price ? `$${gi.price}` : ''}
+                          </p>
+                        </div>
                       </div>
-                    </div>
+                      {/* Bug 2: Pay CTA inside the primary Gift card. */}
+                      {giftUnpaid && (
+                        <button
+                          onClick={handlePayForGift}
+                          disabled={payingGift}
+                          className="mt-4 w-full rounded-xl bg-[#C35F33] hover:bg-[#A85128] text-white font-semibold
+                                     px-4 flex items-center justify-center gap-2 transition-colors
+                                     disabled:opacity-60 disabled:cursor-not-allowed"
+                          style={{ minHeight: 52 }}
+                        >
+                          {payingGift ? (
+                            <>
+                              <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                              Starting checkout…
+                            </>
+                          ) : (
+                            <>
+                              <Gift size={18} />
+                              {amountLabel ? `Pay for your gift — ${amountLabel}` : 'Pay for your gift'}
+                            </>
+                          )}
+                        </button>
+                      )}
+                    </>
                   )
                 })()}
               </SectionCard>
@@ -532,7 +644,13 @@ export default function PostScriptDetailPage({ params }: { params: Promise<{ id:
 
             {/* Gift Info Card */}
             {postscript.has_gift ? (
-              <GiftInfoCard postscript={postscript} />
+              <GiftInfoCard
+                postscript={postscript}
+                unpaid={giftUnpaid}
+                amount={giftAmount}
+                onPay={handlePayForGift}
+                paying={payingGift}
+              />
             ) : (postscript.status === 'draft' || postscript.status === 'scheduled') ? (
               <button
                 onClick={() => setShowGiftModal(true)}
@@ -780,9 +898,22 @@ export default function PostScriptDetailPage({ params }: { params: Promise<{ id:
   )
 }
 
-function GiftInfoCard({ postscript }: { postscript: PostScript }) {
+function GiftInfoCard({
+  postscript,
+  unpaid,
+  amount,
+  onPay,
+  paying,
+}: {
+  postscript: PostScript
+  unpaid: boolean
+  amount: number | null
+  onPay: () => void
+  paying: boolean
+}) {
   let giftInfo: { name?: string; price?: number; image_url?: string } = {}
   try { giftInfo = JSON.parse(postscript.gift_details || '{}') } catch {}
+  const amountLabel = typeof amount === 'number' && !Number.isNaN(amount) ? `$${amount.toFixed(2)}` : ''
   return (
     <SectionCard title="Gift Attached" icon={Gift}>
       <div className="flex items-center gap-3">
@@ -796,7 +927,32 @@ function GiftInfoCard({ postscript }: { postscript: PostScript }) {
           </p>
         </div>
       </div>
-      <p className="text-[11px] text-[#D4C8A0]/40 mt-2">Payment required before delivery</p>
+      {/* Bug 2: prominent Pay CTA whenever the gift is still unpaid.
+          Terra Cotta, 52px min-height, label includes the amount. */}
+      {unpaid ? (
+        <button
+          onClick={onPay}
+          disabled={paying}
+          className="mt-4 w-full rounded-xl bg-[#C35F33] hover:bg-[#A85128] text-white font-semibold
+                     px-4 flex items-center justify-center gap-2 transition-colors
+                     disabled:opacity-60 disabled:cursor-not-allowed"
+          style={{ minHeight: 52 }}
+        >
+          {paying ? (
+            <>
+              <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+              Starting checkout…
+            </>
+          ) : (
+            <>
+              <Gift size={18} />
+              {amountLabel ? `Pay for your gift — ${amountLabel}` : 'Pay for your gift'}
+            </>
+          )}
+        </button>
+      ) : (
+        <p className="text-[11px] text-[#4ADE80]/80 mt-2">Payment complete</p>
+      )}
     </SectionCard>
   )
 }

@@ -7,11 +7,14 @@ import {
   LayoutGrid, Clock3, X, ChevronDown, ChevronRight
 } from 'lucide-react'
 import Link from 'next/link'
+import { useRouter } from 'next/navigation'
 import '@/styles/page-styles.css'
 import { getCategoryIcon } from '@/lib/dashboard/icons'
 import PostscriptTimeline from '@/components/postscripts/PostscriptTimeline'
 import PostscriptCreditsCounter from '@/components/postscripts/PostscriptCreditsCounter'
 import { usePostscriptCredits } from '@/hooks/usePostscriptCredits'
+import EventSuggestions, { type SuggestionContact, type SuggestionProfile, type EventSuggestion } from '@/components/postscripts/EventSuggestions'
+import { createClient } from '@/lib/supabase/client'
 
 interface PostScript {
   id: string
@@ -269,12 +272,48 @@ function GroupRow({
 }
 
 export default function PostScriptsPage() {
+  const router = useRouter()
   const [postscripts, setPostscripts] = useState<PostScript[]>([])
   const [loading, setLoading] = useState(true)
   const [filter, setFilter] = useState<string>('all')
   const [stats, setStats] = useState({ total: 0, scheduled: 0, sent: 0, opened: 0 })
   const [viewMode, setViewMode] = useState<'grid' | 'timeline'>('grid')
+  const [suggestionContacts, setSuggestionContacts] = useState<SuggestionContact[]>([])
+  const [suggestionProfile, setSuggestionProfile] = useState<SuggestionProfile | null>(null)
   const { canCreatePostscript, credits } = usePostscriptCredits()
+
+  // Bug 3: load contacts + profile so EventSuggestions can render on this page.
+  useEffect(() => {
+    const supabase = createClient()
+    ;(async () => {
+      const { data: { user } } = await supabase.auth.getUser()
+      if (!user) return
+      const [{ data: contacts }, { data: profile }] = await Promise.all([
+        supabase
+          .from('contacts')
+          .select('id, full_name, date_of_birth')
+          .eq('user_id', user.id)
+          .not('date_of_birth', 'is', null),
+        supabase
+          .from('profiles')
+          .select('date_of_birth')
+          .eq('id', user.id)
+          .maybeSingle(),
+      ])
+      if (contacts) setSuggestionContacts(contacts as SuggestionContact[])
+      if (profile) setSuggestionProfile({ date_of_birth: (profile as any).date_of_birth || null })
+    })()
+  }, [])
+
+  function handleSuggestionSelect(s: EventSuggestion) {
+    // Bug 3: deep-link into /new with a pre-filled recipient + event + date.
+    const iso = `${s.date.getFullYear()}-${String(s.date.getMonth() + 1).padStart(2, '0')}-${String(s.date.getDate()).padStart(2, '0')}`
+    const params = new URLSearchParams()
+    if (s.contactId) params.set('contact_id', s.contactId)
+    params.set('event_type', s.eventKey)
+    params.set('delivery_date', iso)
+    router.push(`/dashboard/postscripts/new?${params.toString()}`)
+  }
 
   // F2: cancel modal lifted out of Link wrapper. Lives at page root so the
   // Link never sees its click events.
@@ -399,6 +438,18 @@ export default function PostScriptsPage() {
         <p className="text-xs text-[#94A09A] mb-4">
           Words that will arrive exactly when they're needed most
         </p>
+
+        {/* Bug 3: Suggested events — discovery surface at the top of the list.
+            Clicking a suggestion deep-links into /new with the recipient + event + date pre-filled. */}
+        {(suggestionContacts.length > 0 || suggestionProfile?.date_of_birth) && (
+          <div className="mb-6">
+            <EventSuggestions
+              contacts={suggestionContacts}
+              profile={suggestionProfile}
+              onSelect={handleSuggestionSelect}
+            />
+          </div>
+        )}
 
         {/* Stats Row — compact */}
         <div className="flex items-center gap-4 mb-6 text-sm">

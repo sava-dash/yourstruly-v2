@@ -7,7 +7,7 @@
  * Sorted by proximity, capped at 10.
  */
 import React, { useMemo } from 'react'
-import { formatDistanceToNowStrict } from 'date-fns'
+import { formatDistanceToNowStrict, format as formatDate } from 'date-fns'
 
 export interface SuggestionContact {
   id: string
@@ -37,6 +37,15 @@ interface EventSuggestionsProps {
   onSelect: (s: EventSuggestion) => void
   maxDaysAhead?: number   // default 90 for birthdays/anniversaries
   limit?: number          // default 10
+  /**
+   * When set, only suggestions for that contact (contact_birthday) are shown.
+   * The user's own events (profile birthday/anniversary) and holidays are hidden
+   * so the surface stays focused on the selected recipient.
+   */
+  filterContactId?: string | null
+  /** The last-selected suggestion — renders a "Will be delivered on {date}" confirmation below the list. */
+  selectedDate?: Date | null
+  selectedLabel?: string | null
 }
 
 // ---------- Holiday definitions ----------
@@ -232,13 +241,22 @@ export default function EventSuggestions({
   onSelect,
   maxDaysAhead = 90,
   limit = 10,
+  filterContactId = null,
+  selectedDate = null,
+  selectedLabel = null,
 }: EventSuggestionsProps) {
-  const suggestions = useMemo(
-    () => buildSuggestions(contacts, profile, new Date(), maxDaysAhead, limit),
-    [contacts, profile, maxDaysAhead, limit],
-  )
+  const suggestions = useMemo(() => {
+    if (filterContactId) {
+      // Narrow to just this contact's events. Profile + holidays excluded
+      // (the user already picked a person — only that person's milestones matter).
+      const onlyThisContact = contacts.filter(c => c.id === filterContactId)
+      const all = buildSuggestions(onlyThisContact, null, new Date(), maxDaysAhead, limit)
+      return all.filter(s => s.eventType === 'contact_birthday' && s.contactId === filterContactId)
+    }
+    return buildSuggestions(contacts, profile, new Date(), maxDaysAhead, limit)
+  }, [contacts, profile, maxDaysAhead, limit, filterContactId])
 
-  if (suggestions.length === 0) return null
+  if (suggestions.length === 0 && !selectedDate) return null
 
   const hasContactBirthdays = suggestions.some(s => s.eventType === 'contact_birthday')
 
@@ -276,6 +294,30 @@ export default function EventSuggestions({
         <p className="mt-3 text-xs text-[#5A6660]">
           Add birthdays to your contacts to see personalized suggestions.
         </p>
+      )}
+
+      {/* Explicit delivery-date confirmation after an event is picked.
+          Larger Playfair + YT Green per UX brief so 50+ users can verify at a glance. */}
+      {selectedDate && (
+        <div
+          className="mt-4 rounded-xl border border-[#406A56]/30 bg-white px-4 py-3"
+          role="status"
+          aria-live="polite"
+        >
+          <p className="text-xs uppercase tracking-wider text-[#5A6660] mb-1">
+            {selectedLabel ? `${selectedLabel} —` : ''} Your message will be delivered on
+          </p>
+          <p
+            className="text-[#406A56]"
+            style={{
+              fontFamily: 'var(--font-playfair, "Playfair Display", serif)',
+              fontSize: '20px',
+              lineHeight: 1.3,
+            }}
+          >
+            {formatDate(selectedDate, 'MMMM d, yyyy')}
+          </p>
+        </div>
       )}
     </section>
   )
