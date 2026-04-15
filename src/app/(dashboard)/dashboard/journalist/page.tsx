@@ -9,6 +9,7 @@ import {
   Copy, Mail, MessageSquare
 } from 'lucide-react'
 import Link from 'next/link'
+import { formatDistanceToNow } from 'date-fns'
 import '@/styles/page-styles.css'
 import { SMSConsentInline } from '@/components/ui/SMSConsentCheckbox'
 
@@ -43,6 +44,9 @@ interface Session {
   status: string
   access_token: string
   created_at: string
+  opened_at?: string | null
+  started_at?: string | null
+  last_response_at?: string | null
   interview_group_id?: string
   group_question?: string
   contact: {
@@ -422,6 +426,58 @@ export default function JournalistPage() {
     }
   }
 
+  // Derived analytics state for sender dashboard
+  type DerivedKind = 'not_opened' | 'opened_no_response' | 'in_progress' | 'stalled' | 'completed'
+  const getDerivedState = (s: Session): { kind: DerivedKind; label: string; className: string } => {
+    const now = Date.now()
+    const sevenDaysMs = 7 * 24 * 60 * 60 * 1000
+    if (s.status === 'completed') {
+      const ago = s.last_response_at ? formatDistanceToNow(new Date(s.last_response_at), { addSuffix: true }) : 'recently'
+      return {
+        kind: 'completed',
+        label: `Completed ${ago}`,
+        className: 'bg-[#2D5A3D]/10 text-[#2D5A3D]',
+      }
+    }
+    if (s.last_response_at) {
+      const stalled = now - new Date(s.last_response_at).getTime() > sevenDaysMs
+      const ago = formatDistanceToNow(new Date(s.last_response_at), { addSuffix: true })
+      if (stalled) {
+        return {
+          kind: 'stalled',
+          label: 'Stalled — could use a nudge',
+          className: 'bg-[#C35F33]/10 text-[#C35F33]',
+        }
+      }
+      return {
+        kind: 'in_progress',
+        label: `In progress · last answer ${ago}`,
+        className: 'bg-[#2D5A3D]/10 text-[#2D5A3D]',
+      }
+    }
+    if (s.opened_at) {
+      const ago = formatDistanceToNow(new Date(s.opened_at), { addSuffix: true })
+      return {
+        kind: 'opened_no_response',
+        label: `Opened ${ago}, no answer yet`,
+        className: 'bg-[#C4A235]/10 text-[#9a8c12]',
+      }
+    }
+    return {
+      kind: 'not_opened',
+      label: 'Sent — not opened yet',
+      className: 'bg-gray-100 text-gray-600',
+    }
+  }
+
+  // Nudge modal state
+  const [nudgeSession, setNudgeSession] = useState<Session | null>(null)
+  const buildNudgeText = (s: Session): string => {
+    const url = `${typeof window !== 'undefined' ? window.location.origin : ''}/interview/${s.access_token}`
+    const name = s.contact?.full_name?.split(' ')[0] || 'there'
+    return `Hi ${name}, just bumping our conversation up — no rush, but I'd love to hear from you when you have a moment. Here's the link again: ${url}`
+  }
+
   const proceedToQuestion = () => {
     const recipients = getSelectedRecipients()
     if (recipients.length > 0) {
@@ -612,10 +668,23 @@ export default function JournalistPage() {
                       <div>
                         <h3 className="text-[#2d2d2d] font-semibold">{session.title}</h3>
                         <p className="text-[#888] text-sm">with {session.contact?.full_name}</p>
-                        <div className="flex items-center gap-3 mt-2">
-                          <span className={`text-xs px-2.5 py-1 rounded-full font-medium capitalize ${getStatusStyle(session.status)}`}>
-                            {session.status}
-                          </span>
+                        <div className="flex items-center gap-3 mt-2 flex-wrap">
+                          {(() => {
+                            const derived = getDerivedState(session)
+                            return (
+                              <span className={`text-xs px-2.5 py-1 rounded-full font-medium ${derived.className}`}>
+                                {derived.label}
+                              </span>
+                            )
+                          })()}
+                          {getDerivedState(session).kind === 'stalled' && (
+                            <button
+                              onClick={() => setNudgeSession(session)}
+                              className="text-xs px-2.5 py-1 rounded-full font-medium bg-[#C35F33] text-white hover:bg-[#a64f29] transition-colors"
+                            >
+                              Send a friendly nudge
+                            </button>
+                          )}
                           {session.video_responses?.length > 0 && (
                             <span className="text-[#2D5A3D] text-xs flex items-center gap-1">
                               <CheckCircle size={12} />
@@ -1023,6 +1092,63 @@ export default function JournalistPage() {
                   </div>
                 </div>
               )}
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Nudge modal — copy/paste text for the sender */}
+      <AnimatePresence>
+        {nudgeSession && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-50 p-4"
+            onClick={() => setNudgeSession(null)}
+          >
+            <motion.div
+              initial={{ scale: 0.96, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.96, opacity: 0 }}
+              onClick={(e) => e.stopPropagation()}
+              className="bg-white rounded-2xl max-w-md w-full p-6 shadow-xl"
+            >
+              <div className="flex items-start justify-between mb-3">
+                <h3 className="text-lg font-semibold text-[#2d2d2d]">Send a friendly nudge</h3>
+                <button onClick={() => setNudgeSession(null)} aria-label="Close" className="text-[#666] hover:text-[#2d2d2d]">
+                  <X size={18} />
+                </button>
+              </div>
+              <p className="text-sm text-[#666] mb-3">
+                Copy this and send it to {nudgeSession.contact?.full_name?.split(' ')[0] || 'them'} however you usually chat (text, email, etc).
+              </p>
+              <textarea
+                readOnly
+                value={buildNudgeText(nudgeSession)}
+                rows={5}
+                className="w-full p-3 border border-[#DDE3DF] rounded-lg text-sm text-[#2d2d2d] mb-3 font-mono"
+                onFocus={(e) => e.target.select()}
+              />
+              <div className="flex gap-2">
+                <button
+                  onClick={() => {
+                    navigator.clipboard.writeText(buildNudgeText(nudgeSession))
+                    setCopied(nudgeSession.id)
+                    setTimeout(() => setCopied(null), 1500)
+                  }}
+                  className="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 bg-[#2D5A3D] hover:bg-[#244B32] text-white rounded-lg font-medium transition-colors"
+                >
+                  <Copy size={16} />
+                  {copied === nudgeSession.id ? 'Copied!' : 'Copy text'}
+                </button>
+                <button
+                  onClick={() => setNudgeSession(null)}
+                  className="px-4 py-2.5 bg-[#F5F3EE] text-[#666] rounded-lg font-medium hover:bg-[#E8E7DC] transition-colors"
+                >
+                  Done
+                </button>
+              </div>
             </motion.div>
           </motion.div>
         )}

@@ -26,6 +26,11 @@ interface InterviewConversationProps {
   contactName: string;
   onComplete: () => void;
   onClose: () => void;
+  initialProgress?: {
+    exchanges?: Exchange[];
+    currentQuestion?: string;
+    mode?: InputMode;
+  } | null;
 }
 
 type ViewState = 'recording' | 'transcribing' | 'confirming' | 'generating' | 'review' | 'saving' | 'complete';
@@ -39,18 +44,33 @@ export function InterviewConversation({
   contactName,
   onComplete,
   onClose,
+  initialProgress,
 }: InterviewConversationProps) {
-  const [viewState, setViewState] = useState<ViewState>('recording');
-  const [inputMode, setInputMode] = useState<InputMode>('voice');
+  const hasResumed = !!(initialProgress?.exchanges && initialProgress.exchanges.length > 0);
+
+  const [viewState, setViewState] = useState<ViewState>(
+    hasResumed ? 'review' : 'recording'
+  );
+  const [inputMode, setInputMode] = useState<InputMode>(
+    initialProgress?.mode === 'text' ? 'text' : 'voice'
+  );
   const [isTranscribing, setIsTranscribing] = useState(false);
   const [isGeneratingFollowup, setIsGeneratingFollowup] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  
+
   // Current question (starts with the initial, then AI follow-ups)
-  const [currentQuestion, setCurrentQuestion] = useState(question.question_text);
-  
+  const [currentQuestion, setCurrentQuestion] = useState(
+    initialProgress?.currentQuestion || question.question_text
+  );
+
   // All exchanges in this conversation
-  const [exchanges, setExchanges] = useState<Exchange[]>([]);
+  const [exchanges, setExchanges] = useState<Exchange[]>(
+    initialProgress?.exchanges || []
+  );
+
+  // Auto-save indicator
+  const [showSaved, setShowSaved] = useState(false);
+  const [showResumeBanner, setShowResumeBanner] = useState(hasResumed);
   
   // Recording data
   const [recordedBlob, setRecordedBlob] = useState<Blob | null>(null);
@@ -77,6 +97,71 @@ export function InterviewConversation({
       textareaRef.current.focus();
     }
   }, [inputMode, viewState]);
+
+  // Auto-dismiss the resume banner after a moment
+  useEffect(() => {
+    if (showResumeBanner) {
+      const t = setTimeout(() => setShowResumeBanner(false), 6000);
+      return () => clearTimeout(t);
+    }
+  }, [showResumeBanner]);
+
+  // Auto-save: persist progress whenever exchanges/currentQuestion change.
+  // Also runs every 10s while user is composing, and debounced for keystrokes.
+  const lastSavedRef = useRef<string>('');
+  const saveProgress = useCallback(async (extra?: { textInProgress?: string }) => {
+    const payload = {
+      exchanges,
+      currentQuestion,
+      mode: inputMode,
+      textInProgress: extra?.textInProgress ?? '',
+      updatedAt: Date.now(),
+    };
+    const serialized = JSON.stringify(payload);
+    // Skip if nothing changed since last save
+    if (serialized === lastSavedRef.current) return;
+    lastSavedRef.current = serialized;
+
+    try {
+      const res = await fetch('/api/interviews/save-progress', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ token: accessToken, progress: payload }),
+      });
+      if (res.ok) {
+        setShowSaved(true);
+        window.setTimeout(() => setShowSaved(false), 1500);
+      }
+    } catch (err) {
+      // Auto-save is best-effort — don't disrupt the user.
+      console.warn('Auto-save failed:', err);
+    }
+  }, [exchanges, currentQuestion, inputMode, accessToken]);
+
+  // Save after every exchange completion
+  useEffect(() => {
+    if (exchanges.length > 0) {
+      saveProgress();
+    }
+  }, [exchanges.length]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Periodic save every 10s while typing/recording (not in terminal states)
+  useEffect(() => {
+    if (viewState === 'complete' || viewState === 'saving') return;
+    const interval = setInterval(() => {
+      saveProgress({ textInProgress: textInput });
+    }, 10000);
+    return () => clearInterval(interval);
+  }, [viewState, saveProgress, textInput]);
+
+  // Debounced save for keystrokes
+  useEffect(() => {
+    if (!textInput) return;
+    const t = setTimeout(() => {
+      saveProgress({ textInProgress: textInput });
+    }, 2000);
+    return () => clearTimeout(t);
+  }, [textInput, saveProgress]);
 
   // Keyboard shortcuts
   useEffect(() => {
@@ -338,14 +423,71 @@ export function InterviewConversation({
         <div className="interview-conversation-progress">
           {exchanges.length} response{exchanges.length !== 1 ? 's' : ''} captured
         </div>
-        <button
-          onClick={exchanges.length > 0 ? () => setViewState('review') : onClose}
-          className="interview-conversation-close"
-          aria-label="Close"
-        >
-          <X size={20} />
-        </button>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+          <AnimatePresence>
+            {showSaved && (
+              <motion.span
+                key="saved"
+                initial={{ opacity: 0, y: -4 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0 }}
+                transition={{ duration: 0.25 }}
+                style={{
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: 4,
+                  fontSize: 13,
+                  color: '#406A56',
+                  fontWeight: 500,
+                }}
+                aria-live="polite"
+              >
+                <Check size={14} /> Saved
+              </motion.span>
+            )}
+          </AnimatePresence>
+          <button
+            onClick={exchanges.length > 0 ? () => setViewState('review') : onClose}
+            className="interview-conversation-close"
+            aria-label="Close"
+          >
+            <X size={20} />
+          </button>
+        </div>
       </div>
+
+      {/* Resume banner */}
+      <AnimatePresence>
+        {showResumeBanner && (
+          <motion.div
+            initial={{ opacity: 0, y: -8 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -8 }}
+            style={{
+              background: '#D3E1DF',
+              color: '#2d2d2d',
+              padding: '12px 16px',
+              borderRadius: 10,
+              margin: '0 0 12px 0',
+              fontSize: 15,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              gap: 12,
+            }}
+            role="status"
+          >
+            <span>Welcome back — picking up where you left off.</span>
+            <button
+              onClick={() => setShowResumeBanner(false)}
+              aria-label="Dismiss"
+              style={{ background: 'transparent', border: 'none', cursor: 'pointer', color: '#406A56' }}
+            >
+              <X size={16} />
+            </button>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* Question Display */}
       <div className="interview-conversation-question">
