@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect, useCallback, useMemo, useRef } from 'react'
-import { useRouter } from 'next/navigation'
+import { useRouter, useSearchParams } from 'next/navigation'
 import { motion, AnimatePresence, Reorder } from 'framer-motion'
 import { createClient } from '@/lib/supabase/client'
 import GlassCard from '@/components/ui/GlassCard'
@@ -3921,7 +3921,16 @@ export default function CreatePhotobookPage() {
   // photobook_projects.{product_options, add_ons}.
   const [productOptions, setProductOptions] = useState<ProductOptions>(DEFAULT_PRODUCT_OPTIONS)
   const [addOns, setAddOns] = useState<AddOnId[]>([])
-  
+
+  // Draft hydration: when the user arrives with ?projectId= from the drafts
+  // landing page we load the existing project so the editor skips the product
+  // picker. ?fresh=1 bypasses this and starts a new book.
+  const searchParams = useSearchParams()
+  const draftProjectId = searchParams?.get('projectId') ?? null
+  const isFresh = searchParams?.get('fresh') === '1'
+  const [draftLoading, setDraftLoading] = useState<boolean>(!!draftProjectId && !isFresh)
+  const draftHydratedRef = useRef(false)
+
   // Load user, memories, and products
   useEffect(() => {
     const loadData = async () => {
@@ -4045,6 +4054,141 @@ export default function CreatePhotobookPage() {
 
     loadData()
   }, [])
+
+  // Hydrate an existing draft when ?projectId= is present. Runs once products
+  // have loaded (needed to match selectedProduct) and user is known. Skipped
+  // when ?fresh=1 or no id in the URL.
+  useEffect(() => {
+    if (!draftProjectId || isFresh) return
+    if (draftHydratedRef.current) return
+    if (productsLoading) return
+    if (!userId) return
+
+    draftHydratedRef.current = true
+
+    const hydrate = async () => {
+      try {
+        const { data: project, error: projectErr } = await supabase
+          .from('photobook_projects')
+          .select('*')
+          .eq('id', draftProjectId)
+          .eq('user_id', userId)
+          .single()
+
+        if (projectErr || !project) {
+          router.replace('/dashboard/photobook?error=draft-not-found')
+          return
+        }
+
+        // Match product: prefer product_sku (Prodigi SKU) when present,
+        // otherwise fall back to print_config.size + binding. Falls back to
+        // the first product if nothing matches so we never strand the user.
+        const printConfig = (project.print_config ?? {}) as {
+          size?: string
+          binding?: string
+        }
+        const projectSku = (project as { product_sku?: string | null }).product_sku ?? null
+        const matched =
+          (projectSku
+            ? products.find((p) => p.prodigiSku === projectSku)
+            : undefined) ??
+          products.find(
+            (p) =>
+              (!printConfig.size || p.size === printConfig.size) &&
+              (!printConfig.binding || p.binding === printConfig.binding)
+          ) ??
+          products[0] ??
+          null
+
+        if (matched) setSelectedProduct(matched)
+
+        // Cover design (JSONB) — only apply when persisted.
+        if (project.cover_design) {
+          setCoverDesign({ ...DEFAULT_COVER_DESIGN, ...(project.cover_design as Partial<CoverDesignState>) })
+        }
+
+        // Product options + add-ons.
+        if (project.product_options && typeof project.product_options === 'object') {
+          setProductOptions({ ...DEFAULT_PRODUCT_OPTIONS, ...(project.product_options as Partial<ProductOptions>) })
+        }
+        if (Array.isArray(project.add_ons)) {
+          setAddOns(project.add_ons as AddOnId[])
+        }
+
+        // Load pages for this project.
+        const { data: pageRows } = await supabase
+          .from('photobook_pages')
+          .select('id, page_number, page_type, layout_type, content_json')
+          .eq('project_id', draftProjectId)
+          .order('page_number', { ascending: true })
+
+        const loadedPages: PageData[] = (pageRows ?? []).map((row: {
+          id: string
+          page_number: number
+          page_type: string
+          layout_type: string
+          content_json: {
+            photos?: Array<{
+              memory_id?: string
+              media_id?: string
+              file_url?: string
+              slot_id?: string
+              border?: PhotoBorder | null
+              filter?: PhotoFilter | null
+            }>
+            qr_code?: { memory_id?: string; wisdom_id?: string }
+            background?: PageBackground | null
+            overlays?: PageOverlay[]
+          }
+        }) => {
+          const content = row.content_json ?? {}
+          const slots: SlotData[] = []
+          ;(content.photos ?? []).forEach((ph, i) => {
+            slots.push({
+              slotId: ph.slot_id ?? `photo-${i + 1}`,
+              type: 'photo',
+              memoryId: ph.memory_id,
+              mediaId: ph.media_id,
+              fileUrl: ph.file_url,
+              border: ph.border ?? undefined,
+              filter: ph.filter ?? undefined,
+            })
+          })
+          if (content.qr_code?.memory_id || content.qr_code?.wisdom_id) {
+            slots.push({
+              slotId: 'qr-code',
+              type: 'qr',
+              qrMemoryId: content.qr_code.memory_id,
+              qrWisdomId: content.qr_code.wisdom_id,
+            })
+          }
+          return {
+            id: row.id,
+            pageNumber: row.page_number,
+            layoutId: row.layout_type || 'single',
+            slots,
+            backgroundV2: content.background ?? null,
+            overlays: content.overlays ?? [],
+          }
+        })
+
+        setProjectId(draftProjectId)
+        setPages(loadedPages)
+        // Skip the product picker — land on the design step (1). If pages
+        // exist the user edits them; if not, they still get the editor and
+        // can add pages without re-picking the product.
+        setCurrentStep(1)
+      } catch (err) {
+        console.error('Failed to hydrate photobook draft:', err)
+        router.replace('/dashboard/photobook?error=draft-not-found')
+        return
+      } finally {
+        setDraftLoading(false)
+      }
+    }
+
+    hydrate()
+  }, [draftProjectId, isFresh, productsLoading, userId, products, router, supabase])
 
   // Initialize history when pages are first set
   useEffect(() => {
@@ -4476,6 +4620,17 @@ export default function CreatePhotobookPage() {
     }
   }
   
+  if (draftLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-[#FAFAF7]">
+        <div className="text-center">
+          <Loader2 className="w-8 h-8 mx-auto animate-spin text-[#406A56]" />
+          <p className="text-[#5A6660] mt-4">Loading your draft…</p>
+        </div>
+      </div>
+    )
+  }
+
   return (
     <div className="min-h-screen pb-24 pt-14">
       {/* Header */}
