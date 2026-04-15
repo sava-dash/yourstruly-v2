@@ -4752,6 +4752,10 @@ export default function CreatePhotobookPage() {
               breakdown={pricingBreakdown}
               productName={selectedProduct.name}
               productSize={selectedProduct.size}
+              // Preview step renders an extra toolbar row above the content,
+              // so the rail needs a taller top offset to clear it. Checkout
+              // has no toolbar row, so it can sit higher.
+              topOffsetClassName={currentStep === 2 ? 'xl:top-[300px]' : 'xl:top-[220px]'}
             />
           </div>
         )}

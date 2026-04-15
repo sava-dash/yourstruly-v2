@@ -17,15 +17,29 @@ interface Props {
   breakdown: PricingBreakdown
   productName: string
   productSize: string
+  /**
+   * Tailwind class that sets the rail's fixed top offset on xl+ screens.
+   * Needs to clear the page's sticky header (top-14 + title + options bar +
+   * step progress, plus an optional toolbar row on the Preview step). The
+   * previous default of `xl:top-44` (176px) caused the header to cover the
+   * rail on Preview/Checkout — user-reported bug. 260px is a safe default
+   * that clears the entire header stack in both step layouts.
+   */
+  topOffsetClassName?: string
 }
 
-export default function PricingRail({ breakdown, productName, productSize }: Props) {
+export default function PricingRail({
+  breakdown,
+  productName,
+  productSize,
+  topOffsetClassName = 'xl:top-[260px]',
+}: Props) {
   const [showIncluded, setShowIncluded] = useState(false)
 
   return (
     <aside
       aria-label="Price summary"
-      className="w-full xl:w-80 bg-white border-2 border-[#DDE3DF] rounded-2xl shadow-sm p-5 xl:fixed xl:right-6 xl:top-44 xl:max-h-[calc(100vh-12rem)] xl:overflow-y-auto"
+      className={`w-full xl:w-80 bg-white border-2 border-[#DDE3DF] rounded-2xl shadow-sm p-5 xl:fixed xl:right-6 ${topOffsetClassName} xl:max-h-[calc(100vh-18rem)] xl:overflow-y-auto`}
     >
       <div className="flex items-center gap-2 mb-3 pb-3 border-b border-[#DDE3DF]">
         <Receipt className="w-5 h-5 text-[#406A56]" />
