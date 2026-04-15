@@ -62,6 +62,8 @@ interface Session {
     id: string
     duration: number
     ai_summary: string
+    transcript?: string
+    session_question_id?: string
   }[]
 }
 
@@ -113,6 +115,27 @@ export default function JournalistPage() {
   const [searchQuery, setSearchQuery] = useState('')
   const [statusFilter, setStatusFilter] = useState<'all' | 'active' | 'completed' | 'draft'>('all')
 
+  // Optional sender-controlled email verification for the recipient
+  const [requireVerification, setRequireVerification] = useState(false)
+  const [verificationEmail, setVerificationEmail] = useState('')
+
+  // Group view toggle: per-card pivoted view, persisted in localStorage
+  const [groupViewIds, setGroupViewIds] = useState<Set<string>>(new Set())
+  useEffect(() => {
+    try {
+      const stored = JSON.parse(localStorage.getItem('journalist:groupViewIds') || '[]')
+      if (Array.isArray(stored)) setGroupViewIds(new Set(stored))
+    } catch { /* ignore */ }
+  }, [])
+  const toggleGroupView = (groupId: string) => {
+    setGroupViewIds(prev => {
+      const next = new Set(prev)
+      if (next.has(groupId)) next.delete(groupId); else next.add(groupId)
+      try { localStorage.setItem('journalist:groupViewIds', JSON.stringify(Array.from(next))) } catch { /* ignore */ }
+      return next
+    })
+  }
+
   const supabase = createClient()
 
   useEffect(() => {
@@ -134,7 +157,7 @@ export default function JournalistPage() {
         .select(`
           *, contact:contacts!contact_id(id, full_name, phone, email),
           session_questions(id, question_text, status),
-          video_responses(id, duration, ai_summary)
+          video_responses(id, duration, ai_summary, transcript, session_question_id)
         `)
         .eq('user_id', user.id)
         .order('created_at', { ascending: false }),
@@ -313,6 +336,10 @@ export default function JournalistPage() {
             status: 'pending',
             interview_group_id: groupId,
             group_question: groupId ? questionText : null,
+            verification_required: requireVerification,
+            verification_email: requireVerification && verificationEmail.trim()
+              ? verificationEmail.trim().toLowerCase()
+              : (requireVerification ? (recipient.email || null) : null),
           })
           .select()
           .single()
@@ -366,6 +393,8 @@ export default function JournalistPage() {
     setSelectedQuestion(null)
     setSelectedCategory(null)
     setCustomQuestion('')
+    setRequireVerification(false)
+    setVerificationEmail('')
   }
 
   const copyLink = (token: string, sessionId: string) => {
@@ -622,33 +651,125 @@ export default function JournalistPage() {
                         </div>
                       </div>
                     </div>
-                    <Link
-                      href={`/dashboard/journalist/group/${group.group_id}`}
-                      className="flex items-center gap-2 px-3 py-1.5 bg-[#2D5A3D] hover:bg-[#244B32] text-white text-sm rounded-lg transition-colors"
-                    >
-                      <Play size={14} />
-                      Story Time
-                    </Link>
-                  </div>
-                  
-                  <div className="pt-3 border-t border-gray-100">
-                    <p className="text-sm text-[#666] italic mb-3">"{group.question}"</p>
-                    <div className="flex flex-wrap gap-2">
-                      {group.sessions.map(session => (
-                        <div 
-                          key={session.id}
-                          className={`flex items-center gap-2 px-3 py-1.5 rounded-full text-xs ${
-                            session.status === 'completed' 
-                              ? 'bg-[#2D5A3D]/10 text-[#2D5A3D]' 
-                              : 'bg-gray-100 text-gray-600'
-                          }`}
-                        >
-                          {session.status === 'completed' && <Check size={12} />}
-                          {session.contact?.full_name}
-                        </div>
-                      ))}
+                    <div className="flex items-center gap-2">
+                      <button
+                        onClick={() => toggleGroupView(group.group_id)}
+                        className={`flex items-center gap-1.5 px-3 py-1.5 text-sm rounded-lg transition-colors ${
+                          groupViewIds.has(group.group_id)
+                            ? 'bg-[#C35F33] hover:bg-[#a64f29] text-white'
+                            : 'bg-[#D3E1DF] hover:bg-[#bfd3cf] text-[#406A56]'
+                        }`}
+                        title="Toggle side-by-side group view"
+                      >
+                        <Users size={14} />
+                        {groupViewIds.has(group.group_id) ? 'Per-recipient' : 'Group view'}
+                      </button>
+                      <Link
+                        href={`/dashboard/journalist/group/${group.group_id}`}
+                        className="flex items-center gap-2 px-3 py-1.5 bg-[#2D5A3D] hover:bg-[#244B32] text-white text-sm rounded-lg transition-colors"
+                      >
+                        <Play size={14} />
+                        Story Time
+                      </Link>
                     </div>
                   </div>
+
+                  {groupViewIds.has(group.group_id) ? (
+                    /* Pivoted Group View: question -> recipient quotes */
+                    <div className="pt-3 border-t border-gray-100 space-y-4">
+                      {(() => {
+                        // Collect all unique questions across this group's sessions
+                        const allQuestions: { id: string; text: string }[] = []
+                        const seen = new Set<string>()
+                        for (const s of group.sessions) {
+                          for (const sq of (s.session_questions || [])) {
+                            if (!seen.has(sq.question_text)) {
+                              seen.add(sq.question_text)
+                              allQuestions.push({ id: sq.id, text: sq.question_text })
+                            }
+                          }
+                        }
+                        if (allQuestions.length === 0) {
+                          allQuestions.push({ id: 'group-q', text: group.question })
+                        }
+                        return allQuestions.map((q) => (
+                          <div key={q.id}>
+                            <h4
+                              className="text-sm font-semibold text-[#406A56] mb-2"
+                              style={{ fontFamily: 'Playfair Display, serif' }}
+                            >
+                              {q.text}
+                            </h4>
+                            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2">
+                              {group.sessions.map(s => {
+                                // Find the matching session_question id within this session
+                                const localSq = (s.session_questions || []).find(
+                                  sq => sq.question_text === q.text
+                                )
+                                const response = localSq
+                                  ? (s.video_responses || []).find(
+                                      vr => vr.session_question_id === localSq.id
+                                    )
+                                  : undefined
+                                const text = (response?.transcript || response?.ai_summary || '').trim()
+                                return (
+                                  <div
+                                    key={s.id}
+                                    className="rounded-lg p-3 border"
+                                    style={{
+                                      background: text ? '#F2F1E5' : '#D3E1DF',
+                                      borderColor: '#E8E7DC',
+                                    }}
+                                  >
+                                    <div className="text-xs font-medium text-[#406A56] mb-1">
+                                      {s.contact?.full_name || 'Recipient'}
+                                    </div>
+                                    {text ? (
+                                      <>
+                                        <p
+                                          className="text-sm text-[#2d2d2d] italic line-clamp-3"
+                                          style={{ fontFamily: 'Caveat, cursive', fontSize: 16 }}
+                                        >
+                                          “{text}”
+                                        </p>
+                                        <Link
+                                          href={`/dashboard/journalist/${s.id}`}
+                                          className="inline-block mt-1 text-xs text-[#C35F33] hover:underline"
+                                        >
+                                          View full
+                                        </Link>
+                                      </>
+                                    ) : (
+                                      <p className="text-xs text-[#666] italic">No answer yet</p>
+                                    )}
+                                  </div>
+                                )
+                              })}
+                            </div>
+                          </div>
+                        ))
+                      })()}
+                    </div>
+                  ) : (
+                    <div className="pt-3 border-t border-gray-100">
+                      <p className="text-sm text-[#666] italic mb-3">"{group.question}"</p>
+                      <div className="flex flex-wrap gap-2">
+                        {group.sessions.map(session => (
+                          <div
+                            key={session.id}
+                            className={`flex items-center gap-2 px-3 py-1.5 rounded-full text-xs ${
+                              session.status === 'completed'
+                                ? 'bg-[#2D5A3D]/10 text-[#2D5A3D]'
+                                : 'bg-gray-100 text-gray-600'
+                            }`}
+                          >
+                            {session.status === 'completed' && <Check size={12} />}
+                            {session.contact?.full_name}
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
                 </motion.div>
               ))}
 
@@ -1064,6 +1185,40 @@ export default function JournalistPage() {
 
                   {/* SMS Consent + Create Button */}
                   <div className="p-4 border-t border-[#E8E7DC] space-y-4">
+                    {/* Optional recipient email verification */}
+                    <div className="bg-white/70 border border-[#E8E7DC] rounded-xl p-3">
+                      <label className="flex items-start gap-2 cursor-pointer">
+                        <input
+                          type="checkbox"
+                          checked={requireVerification}
+                          onChange={(e) => setRequireVerification(e.target.checked)}
+                          className="mt-1 accent-[#406A56]"
+                        />
+                        <div className="flex-1">
+                          <div className="text-sm font-medium text-[#2d2d2d]">
+                            Require recipient to verify their email before answering
+                          </div>
+                          <div className="text-xs text-[#666] mt-0.5">
+                            Adds a quick check — useful for sensitive topics.
+                          </div>
+                        </div>
+                      </label>
+                      {requireVerification && getSelectedRecipients().length === 1 && (
+                        <input
+                          type="email"
+                          value={verificationEmail}
+                          onChange={(e) => setVerificationEmail(e.target.value)}
+                          placeholder={getSelectedRecipients()[0]?.email || "recipient@example.com"}
+                          className="mt-2 w-full px-3 py-2 bg-white border border-[#E8E7DC] rounded-lg text-sm text-[#2d2d2d] placeholder-[#aaa] focus:outline-none focus:ring-2 focus:ring-[#406A56]"
+                        />
+                      )}
+                      {requireVerification && getSelectedRecipients().length > 1 && (
+                        <p className="text-xs text-[#666] mt-2">
+                          We'll use each recipient's email on file.
+                        </p>
+                      )}
+                    </div>
+
                     {/* SMS Consent - show if any recipient has a phone number */}
                     {getSelectedRecipients().some(r => r.phone) && (
                       <SMSConsentInline

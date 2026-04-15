@@ -1,15 +1,21 @@
 'use client';
 
-import { useState, useCallback, useEffect, useRef } from 'react';
+import { useState, useCallback, useEffect, useMemo, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, Sparkles, Keyboard, Check, Loader2, Video, ImagePlus, Upload, Trash2 } from 'lucide-react';
 import { MediaRecorder } from '../conversation/MediaRecorder';
 import { TranscriptionPreview } from '../conversation/TranscriptionPreview';
+import { evaluateBranches, parseBranchRules, type BranchRule } from '@/lib/interviews/branching';
 
 interface InterviewQuestion {
   id: string;
   question_text: string;
   status: string;
+  // Optional sender-defined branching rules. When the recipient's answer
+  // matches one of these, we use `then_ask` as the next exchange instead
+  // of an AI-generated follow-up. Loaded by the host page (PR B) via the
+  // /api/interviews/load endpoint.
+  branch_rules?: BranchRule[] | unknown;
 }
 
 interface Exchange {
@@ -71,6 +77,14 @@ export function InterviewConversation({
   // Auto-save indicator
   const [showSaved, setShowSaved] = useState(false);
   const [showResumeBanner, setShowResumeBanner] = useState(hasResumed);
+
+  // Branch rules: parsed once. Once we use a branched follow-up we mark it
+  // consumed so subsequent exchanges fall back to AI follow-ups.
+  const branchRules = useMemo(
+    () => parseBranchRules(question.branch_rules),
+    [question.branch_rules]
+  );
+  const [branchConsumed, setBranchConsumed] = useState(false);
   
   // Recording data
   const [recordedBlob, setRecordedBlob] = useState<Blob | null>(null);
@@ -297,9 +311,24 @@ export function InterviewConversation({
       return;
     }
 
+    // Branching question sets: if the sender configured branch_rules and
+    // one matches this answer, use the matched then_ask once before
+    // returning to AI follow-ups.
+    if (!branchConsumed && branchRules.length > 0) {
+      const branchedQuestion = evaluateBranches(confirmedText, branchRules);
+      if (branchedQuestion) {
+        setBranchConsumed(true);
+        setCurrentQuestion(branchedQuestion);
+        setViewState('recording');
+        setRecordedBlob(null);
+        setRecordingType(null);
+        return;
+      }
+    }
+
     // Generate follow-up question
     const followUp = await generateFollowUp(updatedExchanges);
-    
+
     if (followUp) {
       setCurrentQuestion(followUp);
       setViewState('recording');
@@ -309,7 +338,7 @@ export function InterviewConversation({
       // AI says we're done
       setViewState('review');
     }
-  }, [currentQuestion, exchanges, generateFollowUp]);
+  }, [currentQuestion, exchanges, generateFollowUp, branchRules, branchConsumed]);
 
   // Handle skip (go to review if we have exchanges)
   const handleSkip = useCallback(() => {

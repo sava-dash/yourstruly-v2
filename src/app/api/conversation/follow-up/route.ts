@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
+import { classifySentiment, toneSystemPromptAddition } from '@/lib/interviews/sentiment';
 
 interface Exchange {
   question: string;
@@ -45,7 +46,12 @@ export async function POST(request: NextRequest) {
     const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
     const ANTHROPIC_API_KEY = process.env.ANTHROPIC_API_KEY;
     
-    const systemPrompt = getSystemPromptForType(promptType, exchangeCount);
+    // Classify sentiment of the most recent response so we can steer tone.
+    const lastResponseText = exchanges[exchanges.length - 1]?.response || '';
+    const sentiment = classifySentiment(lastResponseText);
+
+    const baseSystemPrompt = getSystemPromptForType(promptType, exchangeCount);
+    const systemPrompt = baseSystemPrompt + toneSystemPromptAddition(sentiment.tone);
     const userPrompt = `Original prompt: ${originalPrompt}\n\nConversation so far:\n${conversationContext}\n\nGenerate a natural, conversational follow-up question that helps gather more details. Keep it warm and personal, like a friend asking about a memory. Output ONLY the question, nothing else.`;
 
     let followUpQuestion: string | null = null;
@@ -125,6 +131,7 @@ export async function POST(request: NextRequest) {
       exchangeCount: exchangeCount + 1,
       maxExchanges,
       extractedEntities, // { names: [], locations: [], times: [] }
+      sentiment: { tone: sentiment.tone, confidence: sentiment.confidence },
     });
 
   } catch (error) {
