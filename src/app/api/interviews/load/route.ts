@@ -19,8 +19,9 @@ export async function GET(request: NextRequest) {
       .select(`
         id, title, status, user_id, expires_at,
         progress_data, opened_at, started_at, last_response_at,
+        sender_note,
         contact:contacts(id, full_name),
-        owner:profiles!interview_sessions_user_id_fkey(full_name, display_name),
+        owner:profiles!interview_sessions_user_id_fkey(full_name, display_name, avatar_url),
         session_questions(id, question_text, status, sort_order)
       `)
       .eq('access_token', token)

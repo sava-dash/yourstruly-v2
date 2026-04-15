@@ -18,6 +18,28 @@ function isValidEmail(email: string): boolean {
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)
 }
 
+// Pull a short, sentence-aware preview from the recipient's longest answer.
+// Caps at maxChars while preserving sentence boundaries when possible.
+function pullPreviewQuote(answers: string[], maxChars = 200): string | null {
+  const cleaned = answers
+    .map((a) => (a || '').replace(/\s+/g, ' ').trim())
+    .filter((a) => a.length > 30)
+  if (cleaned.length === 0) return null
+  const longest = cleaned.reduce((a, b) => (b.length > a.length ? b : a))
+  if (longest.length <= maxChars) return longest
+  const slice = longest.slice(0, maxChars)
+  // Prefer ending at a sentence boundary if one exists in the slice.
+  const lastStop = Math.max(
+    slice.lastIndexOf('.'),
+    slice.lastIndexOf('!'),
+    slice.lastIndexOf('?')
+  )
+  if (lastStop > 80) return slice.slice(0, lastStop + 1).trim()
+  // Fall back to the last whole word.
+  const lastSpace = slice.lastIndexOf(' ')
+  return (lastSpace > 0 ? slice.slice(0, lastSpace) : slice).trim() + '…'
+}
+
 // POST /api/interviews/email-recipient
 // Body: { token: string, email: string }
 // Sends the recipient a clean transcript of their answers.
@@ -87,8 +109,21 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    const signupUrl = `${APP_URL}/signup`
+    const signupUrl = `${APP_URL}/signup?ref=interview`
     const subject = `Your answers for ${senderName} — kept safe on YoursTruly`
+
+    const previewQuote = pullPreviewQuote(qaPairs.map((p) => p.answer))
+    const previewHtml = previewQuote
+      ? `
+      <div style="margin:0 0 24px 0; padding:18px 20px; border-left:3px solid #C35F33; background:#F2F1E5; border-radius:6px;">
+        <div style="font-family: Georgia, 'Playfair Display', serif; font-style:italic; color:#2d4d3e; font-size:17px; line-height:1.55;">
+          &ldquo;${escapeHtml(previewQuote)}&rdquo;
+        </div>
+        <div style="margin-top:8px; font-size:12px; color:#666; letter-spacing:0.04em; text-transform:uppercase;">
+          From your story
+        </div>
+      </div>`
+      : ''
 
     const qaHtml = qaPairs
       .map(
@@ -104,9 +139,23 @@ export async function POST(request: NextRequest) {
       )
       .join('')
 
+    const heroCtaHtml = `
+      <div style="margin:32px 0 24px 0; padding:28px 24px; background:#F2F1E5; border-radius:14px; text-align:center;">
+        <div style="font-family: Georgia, 'Playfair Display', serif; color:#2d4d3e; font-size:22px; line-height:1.25; font-weight:600; margin-bottom:12px;">
+          Want to capture your own family stories?
+        </div>
+        <div style="color:#2d2d2d; font-size:15px; line-height:1.55; margin-bottom:20px;">
+          30 days free. Voice-first.<br>
+          We turn answers into beautifully bound books.
+        </div>
+        <a href="${signupUrl}" style="display:inline-block; background:#C35F33; color:#ffffff; text-decoration:none; padding:14px 32px; border-radius:10px; font-weight:600; font-size:16px;">
+          Begin yours
+        </a>
+      </div>`
+
     const html = `<!DOCTYPE html>
 <html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"></head>
-<body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; color:#2d2d2d; max-width:600px; margin:0 auto; padding:24px; background:#ffffff;">
+<body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; color:#2d2d2d; max-width:560px; margin:0 auto; padding:24px; background:#ffffff;">
   <div style="text-align:center; margin-bottom:24px;">
     <h1 style="color:#406A56; font-family: Georgia, 'Playfair Display', serif; margin:0; font-size:26px;">YoursTruly</h1>
   </div>
@@ -117,19 +166,20 @@ export async function POST(request: NextRequest) {
     Your story is safely kept by ${escapeHtml(senderName)} on YoursTruly.
   </p>
 
+  ${previewHtml}
+
   <div style="margin: 28px 0;">
     ${qaHtml}
   </div>
 
-  <hr style="border:none; border-top:1px solid #D3E1DF; margin:32px 0;">
+  ${heroCtaHtml}
 
-  <p style="font-size:14px; color:#666; line-height:1.6;">
-    If you'd like to start capturing your own stories, YoursTruly is here whenever you're ready.<br>
-    <a href="${signupUrl}" style="color:#C35F33; text-decoration:none; font-weight:600;">Begin your own keepsake →</a>
+  <p style="font-size:12px; color:#94a3b8; text-align:center; margin-top:24px;">
+    Sent with care from YoursTruly · <a href="${APP_URL}" style="color:#406A56;">yourstruly.love</a>
   </p>
 
-  <p style="font-size:12px; color:#94a3b8; text-align:center; margin-top:32px;">
-    Sent with care from YoursTruly · <a href="${APP_URL}" style="color:#406A56;">yourstruly.love</a>
+  <p style="font-size:13px; color:#666; line-height:1.6; margin-top:16px;">
+    PS &mdash; ${escapeHtml(senderName)} treasures these answers. You can ask them to print a keepsake book for you too.
   </p>
 </body></html>`
 
@@ -139,10 +189,18 @@ export async function POST(request: NextRequest) {
       `Here's a copy of the answers you shared for ${senderName}.`,
       `Your story is safely kept by ${senderName} on YoursTruly.`,
       ``,
+      previewQuote ? `From your story: "${previewQuote}"` : '',
+      previewQuote ? `` : '',
       ...qaPairs.flatMap((p) => [`Q: ${p.question}`, `A: ${p.answer}`, ``]),
       `---`,
-      `If you'd like to start capturing your own stories, YoursTruly is here: ${signupUrl}`,
-    ].join('\n')
+      `Want to capture your own family stories?`,
+      `30 days free. Voice-first. We turn answers into beautifully bound books.`,
+      `Begin yours: ${signupUrl}`,
+      ``,
+      `PS — ${senderName} treasures these answers. You can ask them to print a keepsake book for you too.`,
+    ]
+      .filter((line) => line !== '')
+      .join('\n')
 
     const { data: result, error: sendErr } = await resend.emails.send({
       from: FROM_EMAIL,

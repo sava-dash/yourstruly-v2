@@ -2,8 +2,9 @@
 
 import { useState, useEffect, use } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Clock, AlertCircle, ChevronRight, X, Mail, Loader2, Check } from 'lucide-react'
+import { AlertCircle, ChevronRight, X, Mail, Loader2, Check } from 'lucide-react'
 import { InterviewConversation } from '@/components/interview/InterviewConversation'
+import { InterviewMicroFeedback } from '@/components/interview/InterviewMicroFeedback'
 import '@/styles/interview.css'
 
 interface SessionQuestion {
@@ -32,7 +33,9 @@ interface Session {
   owner?: {
     full_name?: string | null
     display_name?: string | null
+    avatar_url?: string | null
   }
+  sender_note?: string | null
   session_questions: SessionQuestion[]
   video_responses?: VideoResponse[]
   progress_data?: {
@@ -477,43 +480,204 @@ export default function InterviewPage({ params }: { params: Promise<{ token: str
     )
   }
 
-  // Welcome
+  // Welcome — personalized marketing-grade cold open
   if (pageState === 'welcome' && session) {
+    const senderFirst = firstName(
+      session.owner?.display_name || session.owner?.full_name,
+      'Someone special'
+    )
+    const avatarUrl = session.owner?.avatar_url || null
+    const noteRaw = (session.sender_note || '').trim()
+    const note =
+      noteRaw.length > 0
+        ? noteRaw.slice(0, 280)
+        : "I'd love to hear your story when you have a moment."
+
     return (
-      <div className="interview-page">
-        <div className="interview-welcome">
-          <div className="interview-welcome-header">
-            <h1>{session.title}</h1>
-            <p className="interview-welcome-subtitle">
-              {session.contact?.full_name || 'Someone special'} would love to hear your story
-            </p>
-          </div>
+      <div
+        className="interview-page"
+        style={{ background: '#F2F1E5', minHeight: '100vh' }}
+      >
+        <div
+          style={{
+            maxWidth: 560,
+            margin: '0 auto',
+            padding: '40px 20px 56px',
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            textAlign: 'center',
+          }}
+        >
+          {avatarUrl ? (
+            <motion.img
+              initial={{ opacity: 0, scale: 0.92 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ duration: 0.4 }}
+              src={avatarUrl}
+              alt={senderFirst}
+              style={{
+                width: 80,
+                height: 80,
+                borderRadius: '50%',
+                objectFit: 'cover',
+                marginBottom: 18,
+                boxShadow: '0 2px 8px rgba(45,77,62,0.15)',
+                border: '3px solid #fff',
+              }}
+            />
+          ) : (
+            <motion.div
+              initial={{ opacity: 0, scale: 0.92 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ duration: 0.4 }}
+              style={{
+                width: 80,
+                height: 80,
+                borderRadius: '50%',
+                marginBottom: 18,
+                background: '#D3E1DF',
+                color: '#2d4d3e',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                fontFamily: "'Playfair Display', Georgia, serif",
+                fontSize: 32,
+                fontWeight: 600,
+                boxShadow: '0 2px 8px rgba(45,77,62,0.15)',
+                border: '3px solid #fff',
+              }}
+            >
+              {senderFirst.charAt(0).toUpperCase()}
+            </motion.div>
+          )}
 
-          <div className="interview-welcome-info">
-            <div className="interview-info-item">
-              <Clock size={20} />
-              <span>~5-10 minutes</span>
-            </div>
-            <div className="interview-info-item">
-              <span>1 topic, multiple follow-ups</span>
-            </div>
-          </div>
+          <motion.h1
+            initial={{ opacity: 0, y: 8 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.45, delay: 0.05 }}
+            style={{
+              fontFamily: "'Playfair Display', Georgia, serif",
+              color: '#2d4d3e',
+              fontSize: 'clamp(28px, 7vw, 38px)',
+              lineHeight: 1.15,
+              margin: '0 0 18px 0',
+              fontWeight: 600,
+            }}
+          >
+            {senderFirst} wants to remember this with you.
+          </motion.h1>
 
-          <div className="interview-welcome-instructions">
-            <h3>How it works:</h3>
-            <ul>
-              <li>Answer each question in your own words</li>
-              <li>You can speak or type your response</li>
-              <li>Review and edit your responses</li>
-              <li>AI asks follow-up questions to capture your full story</li>
-              <li>Save when you&rsquo;re ready</li>
-            </ul>
-          </div>
+          <motion.p
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: 0.5, delay: 0.15 }}
+            style={{
+              fontFamily: "'Caveat', 'Patrick Hand', cursive",
+              color: '#406A56',
+              fontSize: 'clamp(20px, 4.5vw, 24px)',
+              lineHeight: 1.35,
+              margin: '0 0 32px 0',
+              maxWidth: 460,
+            }}
+          >
+            &ldquo;{note}&rdquo;
+          </motion.p>
 
-          <button onClick={handleStart} className="interview-start-btn">
-            <span>Begin Interview</span>
+          <motion.button
+            initial={{ opacity: 0, y: 8 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.4, delay: 0.25 }}
+            onClick={handleStart}
+            style={{
+              background: '#C35F33',
+              color: '#fff',
+              border: 'none',
+              padding: '20px 36px',
+              borderRadius: 14,
+              fontSize: 18,
+              fontWeight: 600,
+              fontFamily: "'Inter Tight', -apple-system, sans-serif",
+              cursor: 'pointer',
+              minHeight: 60,
+              minWidth: 240,
+              boxShadow: '0 3px 10px rgba(195,95,51,0.25)',
+              display: 'inline-flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: 8,
+            }}
+          >
+            Begin when you&rsquo;re ready
             <ChevronRight size={20} />
-          </button>
+          </motion.button>
+
+          <p
+            style={{
+              fontFamily: "'Inter Tight', -apple-system, sans-serif",
+              color: '#666',
+              fontSize: 13,
+              lineHeight: 1.5,
+              margin: '14px 0 28px 0',
+            }}
+          >
+            Take your time. Your answers save automatically.
+          </p>
+
+          <div
+            style={{
+              display: 'grid',
+              gridTemplateColumns: '1fr 1fr 1fr',
+              gap: 14,
+              width: '100%',
+              maxWidth: 480,
+              marginBottom: 36,
+            }}
+          >
+            {[
+              { icon: '📱', text: 'Speak or type — your choice' },
+              { icon: '💾', text: "Pause and come back — we'll remember" },
+              { icon: '💌', text: 'Get a copy of your answers when you’re done' },
+            ].map((item) => (
+              <div
+                key={item.text}
+                style={{
+                  background: '#fff',
+                  borderRadius: 12,
+                  padding: '14px 10px',
+                  textAlign: 'center',
+                  boxShadow: '0 1px 3px rgba(45,77,62,0.06)',
+                }}
+              >
+                <div style={{ fontSize: 24, marginBottom: 6 }} aria-hidden>
+                  {item.icon}
+                </div>
+                <div
+                  style={{
+                    fontFamily: "'Inter Tight', -apple-system, sans-serif",
+                    fontSize: 12,
+                    lineHeight: 1.35,
+                    color: '#2d2d2d',
+                  }}
+                >
+                  {item.text}
+                </div>
+              </div>
+            ))}
+          </div>
+
+          <p
+            style={{
+              fontFamily: "'Inter Tight', -apple-system, sans-serif",
+              color: '#94a3b8',
+              fontSize: 12,
+              lineHeight: 1.5,
+              margin: 0,
+              maxWidth: 380,
+            }}
+          >
+            Made by YoursTruly — built so families can keep what matters.
+          </p>
         </div>
       </div>
     )
@@ -537,6 +701,7 @@ export default function InterviewPage({ params }: { params: Promise<{ token: str
 
     return (
       <div className="interview-page">
+        <InterviewMicroFeedback />
         <InterviewConversation
           sessionId={session.id}
           accessToken={token}
