@@ -54,3 +54,10 @@ __tests__
 *.test.tsx
 *.spec.ts
 *.spec.tsx
+
+# Scratch / agent workspaces
+tmp/
+**/tmp/
+.claude/
+memory/
+research/
