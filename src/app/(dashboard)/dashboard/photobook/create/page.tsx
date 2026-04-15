@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useCallback, useMemo } from 'react'
+import { useState, useEffect, useCallback, useMemo, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import { motion, AnimatePresence, Reorder } from 'framer-motion'
 import { createClient } from '@/lib/supabase/client'
@@ -37,7 +37,11 @@ import {
   Monitor,
   Shield,
   Lightbulb,
-  CheckCircle2
+  CheckCircle2,
+  RotateCw,
+  Type,
+  Star,
+  Palette
 } from 'lucide-react'
 import { 
   LAYOUT_TEMPLATES, 
@@ -60,6 +64,11 @@ import CMYKWarnings from '@/components/photobook/CMYKWarnings'
 import VersionHistoryPanel from '@/components/photobook/VersionHistoryPanel'
 import { PhotobookTheme } from '@/lib/photobook/themes'
 import { PhotoInput as CMYKPhotoInput } from '@/lib/photobook/cmyk-check'
+import type { PageOverlay, PageBackground, TextOverlay } from '@/lib/photobook/overlays'
+import { createTextOverlay, createStickerOverlay } from '@/lib/photobook/overlays'
+import TextEditor, { TextOverlayToolbar } from '@/components/photobook/TextEditor'
+import StickerPicker from '@/components/photobook/StickerPicker'
+import BackgroundPickerV2 from '@/components/photobook/BackgroundPicker'
 
 // ============================================================================
 // TYPES
@@ -145,13 +154,180 @@ interface PageData {
   pageNumber: number
   layoutId: string
   slots: SlotData[]
-  background?: string // CSS color or gradient
+  /**
+   * CSS color or gradient (legacy, kept for back-compat with existing
+   * template/theme code). Newer code prefers `backgroundV2` which is a
+   * structured PageBackground object.
+   */
+  background?: string
+  /** New structured background (solid / gradient / texture). */
+  backgroundV2?: PageBackground | null
+  /** Page-level text + sticker overlays (renders above template slots). */
+  overlays?: PageOverlay[]
 }
 
 // History state for undo/redo
 interface HistoryState {
   pages: PageData[]
   timestamp: number
+}
+
+/**
+ * Convert a structured PageBackground into a CSS `background` value for the
+ * editor preview. Returns `null` when no backgroundV2 is set so the caller
+ * can fall back to legacy `background` / template defaults.
+ */
+function backgroundToCss(bg: PageBackground | null | undefined): string | null {
+  if (!bg) return null
+  if (bg.type === 'solid') return bg.color
+  if (bg.type === 'gradient') return `linear-gradient(${bg.angle ?? 135}deg, ${bg.from}, ${bg.to})`
+  // Texture — use the same CSS catalog used by BackgroundPicker previews.
+  const TEXTURE_CSS: Record<string, string> = {
+    paper: 'radial-gradient(circle at 20% 30%, rgba(0,0,0,0.06) 1px, transparent 1.5px), radial-gradient(circle at 70% 60%, rgba(0,0,0,0.05) 1px, transparent 1.5px), #F2F1E5',
+    linen: 'repeating-linear-gradient(0deg, rgba(0,0,0,0.05) 0 1px, transparent 1px 3px), repeating-linear-gradient(90deg, rgba(0,0,0,0.04) 0 1px, transparent 1px 3px), #EDE4D3',
+    dots: 'radial-gradient(circle, rgba(64,106,86,0.18) 1.5px, transparent 2px) 0 0/16px 16px, #F2F1E5',
+    'diagonal-lines': 'repeating-linear-gradient(45deg, rgba(0,0,0,0.05) 0 1px, transparent 1px 10px), #FFFFFF',
+    grid: 'repeating-linear-gradient(0deg, rgba(0,0,0,0.05) 0 1px, transparent 1px 18px), repeating-linear-gradient(90deg, rgba(0,0,0,0.05) 0 1px, transparent 1px 18px), #FFFFFF',
+    noise: 'radial-gradient(circle at 10% 20%, rgba(0,0,0,0.04) 0.5px, transparent 1px) 0 0/5px 5px, #F8EFE3',
+    waves: 'repeating-radial-gradient(circle at 50% 0, rgba(64,106,86,0.07) 0 12px, transparent 12px 24px), #F2F1E5',
+    cross: 'repeating-linear-gradient(45deg, rgba(0,0,0,0.04) 0 1px, transparent 1px 8px), repeating-linear-gradient(-45deg, rgba(0,0,0,0.04) 0 1px, transparent 1px 8px), #EDE4D3',
+  }
+  return TEXTURE_CSS[bg.textureId] || '#F2F1E5'
+}
+
+/**
+ * Lightweight draggable/resizable/rotatable wrapper for sticker overlays in
+ * the editor. The SVG itself is rendered via `<img>` so it inherits no colors
+ * but scales crisply at any zoom.
+ */
+function StickerOverlayView(props: {
+  overlay: Extract<PageOverlay, { type: 'sticker' }>
+  selected: boolean
+  onSelect: () => void
+  onChange: (next: PageOverlay) => void
+  onCommit: () => void
+  onDelete: () => void
+  pageSize: { width: number; height: number }
+}) {
+  const { overlay, selected, onSelect, onChange, onCommit, onDelete, pageSize } = props
+  const [drag, setDrag] = useState<{
+    kind: 'move' | 'resize' | 'rotate'
+    startX: number; startY: number
+    origX: number; origY: number; origW: number; origH: number; origRot: number
+    centerX?: number; centerY?: number; startAngle?: number
+  } | null>(null)
+  const wrapRef = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    if (!drag) return
+    const onMove = (e: MouseEvent) => {
+      const dxPct = ((e.clientX - drag.startX) / pageSize.width) * 100
+      const dyPct = ((e.clientY - drag.startY) / pageSize.height) * 100
+      if (drag.kind === 'move') {
+        onChange({
+          ...overlay,
+          x: Math.max(0, Math.min(100 - overlay.width, drag.origX + dxPct)),
+          y: Math.max(0, Math.min(100 - overlay.height, drag.origY + dyPct)),
+        })
+      } else if (drag.kind === 'resize') {
+        const delta = Math.max(dxPct, dyPct)
+        const w = Math.max(6, Math.min(100, drag.origW + delta))
+        // Keep aspect ratio (proportional)
+        const ratio = drag.origH / Math.max(drag.origW, 0.01)
+        const h = Math.max(6, Math.min(100, w * ratio))
+        onChange({ ...overlay, width: w, height: h })
+      } else if (drag.kind === 'rotate' && drag.centerX !== undefined) {
+        const angle = Math.atan2(e.clientY - drag.centerY!, e.clientX - drag.centerX) * (180 / Math.PI)
+        onChange({ ...overlay, rotation: Math.round((drag.origRot + (angle - (drag.startAngle ?? 0))) % 360) })
+      }
+    }
+    const onUp = () => { setDrag(null); onCommit() }
+    window.addEventListener('mousemove', onMove)
+    window.addEventListener('mouseup', onUp)
+    return () => {
+      window.removeEventListener('mousemove', onMove)
+      window.removeEventListener('mouseup', onUp)
+    }
+  }, [drag, overlay, pageSize, onChange, onCommit])
+
+  const startDrag = (kind: 'move' | 'resize' | 'rotate') => (e: React.MouseEvent) => {
+    e.stopPropagation(); e.preventDefault()
+    onSelect()
+    const base = {
+      startX: e.clientX, startY: e.clientY,
+      origX: overlay.x, origY: overlay.y, origW: overlay.width, origH: overlay.height,
+      origRot: overlay.rotation ?? 0,
+    }
+    if (kind === 'rotate') {
+      const rect = wrapRef.current?.getBoundingClientRect()
+      if (!rect) return
+      const cx = rect.left + rect.width / 2
+      const cy = rect.top + rect.height / 2
+      setDrag({
+        kind, ...base, centerX: cx, centerY: cy,
+        startAngle: Math.atan2(e.clientY - cy, e.clientX - cx) * (180 / Math.PI),
+      })
+    } else {
+      setDrag({ kind, ...base })
+    }
+  }
+
+  return (
+    <div
+      ref={wrapRef}
+      className={selected ? 'ring-2 ring-[#406A56] ring-offset-2 absolute' : 'hover:ring-2 hover:ring-[#406A56]/50 absolute'}
+      style={{
+        left: `${overlay.x}%`, top: `${overlay.y}%`,
+        width: `${overlay.width}%`, height: `${overlay.height}%`,
+        transform: overlay.rotation ? `rotate(${overlay.rotation}deg)` : undefined,
+        transformOrigin: 'center center',
+        opacity: overlay.opacity ?? 1,
+        cursor: selected ? 'move' : 'pointer',
+      }}
+      onMouseDown={startDrag('move')}
+    >
+      {/* eslint-disable-next-line @next/next/no-img-element */}
+      <img
+        src={`/stickers/${overlay.stickerId}.svg`}
+        alt=""
+        className="w-full h-full pointer-events-none select-none"
+        draggable={false}
+        style={{ color: '#406A56' }}
+      />
+
+      {selected && (
+        <>
+          <div
+            role="button" aria-label="Resize sticker"
+            onMouseDown={startDrag('resize')}
+            className="absolute -bottom-1.5 -right-1.5 w-4 h-4 rounded-full bg-white border-2 border-[#406A56] cursor-nwse-resize"
+          />
+          <button
+            type="button" onMouseDown={startDrag('rotate')} aria-label="Rotate sticker"
+            className="absolute -top-10 left-1/2 -translate-x-1/2 w-8 h-8 rounded-full bg-white border-2 border-[#406A56] flex items-center justify-center shadow-md"
+          ><RotateCw className="w-4 h-4 text-[#406A56]" /></button>
+          <button
+            type="button"
+            onClick={(e) => { e.stopPropagation(); onDelete() }}
+            aria-label="Delete sticker"
+            className="absolute -top-3 -right-3 w-7 h-7 rounded-full bg-[#C35F33] text-white flex items-center justify-center shadow-md"
+          ><Trash2 className="w-3.5 h-3.5" /></button>
+          {/* Opacity slider */}
+          <div className="absolute -bottom-10 left-1/2 -translate-x-1/2 bg-white border-2 border-[#DDE3DF] rounded-lg px-2 py-1 shadow-md flex items-center gap-2 text-xs">
+            <span className="text-[#5A6660]">Opacity</span>
+            <input
+              type="range" min={0.25} max={1} step={0.05}
+              value={overlay.opacity ?? 1}
+              onChange={(e) => onChange({ ...overlay, opacity: Number(e.target.value) })}
+              onMouseUp={onCommit} onTouchEnd={onCommit}
+              aria-label="Sticker opacity"
+              className="w-24"
+            />
+          </div>
+        </>
+      )}
+    </div>
+  )
 }
 
 interface ShippingAddress {
@@ -675,6 +851,44 @@ function ArrangeStep({
   const [selectedPageIds, setSelectedPageIds] = useState<Set<string>>(new Set())
   const [lastSelectedIndex, setLastSelectedIndex] = useState<number | null>(null)
 
+  // Creative tools: text + sticker + background V2
+  const [selectedOverlayId, setSelectedOverlayId] = useState<string | null>(null)
+  const [showStickerPicker, setShowStickerPicker] = useState(false)
+  const [showBackgroundPickerV2, setShowBackgroundPickerV2] = useState(false)
+  const pageCanvasRef = useRef<HTMLDivElement>(null)
+  const [pageCanvasSize, setPageCanvasSize] = useState({ width: 500, height: 500 })
+
+  // Keyboard: Delete removes selected overlay, Escape deselects.
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      const t = e.target as HTMLElement | null
+      const isEditing = !!t && (t.tagName === 'INPUT' || t.tagName === 'TEXTAREA' || t.isContentEditable)
+      if (isEditing) return
+      if (e.key === 'Escape') setSelectedOverlayId(null)
+      if ((e.key === 'Delete' || e.key === 'Backspace') && selectedOverlayId && selectedPageId) {
+        e.preventDefault()
+        deleteOverlay(selectedPageId, selectedOverlayId)
+      }
+    }
+    window.addEventListener('keydown', onKey)
+    return () => window.removeEventListener('keydown', onKey)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedOverlayId, selectedPageId, pages])
+
+  // Track canvas size so TextEditor can convert px → percent while dragging.
+  useEffect(() => {
+    const el = pageCanvasRef.current
+    if (!el) return
+    const update = () => {
+      const rect = el.getBoundingClientRect()
+      if (rect.width > 0) setPageCanvasSize({ width: rect.width, height: rect.height })
+    }
+    update()
+    const ro = new ResizeObserver(update)
+    ro.observe(el)
+    return () => ro.disconnect()
+  }, [selectedPageId])
+
   // Crop/Zoom UI state
   const [cropZoomSlotId, setCropZoomSlotId] = useState<string | null>(null)
   const [cropZoomValues, setCropZoomValues] = useState<{ scale: number; offsetX: number; offsetY: number }>({
@@ -1029,6 +1243,55 @@ function ArrangeStep({
     setPages(newPages)
     saveHistory(newPages)
   }
+
+  // --- Overlay (text/sticker) + structured background helpers ---------------
+  const mutatePageOverlays = (
+    pageId: string,
+    fn: (overlays: PageOverlay[]) => PageOverlay[],
+    commitHistory: boolean
+  ) => {
+    const newPages = pages.map(p =>
+      p.id === pageId ? { ...p, overlays: fn(p.overlays ?? []) } : p
+    )
+    setPages(newPages)
+    if (commitHistory) saveHistory(newPages)
+  }
+
+  const addTextOverlay = () => {
+    if (!selectedPageId) return
+    const overlay = createTextOverlay()
+    mutatePageOverlays(selectedPageId, (o) => [...o, overlay], true)
+    setSelectedOverlayId(overlay.id)
+  }
+
+  const addStickerOverlay = (stickerId: string) => {
+    if (!selectedPageId) return
+    const overlay = createStickerOverlay(stickerId)
+    mutatePageOverlays(selectedPageId, (o) => [...o, overlay], true)
+    setSelectedOverlayId(overlay.id)
+    setShowStickerPicker(false)
+  }
+
+  const updateOverlay = (pageId: string, overlay: PageOverlay, commit: boolean) => {
+    mutatePageOverlays(pageId, (list) => list.map(o => o.id === overlay.id ? overlay : o), commit)
+  }
+
+  const deleteOverlay = (pageId: string, overlayId: string) => {
+    mutatePageOverlays(pageId, (list) => list.filter(o => o.id !== overlayId), true)
+    setSelectedOverlayId(null)
+  }
+
+  const applyBackgroundV2 = (bg: PageBackground | null, scope: 'page' | 'all') => {
+    if (scope === 'all') {
+      const newPages = pages.map(p => ({ ...p, backgroundV2: bg }))
+      setPages(newPages)
+      saveHistory(newPages)
+    } else if (selectedPageId) {
+      const newPages = pages.map(p => p.id === selectedPageId ? { ...p, backgroundV2: bg } : p)
+      setPages(newPages)
+      saveHistory(newPages)
+    }
+  }
   
   const assignPhotoToSlot = (pageId: string, slotId: string, photo: typeof availablePhotos[0] | null) => {
     const newPages = pages.map(p => {
@@ -1379,6 +1642,38 @@ function ArrangeStep({
               <QrCode className="w-4 h-4" />
               Add QR Code
             </button>
+
+            {/* NEW: Text / Sticker / Background (V2) creative tools */}
+            <button
+              type="button"
+              onClick={addTextOverlay}
+              disabled={!selectedPage}
+              className="min-h-[44px] px-3 rounded-lg bg-[#406A56]/10 hover:bg-[#406A56]/20 text-[#406A56] text-sm font-medium flex items-center gap-2 disabled:opacity-40"
+              aria-label="Add text"
+            >
+              <Type className="w-4 h-4" />
+              Add text
+            </button>
+            <button
+              type="button"
+              onClick={() => setShowStickerPicker(true)}
+              disabled={!selectedPage}
+              className="min-h-[44px] px-3 rounded-lg bg-[#406A56]/10 hover:bg-[#406A56]/20 text-[#406A56] text-sm font-medium flex items-center gap-2 disabled:opacity-40"
+              aria-label="Add sticker"
+            >
+              <Star className="w-4 h-4" />
+              Add sticker
+            </button>
+            <button
+              type="button"
+              onClick={() => setShowBackgroundPickerV2(true)}
+              disabled={!selectedPage}
+              className="min-h-[44px] px-3 rounded-lg bg-[#406A56]/10 hover:bg-[#406A56]/20 text-[#406A56] text-sm font-medium flex items-center gap-2 disabled:opacity-40"
+              aria-label="Open background picker"
+            >
+              <Palette className="w-4 h-4" />
+              Background
+            </button>
             
             {/* Page Background Picker */}
             <div className="relative">
@@ -1588,7 +1883,12 @@ function ArrangeStep({
                 width: '100%',
                 maxWidth: 500,
                 aspectRatio: '1/1',
-                background: selectedPage.background || selectedTemplate.background || '#ffffff',
+                background: backgroundToCss(selectedPage.backgroundV2) || selectedPage.background || selectedTemplate.background || '#ffffff',
+              }}
+              ref={pageCanvasRef}
+              onClick={(e) => {
+                // Clicking on empty canvas deselects any overlay
+                if (e.target === e.currentTarget) setSelectedOverlayId(null)
               }}
             >
               {/* Render slots */}
@@ -1883,6 +2183,37 @@ function ArrangeStep({
                   </>
                 )
               })()}
+
+              {/* Page overlays (text + stickers) — rendered above template slots. */}
+              {(selectedPage.overlays ?? []).map((overlay) => {
+                if (overlay.type === 'text') {
+                  return (
+                    <TextEditor
+                      key={overlay.id}
+                      overlay={overlay}
+                      selected={selectedOverlayId === overlay.id}
+                      onSelect={() => setSelectedOverlayId(overlay.id)}
+                      onChange={(next) => updateOverlay(selectedPage.id, next, false)}
+                      onCommit={() => saveHistory(pages)}
+                      onDelete={() => deleteOverlay(selectedPage.id, overlay.id)}
+                      pageSize={pageCanvasSize}
+                    />
+                  )
+                }
+                // Sticker overlay (rendered with a small inline handler)
+                return (
+                  <StickerOverlayView
+                    key={overlay.id}
+                    overlay={overlay}
+                    selected={selectedOverlayId === overlay.id}
+                    onSelect={() => setSelectedOverlayId(overlay.id)}
+                    onChange={(next) => updateOverlay(selectedPage.id, next, false)}
+                    onCommit={() => saveHistory(pages)}
+                    onDelete={() => deleteOverlay(selectedPage.id, overlay.id)}
+                    pageSize={pageCanvasSize}
+                  />
+                )
+              })}
             </div>
           ) : (
             <div className="text-center text-[#94A09A]">
@@ -1890,8 +2221,36 @@ function ArrangeStep({
               <p>Select a page to edit</p>
             </div>
           )}
+
+          {/* Floating text overlay toolbar */}
+          {selectedPage && selectedOverlayId && (() => {
+            const ov = (selectedPage.overlays ?? []).find(o => o.id === selectedOverlayId)
+            if (!ov || ov.type !== 'text') return null
+            return (
+              <div className="mt-4 flex justify-center">
+                <TextOverlayToolbar
+                  overlay={ov}
+                  onChange={(next) => updateOverlay(selectedPage.id, next, false)}
+                  onCommit={() => saveHistory(pages)}
+                  onDelete={() => deleteOverlay(selectedPage.id, ov.id)}
+                />
+              </div>
+            )
+          })()}
         </div>
-        
+
+        {/* Sticker + Background V2 panels */}
+        <StickerPicker
+          open={showStickerPicker}
+          onClose={() => setShowStickerPicker(false)}
+          onPick={addStickerOverlay}
+        />
+        <BackgroundPickerV2
+          open={showBackgroundPickerV2}
+          onClose={() => setShowBackgroundPickerV2(false)}
+          current={selectedPage?.backgroundV2 ?? null}
+          onApply={applyBackgroundV2}
+        />
       </div>
       
       {/* Right Sidebar - Photo Library */}
@@ -3429,7 +3788,12 @@ export default function CreatePhotobookPage() {
             })),
             qr_code: page.slots.find(s => s.type === 'qr') ? {
               memory_id: page.slots.find(s => s.type === 'qr')?.qrMemoryId
-            } : undefined
+            } : undefined,
+            // Extended creative-tools fields (backgrounds + overlays).
+            // Renderer reads these via the PageContent shape; absent fields
+            // keep the original render path unchanged.
+            background: page.backgroundV2 ?? null,
+            overlays: page.overlays ?? [],
           }
         }))
         

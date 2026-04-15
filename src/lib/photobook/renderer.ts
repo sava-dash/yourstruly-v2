@@ -7,6 +7,7 @@
 
 import QRCode from 'qrcode'
 import type { LayoutTemplate, LayoutSlot, SlotPosition } from './templates'
+import type { PageBackground, PageOverlay, TextOverlay, StickerOverlay } from './overlays'
 
 // =============================================================================
 // TYPES
@@ -15,8 +16,20 @@ import type { LayoutTemplate, LayoutSlot, SlotPosition } from './templates'
 export interface PageContent {
   /** Content for each slot, keyed by slot ID */
   slots: Record<string, SlotContent>
-  /** Optional page-level background override */
-  background?: string
+  /**
+   * Optional page-level background override.
+   *
+   * Accepts either a plain CSS string (legacy — solid color or simple
+   * `linear-gradient(...)`) or a structured `PageBackground` for the new
+   * background picker (solid / gradient / texture).
+   */
+  background?: string | PageBackground | null
+  /**
+   * Optional page-level overlays (text + stickers) rendered AFTER the
+   * template's own slots. Z-order guaranteed: background → template photo
+   * slots → template text/qr slots → overlays.
+   */
+  overlays?: PageOverlay[]
 }
 
 export interface SlotContent {
@@ -420,6 +433,193 @@ async function renderQRSlot(
 }
 
 // =============================================================================
+// BACKGROUND + OVERLAY RENDERERS (page-level, outside the template)
+// =============================================================================
+
+type Bounds = { x: number; y: number; width: number; height: number }
+
+/**
+ * Parse a legacy CSS gradient string (`linear-gradient(<angle>deg, c1 N%, c2 N%)`).
+ */
+function parseCssLinearGradient(bg: string): { angle: number; from: string; to: string } | null {
+  const match = bg.match(/linear-gradient\((\d+)deg,\s*(.+?)(?:\s+\d+%)?,\s*(.+?)(?:\s+\d+%)?\)/)
+  if (!match) return null
+  return { angle: parseInt(match[1], 10), from: match[2].trim(), to: match[3].trim() }
+}
+
+/**
+ * Fill the given bounds with the page background. Accepts either the legacy
+ * CSS string form or the structured PageBackground used by the new picker.
+ */
+export async function renderPageBackground(
+  ctx: CanvasRenderingContext2D,
+  background: string | PageBackground | null | undefined,
+  bounds: Bounds
+): Promise<void> {
+  const { x, y, width, height } = bounds
+
+  // Default fallback — plain white
+  if (!background) {
+    ctx.fillStyle = '#ffffff'
+    ctx.fillRect(x, y, width, height)
+    return
+  }
+
+  // Legacy CSS string form
+  if (typeof background === 'string') {
+    if (background.startsWith('linear-gradient')) {
+      const parsed = parseCssLinearGradient(background)
+      if (parsed) {
+        const rad = parsed.angle * (Math.PI / 180)
+        const gradient = ctx.createLinearGradient(
+          x + width / 2 - Math.cos(rad) * width,
+          y + height / 2 - Math.sin(rad) * height,
+          x + width / 2 + Math.cos(rad) * width,
+          y + height / 2 + Math.sin(rad) * height
+        )
+        gradient.addColorStop(0, parsed.from)
+        gradient.addColorStop(1, parsed.to)
+        ctx.fillStyle = gradient
+      } else {
+        ctx.fillStyle = '#ffffff'
+      }
+    } else {
+      ctx.fillStyle = background
+    }
+    ctx.fillRect(x, y, width, height)
+    return
+  }
+
+  // Structured PageBackground
+  if (background.type === 'solid') {
+    ctx.fillStyle = background.color
+    ctx.fillRect(x, y, width, height)
+    return
+  }
+
+  if (background.type === 'gradient') {
+    const rad = (background.angle ?? 135) * (Math.PI / 180)
+    const gradient = ctx.createLinearGradient(
+      x + width / 2 - Math.cos(rad) * width,
+      y + height / 2 - Math.sin(rad) * height,
+      x + width / 2 + Math.cos(rad) * width,
+      y + height / 2 + Math.sin(rad) * height
+    )
+    gradient.addColorStop(0, background.from)
+    gradient.addColorStop(1, background.to)
+    ctx.fillStyle = gradient
+    ctx.fillRect(x, y, width, height)
+    return
+  }
+
+  if (background.type === 'texture') {
+    // Base cream wash under every texture so tiles blend on print
+    ctx.fillStyle = '#faf9f6'
+    ctx.fillRect(x, y, width, height)
+    try {
+      const img = await loadImage(`/photobook-backgrounds/${background.textureId}.png`)
+      const pattern = ctx.createPattern(img, 'repeat')
+      if (pattern) {
+        ctx.save()
+        ctx.globalAlpha = background.opacity ?? 0.15
+        ctx.fillStyle = pattern
+        ctx.fillRect(x, y, width, height)
+        ctx.restore()
+      }
+    } catch {
+      // Texture image missing — leave the cream wash.
+    }
+  }
+}
+
+/**
+ * Render one text overlay onto the canvas.
+ * Position values are percent-of-bounds (0-100).
+ */
+function renderTextOverlay(
+  ctx: CanvasRenderingContext2D,
+  overlay: TextOverlay,
+  bounds: Bounds
+): void {
+  const px = bounds.x + (overlay.x / 100) * bounds.width
+  const py = bounds.y + (overlay.y / 100) * bounds.height
+  const pw = (overlay.width / 100) * bounds.width
+  const ph = (overlay.height / 100) * bounds.height
+
+  // Overlay fontSize is in POINTS (pt). Convert to px relative to bounds height
+  // using a 300-DPI print assumption (1pt ≈ 1/72 in, 300dpi ≈ 4.17px/pt on
+  // print-sized canvases) while scaling down proportionally on preview canvases.
+  // Reference height: a 6x8 page at 300dpi ≈ 2400px; preview ≈ 500px.
+  const pxPerPoint = (bounds.height / 2400) * (300 / 72) + (bounds.height / 500) * (1 / 72) * 0 // bias toward print size
+  const approx = Math.max(10, overlay.fontSize * Math.max(0.18, bounds.height / 2400))
+  const fontPx = Math.max(10, Math.round(approx * (pxPerPoint > 0 ? 1 : 1)))
+
+  ctx.save()
+  ctx.translate(px + pw / 2, py + ph / 2)
+  if (overlay.rotation) ctx.rotate((overlay.rotation * Math.PI) / 180)
+
+  const italic = overlay.italic ? 'italic ' : ''
+  const weight = overlay.weight === 'bold' ? 'bold ' : ''
+  ctx.font = `${italic}${weight}${fontPx}px ${overlay.fontFamily}`
+  ctx.fillStyle = overlay.color
+  ctx.textBaseline = 'top'
+  ctx.textAlign = overlay.align === 'center' ? 'center' : overlay.align === 'right' ? 'right' : 'left'
+
+  const lines = wrapText(ctx, overlay.value, pw)
+  const lineH = fontPx * 1.3
+  let ty = -(lines.length * lineH) / 2
+  const tx = overlay.align === 'center' ? 0 : overlay.align === 'right' ? pw / 2 : -pw / 2
+  for (const line of lines) {
+    ctx.fillText(line, tx, ty)
+    ty += lineH
+  }
+  ctx.restore()
+}
+
+/**
+ * Render one sticker overlay onto the canvas by loading its SVG.
+ */
+async function renderStickerOverlay(
+  ctx: CanvasRenderingContext2D,
+  overlay: StickerOverlay,
+  bounds: Bounds
+): Promise<void> {
+  const px = bounds.x + (overlay.x / 100) * bounds.width
+  const py = bounds.y + (overlay.y / 100) * bounds.height
+  const pw = (overlay.width / 100) * bounds.width
+  const ph = (overlay.height / 100) * bounds.height
+
+  try {
+    const img = await loadImage(`/stickers/${overlay.stickerId}.svg`)
+    ctx.save()
+    ctx.globalAlpha = overlay.opacity ?? 1
+    ctx.translate(px + pw / 2, py + ph / 2)
+    if (overlay.rotation) ctx.rotate((overlay.rotation * Math.PI) / 180)
+    ctx.drawImage(img, -pw / 2, -ph / 2, pw, ph)
+    ctx.restore()
+  } catch (err) {
+    console.warn('Sticker failed to load:', overlay.stickerId, err)
+  }
+}
+
+/**
+ * Render all page overlays in array order (first = bottom, last = top).
+ */
+export async function renderOverlays(
+  ctx: CanvasRenderingContext2D,
+  overlays: readonly PageOverlay[],
+  bounds: Bounds
+): Promise<void> {
+  for (const overlay of overlays) {
+    if (overlay.type === 'text') {
+      renderTextOverlay(ctx, overlay, bounds)
+    } else if (overlay.type === 'sticker') {
+      await renderStickerOverlay(ctx, overlay, bounds)
+    }
+  }
+}
+
+// =============================================================================
 // MAIN RENDERER
 // =============================================================================
 
@@ -457,37 +657,19 @@ export async function renderPage(
   // Scale for DPR
   ctx.scale(dpr, dpr)
 
-  // Draw background
-  const background = content.background || template.background || '#ffffff'
-  
-  if (background.startsWith('linear-gradient')) {
-    // Parse gradient (simplified - assumes 2-stop linear gradient)
-    const match = background.match(/linear-gradient\((\d+)deg,\s*(.+)\s+\d+%,\s*(.+)\s+\d+%\)/)
-    if (match) {
-      const angle = parseInt(match[1]) * (Math.PI / 180)
-      const color1 = match[2]
-      const color2 = match[3]
-      
-      const x1 = width / 2 - Math.cos(angle) * width
-      const y1 = height / 2 - Math.sin(angle) * height
-      const x2 = width / 2 + Math.cos(angle) * width
-      const y2 = height / 2 + Math.sin(angle) * height
-      
-      const gradient = ctx.createLinearGradient(x1, y1, x2, y2)
-      gradient.addColorStop(0, color1)
-      gradient.addColorStop(1, color2)
-      ctx.fillStyle = gradient
-    } else {
-      ctx.fillStyle = '#ffffff'
-    }
-  } else {
-    ctx.fillStyle = background
-  }
-  
-  ctx.fillRect(0, 0, width, height)
+  // Draw background (z-order step 1)
+  await renderPageBackground(
+    ctx,
+    content.background ?? template.background ?? '#ffffff',
+    { x: 0, y: 0, width, height }
+  )
 
-  // Render each slot
-  for (const slot of template.slots) {
+  // Render each template slot (z-order step 2-3: photos, then text/qr)
+  // The templates already define photos before text/qr in most layouts;
+  // enforce the ordering explicitly so overlays always sit on top.
+  const photoSlots = template.slots.filter((s) => s.type === 'photo')
+  const otherSlots = template.slots.filter((s) => s.type !== 'photo')
+  for (const slot of [...photoSlots, ...otherSlots]) {
     const bounds = percentToPixels(slot.position, width, height)
     const slotContent = content.slots[slot.id]
 
@@ -502,6 +684,11 @@ export async function renderPage(
         await renderQRSlot(ctx, slot, slotContent, bounds, options)
         break
     }
+  }
+
+  // Render page overlays (z-order step 4 — on top of everything)
+  if (content.overlays && content.overlays.length > 0) {
+    await renderOverlays(ctx, content.overlays, { x: 0, y: 0, width, height })
   }
 
   // Generate data URL
