@@ -365,35 +365,6 @@ const TEXT_COLORS = [
   '#8e44ad', '#d35400', '#2980b9', '#16a085'
 ]
 
-const BACKGROUND_COLORS = [
-  // Neutrals
-  { value: '#ffffff', label: 'White' },
-  { value: '#faf9f6', label: 'Cream' },
-  { value: '#f5f5f5', label: 'Light Gray' },
-  { value: '#1a1a1a', label: 'Black' },
-  // Pastels
-  { value: '#fce4ec', label: 'Soft Pink' },
-  { value: '#e3f2fd', label: 'Soft Blue' },
-  { value: '#e8f5e9', label: 'Soft Green' },
-  { value: '#fff3e0', label: 'Soft Orange' },
-  { value: '#f3e5f5', label: 'Soft Purple' },
-  { value: '#fffde7', label: 'Soft Yellow' },
-  // Rich Colors
-  { value: '#2c3e50', label: 'Navy Blue' },
-  { value: '#8b4513', label: 'Saddle Brown' },
-  { value: '#2e7d32', label: 'Forest Green' },
-  { value: '#6a1b9a', label: 'Deep Purple' },
-  { value: '#c62828', label: 'Deep Red' },
-  { value: '#00695c', label: 'Teal' },
-  // Gradients (CSS strings)
-  { value: 'linear-gradient(135deg, #fdfcfb 0%, #e2d1c3 100%)', label: 'Warm Gradient' },
-  { value: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)', label: 'Purple Gradient' },
-  { value: 'linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%)', label: 'Cool Gray' },
-  { value: 'linear-gradient(135deg, #ffecd2 0%, #fcb69f 100%)', label: 'Sunset' },
-  { value: 'linear-gradient(135deg, #a8edea 0%, #fed6e3 100%)', label: 'Cotton Candy' },
-  { value: 'linear-gradient(135deg, #d4fc79 0%, #96e6a1 100%)', label: 'Fresh Green' },
-]
-
 const DEFAULT_TEXT_STYLE: TextStyle = {
   fontFamily: 'Georgia, serif',
   fontSize: 'md',
@@ -804,6 +775,19 @@ function ArrangeStep({
   onRedo,
   saveHistory,
   shareTokenMap,
+  selectedPageId,
+  setSelectedPageId,
+  selectedOverlayId,
+  setSelectedOverlayId,
+  showStickerPicker,
+  setShowStickerPicker,
+  showBackgroundPickerV2,
+  setShowBackgroundPickerV2,
+  onOpenThemes,
+  onOpenCover,
+  onOpenPreview,
+  onOpenCmyk,
+  onOpenVersions,
 }: {
   pages: PageData[]
   setPages: (pages: PageData[]) => void
@@ -819,13 +803,24 @@ function ArrangeStep({
   onRedo: () => void
   saveHistory: (pages: PageData[]) => void
   shareTokenMap: Record<string, string>
+  selectedPageId: string | null
+  setSelectedPageId: (id: string | null) => void
+  selectedOverlayId: string | null
+  setSelectedOverlayId: (id: string | null) => void
+  showStickerPicker: boolean
+  setShowStickerPicker: (open: boolean) => void
+  showBackgroundPickerV2: boolean
+  setShowBackgroundPickerV2: (open: boolean) => void
+  onOpenThemes: () => void
+  onOpenCover: () => void
+  onOpenPreview: () => void
+  onOpenCmyk: () => void
+  onOpenVersions: () => void
 }) {
-  const [selectedPageId, setSelectedPageId] = useState<string | null>(pages[0]?.id || null)
   const [showLayoutPicker, setShowLayoutPicker] = useState(false)
   const [layoutPickerMode, setLayoutPickerMode] = useState<'add' | 'change'>('add')
   const [showQRPicker, setShowQRPicker] = useState(false)
   const [qrPickerTab, setQrPickerTab] = useState<'memories' | 'wisdom'>('memories')
-  const [showBackgroundPicker, setShowBackgroundPicker] = useState(false)
   const [showPhotoPicker, setShowPhotoPicker] = useState(false)
   const [activeSlotId, setActiveSlotId] = useState<string | null>(null)
   const [activeTextSlotId, setActiveTextSlotId] = useState<string | null>(null)
@@ -851,10 +846,7 @@ function ArrangeStep({
   const [selectedPageIds, setSelectedPageIds] = useState<Set<string>>(new Set())
   const [lastSelectedIndex, setLastSelectedIndex] = useState<number | null>(null)
 
-  // Creative tools: text + sticker + background V2
-  const [selectedOverlayId, setSelectedOverlayId] = useState<string | null>(null)
-  const [showStickerPicker, setShowStickerPicker] = useState(false)
-  const [showBackgroundPickerV2, setShowBackgroundPickerV2] = useState(false)
+  // Creative tools refs (state for selectedOverlayId / pickers is lifted to root)
   const pageCanvasRef = useRef<HTMLDivElement>(null)
   const [pageCanvasSize, setPageCanvasSize] = useState({ width: 500, height: 500 })
 
@@ -888,6 +880,15 @@ function ArrangeStep({
     ro.observe(el)
     return () => ro.disconnect()
   }, [selectedPageId])
+
+  // Default-select the first page when none selected and pages exist.
+  // (selectedPageId is lifted to root, so we sync here.)
+  useEffect(() => {
+    if (!selectedPageId && pages.length > 0) {
+      setSelectedPageId(pages[0].id)
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [pages, selectedPageId])
 
   // Crop/Zoom UI state
   const [cropZoomSlotId, setCropZoomSlotId] = useState<string | null>(null)
@@ -1232,14 +1233,6 @@ function ArrangeStep({
       return { ...p, layoutId, slots: mappedSlots }
     })
     
-    setPages(newPages)
-    saveHistory(newPages)
-  }
-
-  const updatePageBackground = (pageId: string, background: string) => {
-    const newPages = pages.map(p =>
-      p.id === pageId ? { ...p, background } : p
-    )
     setPages(newPages)
     saveHistory(newPages)
   }
@@ -1622,28 +1615,34 @@ function ArrangeStep({
       
       {/* Main Editor */}
       <div className="flex-1 flex flex-col">
-        {/* Toolbar */}
-        <div className="flex items-center justify-between mb-4 flex-wrap gap-2">
-          <div className="flex items-center gap-2">
+        {/* Unified Editor Toolbar — calm, grouped, single row when it fits.
+            Groups (with subtle dividers): [Layout/QR] | [Text/Sticker/Background]
+            | [Safety lines] | [Themes/Cover] | [Preview/Check colors/Versions]
+            | [Undo/Redo]. */}
+        <div className="flex items-center justify-between mb-4 flex-wrap gap-y-2">
+          <div className="flex items-center flex-wrap gap-2">
+            {/* Group 1 — Page actions */}
             <button
               onClick={() => {
                 setLayoutPickerMode('change')
                 setShowLayoutPicker(true)
               }}
-              className="px-3 py-2 bg-[#406A56]/10 hover:bg-[#406A56]/20 rounded-lg text-[#406A56] text-sm font-medium flex items-center gap-2"
+              className="min-h-[44px] px-3 rounded-lg bg-[#406A56]/10 hover:bg-[#406A56]/20 text-[#406A56] text-sm font-medium flex items-center gap-2"
             >
               <Layout className="w-4 h-4" />
               Change Layout
             </button>
             <button
               onClick={() => setShowQRPicker(true)}
-              className="px-3 py-2 bg-[#406A56]/10 hover:bg-[#406A56]/20 rounded-lg text-[#406A56] text-sm font-medium flex items-center gap-2"
+              className="min-h-[44px] px-3 rounded-lg bg-[#406A56]/10 hover:bg-[#406A56]/20 text-[#406A56] text-sm font-medium flex items-center gap-2"
             >
               <QrCode className="w-4 h-4" />
               Add QR Code
             </button>
 
-            {/* NEW: Text / Sticker / Background (V2) creative tools */}
+            <div className="w-px h-6 bg-[#DDE3DF] mx-1" aria-hidden="true" />
+
+            {/* Group 2 — Design tools */}
             <button
               type="button"
               onClick={addTextOverlay}
@@ -1674,62 +1673,15 @@ function ArrangeStep({
               <Palette className="w-4 h-4" />
               Background
             </button>
-            
-            {/* Page Background Picker */}
-            <div className="relative">
-              <button
-                onClick={() => setShowBackgroundPicker(!showBackgroundPicker)}
-                className="px-3 py-2 bg-[#406A56]/10 hover:bg-[#406A56]/20 rounded-lg text-[#406A56] text-sm font-medium flex items-center gap-2"
-              >
-                <div 
-                  className="w-4 h-4 rounded border border-[#DDE3DF]"
-                  style={{ 
-                    background: selectedPage?.background || '#ffffff',
-                  }}
-                />
-                Background
-              </button>
-              
-              {/* Background Color Dropdown */}
-              {showBackgroundPicker && (
-                <div className="absolute top-full left-0 mt-2 p-3 bg-white rounded-xl shadow-xl border border-[#DDE3DF] z-50 w-64">
-                  <h4 className="text-xs font-semibold text-[#406A56] uppercase mb-2">Page Background</h4>
-                  <div className="grid grid-cols-6 gap-1.5">
-                    {BACKGROUND_COLORS.map(bg => (
-                      <button
-                        key={bg.value}
-                        onClick={() => {
-                          if (selectedPageId) {
-                            updatePageBackground(selectedPageId, bg.value)
-                          }
-                          setShowBackgroundPicker(false)
-                        }}
-                        className={`w-8 h-8 rounded border-2 transition-all hover:scale-110 ${
-                          selectedPage?.background === bg.value 
-                            ? 'border-[#406A56] ring-2 ring-[#406A56]/30' 
-                            : 'border-transparent hover:border-[#DDE3DF]'
-                        }`}
-                        style={{ background: bg.value }}
-                        title={bg.label}
-                      />
-                    ))}
-                  </div>
-                  <button
-                    onClick={() => setShowBackgroundPicker(false)}
-                    className="mt-2 w-full text-xs text-[#5A6660] hover:text-[#406A56]"
-                  >
-                    Close
-                  </button>
-                </div>
-              )}
-            </div>
 
-            {/* Show safety lines toggle (print bleed + safe zone overlay) */}
+            <div className="w-px h-6 bg-[#DDE3DF] mx-1" aria-hidden="true" />
+
+            {/* Group 3 — Safety lines */}
             <button
               onClick={() => setShowSafetyLines(v => !v)}
               aria-pressed={showSafetyLines}
               title="Show safety lines — bleed and safe zone guides for print"
-              className={`px-3 py-2 rounded-lg text-sm font-medium flex items-center gap-2 min-h-[44px] transition-colors ${
+              className={`min-h-[44px] px-3 rounded-lg text-sm font-medium flex items-center gap-2 transition-colors ${
                 showSafetyLines
                   ? 'bg-[#406A56] text-white'
                   : 'bg-[#406A56]/10 hover:bg-[#406A56]/20 text-[#406A56]'
@@ -1739,12 +1691,57 @@ function ArrangeStep({
               {showSafetyLines ? 'Hide safety lines' : 'Show safety lines'}
             </button>
 
-            {/* Undo/Redo buttons */}
-            <div className="flex items-center gap-1 ml-2 pl-2 border-l border-[#DDE3DF]">
+            <div className="w-px h-6 bg-[#DDE3DF] mx-1" aria-hidden="true" />
+
+            {/* Group 4 — Themes / Cover */}
+            <button
+              type="button"
+              onClick={onOpenThemes}
+              className="min-h-[44px] px-3 rounded-lg bg-white border border-[#DDE3DF] hover:border-[#406A56] text-[#2A3E33] text-sm font-medium flex items-center gap-2"
+            >
+              <Sparkles className="w-4 h-4 text-[#C35F33]" /> Themes
+            </button>
+            <button
+              type="button"
+              onClick={onOpenCover}
+              className="min-h-[44px] px-3 rounded-lg bg-white border border-[#DDE3DF] hover:border-[#406A56] text-[#2A3E33] text-sm font-medium flex items-center gap-2"
+            >
+              <BookOpen className="w-4 h-4 text-[#406A56]" /> Cover
+            </button>
+
+            <div className="w-px h-6 bg-[#DDE3DF] mx-1" aria-hidden="true" />
+
+            {/* Group 5 — Preview / Check colors / Versions */}
+            <button
+              type="button"
+              onClick={onOpenPreview}
+              className="min-h-[44px] px-3 rounded-lg bg-white border border-[#DDE3DF] hover:border-[#406A56] text-[#2A3E33] text-sm font-medium flex items-center gap-2"
+            >
+              <Eye className="w-4 h-4 text-[#406A56]" /> Preview as book
+            </button>
+            <button
+              type="button"
+              onClick={onOpenCmyk}
+              className="min-h-[44px] px-3 rounded-lg bg-white border border-[#DDE3DF] hover:border-[#406A56] text-[#2A3E33] text-sm font-medium flex items-center gap-2"
+            >
+              <AlertTriangle className="w-4 h-4 text-[#C35F33]" /> Check colors
+            </button>
+            <button
+              type="button"
+              onClick={onOpenVersions}
+              className="min-h-[44px] px-3 rounded-lg bg-white border border-[#DDE3DF] hover:border-[#406A56] text-[#2A3E33] text-sm font-medium flex items-center gap-2"
+            >
+              <Undo2 className="w-4 h-4 text-[#406A56]" /> Versions
+            </button>
+
+            <div className="w-px h-6 bg-[#DDE3DF] mx-1" aria-hidden="true" />
+
+            {/* Group 6 — Undo/Redo */}
+            <div className="flex items-center gap-1">
               <button
                 onClick={onUndo}
                 disabled={!canUndo}
-                className="px-2 py-2 rounded-lg text-[#406A56] hover:bg-[#406A56]/10 disabled:opacity-30 disabled:cursor-not-allowed flex items-center gap-1"
+                className="min-h-[44px] px-2 rounded-lg text-[#406A56] hover:bg-[#406A56]/10 disabled:opacity-30 disabled:cursor-not-allowed flex items-center gap-1"
                 title="Undo (Ctrl+Z)"
               >
                 <Undo2 className="w-4 h-4" />
@@ -1753,7 +1750,7 @@ function ArrangeStep({
               <button
                 onClick={onRedo}
                 disabled={!canRedo}
-                className="px-2 py-2 rounded-lg text-[#406A56] hover:bg-[#406A56]/10 disabled:opacity-30 disabled:cursor-not-allowed flex items-center gap-1"
+                className="min-h-[44px] px-2 rounded-lg text-[#406A56] hover:bg-[#406A56]/10 disabled:opacity-30 disabled:cursor-not-allowed flex items-center gap-1"
                 title="Redo (Ctrl+Shift+Z)"
               >
                 <Redo2 className="w-4 h-4" />
@@ -1765,6 +1762,34 @@ function ArrangeStep({
             {availablePhotos.length - usedMediaIds.size} photos available
           </div>
         </div>
+
+        {/* Text overlay format toolbar — anchored slot ABOVE the page canvas
+            so it never obscures content. Animates in/out smoothly when a text
+            overlay is selected. */}
+        <AnimatePresence initial={false}>
+          {(() => {
+            if (!selectedPage || !selectedOverlayId) return null
+            const ov = (selectedPage.overlays ?? []).find(o => o.id === selectedOverlayId)
+            if (!ov || ov.type !== 'text') return null
+            return (
+              <motion.div
+                key="text-overlay-toolbar-slot"
+                initial={{ height: 0, opacity: 0 }}
+                animate={{ height: 'auto', opacity: 1 }}
+                exit={{ height: 0, opacity: 0 }}
+                transition={{ duration: 0.18, ease: 'easeOut' }}
+                className="overflow-hidden mb-3"
+              >
+                <TextOverlayToolbar
+                  overlay={ov}
+                  onChange={(next) => updateOverlay(selectedPage.id, next, false)}
+                  onCommit={() => saveHistory(pages)}
+                  onDelete={() => deleteOverlay(selectedPage.id, ov.id)}
+                />
+              </motion.div>
+            )
+          })()}
+        </AnimatePresence>
         
         {/* Text Formatting Toolbar */}
         {activeTextSlotId && selectedPageId && activeStyle && (
@@ -2222,21 +2247,6 @@ function ArrangeStep({
             </div>
           )}
 
-          {/* Floating text overlay toolbar */}
-          {selectedPage && selectedOverlayId && (() => {
-            const ov = (selectedPage.overlays ?? []).find(o => o.id === selectedOverlayId)
-            if (!ov || ov.type !== 'text') return null
-            return (
-              <div className="mt-4 flex justify-center">
-                <TextOverlayToolbar
-                  overlay={ov}
-                  onChange={(next) => updateOverlay(selectedPage.id, next, false)}
-                  onCommit={() => saveHistory(pages)}
-                  onDelete={() => deleteOverlay(selectedPage.id, ov.id)}
-                />
-              </div>
-            )
-          })()}
         </div>
 
         {/* Sticker + Background V2 panels */}
@@ -3343,6 +3353,14 @@ export default function CreatePhotobookPage() {
   const [showFlipPreview, setShowFlipPreview] = useState(false)
   const [showCmyk, setShowCmyk] = useState(false)
   const [showVersions, setShowVersions] = useState(false)
+
+  // Lifted from ArrangeStep so the unified toolbar can act on the active page
+  // and the text-overlay format toolbar can live in a fixed slot above the
+  // canvas rather than floating over it.
+  const [selectedPageId, setSelectedPageId] = useState<string | null>(null)
+  const [selectedOverlayId, setSelectedOverlayId] = useState<string | null>(null)
+  const [showStickerPicker, setShowStickerPicker] = useState(false)
+  const [showBackgroundPickerV2, setShowBackgroundPickerV2] = useState(false)
   
   // Load user, memories, and products
   useEffect(() => {
@@ -3941,8 +3959,9 @@ export default function CreatePhotobookPage() {
         </div>
       </div>
       
-      {/* Editor toolbar (available on design + preview steps) */}
-      {(currentStep === 1 || currentStep === 2) && (
+      {/* Editor toolbar — Preview step only. The Design step (ArrangeStep)
+          renders its own unified toolbar that includes these same actions. */}
+      {currentStep === 2 && (
         <div className="max-w-7xl mx-auto px-4 pt-4">
           <div className="flex flex-wrap items-center gap-2">
             <button
@@ -4018,6 +4037,19 @@ export default function CreatePhotobookPage() {
                 onRedo={handleRedo}
                 saveHistory={saveHistory}
                 shareTokenMap={shareTokenMap}
+                selectedPageId={selectedPageId}
+                setSelectedPageId={setSelectedPageId}
+                selectedOverlayId={selectedOverlayId}
+                setSelectedOverlayId={setSelectedOverlayId}
+                showStickerPicker={showStickerPicker}
+                setShowStickerPicker={setShowStickerPicker}
+                showBackgroundPickerV2={showBackgroundPickerV2}
+                setShowBackgroundPickerV2={setShowBackgroundPickerV2}
+                onOpenThemes={() => setShowThemePicker(true)}
+                onOpenCover={() => setShowCoverDesigner(true)}
+                onOpenPreview={() => setShowFlipPreview(true)}
+                onOpenCmyk={() => setShowCmyk(true)}
+                onOpenVersions={() => setShowVersions(true)}
               />
             )}
             
