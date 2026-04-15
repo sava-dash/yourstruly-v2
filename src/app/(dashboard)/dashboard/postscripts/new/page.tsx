@@ -18,6 +18,7 @@ import AiDraftHelper from '@/components/postscripts/AiDraftHelper'
 import ThemePicker from '@/components/postscripts/ThemePicker'
 import ExecutorContactsTypeahead from '@/components/postscripts/ExecutorContactsTypeahead'
 import { DraftAutoSaver } from '@/lib/postscripts/draft'
+import { computeDateForEvent } from '@/lib/postscripts/event-contact-mapping'
 
 interface Contact {
   id: string
@@ -127,8 +128,8 @@ export default function NewPostScriptPage() {
     recipient_email: '',
     recipient_phone: '',
     group_recipients: [],
-    delivery_type: 'date',
-    trigger_type: 'date',
+    delivery_type: 'event',
+    trigger_type: 'event',
     executor_name: '',
     executor_email: '',
     delivery_date: '',
@@ -170,6 +171,10 @@ export default function NewPostScriptPage() {
     date: Date
     label: string
   } | null>(null)
+  // When the event's date is already resolved (from a deep-link or a
+  // DOB-aware chip click) we hide the "When is this event?" picker by default
+  // and show a read-only confirmation. Toggled on by the "Change date" link.
+  const [overrideEventDate, setOverrideEventDate] = useState(false)
   const draftSaverRef = useRef<DraftAutoSaver | null>(null)
   if (!draftSaverRef.current) {
     draftSaverRef.current = new DraftAutoSaver(
@@ -1107,18 +1112,18 @@ export default function NewPostScriptPage() {
         {/* Delivery Type Tabs */}
         <div className="flex bg-gray-100 rounded-xl p-1">
           <button
-            onClick={() => setForm({ ...form, delivery_type: 'date', trigger_type: 'date' })}
-            className={`flex-1 py-2 px-4 rounded-lg text-sm font-medium transition-all min-h-[44px]
-              ${form.trigger_type === 'date' ? 'bg-white shadow-sm text-gray-900' : 'text-gray-500'}`}
-          >
-            On a date
-          </button>
-          <button
             onClick={() => setForm({ ...form, delivery_type: 'event', trigger_type: 'event' })}
             className={`flex-1 py-2 px-4 rounded-lg text-sm font-medium transition-all min-h-[44px]
               ${form.trigger_type === 'event' ? 'bg-white shadow-sm text-gray-900' : 'text-gray-500'}`}
           >
             On an event
+          </button>
+          <button
+            onClick={() => setForm({ ...form, delivery_type: 'date', trigger_type: 'date' })}
+            className={`flex-1 py-2 px-4 rounded-lg text-sm font-medium transition-all min-h-[44px]
+              ${form.trigger_type === 'date' ? 'bg-white shadow-sm text-gray-900' : 'text-gray-500'}`}
+          >
+            On a date
           </button>
           <button
             onClick={() => setForm({
@@ -1187,8 +1192,10 @@ export default function NewPostScriptPage() {
               // Bug 3: when a recipient is already chosen, narrow suggestions
               // to that person's events so we don't surface unrelated birthdays.
               filterContactId={form.recipient_contact_id || null}
-              selectedDate={lastPickedSuggestion?.date || null}
-              selectedLabel={lastPickedSuggestion?.label || null}
+              // Suppress the internal confirmation — the unified "Will be
+              // delivered on …" panel below (with Change-date override) handles it.
+              selectedDate={null}
+              selectedLabel={null}
               onSelect={(s: EventSuggestion) => {
                 // Auto-fill delivery_event + delivery_date from known data.
                 const iso = `${s.date.getFullYear()}-${String(s.date.getMonth() + 1).padStart(2, '0')}-${String(s.date.getDate()).padStart(2, '0')}`
@@ -1206,12 +1213,45 @@ export default function NewPostScriptPage() {
                 })
                 setEventTypeTag(s.eventType)
                 setPastDateWarning(null)
+                setOverrideEventDate(false)
                 // Bug 5: remember for the explicit "delivered on …" confirmation.
                 setLastPickedSuggestion({ date: s.date, label: s.label })
               }}
             />
-            {/* Inline fallback date picker for events we don't know the date of */}
-            {form.delivery_event && !form.delivery_date && (
+            {/* Date resolved already (deep-link, suggestion pick, or DOB-aware chip)
+                — confirm read-only and offer a "Change date" escape hatch. */}
+            {form.delivery_event && form.delivery_date && !overrideEventDate && (
+              <div
+                className="rounded-xl border border-[#406A56]/30 bg-white px-4 py-3"
+                role="status"
+                aria-live="polite"
+              >
+                <p className="text-xs uppercase tracking-wider text-[#5A6660] mb-1">
+                  Will be delivered on
+                </p>
+                <p
+                  className="text-[#406A56]"
+                  style={{
+                    fontFamily: 'var(--font-playfair, "Playfair Display", serif)',
+                    fontSize: '20px',
+                    lineHeight: 1.3,
+                  }}
+                >
+                  {new Date(form.delivery_date + 'T00:00:00').toLocaleDateString('en-US', {
+                    month: 'long', day: 'numeric', year: 'numeric',
+                  })}
+                </p>
+                <button
+                  type="button"
+                  onClick={() => setOverrideEventDate(true)}
+                  className="mt-2 min-h-[44px] inline-flex items-center text-sm font-medium text-[#B8562E] hover:underline"
+                >
+                  Change date
+                </button>
+              </div>
+            )}
+            {/* Inline date picker — shown when date isn't resolved yet OR user clicked "Change date". */}
+            {form.delivery_event && (!form.delivery_date || overrideEventDate) && (
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
                   When is this event?
@@ -1231,6 +1271,7 @@ export default function NewPostScriptPage() {
                     }
                     setPastDateWarning(null)
                     setForm({ ...form, delivery_date: val })
+                    if (val) setOverrideEventDate(false)
                   }}
                   className="w-full px-4 py-3 bg-white border border-gray-200 rounded-xl
                            focus:ring-2 focus:ring-[#B8562E]/20 focus:border-[#B8562E] outline-none text-gray-900"
@@ -1247,9 +1288,25 @@ export default function NewPostScriptPage() {
                 <button
                   key={event.key}
                   onClick={() => {
-                    // Manual pick clears auto-filled date unless it still matches
-                    setForm({ ...form, delivery_event: event.key, delivery_date: '' })
-                    setEventTypeTag('other')
+                    // If the current recipient is a contact whose DOB/anniversary
+                    // we know, auto-compute the next-occurrence date so we don't
+                    // ask the user for something we already have on file.
+                    const recipientContact = form.recipient_contact_id
+                      ? contacts.find(c => c.id === form.recipient_contact_id) || null
+                      : null
+                    const computed = computeDateForEvent(event.key, recipientContact)
+                    const iso = computed
+                      ? `${computed.getFullYear()}-${String(computed.getMonth() + 1).padStart(2, '0')}-${String(computed.getDate()).padStart(2, '0')}`
+                      : ''
+                    setForm({ ...form, delivery_event: event.key, delivery_date: iso })
+                    setOverrideEventDate(false)
+                    setEventTypeTag(event.key === 'birthday' ? 'contact_birthday' : 'other')
+                    if (computed) {
+                      setLastPickedSuggestion({
+                        date: computed,
+                        label: recipientContact ? `${recipientContact.full_name}'s ${event.label}` : event.label,
+                      })
+                    }
                   }}
                   className={`p-4 rounded-xl border-2 text-center transition-all
                     ${form.delivery_event === event.key

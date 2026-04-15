@@ -14,6 +14,54 @@ export interface ContactLike {
   id: string
   full_name: string
   relationship_type?: string | null
+  date_of_birth?: string | null
+  anniversary_date?: string | null
+}
+
+/**
+ * Given an event kind chip (birthday, anniversary, 18th_birthday, etc.) and a
+ * contact whose DOB / anniversary we may know, return the next occurrence date
+ * for the event, or null when we can't resolve it from stored data.
+ *
+ * - `birthday` / `Nth_birthday` → uses contact.date_of_birth
+ *   * `Nth_birthday` returns the Nth birthday year if still in the future,
+ *     otherwise null (already passed)
+ * - `anniversary` → uses contact.anniversary_date (if present)
+ * - everything else → null (user supplies a date)
+ */
+export function computeDateForEvent(
+  eventKind: string,
+  contact: ContactLike | null | undefined,
+): Date | null {
+  if (!contact) return null
+  const today = new Date()
+  today.setHours(0, 0, 0, 0)
+
+  const nthMatch = /^(\d{1,3})(?:st|nd|rd|th)?_birthday$/i.exec(eventKind)
+  if (nthMatch && contact.date_of_birth) {
+    const n = parseInt(nthMatch[1], 10)
+    const dob = new Date(contact.date_of_birth + 'T00:00:00')
+    if (isNaN(dob.getTime())) return null
+    const target = new Date(dob)
+    target.setFullYear(dob.getFullYear() + n)
+    return target >= today ? target : null
+  }
+
+  if (eventKind === 'birthday' && contact.date_of_birth) {
+    return nextOccurrence(contact.date_of_birth, today)
+  }
+  if (eventKind === 'anniversary' && contact.anniversary_date) {
+    return nextOccurrence(contact.anniversary_date, today)
+  }
+  return null
+}
+
+function nextOccurrence(isoDate: string, today: Date): Date | null {
+  const src = new Date(isoDate + 'T00:00:00')
+  if (isNaN(src.getTime())) return null
+  const candidate = new Date(today.getFullYear(), src.getMonth(), src.getDate())
+  if (candidate < today) candidate.setFullYear(today.getFullYear() + 1)
+  return candidate
 }
 
 export type HolidayKind = "mothers_day" | "fathers_day" | "valentines"
