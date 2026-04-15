@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 160" width="120" height="160">
+  <defs>
+    <linearGradient id="g" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#7A1F2B"/><stop offset="1" stop-color="#3F1318"/></linearGradient>
+  </defs>
+  <rect width="120" height="160" fill="url(#g)"/>
+  <rect x="14" y="40" width="92" height="80" fill="rgba(255,255,255,0.55)" stroke="rgba(0,0,0,0.08)" stroke-width="0.5"/>
+  <text x="60" y="22" font-family="Georgia, serif" font-size="11" text-anchor="middle" fill="#F8E6C7" font-weight="bold">Happy Holidays</text>
+  <text x="60" y="138" font-family="Georgia, serif" font-size="7" text-anchor="middle" fill="#F8E6C7" font-style="italic">with love</text>
+</svg>

@@ -41,7 +41,42 @@ export interface SlotContent {
     color?: string
     fontFamily?: string
   }
+  /**
+   * Optional photo border drawn AFTER the photo pixels and BEFORE template
+   * text/qr/overlays. Defaults to no border. Persisted in `content_json`.
+   */
+  border?: PhotoBorder
+  /**
+   * Optional photo filter applied to the photo's pixel area only. Defaults
+   * to 'original'. Applied AFTER the photo is drawn and BEFORE the border.
+   * Persisted in `content_json`.
+   */
+  filter?: PhotoFilter
 }
+
+/** Photo border styles. Drawn over the slot bounds, after the photo pixels. */
+export type PhotoBorderStyle =
+  | 'none'
+  | 'thin'
+  | 'thick'
+  | 'polaroid'
+  | 'rounded'
+  | 'film-strip'
+
+export interface PhotoBorder {
+  style: PhotoBorderStyle
+  /** CSS color string. Defaults to YT Green (#406A56) for thin/thick. */
+  color?: string
+}
+
+/** Photo filters. Applied as canvas pixel ops so the export PNG carries them. */
+export type PhotoFilter =
+  | 'original'
+  | 'bw'
+  | 'sepia'
+  | 'warm'
+  | 'cool'
+  | 'faded'
 
 export interface RenderOptions {
   /** Output width in pixels */
@@ -170,6 +205,201 @@ function wrapText(
 }
 
 // =============================================================================
+// PHOTO FILTERS + BORDERS (slot-level pixel ops + frame draws)
+// =============================================================================
+
+/**
+ * Apply a color filter to the rectangle (x, y, w, h) of the canvas using
+ * pixel-level math. Implementation choices match the spec; helpers stay
+ * branch-free per pixel for speed on large print canvases.
+ *
+ * Skipped silently when:
+ *   - filter is 'original' (no-op)
+ *   - getImageData throws (cross-origin tainted canvas) — we log and continue
+ *     so the photo still appears unfiltered rather than blanking the page.
+ */
+export function applyFilter(
+  ctx: CanvasRenderingContext2D,
+  x: number,
+  y: number,
+  w: number,
+  h: number,
+  filter: PhotoFilter | undefined
+): void {
+  if (!filter || filter === 'original') return
+  if (w <= 0 || h <= 0) return
+
+  const ix = Math.max(0, Math.floor(x))
+  const iy = Math.max(0, Math.floor(y))
+  const iw = Math.max(1, Math.floor(w))
+  const ih = Math.max(1, Math.floor(h))
+
+  let imageData: ImageData
+  try {
+    imageData = ctx.getImageData(ix, iy, iw, ih)
+  } catch (err) {
+    // Tainted canvas (cross-origin without CORS) — bail rather than crash.
+    console.warn('applyFilter: getImageData failed, skipping filter', err)
+    return
+  }
+  const d = imageData.data
+
+  switch (filter) {
+    case 'bw': {
+      for (let i = 0; i < d.length; i += 4) {
+        const lum = 0.299 * d[i] + 0.587 * d[i + 1] + 0.114 * d[i + 2]
+        d[i] = lum
+        d[i + 1] = lum
+        d[i + 2] = lum
+      }
+      break
+    }
+    case 'sepia': {
+      for (let i = 0; i < d.length; i += 4) {
+        const r = d[i], g = d[i + 1], b = d[i + 2]
+        d[i]     = Math.min(255, 0.393 * r + 0.769 * g + 0.189 * b)
+        d[i + 1] = Math.min(255, 0.349 * r + 0.686 * g + 0.168 * b)
+        d[i + 2] = Math.min(255, 0.272 * r + 0.534 * g + 0.131 * b)
+      }
+      break
+    }
+    case 'warm': {
+      for (let i = 0; i < d.length; i += 4) {
+        d[i]     = Math.min(255, d[i] * 1.15)
+        d[i + 2] = Math.max(0, d[i + 2] * 0.9)
+      }
+      break
+    }
+    case 'cool': {
+      for (let i = 0; i < d.length; i += 4) {
+        d[i]     = Math.max(0, d[i] * 0.9)
+        d[i + 2] = Math.min(255, d[i + 2] * 1.15)
+      }
+      break
+    }
+    case 'faded': {
+      for (let i = 0; i < d.length; i += 4) {
+        // Lift blacks (+30) and reduce contrast (×0.85 around midpoint 128 after lift).
+        d[i]     = clamp(0.85 * (d[i] + 30) + 0.15 * 128)
+        d[i + 1] = clamp(0.85 * (d[i + 1] + 30) + 0.15 * 128)
+        d[i + 2] = clamp(0.85 * (d[i + 2] + 30) + 0.15 * 128)
+      }
+      break
+    }
+  }
+  ctx.putImageData(imageData, ix, iy)
+}
+
+function clamp(v: number): number {
+  return v < 0 ? 0 : v > 255 ? 255 : v
+}
+
+/**
+ * Draw a photo border over the slot bounds. Called AFTER the photo pixels (and
+ * filter) are committed to the canvas, BEFORE template text/qr/overlays.
+ */
+export function drawPhotoBorder(
+  ctx: CanvasRenderingContext2D,
+  bounds: { x: number; y: number; width: number; height: number },
+  border: PhotoBorder | undefined
+): void {
+  if (!border || border.style === 'none') return
+  const { x, y, width, height } = bounds
+  const color = border.color || '#406A56'
+
+  switch (border.style) {
+    case 'thin': {
+      ctx.save()
+      ctx.strokeStyle = color
+      ctx.lineWidth = 2
+      ctx.strokeRect(x + 1, y + 1, width - 2, height - 2)
+      ctx.restore()
+      return
+    }
+    case 'thick': {
+      ctx.save()
+      ctx.strokeStyle = color
+      ctx.lineWidth = 8
+      ctx.strokeRect(x + 4, y + 4, width - 8, height - 8)
+      ctx.restore()
+      return
+    }
+    case 'rounded': {
+      // The renderPhotoSlot draws unrounded — clip a rounded shape OVER by
+      // painting the four corner cutouts in white-ish "page" feel. We instead
+      // overlay a rounded mask by using composite-out: erase the corners.
+      const r = 12
+      ctx.save()
+      ctx.globalCompositeOperation = 'destination-in'
+      ctx.beginPath()
+      // roundRect is widely supported in modern Chromium/Firefox/Safari; fall
+      // back to a manual path for older runtimes.
+      if (typeof (ctx as CanvasRenderingContext2D & { roundRect?: unknown }).roundRect === 'function') {
+        ctx.beginPath()
+        ;(ctx as CanvasRenderingContext2D).roundRect(x, y, width, height, r)
+      } else {
+        // Manual rounded rect path
+        ctx.moveTo(x + r, y)
+        ctx.lineTo(x + width - r, y)
+        ctx.quadraticCurveTo(x + width, y, x + width, y + r)
+        ctx.lineTo(x + width, y + height - r)
+        ctx.quadraticCurveTo(x + width, y + height, x + width - r, y + height)
+        ctx.lineTo(x + r, y + height)
+        ctx.quadraticCurveTo(x, y + height, x, y + height - r)
+        ctx.lineTo(x, y + r)
+        ctx.quadraticCurveTo(x, y, x + r, y)
+      }
+      ctx.closePath()
+      ctx.fill()
+      ctx.restore()
+      return
+    }
+    case 'polaroid': {
+      // 16px white frame on top/left/right + 48px white bottom margin (caption
+      // space). Subtle drop shadow underneath.
+      const top = 16, side = 16, bottom = 48
+      ctx.save()
+      ctx.shadowColor = 'rgba(0,0,0,0.18)'
+      ctx.shadowBlur = 12
+      ctx.shadowOffsetY = 4
+      // Outer white frame painted around the existing photo pixels using
+      // four rectangles (we don't repaint the photo's interior).
+      ctx.fillStyle = '#FFFFFF'
+      ctx.fillRect(x - side, y - top, width + side * 2, top)             // top bar
+      ctx.fillRect(x - side, y + height, width + side * 2, bottom)        // bottom bar (caption)
+      ctx.fillRect(x - side, y, side, height)                             // left bar
+      ctx.fillRect(x + width, y, side, height)                            // right bar
+      ctx.restore()
+      return
+    }
+    case 'film-strip': {
+      // Thick black bars top + bottom with 4 sprocket holes per side.
+      const bar = Math.max(10, Math.round(height * 0.08))
+      ctx.save()
+      ctx.fillStyle = '#0E0E0E'
+      ctx.fillRect(x, y, width, bar)
+      ctx.fillRect(x, y + height - bar, width, bar)
+
+      // Sprocket holes
+      const holeCount = 4
+      const holeW = Math.max(6, Math.round(width / (holeCount * 2 + 1)))
+      const holeH = Math.max(4, Math.round(bar * 0.5))
+      const yTop = y + (bar - holeH) / 2
+      const yBot = y + height - bar + (bar - holeH) / 2
+      const stride = width / holeCount
+      ctx.fillStyle = '#FFFFFF'
+      for (let i = 0; i < holeCount; i++) {
+        const hx = x + stride * (i + 0.5) - holeW / 2
+        ctx.fillRect(hx, yTop, holeW, holeH)
+        ctx.fillRect(hx, yBot, holeW, holeH)
+      }
+      ctx.restore()
+      return
+    }
+  }
+}
+
+// =============================================================================
 // SLOT RENDERERS
 // =============================================================================
 
@@ -257,6 +487,16 @@ async function renderPhotoSlot(
 
     if (borderRadius > 0) {
       ctx.restore()
+    }
+
+    // Apply photo filter to the slot pixels (after photo draws, before border).
+    if (content.filter && content.filter !== 'original') {
+      applyFilter(ctx, x, y, width, height, content.filter)
+    }
+
+    // Draw photo border over the slot bounds (after filter, before text/qr/overlays).
+    if (content.border && content.border.style !== 'none') {
+      drawPhotoBorder(ctx, { x, y, width, height }, content.border)
     }
   } catch (error) {
     console.error('Failed to load image:', error)

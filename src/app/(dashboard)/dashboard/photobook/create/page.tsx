@@ -41,7 +41,10 @@ import {
   RotateCw,
   Type,
   Star,
-  Palette
+  Palette,
+  FileText,
+  Frame,
+  Filter as FilterIcon
 } from 'lucide-react'
 import { 
   LAYOUT_TEMPLATES, 
@@ -69,6 +72,12 @@ import { createTextOverlay, createStickerOverlay } from '@/lib/photobook/overlay
 import TextEditor, { TextOverlayToolbar } from '@/components/photobook/TextEditor'
 import StickerPicker from '@/components/photobook/StickerPicker'
 import BackgroundPickerV2 from '@/components/photobook/BackgroundPicker'
+import IdeaPagePicker, { type IdeaPageApplyMode } from '@/components/photobook/IdeaPagePicker'
+import {
+  instantiateIdeaPageOverlays,
+  type IdeaPagePreset,
+} from '@/lib/photobook/idea-pages'
+import type { PhotoBorder, PhotoBorderStyle, PhotoFilter } from '@/lib/photobook/renderer'
 
 // ============================================================================
 // TYPES
@@ -132,6 +141,10 @@ interface SlotData {
   textStyle?: TextStyle
   crop?: CropData
   cropZoom?: CropZoomData
+  /** Photo border (renderer draws over the slot bounds). Defaults to none. */
+  border?: PhotoBorder
+  /** Photo filter (canvas pixel op applied on render + export). Defaults to original. */
+  filter?: PhotoFilter
 }
 
 interface WisdomEntry {
@@ -326,6 +339,153 @@ function StickerOverlayView(props: {
           </div>
         </>
       )}
+    </div>
+  )
+}
+
+// =============================================================================
+// PHOTO BORDER + FILTER MENUS (PR 2 — small popover submenus)
+// =============================================================================
+
+const BORDER_OPTIONS: Array<{ id: PhotoBorderStyle; label: string }> = [
+  { id: 'none',       label: 'None' },
+  { id: 'thin',       label: 'Thin' },
+  { id: 'thick',      label: 'Thick' },
+  { id: 'polaroid',   label: 'Polaroid' },
+  { id: 'rounded',    label: 'Rounded' },
+  { id: 'film-strip', label: 'Film' },
+]
+
+function BorderMenu({
+  current,
+  onPick,
+}: {
+  current: PhotoBorderStyle
+  onPick: (style: PhotoBorderStyle) => void
+}) {
+  return (
+    <div className="grid grid-cols-3 gap-1">
+      {BORDER_OPTIONS.map((opt) => (
+        <button
+          key={opt.id}
+          type="button"
+          onClick={() => onPick(opt.id)}
+          aria-pressed={current === opt.id}
+          className={`min-h-[44px] rounded text-[11px] font-medium px-1 py-2 flex flex-col items-center justify-center gap-1 border transition-colors ${
+            current === opt.id
+              ? 'bg-[#406A56] text-white border-[#406A56]'
+              : 'bg-white text-[#2A3E33] border-[#DDE3DF] hover:border-[#406A56]'
+          }`}
+          title={opt.label}
+        >
+          <BorderSwatch style={opt.id} active={current === opt.id} />
+          <span className="leading-none">{opt.label}</span>
+        </button>
+      ))}
+    </div>
+  )
+}
+
+/** Tiny visual representation of each border style for the menu buttons. */
+function BorderSwatch({ style, active }: { style: PhotoBorderStyle; active: boolean }) {
+  const fg = active ? '#FFFFFF' : '#406A56'
+  const bg = active ? 'rgba(255,255,255,0.18)' : '#F2F1E5'
+  const inner = (
+    <rect x="6" y="6" width="20" height="14" fill={bg} />
+  )
+  switch (style) {
+    case 'none':
+      return <svg width="32" height="22" viewBox="0 0 32 26">{inner}</svg>
+    case 'thin':
+      return <svg width="32" height="22" viewBox="0 0 32 26">{inner}<rect x="6" y="6" width="20" height="14" fill="none" stroke={fg} strokeWidth="1.2"/></svg>
+    case 'thick':
+      return <svg width="32" height="22" viewBox="0 0 32 26">{inner}<rect x="6" y="6" width="20" height="14" fill="none" stroke={fg} strokeWidth="3"/></svg>
+    case 'polaroid':
+      return <svg width="32" height="22" viewBox="0 0 32 26"><rect x="4" y="4" width="24" height="20" fill="#fff" stroke={fg} strokeWidth="0.5"/><rect x="6" y="6" width="20" height="11" fill={bg}/></svg>
+    case 'rounded':
+      return <svg width="32" height="22" viewBox="0 0 32 26"><rect x="6" y="6" width="20" height="14" rx="4" fill={bg}/></svg>
+    case 'film-strip':
+      return (
+        <svg width="32" height="22" viewBox="0 0 32 26">
+          <rect x="4" y="4" width="24" height="18" fill={bg}/>
+          <rect x="4" y="4" width="24" height="3" fill="#0E0E0E"/>
+          <rect x="4" y="19" width="24" height="3" fill="#0E0E0E"/>
+          {[7, 13, 19, 25].map((cx) => (
+            <rect key={`t${cx}`} x={cx - 1.2} y="4.6" width="2.4" height="1.6" fill="#fff"/>
+          ))}
+          {[7, 13, 19, 25].map((cx) => (
+            <rect key={`b${cx}`} x={cx - 1.2} y="19.6" width="2.4" height="1.6" fill="#fff"/>
+          ))}
+        </svg>
+      )
+  }
+}
+
+const FILTER_OPTIONS: Array<{ id: PhotoFilter; label: string }> = [
+  { id: 'original', label: 'Original' },
+  { id: 'bw',       label: 'B&W' },
+  { id: 'sepia',    label: 'Sepia' },
+  { id: 'warm',     label: 'Warm' },
+  { id: 'cool',     label: 'Cool' },
+  { id: 'faded',    label: 'Faded' },
+]
+
+/**
+ * Map a PhotoFilter to a CSS filter() string for the live thumbnail preview.
+ * The renderer applies the same effect via canvas pixel ops on export — these
+ * CSS values are visually-close approximations for the picker UI only.
+ */
+function filterToCss(filter: PhotoFilter): string {
+  switch (filter) {
+    case 'original': return 'none'
+    case 'bw':       return 'grayscale(1)'
+    case 'sepia':    return 'sepia(0.85)'
+    case 'warm':     return 'saturate(1.1) hue-rotate(-10deg) brightness(1.03)'
+    case 'cool':     return 'saturate(1.05) hue-rotate(15deg) brightness(0.98)'
+    case 'faded':    return 'contrast(0.85) brightness(1.12) saturate(0.85)'
+  }
+}
+
+function FilterMenu({
+  photoUrl,
+  current,
+  onPick,
+}: {
+  photoUrl: string | undefined
+  current: PhotoFilter
+  onPick: (f: PhotoFilter) => void
+}) {
+  return (
+    <div className="grid grid-cols-3 gap-1">
+      {FILTER_OPTIONS.map((opt) => (
+        <button
+          key={opt.id}
+          type="button"
+          onClick={() => onPick(opt.id)}
+          aria-pressed={current === opt.id}
+          className={`min-h-[44px] rounded text-[11px] font-medium px-1 py-1 flex flex-col items-center gap-1 border transition-colors ${
+            current === opt.id
+              ? 'bg-[#406A56] text-white border-[#406A56]'
+              : 'bg-white text-[#2A3E33] border-[#DDE3DF] hover:border-[#406A56]'
+          }`}
+          title={opt.label}
+        >
+          {photoUrl ? (
+            <img
+              src={photoUrl}
+              alt=""
+              width={36}
+              height={24}
+              className="w-9 h-6 rounded object-cover"
+              style={{ filter: filterToCss(opt.id) }}
+              draggable={false}
+            />
+          ) : (
+            <div className="w-9 h-6 rounded bg-[#F2F1E5]" />
+          )}
+          <span className="leading-none">{opt.label}</span>
+        </button>
+      ))}
     </div>
   )
 }
@@ -824,6 +984,12 @@ function ArrangeStep({
   const [showPhotoPicker, setShowPhotoPicker] = useState(false)
   const [activeSlotId, setActiveSlotId] = useState<string | null>(null)
   const [activeTextSlotId, setActiveTextSlotId] = useState<string | null>(null)
+  // Idea pages picker (PR 2)
+  const [showIdeaPagePicker, setShowIdeaPagePicker] = useState(false)
+  // Per-photo-slot popover for Border + Filter (PR 2). Tracks which slot's
+  // popover is open and which submenu ('border' | 'filter' | null) is showing.
+  const [photoToolsSlotId, setPhotoToolsSlotId] = useState<string | null>(null)
+  const [photoToolsMenu, setPhotoToolsMenu] = useState<'border' | 'filter' | null>(null)
   // Print-safe-zone overlay toggle (persisted via localStorage)
   const [showSafetyLines, setShowSafetyLines] = useState<boolean>(() => {
     if (typeof window === 'undefined') return false
@@ -1285,6 +1451,99 @@ function ArrangeStep({
       saveHistory(newPages)
     }
   }
+
+  // --- Idea Pages (PR 2) ----------------------------------------------------
+  /**
+   * Apply a curated Idea Page preset. `mode === 'append'` adds it as a new
+   * page at the END of the list; `mode === 'replace'` swaps the currently
+   * selected page's layout + background + overlays (photo slots clear).
+   * Overlay ids are freshly generated so each instance edits independently.
+   */
+  const applyIdeaPage = (preset: IdeaPagePreset, mode: IdeaPageApplyMode) => {
+    const template = getTemplateById(preset.layoutTemplateId)
+    // Seed text slots with last text style (matches addPage behavior).
+    const seedSlots: SlotData[] = []
+    if (template) {
+      template.slots.forEach(slot => {
+        if (slot.type === 'text') {
+          seedSlots.push({
+            slotId: slot.id,
+            type: 'text',
+            textStyle: { ...lastTextStyle },
+            text: '',
+          })
+        }
+      })
+    }
+    const overlays = instantiateIdeaPageOverlays(preset)
+
+    if (mode === 'append') {
+      const newPage: PageData = {
+        id: `page-${Date.now()}`,
+        pageNumber: pages.length + 1,
+        layoutId: preset.layoutTemplateId,
+        slots: seedSlots,
+        backgroundV2: preset.background,
+        overlays,
+      }
+      const newPages = [...pages, newPage]
+      setPages(newPages)
+      saveHistory(newPages)
+      setSelectedPageId(newPage.id)
+      return
+    }
+
+    // Replace current page (caller already showed the confirm dialog).
+    if (!selectedPageId) return
+    const newPages = pages.map(p => p.id === selectedPageId
+      ? {
+          ...p,
+          layoutId: preset.layoutTemplateId,
+          slots: seedSlots,
+          backgroundV2: preset.background,
+          overlays,
+        }
+      : p
+    )
+    setPages(newPages)
+    saveHistory(newPages)
+  }
+
+  // --- Photo border + filter (PR 2) ----------------------------------------
+  const updatePhotoSlotField = (
+    pageId: string,
+    slotId: string,
+    patch: Partial<Pick<SlotData, 'border' | 'filter'>>
+  ) => {
+    const newPages = pages.map(p => {
+      if (p.id !== pageId) return p
+      const idx = p.slots.findIndex(s => s.slotId === slotId)
+      if (idx === -1) {
+        // No SlotData yet for this slot — create one with the patch.
+        return {
+          ...p,
+          slots: [...p.slots, { slotId, type: 'photo' as const, ...patch }],
+        }
+      }
+      const updated = { ...p.slots[idx], ...patch }
+      const slots = [...p.slots]
+      slots[idx] = updated
+      return { ...p, slots }
+    })
+    setPages(newPages)
+    saveHistory(newPages)
+  }
+
+  const setSlotBorder = (slotId: string, style: PhotoBorderStyle) => {
+    if (!selectedPageId) return
+    const border: PhotoBorder = { style }
+    updatePhotoSlotField(selectedPageId, slotId, { border })
+  }
+
+  const setSlotFilter = (slotId: string, filter: PhotoFilter) => {
+    if (!selectedPageId) return
+    updatePhotoSlotField(selectedPageId, slotId, { filter })
+  }
   
   const assignPhotoToSlot = (pageId: string, slotId: string, photo: typeof availablePhotos[0] | null) => {
     const newPages = pages.map(p => {
@@ -1673,6 +1932,16 @@ function ArrangeStep({
               <Palette className="w-4 h-4" />
               Background
             </button>
+            <button
+              type="button"
+              onClick={() => setShowIdeaPagePicker(true)}
+              className="min-h-[44px] px-3 rounded-lg bg-[#406A56]/10 hover:bg-[#406A56]/20 text-[#406A56] text-sm font-medium flex items-center gap-2"
+              aria-label="Open idea pages"
+              title="Browse curated full-page designs"
+            >
+              <FileText className="w-4 h-4" />
+              Idea pages
+            </button>
 
             <div className="w-px h-6 bg-[#DDE3DF] mx-1" aria-hidden="true" />
 
@@ -2002,6 +2271,29 @@ function ArrangeStep({
                               <ZoomIn className="w-4 h-4" />
                             </button>
 
+                            {/* Effects button (Border + Filter popover) */}
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation()
+                                if (photoToolsSlotId === slot.id) {
+                                  setPhotoToolsSlotId(null)
+                                  setPhotoToolsMenu(null)
+                                } else {
+                                  setPhotoToolsSlotId(slot.id)
+                                  setPhotoToolsMenu(null)
+                                }
+                              }}
+                              className={`p-1.5 rounded transition-colors ${
+                                photoToolsSlotId === slot.id
+                                  ? 'bg-[#406A56] text-white'
+                                  : 'bg-white/90 text-[#406A56] hover:bg-white'
+                              }`}
+                              title="Border & Filter"
+                              aria-label="Border and filter effects"
+                            >
+                              <Frame className="w-4 h-4" />
+                            </button>
+
                             {/* Remove photo button */}
                             <button
                               onClick={(e) => {
@@ -2063,6 +2355,62 @@ function ArrangeStep({
                               </div>
                             </div>
                           )}
+
+                          {/* Border + Filter popover (PR 2). Anchored top-right
+                              under the controls; small (≤200px wide) so it
+                              doesn't dominate the slot. */}
+                          {photoToolsSlotId === slot.id && (
+                            <div
+                              onClick={(e) => e.stopPropagation()}
+                              className="absolute top-2 right-12 z-20 bg-white shadow-xl border border-[#DDE3DF] rounded-lg p-2 w-[190px]"
+                            >
+                              <div className="flex gap-1 mb-2">
+                                <button
+                                  type="button"
+                                  onClick={(e) => { e.stopPropagation(); setPhotoToolsMenu('border') }}
+                                  aria-pressed={photoToolsMenu === 'border'}
+                                  className={`flex-1 min-h-[36px] px-2 rounded text-xs font-medium flex items-center justify-center gap-1 ${
+                                    photoToolsMenu === 'border'
+                                      ? 'bg-[#406A56] text-white'
+                                      : 'bg-[#406A56]/10 text-[#406A56] hover:bg-[#406A56]/20'
+                                  }`}
+                                >
+                                  <Frame className="w-3.5 h-3.5" /> Border
+                                </button>
+                                <button
+                                  type="button"
+                                  onClick={(e) => { e.stopPropagation(); setPhotoToolsMenu('filter') }}
+                                  aria-pressed={photoToolsMenu === 'filter'}
+                                  className={`flex-1 min-h-[36px] px-2 rounded text-xs font-medium flex items-center justify-center gap-1 ${
+                                    photoToolsMenu === 'filter'
+                                      ? 'bg-[#406A56] text-white'
+                                      : 'bg-[#406A56]/10 text-[#406A56] hover:bg-[#406A56]/20'
+                                  }`}
+                                >
+                                  <FilterIcon className="w-3.5 h-3.5" /> Filter
+                                </button>
+                              </div>
+
+                              {photoToolsMenu === 'border' && (
+                                <BorderMenu
+                                  current={pageSlot?.border?.style ?? 'none'}
+                                  onPick={(style) => setSlotBorder(slot.id, style)}
+                                />
+                              )}
+                              {photoToolsMenu === 'filter' && (
+                                <FilterMenu
+                                  photoUrl={pageSlot.fileUrl}
+                                  current={pageSlot?.filter ?? 'original'}
+                                  onPick={(f) => setSlotFilter(slot.id, f)}
+                                />
+                              )}
+                              {photoToolsMenu === null && (
+                                <p className="text-[11px] text-[#5A6660] px-1 py-2">
+                                  Pick Border or Filter above.
+                                </p>
+                              )}
+                            </div>
+                          )}
                         </>
                       ) : (
                         <div className="w-full h-full flex flex-col items-center justify-center text-[#94A09A]">
@@ -2073,7 +2421,7 @@ function ArrangeStep({
                     </div>
                   )
                 }
-                
+
                 if (slot.type === 'text') {
                   const textStyle = getTextStyle(selectedPage.id, slot.id)
                   const isActive = activeTextSlotId === slot.id
@@ -2260,6 +2608,12 @@ function ArrangeStep({
           onClose={() => setShowBackgroundPickerV2(false)}
           current={selectedPage?.backgroundV2 ?? null}
           onApply={applyBackgroundV2}
+        />
+        <IdeaPagePicker
+          open={showIdeaPagePicker}
+          onClose={() => setShowIdeaPagePicker(false)}
+          hasSelectedPage={!!selectedPage}
+          onApply={applyIdeaPage}
         />
       </div>
       
@@ -3802,7 +4156,12 @@ export default function CreatePhotobookPage() {
             photos: page.slots.filter(s => s.type === 'photo').map(s => ({
               memory_id: s.memoryId,
               media_id: s.mediaId,
-              file_url: s.fileUrl
+              file_url: s.fileUrl,
+              // PR 2: per-slot border + filter (additive — round-trips without
+              // a schema migration; absent fields keep the original render).
+              slot_id: s.slotId,
+              border: s.border ?? null,
+              filter: s.filter ?? null,
             })),
             qr_code: page.slots.find(s => s.type === 'qr') ? {
               memory_id: page.slots.find(s => s.type === 'qr')?.qrMemoryId
