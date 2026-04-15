@@ -51,7 +51,7 @@ const myStoryLink = { href: '/dashboard/my-story', label: 'My Story', icon: Book
 const toolsItems = [
   { href: '/dashboard/journalist', label: 'Interviews', icon: MessageSquare },
   { href: '/dashboard/postscripts', label: 'PostScripts', icon: Gift },
-  { href: '/dashboard/photobook/create', label: 'Create Book', icon: BookOpen },
+  { href: '/dashboard/photobook', label: 'Your books', icon: BookOpen },
 ]
 
 // People dropdown - who you share with
