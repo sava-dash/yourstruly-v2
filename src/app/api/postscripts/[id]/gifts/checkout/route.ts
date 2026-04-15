@@ -116,14 +116,22 @@ export async function POST(
   }
 
   // Create the gift record first (unpaid)
+  const resolvedProductId = giftType === 'choice' ? GOODY_FLEX_GIFT_PRODUCT_ID : productId
   const { data: gift, error: giftError } = await supabase
     .from('postscript_gifts')
     .insert({
       postscript_id: postscriptId,
-      product_id: giftType === 'choice' ? GOODY_FLEX_GIFT_PRODUCT_ID : productId,
+      user_id: user.id, // Required by NOT NULL + RLS policy on legacy schema
+      // Legacy NOT NULL columns from 044_marketplace_postscript_gifts.sql — populate
+      // with sensible defaults so the insert does not violate constraints on installs
+      // that still carry the pre-cleanup schema.
+      code: resolvedProductId || 'goody-gift',
+      market: 'goody',
+      title: displayName,
+      product_id: resolvedProductId,
       provider: 'goody',
       name: displayName,
-      description: giftType === 'choice' 
+      description: giftType === 'choice'
         ? `Recipient chooses any gift up to $${flexGiftAmount}`
         : null,
       image_url: displayImage,
@@ -137,7 +145,7 @@ export async function POST(
       payment_status: 'pending',
       status: 'pending',
       provider_data: {
-        goody_product_id: giftType === 'choice' ? GOODY_FLEX_GIFT_PRODUCT_ID : productId,
+        goody_product_id: resolvedProductId,
         is_flex_gift: giftType === 'choice',
       },
     })
@@ -145,8 +153,37 @@ export async function POST(
     .single()
 
   if (giftError) {
-    console.error('Error creating gift record:', giftError)
-    return NextResponse.json({ error: 'Failed to create gift record' }, { status: 500 })
+    console.error('[postscript_gifts insert] ', giftError)
+    const isDev = process.env.NODE_ENV !== 'production'
+    if (isDev) {
+      return NextResponse.json(
+        {
+          error: 'Failed to create gift record',
+          code: giftError.code,
+          message: giftError.message,
+          hint: giftError.hint,
+          details: giftError.details,
+        },
+        { status: 500 }
+      )
+    }
+    // Production: short correlation id, verbose log server-side only.
+    const correlationId = `gift-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 8)}`
+    console.error(`[postscript_gifts insert] correlationId=${correlationId}`, {
+      code: giftError.code,
+      message: giftError.message,
+      hint: giftError.hint,
+      details: giftError.details,
+    })
+    return NextResponse.json(
+      {
+        error: 'Failed to create gift record',
+        code: giftError.code,
+        message: giftError.message,
+        correlationId,
+      },
+      { status: 500 }
+    )
   }
 
   // Create Stripe checkout session
