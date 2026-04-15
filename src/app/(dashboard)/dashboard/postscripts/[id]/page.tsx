@@ -710,26 +710,51 @@ export default function PostScriptDetailPage({ params }: { params: Promise<{ id:
               <button
                 onClick={async () => {
                   setShowCheckoutPrompt(false)
-                  // Create a Stripe checkout for the gift
+                  // Create a Stripe checkout for the gift attached to this postscript
                   try {
+                    let parsedGift: { name?: string; price?: number; image_url?: string; product_id?: string } = {}
+                    try { parsedGift = JSON.parse(postscript.gift_details || '{}') } catch {}
+                    const giftType = postscript.gift_type === 'choice' ? 'choice' : 'product'
+                    const payload: Record<string, unknown> = { giftType }
+                    if (giftType === 'choice') {
+                      payload.flexGiftAmount = postscript.gift_budget || parsedGift.price || 50
+                    } else {
+                      payload.productId = parsedGift.product_id || postscript.id
+                      payload.productName = parsedGift.name || 'Gift'
+                      payload.productImage = parsedGift.image_url
+                      payload.productPrice = parsedGift.price || postscript.gift_budget || 50
+                    }
                     const res = await fetch(`/api/postscripts/${postscript.id}/gifts/checkout`, {
                       method: 'POST',
                       headers: { 'Content-Type': 'application/json' },
-                      body: JSON.stringify({
-                        amount: postscript.gift_budget || 50,
-                        gift_type: postscript.gift_type,
-                      }),
+                      body: JSON.stringify(payload),
                     })
                     if (res.ok) {
                       const data = await res.json()
-                      if (data.url) {
-                        window.location.href = data.url
+                      if (data.checkoutUrl) {
+                        window.location.href = data.checkoutUrl
                         return
                       }
+                    } else {
+                      const errData = await res.json().catch(() => ({}))
+                      setGiftMessage({
+                        type: 'error',
+                        text: errData.error || "We couldn't start checkout. Please try again.",
+                      })
+                      return
                     }
-                  } catch {}
-                  // Fallback: just dismiss and show gift modal
-                  setShowGiftModal(true)
+                  } catch {
+                    setGiftMessage({
+                      type: 'error',
+                      text: "We couldn't reach the payment service. Please try again.",
+                    })
+                    return
+                  }
+                  // Fallback: show a plain-language toast
+                  setGiftMessage({
+                    type: 'error',
+                    text: "Checkout didn't start. Please try again in a moment.",
+                  })
                 }}
                 className="w-full py-3 bg-[#2D5A3D] text-white rounded-xl font-medium hover:bg-[#244B32] transition-colors"
               >
