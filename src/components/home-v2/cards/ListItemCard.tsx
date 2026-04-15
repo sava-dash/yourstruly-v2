@@ -40,7 +40,8 @@ export function ListItemCard({ category, promptText, data, onSave, saved }: List
   const [enriching, setEnriching] = useState(false)
   const [previewUrl, setPreviewUrl] = useState(data.metadata?.previewUrl || '')
   const [externalUrl, setExternalUrl] = useState(data.metadata?.externalUrl || '')
-  const [searchResults, setSearchResults] = useState<{ name: string; artist?: string; imageUrl?: string; previewUrl?: string; externalUrl?: string }[]>([])
+  const [searchResults, setSearchResults] = useState<{ name: string; artist?: string; year?: string; imageUrl?: string; previewUrl?: string; externalUrl?: string }[]>([])
+  const [searchAttempted, setSearchAttempted] = useState(false)
   const [contacts, setContacts] = useState<{ id: string; full_name: string }[]>([])
   const [personSearch, setPersonSearch] = useState('')
   const [showPersonSuggestions, setShowPersonSuggestions] = useState(false)
@@ -60,8 +61,9 @@ export function ListItemCard({ category, promptText, data, onSave, saved }: List
 
   // Search + enrich: fetch suggestions and cover art
   const enrichItem = useCallback(async (name: string) => {
-    if (name.length < 2 || !config.searchApi) { setSearchResults([]); return }
+    if (name.length < 2 || !config.searchApi) { setSearchResults([]); setSearchAttempted(false); return }
     setEnriching(true)
+    setSearchAttempted(true)
     try {
       if (config.searchApi === 'music') {
         const res = await fetch(`https://itunes.apple.com/search?term=${encodeURIComponent(name)}&entity=song&limit=20`)
@@ -93,17 +95,20 @@ export function ListItemCard({ category, promptText, data, onSave, saved }: List
           if (detail.imdbID) setExternalUrl(`https://www.imdb.com/title/${detail.imdbID}`)
         }
       } else if (config.searchApi === 'books') {
-        // Search Google Books — matches by title OR author. Returns more results
-        // so author searches (e.g. "Stephen King") have enough to browse.
-        const res = await fetch(`https://www.googleapis.com/books/v1/volumes?q=${encodeURIComponent(name)}&maxResults=20&printType=books`)
+        // Google Books v1 — free-text query matches BOTH title and author automatically.
+        // No auth key needed for basic use. Returns up to 20 results sorted by relevance.
+        const res = await fetch(`https://www.googleapis.com/books/v1/volumes?q=${encodeURIComponent(name)}&maxResults=20&orderBy=relevance&printType=books`)
         const data = await res.json()
         const items = (data.items || []).filter((r: any) => r.volumeInfo?.title)
         setSearchResults(items.slice(0, 20).map((r: any) => {
           const authors = r.volumeInfo?.authors || []
-          const authorStr = authors.length > 0 ? authors.slice(0, 2).join(', ') : 'Unknown'
+          const authorStr = authors.length > 0 ? authors.slice(0, 2).join(', ') : 'Unknown author'
+          const pubDate = r.volumeInfo?.publishedDate || ''
+          const pubYear = pubDate.slice(0, 4)
           return {
-            name: `${r.volumeInfo.title} — ${authorStr}`,
+            name: r.volumeInfo.title,
             artist: authorStr,
+            year: pubYear,
             imageUrl: r.volumeInfo?.imageLinks?.thumbnail?.replace('http:', 'https:'),
             externalUrl: r.volumeInfo?.previewLink || r.volumeInfo?.infoLink,
           }
@@ -126,7 +131,7 @@ export function ListItemCard({ category, promptText, data, onSave, saved }: List
   const handleItemChange = (val: string) => {
     setItem(val)
     if (debounceRef.current) clearTimeout(debounceRef.current)
-    debounceRef.current = setTimeout(() => enrichItem(val), 800)
+    debounceRef.current = setTimeout(() => enrichItem(val), 300)
   }
 
   const handleSave = async () => {
@@ -255,22 +260,74 @@ export function ListItemCard({ category, promptText, data, onSave, saved }: List
           )}
         </div>
         {/* Search suggestions dropdown */}
-        {searchResults.length > 0 && item.length >= 2 && (
-          <div className="absolute top-full left-0 right-0 mt-1 bg-white rounded-xl shadow-lg border border-[#DDE3DF] z-20 max-h-[240px] overflow-y-auto overscroll-contain">
+        {item.length >= 2 && (searchResults.length > 0 || enriching || searchAttempted) && (
+          <div className="absolute top-full left-0 right-0 mt-1 bg-white rounded-xl shadow-lg border border-[#DDE3DF] z-20 max-h-[360px] overflow-y-auto overscroll-contain">
+            {/* Loading skeleton */}
+            {enriching && searchResults.length === 0 && (
+              <div className="p-2 space-y-2">
+                {[0, 1, 2].map(i => (
+                  <div key={i} className="flex items-center gap-3 px-2 py-2 min-h-[44px]">
+                    {category === 'books' ? (
+                      <div className="w-10 h-[60px] rounded bg-[#E6F0EA] animate-pulse flex-shrink-0" />
+                    ) : (
+                      <div className="w-8 h-8 rounded-lg bg-[#E6F0EA] animate-pulse flex-shrink-0" />
+                    )}
+                    <div className="flex-1 space-y-1.5">
+                      <div className="h-3 bg-[#E6F0EA] rounded animate-pulse w-3/4" />
+                      <div className="h-2.5 bg-[#E6F0EA] rounded animate-pulse w-1/2" />
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {/* No results */}
+            {!enriching && searchAttempted && searchResults.length === 0 && (
+              <div className="px-4 py-6 text-center text-sm text-[#94A09A]">
+                No matches found — try a different search
+              </div>
+            )}
+
+            {/* Results */}
             {searchResults.map((result, i) => (
               <button
                 key={i}
                 onClick={() => {
                   setItem(result.name.split(' — ')[0].split(' (')[0])
+                  if (result.artist && category === 'books' && !person) setPerson('')
+                  if (result.year && !year) setYear(result.year)
                   if (result.imageUrl) setImageUrl(result.imageUrl)
                   if (result.previewUrl) setPreviewUrl(result.previewUrl)
                   if (result.externalUrl) setExternalUrl(result.externalUrl)
                   setSearchResults([])
+                  setSearchAttempted(false)
                 }}
-                className="w-full flex items-center gap-2.5 px-3 py-2 text-left hover:bg-[#E6F0EA] transition-colors text-sm"
+                className={`w-full flex items-center gap-3 px-3 py-2 text-left hover:bg-[#F5F0E6] transition-colors text-sm min-h-[44px] ${category === 'books' ? 'border-b border-[#F0EDE5] last:border-0' : ''}`}
               >
-                {result.imageUrl && <img src={result.imageUrl} alt="" className="w-8 h-8 rounded-lg object-cover flex-shrink-0" />}
-                <span className="text-[#1A1F1C] truncate">{result.name}</span>
+                {category === 'books' ? (
+                  <>
+                    {result.imageUrl ? (
+                      <img src={result.imageUrl} alt="" className="w-10 h-[60px] rounded object-cover flex-shrink-0 shadow-sm" />
+                    ) : (
+                      <div className="w-10 h-[60px] rounded bg-[#E6F0EA] flex items-center justify-center flex-shrink-0">
+                        <BookOpen size={16} className="text-[#2D5A3D]/40" />
+                      </div>
+                    )}
+                    <div className="flex-1 min-w-0">
+                      <div className="text-[#1A1F1C] truncate font-medium" style={{ fontFamily: 'var(--font-playfair, Playfair Display, serif)' }}>
+                        {result.name}
+                      </div>
+                      <div className="text-xs text-[#5A6660] truncate mt-0.5" style={{ fontFamily: 'var(--font-inter-tight, Inter Tight, sans-serif)' }}>
+                        {result.artist}{result.year ? ` · ${result.year}` : ''}
+                      </div>
+                    </div>
+                  </>
+                ) : (
+                  <>
+                    {result.imageUrl && <img src={result.imageUrl} alt="" className="w-8 h-8 rounded-lg object-cover flex-shrink-0" />}
+                    <span className="text-[#1A1F1C] truncate">{result.name}</span>
+                  </>
+                )}
               </button>
             ))}
           </div>
