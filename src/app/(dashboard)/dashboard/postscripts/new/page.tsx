@@ -1,12 +1,12 @@
 'use client'
 
-import React, { useState, useEffect, useRef } from 'react'
+import React, { useState, useEffect, useRef, useMemo } from 'react'
 import { createClient } from '@/lib/supabase/client'
-import { useRouter } from 'next/navigation'
-import { 
+import { useRouter, useSearchParams } from 'next/navigation'
+import {
   ChevronLeft, ChevronRight, User, Users, Calendar, Gift,
   MessageSquare, Send, Check, X, Search, Mail, Phone, ImagePlus, Trash2,
-  Mic, Brain, Sparkles, DollarSign
+  Mic, Brain, Sparkles, DollarSign, Video, Heart
 } from 'lucide-react'
 import Link from 'next/link'
 import '@/styles/home.css'
@@ -15,6 +15,7 @@ import { AttachmentSelectorModal, type SelectedAttachment } from '@/components/p
 import { GiftSelectionModal, type GiftSelection } from '@/components/postscripts/GiftSelectionModal'
 import AiDraftHelper from '@/components/postscripts/AiDraftHelper'
 import ThemePicker from '@/components/postscripts/ThemePicker'
+import { DraftAutoSaver } from '@/lib/postscripts/draft'
 
 interface Contact {
   id: string
@@ -52,13 +53,19 @@ interface SelectedGift {
 interface FormData {
   // Recipient
   recipient_type: 'contact' | 'circle'
+  recipient_mode: 'single' | 'group' | 'circle'
   recipient_contact_id: string | null
   circle_id: string | null
   recipient_name: string
   recipient_email: string
   recipient_phone: string
+  // Group send (F5)
+  group_recipients: Contact[]
   // Occasion
   delivery_type: 'date' | 'event' | 'after_passing'
+  trigger_type: 'date' | 'event' | 'legacy_executor'
+  executor_name: string
+  executor_email: string
   delivery_date: string
   delivery_time: string
   delivery_event: string
@@ -69,6 +76,7 @@ interface FormData {
   title: string
   message: string
   video_url: string
+  video_file: File | null
   audio_url: string
   audio_blob: Blob | null
   attachments: Attachment[]
@@ -101,12 +109,17 @@ export default function NewPostScriptPage() {
   
   const [form, setForm] = useState<FormData>({
     recipient_type: 'contact',
+    recipient_mode: 'single',
     recipient_contact_id: null,
     circle_id: null,
     recipient_name: '',
     recipient_email: '',
     recipient_phone: '',
+    group_recipients: [],
     delivery_type: 'date',
+    trigger_type: 'date',
+    executor_name: '',
+    executor_email: '',
     delivery_date: '',
     delivery_time: '08:00',
     delivery_event: '',
@@ -116,6 +129,7 @@ export default function NewPostScriptPage() {
     title: '',
     message: '',
     video_url: '',
+    video_file: null,
     audio_url: '',
     audio_blob: null,
     attachments: [],
@@ -123,6 +137,25 @@ export default function NewPostScriptPage() {
     memories: [],
     wisdom: []
   })
+
+  // F1: draft autosave + saved-pulse
+  const searchParams = useSearchParams()
+  const initialDraftId = searchParams.get('draftId')
+  const [draftId, setDraftId] = useState<string | null>(initialDraftId)
+  const [showSavedPulse, setShowSavedPulse] = useState(false)
+  const draftSaverRef = useRef<DraftAutoSaver | null>(null)
+  if (!draftSaverRef.current) {
+    draftSaverRef.current = new DraftAutoSaver(
+      '/api/postscripts/draft',
+      2000,
+      (id) => {
+        setDraftId(id)
+        setShowSavedPulse(true)
+        setTimeout(() => setShowSavedPulse(false), 1800)
+      },
+      (e) => console.warn('[draft autosave]', e.message),
+    )
+  }
   
   const [showGiftModal, setShowGiftModal] = useState(false)
   const [showMemoryModal, setShowMemoryModal] = useState(false)
@@ -203,6 +236,83 @@ export default function NewPostScriptPage() {
     fetchContacts()
     fetchCircles()
   }, [])
+
+  // F1: hydrate from existing draft
+  useEffect(() => {
+    if (!initialDraftId) return
+    let cancelled = false
+    ;(async () => {
+      try {
+        const res = await fetch(`/api/postscripts/${initialDraftId}`)
+        if (!res.ok) return
+        const { postscript: p } = await res.json()
+        if (cancelled || !p) return
+        setForm(f => ({
+          ...f,
+          recipient_contact_id: p.recipient_contact_id || null,
+          circle_id: p.circle_id || null,
+          recipient_name: p.recipient_name || '',
+          recipient_email: p.recipient_email || '',
+          recipient_phone: p.recipient_phone || '',
+          title: p.title === 'Untitled draft' ? '' : (p.title || ''),
+          message: p.message || '',
+          video_url: p.video_url || '',
+          delivery_type: p.delivery_type || 'date',
+          trigger_type: p.trigger_type || (p.delivery_type === 'event' ? 'event' : 'date'),
+          executor_name: p.executor_name || '',
+          executor_email: p.executor_email || '',
+          delivery_date: p.delivery_date || '',
+          delivery_event: p.delivery_event || '',
+          delivery_recurring: !!p.delivery_recurring,
+          requires_confirmation: !!p.requires_confirmation,
+        }))
+        draftSaverRef.current?.setId(initialDraftId)
+        setDraftId(initialDraftId)
+      } catch (err) {
+        console.warn('[draft hydrate]', err)
+      }
+    })()
+    return () => { cancelled = true }
+  }, [initialDraftId])
+
+  // F1: debounced autosave on form change (skip while final saving)
+  useEffect(() => {
+    if (saving) return
+    draftSaverRef.current?.schedule({
+      recipient_contact_id: form.recipient_contact_id,
+      circle_id: form.circle_id,
+      recipient_name: form.recipient_name,
+      recipient_email: form.recipient_email,
+      recipient_phone: form.recipient_phone,
+      title: form.title,
+      message: form.message,
+      delivery_type: form.delivery_type,
+      delivery_date: form.delivery_date,
+      delivery_event: form.delivery_event,
+      delivery_recurring: form.delivery_recurring,
+      requires_confirmation: form.requires_confirmation,
+      trigger_type: form.trigger_type,
+      executor_name: form.executor_name,
+      executor_email: form.executor_email,
+    })
+  }, [
+    form.recipient_contact_id, form.circle_id, form.recipient_name, form.recipient_email,
+    form.recipient_phone, form.title, form.message, form.delivery_type, form.delivery_date,
+    form.delivery_event, form.delivery_recurring, form.requires_confirmation,
+    form.trigger_type, form.executor_name, form.executor_email, saving,
+  ])
+
+  // F4: video upload
+  const handleVideoSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+    if (!file.type.startsWith('video/')) {
+      alert('Please choose a video file.')
+      return
+    }
+    setForm(f => ({ ...f, video_file: file }))
+  }
+  const removeVideo = () => setForm(f => ({ ...f, video_file: null, video_url: '' }))
 
   async function fetchContacts() {
     const { data: { user } } = await supabase.auth.getUser()
@@ -307,11 +417,20 @@ export default function NewPostScriptPage() {
   function canProceed(): boolean {
     switch (step) {
       case 1:
+        // Group: need >=2 recipients each with email or phone
+        if (form.recipient_mode === 'group') {
+          return form.group_recipients.length >= 2 &&
+                 form.group_recipients.every(c => !!(c.email || c.phone))
+        }
         // Need a recipient AND a delivery method (email or phone), unless it's a circle
         if (form.circle_id) return true
         if (!form.recipient_name.trim()) return false
         return !!(form.recipient_email.trim() || form.recipient_phone.trim())
       case 2:
+        if (form.trigger_type === 'legacy_executor') {
+          return form.executor_email.trim().length > 3 && form.executor_email.includes('@')
+            && form.executor_name.trim().length > 0
+        }
         if (form.delivery_type === 'date') {
           return form.delivery_date.length > 0
         } else if (form.delivery_type === 'event') {
@@ -355,6 +474,19 @@ export default function NewPostScriptPage() {
         }
       }
 
+      // F4: Upload video if a file was chosen
+      let videoUrl = form.video_url
+      if (form.video_file) {
+        const videoFormData = new FormData()
+        videoFormData.append('file', form.video_file)
+        videoFormData.append('bucket', 'memories')
+        const videoRes = await fetch('/api/upload', { method: 'POST', body: videoFormData })
+        if (videoRes.ok) {
+          const { url } = await videoRes.json()
+          videoUrl = url
+        }
+      }
+
       // Upload audio if recorded
       let audioUrl = form.audio_url
       if (form.audio_blob) {
@@ -373,25 +505,58 @@ export default function NewPostScriptPage() {
         }
       }
 
-      const res = await fetch('/api/postscripts', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          recipient_contact_id: form.recipient_contact_id,
-          circle_id: form.circle_id,
-          recipient_name: form.recipient_name,
-          recipient_email: form.recipient_email,
-          recipient_phone: form.recipient_phone,
-          delivery_type: form.delivery_type,
-          delivery_date: form.delivery_date,
+      // Build the recipient list: for group mode we POST one per recipient sharing a group_id (F5)
+      const isGroup = form.recipient_mode === 'group' && form.group_recipients.length > 0
+      const groupId = isGroup ? crypto.randomUUID() : null
+      const recipients = isGroup
+        ? form.group_recipients.map(c => ({
+            recipient_contact_id: c.id,
+            recipient_name: c.full_name,
+            recipient_email: c.email || '',
+            recipient_phone: c.phone || '',
+          }))
+        : [{
+            recipient_contact_id: form.recipient_contact_id,
+            recipient_name: form.recipient_name,
+            recipient_email: form.recipient_email,
+            recipient_phone: form.recipient_phone,
+          }]
+
+      // Resolve trigger + delivery semantics. For legacy_executor, schedule far-out so cron doesn't fire on date.
+      const isLegacy = form.trigger_type === 'legacy_executor'
+      const effectiveDeliveryType = isLegacy ? 'date' : form.delivery_type
+      const effectiveDeliveryDate = isLegacy
+        ? new Date(Date.now() + 365 * 100 * 24 * 60 * 60 * 1000).toISOString().split('T')[0]
+        : form.delivery_date
+
+      let firstId: string | null = null
+      let firstHadGift = false
+
+      // If we have an existing draft, convert it (PUT) for the first recipient instead of inserting
+      const draftToConvert = !isGroup && draftId ? draftId : null
+
+      for (const r of recipients) {
+        const payload: Record<string, any> = {
+          recipient_contact_id: r.recipient_contact_id,
+          circle_id: isGroup ? null : form.circle_id,
+          group_id: groupId,
+          recipient_name: r.recipient_name,
+          recipient_email: r.recipient_email,
+          recipient_phone: r.recipient_phone,
+          delivery_type: effectiveDeliveryType,
+          delivery_date: effectiveDeliveryDate,
           delivery_time: form.delivery_time,
           delivery_event: form.delivery_event,
           delivery_recurring: form.delivery_recurring,
           requires_confirmation: form.requires_confirmation,
+          trigger_type: form.trigger_type,
+          executor_name: isLegacy ? form.executor_name : null,
+          executor_email: isLegacy ? form.executor_email : null,
+          legacy_release_required: isLegacy,
           theme: form.theme,
           title: form.title,
           message: form.message,
-          video_url: form.video_url,
+          video_url: videoUrl,
           audio_url: audioUrl,
           attachments: uploadedAttachments,
           has_gift: !!form.gift,
@@ -400,23 +565,39 @@ export default function NewPostScriptPage() {
           gift_budget: form.gift?.price || null,
           memories: form.memories.map(m => ({ id: m.id, title: m.title, imageUrl: (m as any).imageUrl || (m as any).image_url })),
           wisdom: form.wisdom.map(w => ({ id: w.id, title: w.title })),
-          status
-        })
-      })
+          status,
+        }
 
-      const data = await res.json()
-
-      if (!res.ok) {
-        throw new Error(data.error || 'Failed to save')
+        let res: Response, data: any
+        if (draftToConvert && firstId === null) {
+          res = await fetch(`/api/postscripts/${draftToConvert}`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload),
+          })
+          data = await res.json()
+          if (!res.ok) throw new Error(data.error || 'Failed to save')
+          firstId = draftToConvert
+          firstHadGift = !!form.gift
+        } else {
+          res = await fetch('/api/postscripts', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload),
+          })
+          data = await res.json()
+          if (!res.ok) throw new Error(data.error || 'Failed to save')
+          if (firstId === null) {
+            firstId = data.postscript?.id || null
+            firstHadGift = !!form.gift
+          }
+        }
       }
 
-      // If gifts attached, go to checkout first (they can skip to detail page)
-      // Otherwise go directly to detail page
-      const postscriptId = data.postscript?.id
-      if (postscriptId && form.gift) {
-        router.push(`/dashboard/postscripts/${postscriptId}?checkout=true`)
+      if (firstId && firstHadGift) {
+        router.push(`/dashboard/postscripts/${firstId}?checkout=true`)
       } else {
-        router.push(postscriptId ? `/dashboard/postscripts/${postscriptId}` : '/dashboard/postscripts')
+        router.push(firstId ? `/dashboard/postscripts/${firstId}` : '/dashboard/postscripts')
       }
     } catch (err: any) {
       setError(err.message)
@@ -437,11 +618,111 @@ export default function NewPostScriptPage() {
             <Users size={32} className="text-[#B8562E]" />
           </div>
           <h2 className="text-xl font-bold text-gray-900">Who is this message for?</h2>
-          <p className="text-gray-600 mt-1">Select a contact, circle, or enter details manually</p>
+          <p className="text-gray-600 mt-1">Send to one person, a group of people, or a circle</p>
         </div>
 
-        {/* Selected Recipient */}
-        {hasSelection && (
+        {/* F5: Recipient mode picker */}
+        <div className="grid grid-cols-3 gap-2">
+          {([
+            { key: 'single', label: 'Single', Icon: User, hint: 'One recipient' },
+            { key: 'group', label: 'Group', Icon: Users, hint: 'Multiple people' },
+            { key: 'circle', label: 'Circle', Icon: Heart, hint: 'A saved circle' },
+          ] as const).map(({ key, label, Icon, hint }) => (
+            <button
+              key={key}
+              onClick={() => {
+                if (key === 'group') {
+                  setForm(f => ({ ...f, recipient_mode: 'group', recipient_contact_id: null, circle_id: null, recipient_name: '', recipient_email: '', recipient_phone: '' }))
+                } else if (key === 'circle') {
+                  setForm(f => ({ ...f, recipient_mode: 'circle', recipient_contact_id: null, group_recipients: [], recipient_name: '', recipient_email: '', recipient_phone: '' }))
+                  setRecipientTab('circles')
+                } else {
+                  setForm(f => ({ ...f, recipient_mode: 'single', circle_id: null, group_recipients: [] }))
+                  setRecipientTab('contacts')
+                }
+              }}
+              className={`min-h-[56px] py-3 px-3 rounded-xl border-2 text-left transition-all
+                ${form.recipient_mode === key ? 'border-[#406A56] bg-[#D3E1DF]/40' : 'border-gray-200 bg-white hover:border-gray-300'}`}
+            >
+              <div className="flex items-center gap-2">
+                <Icon size={16} className="text-[#406A56]" />
+                <span className="text-sm font-semibold text-[#2d2d2d]">{label}</span>
+              </div>
+              <p className="text-[11px] text-[#666] mt-0.5">{hint}</p>
+            </button>
+          ))}
+        </div>
+
+        {/* F5: Group multi-select */}
+        {form.recipient_mode === 'group' && (
+          <div className="space-y-3">
+            <label className="block text-sm font-medium text-[#2d2d2d]">
+              Select people ({form.group_recipients.length} selected)
+            </label>
+            <div className="relative">
+              <Search size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" />
+              <input
+                type="text"
+                placeholder="Search contacts..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="w-full min-h-[44px] pl-11 pr-4 py-3 bg-white border border-gray-200 rounded-xl
+                         focus:ring-2 focus:ring-[#406A56]/20 focus:border-[#406A56] outline-none text-gray-900 placeholder:text-gray-400"
+              />
+            </div>
+            <div className="max-h-72 overflow-y-auto space-y-2 border border-gray-100 rounded-xl p-2">
+              {filteredContacts.length === 0 ? (
+                <p className="text-center text-gray-400 py-4 text-sm">No contacts</p>
+              ) : (
+                filteredContacts.map(contact => {
+                  const selected = form.group_recipients.some(g => g.id === contact.id)
+                  const reachable = !!(contact.email || contact.phone)
+                  return (
+                    <label
+                      key={contact.id}
+                      className={`flex items-center gap-3 p-3 rounded-xl cursor-pointer border min-h-[56px]
+                        ${selected ? 'border-[#406A56] bg-[#D3E1DF]/30' : 'border-gray-100 bg-white hover:bg-[#F2F1E5]'}
+                        ${!reachable ? 'opacity-60' : ''}`}
+                    >
+                      <input
+                        type="checkbox"
+                        checked={selected}
+                        disabled={!reachable}
+                        onChange={() => {
+                          setForm(f => {
+                            const exists = f.group_recipients.some(g => g.id === contact.id)
+                            return {
+                              ...f,
+                              group_recipients: exists
+                                ? f.group_recipients.filter(g => g.id !== contact.id)
+                                : [...f.group_recipients, contact]
+                            }
+                          })
+                        }}
+                        className="w-5 h-5 rounded text-[#406A56] focus:ring-[#406A56]"
+                      />
+                      <div className="w-9 h-9 rounded-full bg-[#406A56]/10 text-[#406A56] flex items-center justify-center font-semibold text-sm">
+                        {contact.full_name.slice(0, 2).toUpperCase()}
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-medium text-[#2d2d2d] truncate">{contact.full_name}</p>
+                        <p className="text-xs text-[#666] truncate">
+                          {reachable ? (contact.email || contact.phone) : 'Needs an email or phone'}
+                        </p>
+                      </div>
+                    </label>
+                  )
+                })
+              )}
+            </div>
+            <p className="text-xs text-[#666]">
+              We will create one postscript for each recipient. They schedule together but you can cancel each one individually.
+            </p>
+          </div>
+        )}
+
+        {/* Single/Circle picker — hidden in group mode */}
+        {form.recipient_mode !== 'group' && hasSelection && (
           <div className="space-y-3">
             <div className="bg-[#B8562E]/5 border border-[#B8562E]/20 rounded-2xl p-4 flex items-center justify-between">
               <div className="flex items-center gap-3">
@@ -517,7 +798,7 @@ export default function NewPostScriptPage() {
         )}
 
         {/* Recipient Selection */}
-        {!hasSelection && (
+        {form.recipient_mode !== 'group' && !hasSelection && (
           <>
             {/* Tabs: Contacts vs Circles */}
             <div className="flex bg-gray-100 rounded-xl p-1">
@@ -682,25 +963,30 @@ export default function NewPostScriptPage() {
         {/* Delivery Type Tabs */}
         <div className="flex bg-gray-100 rounded-xl p-1">
           <button
-            onClick={() => setForm({ ...form, delivery_type: 'date' })}
-            className={`flex-1 py-2 px-4 rounded-lg text-sm font-medium transition-all
-              ${form.delivery_type === 'date' ? 'bg-white shadow-sm text-gray-900' : 'text-gray-500'}`}
+            onClick={() => setForm({ ...form, delivery_type: 'date', trigger_type: 'date' })}
+            className={`flex-1 py-2 px-4 rounded-lg text-sm font-medium transition-all min-h-[44px]
+              ${form.trigger_type === 'date' ? 'bg-white shadow-sm text-gray-900' : 'text-gray-500'}`}
           >
-            Specific Date
+            On a date
           </button>
           <button
-            onClick={() => setForm({ ...form, delivery_type: 'event' })}
-            className={`flex-1 py-2 px-4 rounded-lg text-sm font-medium transition-all
-              ${form.delivery_type === 'event' ? 'bg-white shadow-sm text-gray-900' : 'text-gray-500'}`}
+            onClick={() => setForm({ ...form, delivery_type: 'event', trigger_type: 'event' })}
+            className={`flex-1 py-2 px-4 rounded-lg text-sm font-medium transition-all min-h-[44px]
+              ${form.trigger_type === 'event' ? 'bg-white shadow-sm text-gray-900' : 'text-gray-500'}`}
           >
-            Life Event
+            On an event
           </button>
           <button
-            onClick={() => setForm({ ...form, delivery_type: 'after_passing', requires_confirmation: true })}
-            className={`flex-1 py-2 px-4 rounded-lg text-sm font-medium transition-all
-              ${form.delivery_type === 'after_passing' ? 'bg-white shadow-sm text-gray-900' : 'text-gray-500'}`}
+            onClick={() => setForm({
+              ...form,
+              delivery_type: 'after_passing',
+              trigger_type: 'legacy_executor',
+              requires_confirmation: true,
+            })}
+            className={`flex-1 py-2 px-4 rounded-lg text-sm font-medium transition-all min-h-[44px]
+              ${form.trigger_type === 'legacy_executor' ? 'bg-white shadow-sm text-gray-900' : 'text-gray-500'}`}
           >
-            After I'm Gone
+            When I'm no longer here
           </button>
         </div>
 
@@ -760,13 +1046,50 @@ export default function NewPostScriptPage() {
           </div>
         )}
 
-        {/* After Passing Info */}
-        {form.delivery_type === 'after_passing' && (
-          <div className="bg-amber-50 border border-amber-200 rounded-xl p-4">
-            <p className="text-amber-800 text-sm">
-              <strong>Note:</strong> This message will be delivered after your passing.
-              You'll need to designate trusted contacts who can confirm delivery.
+        {/* F3: Legacy executor panel */}
+        {form.trigger_type === 'legacy_executor' && (
+          <div className="rounded-2xl p-5 border border-[#406A56]/20 bg-[#D3E1DF]/40 space-y-4">
+            <div>
+              <h3
+                className="text-lg text-[#2d2d2d]"
+                style={{ fontFamily: 'var(--font-playfair, "Playfair Display", serif)' }}
+              >
+                Name a trusted executor
+              </h3>
+              <p
+                className="text-[#406A56] text-base mt-1"
+                style={{ fontFamily: 'var(--font-caveat, Caveat, cursive)' }}
+              >
+                A person who will confirm when the time comes.
+              </p>
+            </div>
+            <p className="text-sm text-[#666] leading-relaxed">
+              We'll email this person when YoursTruly hasn't seen you in 180 days. They click a link, confirm, and your postscript is delivered.
             </p>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div>
+                <label className="block text-sm font-medium text-[#2d2d2d] mb-1">Executor name</label>
+                <input
+                  type="text"
+                  value={form.executor_name}
+                  onChange={(e) => setForm({ ...form, executor_name: e.target.value })}
+                  placeholder="e.g., Sarah Mitchell"
+                  className="w-full min-h-[44px] px-4 py-3 bg-white border border-[#D3E1DF] rounded-xl text-[#2d2d2d] placeholder:text-gray-400
+                             focus:ring-2 focus:ring-[#406A56]/20 focus:border-[#406A56] outline-none"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-[#2d2d2d] mb-1">Executor email</label>
+                <input
+                  type="email"
+                  value={form.executor_email}
+                  onChange={(e) => setForm({ ...form, executor_email: e.target.value })}
+                  placeholder="sarah@example.com"
+                  className="w-full min-h-[44px] px-4 py-3 bg-white border border-[#D3E1DF] rounded-xl text-[#2d2d2d] placeholder:text-gray-400
+                             focus:ring-2 focus:ring-[#406A56]/20 focus:border-[#406A56] outline-none"
+                />
+              </div>
+            </div>
           </div>
         )}
 
@@ -1027,6 +1350,54 @@ export default function NewPostScriptPage() {
                 </button>
               )}
             </div>
+          </div>
+
+          {/* F4: Video upload */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2 flex items-center gap-1.5">
+              <Video size={14} className="text-[#406A56]" />
+              Video Message <span className="text-gray-400 font-normal">(optional, file upload only)</span>
+            </label>
+            {form.video_file ? (
+              <div className="bg-[#D3E1DF]/40 border border-[#406A56]/20 rounded-xl p-4 flex items-center gap-4">
+                <Video size={28} className="text-[#406A56]" />
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-medium text-[#2d2d2d] truncate">{form.video_file.name}</p>
+                  <p className="text-xs text-[#666]">{(form.video_file.size / 1024 / 1024).toFixed(1)} MB · uploads when you save</p>
+                </div>
+                <button
+                  onClick={removeVideo}
+                  className="p-2 text-[#C35F33] hover:bg-[#C35F33]/10 rounded-lg min-h-[44px] min-w-[44px] flex items-center justify-center"
+                  aria-label="Remove video"
+                >
+                  <Trash2 size={18} />
+                </button>
+              </div>
+            ) : form.video_url ? (
+              <div className="bg-[#D3E1DF]/40 border border-[#406A56]/20 rounded-xl p-4">
+                <video src={form.video_url} controls className="w-full rounded-lg max-h-64" />
+                <button
+                  onClick={removeVideo}
+                  className="mt-2 text-sm text-[#C35F33] hover:underline"
+                >
+                  Remove video
+                </button>
+              </div>
+            ) : (
+              <label className="block w-full py-4 rounded-xl border-2 border-dashed border-gray-300
+                              hover:border-[#406A56] hover:bg-[#406A56]/5 cursor-pointer transition-all min-h-[56px]">
+                <input
+                  type="file"
+                  accept="video/*"
+                  onChange={handleVideoSelect}
+                  className="hidden"
+                />
+                <div className="flex flex-col items-center gap-1">
+                  <Video size={22} className="text-gray-400" />
+                  <span className="text-sm text-gray-500">Choose a video to upload</span>
+                </div>
+              </label>
+            )}
           </div>
 
           {/* Audio Recording */}
@@ -1298,10 +1669,15 @@ export default function NewPostScriptPage() {
           >
             <ChevronLeft size={20} />
           </Link>
-          <div>
+          <div className="flex-1">
             <h1 className="text-lg font-bold text-gray-900">Create PostScript</h1>
             <p className="text-sm text-gray-500">Step {step} of 4</p>
           </div>
+          {showSavedPulse && (
+            <span className="inline-flex items-center gap-1 px-3 py-1.5 rounded-full bg-[#406A56]/10 text-[#406A56] text-xs font-medium animate-in fade-in">
+              <Check size={12} /> Saved
+            </span>
+          )}
         </header>
 
         {/* Progress */}

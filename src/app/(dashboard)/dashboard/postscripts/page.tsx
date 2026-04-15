@@ -1,10 +1,10 @@
 'use client'
 
 import React, { useState, useEffect } from 'react'
-import { 
+import {
   Send, Calendar, Clock, CheckCircle, Mail, Plus,
   User, Users, Image as ImageIcon, Mic,
-  LayoutGrid, Clock3
+  LayoutGrid, Clock3, X, ChevronDown, ChevronRight
 } from 'lucide-react'
 import Link from 'next/link'
 import '@/styles/page-styles.css'
@@ -20,10 +20,12 @@ interface PostScript {
   recipient_name: string
   recipient_email: string | null
   circle_id: string | null
+  group_id: string | null
   delivery_type: 'date' | 'event' | 'after_passing'
   delivery_date: string | null
   delivery_event: string | null
-  status: 'draft' | 'scheduled' | 'sent' | 'opened'
+  status: 'draft' | 'scheduled' | 'sent' | 'opened' | 'cancelled'
+  sent_at?: string | null
   created_at: string
   audio_url?: string | null
   reply_text?: string | null
@@ -85,8 +87,29 @@ function getDaysUntilDelivery(dateStr: string | null): number | null {
   return Math.ceil(diffMs / (1000 * 60 * 60 * 24))
 }
 
-function PostScriptCard({ postscript }: { postscript: PostScript }) {
+function isCancelEligible(ps: PostScript): boolean {
+  if (ps.status !== 'scheduled') return false
+  if (ps.sent_at) return false
+  const now = Date.now()
+  const created = ps.created_at ? new Date(ps.created_at).getTime() : 0
+  const delivery = ps.delivery_date ? new Date(ps.delivery_date).getTime() : Infinity
+  return (now - created < 24 * 60 * 60 * 1000) || delivery > now
+}
+
+function PostScriptCard({ postscript, onChanged }: { postscript: PostScript; onChanged?: () => void }) {
   const isCircle = !!postscript.circle_id
+  const [cancelOpen, setCancelOpen] = React.useState(false)
+  const [cancelling, setCancelling] = React.useState(false)
+
+  const handleCancel = async (e: React.MouseEvent) => {
+    e.preventDefault()
+    e.stopPropagation()
+    setCancelling(true)
+    const res = await fetch(`/api/postscripts/${postscript.id}/cancel`, { method: 'POST' })
+    setCancelling(false)
+    setCancelOpen(false)
+    if (res.ok) onChanged?.()
+  }
   const displayName = postscript.circle?.name || postscript.recipient_name
   const initials = displayName
     .split(' ')
@@ -176,10 +199,84 @@ function PostScriptCard({ postscript }: { postscript: PostScript }) {
                 {postscript.attachments.length}
               </span>
             )}
+            {isCancelEligible(postscript) && (
+              <button
+                onClick={(e) => { e.preventDefault(); e.stopPropagation(); setCancelOpen(true) }}
+                className="ml-1 px-2 py-1 rounded-md text-[11px] font-medium text-[#C35F33] border border-[#C35F33]/30 hover:bg-[#C35F33]/10 min-h-[28px]"
+                title="Cancel this scheduled message"
+              >
+                <X size={12} className="inline -mt-0.5" /> Cancel
+              </button>
+            )}
           </div>
         </div>
       </div>
+      {cancelOpen && (
+        <div
+          className="fixed inset-0 z-50 bg-black/40 flex items-center justify-center p-4"
+          onClick={(e) => { e.preventDefault(); e.stopPropagation(); setCancelOpen(false) }}
+        >
+          <div
+            className="bg-white rounded-2xl p-6 max-w-sm w-full shadow-xl"
+            onClick={(e) => { e.preventDefault(); e.stopPropagation() }}
+          >
+            <h3 className="text-lg font-semibold text-[#2d2d2d] mb-2" style={{ fontFamily: 'var(--font-playfair, "Playfair Display", serif)' }}>
+              Stop the delivery?
+            </h3>
+            <p className="text-sm text-[#666] mb-5">
+              You can always create a new postscript later.
+            </p>
+            <div className="flex gap-3">
+              <button
+                onClick={(e) => { e.preventDefault(); e.stopPropagation(); setCancelOpen(false) }}
+                className="flex-1 min-h-[44px] py-2 px-4 rounded-xl bg-[#F2F1E5] text-[#2d2d2d] font-medium hover:bg-[#E8E4D6]"
+              >
+                Keep it
+              </button>
+              <button
+                onClick={handleCancel}
+                disabled={cancelling}
+                className="flex-1 min-h-[44px] py-2 px-4 rounded-xl bg-[#C35F33] text-white font-medium hover:bg-[#A85128] disabled:opacity-50"
+              >
+                {cancelling ? 'Cancelling…' : 'Yes, stop it'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </Link>
+  )
+}
+
+/** Group-row for F5: collapses N postscripts that share group_id into one summary tile. */
+function GroupRow({ group, onChanged }: { group: { groupId: string; items: PostScript[] }; onChanged?: () => void }) {
+  const [open, setOpen] = React.useState(false)
+  const first = group.items[0]
+  return (
+    <div className="bg-white border border-[#406A56]/30 rounded-xl shadow-sm p-4 col-span-1 sm:col-span-2 lg:col-span-3">
+      <button
+        onClick={() => setOpen(o => !o)}
+        className="w-full flex items-center justify-between gap-3 text-left min-h-[44px]"
+      >
+        <div className="flex items-center gap-3 flex-1 min-w-0">
+          <div className="w-10 h-10 rounded-full bg-[#406A56]/10 text-[#406A56] flex items-center justify-center">
+            <Users size={18} />
+          </div>
+          <div className="flex-1 min-w-0">
+            <p className="font-semibold text-[#2d2d2d] truncate">{first.title}</p>
+            <p className="text-xs text-[#666]">{group.items.length} recipients · group send</p>
+          </div>
+        </div>
+        {open ? <ChevronDown size={18} className="text-[#666]" /> : <ChevronRight size={18} className="text-[#666]" />}
+      </button>
+      {open && (
+        <div className="mt-3 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+          {group.items.map(ps => (
+            <PostScriptCard key={ps.id} postscript={ps} onChanged={onChanged} />
+          ))}
+        </div>
+      )}
+    </div>
   )
 }
 
@@ -239,7 +336,8 @@ export default function PostScriptsPage() {
     { key: 'draft', label: 'Drafts' },
     { key: 'scheduled', label: 'Scheduled' },
     { key: 'sent', label: 'Sent' },
-    { key: 'opened', label: 'Opened' }
+    { key: 'opened', label: 'Opened' },
+    { key: 'cancelled', label: 'Cancelled' }
   ]
 
   return (
@@ -409,13 +507,32 @@ export default function PostScriptsPage() {
             </Link>
           </div>
         ) : viewMode === 'timeline' ? (
-          <PostscriptTimeline postscripts={postscripts} />
+          <PostscriptTimeline postscripts={postscripts as any} />
         ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-            {postscripts.map(ps => (
-              <PostScriptCard key={ps.id} postscript={ps} />
-            ))}
-          </div>
+          (() => {
+            // F5: collapse rows sharing the same group_id into a single GroupRow.
+            const groups = new Map<string, PostScript[]>()
+            const singles: PostScript[] = []
+            for (const ps of postscripts) {
+              if (ps.group_id) {
+                const list = groups.get(ps.group_id) || []
+                list.push(ps)
+                groups.set(ps.group_id, list)
+              } else {
+                singles.push(ps)
+              }
+            }
+            return (
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                {Array.from(groups.entries()).map(([gid, items]) => (
+                  <GroupRow key={gid} group={{ groupId: gid, items }} onChanged={fetchPostScripts} />
+                ))}
+                {singles.map(ps => (
+                  <PostScriptCard key={ps.id} postscript={ps} onChanged={fetchPostScripts} />
+                ))}
+              </div>
+            )
+          })()
         )}
       </div>
     </div>
