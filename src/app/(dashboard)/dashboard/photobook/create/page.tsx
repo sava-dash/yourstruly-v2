@@ -93,6 +93,7 @@ import {
 import ProductOptionsBar from '@/components/photobook/ProductOptionsBar'
 import AddOnsPanel from '@/components/photobook/AddOnsPanel'
 import PricingRail from '@/components/photobook/PricingRail'
+import PriceChip from '@/components/photobook/PriceChip'
 
 // ============================================================================
 // TYPES
@@ -4742,10 +4743,10 @@ export default function CreatePhotobookPage() {
 
       {/* Content */}
       <div className="max-w-7xl mx-auto px-4 py-8 relative">
-        {/* PR 3: live pricing rail. Sticky on xl screens, full-width above
-            the editor on smaller widths so the running total is always in
-            view during Design + Preview. */}
-        {selectedProduct && pricingBreakdown && (currentStep === 1 || currentStep === 2) && (
+        {/* Live pricing rail. Shown only during Preview + Checkout so the
+            Design step can use the full editor width. Design step uses the
+            floating PriceChip (rendered below) for peek-able pricing. */}
+        {selectedProduct && pricingBreakdown && (currentStep === 2 || currentStep === 3) && (
           <div className="mb-6 xl:mb-0">
             <PricingRail
               breakdown={pricingBreakdown}
@@ -4753,6 +4754,16 @@ export default function CreatePhotobookPage() {
               productSize={selectedProduct.size}
             />
           </div>
+        )}
+
+        {/* Floating price chip + slide-out — Design step only. Keeps canvas
+            full-width while giving the user on-demand access to the breakdown. */}
+        {selectedProduct && pricingBreakdown && currentStep === 1 && (
+          <PriceChip
+            breakdown={pricingBreakdown}
+            productName={selectedProduct.name}
+            productSize={selectedProduct.size}
+          />
         )}
 
         <AnimatePresence mode="wait">
@@ -4773,7 +4784,7 @@ export default function CreatePhotobookPage() {
             )}
             
             {currentStep === 1 && (
-              <div className="xl:pr-96">
+              <div>
               <ArrangeStep
                 pages={pages}
                 setPages={setPages}
