@@ -79,11 +79,11 @@ export async function POST(
   let displayImage: string | undefined
 
   if (giftType === 'choice') {
-    baseAmount = flexGiftAmount * 100 // Convert to cents
+    baseAmount = Math.round(flexGiftAmount * 100) // Convert to cents (round to avoid float imprecision)
     displayName = `Gift of Choice - $${flexGiftAmount}`
     displayImage = 'https://assets.ongoody.com/store/gift-of-choice-card.png'
   } else {
-    baseAmount = productPrice * 100 // Convert to cents
+    baseAmount = Math.round(productPrice * 100) // Convert to cents (round to avoid float imprecision)
     displayName = productName
     displayImage = productImage
   }

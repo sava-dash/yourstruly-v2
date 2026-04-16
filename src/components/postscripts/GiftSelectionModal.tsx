@@ -196,7 +196,7 @@ export function GiftSelectionModal({
     setProducts([])
 
     const qs = new URLSearchParams()
-    if (scope !== 'all') qs.append('scope', scope)
+    qs.append('scope', scope) // always send — API treats 'all' as no-filter
     if (searchQuery) qs.append('search', searchQuery)
     qs.append('page', '1')
     qs.append('perPage', PER_PAGE.toString())
@@ -219,7 +219,7 @@ export function GiftSelectionModal({
     pageRef.current = nextPage
 
     const qs = new URLSearchParams()
-    if (scope !== 'all') qs.append('scope', scope)
+    qs.append('scope', scope) // always send — API treats 'all' as no-filter
     if (searchQuery) qs.append('search', searchQuery)
     qs.append('page', nextPage.toString())
     qs.append('perPage', PER_PAGE.toString())
