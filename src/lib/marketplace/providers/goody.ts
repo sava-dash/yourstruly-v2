@@ -276,28 +276,44 @@ export async function getProducts(
       return { products: [], total: 0, page, perPage, hasMore: false };
     }
     
-    // Normalize products
-    const products: Product[] = (data || []).map(row => ({
-      id: row.id,
-      name: row.name,
-      description: row.description || '',
-      price: row.sale_price_cents ? row.sale_price_cents / 100 : row.base_price_cents / 100,
-      originalPrice: row.sale_price_cents ? row.base_price_cents / 100 : undefined,
-      currency: row.currency || 'USD',
-      images: row.images || [],
-      thumbnail: row.images?.[0] || '',
-      provider: 'goody',
-      category: row.occasions?.[0] || 'gifts',
-      inStock: row.in_stock,
-      brand: row.provider,
-      providerData: {
-        goodyId: row.external_id,
-        occasions: row.occasions,
-        emotionalImpact: row.emotional_impact,
-        whyWeLoveIt: row.why_we_love_it,
-        curatedScore: row.curated_score,
-      },
-    }));
+    // Normalize products + backfill starting_price_cents (min variant price
+    // if variants exist, otherwise base_price_cents)
+    const products: Product[] = (data || []).map(row => {
+      const variantPrices: number[] = Array.isArray(row.variants)
+        ? row.variants
+            .map((v: { price?: number }) => (typeof v?.price === 'number' ? v.price : NaN))
+            .filter((n: number) => Number.isFinite(n) && n > 0)
+        : [];
+      const startingPriceCents = row.starting_price_cents
+        ?? (variantPrices.length > 0 ? Math.min(...variantPrices) : row.base_price_cents);
+
+      return {
+        id: row.id,
+        name: row.name,
+        description: row.description || '',
+        price: row.sale_price_cents ? row.sale_price_cents / 100 : row.base_price_cents / 100,
+        originalPrice: row.sale_price_cents ? row.base_price_cents / 100 : undefined,
+        currency: row.currency || 'USD',
+        images: row.images || [],
+        thumbnail: row.images?.[0] || '',
+        provider: 'goody',
+        category: row.occasions?.[0] || 'gifts',
+        inStock: row.in_stock,
+        brand: row.brand_name || row.provider,
+        providerData: {
+          goodyId: row.external_id,
+          occasions: row.occasions,
+          categories: row.categories,
+          scope: row.scope,
+          brandName: row.brand_name,
+          brandSlug: row.brand_slug,
+          startingPriceCents,
+          emotionalImpact: row.emotional_impact,
+          whyWeLoveIt: row.why_we_love_it,
+          curatedScore: row.curated_score,
+        },
+      };
+    });
     
     const total = count || 0;
     const result: PaginatedProducts = {
@@ -339,6 +355,90 @@ export async function getProductDetails(productId: string): Promise<Product | nu
  */
 export async function getCategories(): Promise<{ id: string; name: string }[]> {
   return GOODY_CATEGORIES.map(cat => ({ id: cat.id, name: cat.name }));
+}
+
+/**
+ * Brand card shape returned by /api/marketplace/brands
+ */
+export interface BrandCard {
+  slug: string;
+  name: string;
+  productCount: number;
+  startingPriceCents: number;
+  sampleImage: string;
+  blurb?: string;
+}
+
+/**
+ * Aggregate active products into brand cards.
+ * Optional filters: scope (matches scope[]) or category (matches categories[]).
+ */
+export async function getBrands(
+  filters: { scope?: string; category?: string } = {}
+): Promise<BrandCard[]> {
+  const cacheKey = `brands_${filters.scope || 'all'}_${filters.category || 'all'}`;
+  const cached = getMarketplaceCache<BrandCard[]>('goody', cacheKey);
+  if (cached) return cached;
+
+  try {
+    const { createClient } = await import('@/lib/supabase/server');
+    const supabase = await createClient();
+
+    let query = supabase
+      .from('marketplace_products')
+      .select('brand_slug, brand_name, base_price_cents, starting_price_cents, images, scope, categories')
+      .eq('is_active', true)
+      .not('brand_slug', 'is', null);
+
+    if (filters.scope && filters.scope !== 'all') {
+      query = query.contains('scope', [filters.scope]);
+    }
+    if (filters.category) {
+      query = query.contains('categories', [filters.category]);
+    }
+
+    const { data, error } = await query;
+    if (error || !data) {
+      console.error('getBrands query error:', error);
+      return [];
+    }
+
+    // Aggregate in JS (Supabase JS client doesn't expose GROUP BY directly)
+    const byBrand = new Map<string, BrandCard>();
+    for (const row of data as Array<{
+      brand_slug: string;
+      brand_name: string | null;
+      base_price_cents: number;
+      starting_price_cents: number | null;
+      images: string[] | null;
+    }>) {
+      const slug = row.brand_slug;
+      if (!slug) continue;
+      const price = row.starting_price_cents ?? row.base_price_cents;
+      const img = row.images?.[0] || '';
+      const existing = byBrand.get(slug);
+      if (!existing) {
+        byBrand.set(slug, {
+          slug,
+          name: row.brand_name || slug,
+          productCount: 1,
+          startingPriceCents: price,
+          sampleImage: img,
+        });
+      } else {
+        existing.productCount += 1;
+        if (price < existing.startingPriceCents) existing.startingPriceCents = price;
+        if (!existing.sampleImage && img) existing.sampleImage = img;
+      }
+    }
+
+    const brands = [...byBrand.values()].sort((a, b) => b.productCount - a.productCount);
+    setMarketplaceCache('goody', cacheKey, brands);
+    return brands;
+  } catch (err) {
+    console.error('getBrands failed:', err);
+    return [];
+  }
 }
 
 /**

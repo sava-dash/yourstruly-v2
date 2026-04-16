@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect, useCallback } from 'react'
-import { Package, Plus, Search, Edit2, Trash2, Eye, EyeOff, Loader2, Gift, ChevronLeft, ChevronRight, CheckSquare, Square, ToggleLeft, ToggleRight } from 'lucide-react'
+import { Package, Plus, Search, Edit2, Trash2, Eye, EyeOff, Loader2, Gift, ChevronLeft, ChevronRight, CheckSquare, Square, ToggleLeft, ToggleRight, Upload } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
 
 interface MarketplaceProduct {
@@ -38,6 +38,7 @@ export default function MarketplacePage() {
   const [selected, setSelected] = useState<Set<string>>(new Set())
   const [bulkWorking, setBulkWorking] = useState(false)
   const [showAddModal, setShowAddModal] = useState(false)
+  const [showBulkModal, setShowBulkModal] = useState(false)
   const [editingProduct, setEditingProduct] = useState<MarketplaceProduct | null>(null)
 
   const supabase = createClient()
@@ -170,13 +171,23 @@ export default function MarketplacePage() {
             {stats.active} of {stats.total} products active
           </p>
         </div>
-        <button
-          onClick={() => setShowAddModal(true)}
-          className="flex items-center gap-2 px-4 py-2 bg-[#2D5A3D] text-white rounded-lg hover:bg-[#355847] transition-colors"
-        >
-          <Plus size={18} />
-          Add Product
-        </button>
+        <div className="flex items-center gap-2">
+          <button
+            onClick={() => setShowBulkModal(true)}
+            className="flex items-center gap-2 px-4 py-2 bg-white border border-[#406A56]/30 text-[#406A56] rounded-lg hover:bg-[#406A56]/5 transition-colors"
+            title="Paste a JSON array of products to import in bulk"
+          >
+            <Upload size={18} />
+            Bulk import from JSON
+          </button>
+          <button
+            onClick={() => setShowAddModal(true)}
+            className="flex items-center gap-2 px-4 py-2 bg-[#406A56] text-white rounded-lg hover:bg-[#355847] transition-colors"
+          >
+            <Plus size={18} />
+            Add Product
+          </button>
+        </div>
       </div>
 
       {/* Stats */}
@@ -432,6 +443,14 @@ export default function MarketplacePage() {
           onSave={() => { fetchProducts(); setShowAddModal(false); setEditingProduct(null) }}
         />
       )}
+
+      {/* Bulk Import Modal */}
+      {showBulkModal && (
+        <BulkImportModal
+          onClose={() => setShowBulkModal(false)}
+          onImported={() => { fetchProducts() }}
+        />
+      )}
     </div>
   )
 }
@@ -580,6 +599,164 @@ function ProductModal({
             </button>
           </div>
         </form>
+      </div>
+    </div>
+  )
+}
+
+// ── Bulk Import Modal ────────────────────────────────────────────────────────
+
+interface BulkImportResponse {
+  inserted: number
+  skipped: number
+  errors: Array<{ index: number; name?: string; reason: string }>
+}
+
+function BulkImportModal({
+  onClose,
+  onImported,
+}: {
+  onClose: () => void
+  onImported: () => void
+}) {
+  const [text, setText] = useState('')
+  const [busy, setBusy] = useState(false)
+  const [error, setError] = useState('')
+  const [result, setResult] = useState<BulkImportResponse | null>(null)
+
+  const placeholder = `[
+  {
+    "name": "Example Mug",
+    "brand_name": "Example Brand",
+    "description": "A test mug",
+    "base_price_cents": 2500,
+    "images": ["https://images.unsplash.com/photo-..."] ,
+    "categories": ["home"],
+    "scope": ["best_seller"]
+  }
+]`
+
+  const handleSubmit = async () => {
+    setError('')
+    setResult(null)
+    setBusy(true)
+
+    let parsed: unknown
+    try {
+      parsed = JSON.parse(text)
+    } catch (e) {
+      setError("That isn't valid JSON. Paste a JSON array like the example below.")
+      setBusy(false)
+      return
+    }
+
+    if (!Array.isArray(parsed)) {
+      setError('Expected a JSON array (starts with `[`, ends with `]`).')
+      setBusy(false)
+      return
+    }
+
+    try {
+      const res = await fetch('/api/admin/marketplace/bulk-import', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ products: parsed }),
+      })
+      const json = await res.json() as BulkImportResponse | { error?: string }
+      if (!res.ok) {
+        setError((json as { error?: string }).error || `Import failed (HTTP ${res.status})`)
+      } else {
+        setResult(json as BulkImportResponse)
+        onImported()
+      }
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'Import failed')
+    } finally {
+      setBusy(false)
+    }
+  }
+
+  return (
+    <div className="fixed inset-0 z-50 bg-black/60 flex items-center justify-center p-4" onClick={onClose}>
+      <div
+        className="bg-white rounded-2xl w-full max-w-2xl max-h-[90vh] overflow-auto"
+        onClick={e => e.stopPropagation()}
+      >
+        <div className="p-6 border-b border-gray-100 flex items-center justify-between">
+          <div>
+            <h2 className="text-xl font-semibold text-[#2a1f1a]">Bulk import from JSON</h2>
+            <p className="text-sm text-[#2a1f1a]/60 mt-1">
+              Paste a JSON array of products. We&rsquo;ll auto-slug the brand and set the starting price.
+            </p>
+          </div>
+        </div>
+
+        <div className="p-6 space-y-4">
+          {error && (
+            <div className="p-3 bg-[#B8562E]/10 border border-[#B8562E]/30 text-[#B8562E] rounded-lg text-sm">
+              {error}
+            </div>
+          )}
+
+          {result && (
+            <div className="p-3 bg-[#406A56]/10 border border-[#406A56]/30 text-[#406A56] rounded-lg text-sm space-y-2">
+              <div>
+                <strong>{result.inserted}</strong> inserted, <strong>{result.skipped}</strong> skipped.
+              </div>
+              {result.errors.length > 0 && (
+                <div>
+                  <p className="font-medium mb-1">Skipped rows:</p>
+                  <ul className="text-xs list-disc pl-5 space-y-0.5">
+                    {result.errors.slice(0, 10).map((err, i) => (
+                      <li key={i}>
+                        [{err.index}] {err.name ? `"${err.name}" — ` : ''}{err.reason}
+                      </li>
+                    ))}
+                    {result.errors.length > 10 && (
+                      <li>… and {result.errors.length - 10} more</li>
+                    )}
+                  </ul>
+                </div>
+              )}
+            </div>
+          )}
+
+          <div>
+            <label className="block text-sm font-medium text-[#2a1f1a]/80 mb-1">
+              JSON array of products
+            </label>
+            <textarea
+              value={text}
+              onChange={e => setText(e.target.value)}
+              rows={14}
+              placeholder={placeholder}
+              className="w-full px-3 py-2 font-mono text-xs border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#406A56]/30"
+            />
+            <p className="text-xs text-[#2a1f1a]/50 mt-1">
+              Required per entry: <code>name</code>, <code>brand_name</code>, <code>base_price_cents</code>.
+              Optional: description, images, categories, scope, brand_slug, in_stock.
+            </p>
+          </div>
+
+          <div className="flex justify-end gap-3 pt-4 border-t border-gray-100">
+            <button
+              type="button"
+              onClick={onClose}
+              className="px-4 py-2 text-sm text-[#2a1f1a]/60 hover:text-[#2a1f1a]"
+            >
+              Close
+            </button>
+            <button
+              type="button"
+              onClick={handleSubmit}
+              disabled={busy || text.trim().length === 0}
+              className="px-6 py-2 bg-[#406A56] text-white rounded-lg hover:bg-[#355847] text-sm disabled:opacity-50 flex items-center gap-2"
+            >
+              {busy && <Loader2 className="w-4 h-4 animate-spin" />}
+              Import
+            </button>
+          </div>
+        </div>
       </div>
     </div>
   )

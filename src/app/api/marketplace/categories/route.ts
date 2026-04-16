@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { createClient } from '@/lib/supabase/server';
 
-// Category definitions for each provider type
+// ── Legacy provider-based category lists (kept for back-compat) ────────────
 const GIFT_CATEGORIES = [
   { id: 'all', name: 'All Gifts', slug: 'all', provider: 'gifts' },
   { id: 'food', name: 'Food & Treats', slug: 'food', provider: 'gifts' },
@@ -29,20 +30,90 @@ const PRINT_CATEGORIES = [
   { id: 'blankets', name: 'Photo Blankets', slug: 'blankets', provider: 'prints' },
 ];
 
+interface CategoryRow {
+  slug: string;
+  name: string;
+  icon: string | null;
+  parent_slug: string | null;
+  sort_order: number;
+  is_occasion: boolean;
+}
+
+interface CategoryNode {
+  slug: string;
+  name: string;
+  icon: string | null;
+  children: CategoryNode[];
+}
+
+// In-memory cache (10 minutes)
+const TAB_CACHE = new Map<string, { expiresAt: number; nodes: CategoryNode[] }>();
+const TAB_TTL_MS = 10 * 60 * 1000;
+
+async function loadCategoryTree(tab: 'categories' | 'occasions'): Promise<CategoryNode[]> {
+  const cached = TAB_CACHE.get(tab);
+  if (cached && cached.expiresAt > Date.now()) return cached.nodes;
+
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from('marketplace_categories')
+    .select('slug, name, icon, parent_slug, sort_order, is_occasion')
+    .eq('is_occasion', tab === 'occasions')
+    .order('sort_order', { ascending: true });
+
+  if (error || !data) {
+    console.error('categories query error:', error);
+    return [];
+  }
+
+  // Build tree keyed by slug
+  const bySlug = new Map<string, CategoryNode>();
+  for (const row of data as CategoryRow[]) {
+    bySlug.set(row.slug, { slug: row.slug, name: row.name, icon: row.icon, children: [] });
+  }
+
+  const roots: CategoryNode[] = [];
+  for (const row of data as CategoryRow[]) {
+    const node = bySlug.get(row.slug)!;
+    if (row.parent_slug && bySlug.has(row.parent_slug)) {
+      bySlug.get(row.parent_slug)!.children.push(node);
+    } else {
+      roots.push(node);
+    }
+  }
+
+  TAB_CACHE.set(tab, { expiresAt: Date.now() + TAB_TTL_MS, nodes: roots });
+  return roots;
+}
+
 /**
  * GET /api/marketplace/categories
- * Get categories from marketplace providers
- * 
- * Query parameters:
- * - provider: 'gifts' | 'flowers' | 'prints' | 'all' (optional, defaults to all)
+ *
+ * New (ongoody-IA) usage:
+ *   ?tab=categories  → returns the Categories-tab tree
+ *   ?tab=occasions   → returns the Occasions-tab tree
+ *
+ * Legacy usage (kept for back-compat with existing UI):
+ *   ?provider=gifts|flowers|prints|all → flat list
  */
 export async function GET(request: NextRequest) {
   try {
-    const searchParams = request.nextUrl.searchParams;
+    const { searchParams } = request.nextUrl;
+    const tab = searchParams.get('tab');
+
+    // New tree API
+    if (tab === 'categories' || tab === 'occasions') {
+      const tree = await loadCategoryTree(tab);
+      return NextResponse.json(
+        { tab, categories: tree },
+        { headers: { 'Cache-Control': 's-maxage=600, stale-while-revalidate=300' } }
+      );
+    }
+
+    // Legacy provider API
     const providerParam = searchParams.get('provider') || 'all';
-    
     let categories: typeof GIFT_CATEGORIES = [];
-    
+
     switch (providerParam) {
       case 'gifts':
       case 'goody':
@@ -58,7 +129,6 @@ export async function GET(request: NextRequest) {
         break;
       case 'all':
       default:
-        // Combine all categories with unique keys
         categories = [
           ...GIFT_CATEGORIES.map(c => ({ ...c, id: `gifts-${c.id}` })),
           ...FLOWER_CATEGORIES.map(c => ({ ...c, id: `flowers-${c.id}` })),
@@ -66,18 +136,10 @@ export async function GET(request: NextRequest) {
         ];
         break;
     }
-    
-    return NextResponse.json({
-      provider: providerParam,
-      categories,
-    });
-    
-  } catch (error) {
-    console.error('Marketplace categories API error:', error);
-    
-    return NextResponse.json(
-      { error: 'Internal server error' },
-      { status: 500 }
-    );
+
+    return NextResponse.json({ provider: providerParam, categories });
+  } catch (err) {
+    console.error('Marketplace categories API error:', err);
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }
