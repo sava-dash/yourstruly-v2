@@ -10,7 +10,7 @@
  * types) so the old cart/ProductCard legacy flow is untouched.
  */
 
-export type MarketplaceScope = 'all' | 'gift_of_choice' | 'best_seller' | 'personalized';
+export type MarketplaceScope = 'all' | 'gift_of_choice' | 'best_seller' | 'personalized' | 'postscript_credits';
 export type MarketplaceView = 'brands' | 'products';
 export type CategoryTab = 'categories' | 'occasions';
 
@@ -73,11 +73,12 @@ export interface CategoriesResponse {
   categories: CategoryNode[];
 }
 
-export const SCOPE_PILLS: { id: MarketplaceScope; label: string }[] = [
+export const SCOPE_PILLS: { id: MarketplaceScope; label: string; icon?: string }[] = [
   { id: 'all', label: 'All Gifts' },
   { id: 'gift_of_choice', label: 'Gift of Choice' },
   { id: 'best_seller', label: 'Best Sellers' },
   { id: 'personalized', label: 'Personalized Gifts' },
+  { id: 'postscript_credits', label: 'PostScript Credits', icon: 'mail' },
 ];
 
 export function formatCents(cents: number | null | undefined): string {

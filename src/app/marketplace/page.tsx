@@ -3,13 +3,14 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
-import { ShoppingBag, X, Loader2 } from 'lucide-react';
+import { ShoppingBag, X, Loader2, Mail } from 'lucide-react';
 
 import CategoryRail, { findCategoryBySlug } from '@/components/marketplace/CategoryRail';
 import ScopePills from '@/components/marketplace/ScopePills';
 import FilterRow from '@/components/marketplace/FilterRow';
 import ProductGrid, { type GridItem } from '@/components/marketplace/ProductGrid';
 import CategoryHero from '@/components/marketplace/CategoryHero';
+import PostScriptCreditsSection from '@/components/marketplace/PostScriptCreditsSection';
 import type {
   BrandCard as BrandCardData,
   CategoryNode,
@@ -86,9 +87,14 @@ export default function MarketplacePage() {
     };
   }, [tab]);
 
+  // Check for credits=purchased query param (Stripe return)
+  const creditsPurchased = searchParams.get('credits') === 'purchased';
+
+  const isCreditsScope = scope === 'postscript_credits';
+
   // Fetch products — switches to Prodigi provider when a prints category is active
   useEffect(() => {
-    if (view !== 'products') return;
+    if (view !== 'products' || isCreditsScope) return;
     let cancelled = false;
     setLoading(true);
 
@@ -136,11 +142,11 @@ export default function MarketplacePage() {
     return () => {
       cancelled = true;
     };
-  }, [view, scope, category, childCategory, search]);
+  }, [view, scope, category, childCategory, search, isCreditsScope]);
 
   // Fetch brands
   useEffect(() => {
-    if (view !== 'brands') return;
+    if (view !== 'brands' || isCreditsScope) return;
     let cancelled = false;
     setLoading(true);
     const qs = new URLSearchParams();
@@ -157,7 +163,7 @@ export default function MarketplacePage() {
     return () => {
       cancelled = true;
     };
-  }, [view, scope, category, childCategory]);
+  }, [view, scope, category, childCategory, isCreditsScope]);
 
   const handleTabChange = useCallback((t: CategoryTab) => {
     setTab(t);
@@ -217,12 +223,23 @@ export default function MarketplacePage() {
     if (view === 'brands') {
       items.push(...brands.map((b) => ({ kind: 'brand' as const, brand: b })));
     } else {
-      items.push(
-        ...filteredProducts.map((p) => ({ kind: 'product' as const, product: p }))
-      );
+      const productItems = filteredProducts.map((p) => ({ kind: 'product' as const, product: p }));
+      // Insert promo card at position 3 (4th slot) when not in credits scope
+      if (!isCreditsScope && productItems.length > 3) {
+        items.push(...productItems.slice(0, 3));
+        items.push({
+          kind: 'hero' as const,
+          href: '/marketplace?scope=postscript_credits',
+          title: 'Need PostScript credits?',
+          subtitle: 'Trade XP or buy a pack to send heartfelt messages.',
+        });
+        items.push(...productItems.slice(3));
+      } else {
+        items.push(...productItems);
+      }
     }
     return items;
-  }, [view, scope, category, search, filteredProducts, brands]);
+  }, [view, scope, category, search, filteredProducts, brands, isCreditsScope]);
 
   const handleAddToCart = useCallback((_p: MarketplaceProduct) => {
     setCartCount((c) => c + 1);
@@ -265,71 +282,87 @@ export default function MarketplacePage() {
         </div>
       </header>
 
+      {/* Credits purchased banner */}
+      {creditsPurchased && (
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-4">
+          <div className="flex items-center gap-3 rounded-xl px-5 py-3.5 text-sm font-medium bg-[#406A56]/10 text-[#406A56] border border-[#406A56]/20">
+            <Mail size={16} />
+            Credits added to your account!
+          </div>
+        </div>
+      )}
+
       {/* Main */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
         <div className="flex gap-8">
-          {/* Left rail — desktop */}
-          <div className="hidden lg:block w-60 flex-shrink-0">
-            <div className="sticky top-40 max-h-[calc(100vh-10rem)] overflow-y-auto pb-8">
-              <CategoryRail
-                tab={tab}
-                onTabChange={handleTabChange}
-                selectedSlug={category}
-                onSelect={handleSelectCategory}
-              />
+          {/* Left rail — desktop (hidden for credits scope) */}
+          {!isCreditsScope && (
+            <div className="hidden lg:block w-60 flex-shrink-0">
+              <div className="sticky top-40 max-h-[calc(100vh-10rem)] overflow-y-auto pb-8">
+                <CategoryRail
+                  tab={tab}
+                  onTabChange={handleTabChange}
+                  selectedSlug={category}
+                  onSelect={handleSelectCategory}
+                />
+              </div>
             </div>
-          </div>
+          )}
 
           {/* Main column */}
           <main className="flex-1 min-w-0">
-            {/* Filter row */}
-            <div className="mb-5">
-              <FilterRow
-                view={view}
-                onViewChange={setView}
-                priceMin={priceMin}
-                priceMax={priceMax}
-                onPriceChange={handlePriceChange}
-                value={valueFilter}
-                onValueChange={setValueFilter}
-                search={search}
-                onSearchChange={setSearch}
-                onOpenMobileCategories={() => setMobileCatsOpen(true)}
-              />
-            </div>
+            {isCreditsScope ? (
+              <PostScriptCreditsSection />
+            ) : (
+              <>
+                {/* Filter row */}
+                <div className="mb-5">
+                  <FilterRow
+                    view={view}
+                    onViewChange={setView}
+                    priceMin={priceMin}
+                    priceMax={priceMax}
+                    onPriceChange={handlePriceChange}
+                    search={search}
+                    onSearchChange={setSearch}
+                    onOpenMobileCategories={() => setMobileCatsOpen(true)}
+                  />
+                </div>
 
-            {/* Category hero */}
-            {currentCategory && (
-              <CategoryHero
-                category={currentCategory}
-                selectedChildSlug={childCategory}
-                onSelectChild={(slug) => setChildCategory(slug)}
-              />
-            )}
-
-            {/* Count */}
-            <div className="flex items-center justify-between mb-4">
-              <p className="text-sm text-[#666]">
-                {loading ? (
-                  <span className="inline-flex items-center gap-2">
-                    <Loader2 size={12} className="animate-spin" /> Loading
-                  </span>
-                ) : view === 'brands' ? (
-                  `${brands.length} brand${brands.length === 1 ? '' : 's'}`
-                ) : (
-                  `${filteredProducts.length} product${filteredProducts.length === 1 ? '' : 's'}`
+                {/* Category hero */}
+                {currentCategory && (
+                  <CategoryHero
+                    category={currentCategory}
+                    selectedChildSlug={childCategory}
+                    onSelectChild={(slug) => setChildCategory(slug)}
+                  />
                 )}
-              </p>
-            </div>
 
-            <ProductGrid
-              items={gridItems}
-              isLoading={loading}
-              onAddToCart={handleAddToCart}
-              onSendAsGift={handleSendAsGift}
-              emptyTitle={view === 'brands' ? 'No brands match' : 'No gifts match'}
-              emptyDescription="Try a different category, scope, or clear your filters."
-            />
+                {/* Count */}
+                <div className="flex items-center justify-between mb-4">
+                  <p className="text-sm text-[#666]">
+                    {loading ? (
+                      <span className="inline-flex items-center gap-2">
+                        <Loader2 size={12} className="animate-spin" /> Loading
+                      </span>
+                    ) : view === 'brands' ? (
+                      `${brands.length} brand${brands.length === 1 ? '' : 's'}`
+                    ) : (
+                      `${filteredProducts.length} product${filteredProducts.length === 1 ? '' : 's'}`
+                    )}
+                  </p>
+                </div>
+
+                <ProductGrid
+                  items={gridItems}
+                  isLoading={loading}
+                  onAddToCart={handleAddToCart}
+                  onSendAsGift={handleSendAsGift}
+                  emptyTitle={view === 'brands' ? 'No brands match' : 'No gifts match'}
+                  emptyDescription="Try a different category, scope, or clear your filters."
+                />
+              </>
+            )}
           </main>
         </div>
       </div>
