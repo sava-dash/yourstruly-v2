@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
-import { ShoppingBag, X, Loader2, Mail } from 'lucide-react';
+import { Check, ShoppingBag, X, Loader2, Mail } from 'lucide-react';
 
 import CategoryRail, { findCategoryBySlug } from '@/components/marketplace/CategoryRail';
 import ScopePills from '@/components/marketplace/ScopePills';
@@ -12,6 +12,8 @@ import ProductGrid, { type GridItem } from '@/components/marketplace/ProductGrid
 import CategoryHero from '@/components/marketplace/CategoryHero';
 import PostScriptCreditsSection from '@/components/marketplace/PostScriptCreditsSection';
 import MarketplacePanel from '@/components/marketplace/MarketplacePanel';
+import CartPanel from '@/components/marketplace/CartPanel';
+import { useCart } from '@/lib/marketplace/useCart';
 import type {
   BrandCard as BrandCardData,
   CategoryNode,
@@ -55,8 +57,13 @@ export default function MarketplacePage() {
   const [brands, setBrands] = useState<BrandCardData[]>([]);
   const [categoryTree, setCategoryTree] = useState<CategoryNode[]>([]);
   const [loading, setLoading] = useState(false);
-  const [cartCount, setCartCount] = useState(0);
   const [mobileCatsOpen, setMobileCatsOpen] = useState(false);
+
+  // Cart
+  const cart = useCart();
+  const [showCart, setShowCart] = useState(false);
+  const [addedToast, setAddedToast] = useState(false);
+  const [badgeBounce, setBadgeBounce] = useState(false);
 
   // Slide-out panel state
   const [panelBrandSlug, setPanelBrandSlug] = useState<string | null>(null);
@@ -246,9 +253,17 @@ export default function MarketplacePage() {
     return items;
   }, [view, scope, category, search, filteredProducts, brands, isCreditsScope]);
 
-  const handleAddToCart = useCallback((_p: MarketplaceProduct) => {
-    setCartCount((c) => c + 1);
-  }, []);
+  const handleAddToCart = useCallback(
+    (p: MarketplaceProduct) => {
+      cart.add(p);
+      // Toast feedback
+      setAddedToast(true);
+      setBadgeBounce(true);
+      setTimeout(() => setAddedToast(false), 1500);
+      setTimeout(() => setBadgeBounce(false), 600);
+    },
+    [cart],
+  );
 
   const handleSelectProduct = useCallback((p: MarketplaceProduct) => {
     setPanelProductId(p.id);
@@ -279,18 +294,34 @@ export default function MarketplacePage() {
               Marketplace
             </h1>
           </Link>
-          <Link
-            href="/marketplace/cart"
-            className="relative p-2 rounded-full hover:bg-[#D3E1DF]/40 min-h-[44px] min-w-[44px] flex items-center justify-center"
-            aria-label="Cart"
-          >
-            <ShoppingBag size={22} className="text-[#406A56]" />
-            {cartCount > 0 && (
-              <span className="absolute -top-0.5 -right-0.5 w-5 h-5 bg-[#C35F33] text-white text-[10px] font-bold rounded-full flex items-center justify-center">
-                {cartCount}
-              </span>
+          <div className="relative">
+            <button
+              type="button"
+              onClick={() => setShowCart(true)}
+              className="relative p-2 rounded-full hover:bg-[#D3E1DF]/40 min-h-[44px] min-w-[44px] flex items-center justify-center"
+              aria-label="Cart"
+            >
+              <ShoppingBag size={22} className="text-[#406A56]" />
+              {cart.count > 0 && (
+                <span
+                  className={`absolute -top-0.5 -right-0.5 w-5 h-5 bg-[#C35F33] text-white text-[10px] font-bold rounded-full flex items-center justify-center${
+                    badgeBounce ? ' animate-bounce' : ''
+                  }`}
+                >
+                  {cart.count}
+                </span>
+              )}
+            </button>
+
+            {/* "Added to cart" toast */}
+            {addedToast && (
+              <div
+                className="absolute top-full right-0 mt-2 whitespace-nowrap bg-[#406A56] text-white text-xs font-medium px-3 py-1.5 rounded-lg shadow-lg flex items-center gap-1.5 z-20 fade-in"
+              >
+                <Check size={12} /> Added to cart
+              </div>
             )}
-          </Link>
+          </div>
         </div>
 
         {/* Scope pills row */}
@@ -391,6 +422,17 @@ export default function MarketplacePage() {
         productId={panelProductId}
         onClose={handleClosePanel}
         onAddToCart={handleAddToCart}
+      />
+
+      {/* Cart slide-out panel */}
+      <CartPanel
+        open={showCart}
+        items={cart.items}
+        total={cart.total}
+        onClose={() => setShowCart(false)}
+        onRemove={cart.remove}
+        onUpdateQty={cart.updateQty}
+        onClear={cart.clear}
       />
 
       {/* Mobile categories drawer */}
