@@ -1,5 +1,6 @@
 'use client';
 
+import LucideIcon from './LucideIcon';
 import type { CategoryNode } from './types';
 
 interface CategoryHeroProps {
@@ -19,9 +20,7 @@ export default function CategoryHero({
     <section className="rounded-2xl bg-[#D3E1DF]/50 border border-[#406A56]/15 p-5 md:p-6 mb-6">
       <div className="flex items-start gap-3">
         {category.icon && (
-          <span className="text-3xl leading-none mt-0.5" aria-hidden>
-            {category.icon}
-          </span>
+          <LucideIcon name={category.icon} size={32} className="text-[#406A56] mt-0.5 shrink-0" />
         )}
         <div>
           <h2
@@ -64,7 +63,7 @@ export default function CategoryHero({
                     : 'bg-white text-[#406A56] border border-[#406A56]/20 hover:bg-[#D3E1DF]'
                 }`}
               >
-                {child.icon ? `${child.icon} ` : ''}
+                {child.icon && <LucideIcon name={child.icon} size={14} className="mr-1 inline-block" />}
                 {child.name}
               </button>
             );
