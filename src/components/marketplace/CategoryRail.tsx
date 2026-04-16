@@ -16,6 +16,40 @@ interface CategoryRailProps {
 const GREEN = '#406A56';
 const GREEN_LIGHT = '#D3E1DF';
 
+/** Count how many products exist per category slug. */
+function buildCategoryCounts(
+  products: Array<{ categories?: string[] }>,
+): Map<string, number> {
+  const counts = new Map<string, number>();
+  for (const p of products) {
+    for (const slug of p.categories || []) {
+      counts.set(slug, (counts.get(slug) || 0) + 1);
+    }
+  }
+  return counts;
+}
+
+/**
+ * Recursively filter the tree: keep a node if it (or any descendant) has
+ * products. Parent counts include descendant counts for the purpose of
+ * deciding visibility.
+ */
+function pruneEmpty(
+  nodes: CategoryNode[],
+  counts: Map<string, number>,
+): CategoryNode[] {
+  const result: CategoryNode[] = [];
+  for (const node of nodes) {
+    const prunedChildren = pruneEmpty(node.children || [], counts);
+    const selfCount = counts.get(node.slug) || 0;
+    const childrenHaveProducts = prunedChildren.length > 0;
+    if (selfCount > 0 || childrenHaveProducts) {
+      result.push({ ...node, children: prunedChildren });
+    }
+  }
+  return result;
+}
+
 export default function CategoryRail({
   tab,
   onTabChange,
@@ -23,20 +57,22 @@ export default function CategoryRail({
   onSelect,
   className = '',
 }: CategoryRailProps) {
-  const [tree, setTree] = useState<CategoryNode[]>([]);
+  const [rawTree, setRawTree] = useState<CategoryNode[]>([]);
   const [loading, setLoading] = useState(false);
   const [expanded, setExpanded] = useState<Set<string>>(new Set());
+  const [categoryCounts, setCategoryCounts] = useState<Map<string, number>>(new Map());
 
+  // Fetch category tree
   useEffect(() => {
     let cancelled = false;
     setLoading(true);
     fetch(`/api/marketplace/categories?tab=${tab}`)
       .then((r) => (r.ok ? r.json() : { categories: [] }))
       .then((data) => {
-        if (!cancelled) setTree(Array.isArray(data.categories) ? data.categories : []);
+        if (!cancelled) setRawTree(Array.isArray(data.categories) ? data.categories : []);
       })
       .catch(() => {
-        if (!cancelled) setTree([]);
+        if (!cancelled) setRawTree([]);
       })
       .finally(() => {
         if (!cancelled) setLoading(false);
@@ -45,6 +81,30 @@ export default function CategoryRail({
       cancelled = true;
     };
   }, [tab]);
+
+  // Fetch product counts per category (lightweight — just needs categories array)
+  useEffect(() => {
+    let cancelled = false;
+    fetch('/api/marketplace/products?scope=all&perPage=100')
+      .then((r) => (r.ok ? r.json() : { products: [] }))
+      .then((data) => {
+        if (!cancelled) {
+          setCategoryCounts(buildCategoryCounts(data.products || []));
+        }
+      })
+      .catch(() => {
+        if (!cancelled) setCategoryCounts(new Map());
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  // Prune categories with 0 products (only when counts are loaded)
+  const tree = useMemo(() => {
+    if (categoryCounts.size === 0) return rawTree; // show all until counts load
+    return pruneEmpty(rawTree, categoryCounts);
+  }, [rawTree, categoryCounts]);
 
   // Auto-expand the branch that contains the selected slug
   useEffect(() => {

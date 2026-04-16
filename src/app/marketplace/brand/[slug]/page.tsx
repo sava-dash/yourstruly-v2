@@ -51,9 +51,15 @@ export default function BrandDetailPage() {
   }, [slug]);
 
   const categories = useMemo(() => {
-    const set = new Set<string>();
-    products.forEach((p) => p.categories.forEach((c) => set.add(c)));
-    return Array.from(set).sort();
+    const counts = new Map<string, number>();
+    products.forEach((p) =>
+      p.categories.forEach((c) => counts.set(c, (counts.get(c) || 0) + 1)),
+    );
+    // Only keep categories that have at least 1 product
+    return Array.from(counts.entries())
+      .filter(([, count]) => count > 0)
+      .sort(([a], [b]) => a.localeCompare(b))
+      .map(([name]) => name);
   }, [products]);
 
   const filtered = useMemo(

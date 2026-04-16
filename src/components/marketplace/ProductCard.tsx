@@ -56,9 +56,7 @@ export default function ProductCard({
     href ??
     (isPhotobook
       ? `/dashboard/photobook/create?sku=${encodeURIComponent(product.id)}`
-      : product.brandSlug
-        ? `/marketplace/brand/${product.brandSlug}?product=${product.id}`
-        : `/marketplace`);
+      : `/marketplace/product/${product.id}`);
 
   const inner = (
     <div
