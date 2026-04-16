@@ -40,6 +40,7 @@ interface MarketplacePanelProps {
   brandSlug: string | null;
   productId: string | null;
   onClose: () => void;
+  onAddToCart?: (product: MarketplaceProduct) => void;
 }
 
 /* ─── Component ────────────────────────────────────────────────────────── */
@@ -48,6 +49,7 @@ export default function MarketplacePanel({
   brandSlug,
   productId,
   onClose,
+  onAddToCart,
 }: MarketplacePanelProps) {
   const isOpen = !!(brandSlug || productId);
 
@@ -527,6 +529,7 @@ function ProductDetailView({
         {/* Add to Cart */}
         <button
           type="button"
+          onClick={() => onAddToCart?.(product)}
           className="mt-6 w-full min-h-[52px] bg-[#406A56] text-white text-base font-medium rounded-full flex items-center justify-center gap-2 hover:bg-[#355a49] transition-colors"
         >
           <ShoppingBag size={18} /> Add to Cart

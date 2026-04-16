@@ -390,6 +390,7 @@ export default function MarketplacePage() {
         brandSlug={panelBrandSlug}
         productId={panelProductId}
         onClose={handleClosePanel}
+        onAddToCart={handleAddToCart}
       />
 
       {/* Mobile categories drawer */}
