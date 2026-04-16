@@ -107,7 +107,8 @@ export async function POST(
       image_url,
       price,
       original_price,
-      currency,
+      // currency defaults to 'USD' at the DB level; omit to avoid PGRST204
+      // when the PostgREST schema cache is briefly stale post-migration.
       quantity,
       qty: quantity, // Legacy NOT NULL column alongside quantity
       provider_data,

@@ -136,7 +136,9 @@ export async function POST(
         : null,
       image_url: displayImage,
       price: baseAmount / 100, // Store in dollars
-      currency: 'USD',
+      // currency column defaults to 'USD' at the DB level; omitting the key
+      // avoids intermittent PGRST204 "column not found" errors when the
+      // PostgREST schema cache is stale after a migration.
       quantity,
       qty: quantity, // Legacy NOT NULL column alongside quantity; keep them in sync
       gift_type: giftType,
