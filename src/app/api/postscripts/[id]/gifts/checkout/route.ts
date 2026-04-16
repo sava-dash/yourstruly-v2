@@ -129,7 +129,8 @@ export async function POST(
       market: 'goody',
       title: displayName,
       product_id: resolvedProductId,
-      provider: 'goody',
+      // provider column omitted — defaults to 'goody' at DB level;
+      // avoids PGRST204 when PostgREST schema cache is stale.
       name: displayName,
       description: giftType === 'choice'
         ? `Recipient chooses any gift up to $${flexGiftAmount}`

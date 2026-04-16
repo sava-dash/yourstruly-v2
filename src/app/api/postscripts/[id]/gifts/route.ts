@@ -98,11 +98,12 @@ export async function POST(
       postscript_id: id,
       user_id: user.id, // Required by legacy NOT NULL + RLS
       product_id,
-      provider,
+      // provider column omitted — defaults at DB level; avoids PGRST204
+      // when PostgREST schema cache is stale.
       name,
       title: name, // Legacy NOT NULL column
-      code: product_id || provider, // Legacy NOT NULL column
-      market: provider, // Legacy NOT NULL column
+      code: product_id || 'goody', // Legacy NOT NULL column
+      market: 'goody', // Legacy NOT NULL column
       description,
       image_url,
       price,
