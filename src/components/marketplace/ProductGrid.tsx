@@ -1,196 +1,49 @@
 'use client';
 
-import { motion } from 'framer-motion';
-import { Package, SearchX } from 'lucide-react';
+import { Loader2, SearchX } from 'lucide-react';
 import ProductCard from './ProductCard';
-import { Product } from '@/types/marketplace';
+import BrandCard from './BrandCard';
+import type { BrandCard as BrandCardData, MarketplaceProduct } from './types';
+
+export type GridItem =
+  | { kind: 'product'; product: MarketplaceProduct }
+  | { kind: 'brand'; brand: BrandCardData }
+  | { kind: 'hero'; href: string; title: string; subtitle: string; image?: string };
 
 interface ProductGridProps {
-  products: Product[];
-  variant?: 'default' | 'compact' | 'polaroid';
-  columns?: 2 | 3 | 4 | 5;
-  gap?: 'sm' | 'md' | 'lg';
-  onAddToCart?: (product: Product) => void;
-  onToggleFavorite?: (productId: string) => void;
-  favoriteIds?: string[];
+  items: GridItem[];
   isLoading?: boolean;
-  emptyState?: {
-    title?: string;
-    description?: string;
-    action?: React.ReactNode;
-  };
+  compact?: boolean;
+  onAddToCart?: (p: MarketplaceProduct) => void;
+  onSendAsGift?: (p: MarketplaceProduct) => void;
+  onSelectProduct?: (p: MarketplaceProduct) => void;
+  emptyTitle?: string;
+  emptyDescription?: string;
 }
 
 export default function ProductGrid({
-  products,
-  variant = 'default',
-  columns = 4,
-  gap = 'md',
+  items,
+  isLoading,
+  compact,
   onAddToCart,
-  onToggleFavorite,
-  favoriteIds = [],
-  isLoading = false,
-  emptyState,
+  onSendAsGift,
+  onSelectProduct,
+  emptyTitle = 'Nothing here yet',
+  emptyDescription = 'Try a different category or clear your filters.',
 }: ProductGridProps) {
-  const gapClasses = {
-    sm: 'gap-3',
-    md: 'gap-4 md:gap-6',
-    lg: 'gap-6 md:gap-8',
-  };
-
-  const gridClasses = {
-    2: 'grid-cols-2',
-    3: 'grid-cols-2 md:grid-cols-3',
-    4: 'grid-cols-2 md:grid-cols-3 lg:grid-cols-4',
-    5: 'grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5',
-  };
-
-  // Loading skeleton
-  if (isLoading) {
+  if (isLoading && items.length === 0) {
     return (
-      <div className={`grid ${gridClasses[columns]} ${gapClasses[gap]}`}>
-        {Array.from({ length: 8 }).map((_, i) => (
-          <motion.div
+      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4 md:gap-6">
+        {Array.from({ length: 9 }).map((_, i) => (
+          <div
             key={i}
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ delay: i * 0.05 }}
-            className="bg-white rounded-2xl border border-[#2D5A3D]/10 overflow-hidden"
+            className="bg-white rounded-2xl border border-[#406A56]/10 overflow-hidden"
           >
-            {/* Image skeleton */}
-            <div className="aspect-[4/3] bg-gray-200 animate-pulse" />
-            
-            {/* Content skeleton */}
-            <div className="p-4 space-y-3">
+            <div className="aspect-square bg-[#F2F1E5] animate-pulse" />
+            <div className="p-4 space-y-2">
+              <div className="h-3 bg-gray-200 rounded animate-pulse w-1/3" />
               <div className="h-4 bg-gray-200 rounded animate-pulse w-3/4" />
-              <div className="h-3 bg-gray-200 rounded animate-pulse w-full" />
-              <div className="h-3 bg-gray-200 rounded animate-pulse w-2/3" />
-              <div className="flex items-center justify-between pt-2">
-                <div className="h-5 bg-gray-200 rounded animate-pulse w-16" />
-                <div className="h-4 bg-gray-200 rounded animate-pulse w-12" />
-              </div>
-            </div>
-          </motion.div>
-        ))}
-      </div>
-    );
-  }
-
-  // Empty state
-  if (products.length === 0) {
-    return (
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        className="flex flex-col items-center justify-center py-16 px-4"
-      >
-        <div className="w-20 h-20 rounded-full bg-[#2D5A3D]/10 flex items-center justify-center mb-4">
-          <SearchX size={32} className="text-[#2D5A3D]" />
-        </div>
-        <h3 className="font-playfair text-xl font-semibold text-[#2d2d2d] mb-2">
-          {emptyState?.title || 'No products found'}
-        </h3>
-        <p className="text-gray-500 text-center max-w-sm mb-4">
-          {emptyState?.description || 'Try adjusting your filters or search query to find what you\'re looking for.'}
-        </p>
-        {emptyState?.action}
-      </motion.div>
-    );
-  }
-
-  // Staggered animation variants
-  const containerVariants = {
-    hidden: { opacity: 0 },
-    visible: {
-      opacity: 1,
-      transition: {
-        staggerChildren: 0.05,
-      },
-    },
-  };
-
-  const itemVariants = {
-    hidden: { opacity: 0, y: 20 },
-    visible: { 
-      opacity: 1, 
-      y: 0,
-      transition: {
-        duration: 0.3,
-        ease: 'easeOut' as const,
-      },
-    },
-  } as const;
-
-  // Polaroid grid has different layout
-  if (variant === 'polaroid') {
-    return (
-      <motion.div
-        variants={containerVariants}
-        initial="hidden"
-        animate="visible"
-        className={`grid ${gridClasses[columns]} ${gapClasses[gap]}`}
-      >
-        {products.map((product, index) => (
-          <motion.div
-            key={product.id}
-            variants={itemVariants}
-            style={{
-              transform: `rotate(${index % 2 === 0 ? -1 : 1}deg)`,
-            }}
-          >
-            <ProductCard
-              product={product}
-              variant="polaroid"
-              onAddToCart={onAddToCart}
-              onToggleFavorite={onToggleFavorite}
-              isFavorite={favoriteIds.includes(product.id)}
-            />
-          </motion.div>
-        ))}
-      </motion.div>
-    );
-  }
-
-  return (
-    <div className={`grid ${gridClasses[columns]} ${gapClasses[gap]}`}>
-      {products.map((product, i) => (
-        <motion.div
-          key={product.id}
-          initial={{ opacity: 0, y: 16 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.25, delay: Math.min(i % 12, 8) * 0.04 }}
-        >
-          <ProductCard
-            product={product}
-            variant={variant}
-            onAddToCart={onAddToCart}
-            onToggleFavorite={onToggleFavorite}
-            isFavorite={favoriteIds.includes(product.id)}
-          />
-        </motion.div>
-      ))}
-    </div>
-  );
-}
-
-// Compact list view variant
-export function ProductList({
-  products,
-  onAddToCart,
-  onToggleFavorite,
-  favoriteIds = [],
-  isLoading = false,
-}: Omit<ProductGridProps, 'variant' | 'columns' | 'gap'>) {
-  if (isLoading) {
-    return (
-      <div className="space-y-3">
-        {Array.from({ length: 5 }).map((_, i) => (
-          <div key={i} className="flex gap-3 p-3 bg-white rounded-xl border border-[#2D5A3D]/10">
-            <div className="w-20 h-20 bg-gray-200 rounded-lg animate-pulse flex-shrink-0" />
-            <div className="flex-1 space-y-2 py-1">
-              <div className="h-4 bg-gray-200 rounded animate-pulse w-1/3" />
-              <div className="h-3 bg-gray-200 rounded animate-pulse w-3/4" />
-              <div className="h-4 bg-gray-200 rounded animate-pulse w-20 mt-2" />
+              <div className="h-5 bg-gray-200 rounded animate-pulse w-1/4" />
             </div>
           </div>
         ))}
@@ -198,27 +51,81 @@ export function ProductList({
     );
   }
 
-  if (products.length === 0) {
+  if (items.length === 0) {
     return (
-      <div className="flex flex-col items-center justify-center py-12 px-4">
-        <Package size={40} className="text-gray-300 mb-3" />
-        <p className="text-gray-500">No products found</p>
+      <div className="flex flex-col items-center justify-center py-16 px-4 bg-[#F2F1E5]/40 rounded-2xl">
+        <div className="w-16 h-16 rounded-full bg-[#D3E1DF] flex items-center justify-center mb-4">
+          <SearchX size={28} className="text-[#406A56]" />
+        </div>
+        <h3
+          className="text-xl font-semibold text-[#2d2d2d] mb-1"
+          style={{ fontFamily: 'var(--font-playfair, Playfair Display, serif)' }}
+        >
+          {emptyTitle}
+        </h3>
+        <p className="text-sm text-[#666] text-center max-w-sm">{emptyDescription}</p>
       </div>
     );
   }
 
   return (
-    <div className="space-y-3">
-      {products.map((product) => (
-        <ProductCard
-          key={product.id}
-          product={product}
-          variant="compact"
-          onAddToCart={onAddToCart}
-          onToggleFavorite={onToggleFavorite}
-          isFavorite={favoriteIds.includes(product.id)}
-        />
-      ))}
+    <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4 md:gap-6">
+      {items.map((item, idx) => {
+        if (item.kind === 'product') {
+          return (
+            <ProductCard
+              key={`p-${item.product.id}`}
+              product={item.product}
+              compact={compact}
+              onAddToCart={onAddToCart}
+              onSendAsGift={onSendAsGift}
+              onSelect={onSelectProduct}
+            />
+          );
+        }
+        if (item.kind === 'brand') {
+          return <BrandCard key={`b-${item.brand.slug}`} brand={item.brand} />;
+        }
+        return <HeroCard key={`h-${idx}`} item={item} />;
+      })}
+      {isLoading && items.length > 0 && (
+        <div className="col-span-full flex justify-center py-4">
+          <Loader2 className="animate-spin text-[#406A56]" size={20} />
+        </div>
+      )}
     </div>
+  );
+}
+
+function HeroCard({
+  item,
+}: {
+  item: Extract<GridItem, { kind: 'hero' }>;
+}) {
+  return (
+    <a
+      href={item.href}
+      className="group relative rounded-2xl overflow-hidden bg-[#406A56] text-white min-h-[280px] flex items-end p-6 md:col-span-2"
+      style={{
+        backgroundImage: item.image
+          ? `linear-gradient(180deg, rgba(64,106,86,0.2) 0%, rgba(64,106,86,0.85) 100%), url(${item.image})`
+          : undefined,
+        backgroundSize: 'cover',
+        backgroundPosition: 'center',
+      }}
+    >
+      <div>
+        <h3
+          className="text-2xl md:text-3xl font-semibold leading-tight"
+          style={{ fontFamily: 'var(--font-playfair, Playfair Display, serif)' }}
+        >
+          {item.title}
+        </h3>
+        <p className="mt-1 text-sm text-white/90 max-w-md">{item.subtitle}</p>
+        <span className="mt-3 inline-block text-sm underline underline-offset-4">
+          Shop now →
+        </span>
+      </div>
+    </a>
   );
 }

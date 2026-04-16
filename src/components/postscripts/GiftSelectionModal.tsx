@@ -1,5 +1,14 @@
 'use client'
 
+// TODO(gift-modal-refactor): This modal still owns its own product-list /
+// search / scope logic. PR 2 of the ongoody-IA rebuild introduced shared
+// components under `src/components/marketplace/*` (ScopePills, FilterRow,
+// ProductGrid, ProductCard, BrandCard). The plan is for this modal to
+// mount those shared components in "compact" mode so UI fixes flow both
+// ways. Deferring: the modal is 900+ lines with its own GiftProduct type
+// and Gift-of-Choice flex-amount flow, and refactoring it in PR 2 risks
+// regressing the postscripts/new save flow. Follow-up ticket to come.
+
 import React, { useState, useEffect, useMemo } from 'react'
 import { 
   X, Gift, Search, ShoppingBag, Heart, Calendar,
