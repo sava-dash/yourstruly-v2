@@ -3,7 +3,8 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { ArrowLeft, Loader2, Truck, Leaf } from 'lucide-react';
+import Image from 'next/image';
+import { ArrowLeft, Loader2, Truck, Leaf, Package } from 'lucide-react';
 
 import ProductGrid, { type GridItem } from '@/components/marketplace/ProductGrid';
 import type { BrandCard as BrandCardData, MarketplaceProduct } from '@/components/marketplace/types';
@@ -96,32 +97,67 @@ export default function BrandDetailPage() {
       </div>
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {/* Header */}
-        <header className="mb-8">
-          <h1
-            className="text-4xl font-semibold text-[#406A56] leading-tight"
-            style={{ fontFamily: 'var(--font-playfair, Playfair Display, serif)' }}
-          >
-            {brand?.name || 'Brand'}
-          </h1>
-          {brand?.blurb && (
-            <p className="mt-2 text-[#666] max-w-2xl leading-relaxed">{brand.blurb}</p>
-          )}
-          <div className="mt-4 flex flex-wrap gap-2">
-            <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-[#D3E1DF] text-[#406A56] text-xs font-medium">
-              <Truck size={12} /> Standard shipping
-            </span>
-            {hasSustainable && (
+        {/* Brand hero — ongoody style: description left, hero image right */}
+        <header className="mb-8 flex flex-col md:flex-row gap-8 items-start">
+          {/* Left: brand info */}
+          <div className="flex-1 min-w-0">
+            <div className="w-14 h-14 rounded-full bg-white border border-[#406A56]/15 flex items-center justify-center mb-4">
+              <Package size={24} className="text-[#406A56]" />
+            </div>
+            <h1
+              className="text-3xl md:text-4xl font-semibold text-[#406A56] leading-tight"
+              style={{ fontFamily: 'var(--font-playfair, Playfair Display, serif)' }}
+            >
+              {brand?.name || 'Brand'}
+            </h1>
+            {brand?.blurb && (
+              <p className="mt-3 text-[#666] max-w-lg leading-relaxed text-[15px]">{brand.blurb}</p>
+            )}
+            {!brand?.blurb && products.length > 0 && (
+              <p className="mt-3 text-[#666] max-w-lg leading-relaxed text-[15px]">
+                Explore {brand?.name || 'this brand'}&apos;s curated collection — {products.length} products hand-selected for gifting.
+              </p>
+            )}
+            <div className="mt-5 flex flex-wrap gap-2">
               <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-[#D3E1DF] text-[#406A56] text-xs font-medium">
-                <Leaf size={12} /> Sustainable
+                <Truck size={12} /> Free shipping available
               </span>
-            )}
-            {brand && (
-              <span className="inline-flex items-center px-3 py-1.5 rounded-full bg-white border border-[#406A56]/20 text-[#2d2d2d] text-xs font-medium">
-                {brand.productCount} products
-              </span>
-            )}
+              {hasSustainable && (
+                <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-[#D3E1DF] text-[#406A56] text-xs font-medium">
+                  <Leaf size={12} /> Sustainable
+                </span>
+              )}
+              {brand && (
+                <span className="inline-flex items-center px-3 py-1.5 rounded-full bg-white border border-[#406A56]/20 text-[#2d2d2d] text-xs font-medium">
+                  {brand.productCount} product{brand.productCount !== 1 ? 's' : ''}
+                </span>
+              )}
+            </div>
           </div>
+
+          {/* Right: hero product image (first 3 products as collage) */}
+          {products.length > 0 && (
+            <div className="w-full md:w-[400px] lg:w-[480px] shrink-0">
+              <div className="grid grid-cols-2 gap-2 rounded-2xl overflow-hidden">
+                {products.slice(0, 3).map((p, i) => (
+                  <div
+                    key={p.id}
+                    className={`relative bg-[#D3E1DF] ${i === 0 ? 'col-span-2 aspect-[2/1]' : 'aspect-square'}`}
+                  >
+                    {p.images[0] && (
+                      <Image
+                        src={p.images[0]}
+                        alt={p.name}
+                        fill
+                        className="object-cover"
+                        sizes="(max-width: 768px) 100vw, 480px"
+                      />
+                    )}
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
         </header>
 
         {/* Sub-category tabs */}

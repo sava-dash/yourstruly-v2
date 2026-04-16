@@ -3,6 +3,7 @@
 import { useEffect, useState, useCallback, useMemo } from 'react';
 import { ChevronDown, ChevronRight, Loader2 } from 'lucide-react';
 import LucideIcon from './LucideIcon';
+import { PRINTS_CATEGORY_SLUGS } from './types';
 import type { CategoryNode, CategoryTab } from './types';
 
 interface CategoryRailProps {
@@ -40,6 +41,12 @@ function pruneEmpty(
 ): CategoryNode[] {
   const result: CategoryNode[] = [];
   for (const node of nodes) {
+    // Prints categories get their products from Prodigi API (not our DB)
+    // so they always have 0 in the DB count — never prune them.
+    if (PRINTS_CATEGORY_SLUGS.has(node.slug)) {
+      result.push(node);
+      continue;
+    }
     const prunedChildren = pruneEmpty(node.children || [], counts);
     const selfCount = counts.get(node.slug) || 0;
     const childrenHaveProducts = prunedChildren.length > 0;
