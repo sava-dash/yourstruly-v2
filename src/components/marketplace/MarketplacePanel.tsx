@@ -268,6 +268,7 @@ export default function MarketplacePanel({
                   slug={current.brandSlug ?? ''}
                   shippingLabel={shippingLabel}
                   onSelectProduct={goToProduct}
+                  onAddToCart={onAddToCart}
                 />
               )}
 
@@ -279,6 +280,7 @@ export default function MarketplacePanel({
                   setActiveImg={setActiveImg}
                   priceLabel={priceLabel}
                   onBrandClick={goToBrand}
+                  onAddToCart={onAddToCart}
                 />
               )}
 
@@ -304,12 +306,14 @@ function BrandView({
   slug,
   shippingLabel,
   onSelectProduct,
+  onAddToCart,
 }: {
   brandMeta: BrandMeta | null;
   products: MarketplaceProduct[];
   slug: string;
   shippingLabel: string | null;
   onSelectProduct: (p: MarketplaceProduct) => void;
+  onAddToCart?: (p: MarketplaceProduct) => void;
 }) {
   const displayName = brandMeta?.name ?? slug.replace(/-/g, ' ');
 
@@ -381,6 +385,7 @@ function BrandView({
               product={p}
               compact
               onSelect={onSelectProduct}
+              onAddToCart={onAddToCart}
             />
           ))}
         </div>
@@ -398,6 +403,7 @@ function ProductDetailView({
   setActiveImg,
   priceLabel,
   onBrandClick,
+  onAddToCart,
 }: {
   product: MarketplaceProduct;
   images: string[];
@@ -405,6 +411,7 @@ function ProductDetailView({
   setActiveImg: (i: number) => void;
   priceLabel: string;
   onBrandClick: (slug: string) => void;
+  onAddToCart?: (p: MarketplaceProduct) => void;
 }) {
   const isBestSeller = product.scope.includes('best_seller');
   const isPersonalized = product.scope.includes('personalized');
@@ -535,10 +542,10 @@ function ProductDetailView({
           <ShoppingBag size={18} /> Add to Cart
         </button>
 
-        {/* Emotional impact */}
-        {product.emotionalImpact && (
-          <p className="mt-3 text-center text-xs text-[#666]">
-            {product.emotionalImpact}
+        {/* Why we love it (only show actual copy, not the raw enum) */}
+        {product.whyWeLoveIt && product.whyWeLoveIt.length > 10 && (
+          <p className="mt-3 text-center text-xs text-[#666] italic">
+            {product.whyWeLoveIt}
           </p>
         )}
       </div>
