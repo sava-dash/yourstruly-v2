@@ -245,9 +245,6 @@ export default function MarketplacePage() {
     setCartCount((c) => c + 1);
   }, []);
 
-  const handleSendAsGift = useCallback((p: MarketplaceProduct) => {
-    router.push(`/dashboard/postscripts/new?gift=${p.id}`);
-  }, [router]);
 
   return (
     <div className="min-h-screen bg-[#F2F1E5]">
@@ -357,7 +354,7 @@ export default function MarketplacePage() {
                   items={gridItems}
                   isLoading={loading}
                   onAddToCart={handleAddToCart}
-                  onSendAsGift={handleSendAsGift}
+                  
                   emptyTitle={view === 'brands' ? 'No brands match' : 'No gifts match'}
                   emptyDescription="Try a different category, scope, or clear your filters."
                 />

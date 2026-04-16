@@ -17,7 +17,6 @@ interface ProductGridProps {
   /** Passed through to each ProductCard. */
   mode?: ProductCardMode;
   onAddToCart?: (p: MarketplaceProduct) => void;
-  onSendAsGift?: (p: MarketplaceProduct) => void;
   onSelectProduct?: (p: MarketplaceProduct) => void;
   emptyTitle?: string;
   emptyDescription?: string;
@@ -29,7 +28,6 @@ export default function ProductGrid({
   compact,
   mode,
   onAddToCart,
-  onSendAsGift,
   onSelectProduct,
   emptyTitle = 'Nothing here yet',
   emptyDescription = 'Try a different category or clear your filters.',
@@ -82,7 +80,7 @@ export default function ProductGrid({
               compact={compact}
               mode={mode}
               onAddToCart={onAddToCart}
-              onSendAsGift={onSendAsGift}
+              
               onSelect={onSelectProduct}
             />
           );

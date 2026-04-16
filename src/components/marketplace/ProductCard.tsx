@@ -20,7 +20,6 @@ interface ProductCardProps {
   /** Display mode — controls which action buttons appear. */
   mode?: ProductCardMode;
   onAddToCart?: (p: MarketplaceProduct) => void;
-  onSendAsGift?: (p: MarketplaceProduct) => void;
   /** When provided, clicking the card fires this instead of navigating (e.g. gift modal). */
   onSelect?: (p: MarketplaceProduct) => void;
   href?: string;
@@ -31,12 +30,11 @@ export default function ProductCard({
   compact = false,
   mode = 'marketplace',
   onAddToCart,
-  onSendAsGift,
   onSelect,
   href,
 }: ProductCardProps) {
   const [imgErr, setImgErr] = useState(false);
-  const image = !imgErr && product.images[0] ? product.images[0] : '/placeholder-product.png';
+  const image = !imgErr && product.images[0] ? product.images[0] : '';
   const hasVariants =
     product.startingPriceCents !== product.basePriceCents &&
     product.startingPriceCents < product.basePriceCents;
@@ -69,14 +67,20 @@ export default function ProductCard({
       }`}
     >
       <div className="relative aspect-square overflow-hidden bg-[#F2F1E5]">
-        <Image
-          src={image}
-          alt={product.name}
-          fill
-          sizes={compact ? '(max-width: 768px) 50vw, 25vw' : '(max-width: 768px) 50vw, 33vw'}
-          className="object-cover transition-transform duration-500 group-hover:scale-105"
-          onError={() => setImgErr(true)}
-        />
+        {image ? (
+          <Image
+            src={image}
+            alt={product.name}
+            fill
+            sizes={compact ? '(max-width: 768px) 50vw, 25vw' : '(max-width: 768px) 50vw, 33vw'}
+            className="object-cover transition-transform duration-500 group-hover:scale-105"
+            onError={() => setImgErr(true)}
+          />
+        ) : (
+          <div className="w-full h-full flex items-center justify-center">
+            <ShoppingBag size={48} className="text-[#406A56]/20" />
+          </div>
+        )}
 
         {/* Scope badges (top-left) */}
         <div className="absolute top-2 left-2 flex flex-col gap-1">
@@ -143,34 +147,19 @@ export default function ProductCard({
             </button>
           </div>
         )}
-        {mode === 'marketplace' && (onAddToCart || onSendAsGift) && (
-          <div className="mt-3 flex gap-2 lg:opacity-0 lg:group-hover:opacity-100 lg:transition-opacity">
-            {onAddToCart && (
-              <button
-                type="button"
-                onClick={(e) => {
-                  e.preventDefault();
-                  e.stopPropagation();
-                  onAddToCart(product);
-                }}
-                className="flex-1 min-h-[40px] bg-[#406A56] text-white text-xs font-medium rounded-full flex items-center justify-center gap-1.5 hover:bg-[#355a49]"
-              >
-                <ShoppingBag size={14} /> Add
-              </button>
-            )}
-            {onSendAsGift && (
-              <button
-                type="button"
-                onClick={(e) => {
-                  e.preventDefault();
-                  e.stopPropagation();
-                  onSendAsGift(product);
-                }}
-                className="flex-1 min-h-[40px] border border-[#C35F33] text-[#C35F33] text-xs font-medium rounded-full flex items-center justify-center gap-1.5 hover:bg-[#C35F33] hover:text-white"
-              >
-                <Gift size={14} /> Gift
-              </button>
-            )}
+        {mode === 'marketplace' && onAddToCart && (
+          <div className="mt-3 lg:opacity-0 lg:group-hover:opacity-100 lg:transition-opacity">
+            <button
+              type="button"
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                onAddToCart(product);
+              }}
+              className="w-full min-h-[40px] bg-[#406A56] text-white text-xs font-medium rounded-full flex items-center justify-center gap-1.5 hover:bg-[#355a49]"
+            >
+              <ShoppingBag size={14} /> Add to Cart
+            </button>
           </div>
         )}
       </div>
