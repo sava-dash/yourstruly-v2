@@ -1,9 +1,9 @@
 'use client';
 
-import { useMemo } from 'react';
+import { useCallback, useMemo, useState } from 'react';
 import Image from 'next/image';
 import { AnimatePresence, motion } from 'framer-motion';
-import { Minus, Plus, ShoppingBag, Trash2, X } from 'lucide-react';
+import { Loader2, Minus, Plus, ShoppingBag, Trash2, X } from 'lucide-react';
 
 import type { CartItem } from '@/lib/marketplace/cart';
 import { formatCents } from './types';
@@ -35,6 +35,40 @@ export default function CartPanel({
     () => items.reduce((s, i) => s + i.quantity, 0),
     [items],
   );
+
+  const [checkingOut, setCheckingOut] = useState(false);
+  const [checkoutError, setCheckoutError] = useState<string | null>(null);
+
+  const handleCheckout = useCallback(async () => {
+    setCheckingOut(true);
+    setCheckoutError(null);
+    try {
+      const res = await fetch('/api/marketplace/checkout', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          items: items.map((i) => ({
+            productId: i.product.id,
+            name: i.product.name,
+            quantity: i.quantity,
+            priceCents: i.product.salePriceCents ?? i.product.basePriceCents,
+            image: i.product.images[0],
+            variant: i.selectedVariant?.name,
+          })),
+        }),
+      });
+      const data = await res.json();
+      if (data.url) {
+        window.location.href = data.url;
+      } else {
+        setCheckoutError(data.error || 'Checkout failed. Please try again.');
+        setCheckingOut(false);
+      }
+    } catch {
+      setCheckoutError('Something went wrong. Please try again.');
+      setCheckingOut(false);
+    }
+  }, [items]);
 
   return (
     <AnimatePresence>
@@ -128,11 +162,26 @@ export default function CartPanel({
                 {/* Checkout */}
                 <button
                   type="button"
-                  onClick={() => alert('Checkout coming soon!')}
-                  className="w-full min-h-[52px] bg-[#C35F33] text-white text-base font-medium rounded-full flex items-center justify-center gap-2 hover:bg-[#a84f2a] transition-colors"
+                  onClick={handleCheckout}
+                  disabled={checkingOut}
+                  className="w-full min-h-[52px] bg-[#C35F33] text-white text-base font-medium rounded-full flex items-center justify-center gap-2 hover:bg-[#a84f2a] transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
                 >
-                  Proceed to Checkout
+                  {checkingOut ? (
+                    <>
+                      <Loader2 size={18} className="animate-spin" />
+                      Redirecting to checkout...
+                    </>
+                  ) : (
+                    'Proceed to Checkout'
+                  )}
                 </button>
+
+                {/* Checkout error */}
+                {checkoutError && (
+                  <p className="text-sm text-[#C35F33] text-center">
+                    {checkoutError}
+                  </p>
+                )}
 
                 {/* Continue + Clear */}
                 <div className="flex items-center justify-between">

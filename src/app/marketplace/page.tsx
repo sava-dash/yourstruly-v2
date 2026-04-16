@@ -65,6 +65,27 @@ export default function MarketplacePage() {
   const [addedToast, setAddedToast] = useState(false);
   const [badgeBounce, setBadgeBounce] = useState(false);
 
+  // Checkout return banners
+  const checkoutStatus = searchParams.get('checkout');
+  const [checkoutBanner, setCheckoutBanner] = useState<'success' | 'cancelled' | null>(
+    checkoutStatus === 'success' ? 'success' : checkoutStatus === 'cancelled' ? 'cancelled' : null,
+  );
+
+  // On success return, clear the cart
+  useEffect(() => {
+    if (checkoutStatus === 'success') {
+      cart.clear();
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [checkoutStatus]);
+
+  // Auto-dismiss banner after 5s
+  useEffect(() => {
+    if (!checkoutBanner) return;
+    const t = setTimeout(() => setCheckoutBanner(null), 5000);
+    return () => clearTimeout(t);
+  }, [checkoutBanner]);
+
   // Slide-out panel state
   const [panelBrandSlug, setPanelBrandSlug] = useState<string | null>(null);
   const [panelProductId, setPanelProductId] = useState<string | null>(null);
@@ -338,6 +359,47 @@ export default function MarketplacePage() {
             <Mail size={16} />
             Credits added to your account!
           </div>
+        </div>
+      )}
+
+      {/* Checkout success banner */}
+      {checkoutBanner === 'success' && (
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-4">
+          <button
+            type="button"
+            onClick={() => setCheckoutBanner(null)}
+            className="w-full flex items-center justify-between rounded-xl px-5 py-3.5 bg-[#406A56] text-white border border-[#406A56]"
+          >
+            <span className="flex items-center gap-3">
+              <Check size={16} />
+              <span
+                className="text-sm font-medium"
+                style={{ fontFamily: 'var(--font-playfair, Playfair Display, serif)' }}
+              >
+                Order placed! Your gifts are on the way.
+              </span>
+            </span>
+            <X size={14} className="opacity-60" />
+          </button>
+        </div>
+      )}
+
+      {/* Checkout cancelled banner */}
+      {checkoutBanner === 'cancelled' && (
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-4">
+          <button
+            type="button"
+            onClick={() => setCheckoutBanner(null)}
+            className="w-full flex items-center justify-between rounded-xl px-5 py-3.5 bg-amber-50 text-amber-800 border border-amber-200"
+          >
+            <span className="flex items-center gap-3">
+              <ShoppingBag size={16} />
+              <span className="text-sm font-medium">
+                Checkout cancelled. Your cart is still saved.
+              </span>
+            </span>
+            <X size={14} className="opacity-60" />
+          </button>
         </div>
       )}
 
