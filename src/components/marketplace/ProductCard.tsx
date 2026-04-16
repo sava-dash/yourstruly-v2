@@ -2,7 +2,7 @@
 
 import Image from 'next/image';
 import Link from 'next/link';
-import { ShoppingBag, Gift, Sparkles } from 'lucide-react';
+import { ShoppingBag, Gift, Sparkles, BookOpen } from 'lucide-react';
 import { useState } from 'react';
 import type { MarketplaceProduct } from './types';
 import { formatCents } from './types';
@@ -49,8 +49,18 @@ export default function ProductCard({
   const isPersonalized = product.scope.includes('personalized');
   const isGiftOfChoice = product.scope.includes('gift_of_choice');
 
+  // Photobook detection — route to the book creation flow instead of PDP
+  const isPhotobook =
+    product.prodigiCategory === 'photobooks' ||
+    product.categories?.some((c) => c.toLowerCase().includes('photobook'));
+
   const destination =
-    href ?? (product.brandSlug ? `/marketplace/brand/${product.brandSlug}?product=${product.id}` : `/marketplace`);
+    href ??
+    (isPhotobook
+      ? `/dashboard/photobook/create?sku=${encodeURIComponent(product.id)}`
+      : product.brandSlug
+        ? `/marketplace/brand/${product.brandSlug}?product=${product.id}`
+        : `/marketplace`);
 
   const inner = (
     <div
@@ -85,6 +95,11 @@ export default function ProductCard({
               Gift of Choice
             </span>
           )}
+          {isPhotobook && (
+            <span className="px-2 py-0.5 bg-[#406A56] text-white text-[10px] font-medium rounded-full flex items-center gap-1">
+              <BookOpen size={10} /> Book
+            </span>
+          )}
         </div>
       </div>
 
@@ -105,6 +120,11 @@ export default function ProductCard({
         </h3>
         <div className="mt-2 flex items-center justify-between">
           <span className="text-lg font-bold text-[#406A56]">{priceLabel}</span>
+          {isPhotobook && (
+            <span className="text-xs font-medium text-[#C35F33]">
+              Create your book &rarr;
+            </span>
+          )}
         </div>
 
         {/* Actions — mode-dependent */}

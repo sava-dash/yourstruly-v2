@@ -3930,6 +3930,8 @@ export default function CreatePhotobookPage() {
   const searchParams = useSearchParams()
   const draftProjectId = searchParams?.get('projectId') ?? null
   const isFresh = searchParams?.get('fresh') === '1'
+  /** Marketplace deep-link: ?sku=PRODIGI_SKU auto-selects matching product */
+  const skuParam = searchParams?.get('sku') ?? null
   const [draftLoading, setDraftLoading] = useState<boolean>(!!draftProjectId && !isFresh)
   const draftHydratedRef = useRef(false)
 
@@ -4056,6 +4058,14 @@ export default function CreatePhotobookPage() {
 
     loadData()
   }, [])
+
+  // Auto-select product when arriving from marketplace with ?sku= deep-link.
+  // Matches against the prodigiSku field loaded from the DB products.
+  useEffect(() => {
+    if (!skuParam || productsLoading || products.length === 0) return
+    const match = products.find((p) => p.prodigiSku === skuParam) ?? products[0]
+    if (match) setSelectedProduct(match)
+  }, [skuParam, productsLoading, products])
 
   // Hydrate an existing draft when ?projectId= is present. Runs once products
   // have loaded (needed to match selectedProduct) and user is known. Skipped

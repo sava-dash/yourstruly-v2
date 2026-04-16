@@ -50,6 +50,10 @@ export interface MarketplaceProduct {
   whyWeLoveIt: string | null;
   /** Optional, forward-looking. No seed data today — see FilterRow "Values" TODO. */
   values?: string[];
+  /** Source provider — defaults to 'goody' for DB products. */
+  provider?: 'goody' | 'prodigi';
+  /** Prodigi product category (e.g. 'photobooks', 'canvas'). */
+  prodigiCategory?: string;
 }
 
 export interface ProductsResponse {
@@ -80,4 +84,80 @@ export function formatCents(cents: number | null | undefined): string {
   if (cents == null) return '';
   const dollars = Math.round(cents / 100);
   return `$${dollars}`;
+}
+
+// ---------------------------------------------------------------------------
+// Prints / Prodigi integration helpers
+// ---------------------------------------------------------------------------
+
+/** The root prints slug and all child slugs that trigger Prodigi fetching. */
+export const PRINTS_CATEGORY_SLUGS = new Set([
+  'prints',
+  'photo-prints',
+  'canvas-prints',
+  'wall-art',
+  'posters',
+  'calendars',
+  'cards',
+  'apparel-prints',
+  'home-living-prints',
+]);
+
+/**
+ * Map our marketplace child slug to the Prodigi API `category` param.
+ * The root `prints` slug fetches all (no filter).
+ */
+export const SLUG_TO_PRODIGI_CATEGORY: Record<string, string | undefined> = {
+  'prints': undefined, // all
+  'photo-prints': undefined, // generic prints — no Prodigi filter
+  'canvas-prints': 'canvas',
+  'wall-art': 'wall-art',
+  'posters': 'posters',
+  'calendars': 'calendars',
+  'cards': 'cards',
+  'apparel-prints': 'apparel',
+  'home-living-prints': 'home',
+};
+
+/**
+ * Convert a legacy Prodigi `Product` (from the provider client) into a
+ * `MarketplaceProduct` so ProductCard / ProductGrid can render it identically
+ * to Goody products.
+ */
+export function prodigiProductToMarketplace(
+  p: {
+    id: string;
+    name: string;
+    description: string;
+    price: number;
+    currency: string;
+    images: string[];
+    category?: string;
+    inStock: boolean;
+    brand?: string;
+    providerData?: Record<string, unknown>;
+  }
+): MarketplaceProduct {
+  const priceCents = Math.round(p.price * 100);
+  return {
+    id: p.id,
+    name: p.name,
+    description: p.description || null,
+    brand: p.brand || 'Prodigi',
+    brandSlug: null,
+    basePriceCents: priceCents,
+    salePriceCents: null,
+    startingPriceCents: priceCents,
+    images: p.images,
+    inStock: p.inStock,
+    isCurated: null,
+    curatedScore: null,
+    occasions: [],
+    categories: p.category ? [p.category] : [],
+    scope: [],
+    emotionalImpact: null,
+    whyWeLoveIt: null,
+    provider: 'prodigi',
+    prodigiCategory: p.category,
+  };
 }

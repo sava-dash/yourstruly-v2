@@ -18,6 +18,11 @@ import type {
   MarketplaceScope,
   MarketplaceView,
 } from '@/components/marketplace/types';
+import {
+  PRINTS_CATEGORY_SLUGS,
+  SLUG_TO_PRODIGI_CATEGORY,
+  prodigiProductToMarketplace,
+} from '@/components/marketplace/types';
 
 export default function MarketplacePage() {
   const router = useRouter();
@@ -81,24 +86,53 @@ export default function MarketplacePage() {
     };
   }, [tab]);
 
-  // Fetch products
+  // Fetch products — switches to Prodigi provider when a prints category is active
   useEffect(() => {
     if (view !== 'products') return;
     let cancelled = false;
     setLoading(true);
-    const qs = new URLSearchParams();
-    qs.set('scope', scope); // always send — API treats 'all' as no-filter
+
     const effectiveCategory = childCategory || category;
-    if (effectiveCategory) qs.set('category', effectiveCategory);
-    if (search) qs.set('search', search);
-    qs.set('perPage', '48');
-    fetch(`/api/marketplace/products?${qs.toString()}`)
-      .then((r) => (r.ok ? r.json() : { products: [] }))
-      .then((data) => {
-        if (!cancelled) setProducts(data.products || []);
-      })
-      .catch(() => !cancelled && setProducts([]))
-      .finally(() => !cancelled && setLoading(false));
+    const isPrints = !!effectiveCategory && PRINTS_CATEGORY_SLUGS.has(effectiveCategory);
+
+    if (isPrints) {
+      // Prodigi provider mode via legacy route
+      const qs = new URLSearchParams();
+      qs.set('provider', 'prodigi');
+      const prodigiCat = SLUG_TO_PRODIGI_CATEGORY[effectiveCategory];
+      if (prodigiCat) qs.set('category', prodigiCat);
+      if (search) qs.set('search', search);
+      qs.set('perPage', '48');
+      fetch(`/api/marketplace/products?${qs.toString()}`)
+        .then((r) => (r.ok ? r.json() : { products: [] }))
+        .then((data) => {
+          if (!cancelled) {
+            const raw: Array<{
+              id: string; name: string; description: string; price: number;
+              currency: string; images: string[]; category?: string;
+              inStock: boolean; brand?: string; providerData?: Record<string, unknown>;
+            }> = data.products || [];
+            setProducts(raw.map(prodigiProductToMarketplace));
+          }
+        })
+        .catch(() => !cancelled && setProducts([]))
+        .finally(() => !cancelled && setLoading(false));
+    } else {
+      // Standard Goody / DB mode
+      const qs = new URLSearchParams();
+      qs.set('scope', scope);
+      if (effectiveCategory) qs.set('category', effectiveCategory);
+      if (search) qs.set('search', search);
+      qs.set('perPage', '48');
+      fetch(`/api/marketplace/products?${qs.toString()}`)
+        .then((r) => (r.ok ? r.json() : { products: [] }))
+        .then((data) => {
+          if (!cancelled) setProducts(data.products || []);
+        })
+        .catch(() => !cancelled && setProducts([]))
+        .finally(() => !cancelled && setLoading(false));
+    }
+
     return () => {
       cancelled = true;
     };
