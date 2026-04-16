@@ -31,7 +31,7 @@ BEGIN
                 'gift_id', NEW.id,
                 'title', COALESCE(NEW.title, NEW.name),
                 'price', NEW.price,
-                'market', COALESCE(NEW.market, NEW.provider)
+                'market', NEW.market
             ),
             updated_at = NOW()
         WHERE id = NEW.postscript_id;
