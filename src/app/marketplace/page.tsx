@@ -40,7 +40,7 @@ export default function MarketplacePage() {
     (searchParams.get('scope') as MarketplaceScope) || 'all'
   );
   const [view, setView] = useState<MarketplaceView>(
-    (searchParams.get('view') as MarketplaceView) || 'products'
+    (searchParams.get('view') as MarketplaceView) || 'brands'
   );
   const [category, setCategory] = useState<string | undefined>(
     searchParams.get('category') || undefined
@@ -74,7 +74,7 @@ export default function MarketplacePage() {
     const params = new URLSearchParams();
     if (tab !== 'categories') params.set('tab', tab);
     if (scope !== 'all') params.set('scope', scope);
-    if (view !== 'products') params.set('view', view);
+    if (view !== 'brands') params.set('view', view);
     if (category) params.set('category', category);
     if (childCategory) params.set('child', childCategory);
     if (search) params.set('search', search);
@@ -316,7 +316,8 @@ export default function MarketplacePage() {
             {/* "Added to cart" toast */}
             {addedToast && (
               <div
-                className="absolute top-full right-0 mt-2 whitespace-nowrap bg-[#406A56] text-white text-xs font-medium px-3 py-1.5 rounded-lg shadow-lg flex items-center gap-1.5 z-20 fade-in"
+                className="absolute top-full right-0 mt-2 whitespace-nowrap bg-[#406A56] text-white text-xs font-medium px-3 py-1.5 rounded-lg shadow-lg flex items-center gap-1.5 z-20 animate-in"
+                style={{ animation: 'fadeIn 0.2s ease-out' }}
               >
                 <Check size={12} /> Added to cart
               </div>

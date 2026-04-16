@@ -394,7 +394,9 @@ export async function getBrands(
       query = query.contains('scope', [filters.scope]);
     }
     if (filters.category) {
-      query = query.contains('categories', [filters.category]);
+      // Match against both categories[] and occasions[] — occasion slugs like
+      // 'birthday', 'wedding' live in occasions[], not categories[].
+      query = query.or(`categories.cs.{${filters.category}},occasions.cs.{${filters.category}}`);
     }
 
     const { data, error } = await query;
