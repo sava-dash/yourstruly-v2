@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useState, useEffect, use } from 'react'
+import React, { useState, useEffect, useRef, use } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { 
   ChevronLeft, Send, Calendar, Clock, CheckCircle, 
@@ -139,6 +139,8 @@ export default function PostScriptDetailPage({ params }: { params: Promise<{ id:
   // button spinning while leaving the others clickable.
   const [payingGiftId, setPayingGiftId] = useState<string | null>(null)
   const payingGift = payingGiftId !== null
+  // Guard: only auto-trigger checkout once per page load.
+  const autoCheckoutTriggered = useRef(false)
 
   // Handle gift payment callback from Stripe
   useEffect(() => {
@@ -164,6 +166,38 @@ export default function PostScriptDetailPage({ params }: { params: Promise<{ id:
   useEffect(() => {
     fetchPostScript()
   }, [id])
+
+  // Auto-trigger Stripe checkout when arriving with ?checkout=true and an
+  // unpaid gift. This fires once after the postscript + gift rows finish
+  // loading so `giftUnpaid` is reliable. If the checkout call fails the
+  // modal stays visible as a manual fallback.
+  useEffect(() => {
+    if (
+      autoCheckoutTriggered.current ||
+      loading ||
+      !showCheckoutPrompt ||
+      !postscript?.has_gift ||
+      payingGift
+    ) return
+
+    // Derive unpaid status inline (mirrors `giftUnpaid` computed below but
+    // we can't reference it before its declaration).
+    const unpaid =
+      giftRows.length === 0
+        ? true
+        : giftRows.some(g => (g.payment_status || 'pending') !== 'paid')
+
+    if (!unpaid) {
+      // Gift already paid — dismiss the prompt silently.
+      setShowCheckoutPrompt(false)
+      return
+    }
+
+    autoCheckoutTriggered.current = true
+    // Kick off the checkout redirect. On failure handlePayForGift sets a
+    // toast and the modal remains so the user can retry manually.
+    handlePayForGift()
+  }, [loading, showCheckoutPrompt, postscript, giftRows, payingGift])
 
   async function fetchPostScript() {
     setLoading(true)
@@ -899,97 +933,75 @@ export default function PostScriptDetailPage({ params }: { params: Promise<{ id:
         }}
       />
 
-      {/* Checkout prompt — shown after saving a PostScript with gifts */}
+      {/* Checkout prompt — shown after saving a PostScript with gifts.
+          Auto-checkout fires via useEffect; this modal is the fallback if it
+          fails or while redirecting. */}
       {showCheckoutPrompt && postscript.has_gift && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm">
           <div className="bg-white rounded-2xl max-w-md w-full mx-4 p-8 text-center shadow-2xl">
             <div className="w-16 h-16 rounded-full bg-[#2D5A3D]/10 flex items-center justify-center mx-auto mb-4">
               <Gift size={28} className="text-[#2D5A3D]" />
             </div>
-            <h2 className="text-xl font-bold text-gray-900 mb-2">PostScript Saved!</h2>
-            <p className="text-gray-600 mb-6">
-              Your message is scheduled. Would you like to complete the gift payment now?
-            </p>
-            {(() => {
-              let giftInfo: { name?: string; price?: number } = {}
-              try { giftInfo = JSON.parse(postscript.gift_details || '{}') } catch {}
-              return giftInfo.name ? (
-                <div className="bg-gray-50 rounded-xl p-3 mb-6 text-left flex items-center gap-3">
-                  <Gift size={16} className="text-[#C4A235] flex-shrink-0" />
-                  <div>
-                    <p className="text-sm font-medium text-gray-800">{giftInfo.name}</p>
-                    {postscript.gift_budget && <p className="text-xs text-[#2D5A3D] font-semibold">${postscript.gift_budget}</p>}
-                  </div>
+            {payingGift ? (
+              <>
+                <h2 className="text-xl font-bold text-gray-900 mb-2">Redirecting to checkout...</h2>
+                <p className="text-gray-600 mb-6">
+                  Taking you to Stripe to complete your gift payment.
+                </p>
+                <div className="flex justify-center">
+                  <div className="w-8 h-8 border-3 border-[#406A56] border-t-transparent rounded-full animate-spin" />
                 </div>
-              ) : null
-            })()}
-            <div className="space-y-2">
-              <button
-                onClick={async () => {
-                  setShowCheckoutPrompt(false)
-                  // Create a Stripe checkout for the gift attached to this postscript
-                  try {
-                    let parsedGift: { name?: string; price?: number; image_url?: string; product_id?: string } = {}
-                    try { parsedGift = JSON.parse(postscript.gift_details || '{}') } catch {}
-                    const giftType = postscript.gift_type === 'choice' ? 'choice' : 'product'
-                    const payload: Record<string, unknown> = { giftType }
-                    if (giftType === 'choice') {
-                      payload.flexGiftAmount = postscript.gift_budget || parsedGift.price || 50
-                    } else {
-                      payload.productId = parsedGift.product_id || postscript.id
-                      payload.productName = parsedGift.name || 'Gift'
-                      payload.productImage = parsedGift.image_url
-                      payload.productPrice = parsedGift.price || postscript.gift_budget || 50
-                    }
-                    const res = await fetch(`/api/postscripts/${postscript.id}/gifts/checkout`, {
-                      method: 'POST',
-                      headers: { 'Content-Type': 'application/json' },
-                      body: JSON.stringify(payload),
-                    })
-                    if (res.ok) {
-                      const data = await res.json()
-                      if (data.checkoutUrl) {
-                        window.location.href = data.checkoutUrl
-                        return
-                      }
-                    } else {
-                      const errData = await res.json().catch(() => ({}))
-                      setGiftMessage({
-                        type: 'error',
-                        text: errData.error || "We couldn't start checkout. Please try again.",
-                      })
-                      return
-                    }
-                  } catch {
-                    setGiftMessage({
-                      type: 'error',
-                      text: "We couldn't reach the payment service. Please try again.",
-                    })
-                    return
-                  }
-                  // Fallback: show a plain-language toast
-                  setGiftMessage({
-                    type: 'error',
-                    text: "Checkout didn't start. Please try again in a moment.",
-                  })
-                }}
-                className="w-full py-3 bg-[#2D5A3D] text-white rounded-xl font-medium hover:bg-[#244B32] transition-colors"
-              >
-                Pay for Gift Now
-              </button>
-              <button
-                onClick={() => {
-                  setShowCheckoutPrompt(false)
-                  router.replace(`/dashboard/postscripts/${id}`, { scroll: false })
-                }}
-                className="w-full py-2.5 text-gray-500 hover:text-gray-700 text-sm font-medium transition-colors"
-              >
-                Finish payment later
-              </button>
-              <p className="text-[11px] text-gray-400 leading-tight">
-                Your message will still be delivered at your scheduled time without gifts if payment is incomplete.
-              </p>
-            </div>
+              </>
+            ) : (
+              <>
+                <h2 className="text-xl font-bold text-gray-900 mb-2">PostScript Saved!</h2>
+                <p className="text-gray-600 mb-6">
+                  Your message is scheduled. Complete the gift payment to include your gift.
+                </p>
+                {(() => {
+                  let giftInfo: { name?: string; price?: number } = {}
+                  try { giftInfo = JSON.parse(postscript.gift_details || '{}') } catch {}
+                  return giftInfo.name ? (
+                    <div className="bg-gray-50 rounded-xl p-3 mb-6 text-left flex items-center gap-3">
+                      <Gift size={16} className="text-[#C4A235] flex-shrink-0" />
+                      <div>
+                        <p className="text-sm font-medium text-gray-800">{giftInfo.name}</p>
+                        {postscript.gift_budget && <p className="text-xs text-[#2D5A3D] font-semibold">${postscript.gift_budget}</p>}
+                      </div>
+                    </div>
+                  ) : null
+                })()}
+                {giftMessage && (
+                  <div className={`mb-4 p-3 rounded-xl text-sm ${
+                    giftMessage.type === 'error'
+                      ? 'bg-red-50 text-red-700 border border-red-200'
+                      : 'bg-green-50 text-green-700 border border-green-200'
+                  }`}>
+                    {giftMessage.text}
+                  </div>
+                )}
+                <div className="space-y-2">
+                  <button
+                    onClick={() => handlePayForGift()}
+                    className="w-full py-3 bg-[#406A56] text-white rounded-xl font-medium hover:bg-[#345747] transition-colors"
+                  >
+                    Pay for Gift Now
+                  </button>
+                  <button
+                    onClick={() => {
+                      setShowCheckoutPrompt(false)
+                      router.replace(`/dashboard/postscripts/${id}`, { scroll: false })
+                    }}
+                    className="w-full py-2.5 text-gray-500 hover:text-gray-700 text-sm font-medium transition-colors"
+                  >
+                    Finish payment later
+                  </button>
+                  <p className="text-[11px] text-gray-400 leading-tight">
+                    Your message will still be delivered at your scheduled time without gifts if payment is incomplete.
+                  </p>
+                </div>
+              </>
+            )}
           </div>
         </div>
       )}
