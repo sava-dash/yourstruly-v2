@@ -134,11 +134,14 @@ export default function PostScriptDetailPage({ params }: { params: Promise<{ id:
     product_id: string | null
     flex_gift_amount: number | null
     quantity: number | null
+    provider_data: { brand_name?: string } | null
+    description: string | null
   }>>([])
   // Per-gift payment-in-progress id (null when idle). Keeps the right card's
   // button spinning while leaving the others clickable.
   const [payingGiftId, setPayingGiftId] = useState<string | null>(null)
   const payingGift = payingGiftId !== null
+  const [removingGiftId, setRemovingGiftId] = useState<string | null>(null)
   // Guard: only auto-trigger checkout once per page load.
   const autoCheckoutTriggered = useRef(false)
 
@@ -312,6 +315,32 @@ export default function PostScriptDetailPage({ params }: { params: Promise<{ id:
       })
     } finally {
       setPayingGiftId(null)
+    }
+  }
+
+  async function handleRemoveGift(giftId: string) {
+    if (!postscript || removingGiftId) return
+    if (!window.confirm('Remove this gift? This can\'t be undone.')) return
+    setRemovingGiftId(giftId)
+    try {
+      const res = await fetch(`/api/postscripts/${postscript.id}/gifts/${giftId}`, {
+        method: 'DELETE',
+      })
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}))
+        setGiftMessage({ type: 'error', text: data.error || 'Failed to remove gift' })
+        return
+      }
+      const remaining = giftRows.filter(g => g.id !== giftId)
+      setGiftRows(remaining)
+      if (remaining.length === 0) {
+        setPostscript(prev => prev ? { ...prev, has_gift: false } : prev)
+      }
+      setGiftMessage({ type: 'success', text: 'Gift removed.' })
+    } catch {
+      setGiftMessage({ type: 'error', text: 'Failed to remove gift. Please try again.' })
+    } finally {
+      setRemovingGiftId(null)
     }
   }
 
@@ -647,30 +676,33 @@ export default function PostScriptDetailPage({ params }: { params: Promise<{ id:
                 key: string
                 row: typeof giftRows[number] | null
                 name: string
+                brand: string | null
                 price: number | null
                 image_url: string | null
+                quantity: number
                 paid: boolean
               }> = giftRows.length > 0
                 ? giftRows.map(r => ({
                     key: r.id,
                     row: r,
                     name: r.name || postscript.gift_type || 'Gift',
+                    brand: r.provider_data?.brand_name || null,
                     price: r.price,
                     image_url: r.image_url,
+                    quantity: r.quantity ?? 1,
                     paid: (r.payment_status || 'pending') === 'paid',
                   }))
                 : [{
                     key: 'legacy',
                     row: null,
                     name: legacy.name || postscript.gift_type || 'Gift',
+                    brand: null,
                     price: postscript.gift_budget ?? legacy.price ?? null,
                     image_url: legacy.image_url || null,
+                    quantity: 1,
                     paid: false,
                   }]
-              const paidCount = renderRows.filter(r => r.paid).length
-              const unpaidCount = renderRows.length - paidCount
-              const paidTotal = renderRows.filter(r => r.paid).reduce((a, r) => a + (r.price || 0), 0)
-              const unpaidTotal = renderRows.filter(r => !r.paid).reduce((a, r) => a + (r.price || 0), 0)
+              const grandTotal = renderRows.reduce((a, r) => a + ((r.price || 0) * r.quantity), 0)
               return (
                 <section>
                   <div className="flex items-baseline justify-between mb-3">
@@ -680,56 +712,99 @@ export default function PostScriptDetailPage({ params }: { params: Promise<{ id:
                     >
                       Your gifts
                     </h2>
-                    <div className="text-[11px] text-[#D4C8A0]/60">
-                      {paidCount > 0 && <span>Paid ${paidTotal.toFixed(2)}</span>}
-                      {paidCount > 0 && unpaidCount > 0 && <span className="mx-2">·</span>}
-                      {unpaidCount > 0 && <span className="text-[#C4A235]">Due ${unpaidTotal.toFixed(2)}</span>}
-                    </div>
+                    <span className="text-[13px] text-[#D4C8A0]/70" style={{ fontFamily: 'var(--font-inter-tight, "Inter Tight", sans-serif)' }}>
+                      Total: ${grandTotal.toFixed(2)}
+                    </span>
                   </div>
                   <div className="space-y-3">
                     {renderRows.map(rr => {
-                      const amountLabel = typeof rr.price === 'number' && !Number.isNaN(rr.price)
-                        ? `$${rr.price.toFixed(2)}`
-                        : ''
+                      const unitPrice = typeof rr.price === 'number' && !Number.isNaN(rr.price) ? rr.price : null
+                      const lineTotal = unitPrice !== null ? unitPrice * rr.quantity : null
+                      const amountLabel = lineTotal !== null ? `$${lineTotal.toFixed(2)}` : ''
                       const thisPaying = payingGiftId === (rr.row?.id ?? 'legacy')
+                      const thisRemoving = removingGiftId === (rr.row?.id ?? 'legacy')
+                      const brandQty = [rr.brand, rr.quantity > 1 ? `Qty: ${rr.quantity}` : null].filter(Boolean).join(' \u00b7 ')
                       return (
-                        <SectionCard key={rr.key} title={rr.paid ? 'Gift · Paid' : 'Gift'} icon={Gift}>
-                          <div className="flex items-center gap-3">
+                        <div
+                          key={rr.key}
+                          className="rounded-2xl p-4"
+                          style={{
+                            background: 'linear-gradient(165deg, rgba(62,48,35,0.85) 0%, rgba(42,32,26,0.92) 100%)',
+                            border: '1px solid rgba(196,162,53,0.12)',
+                          }}
+                        >
+                          {/* Top row: image + name/brand + price + badge */}
+                          <div className="flex items-start gap-3">
                             {rr.image_url && (
-                              <img src={rr.image_url} alt="" className="w-14 h-14 rounded-xl object-cover ring-1 ring-[#C4A235]/20" />
+                              <img
+                                src={rr.image_url}
+                                alt=""
+                                className="w-[60px] h-[60px] rounded-xl object-cover ring-1 ring-[#C4A235]/20 flex-shrink-0"
+                              />
                             )}
                             <div className="flex-1 min-w-0">
-                              <p className="text-[#E8DCC4] text-sm font-medium truncate">{rr.name}</p>
-                              <p className="text-[#C4A235] font-semibold text-sm">
-                                {amountLabel}
-                              </p>
+                              <div className="flex items-start justify-between gap-2">
+                                <p className="text-[#E8DCC4] text-sm font-medium truncate" style={{ fontFamily: 'var(--font-inter-tight, "Inter Tight", sans-serif)' }}>
+                                  {rr.name}
+                                </p>
+                                <span className="text-[#C4A235] font-semibold text-sm whitespace-nowrap flex-shrink-0">
+                                  {amountLabel}
+                                </span>
+                              </div>
+                              <div className="flex items-center justify-between mt-1">
+                                {brandQty && (
+                                  <p className="text-[11px] text-[#D4C8A0]/60" style={{ fontFamily: 'var(--font-inter-tight, "Inter Tight", sans-serif)' }}>
+                                    {brandQty}
+                                  </p>
+                                )}
+                                <span
+                                  className={`text-[11px] font-semibold px-2 py-0.5 rounded-full whitespace-nowrap ${
+                                    rr.paid
+                                      ? 'bg-[#406A56]/20 text-[#4ADE80]'
+                                      : 'bg-[#C35F33]/15 text-[#C35F33]'
+                                  }`}
+                                >
+                                  {rr.paid ? 'Paid \u2713' : 'Unpaid'}
+                                </span>
+                              </div>
                             </div>
                           </div>
-                          {!rr.paid ? (
+
+                          {/* Bottom row: pay button (if unpaid) + remove button */}
+                          <div className="flex items-center gap-2 mt-3">
+                            {!rr.paid && (
+                              <button
+                                onClick={() => handlePayForGift(rr.row ?? undefined)}
+                                disabled={payingGift}
+                                className="flex-1 rounded-xl bg-[#C35F33] hover:bg-[#A85128] text-white font-semibold
+                                           px-4 flex items-center justify-center gap-2 transition-colors
+                                           disabled:opacity-60 disabled:cursor-not-allowed"
+                                style={{ minHeight: 44 }}
+                              >
+                                {thisPaying ? (
+                                  <>
+                                    <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                                    Starting checkout...
+                                  </>
+                                ) : (
+                                  <>
+                                    <Gift size={18} />
+                                    {amountLabel ? `Pay for this gift \u2014 ${amountLabel}` : 'Pay for this gift'}
+                                  </>
+                                )}
+                              </button>
+                            )}
                             <button
-                              onClick={() => handlePayForGift(rr.row ?? undefined)}
-                              disabled={payingGift}
-                              className="mt-4 w-full rounded-xl bg-[#C35F33] hover:bg-[#A85128] text-white font-semibold
-                                         px-4 flex items-center justify-center gap-2 transition-colors
-                                         disabled:opacity-60 disabled:cursor-not-allowed"
-                              style={{ minHeight: 52 }}
+                              onClick={() => handleRemoveGift(rr.row?.id ?? rr.key)}
+                              disabled={!!removingGiftId}
+                              className="text-[#C35F33] hover:text-[#A85128] text-[13px] font-medium
+                                         transition-colors disabled:opacity-50 flex-shrink-0"
+                              style={{ minHeight: 44, minWidth: 44, fontFamily: 'var(--font-inter-tight, "Inter Tight", sans-serif)' }}
                             >
-                              {thisPaying ? (
-                                <>
-                                  <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                                  Starting checkout…
-                                </>
-                              ) : (
-                                <>
-                                  <Gift size={18} />
-                                  {amountLabel ? `Pay for this gift — ${amountLabel}` : 'Pay for this gift'}
-                                </>
-                              )}
+                              {thisRemoving ? 'Removing...' : 'Remove'}
                             </button>
-                          ) : (
-                            <p className="text-[11px] text-[#4ADE80]/80 mt-2">Payment complete</p>
-                          )}
-                        </SectionCard>
+                          </div>
+                        </div>
                       )
                     })}
                   </div>
