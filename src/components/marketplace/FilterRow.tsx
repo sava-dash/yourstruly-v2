@@ -10,22 +10,11 @@ interface FilterRowProps {
   priceMin: number;
   priceMax: number;
   onPriceChange: (min: number, max: number) => void;
-  value?: string;
-  onValueChange?: (value: string) => void;
   search: string;
   onSearchChange: (search: string) => void;
   onOpenMobileCategories?: () => void;
 }
 
-// Placeholder Values list — no product data for these yet.
-// TODO(marketplace-values): wire up once products have a `values[]` tag column.
-const VALUE_OPTIONS = [
-  { id: '', label: 'Any values' },
-  { id: 'sustainable', label: 'Sustainable' },
-  { id: 'woman_owned', label: 'Woman-owned' },
-  { id: 'small_batch', label: 'Small batch' },
-  { id: 'made_in_usa', label: 'Made in USA' },
-];
 
 export default function FilterRow({
   view,
@@ -33,8 +22,6 @@ export default function FilterRow({
   priceMin,
   priceMax,
   onPriceChange,
-  value = '',
-  onValueChange,
   search,
   onSearchChange,
   onOpenMobileCategories,
@@ -155,19 +142,6 @@ export default function FilterRow({
           </div>
         )}
       </div>
-
-      {/* Values dropdown (client-side cosmetic for now) */}
-      <select
-        value={value}
-        onChange={(e) => onValueChange?.(e.target.value)}
-        className="min-h-[40px] px-3 rounded-full border border-[#406A56]/20 bg-white text-sm text-[#2d2d2d] hover:border-[#406A56]/40 focus:outline-none focus:ring-2 focus:ring-[#406A56]/20"
-      >
-        {VALUE_OPTIONS.map((o) => (
-          <option key={o.id} value={o.id}>
-            {o.label}
-          </option>
-        ))}
-      </select>
 
       {/* Search */}
       <div className="relative flex-1 min-w-[200px] ml-auto">

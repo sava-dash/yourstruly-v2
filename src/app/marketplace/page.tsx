@@ -87,7 +87,7 @@ export default function MarketplacePage() {
     let cancelled = false;
     setLoading(true);
     const qs = new URLSearchParams();
-    if (scope !== 'all') qs.set('scope', scope);
+    qs.set('scope', scope); // always send — API treats 'all' as no-filter
     const effectiveCategory = childCategory || category;
     if (effectiveCategory) qs.set('category', effectiveCategory);
     if (search) qs.set('search', search);
@@ -110,7 +110,7 @@ export default function MarketplacePage() {
     let cancelled = false;
     setLoading(true);
     const qs = new URLSearchParams();
-    if (scope !== 'all') qs.set('scope', scope);
+    qs.set('scope', scope); // always send — API treats 'all' as no-filter
     const effectiveCategory = childCategory || category;
     if (effectiveCategory) qs.set('category', effectiveCategory);
     fetch(`/api/marketplace/brands?${qs.toString()}`)

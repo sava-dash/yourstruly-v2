@@ -2,6 +2,7 @@
 
 import { useEffect, useState, useCallback, useMemo } from 'react';
 import { ChevronDown, ChevronRight, Loader2 } from 'lucide-react';
+import LucideIcon from './LucideIcon';
 import type { CategoryNode, CategoryTab } from './types';
 
 interface CategoryRailProps {
@@ -180,7 +181,7 @@ function CategoryItem({
             fontFamily: 'var(--font-inter-tight, Inter Tight, sans-serif)',
           }}
         >
-          {node.icon && <span className="mr-2 text-base">{node.icon}</span>}
+          {node.icon && <LucideIcon name={node.icon} size={16} className="mr-2 shrink-0" />}
           <span className="flex-1">{node.name}</span>
         </button>
         {hasChildren && (
