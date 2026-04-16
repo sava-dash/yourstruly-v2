@@ -19,6 +19,7 @@ import ThemePicker from '@/components/postscripts/ThemePicker'
 import ExecutorContactsTypeahead from '@/components/postscripts/ExecutorContactsTypeahead'
 import { DraftAutoSaver } from '@/lib/postscripts/draft'
 import { computeDateForEvent } from '@/lib/postscripts/event-contact-mapping'
+import { format } from 'date-fns'
 
 interface Contact {
   id: string
@@ -2045,6 +2046,30 @@ export default function NewPostScriptPage() {
                     )}
                   </div>
                 )}
+
+                {/* Delivers — exact date row (display-only) */}
+                {form.trigger_type === 'legacy_executor' ? (
+                  <div className="bg-white rounded-xl border border-gray-100 p-3">
+                    <p className="text-[10px] text-gray-400 uppercase tracking-wider mb-1" style={{ fontFamily: 'Inter Tight, sans-serif' }}>Delivers</p>
+                    <p className="text-sm text-gray-700" style={{ fontFamily: 'Inter Tight, sans-serif', fontSize: '14px' }}>
+                      when: your executor confirms
+                    </p>
+                  </div>
+                ) : form.delivery_date ? (
+                  <div className="bg-white rounded-xl border border-gray-100 p-3">
+                    <p className="text-[10px] text-gray-400 uppercase tracking-wider mb-1" style={{ fontFamily: 'Inter Tight, sans-serif' }}>Delivers</p>
+                    <p style={{ fontFamily: 'Inter Tight, sans-serif', fontSize: '14px', color: '#406A56', fontWeight: 500 }}>
+                      {form.delivery_type === 'event' && form.delivery_event
+                        ? `on ${format(new Date(form.delivery_date + 'T00:00:00'), 'MMMM d, yyyy')}`
+                        : format(new Date(form.delivery_date + 'T00:00:00'), 'MMMM d, yyyy')}
+                    </p>
+                    {form.delivery_type === 'event' && form.delivery_event && (
+                      <p className="text-gray-500 mt-0.5" style={{ fontFamily: 'Caveat, cursive', fontSize: '15px' }}>
+                        — {EVENT_OPTIONS.find(e => e.key === form.delivery_event)?.label || form.delivery_event}
+                      </p>
+                    )}
+                  </div>
+                ) : null}
 
                 {/* Message preview */}
                 {form.title && (
