@@ -432,7 +432,9 @@ export async function getBrands(
       }
     }
 
-    const brands = [...byBrand.values()].sort((a, b) => b.productCount - a.productCount);
+    const brands = [...byBrand.values()]
+      .filter((b) => b.productCount >= 2) // Hide single-product brands from the Brands view
+      .sort((a, b) => b.productCount - a.productCount);
     setMarketplaceCache('goody', cacheKey, brands);
     return brands;
   } catch (err) {
