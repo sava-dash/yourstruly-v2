@@ -1,7 +1,6 @@
 import React from 'react';
 import { motion } from 'framer-motion';
 import { ChevronRight } from 'lucide-react';
-import { GoogleContactsImport } from '@/components/contacts';
 import { titleCaseName } from '../helpers';
 
 export const RELATIONSHIP_OPTIONS = [
@@ -53,46 +52,6 @@ export function ContactsPanel({
         <p>The people you shared life with are part of what makes those moments live on. Add the people who matter most.</p>
       </div>
       <div className="globe-side-panel-items" style={{ gap: '0', padding: '8px 16px', overflowY: 'auto' }}>
-        {/* Google import — quickly bring in contacts you already have */}
-        <div className="contact-google-import-row">
-          <GoogleContactsImport
-            onImportComplete={async () => {
-              try {
-                const { createClient } = await import('@/lib/supabase/client');
-                const supabase = createClient();
-                const { data: { user } } = await supabase.auth.getUser();
-                if (!user) return;
-                const { data } = await supabase
-                  .from('contacts')
-                  .select('full_name, relationship_type')
-                  .eq('user_id', user.id);
-                if (!data) return;
-                // Merge any names not already in contactEntries
-                setContactEntries(prev => {
-                  const existing = new Set(prev.map(e => e.name));
-                  const additions = data
-                    .filter(row => row.full_name && !existing.has(row.full_name))
-                    .map(row => ({
-                      name: row.full_name as string,
-                      relationship: ((row.relationship_type as string) || 'other')
-                        .replace(/_/g, ' ')
-                        .replace(/\b\w/g, c => c.toUpperCase()),
-                    }));
-                  return [...prev, ...additions];
-                });
-                setGoogleImportedNames(prev => {
-                  const next = new Set(prev);
-                  data.forEach(row => { if (row.full_name) next.add(row.full_name as string); });
-                  return next;
-                });
-              } catch (err) {
-                console.error('Failed to merge Google-imported contacts:', err);
-              }
-            }}
-          />
-          <span className="contact-google-import-hint">or add people manually below</span>
-        </div>
-
         {/* Existing contact rows */}
         {contactEntries.map((entry, i) => (
           <div key={i} className="contact-entry-row">
