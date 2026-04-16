@@ -9,12 +9,24 @@ import { ArrowLeft, Loader2, Truck, Leaf, Package } from 'lucide-react';
 import ProductGrid, { type GridItem } from '@/components/marketplace/ProductGrid';
 import type { BrandCard as BrandCardData, MarketplaceProduct } from '@/components/marketplace/types';
 
+/** Brand metadata from /api/marketplace/brands/[slug] (marketplace_brands table). */
+interface BrandMeta {
+  slug: string;
+  name: string;
+  logoUrl: string | null;
+  description: string | null;
+  shippingPriceCents: number | null;
+  freeShippingMinCents: number | null;
+  brandValues: string[];
+}
+
 export default function BrandDetailPage() {
   const params = useParams();
   const router = useRouter();
   const slug = (params?.slug as string | undefined) || '';
 
   const [brand, setBrand] = useState<BrandCardData | null>(null);
+  const [brandMeta, setBrandMeta] = useState<BrandMeta | null>(null);
   const [products, setProducts] = useState<MarketplaceProduct[]>([]);
   const [loading, setLoading] = useState(true);
   const [activeCategory, setActiveCategory] = useState<string>('all');
@@ -28,19 +40,28 @@ export default function BrandDetailPage() {
         r.ok ? r.json() : { products: [] }
       ),
       fetch(`/api/marketplace/brands`).then((r) => (r.ok ? r.json() : { brands: [] })),
+      fetch(`/api/marketplace/brands/${encodeURIComponent(slug)}`).then((r) =>
+        r.ok ? r.json() : { brand: null }
+      ),
     ])
-      .then(([productsData, brandsData]) => {
+      .then(([productsData, brandsData, brandDetail]) => {
         if (cancelled) return;
-        setProducts(productsData.products || []);
+        const prods: MarketplaceProduct[] = productsData.products || [];
+        setProducts(prods);
+
         const found = (brandsData.brands || []).find(
           (b: BrandCardData) => b.slug === slug
         );
         setBrand(found || null);
+
+        // Brand metadata from dedicated table
+        setBrandMeta(brandDetail?.brand || null);
       })
       .catch(() => {
         if (!cancelled) {
           setProducts([]);
           setBrand(null);
+          setBrandMeta(null);
         }
       })
       .finally(() => {
@@ -73,6 +94,23 @@ export default function BrandDetailPage() {
 
   const hasSustainable = products.some((p) => p.values?.includes('sustainable'));
 
+  // Derive display name: brandMeta > brand aggregation > first product's brand > slug
+  const displayName = brandMeta?.name || brand?.name || products[0]?.brand || slug.replace(/-/g, ' ');
+  const logoUrl = brandMeta?.logoUrl || null;
+
+  // Shipping badge text
+  const shippingLabel = useMemo(() => {
+    if (!brandMeta) return 'Free shipping available';
+    if (brandMeta.shippingPriceCents === 0) return 'Free shipping';
+    if (brandMeta.freeShippingMinCents != null) {
+      return `Free shipping over $${Math.round(brandMeta.freeShippingMinCents / 100)}`;
+    }
+    if (brandMeta.shippingPriceCents != null) {
+      return `$${(brandMeta.shippingPriceCents / 100).toFixed(0)} shipping`;
+    }
+    return 'Free shipping available';
+  }, [brandMeta]);
+
   const gridItems: GridItem[] = filtered.map((p) => ({ kind: 'product', product: p }));
 
   return (
@@ -92,7 +130,7 @@ export default function BrandDetailPage() {
             Brands
           </Link>
           <span className="text-gray-300">›</span>
-          <span className="text-[#2d2d2d]">{brand?.name || slug}</span>
+          <span className="text-[#2d2d2d]">{displayName}</span>
         </div>
       </div>
 
@@ -101,37 +139,60 @@ export default function BrandDetailPage() {
         <header className="mb-8 flex flex-col md:flex-row gap-8 items-start">
           {/* Left: brand info */}
           <div className="flex-1 min-w-0">
-            <div className="w-14 h-14 rounded-full bg-white border border-[#406A56]/15 flex items-center justify-center mb-4">
-              <Package size={24} className="text-[#406A56]" />
-            </div>
+            {logoUrl ? (
+              <div className="w-20 h-20 rounded-lg bg-white border border-[#406A56]/10 flex items-center justify-center mb-4 overflow-hidden">
+                <Image
+                  src={logoUrl}
+                  alt={`${displayName} logo`}
+                  width={80}
+                  height={80}
+                  className="object-contain p-1"
+                />
+              </div>
+            ) : (
+              <div className="w-14 h-14 rounded-full bg-white border border-[#406A56]/15 flex items-center justify-center mb-4">
+                <Package size={24} className="text-[#406A56]" />
+              </div>
+            )}
             <h1
               className="text-3xl md:text-4xl font-semibold text-[#406A56] leading-tight"
               style={{ fontFamily: 'var(--font-playfair, Playfair Display, serif)' }}
             >
-              {brand?.name || 'Brand'}
+              {displayName}
             </h1>
-            {brand?.blurb && (
+            {brandMeta?.description && (
+              <p className="mt-3 text-[#666] max-w-lg leading-relaxed text-[15px]">{brandMeta.description}</p>
+            )}
+            {!brandMeta?.description && brand?.blurb && (
               <p className="mt-3 text-[#666] max-w-lg leading-relaxed text-[15px]">{brand.blurb}</p>
             )}
-            {!brand?.blurb && products.length > 0 && (
+            {!brandMeta?.description && !brand?.blurb && products.length > 0 && (
               <p className="mt-3 text-[#666] max-w-lg leading-relaxed text-[15px]">
-                Explore {brand?.name || 'this brand'}&apos;s curated collection — {products.length} products hand-selected for gifting.
+                Explore {displayName}&apos;s curated collection — {products.length} products hand-selected for gifting.
               </p>
             )}
             <div className="mt-5 flex flex-wrap gap-2">
               <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-[#D3E1DF] text-[#406A56] text-xs font-medium">
-                <Truck size={12} /> Free shipping available
+                <Truck size={12} /> {shippingLabel}
               </span>
               {hasSustainable && (
                 <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-[#D3E1DF] text-[#406A56] text-xs font-medium">
                   <Leaf size={12} /> Sustainable
                 </span>
               )}
-              {brand && (
+              {(brand || products.length > 0) && (
                 <span className="inline-flex items-center px-3 py-1.5 rounded-full bg-white border border-[#406A56]/20 text-[#2d2d2d] text-xs font-medium">
-                  {brand.productCount} product{brand.productCount !== 1 ? 's' : ''}
+                  {brand?.productCount ?? products.length} product{(brand?.productCount ?? products.length) !== 1 ? 's' : ''}
                 </span>
               )}
+              {brandMeta?.brandValues?.map((val) => (
+                <span
+                  key={val}
+                  className="inline-flex items-center px-3 py-1.5 rounded-full bg-[#D3E1DF]/50 text-[#406A56] text-xs font-medium"
+                >
+                  {val}
+                </span>
+              ))}
             </div>
           </div>
 
