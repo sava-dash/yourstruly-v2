@@ -161,7 +161,8 @@ export default function PostScriptDetailPage({ params }: { params: Promise<{ id:
   // Auto-dismiss gift message
   useEffect(() => {
     if (giftMessage) {
-      const timer = setTimeout(() => setGiftMessage(null), 5000)
+      const ms = giftMessage.text.includes('added') ? 1500 : 5000
+      const timer = setTimeout(() => setGiftMessage(null), ms)
       return () => clearTimeout(timer)
     }
   }, [giftMessage])
@@ -808,9 +809,44 @@ export default function PostScriptDetailPage({ params }: { params: Promise<{ id:
                       )
                     })}
                   </div>
+                  {/* "+ Add a gift" button — only for draft/scheduled postscripts */}
+                  {(postscript.status === 'draft' || postscript.status === 'scheduled') && (
+                    <button
+                      onClick={() => setShowGiftModal(true)}
+                      className="mt-3 w-full rounded-full border border-[#406A56] text-[#406A56] font-semibold
+                                 text-sm hover:bg-[#406A56]/10 transition-colors flex items-center justify-center gap-2"
+                      style={{ minHeight: 44, fontFamily: 'var(--font-inter-tight, "Inter Tight", sans-serif)' }}
+                    >
+                      <Gift size={16} />
+                      + Add a gift
+                    </button>
+                  )}
                 </section>
               )
             })()}
+            {/* No gifts yet — larger CTA for draft/scheduled */}
+            {!postscript.has_gift && (postscript.status === 'draft' || postscript.status === 'scheduled') && (
+              <section>
+                <button
+                  onClick={() => setShowGiftModal(true)}
+                  className="w-full rounded-2xl p-5 text-left transition-colors group"
+                  style={{
+                    background: 'linear-gradient(165deg, rgba(62,48,35,0.85) 0%, rgba(42,32,26,0.92) 100%)',
+                    border: '1px dashed rgba(64,106,86,0.4)',
+                  }}
+                >
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-xl bg-[#406A56]/15 flex items-center justify-center group-hover:bg-[#406A56]/25 transition-colors">
+                      <Gift size={20} className="text-[#406A56]" />
+                    </div>
+                    <div>
+                      <h3 className="font-medium text-[#E8DCC4]">Attach a gift to this PostScript</h3>
+                      <p className="text-sm text-[#D4C8A0]/50">Surprise them with something special</p>
+                    </div>
+                  </div>
+                </button>
+              </section>
+            )}
           {/* Recipient + Gift + Timeline — horizontal row */}
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
             {/* Recipient */}
@@ -1005,6 +1041,8 @@ export default function PostScriptDetailPage({ params }: { params: Promise<{ id:
         deliveryType={postscript.delivery_type === 'after_passing' ? 'passing' : postscript.delivery_type}
         onGiftAdded={(gift) => {
           fetchPostScript()
+          setGiftMessage({ type: 'success', text: 'Gift added \u2713' })
+          setPostscript(prev => prev ? { ...prev, has_gift: true } : prev)
         }}
       />
 
