@@ -11,7 +11,7 @@ import Link from 'next/link'
 import '@/styles/page-styles.css'
 import Modal from '@/components/ui/Modal'
 import { EVENT_LABELS, getEventIcon } from '@/lib/postscripts/events'
-import { GiftSelectorModal } from '@/components/postscripts'
+import GiftSelectionModal, { type GiftSelection } from '@/components/postscripts/GiftSelectionModal'
 
 interface PostScript {
   id: string
@@ -1032,17 +1032,48 @@ export default function PostScriptDetailPage({ params }: { params: Promise<{ id:
         </div>
       </Modal>
 
-      {/* Gift Selector Modal */}
-      <GiftSelectorModal
+      {/* Gift Selection Modal — inline marketplace browsing */}
+      <GiftSelectionModal
         isOpen={showGiftModal}
         onClose={() => setShowGiftModal(false)}
-        postscriptId={postscript.id}
-        deliveryDate={postscript.delivery_date ? new Date(postscript.delivery_date) : null}
-        deliveryType={postscript.delivery_type === 'after_passing' ? 'passing' : postscript.delivery_type}
-        onGiftAdded={(gift) => {
-          fetchPostScript()
-          setGiftMessage({ type: 'success', text: 'Gift added \u2713' })
-          setPostscript(prev => prev ? { ...prev, has_gift: true } : prev)
+        deliveryDate={postscript.delivery_date || undefined}
+        deliveryType={postscript.delivery_type === 'after_passing' ? 'after_passing' : postscript.delivery_type as 'date' | 'event'}
+        onSelect={async (selection: GiftSelection) => {
+          try {
+            const items = selection.cartItems?.length
+              ? selection.cartItems
+              : selection.product
+                ? [{ product: selection.product, qty: selection.quantity }]
+                : []
+            for (const item of items) {
+              await fetch(`/api/postscripts/${postscript.id}/gifts`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                  product_id: item.product.id,
+                  provider: 'goody',
+                  name: item.product.name,
+                  description: item.product.description,
+                  image_url: item.product.images?.[0],
+                  price: item.product.price,
+                  quantity: item.qty,
+                  provider_data: { variant_id: selection.variantId },
+                  delivery_timing: selection.deliveryTiming,
+                  delivery_date: selection.deliveryDate,
+                  delivery_event: selection.deliveryEvent,
+                  delivery_offset_days: selection.deliveryOffsetDays,
+                  gift_type: selection.giftType,
+                  flex_gift_amount: selection.flexGiftAmount,
+                }),
+              })
+            }
+            fetchPostScript()
+            setGiftMessage({ type: 'success', text: 'Gift added \u2713' })
+            setPostscript(prev => prev ? { ...prev, has_gift: true } : prev)
+            setShowGiftModal(false)
+          } catch {
+            setGiftMessage({ type: 'error', text: 'Failed to add gift' })
+          }
         }}
       />
 
