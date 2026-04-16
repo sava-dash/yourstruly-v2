@@ -1,7 +1,7 @@
 'use client';
 
 import { Loader2, SearchX } from 'lucide-react';
-import ProductCard from './ProductCard';
+import ProductCard, { type ProductCardMode } from './ProductCard';
 import BrandCard from './BrandCard';
 import type { BrandCard as BrandCardData, MarketplaceProduct } from './types';
 
@@ -14,6 +14,8 @@ interface ProductGridProps {
   items: GridItem[];
   isLoading?: boolean;
   compact?: boolean;
+  /** Passed through to each ProductCard. */
+  mode?: ProductCardMode;
   onAddToCart?: (p: MarketplaceProduct) => void;
   onSendAsGift?: (p: MarketplaceProduct) => void;
   onSelectProduct?: (p: MarketplaceProduct) => void;
@@ -25,6 +27,7 @@ export default function ProductGrid({
   items,
   isLoading,
   compact,
+  mode,
   onAddToCart,
   onSendAsGift,
   onSelectProduct,
@@ -77,6 +80,7 @@ export default function ProductGrid({
               key={`p-${item.product.id}`}
               product={item.product}
               compact={compact}
+              mode={mode}
               onAddToCart={onAddToCart}
               onSendAsGift={onSendAsGift}
               onSelect={onSelectProduct}

@@ -7,9 +7,18 @@ import { useState } from 'react';
 import type { MarketplaceProduct } from './types';
 import { formatCents } from './types';
 
+/**
+ * Display mode controls action buttons and click behavior.
+ * - 'marketplace' (default): hover-reveal Add / Gift buttons, card links to PDP.
+ * - 'modal': single terra-cotta "Select" button, click fires `onSelect`.
+ */
+export type ProductCardMode = 'marketplace' | 'modal';
+
 interface ProductCardProps {
   product: MarketplaceProduct;
   compact?: boolean;
+  /** Display mode — controls which action buttons appear. */
+  mode?: ProductCardMode;
   onAddToCart?: (p: MarketplaceProduct) => void;
   onSendAsGift?: (p: MarketplaceProduct) => void;
   /** When provided, clicking the card fires this instead of navigating (e.g. gift modal). */
@@ -20,6 +29,7 @@ interface ProductCardProps {
 export default function ProductCard({
   product,
   compact = false,
+  mode = 'marketplace',
   onAddToCart,
   onSendAsGift,
   onSelect,
@@ -97,8 +107,23 @@ export default function ProductCard({
           <span className="text-lg font-bold text-[#406A56]">{priceLabel}</span>
         </div>
 
-        {/* Actions — hover-reveal on desktop, always visible on mobile */}
-        {(onAddToCart || onSendAsGift) && (
+        {/* Actions — mode-dependent */}
+        {mode === 'modal' && onSelect && (
+          <div className="mt-3">
+            <button
+              type="button"
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                onSelect(product);
+              }}
+              className="w-full min-h-[44px] bg-[#C35F33] text-white text-xs font-medium rounded-full flex items-center justify-center gap-1.5 hover:bg-[#a84e2a] transition-colors"
+            >
+              <Gift size={14} /> Select
+            </button>
+          </div>
+        )}
+        {mode === 'marketplace' && (onAddToCart || onSendAsGift) && (
           <div className="mt-3 flex gap-2 lg:opacity-0 lg:group-hover:opacity-100 lg:transition-opacity">
             {onAddToCart && (
               <button
