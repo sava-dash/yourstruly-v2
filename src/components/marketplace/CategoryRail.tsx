@@ -89,14 +89,21 @@ export default function CategoryRail({
     };
   }, [tab]);
 
-  // Fetch product counts per category (lightweight — just needs categories array)
+  // Fetch product counts per category + occasions
   useEffect(() => {
     let cancelled = false;
-    fetch('/api/marketplace/products?scope=all&perPage=100')
+    fetch('/api/marketplace/products?scope=all&perPage=500')
       .then((r) => (r.ok ? r.json() : { products: [] }))
       .then((data) => {
         if (!cancelled) {
-          setCategoryCounts(buildCategoryCounts(data.products || []));
+          const counts = buildCategoryCounts(data.products || []);
+          // Also count occasions (stored separately) for the Occasions tab
+          for (const p of data.products || []) {
+            for (const o of (p.occasions || [])) {
+              counts.set(o, (counts.get(o) || 0) + 1);
+            }
+          }
+          setCategoryCounts(counts);
         }
       })
       .catch(() => {

@@ -88,7 +88,11 @@ async function handleNewMode(request: NextRequest): Promise<NextResponse> {
 
   if (brand) query = query.eq('brand_slug', brand);
   if (scope) query = query.contains('scope', [scope]);
-  if (category && category !== 'all') query = query.contains('categories', [category]);
+  if (category && category !== 'all') {
+    // Match against both categories[] and occasions[] — occasion slugs like
+    // 'birthday', 'wedding' live in occasions[], not categories[].
+    query = query.or(`categories.cs.{${category}},occasions.cs.{${category}}`);
+  }
   if (search) query = query.or(`name.ilike.%${search}%,description.ilike.%${search}%`);
 
   query = query.order('curated_score', { ascending: false, nullsFirst: false });
