@@ -8,14 +8,15 @@ import { formatCents } from './types';
 
 interface BrandCardProps {
   brand: BrandCardData;
+  /** When provided, fires instead of navigating to the brand page. */
+  onClick?: (brand: BrandCardData) => void;
 }
 
-export default function BrandCard({ brand }: BrandCardProps) {
+export default function BrandCard({ brand, onClick }: BrandCardProps) {
   const [imgErr, setImgErr] = useState(false);
   const image = !imgErr && brand.sampleImage ? brand.sampleImage : '/placeholder-product.png';
 
-  return (
-    <Link href={`/marketplace/brand/${brand.slug}`}>
+  const inner = (
       <div className="group bg-white rounded-2xl border border-[#406A56]/10 overflow-hidden transition-all duration-200 hover:border-[#406A56]/30 hover:shadow-lg">
         <div className="relative aspect-square overflow-hidden bg-[#F2F1E5]">
           <Image
@@ -50,6 +51,19 @@ export default function BrandCard({ brand }: BrandCardProps) {
           </div>
         </div>
       </div>
-    </Link>
   );
+
+  if (onClick) {
+    return (
+      <button
+        type="button"
+        onClick={() => onClick(brand)}
+        className="text-left w-full"
+      >
+        {inner}
+      </button>
+    );
+  }
+
+  return <Link href={`/marketplace/brand/${brand.slug}`}>{inner}</Link>;
 }

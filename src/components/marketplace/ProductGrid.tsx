@@ -18,6 +18,8 @@ interface ProductGridProps {
   mode?: ProductCardMode;
   onAddToCart?: (p: MarketplaceProduct) => void;
   onSelectProduct?: (p: MarketplaceProduct) => void;
+  /** When provided, fires on brand card click instead of navigating. */
+  onSelectBrand?: (brand: BrandCardData) => void;
   emptyTitle?: string;
   emptyDescription?: string;
 }
@@ -29,6 +31,7 @@ export default function ProductGrid({
   mode,
   onAddToCart,
   onSelectProduct,
+  onSelectBrand,
   emptyTitle = 'Nothing here yet',
   emptyDescription = 'Try a different category or clear your filters.',
 }: ProductGridProps) {
@@ -86,7 +89,7 @@ export default function ProductGrid({
           );
         }
         if (item.kind === 'brand') {
-          return <BrandCard key={`b-${item.brand.slug}`} brand={item.brand} />;
+          return <BrandCard key={`b-${item.brand.slug}`} brand={item.brand} onClick={onSelectBrand} />;
         }
         return <HeroCard key={`h-${idx}`} item={item} />;
       })}

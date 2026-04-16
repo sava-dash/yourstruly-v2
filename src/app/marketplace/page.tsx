@@ -11,6 +11,7 @@ import FilterRow from '@/components/marketplace/FilterRow';
 import ProductGrid, { type GridItem } from '@/components/marketplace/ProductGrid';
 import CategoryHero from '@/components/marketplace/CategoryHero';
 import PostScriptCreditsSection from '@/components/marketplace/PostScriptCreditsSection';
+import MarketplacePanel from '@/components/marketplace/MarketplacePanel';
 import type {
   BrandCard as BrandCardData,
   CategoryNode,
@@ -56,6 +57,10 @@ export default function MarketplacePage() {
   const [loading, setLoading] = useState(false);
   const [cartCount, setCartCount] = useState(0);
   const [mobileCatsOpen, setMobileCatsOpen] = useState(false);
+
+  // Slide-out panel state
+  const [panelBrandSlug, setPanelBrandSlug] = useState<string | null>(null);
+  const [panelProductId, setPanelProductId] = useState<string | null>(null);
 
   // Sync URL
   useEffect(() => {
@@ -245,6 +250,21 @@ export default function MarketplacePage() {
     setCartCount((c) => c + 1);
   }, []);
 
+  const handleSelectProduct = useCallback((p: MarketplaceProduct) => {
+    setPanelProductId(p.id);
+    setPanelBrandSlug(null);
+  }, []);
+
+  const handleSelectBrand = useCallback((b: BrandCardData) => {
+    setPanelBrandSlug(b.slug);
+    setPanelProductId(null);
+  }, []);
+
+  const handleClosePanel = useCallback(() => {
+    setPanelBrandSlug(null);
+    setPanelProductId(null);
+  }, []);
+
 
   return (
     <div className="min-h-screen bg-[#F2F1E5]">
@@ -354,7 +374,8 @@ export default function MarketplacePage() {
                   items={gridItems}
                   isLoading={loading}
                   onAddToCart={handleAddToCart}
-                  
+                  onSelectProduct={handleSelectProduct}
+                  onSelectBrand={handleSelectBrand}
                   emptyTitle={view === 'brands' ? 'No brands match' : 'No gifts match'}
                   emptyDescription="Try a different category, scope, or clear your filters."
                 />
@@ -363,6 +384,13 @@ export default function MarketplacePage() {
           </main>
         </div>
       </div>
+
+      {/* Slide-out panel for brand / product detail */}
+      <MarketplacePanel
+        brandSlug={panelBrandSlug}
+        productId={panelProductId}
+        onClose={handleClosePanel}
+      />
 
       {/* Mobile categories drawer */}
       {mobileCatsOpen && (
