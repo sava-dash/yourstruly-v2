@@ -74,6 +74,7 @@ export async function POST(request: NextRequest) {
       answeredPromptsRes,
       recentAnglesRes,
       existingPromptsRes,
+      photosWithExifRes,
     ] = await Promise.all([
       supabase
         .from('profiles')
@@ -114,12 +115,21 @@ export async function POST(request: NextRequest) {
         .eq('user_id', user.id)
         .order('created_at', { ascending: false })
         .limit(100),
+      // Photos with EXIF metadata (date/location) for context-aware photo prompts
+      supabase
+        .from('memory_media')
+        .select('id, taken_at, exif_lat, exif_lng, location_name')
+        .eq('user_id', user.id)
+        .not('taken_at', 'is', null)
+        .order('taken_at', { ascending: false })
+        .limit(20),
     ]);
 
     const profile = (profileRes.data as any) || {};
     const contacts = (contactsRes.data as any[]) || [];
     const memories = (memoriesRes.data as any[]) || [];
     const answeredPrompts = (answeredPromptsRes.data as any[]) || [];
+    const photosWithExif = (photosWithExifRes.data as any[]) || [];
     const recentAngles = ((recentAnglesRes.data as any[]) || [])
       .map((p: any) => p.angle)
       .filter(Boolean);
@@ -187,6 +197,18 @@ CONTACTS: ${contactsList || 'none added yet'}
 
 MEMORIES SHARED (${memories.length} total):
 ${memorySummaries || 'None yet.'}
+
+PHOTOS WITH METADATA (${photosWithExif.length} photos have date/location):
+${photosWithExif.length > 0 ? photosWithExif.slice(0, 10).map((p: any) => {
+  const date = p.taken_at ? new Date(p.taken_at).toLocaleDateString('en-US', { month: 'long', year: 'numeric' }) : null;
+  const loc = p.location_name || null;
+  if (date && loc) return `- Photo from ${loc}, ${date}`;
+  if (date) return `- Photo from ${date}`;
+  if (loc) return `- Photo from ${loc}`;
+  return null;
+}).filter(Boolean).join('\n') : 'No geotagged photos yet.'}
+
+IMPORTANT: When generating prompts about photos, use the date and location if available. Do NOT ask "where was this taken" if we already know the location. Instead, reference it: "This photo from {location} in {date}..." and ask about the story, feelings, and people.
 
 ${answeredSummaries ? `RECENT ANSWERS:\n${answeredSummaries}` : ''}
 
