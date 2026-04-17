@@ -201,6 +201,20 @@ export default function HomeV2Page() {
     load()
   }, [])
 
+  // First-load seed: if user has no engagement_prompts, trigger seeding
+  const hasTriedSeed = useRef(false)
+  useEffect(() => {
+    if (!user || hasTriedSeed.current) return
+    if (rawPrompts.length > 0 || promptsLoading) return
+    hasTriedSeed.current = true
+    fetch('/api/engagement/seed-first-session', { method: 'POST' })
+      .then((res) => res.json())
+      .then((data) => {
+        if (data?.seeded > 0) shuffle()
+      })
+      .catch(() => {})
+  }, [user, rawPrompts.length, promptsLoading, shuffle])
+
   // Load the full set of chapter/category keys the system knows about
   // so the right panel can show every chapter even when no prompt of
   // that type is currently loaded into the feed.

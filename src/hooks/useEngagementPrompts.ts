@@ -25,6 +25,7 @@ export function useEngagementPrompts(count: number = 5, lifeChapter: string | nu
 
   const isFetching = useRef(false);
   const hasTriedAiFallback = useRef(false);
+  const hasTriedSeedFallback = useRef(false);
   const promptsRef = useRef(prompts);
   promptsRef.current = prompts;
 
@@ -66,6 +67,22 @@ export function useEngagementPrompts(count: number = 5, lifeChapter: string | nu
         // Genuinely empty pool — fall through to the AI generator so the
         // user never runs out of cards. We only try once per mount to
         // avoid infinite loops if the endpoint fails.
+        // Try seed-first-session bootstrap before AI fallback
+        if (!hasTriedSeedFallback.current) {
+          hasTriedSeedFallback.current = true;
+          try {
+            const seedRes = await fetch('/api/engagement/seed-first-session', { method: 'POST' });
+            const seedData = await seedRes.json().catch(() => ({}));
+            if (seedRes.ok && (seedData?.seeded ?? 0) > 0) {
+              isFetching.current = false;
+              await fetchPrompts(true);
+              return;
+            }
+          } catch (seedErr) {
+            console.error('[useEngagementPrompts] Seed fallback failed', seedErr);
+          }
+        }
+
         if (!hasTriedAiFallback.current) {
           hasTriedAiFallback.current = true;
           try {
@@ -104,6 +121,7 @@ export function useEngagementPrompts(count: number = 5, lifeChapter: string | nu
         promptText: p.prompt_text,
         status: p.status,
         priority: p.priority,
+        tier: p.tier ?? 0,
         photoUrl: p.photo_id ? photosMap[p.photo_id] : undefined,
         photoId: p.photo_id,
         photoMetadata: p.photo_id ? photoMetaMap[p.photo_id] : undefined,
@@ -129,7 +147,18 @@ export function useEngagementPrompts(count: number = 5, lifeChapter: string | nu
         return true;
       });
 
-      setPrompts(dedupedPrompts);
+      // Tier-aware sorting: tier ASC → priority DESC → random within same bucket
+      const sorted = dedupedPrompts.sort((a, b) => {
+        const tierA = (a as any).tier ?? 0;
+        const tierB = (b as any).tier ?? 0;
+        if (tierA !== tierB) return tierA - tierB;
+        const prioA = a.priority ?? 0;
+        const prioB = b.priority ?? 0;
+        if (prioA !== prioB) return prioB - prioA; // DESC
+        return Math.random() - 0.5;
+      });
+
+      setPrompts(sorted);
       await fetchStats();
 
     } catch (err) {

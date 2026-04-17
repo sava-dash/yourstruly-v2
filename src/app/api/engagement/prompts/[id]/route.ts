@@ -3,6 +3,7 @@ import { createClient } from '@/lib/supabase/server';
 import { createAdminClient } from '@/lib/supabase/admin';
 import type { AnswerPromptRequest, AnswerPromptResponse } from '@/types/engagement';
 import { transcribeAudio } from '@/lib/ai/transcription';
+import { checkAndAdvanceTier } from '@/lib/engagement/tier-advancement';
 // Using shared transcription lib for consistency
 
 // XP rewards configuration (matching TYPE_CONFIG in Bubble.tsx)
@@ -690,6 +691,34 @@ export async function POST(
       }
     }
 
+    // Increment prompts_answered_count + check tier advancement
+    let tierAdvanced = false;
+    let newTier: number | undefined;
+    if (!alreadyAnswered) {
+      try {
+        const adminClient = createAdminClient();
+        const { error: rpcErr } = await adminClient.rpc('increment_prompts_answered', { p_user_id: user.id });
+        if (rpcErr) {
+          // Fallback if RPC doesn't exist yet: read-then-write
+          const { data: prof } = await adminClient
+            .from('profiles')
+            .select('prompts_answered_count')
+            .eq('id', user.id)
+            .single();
+          await adminClient
+            .from('profiles')
+            .update({ prompts_answered_count: ((prof as any)?.prompts_answered_count ?? 0) + 1 })
+            .eq('id', user.id);
+        }
+      } catch (e) {
+        console.error('[answer] increment prompts_answered_count failed:', e);
+      }
+
+      const advancement = await checkAndAdvanceTier(supabase, user.id);
+      tierAdvanced = advancement.advanced;
+      newTier = advancement.newTier;
+    }
+
     const response: AnswerPromptResponse = {
       success: true,
       prompt: answeredPrompt,
@@ -701,7 +730,9 @@ export async function POST(
       contactUpdated,
       xpAwarded,
       mediaAttached,
-    } as AnswerPromptResponse & { mediaAttached: number };
+      tierAdvanced,
+      newTier,
+    } as AnswerPromptResponse & { mediaAttached: number; tierAdvanced: boolean; newTier?: number };
 
     return NextResponse.json(response);
 
