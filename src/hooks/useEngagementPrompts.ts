@@ -72,16 +72,46 @@ export function useEngagementPrompts(count: number = 5, lifeChapter: string | nu
         // Use seed_library prompts directly (bypass old shuffle RPC)
         rawPrompts = seedPrompts;
       } else {
-        // Fall back to old shuffle RPC for users not yet seeded
-        const { data: rpcData, error: rpcErr } = await supabase
-          .rpc('shuffle_engagement_prompts', {
-            p_user_id: user.id,
-            p_count: count,
-            p_regenerate: regenerate,
-            p_life_chapter: lifeChapter,
-          });
-        rawPrompts = rpcData;
-        fetchError = rpcErr;
+        // Seed library exhausted or not yet populated.
+        // Try the NEW AI engine first (journalist-friend spec),
+        // then fall back to old shuffle RPC only if AI also fails.
+        if (!hasTriedAiFallback.current) {
+          hasTriedAiFallback.current = true;
+          try {
+            const genRes = await fetch('/api/engagement/generate-ai-prompts', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ count: 15, chapter: lifeChapter || undefined }),
+            });
+            const genData = await genRes.json().catch(() => ({}));
+            if (genRes.ok && (genData?.generated ?? 0) > 0) {
+              // Re-fetch the newly generated prompts
+              const { data: freshPrompts } = await supabase
+                .from('engagement_prompts')
+                .select('*')
+                .eq('user_id', user.id)
+                .eq('status', 'pending')
+                .order('priority', { ascending: false })
+                .limit(count);
+              rawPrompts = freshPrompts;
+            }
+          } catch (e) {
+            console.error('[useEngagementPrompts] New AI generation failed', e);
+          }
+        }
+
+        // If still no prompts, fall back to old shuffle RPC
+        if (!rawPrompts || rawPrompts.length === 0) {
+          const { data: rpcData, error: rpcErr } = await supabase
+            .rpc('shuffle_engagement_prompts', {
+              p_user_id: user.id,
+              p_count: count,
+              p_regenerate: regenerate,
+              p_life_chapter: lifeChapter,
+            });
+          rawPrompts = rpcData;
+          fetchError = rpcErr;
+        }
       }
 
       if (fetchError) throw fetchError;
