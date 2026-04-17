@@ -4,6 +4,7 @@ import { createAdminClient } from '@/lib/supabase/admin';
 import type { AnswerPromptRequest, AnswerPromptResponse } from '@/types/engagement';
 import { transcribeAudio } from '@/lib/ai/transcription';
 import { checkAndAdvanceTier } from '@/lib/engagement/tier-advancement';
+import { generateFollowUp } from '@/lib/engagement/follow-up-engine';
 // Using shared transcription lib for consistency
 
 // XP rewards configuration (matching TYPE_CONFIG in Bubble.tsx)
@@ -717,6 +718,12 @@ export async function POST(
       const advancement = await checkAndAdvanceTier(supabase, user.id);
       tierAdvanced = advancement.advanced;
       newTier = advancement.newTier;
+    }
+
+    // Generate follow-up if response is substantial (fire-and-forget)
+    const responseText = body.responseText;
+    if (responseText && responseText.length > 200) {
+      generateFollowUp(supabase, user.id, promptId, responseText).catch(console.error);
     }
 
     const response: AnswerPromptResponse = {
