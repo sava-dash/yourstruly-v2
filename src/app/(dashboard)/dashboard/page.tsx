@@ -1676,13 +1676,36 @@ function PromptCard({ row, onClick, onClose, isExpanded, index }: {
           </div>
         )}
 
-        <p style={{
-          fontSize: hasPhoto ? '22px' : '24px',
-          fontWeight: 700, color: '#1A1F1C',
-          lineHeight: 1.6, letterSpacing: '0.01em', margin: 0,
-        }}>
-          {row.promptText}
-        </p>
+        {(() => {
+          const parts = (row.promptText || '').split('\n---\n');
+          const question = parts[0];
+          const hints = parts.length > 1 ? parts[1] : null;
+          return (
+            <>
+              <p style={{
+                fontSize: hasPhoto ? '22px' : '24px',
+                fontWeight: 700, color: '#1A1F1C',
+                lineHeight: 1.5, letterSpacing: '0.01em', margin: 0,
+                fontFamily: 'var(--font-playfair, Playfair Display, serif)',
+              }}>
+                {question}
+              </p>
+              {hints && (
+                <div style={{
+                  fontSize: '14px', color: '#5A6660',
+                  lineHeight: 1.6, marginTop: '10px',
+                  fontFamily: 'var(--font-inter-tight, Inter Tight, sans-serif)',
+                }}>
+                  {hints.split('\n').map((line, i) => (
+                    <p key={i} style={{ margin: line.startsWith('\u2022') ? '4px 0 4px 8px' : '0 0 4px' }}>
+                      {line}
+                    </p>
+                  ))}
+                </div>
+              )}
+            </>
+          );
+        })()}
 
         {(() => {
           // Only surface the "About NAME" subtitle when it actually adds

@@ -113,14 +113,22 @@ export async function POST(_request: NextRequest) {
       return pickFrom(universals);
     };
 
-    // Resolve placeholders in template text
-    const resolve = (text: string): string => {
+    // Resolve placeholders in template text.
+    // Returns null if anchored data is missing (caller should skip the prompt).
+    const resolve = (text: string, anchor: string | null): string | null => {
+      // Check if the prompt requires data we don't have — return null to skip
+      if (anchor === 'place' && !firstPlace) return null;
+      if (anchor === 'person' && contacts.length === 0) return null;
+      if (anchor === 'interest' && interests.length === 0) return null;
+      if (anchor === 'why_here' && !whyText) return null;
+
       return text
-        .replace(/\{place\}/gi, firstPlace || 'your hometown')
-        .replace(/\{person_name\}/gi, contacts[0]?.full_name || 'someone close to you')
-        .replace(/\{interest\}/gi, interests[0] || 'something you love')
-        .replace(/\{why_text\}/gi, whyText || 'preserving memories')
-        .replace(/\{decade\}/gi, decade || 'your younger years');
+        .replace(/\{place\}/gi, firstPlace || '')
+        .replace(/\{hometown\}/gi, firstPlace || '')
+        .replace(/\{person_name\}/gi, contacts[0]?.full_name || '')
+        .replace(/\{interest\}/gi, interests[0] || '')
+        .replace(/\{why_text\}/gi, whyText || '')
+        .replace(/\{decade\}/gi, 'when you were younger');
     };
 
     // Build the "We Were Listening" interleaved sequence (slots 1-10)
@@ -144,19 +152,26 @@ export async function POST(_request: NextRequest) {
       let picked: any = null;
 
       if (slot.anchor) {
-        // Try anchored prompt
-        const candidates = byAnchor[slot.anchor];
-        if (candidates && candidates.length > 0) {
-          // For person-anchor, resolve with specific contact
-          picked = pickFrom(candidates);
-          if (picked && slot.anchor === 'person') {
-            const contact = contacts[slot.contactIdx ?? 0] ?? contacts[0];
-            if (contact) {
-              picked = { ...picked, text: picked.text.replace(/\{person_name\}/gi, contact.full_name) };
+        // Check if we have data for this anchor type — skip anchored entirely if not
+        const hasData =
+          (slot.anchor === 'place' && firstPlace) ||
+          (slot.anchor === 'person' && contacts.length > 0) ||
+          (slot.anchor === 'interest' && interests.length > 0) ||
+          (slot.anchor === 'why_here' && whyText);
+
+        if (hasData) {
+          const candidates = byAnchor[slot.anchor];
+          if (candidates && candidates.length > 0) {
+            picked = pickFrom(candidates);
+            if (picked && slot.anchor === 'person') {
+              const contact = contacts[slot.contactIdx ?? 0] ?? contacts[0];
+              if (contact) {
+                picked = { ...picked, text: picked.text.replace(/\{person_name\}/gi, contact.full_name) };
+              }
             }
           }
         }
-        // If anchored data is missing, fall back to universal
+        // If no data for anchor or no candidates, use a universal instead
         if (!picked) {
           picked = pickFrom(universals);
         }
@@ -185,10 +200,12 @@ export async function POST(_request: NextRequest) {
 
     for (let i = 0; i < sequence.length; i++) {
       const seed = sequence[i];
+      const resolved = resolve(seed.text, seed.anchor);
+      if (!resolved) continue; // Skip if anchored data is missing
       rows.push({
         user_id: user.id,
         type: 'memory_prompt',
-        prompt_text: resolve(seed.text),
+        prompt_text: resolved,
         tier: 0,
         angle: seed.angle,
         anti_repeat_group: seed.anti_repeat_group || null,
@@ -202,11 +219,13 @@ export async function POST(_request: NextRequest) {
 
     for (let i = 0; i < extras.length; i++) {
       const seed = extras[i];
+      const resolved = resolve(seed.text, seed.anchor);
+      if (!resolved) continue; // Skip if anchored data is missing
       const position = sequence.length + i + 1;
       rows.push({
         user_id: user.id,
         type: 'memory_prompt',
-        prompt_text: resolve(seed.text),
+        prompt_text: resolved,
         tier: 0,
         angle: seed.angle,
         anti_repeat_group: seed.anti_repeat_group || null,

@@ -103,7 +103,7 @@ export function EngagementTile({ nextPrompt, totalWaiting, onOpen }: EngagementT
         )}
       </div>
 
-      {/* Prompt Preview */}
+      {/* Prompt Preview — show only the question header */}
       <p style={{
         fontSize: '14px',
         fontWeight: '500',
@@ -115,7 +115,7 @@ export function EngagementTile({ nextPrompt, totalWaiting, onOpen }: EngagementT
         WebkitBoxOrient: 'vertical',
         overflow: 'hidden',
       }}>
-        {promptText}
+        {promptText.split('\n---\n')[0]}
       </p>
 
       {/* Photo preview */}
