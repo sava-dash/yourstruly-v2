@@ -52,14 +52,37 @@ export function useEngagementPrompts(count: number = 5, lifeChapter: string | nu
       if (!session?.user) throw new Error('Not authenticated');
       const user = session.user;
 
-      // Call the shuffle function to get/generate prompts
-      const { data: rawPrompts, error: fetchError } = await supabase
-        .rpc('shuffle_engagement_prompts', {
-          p_user_id: user.id,
-          p_count: count,
-          p_regenerate: regenerate,
-          p_life_chapter: lifeChapter,
-        });
+      // Prefer seed_library prompts (from the new progressive system) over
+      // the old shuffle RPC. Query directly, ordered by priority DESC so the
+      // "We Were Listening" first-session sequence serves in order.
+      let rawPrompts: any[] | null = null;
+      let fetchError: any = null;
+
+      // Check for new-system prompts first
+      const { data: seedPrompts, error: seedErr } = await supabase
+        .from('engagement_prompts')
+        .select('*')
+        .eq('user_id', user.id)
+        .eq('status', 'pending')
+        .eq('source', 'seed_library')
+        .order('priority', { ascending: false })
+        .limit(count);
+
+      if (!seedErr && seedPrompts && seedPrompts.length > 0) {
+        // Use seed_library prompts directly (bypass old shuffle RPC)
+        rawPrompts = seedPrompts;
+      } else {
+        // Fall back to old shuffle RPC for users not yet seeded
+        const { data: rpcData, error: rpcErr } = await supabase
+          .rpc('shuffle_engagement_prompts', {
+            p_user_id: user.id,
+            p_count: count,
+            p_regenerate: regenerate,
+            p_life_chapter: lifeChapter,
+          });
+        rawPrompts = rpcData;
+        fetchError = rpcErr;
+      }
 
       if (fetchError) throw fetchError;
 
