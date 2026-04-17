@@ -204,8 +204,9 @@ export default function HomeV2Page() {
   // First-load seed: if user has no engagement_prompts, trigger seeding
   const hasTriedSeed = useRef(false)
   useEffect(() => {
-    if (!user || hasTriedSeed.current) return
-    if (rawPrompts.length > 0 || promptsLoading) return
+    if (!user || hasTriedSeed.current || promptsLoading) return
+    // Always try seeding — the endpoint is idempotent (checks for seed_library source)
+    // This ensures existing users with only old-style prompts get the new seeds too
     hasTriedSeed.current = true
     fetch('/api/engagement/seed-first-session', { method: 'POST' })
       .then((res) => res.json())

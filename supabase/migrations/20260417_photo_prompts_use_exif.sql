@@ -14,7 +14,7 @@ SELECT
   mm.taken_at,
   mm.exif_lat,
   mm.exif_lng,
-  COALESCE(mm.location_name, '') AS location_name
+  COALESCE(m.location_name, '') AS location_name
 FROM memory_media mm
 LEFT JOIN memories m ON mm.memory_id = m.id
 WHERE (m.description IS NULL OR m.description = '')

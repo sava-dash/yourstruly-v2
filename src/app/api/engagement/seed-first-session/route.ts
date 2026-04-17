@@ -13,11 +13,13 @@ export async function POST(_request: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    // Idempotent guard: skip if user already has engagement_prompts
+    // Idempotent guard: skip if user already has seed_library prompts
+    // (allows re-seeding for users who only have old-style system prompts)
     const { count, error: countErr } = await supabase
       .from('engagement_prompts')
       .select('id', { count: 'exact', head: true })
-      .eq('user_id', user.id);
+      .eq('user_id', user.id)
+      .eq('source', 'seed_library');
 
     if (countErr) {
       console.error('[seed-first-session] count check failed:', countErr);
@@ -27,6 +29,14 @@ export async function POST(_request: NextRequest) {
     if ((count ?? 0) > 0) {
       return NextResponse.json({ seeded: 0, reason: 'already_seeded' });
     }
+
+    // Mark old generic prompts as dismissed so new seeds take priority
+    await supabase
+      .from('engagement_prompts')
+      .update({ status: 'dismissed' })
+      .eq('user_id', user.id)
+      .eq('status', 'pending')
+      .in('source', ['system', 'photo_upload', 'profile_based']);
 
     // Load onboarding data in parallel
     const [profileRes, contactsRes] = await Promise.all([
