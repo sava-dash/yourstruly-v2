@@ -30,13 +30,13 @@ export async function POST(_request: NextRequest) {
       return NextResponse.json({ seeded: 0, reason: 'already_seeded' });
     }
 
-    // Mark old generic prompts as dismissed so new seeds take priority
+    // Dismiss ALL old non-seed prompts so new seeds take priority
     await supabase
       .from('engagement_prompts')
       .update({ status: 'dismissed' })
       .eq('user_id', user.id)
       .eq('status', 'pending')
-      .in('source', ['system', 'photo_upload', 'profile_based']);
+      .neq('source', 'seed_library');
 
     // Load onboarding data in parallel
     const [profileRes, contactsRes] = await Promise.all([
