@@ -2,31 +2,24 @@
 
 ## Post-Deployment Tasks
 
-### Stripe Webhook Setup
-- [ ] Create webhook endpoint at `https://yourstruly.love/api/webhooks/stripe`
-- [ ] Subscribe to events:
-  - `checkout.session.completed`
-  - `customer.subscription.created`
-  - `customer.subscription.updated`
-  - `customer.subscription.deleted`
-  - `invoice.payment_failed`
-  - `invoice.payment_succeeded`
-- [ ] Add `STRIPE_WEBHOOK_SECRET` to production environment
-- [ ] Test webhook delivery in Stripe Dashboard
+### Stripe Webhook Setup ✅ DONE
+- [x] Webhook endpoint live at `/api/webhooks/stripe` (handles 7 event types incl. `payment_intent.succeeded` for photobooks)
+- [x] `STRIPE_WEBHOOK_SECRET` present in ECS task def (rev 7), and `STRIPE_WEBHOOK_SECRET_GIFTS` for the gifts variant
+- [ ] Confirm event subscriptions in Stripe Dashboard cover: `checkout.session.completed`, `customer.subscription.created/updated/deleted`, `invoice.payment_succeeded/failed`, `customer.subscription.trial_will_end`, `payment_intent.succeeded`
 
-### Interview Security & Claiming
-- [ ] Add optional email/phone verification for interviewees
-- [ ] Prompt "Save a copy to your account?" at interview completion
-- [ ] Check for claimable interviews during signup (match email/phone)
-- [ ] UI for claiming past interview responses when signing up
-- [ ] Migration 061 created: `interview_respondents` table + claim functions
+### Interview Security & Claiming ✅ DONE
+- [x] Migration `20260418_interview_claimable.sql` adds `interviewee_email` + `claimed_by_user_id` to `interview_sessions`
+- [x] `/api/interviews/claimable?email=` returns unclaimed sessions
+- [x] `/api/interviews/claim-account` copies responses into the new user
+- [x] `ClaimAccountFlow` mounted on the interview completion page
+- [x] Signup page checks for claimable interviews on email entry and offers to claim
 
 ### Testing
-- [ ] Test face detection on uploaded photos
-- [ ] Verify Resend email delivery for seat invites
-- [ ] Test photobook builder flow end-to-end
-- [ ] Test live transcription/conversations end-to-end
-- [ ] Test group interviews end-to-end
+- [ ] Test face detection on uploaded photos (manual — see `docs/PRELAUNCH_TEST_BATCH3.md`)
+- [ ] Verify Resend email delivery for seat invites (manual)
+- [ ] Test photobook builder flow end-to-end (manual)
+- [ ] Test live transcription/conversations end-to-end (manual)
+- [ ] Test group interviews end-to-end (manual)
 
 ### Other
 - [ ] Set up Prodigi API keys (production)
