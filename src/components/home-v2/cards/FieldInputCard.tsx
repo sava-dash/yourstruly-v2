@@ -5,7 +5,7 @@ import { Check, Loader2, User } from 'lucide-react'
 
 interface FieldInputCardProps {
   contactName?: string
-  contactPhotoUrl?: string
+  contactPhotoUrl?: string | null
   /** Raw missing-field key from the prompt (e.g. "birth_date") — if set, only this field is shown */
   missingField?: string
   /** Friendly label for the missing field (e.g. "Birthday") */
