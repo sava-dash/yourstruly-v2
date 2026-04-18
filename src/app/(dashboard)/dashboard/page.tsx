@@ -1581,7 +1581,6 @@ function PromptCard({ row, onClick, onClose, isExpanded, index }: {
 
   return (
     <motion.div
-      className="chapter-gradient-card"
       onClick={onClick || undefined}
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
@@ -1591,7 +1590,8 @@ function PromptCard({ row, onClick, onClose, isExpanded, index }: {
         height: `${CARD_H}px`,
         borderRadius: '20px',
         overflow: 'hidden',
-        background: chapterStyle.gradient,
+        background: '#FAFAF7',
+        position: 'relative',
         boxShadow: '0 8px 32px rgba(0,0,0,0.06), 0 2px 8px rgba(0,0,0,0.04)',
         cursor: 'pointer',
         flexShrink: 0,
@@ -1601,6 +1601,21 @@ function PromptCard({ row, onClick, onClose, isExpanded, index }: {
       whileHover={!isExpanded ? { boxShadow: '0 2px 4px rgba(45,90,61,0.06), 0 8px 24px rgba(0,0,0,0.08), 0 16px 48px rgba(0,0,0,0.04)' } : {}}
       whileTap={!isExpanded ? { scale: 0.96 } : {}}
     >
+      {/* Amorphous gradient blob — confined to bottom of card */}
+      <div className="chapter-gradient-blob" style={{
+        position: 'absolute', bottom: 0, left: '-20%', right: '-20%', height: '55%',
+        background: `radial-gradient(ellipse 80% 70% at 50% 80%, ${chapterStyle.accentColor}22 0%, ${chapterStyle.accentColor}11 40%, transparent 70%)`,
+        pointerEvents: 'none', zIndex: 0,
+      }}>
+        <div className="chapter-blob-inner" style={{
+          position: 'absolute', inset: 0,
+          background: `radial-gradient(ellipse 60% 50% at 30% 90%, ${chapterStyle.accentColor}18 0%, transparent 60%)`,
+        }} />
+        <div className="chapter-blob-inner-2" style={{
+          position: 'absolute', inset: 0,
+          background: `radial-gradient(ellipse 50% 40% at 70% 85%, ${chapterStyle.accentColor}15 0%, transparent 55%)`,
+        }} />
+      </div>
       {/* Photo hero — fills ~60% of card */}
       {hasPhoto && (
         <div style={{ position: 'relative', flex: '0 0 60%', overflow: 'hidden' }}>
@@ -1747,9 +1762,10 @@ function PromptCard({ row, onClick, onClose, isExpanded, index }: {
         {/* Bottom caption area */}
         <div style={{
           display: 'flex', alignItems: 'center', justifyContent: 'center',
-          gap: '10px', marginTop: 'auto', paddingTop: '16px',
+          gap: '12px', marginTop: 'auto', paddingTop: '16px',
           borderTop: `1px solid ${colors.border}15`,
-          fontSize: '12px', color: '#94A09A',
+          fontSize: '14px', fontWeight: 500, color: '#6B7A73',
+          position: 'relative', zIndex: 1,
         }}>
           <span>{meta.hint}</span>
           <span style={{ width: '3px', height: '3px', borderRadius: '50%', background: '#DDE3DF' }} />

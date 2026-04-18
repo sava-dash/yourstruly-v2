@@ -3,18 +3,33 @@
    Cleaned up 2026-03-22: Removed dead bubble/masonry/conversation styles
    ============================================================================= */
 
-/* Chapter gradient floating animation — slow vertical shift at the bottom */
-@keyframes gradientFloat {
-  0%   { background-position: 50% 0%; }
-  25%  { background-position: 30% 10%; }
-  50%  { background-position: 70% 5%; }
-  75%  { background-position: 40% 15%; }
-  100% { background-position: 50% 0%; }
+/* Amorphous blob animation — organic drift at bottom of card */
+@keyframes blobDrift {
+  0%   { transform: translate(0, 0) scale(1); }
+  25%  { transform: translate(8%, -5%) scale(1.05); }
+  50%  { transform: translate(-6%, 3%) scale(0.95); }
+  75%  { transform: translate(5%, -2%) scale(1.03); }
+  100% { transform: translate(0, 0) scale(1); }
 }
 
-.chapter-gradient-card {
-  background-size: 200% 200% !important;
-  animation: gradientFloat 15s ease-in-out infinite !important;
+@keyframes blobDrift2 {
+  0%   { transform: translate(0, 0) scale(1); }
+  25%  { transform: translate(-10%, 4%) scale(1.08); }
+  50%  { transform: translate(7%, -3%) scale(0.92); }
+  75%  { transform: translate(-4%, 6%) scale(1.04); }
+  100% { transform: translate(0, 0) scale(1); }
+}
+
+.chapter-gradient-blob {
+  filter: blur(30px);
+}
+
+.chapter-blob-inner {
+  animation: blobDrift 12s ease-in-out infinite !important;
+}
+
+.chapter-blob-inner-2 {
+  animation: blobDrift2 16s ease-in-out infinite !important;
 }
 
 /* =============================================================================
