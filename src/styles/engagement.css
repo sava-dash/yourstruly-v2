@@ -3,6 +3,14 @@
    Cleaned up 2026-03-22: Removed dead bubble/masonry/conversation styles
    ============================================================================= */
 
+/* Chapter gradient floating animation — slow 12s cycle for subtle life */
+@keyframes gradientFloat {
+  0%   { background-position: 0% 50%; }
+  33%  { background-position: 100% 0%; }
+  66%  { background-position: 50% 100%; }
+  100% { background-position: 0% 50%; }
+}
+
 /* =============================================================================
    BUBBLE TILE (Used in dashboard)
    ============================================================================= */

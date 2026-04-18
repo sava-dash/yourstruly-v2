@@ -3,6 +3,7 @@
 import { motion } from 'framer-motion'
 import { Sparkles, Camera, BookOpen, Brain, Heart, MessageSquare, Users, Gift, ArrowRight } from 'lucide-react'
 import { TYPE_CONFIG } from '../constants'
+import { getChapterStyle } from '@/lib/engagement/chapter-styles'
 
 interface EngagementTileProps {
   nextPrompt: any | null
@@ -41,7 +42,7 @@ export function EngagementTile({ nextPrompt, totalWaiting, onOpen }: EngagementT
 
   const config = nextPrompt ? TYPE_CONFIG[nextPrompt.type] : null
   const Icon = nextPrompt ? (TYPE_ICONS[nextPrompt.type] || Sparkles) : Sparkles
-  const color = config ? TYPE_COLORS[config.color] || '#B8562E' : '#B8562E'
+  const chapterStyle = getChapterStyle(nextPrompt?.category || nextPrompt?.dbCategory || nextPrompt?.lifeChapter)
   const promptText = nextPrompt?.promptText || 'Continue your story'
 
   return (
@@ -51,12 +52,12 @@ export function EngagementTile({ nextPrompt, totalWaiting, onOpen }: EngagementT
       onClick={onOpen}
       style={{
         cursor: 'pointer',
-        borderRadius: '16px',
+        borderRadius: '20px',
         padding: '20px',
-        background: isDark
-          ? `linear-gradient(135deg, ${color}20, ${color}10)`
-          : `linear-gradient(135deg, ${color}15, ${color}08)`,
-        border: `1px solid ${isDark ? `${color}40` : `${color}30`}`,
+        background: chapterStyle.gradient,
+        backgroundSize: '300% 300%',
+        animation: 'gradientFloat 12s ease-in-out infinite',
+        boxShadow: '0 8px 32px rgba(0,0,0,0.06), 0 2px 8px rgba(0,0,0,0.04)',
         display: 'flex',
         flexDirection: 'column',
         gap: '12px',
@@ -70,24 +71,23 @@ export function EngagementTile({ nextPrompt, totalWaiting, onOpen }: EngagementT
             width: '32px',
             height: '32px',
             borderRadius: '10px',
-            background: `${color}${isDark ? '30' : '20'}`,
+            background: 'rgba(255,255,255,0.5)',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
-            color: color,
+            color: chapterStyle.accentColor,
           }}>
             <Icon size={16} />
           </div>
-          <div style={{
-            fontSize: '11px',
-            fontWeight: '600',
+          <span style={{
+            fontSize: '10px',
+            fontWeight: 700,
             textTransform: 'uppercase',
-            letterSpacing: '0.5px',
-            color: color,
-            opacity: 0.9,
+            letterSpacing: '0.12em',
+            color: chapterStyle.accentColor,
           }}>
-            {config?.label || 'Story Prompt'}
-          </div>
+            {chapterStyle.label}
+          </span>
         </div>
         {totalWaiting > 0 && (
           <span style={{
@@ -138,7 +138,7 @@ export function EngagementTile({ nextPrompt, totalWaiting, onOpen }: EngagementT
         gap: '6px',
         fontSize: '13px',
         fontWeight: '600',
-        color: color,
+        color: chapterStyle.accentColor,
       }}>
         <span>Continue Your Story</span>
         <ArrowRight size={14} />

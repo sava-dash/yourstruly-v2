@@ -28,6 +28,7 @@ import { useXpState } from './hooks/useXpState'
 import { useGamificationConfig } from '@/hooks/useGamificationConfig'
 import { TYPE_CONFIG, getFieldLabel, LIFE_CHAPTERS } from './constants'
 import { trackEngagement } from './analytics'
+import { getChapterStyle } from '@/lib/engagement/chapter-styles'
 import { EngagementErrorBoundary } from './components/EngagementErrorBoundary'
 import { CelebrationModal } from './components/CelebrationModal'
 import { HistoryPanel } from './components/HistoryPanel'
@@ -848,23 +849,23 @@ export default function HomeV2Page() {
 
       {/* ── Edge toggles for slide-out panels ── */}
       <button
-        onClick={() => setHistoryOpen(true)}
-        className="edge-toggle edge-toggle-left"
-        aria-label="Open history"
-        title="Your history"
-      >
-        <Clock size={14} />
-        <span className="edge-toggle-label">History</span>
-      </button>
-      <button
         onClick={() => setCategoriesOpen(true)}
-        className="edge-toggle edge-toggle-right"
+        className="edge-toggle edge-toggle-left"
         aria-label="Browse chapters"
         title="Browse chapters"
       >
         <LayoutGrid size={14} />
         <span className="edge-toggle-label">Chapters</span>
         {categoryFilter && <span className="edge-toggle-dot" aria-hidden="true" />}
+      </button>
+      <button
+        onClick={() => setHistoryOpen(true)}
+        className="edge-toggle edge-toggle-right"
+        aria-label="Open history"
+        title="Your history"
+      >
+        <Clock size={14} />
+        <span className="edge-toggle-label">History</span>
       </button>
 
       {/* ── Main Content — snap-scroll viewport ── */}
@@ -1266,6 +1267,13 @@ export default function HomeV2Page() {
             100% { background-position: 200% 0; }
           }
 
+          @keyframes gradientFloat {
+            0%   { background-position: 0% 50%; }
+            33%  { background-position: 100% 0%; }
+            66%  { background-position: 50% 100%; }
+            100% { background-position: 0% 50%; }
+          }
+
           /* ── Edge toggle buttons for slide-out panels ── */
           .edge-toggle {
             position: fixed;
@@ -1567,6 +1575,7 @@ function PromptCard({ row, onClick, onClose, isExpanded, index }: {
 }) {
   const meta = CATEGORY_META[row.category] || CATEGORY_META.memory
   const colors = CATEGORY_COLORS[row.category] || CATEGORY_COLORS.memory
+  const chapterStyle = getChapterStyle(row.dbCategory || row.lifeChapter)
   const hasPhoto = !!row.photoUrl
   const Icon = meta.icon
 
@@ -1579,11 +1588,12 @@ function PromptCard({ row, onClick, onClose, isExpanded, index }: {
       style={{
         width: 'var(--card-w)',
         height: `${CARD_H}px`,
-        borderRadius: '24px',
+        borderRadius: '20px',
         overflow: 'hidden',
-        background: colors.cardBg,
-        border: `1px solid ${colors.border}25`,
-        boxShadow: '0 1px 2px rgba(45,90,61,0.04), 0 4px 16px rgba(0,0,0,0.05), 0 12px 40px rgba(0,0,0,0.03)',
+        background: chapterStyle.gradient,
+        backgroundSize: '300% 300%',
+        animation: 'gradientFloat 12s ease-in-out infinite',
+        boxShadow: '0 8px 32px rgba(0,0,0,0.06), 0 2px 8px rgba(0,0,0,0.04)',
         cursor: 'pointer',
         flexShrink: 0,
         display: 'flex',
@@ -1626,11 +1636,12 @@ function PromptCard({ row, onClick, onClose, isExpanded, index }: {
           <div style={{ position: 'absolute', bottom: '14px', left: '18px' }}>
             <span style={{
               padding: '5px 14px', borderRadius: '20px',
-              fontSize: '11px', fontWeight: 600,
+              fontSize: '10px', fontWeight: 700,
+              letterSpacing: '0.12em', textTransform: 'uppercase',
               background: 'rgba(255,255,255,0.15)', backdropFilter: 'blur(8px)',
               color: '#fff',
             }}>
-              {meta.label}
+              {chapterStyle.label}
             </span>
           </div>
         </div>
@@ -1645,18 +1656,17 @@ function PromptCard({ row, onClick, onClose, isExpanded, index }: {
           <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '16px' }}>
             <div style={{
               width: '40px', height: '40px', borderRadius: '50%',
-              background: colors.bg,
+              background: 'rgba(255,255,255,0.5)',
               display: 'flex', alignItems: 'center', justifyContent: 'center',
             }}>
-              <Icon size={18} color={colors.accent} />
+              <Icon size={18} color={chapterStyle.accentColor} />
             </div>
             <span style={{
-              fontSize: '11px', fontWeight: 600,
-              color: colors.accent,
-              textTransform: 'uppercase', letterSpacing: '0.08em',
-              opacity: 0.7,
+              fontSize: '10px', fontWeight: 700,
+              color: chapterStyle.accentColor,
+              textTransform: 'uppercase', letterSpacing: '0.12em',
             }}>
-              {meta.label}
+              {chapterStyle.label}
             </span>
             {isExpanded && (
               <motion.button
