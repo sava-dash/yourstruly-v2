@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { Check } from 'lucide-react'
 
 interface Challenge {
@@ -14,10 +14,21 @@ interface Challenge {
   completed: boolean
 }
 
+interface ChallengesResponse {
+  challenges: Challenge[]
+  weekStart: string
+  streak: number
+  streakBonus: number
+}
+
 export default function WeeklyChallenges() {
   const [challenges, setChallenges] = useState<Challenge[]>([])
   const [loading, setLoading] = useState(true)
   const [isDark, setIsDark] = useState(false)
+  const [streak, setStreak] = useState(0)
+  const [streakBonus, setStreakBonus] = useState(0)
+  const [completedToast, setCompletedToast] = useState<{ label: string; xp: number } | null>(null)
+  const prevCompletedRef = useRef<Set<string>>(new Set())
 
   useEffect(() => {
     fetchChallenges()
@@ -40,12 +51,32 @@ export default function WeeklyChallenges() {
     }
   }, [])
 
+  // Auto-dismiss completion toast after 3 seconds
+  useEffect(() => {
+    if (!completedToast) return
+    const timer = setTimeout(() => setCompletedToast(null), 3000)
+    return () => clearTimeout(timer)
+  }, [completedToast])
+
   const fetchChallenges = async () => {
     try {
       const res = await fetch('/api/challenges')
       if (res.ok) {
-        const data = await res.json()
-        setChallenges(data.challenges || [])
+        const data: ChallengesResponse = await res.json()
+        const newChallenges = data.challenges || []
+
+        // Detect newly completed challenges
+        const prevCompleted = prevCompletedRef.current
+        for (const c of newChallenges) {
+          if (c.completed && !prevCompleted.has(c.id) && prevCompleted.size > 0) {
+            setCompletedToast({ label: c.challenge_label, xp: c.xp_reward })
+          }
+        }
+        prevCompletedRef.current = new Set(newChallenges.filter(c => c.completed).map(c => c.id))
+
+        setChallenges(newChallenges)
+        setStreak(data.streak || 0)
+        setStreakBonus(data.streakBonus || 0)
       }
     } catch (err) {
       console.error('Failed to fetch challenges:', err)
@@ -78,7 +109,31 @@ export default function WeeklyChallenges() {
       borderRadius: '16px',
       backdropFilter: 'blur(12px)',
       boxShadow: isDark ? '0 2px 12px rgba(0,0,0,0.3)' : '0 2px 8px rgba(0,0,0,0.06)',
+      position: 'relative',
     }}>
+      {/* Completion toast */}
+      {completedToast && (
+        <div style={{
+          position: 'absolute',
+          top: '-48px',
+          left: '50%',
+          transform: 'translateX(-50%)',
+          background: '#406A56',
+          color: '#fff',
+          padding: '8px 18px',
+          borderRadius: '9999px',
+          fontSize: '13px',
+          fontWeight: '600',
+          fontFamily: "'Playfair Display', serif",
+          whiteSpace: 'nowrap',
+          zIndex: 10,
+          boxShadow: '0 4px 12px rgba(64,106,86,0.3)',
+          animation: 'fadeInUp 0.3s ease',
+        }}>
+          Challenge complete! +{completedToast.xp} XP
+        </div>
+      )}
+
       <div style={{
         padding: '12px 14px 8px',
         fontSize: '12px',
@@ -87,8 +142,22 @@ export default function WeeklyChallenges() {
         textTransform: 'uppercase',
         letterSpacing: '0.5px',
         borderBottom: `1px solid ${t.divider}`,
+        display: 'flex',
+        justifyContent: 'space-between',
+        alignItems: 'center',
       }}>
-        Weekly Challenges
+        <span>Weekly Challenges</span>
+        {streak > 0 && (
+          <span style={{
+            fontSize: '11px',
+            fontWeight: '600',
+            color: '#C35F33',
+            textTransform: 'none',
+            letterSpacing: '0',
+          }}>
+            {streak}-week streak!{streakBonus > 0 ? ` +${streakBonus}%` : ''}
+          </span>
+        )}
       </div>
       <div>
         {challenges.map((c, i) => {
@@ -161,13 +230,19 @@ export default function WeeklyChallenges() {
                   {c.current_count}/{c.target_count}
                 </span>
                 <span style={{ fontSize: '10px', fontWeight: '600', color: c.completed ? '#2D5A3D' : '#C4A235' }}>
-                  {c.completed ? '✓ Done' : `⚡${c.xp_reward} XP`}
+                  {c.completed ? '\u2713 Done' : `\u26A1${c.xp_reward} XP`}
                 </span>
               </div>
             </div>
           )
         })}
       </div>
+      <style>{`
+        @keyframes fadeInUp {
+          from { opacity: 0; transform: translateX(-50%) translateY(8px); }
+          to { opacity: 1; transform: translateX(-50%) translateY(0); }
+        }
+      `}</style>
     </div>
   )
 }

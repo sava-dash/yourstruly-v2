@@ -30,7 +30,9 @@ export interface ChallengeTemplate {
   label: string // use {n} for target count
   emoji: string
   targets: number[]
+  difficulty: 'easy' | 'medium' | 'hard'
   description: string // why this matters
+  xpMultiplier?: number // per-target XP (default 20)
 }
 
 export interface GamificationConfig {
@@ -66,13 +68,21 @@ export const DEFAULT_CONFIG: GamificationConfig = {
   ],
 
   challengeTemplates: [
-    { type: 'add_memories', label: 'Create {n} memories for your family', emoji: '📝', targets: [2, 3, 5], description: 'Every memory you save is a gift to those you love' },
-    { type: 'add_photos', label: 'Share {n} photos with loved ones', emoji: '📸', targets: [3, 5, 10], description: 'Photos bring memories to life for your family' },
-    { type: 'record_voice', label: 'Record {n} voice message for family', emoji: '🎙️', targets: [1, 2, 3], description: "Your voice is irreplaceable — your family will treasure hearing it" },
-    { type: 'tag_faces', label: 'Tag {n} people in your photos', emoji: '👤', targets: [3, 5, 8], description: 'Help your family know who was part of these moments' },
-    { type: 'add_wisdom', label: 'Share {n} piece of wisdom', emoji: '💡', targets: [1, 2, 3], description: 'Pass down the lessons that shaped who you are' },
-    { type: 'complete_prompts', label: 'Answer {n} memory prompts', emoji: '💬', targets: [2, 3, 5], description: 'Each answer adds another chapter to your story' },
-    { type: 'enrich_memories', label: 'Add details to {n} memories', emoji: '📍', targets: [2, 3, 5], description: 'The details make memories come alive for your loved ones' },
+    // Easy (low target, common actions)
+    { type: 'add_memories', label: 'Create {n} memories for your family', emoji: '📝', targets: [2], difficulty: 'easy', description: 'Every memory you save is a gift to those you love' },
+    { type: 'complete_prompts', label: 'Answer {n} memory prompts', emoji: '💬', targets: [2], difficulty: 'easy', description: 'Each answer adds another chapter to your story' },
+    { type: 'add_wisdom', label: 'Share {n} piece of wisdom', emoji: '💡', targets: [1], difficulty: 'easy', description: 'Pass down the lessons that shaped who you are' },
+
+    // Medium
+    { type: 'add_photos', label: 'Share {n} photos with loved ones', emoji: '📸', targets: [5], difficulty: 'medium', description: 'Photos bring memories to life for your family' },
+    { type: 'tag_faces', label: 'Tag {n} people in your photos', emoji: '👤', targets: [3], difficulty: 'medium', description: 'Help your family know who was part of these moments' },
+    { type: 'record_voice', label: 'Record {n} voice message for family', emoji: '🎙️', targets: [2], difficulty: 'medium', description: "Your voice is irreplaceable — your family will treasure hearing it" },
+    { type: 'share_memory', label: 'Share a memory with {n} people', emoji: '💌', targets: [1, 2], difficulty: 'medium', description: 'Sharing memories brings people closer together', xpMultiplier: 20 },
+
+    // Hard (higher target, less common actions)
+    { type: 'enrich_memories', label: 'Add details to {n} memories', emoji: '📍', targets: [5], difficulty: 'hard', description: 'The details make memories come alive for your loved ones' },
+    { type: 'add_photos', label: 'Share {n} photos with loved ones', emoji: '📸', targets: [10], difficulty: 'hard', description: 'Photos bring memories to life for your family' },
+    { type: 'tag_faces', label: 'Tag {n} people in your photos', emoji: '👤', targets: [8], difficulty: 'hard', description: 'Help your family know who was part of these moments' },
   ],
 
   streakMessages: {
