@@ -135,3 +135,45 @@ export async function generateFollowUp(
     return null;
   }
 }
+
+/**
+ * Fire-and-forget wrapper that emits a structured log line for every
+ * follow-up attempt. Never throws — safe to call without `await` and
+ * without `.catch()`. The log line is JSON so it greps cleanly out of
+ * server logs (CloudWatch, Vercel, etc.) without needing a DB table.
+ *
+ * Outcomes: `created` | `skipped_short` | `skipped_no_text` | `failed`
+ */
+export function generateFollowUpWithMetrics(
+  supabase: SupabaseClient,
+  userId: string,
+  answeredPromptId: string,
+  responseText: string
+): void {
+  const startedAt = Date.now();
+  const inputLength = responseText?.length ?? 0;
+
+  const log = (
+    outcome: 'created' | 'skipped_short' | 'skipped_no_text' | 'failed',
+    extra: Record<string, unknown> = {}
+  ) => {
+    const line = {
+      tag: 'follow_up_engine',
+      outcome,
+      duration_ms: Date.now() - startedAt,
+      input_length: inputLength,
+      user_id: userId,
+      prompt_id: answeredPromptId,
+      ...extra,
+    };
+    if (outcome === 'failed') console.error(JSON.stringify(line));
+    else console.log(JSON.stringify(line));
+  };
+
+  if (!responseText) return log('skipped_no_text');
+  if (responseText.length <= 200) return log('skipped_short');
+
+  generateFollowUp(supabase, userId, answeredPromptId, responseText)
+    .then((followUp) => log(followUp ? 'created' : 'failed', { followUp_length: followUp?.length ?? 0 }))
+    .catch((err) => log('failed', { error: err?.message ?? String(err) }));
+}

@@ -4,7 +4,7 @@ import { createAdminClient } from '@/lib/supabase/admin';
 import type { AnswerPromptRequest, AnswerPromptResponse } from '@/types/engagement';
 import { transcribeAudio } from '@/lib/ai/transcription';
 import { checkAndAdvanceTier } from '@/lib/engagement/tier-advancement';
-import { generateFollowUp } from '@/lib/engagement/follow-up-engine';
+import { generateFollowUpWithMetrics } from '@/lib/engagement/follow-up-engine';
 // Using shared transcription lib for consistency
 
 // XP rewards configuration (matching TYPE_CONFIG in Bubble.tsx)
@@ -720,10 +720,12 @@ export async function POST(
       newTier = advancement.newTier;
     }
 
-    // Generate follow-up if response is substantial (fire-and-forget)
+    // Generate follow-up if response is substantial (fire-and-forget).
+    // The wrapper emits a structured JSON log line per attempt (outcome,
+    // duration_ms, input_length) so silent breakage shows up in server logs.
     const responseText = body.responseText;
-    if (responseText && responseText.length > 200) {
-      generateFollowUp(supabase, user.id, promptId, responseText).catch(console.error);
+    if (responseText) {
+      generateFollowUpWithMetrics(supabase, user.id, promptId, responseText);
     }
 
     const response: AnswerPromptResponse = {

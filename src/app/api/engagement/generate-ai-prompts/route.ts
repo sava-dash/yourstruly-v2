@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import Anthropic from '@anthropic-ai/sdk';
 import { getNextAngle, validateAngle, extractAntiRepeatGroup, extractSnowballHooks } from '@/lib/engagement/angle-rotation';
+import { normalizePromptType, normalizePromptCategory, normalizePromptText } from '@/lib/engagement/seed-types';
 
 /**
  * POST /api/engagement/generate-ai-prompts
@@ -35,6 +36,11 @@ const VALID_TYPES = [
   'memory_prompt', 'knowledge', 'connect_dots', 'highlight',
   'recipes_wisdom', 'favorites_firsts', 'postscript',
 ];
+
+// Types that historically doubled as categories. When the AI emits one of
+// these as `type`, we collapse the type via TYPE_ALIASES and promote the
+// label up to the `category` slot so the chapter taxonomy stays intact.
+const TYPE_AS_CATEGORY = new Set(['recipes_wisdom', 'favorites_firsts']);
 
 const TIER_INSTRUCTIONS: Record<number, string> = {
   0: 'Keep prompts broader. Use what you know about them but do not force specificity. Focus on universally meaningful moments.',
@@ -135,7 +141,7 @@ export async function POST(request: NextRequest) {
       .filter(Boolean);
     const existingPromptTexts = new Set(
       ((existingPromptsRes.data as any[]) || [])
-        .map((p: any) => (p.prompt_text || '').trim().toLowerCase())
+        .map((p: any) => normalizePromptText(p.prompt_text))
         .filter(Boolean)
     );
 
@@ -273,10 +279,19 @@ OUTPUT: JSON object: {"prompts": [{"prompt_text": "...", "category": "...", "typ
       .filter((p) => p && typeof p.prompt_text === 'string')
       .map((p) => {
         const promptText = p.prompt_text.trim().slice(0, 500);
-        const category = requestedChapter
+        const rawCategory = requestedChapter
           ? requestedChapter
           : VALID_CATEGORIES.includes(p.category) ? p.category : 'wisdom_legacy';
-        const type = VALID_TYPES.includes(p.type) ? p.type : 'memory_prompt';
+        const rawType = VALID_TYPES.includes(p.type) ? p.type : 'memory_prompt';
+
+        // Collapse deprecated/duplicate types & alias chapters before insert
+        // so the queue stays on a single canonical taxonomy.
+        const type = normalizePromptType(rawType);
+        // If the original type carried category meaning (e.g. recipes_wisdom,
+        // favorites_firsts), promote it to category when the AI didn't pick one.
+        const promotedCategory = TYPE_AS_CATEGORY.has(rawType) ? rawType : rawCategory;
+        const category = normalizePromptCategory(promotedCategory);
+
         const angle = validateAngle(p.angle, recentAngles);
         const antiRepeatGroup = extractAntiRepeatGroup(promptText);
         const snowballHooks = extractSnowballHooks(promptText);
@@ -296,9 +311,9 @@ OUTPUT: JSON object: {"prompts": [{"prompt_text": "...", "category": "...", "typ
         };
       })
       .filter((p) => p.prompt_text.length > 8)
-      .filter((p) => !existingPromptTexts.has(p.prompt_text.toLowerCase()))
+      .filter((p) => !existingPromptTexts.has(normalizePromptText(p.prompt_text)))
       .filter((p, i, arr) =>
-        arr.findIndex((x) => x.prompt_text.toLowerCase() === p.prompt_text.toLowerCase()) === i
+        arr.findIndex((x) => normalizePromptText(x.prompt_text) === normalizePromptText(p.prompt_text)) === i
       );
 
     if (toInsert.length === 0) {

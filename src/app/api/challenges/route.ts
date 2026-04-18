@@ -72,6 +72,14 @@ export async function GET() {
     .eq('week_start', weekStart)
     .order('created_at')
 
+  // Enforce the 3-per-week cap defensively: if legacy data or a race produced
+  // more than 3 rows for the current week, drop the extras (keep the oldest 3).
+  if (challenges && challenges.length > 3) {
+    const extras = challenges.slice(3).map((c: any) => c.id)
+    await supabase.from('weekly_challenges').delete().in('id', extras)
+    challenges = challenges.slice(0, 3)
+  }
+
   // Auto-generate if none exist — exactly 3 (1 easy + 1 medium + 1 hard)
   if (!challenges || challenges.length === 0) {
     const config = await getConfig(supabase)

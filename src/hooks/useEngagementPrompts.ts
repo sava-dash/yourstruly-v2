@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { createClient } from '@/lib/supabase/client';
 import { fetchPromptEnrichmentMaps } from '@/lib/engagement/enrich-prompts';
+import { rankPrompts, type StreakStatus } from '@/lib/engagement/prompt-scoring';
 import type { EngagementPrompt, PromptResponse, EngagementStats } from '@/types/engagement';
 
 interface UseEngagementPromptsReturn {
@@ -15,6 +16,25 @@ interface UseEngagementPromptsReturn {
   skipPrompt: (promptId: string) => Promise<void>;
   dismissPrompt: (promptId: string) => Promise<void>;
   refetch: () => Promise<void>;
+}
+
+/**
+ * Best-effort streak classification from the cached EngagementStats. The
+ * server is the source of truth; this is only used as a scoring hint, so
+ * if anything's missing we degrade to 'none'.
+ */
+function deriveStreakStatus(stats: EngagementStats | null): StreakStatus {
+  if (!stats) return 'none';
+  const streak = stats.currentStreakDays ?? 0;
+  if (streak <= 0) return 'none';
+  const today = new Date().toISOString().split('T')[0];
+  const last = stats.lastEngagementDate;
+  if (!last) return 'none';
+  if (last === today) return 'active_engaged_today';
+  // Last engagement was earlier than today and streak is still positive ⇒
+  // user hasn't yet engaged today; pick morning vs evening by current hour.
+  const hour = new Date().getHours();
+  return hour < 18 ? 'active_not_engaged_today_morning' : 'active_not_engaged_today_evening';
 }
 
 export function useEngagementPrompts(count: number = 5, lifeChapter: string | null = null): UseEngagementPromptsReturn {
@@ -211,7 +231,19 @@ export function useEngagementPrompts(count: number = 5, lifeChapter: string | nu
         return Math.random() - 0.5;
       });
 
-      setPrompts(sorted);
+      // Apply PROMPT-ORDERING-STRATEGY scoring on top of tier sort: re-ranks
+      // within tiers using time-of-day, freshness, photo relevance, and
+      // variety so the queue reads more like a human producer ordered it.
+      // Recently-shown types come from the queue we're replacing so the
+      // first item of the new queue isn't a clone of the last item of the
+      // previous one.
+      const recentlyShownTypes = promptsRef.current.slice(-3).map((p) => p.type);
+      const ranked = rankPrompts(sorted, {
+        recentlyShownTypes,
+        streakStatus: deriveStreakStatus(stats),
+      });
+
+      setPrompts(ranked);
       await fetchStats();
 
     } catch (err) {
