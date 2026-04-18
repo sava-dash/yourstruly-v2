@@ -77,7 +77,7 @@
 
 ---
 
-## Phase 3: Async Video Journalist 🚧 IN PROGRESS
+## Phase 3: Async Video Journalist ✅ COMPLETE
 **Goal**: Send questions, capture video responses remotely
 
 ### Deliverables
@@ -86,11 +86,11 @@
 - [x] Public interview recording page (no auth)
 - [x] Video recording with MediaRecorder API
 - [x] Video storage in Supabase
-- [ ] Send question to contact (SMS via Twilio) - needs Twilio setup
-- [ ] Whisper transcription (async job) - needs OpenAI/Whisper
-- [ ] Topic extraction from transcript
-- [ ] Interview history per contact
-- [ ] Suggested follow-up questions (AI)
+- [x] Send question to contact (SMS via Telnyx + email fallback, with retry)
+- [x] Transcription (async, via Deepgram through `lib/ai/transcription`)
+- [x] Topic + people + time + location extraction from transcript (folded into `memories.metadata`)
+- [x] Interview history per contact (`/dashboard/journalist/[id]`, `/inbox`, `/group/[groupId]`)
+- [x] Suggested follow-up questions (AI) — `lib/engagement/follow-up-engine` + `lib/interviews/branching` + `lib/interviews/sentiment`
 
 ### Testable
 ✅ Create interview → Copy link → Open link → Record response → See in app

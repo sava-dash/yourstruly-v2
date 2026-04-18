@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createAdminClient } from '@/lib/supabase/admin';
+import { extractAndPersistWithMetrics } from '@/lib/interviews/extract-entities';
 
 // Use service role for database operations (interviewees may not be authenticated)
 
@@ -155,11 +156,24 @@ export async function POST(request: NextRequest) {
       .select()
       .single();
 
-    // Note: In the future, if contacts are linked to YT accounts, 
-    // we could create memories for them too. For now, all interview 
+    // Fire-and-forget entity extraction. Pulls topics / people / times /
+    // locations / one-line summary out of the transcript and writes them
+    // to BOTH video_responses.extracted_entities AND memories.metadata so
+    // the memory row alone is the comprehensive searchable record.
+    // Never throws — see extract-entities.ts for the metric/log shape.
+    extractAndPersistWithMetrics(createAdminClient(), {
+      videoResponseId: responseRecord.id,
+      memoryId: interviewerMemoryRecord?.id ?? null,
+      transcript: transcript || textResponse || '',
+      sessionId,
+      userId: session.user_id,
+    });
+
+    // Note: In the future, if contacts are linked to YT accounts,
+    // we could create memories for them too. For now, all interview
     // content is owned by the interviewer (user who set up the session).
 
-    return NextResponse.json({ 
+    return NextResponse.json({
       success: true,
       responseId: responseRecord.id,
       memoryId: interviewerMemoryRecord?.id,
