@@ -1581,6 +1581,7 @@ function PromptCard({ row, onClick, onClose, isExpanded, index }: {
 
   return (
     <motion.div
+      className="chapter-gradient-card"
       onClick={onClick || undefined}
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
@@ -1591,8 +1592,6 @@ function PromptCard({ row, onClick, onClose, isExpanded, index }: {
         borderRadius: '20px',
         overflow: 'hidden',
         background: chapterStyle.gradient,
-        backgroundSize: '300% 300%',
-        animation: 'gradientFloat 12s ease-in-out infinite',
         boxShadow: '0 8px 32px rgba(0,0,0,0.06), 0 2px 8px rgba(0,0,0,0.04)',
         cursor: 'pointer',
         flexShrink: 0,

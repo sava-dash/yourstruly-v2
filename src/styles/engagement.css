@@ -11,6 +11,11 @@
   100% { background-position: 0% 50%; }
 }
 
+.chapter-gradient-card {
+  background-size: 300% 300% !important;
+  animation: gradientFloat 12s ease-in-out infinite !important;
+}
+
 /* =============================================================================
    BUBBLE TILE (Used in dashboard)
    ============================================================================= */
