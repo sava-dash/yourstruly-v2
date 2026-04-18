@@ -297,7 +297,7 @@ export default function HomeV2Page() {
         return { id: uid(), type, data: {}, saved: false, createdAt: new Date().toISOString() }
       })
       // No extra media-item card for photos — the photo is shown on the prompt card itself
-      // Chain order for photo: when-where → backstory → tag-people → plus
+      // Chain order: story → when-where → tag-people → plus
       newRows.set(prompt.id, {
         promptId: prompt.id, promptText: prompt.promptText, promptType: prompt.type,
         category,
@@ -545,6 +545,20 @@ export default function HomeV2Page() {
       next.set(promptId, { ...row, cards: updatedCards })
       return next
     })
+
+    // Auto-scroll to the next card in the chain immediately on save
+    // (before the server roundtrip so visual advancement feels instant)
+    requestAnimationFrame(() => {
+      const scrollEl = scrollRowRefs.current.get(promptId);
+      if (!scrollEl) return;
+      const currentCard = scrollEl.querySelector(`[data-card-id="${cardId}"]`) as HTMLElement;
+      if (!currentCard) return;
+      const nextCard = currentCard.nextElementSibling as HTMLElement;
+      if (nextCard) {
+        nextCard.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'center' });
+      }
+    });
+
     try {
       const row = rows.get(promptId)
       if (!row) return
@@ -643,19 +657,7 @@ export default function HomeV2Page() {
       }
     }
 
-    // Auto-advance: scroll to next card in carousel
-    setTimeout(() => {
-      const scrollEl = scrollRowRefs.current.get(promptId)
-      if (!scrollEl) return
-      const savedCard = scrollEl.querySelector(`[data-card-id="${cardId}"]`) as HTMLElement | null
-      if (!savedCard) return
-      const next = savedCard.nextElementSibling as HTMLElement | null
-      if (!next) return
-      // Use offsetLeft (relative to scroll container) — most reliable
-      const target = next.offsetLeft - scrollEl.clientWidth / 2 + next.offsetWidth / 2
-      console.log('[CardChain] Auto-advance', { from: scrollEl.scrollLeft, to: target, nextOffsetLeft: next.offsetLeft })
-      scrollEl.scrollTo({ left: target, behavior: 'smooth' })
-    }, 400)
+    // Auto-advance now fires immediately after optimistic save (above)
   }, [rows, answerPrompt, supabase])
 
 

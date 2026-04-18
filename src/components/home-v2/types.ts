@@ -105,10 +105,10 @@ export function categorizePrompt(type: string): PromptCategory {
 export function generateInitialCards(category: PromptCategory, promptType: string): CardType[] {
   switch (category) {
     case 'memory':
-      return ['when-where', 'text-voice-video', 'people-present', 'media-upload', 'plus']
+      return ['text-voice-video', 'when-where', 'people-present', 'media-upload', 'plus']
     case 'photo':
-      // Photo backstory flow: when/where → story → who was there → more media → save
-      return ['when-where', 'text-voice-video', 'people-present', 'tag-people', 'media-upload', 'plus']
+      // Photo backstory flow: story → when/where → who was there → more media → save
+      return ['text-voice-video', 'when-where', 'people-present', 'tag-people', 'media-upload', 'plus']
     case 'wisdom':
       return ['text-voice-video', 'media-upload', 'plus']
     case 'contact':
