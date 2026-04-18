@@ -215,6 +215,16 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Failed to send email' }, { status: 500 })
     }
 
+    // Remember the email on the session so the user can claim it later at
+    // signup. Best-effort: ignore errors (older DBs without the column).
+    try {
+      await supabase
+        .from('interview_sessions')
+        .update({ interviewee_email: email.toLowerCase() })
+        .eq('id', session.id)
+        .is('interviewee_email', null)
+    } catch {}
+
     return NextResponse.json({ ok: true, messageId: result?.id })
   } catch (err: any) {
     console.error('email-recipient exception:', err)

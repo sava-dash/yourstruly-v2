@@ -118,6 +118,20 @@ export async function POST(req: NextRequest) {
       if (memErr) console.warn('[claim-account] memory insert warning:', memErr.message);
     }
 
+    // Mark the session as claimed so it stops showing up as claimable on
+    // future signups and also capture the email we just used for matching.
+    try {
+      await admin
+        .from('interview_sessions')
+        .update({
+          claimed_by_user_id: userId,
+          interviewee_email: email,
+        })
+        .eq('id', session.id);
+    } catch (markErr) {
+      console.warn('[claim-account] mark-claimed warning:', markErr);
+    }
+
     // Fire magic link (non-blocking success)
     let magicLinkSent = false;
     try {

@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createAdminClient } from '@/lib/supabase/admin'
+import { getStorageQuota } from '@/lib/storage/quota'
 
 /**
  * POST /api/mobile-upload
@@ -50,6 +51,20 @@ export async function POST(request: NextRequest) {
                      file.type.startsWith('video/') ? 'video' : null
     if (!fileType) {
       return NextResponse.json({ error: 'Invalid file type' }, { status: 400 })
+    }
+
+    // Enforce tier storage quota (share the helper used by /api/upload).
+    const quota = await getStorageQuota(admin, userId)
+    if (file.size > quota.remaining) {
+      return NextResponse.json(
+        {
+          error: 'Storage limit reached',
+          used: quota.used,
+          limit: quota.limit,
+          remaining: quota.remaining,
+        },
+        { status: 413 },
+      )
     }
 
     // Upload to storage

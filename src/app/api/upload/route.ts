@@ -4,6 +4,7 @@ import { createAdminClient } from '@/lib/supabase/admin'
 import exifr from 'exifr'
 import { detectFaces, getDominantEmotion, searchFaces } from '@/lib/aws/rekognition'
 import { reverseGeocode } from '@/lib/geo/reverseGeocode'
+import { getStorageQuota } from '@/lib/storage/quota'
 
 export const dynamic = 'force-dynamic'
 
@@ -34,7 +35,22 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: 'File too large (max 50MB)' }, { status: 400 })
   }
 
-  const fileType = file.type.startsWith('image/') ? 'image' : 
+  // Enforce per-tier storage quota. Returns 413 Payload Too Large when this
+  // upload would push the user over their plan's storage_limit_bytes.
+  const quota = await getStorageQuota(supabase, user.id)
+  if (file.size > quota.remaining) {
+    return NextResponse.json(
+      {
+        error: 'Storage limit reached',
+        used: quota.used,
+        limit: quota.limit,
+        remaining: quota.remaining,
+      },
+      { status: 413 },
+    )
+  }
+
+  const fileType = file.type.startsWith('image/') ? 'image' :
                    file.type.startsWith('video/') ? 'video' : null
 
   if (!fileType) {
@@ -196,6 +212,7 @@ export async function POST(request: NextRequest) {
           file_url: publicUrl,
           file_key: fileName,
           file_type: fileType,
+          file_size: file.size,
           is_cover: false,
           sort_order: 0,
           taken_at: exifData.takenAt || null,

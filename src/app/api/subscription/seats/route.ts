@@ -135,14 +135,16 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Seats require Premium plan' }, { status: 403 })
     }
 
-    // Check current seat count
-    const { data: currentSeats } = await adminClient
+    // Pull every seat row (including removed) so we can both enforce the cap
+    // against active/pending and choose a seat_number that doesn't collide
+    // with a removed row still holding a unique (subscription_id, seat_number).
+    const { data: allSeats } = await adminClient
       .from('subscription_seats')
-      .select('*')
+      .select('seat_number, email, status')
       .eq('subscription_id', subscription.id)
-      .in('status', ['active', 'pending'])
 
-    const seatCount = (currentSeats?.length || 0) + 1 // +1 for owner
+    const activeOrPending = (allSeats || []).filter(s => s.status === 'active' || s.status === 'pending')
+    const seatCount = activeOrPending.length + 1 // +1 for owner (seat 1, not stored)
     if (seatCount >= 10) {
       return NextResponse.json({ error: 'Maximum 10 seats allowed' }, { status: 400 })
     }
@@ -152,14 +154,17 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Cannot invite yourself' }, { status: 400 })
     }
 
-    const existingInvite = currentSeats?.find(s => s.email?.toLowerCase() === email.toLowerCase())
+    const existingInvite = activeOrPending.find(s => s.email?.toLowerCase() === email.toLowerCase())
     if (existingInvite) {
       return NextResponse.json({ error: 'Email already invited' }, { status: 400 })
     }
 
     // Generate invite token
     const inviteToken = crypto.randomBytes(32).toString('hex')
-    const nextSeatNumber = seatCount + 1
+    // Use max(seat_number)+1 across ALL seats (incl. removed) to avoid unique
+    // constraint collision when a seat was previously removed and left a row.
+    const maxSeatNumber = (allSeats || []).reduce((m, s) => Math.max(m, s.seat_number || 1), 1)
+    const nextSeatNumber = Math.max(maxSeatNumber + 1, 2)
 
     // Create seat
     const { data: seat, error } = await adminClient

@@ -1,11 +1,19 @@
 'use client';
 
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { createClient } from '@/lib/supabase/client';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { Eye, EyeOff, Loader2, Mail, Lock, User, ArrowRight, Check, X } from 'lucide-react';
+import { Eye, EyeOff, Loader2, Mail, Lock, User, ArrowRight, Check, X, Gift } from 'lucide-react';
 import { validatePassword, type PasswordValidationResult } from '@/lib/auth/password';
+
+interface ClaimableSession {
+  token: string;
+  title: string;
+  completedAt: string | null;
+  senderName: string;
+  invitee: string | null;
+}
 
 export default function SignupPage() {
   const [fullName, setFullName] = useState('');
@@ -16,12 +24,42 @@ export default function SignupPage() {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const [showRequirements, setShowRequirements] = useState(false);
+  const [claimable, setClaimable] = useState<ClaimableSession[]>([]);
+  const [claimSelected, setClaimSelected] = useState(true);
   const router = useRouter();
   const supabase = createClient();
 
   const validation = useMemo<PasswordValidationResult>(() => {
     return validatePassword(password);
   }, [password]);
+
+  // When the email field settles on a valid address, quietly check whether
+  // this person already answered interviews for someone else. If so we'll
+  // offer to pull those answers into their new account after signup.
+  useEffect(() => {
+    const candidate = email.trim().toLowerCase();
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(candidate)) {
+      setClaimable([]);
+      return;
+    }
+    const controller = new AbortController();
+    const timer = setTimeout(async () => {
+      try {
+        const res = await fetch(`/api/interviews/claimable?email=${encodeURIComponent(candidate)}`, {
+          signal: controller.signal,
+        });
+        if (!res.ok) return;
+        const data = await res.json();
+        setClaimable(Array.isArray(data?.sessions) ? data.sessions : []);
+      } catch {
+        // ignore — this is a best-effort lookup, no user-facing error
+      }
+    }, 500);
+    return () => {
+      clearTimeout(timer);
+      controller.abort();
+    };
+  }, [email]);
 
   const handleSignup = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -57,10 +95,32 @@ export default function SignupPage() {
       setError('An account with this email already exists. Please sign in instead.');
       setLoading(false);
     } else {
+      // Claim any past interviews tied to this email before navigating away.
+      // Best-effort — if it fails, the user can still claim via the direct
+      // link, so we never block signup on this.
+      if (claimSelected && claimable.length > 0) {
+        const normalizedName = fullName.trim().replace(/\b\w/g, (c) => c.toUpperCase());
+        await Promise.all(
+          claimable.map((session) =>
+            fetch('/api/interviews/claim-account', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                token: session.token,
+                email: email.trim().toLowerCase(),
+                fullName: normalizedName,
+              }),
+            }).catch(() => null),
+          ),
+        );
+      }
+
       if (data.session) {
         // Hard navigation ensures auth cookies are fully set before middleware runs
         // router.push can race with cookie writes, causing infinite spinner
-        window.location.href = '/onboarding';
+        window.location.href = claimable.length > 0
+          ? '/onboarding?claimed=1'
+          : '/onboarding';
       } else {
         window.location.href = '/verify-email?email=' + encodeURIComponent(email);
       }
@@ -306,6 +366,40 @@ export default function SignupPage() {
                 </span>
               </label>
             </div>
+
+            {claimable.length > 0 && (
+              <div className="p-4 rounded-xl bg-[#D3E1DF] border border-[#406A56]/30">
+                <label className="flex items-start gap-3 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={claimSelected}
+                    onChange={(e) => setClaimSelected(e.target.checked)}
+                    className="mt-1 w-4 h-4 rounded border-gray-300 text-[#2D5A3D] focus:ring-[#2D5A3D]"
+                  />
+                  <div className="flex-1">
+                    <div className="flex items-center gap-2 text-[#406A56]">
+                      <Gift className="w-4 h-4" aria-hidden="true" />
+                      <span className="text-sm font-semibold">
+                        We found {claimable.length === 1 ? 'an interview' : `${claimable.length} interviews`} tied to this email
+                      </span>
+                    </div>
+                    <p className="mt-1 text-xs text-[#406A56]/80">
+                      Claim {claimable.length === 1 ? 'it' : 'them'} on signup and we'll copy your answers into your private archive.
+                    </p>
+                    <ul className="mt-2 space-y-1">
+                      {claimable.slice(0, 3).map((s) => (
+                        <li key={s.token} className="text-xs text-[#406A56]/80">
+                          · {s.senderName}'s interview — "{s.title}"
+                        </li>
+                      ))}
+                      {claimable.length > 3 && (
+                        <li className="text-xs text-[#406A56]/60">· and {claimable.length - 3} more</li>
+                      )}
+                    </ul>
+                  </div>
+                </label>
+              </div>
+            )}
 
             {error && (
               <div id="signup-error" role="alert" className="p-3 rounded-xl bg-red-50 border border-red-200 text-red-600 text-sm">

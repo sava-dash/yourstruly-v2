@@ -132,9 +132,11 @@ export function VoiceRecorder({
       source.connect(analyser);
       analyserRef.current = analyser;
 
-      // Connect to Deepgram WebSocket with API key in URL
-      const dgUrl = `wss://api.deepgram.com/v1/listen?token=${apiKey}&model=nova-2&language=en-US&smart_format=true&interim_results=true&endpointing=300&punctuate=true`;
-      const ws = new WebSocket(dgUrl);
+      // Connect to Deepgram WebSocket. Deepgram requires auth via WebSocket
+      // subprotocol (`['token', <key>]`), NOT `?token=` — that query param is
+      // ignored and the connection drops on first audio frame.
+      const dgUrl = `wss://api.deepgram.com/v1/listen?model=nova-2&language=en-US&smart_format=true&interim_results=true&endpointing=300&punctuate=true&encoding=linear16&sample_rate=16000&channels=1`;
+      const ws = new WebSocket(dgUrl, ['token', apiKey]);
       websocketRef.current = ws;
 
       finalTranscriptRef.current = '';

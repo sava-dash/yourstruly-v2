@@ -2,6 +2,7 @@ import Stripe from 'stripe';
 import { getStripeServer } from '@/lib/stripe';
 import { createClient } from '@supabase/supabase-js';
 import { NextRequest, NextResponse } from 'next/server';
+import { submitOrderToProdigi } from '@/lib/photobook/submit';
 
 // Lazy-init Supabase admin client (avoids build-time env issues)
 let _supabaseAdmin: ReturnType<typeof createClient> | null = null;
@@ -42,6 +43,7 @@ export async function POST(req: NextRequest) {
         break;
       }
 
+      case 'customer.subscription.created':
       case 'customer.subscription.updated': {
         await handleSubscriptionUpdated(event.data.object as Stripe.Subscription);
         break;
@@ -49,6 +51,16 @@ export async function POST(req: NextRequest) {
 
       case 'customer.subscription.deleted': {
         await handleSubscriptionDeleted(event.data.object as Stripe.Subscription);
+        break;
+      }
+
+      case 'invoice.payment_succeeded': {
+        await handlePaymentSucceeded(event.data.object as Stripe.Invoice);
+        break;
+      }
+
+      case 'payment_intent.succeeded': {
+        await handlePaymentIntentSucceeded(event.data.object as Stripe.PaymentIntent);
         break;
       }
 
@@ -168,6 +180,30 @@ async function handleSubscriptionDeleted(subscription: any) {
   console.log(`Subscription canceled: ${subscription.id}`);
 }
 
+async function handlePaymentSucceeded(invoice: any) {
+  const subscriptionId = invoice.subscription as string;
+
+  if (!subscriptionId) return;
+
+  // Flip status back to active after a successful payment — handles the
+  // past_due → active recovery path and keeps trial → active transitions
+  // consistent even when the subscription.updated event is delayed.
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const { error } = await (getSupabaseAdmin().from('subscriptions') as any)
+    .update({
+      status: 'active',
+      updated_at: new Date().toISOString(),
+    })
+    .eq('stripe_subscription_id', subscriptionId);
+
+  if (error) {
+    console.error('Error marking subscription active after payment:', error);
+    throw error;
+  }
+
+  console.log(`Payment succeeded for subscription: ${subscriptionId}`);
+}
+
 async function handlePaymentFailed(invoice: any) {
   const subscriptionId = invoice.subscription as string;
   
@@ -187,6 +223,49 @@ async function handlePaymentFailed(invoice: any) {
   }
 
   console.log(`Payment failed for subscription: ${subscriptionId}`);
+}
+
+async function handlePaymentIntentSucceeded(pi: Stripe.PaymentIntent) {
+  // Photobook orders create a PaymentIntent and need Prodigi submission after
+  // the card is charged. The browser-side /api/photobook/order/[id] POST is
+  // the primary path — this webhook is the fallback for when the user closes
+  // the tab before confirmation lands. submitOrderToProdigi is idempotent and
+  // no-ops if the order has already been submitted.
+  if (pi.metadata?.type !== 'photobook_order') return;
+
+  const supabase = getSupabaseAdmin();
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const { data: order } = await (supabase.from('photobook_orders') as any)
+    .select('id, user_id, status')
+    .eq('stripe_payment_intent_id', pi.id)
+    .maybeSingle();
+
+  if (!order) {
+    console.error('[webhook] photobook_order not found for payment_intent', pi.id);
+    return;
+  }
+
+  if (order.status !== 'pending_payment') {
+    console.log(`[webhook] photobook_order ${order.id} already ${order.status}, skipping`);
+    return;
+  }
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const { data: userRow } = await (supabase.from('profiles') as any)
+    .select('email')
+    .eq('id', order.user_id)
+    .maybeSingle();
+
+  const result = await submitOrderToProdigi(order.id, userRow?.email);
+  if (!result.ok) {
+    console.error(`[webhook] Prodigi submission failed for ${order.id}:`, result);
+    // The order row is already marked 'error' inside submitOrderToProdigi
+    // when Prodigi rejects. For other failure codes we leave status alone so
+    // a retry can pick it up.
+    return;
+  }
+
+  console.log(`[webhook] Submitted photobook order ${order.id} → Prodigi ${result.prodigiOrderId}`);
 }
 
 async function handleTrialEnding(subscription: Stripe.Subscription) {

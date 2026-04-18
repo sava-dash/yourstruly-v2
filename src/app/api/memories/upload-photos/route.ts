@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
+import { getStorageQuota } from '@/lib/storage/quota';
 
 export async function POST(request: NextRequest) {
   try {
@@ -32,6 +33,21 @@ export async function POST(request: NextRequest) {
 
     if (memoryError || !memory) {
       return NextResponse.json({ error: 'Memory not found' }, { status: 404 });
+    }
+
+    // Enforce tier storage quota across the whole batch.
+    const totalBatchBytes = photos.reduce((sum, p) => sum + (p.size || 0), 0);
+    const quota = await getStorageQuota(supabase, user.id);
+    if (totalBatchBytes > quota.remaining) {
+      return NextResponse.json(
+        {
+          error: 'Storage limit reached',
+          used: quota.used,
+          limit: quota.limit,
+          remaining: quota.remaining,
+        },
+        { status: 413 },
+      );
     }
 
     const uploadedMedia: any[] = [];
