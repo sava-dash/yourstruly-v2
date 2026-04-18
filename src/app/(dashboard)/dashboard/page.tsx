@@ -167,13 +167,15 @@ export default function HomeV2Page() {
     })
     setTimeout(() => {
       setExpandedRowId(promptId)
-      requestAnimationFrame(() => {
+      // Wait for Framer Motion expansion animation (350ms) to finish
+      // before scrolling, so the final card size is known
+      setTimeout(() => {
         const scrollEl = scrollRowRefs.current.get(promptId)
         if (scrollEl) {
           const firstCard = scrollEl.querySelector('[data-chain-card="0"]') as HTMLElement
           if (firstCard) firstCard.scrollIntoView({ behavior: 'smooth', inline: 'start', block: 'center' })
         }
-      })
+      }, 400)
     }, 200)
   }, [])
 
@@ -335,8 +337,8 @@ export default function HomeV2Page() {
       promptType: row?.promptType,
       category: row?.category,
     })
-    // After state update and render, scroll to the first chain card
-    requestAnimationFrame(() => {
+    // Wait for expansion animation to finish before centering
+    setTimeout(() => {
       const scrollEl = scrollRowRefs.current.get(promptId)
       if (scrollEl) {
         const firstChainCard = scrollEl.querySelector('[data-chain-card="0"]') as HTMLElement
@@ -344,7 +346,7 @@ export default function HomeV2Page() {
           firstChainCard.scrollIntoView({ behavior: 'smooth', inline: 'start', block: 'center' })
         }
       }
-    })
+    }, 400)
   }, [rows])
 
   // Close: collapse back to feed
@@ -1064,8 +1066,9 @@ export default function HomeV2Page() {
                   style={{
                     scrollSnapAlign: 'start',
                     minHeight: `${CARD_H + 80}px`,
-                    paddingTop: index === 0 ? '24px' : '8px',
-                    paddingBottom: '8px',
+                    paddingTop: index === 0 ? '24px' : '0px',
+                    paddingBottom: '0px',
+                    marginBottom: '-4px',
                     pointerEvents: isBehind ? 'none' : 'auto',
                     position: 'relative',
                   }}
