@@ -849,23 +849,23 @@ export default function HomeV2Page() {
 
       {/* ── Edge toggles for slide-out panels ── */}
       <button
-        onClick={() => setCategoriesOpen(true)}
+        onClick={() => setHistoryOpen(true)}
         className="edge-toggle edge-toggle-left"
+        aria-label="Open history"
+        title="Your history"
+      >
+        <Clock size={14} />
+        <span className="edge-toggle-label">History</span>
+      </button>
+      <button
+        onClick={() => setCategoriesOpen(true)}
+        className="edge-toggle edge-toggle-right"
         aria-label="Browse chapters"
         title="Browse chapters"
       >
         <LayoutGrid size={14} />
         <span className="edge-toggle-label">Chapters</span>
         {categoryFilter && <span className="edge-toggle-dot" aria-hidden="true" />}
-      </button>
-      <button
-        onClick={() => setHistoryOpen(true)}
-        className="edge-toggle edge-toggle-right"
-        aria-label="Open history"
-        title="Your history"
-      >
-        <Clock size={14} />
-        <span className="edge-toggle-label">History</span>
       </button>
 
       {/* ── Main Content — snap-scroll viewport ── */}

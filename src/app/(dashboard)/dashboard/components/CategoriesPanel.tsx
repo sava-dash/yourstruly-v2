@@ -177,21 +177,21 @@ export function CategoriesPanel({
             key="cat-panel"
             role="dialog"
             aria-label="Prompt categories"
-            initial={{ x: '-100%' }}
+            initial={{ x: '100%' }}
             animate={{ x: 0 }}
-            exit={{ x: '-100%' }}
+            exit={{ x: '100%' }}
             transition={{ type: 'spring', damping: 28, stiffness: 280 }}
             style={{
               position: 'fixed',
               top: 0,
-              left: 0,
+              right: 0,
               bottom: 0,
               width: 'min(400px, 94vw)',
               background: '#FAFAF7',
               zIndex: 70,
               display: 'flex',
               flexDirection: 'column',
-              boxShadow: '12px 0 48px rgba(0,0,0,0.22)',
+              boxShadow: '-12px 0 48px rgba(0,0,0,0.22)',
               borderLeft: '1px solid #DDE3DF',
             }}
           >

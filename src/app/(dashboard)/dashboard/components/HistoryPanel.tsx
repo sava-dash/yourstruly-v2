@@ -150,14 +150,14 @@ export function HistoryPanel({ open, onClose }: HistoryPanelProps) {
             key="history-panel"
             role="dialog"
             aria-label="Memory history"
-            initial={{ x: '100%' }}
+            initial={{ x: '-100%' }}
             animate={{ x: 0 }}
-            exit={{ x: '100%' }}
+            exit={{ x: '-100%' }}
             transition={{ type: 'spring', damping: 28, stiffness: 280 }}
             style={{
               position: 'fixed',
               top: 0,
-              right: 0,
+              left: 0,
               bottom: 0,
               width: 'min(360px, 92vw)',
               background: '#FAFAF7',
