@@ -3,17 +3,18 @@
    Cleaned up 2026-03-22: Removed dead bubble/masonry/conversation styles
    ============================================================================= */
 
-/* Chapter gradient floating animation — slow 12s cycle for subtle life */
+/* Chapter gradient floating animation — slow vertical shift at the bottom */
 @keyframes gradientFloat {
-  0%   { background-position: 0% 50%; }
-  33%  { background-position: 100% 0%; }
-  66%  { background-position: 50% 100%; }
-  100% { background-position: 0% 50%; }
+  0%   { background-position: 50% 0%; }
+  25%  { background-position: 30% 10%; }
+  50%  { background-position: 70% 5%; }
+  75%  { background-position: 40% 15%; }
+  100% { background-position: 50% 0%; }
 }
 
 .chapter-gradient-card {
-  background-size: 300% 300% !important;
-  animation: gradientFloat 12s ease-in-out infinite !important;
+  background-size: 200% 200% !important;
+  animation: gradientFloat 15s ease-in-out infinite !important;
 }
 
 /* =============================================================================
