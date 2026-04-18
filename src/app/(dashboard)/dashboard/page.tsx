@@ -171,7 +171,7 @@ export default function HomeV2Page() {
         const scrollEl = scrollRowRefs.current.get(promptId)
         if (scrollEl) {
           const firstCard = scrollEl.querySelector('[data-chain-card="0"]') as HTMLElement
-          if (firstCard) firstCard.scrollIntoView({ behavior: 'smooth', inline: 'start', block: 'nearest' })
+          if (firstCard) firstCard.scrollIntoView({ behavior: 'smooth', inline: 'start', block: 'center' })
         }
       })
     }, 200)
@@ -341,7 +341,7 @@ export default function HomeV2Page() {
       if (scrollEl) {
         const firstChainCard = scrollEl.querySelector('[data-chain-card="0"]') as HTMLElement
         if (firstChainCard) {
-          firstChainCard.scrollIntoView({ behavior: 'smooth', inline: 'start', block: 'nearest' })
+          firstChainCard.scrollIntoView({ behavior: 'smooth', inline: 'start', block: 'center' })
         }
       }
     })
