@@ -1603,17 +1603,17 @@ function PromptCard({ row, onClick, onClose, isExpanded, index }: {
     >
       {/* Amorphous gradient blob — confined to bottom of card */}
       <div className="chapter-gradient-blob" style={{
-        position: 'absolute', bottom: 0, left: '-20%', right: '-20%', height: '55%',
-        background: `radial-gradient(ellipse 80% 70% at 50% 80%, ${chapterStyle.accentColor}22 0%, ${chapterStyle.accentColor}11 40%, transparent 70%)`,
+        position: 'absolute', bottom: '-10%', left: '-30%', right: '-30%', height: '65%',
+        background: `radial-gradient(ellipse 90% 80% at 50% 85%, ${chapterStyle.accentColor}55 0%, ${chapterStyle.accentColor}30 35%, transparent 65%)`,
         pointerEvents: 'none', zIndex: 0,
       }}>
         <div className="chapter-blob-inner" style={{
           position: 'absolute', inset: 0,
-          background: `radial-gradient(ellipse 60% 50% at 30% 90%, ${chapterStyle.accentColor}18 0%, transparent 60%)`,
+          background: `radial-gradient(ellipse 70% 60% at 25% 90%, ${chapterStyle.accentColor}45 0%, transparent 55%)`,
         }} />
         <div className="chapter-blob-inner-2" style={{
           position: 'absolute', inset: 0,
-          background: `radial-gradient(ellipse 50% 40% at 70% 85%, ${chapterStyle.accentColor}15 0%, transparent 55%)`,
+          background: `radial-gradient(ellipse 65% 55% at 75% 80%, ${chapterStyle.accentColor}40 0%, transparent 50%)`,
         }} />
       </div>
       {/* Photo hero — fills ~60% of card */}
