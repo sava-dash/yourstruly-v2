@@ -11,14 +11,14 @@ export interface EngagementPrompt {
   photoUrl?: string;
   photoId?: string;
   photoMetadata?: {
-    taken_at?: string;
-    exif_lat?: number;
-    exif_lng?: number;
+    taken_at?: string | null;
+    exif_lat?: number | null;
+    exif_lng?: number | null;
     location_name?: string;
   };
   contactId?: string;
   contactName?: string;
-  contactPhotoUrl?: string;
+  contactPhotoUrl?: string | null;
   memoryId?: string;
   missingField?: string;
   metadata?: {

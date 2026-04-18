@@ -57,7 +57,7 @@ export interface PromptRow {
   photoId?: string
   contactName?: string
   contactId?: string
-  contactPhotoUrl?: string
+  contactPhotoUrl?: string | null
   /** Raw missing-field identifier from the prompt RPC (e.g. "birth_date") */
   missingField?: string
   metadata?: Record<string, any>
