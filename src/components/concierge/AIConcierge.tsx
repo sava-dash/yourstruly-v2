@@ -6,7 +6,7 @@ import {
   Mic, Square, X, Send, Loader2, MapPin, Calendar, Users, Music,
   Sparkles, BookOpen, Heart, ChevronRight, Check, MessageSquare, Keyboard
 } from 'lucide-react'
-import { useChat } from '@/hooks/useChat'
+import { useChat, type ChatMode } from '@/hooks/useChat'
 import { useRouter } from 'next/navigation'
 
 // ─── Types ───
@@ -44,7 +44,12 @@ interface ConciergeProps {
 
 export default function AIConcierge({ isOpen, onClose, onCreateMemory }: ConciergeProps) {
   const router = useRouter()
-  const { messages, isLoading, sendMessage, clearChat } = useChat()
+  // Mode toggle: 'concierge' (talks ABOUT your life + helps with the app)
+  // vs 'avatar' (talks AS you, in first person, using your synthesized
+  // Persona Card). Switching modes resets the chat thread because each
+  // mode owns its own conversation in chat_sessions.
+  const [chatMode, setChatMode] = useState<ChatMode>('concierge')
+  const { messages, isLoading, sendMessage, clearChat } = useChat({ mode: chatMode })
 
   // Voice state
   const [mode, setMode] = useState<ConciergeMode>('listening')
@@ -416,12 +421,56 @@ export default function AIConcierge({ isOpen, onClose, onCreateMemory }: Concier
             </div>
             <div>
               <h2 className="text-white font-semibold text-base">YoursTruly</h2>
-              <p className="text-white/40 text-xs">Your memory companion</p>
+              <p className="text-white/40 text-xs">
+                {chatMode === 'avatar' ? 'Talking as you (Avatar)' : 'Your memory companion'}
+              </p>
             </div>
           </div>
           <button onClick={onClose} className="p-2.5 rounded-full bg-white/10 hover:bg-white/20 text-white/70 hover:text-white transition-all">
             <X size={18} />
           </button>
+        </div>
+
+        {/* Mode toggle: Concierge vs Avatar. Switching clears the in-memory
+            chat so the user starts a fresh thread in the new mode (the old
+            session row stays in the DB and is reachable from history). */}
+        <div className="px-6 pb-3">
+          <div
+            role="tablist"
+            aria-label="AI mode"
+            className="inline-flex p-1 rounded-full bg-white/5 border border-white/10"
+          >
+            {(['concierge', 'avatar'] as const).map((m) => {
+              const active = chatMode === m
+              const label = m === 'concierge' ? 'Concierge' : 'Avatar (you)'
+              const hint = m === 'concierge' ? 'Helps with your life + the app' : 'Speaks as you, in first person'
+              return (
+                <button
+                  key={m}
+                  role="tab"
+                  aria-selected={active}
+                  title={hint}
+                  onClick={() => {
+                    if (chatMode === m) return
+                    setChatMode(m)
+                    clearChat()
+                  }}
+                  className={`px-4 py-1.5 rounded-full text-xs font-medium transition-all ${
+                    active
+                      ? 'bg-[#2D5A3D] text-white shadow-sm'
+                      : 'text-white/60 hover:text-white/90'
+                  }`}
+                >
+                  {label}
+                </button>
+              )
+            })}
+          </div>
+          {chatMode === 'avatar' && (
+            <p className="mt-2 text-[11px] text-white/40 max-w-md">
+              Avatar speaks as you, drawing on your memories. First reply may take a moment while we synthesize your voice.
+            </p>
+          )}
         </div>
 
         {/* Main content area */}

@@ -1,5 +1,7 @@
 import { useState, useCallback } from 'react'
 
+export type ChatMode = 'concierge' | 'avatar'
+
 interface ChatMessage {
   id?: string
   role: 'user' | 'assistant'
@@ -10,6 +12,8 @@ interface ChatMessage {
 
 interface UseChatOptions {
   sessionId?: string
+  /** Which AI surface to talk to. Defaults to 'concierge' for backwards compat. */
+  mode?: ChatMode
   onError?: (error: Error) => void
 }
 
@@ -18,6 +22,7 @@ export function useChat(options: UseChatOptions = {}) {
   const [isLoading, setIsLoading] = useState(false)
   const [sessionId, setSessionId] = useState<string | undefined>(options.sessionId)
   const [error, setError] = useState<Error | null>(null)
+  const mode: ChatMode = options.mode || 'concierge'
 
   const sendMessage = useCallback(async (content: string) => {
     if (!content.trim() || isLoading) return
@@ -40,6 +45,7 @@ export function useChat(options: UseChatOptions = {}) {
         body: JSON.stringify({
           message: content,
           sessionId,
+          mode,
         }),
       })
 
@@ -77,7 +83,7 @@ export function useChat(options: UseChatOptions = {}) {
     } finally {
       setIsLoading(false)
     }
-  }, [isLoading, sessionId, options])
+  }, [isLoading, sessionId, options, mode])
 
   const loadHistory = useCallback(async (loadSessionId?: string) => {
     const targetSessionId = loadSessionId || sessionId

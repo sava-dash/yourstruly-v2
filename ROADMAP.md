@@ -97,22 +97,33 @@
 
 ---
 
-## Phase 4: AI Avatar (Week 8-9)
+## Phase 4: AI Avatar 🚧 IN PROGRESS
 **Goal**: Chat with a digital version of yourself/loved one
 
+### Architecture
+Mode-switch on the existing AI Concierge surface (single floating button,
+toggle between Concierge and Avatar). Shared RAG runtime (`lib/ai/rag-runtime`)
+backs both modes; mode determines which system prompt is composed.
+
 ### Deliverables
-- [ ] Extended personality questionnaire
-- [ ] Knowledge base builder:
-  - Import from profile data
-  - Import from video transcripts
-  - Manual stories/facts
-- [ ] Chat interface
-- [ ] Avatar responds in user's "voice"
-- [ ] Memory of conversations
-- [ ] Optional: Voice synthesis (ElevenLabs)
+- [x] **4.1 Foundation** — `avatar_personas` table; `chat_sessions.mode` column;
+      RAG runtime extracted from `/api/chat`; mode toggle in `AIConcierge`;
+      Avatar mode wired end-to-end through `/api/chat`
+- [x] **4.2 Persona Card synthesis** — `lib/avatar/synthesize-persona`
+      auto-derives voice/themes/phrases/facts/tone from profile + memories,
+      no extended questionnaire needed; on-demand at first Avatar use
+- [x] **4.3 Conversation memory** — reuses existing `chat_messages` history
+      window (last 10 turns) per-mode
+- [ ] **4.4 "What your avatar knows" panel** — visible knowledge + manual
+      fact-add + source citations on responses
+- [ ] **4.5 Loved-one avatars** — per-contact personas built from interview
+      responses; visibility/permissions
+- [ ] **4.6 Voice synthesis (optional)** — ElevenLabs voice clone from
+      interview audio
 
 ### Testable
-✅ Complete questionnaire → Add 5 stories → Chat with your avatar → It knows your info
+✅ Open Concierge → toggle to "Avatar (you)" → Avatar replies in first
+person, drawing on your memories
 
 ---
 

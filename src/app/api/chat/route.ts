@@ -1,9 +1,18 @@
-import { createClient } from '@/lib/supabase/server'
-import { NextRequest, NextResponse } from 'next/server'
-import { generateEmbedding, generateChatResponse, checkProviderConfig } from '@/lib/ai/providers'
+import { createClient } from '@/lib/supabase/server';
+import { createAdminClient } from '@/lib/supabase/admin';
+import { NextRequest, NextResponse } from 'next/server';
+import { checkProviderConfig } from '@/lib/ai/providers';
+import { runRagChat, type ChatMode } from '@/lib/ai/rag-runtime';
+import { synthesizePersona } from '@/lib/avatar/synthesize-persona';
+import {
+  buildAvatarSystemPrompt,
+  AVATAR_FALLBACK_SYSTEM_PROMPT,
+} from '@/lib/avatar/build-system-prompt';
 
-// System prompt for the AI — both personal companion and platform support
-const SYSTEM_PROMPT = `You are the AI Concierge for YoursTruly — a digital legacy platform where people preserve memories, stories, and connections with loved ones.
+// ─── Concierge system prompt ────────────────────────────────────────────────
+// (Unchanged from the pre-refactor handler so existing Concierge behavior
+// is identical — the rag-runtime extraction is a pure plumbing change.)
+const CONCIERGE_SYSTEM_PROMPT = `You are the AI Concierge for YoursTruly — a digital legacy platform where people preserve memories, stories, and connections with loved ones.
 
 You serve TWO roles:
 
@@ -21,267 +30,176 @@ Guidelines:
 - Keep responses concise (2-3 paragraphs max)
 - Use a conversational, caring tone
 
-You're their companion AND their guide to the platform.`
+You're their companion AND their guide to the platform.`;
 
-// Search user's content using vector similarity
-async function searchUserContent(
-  supabase: any,
-  userId: string,
-  queryEmbedding: number[],
-  limit: number = 8
-) {
-  // Format embedding for Postgres
-  const embeddingStr = `[${queryEmbedding.join(',')}]`
+// ─── Concierge-only: support knowledge lookup ───────────────────────────────
+// Avatar mode never returns platform help (it's the user, not an assistant),
+// so this stays scoped to /api/chat rather than the shared rag-runtime.
+async function buildSupportContext(supabase: any, message: string): Promise<string> {
+  try {
+    const messageLower = message.toLowerCase();
+    const { data: supportArticles } = await supabase
+      .from('support_knowledge')
+      .select('title, content, category')
+      .eq('is_active', true)
+      .order('sort_order');
 
-  const { data, error } = await supabase.rpc('search_user_content', {
-    query_embedding: embeddingStr,
-    search_user_id: userId,
-    match_threshold: 0.25, // Lower threshold for better recall
-    match_count: limit,
-  })
+    if (!supportArticles?.length) return '';
 
-  if (error) {
-    console.error('Search error:', error)
-    return []
+    const matched = supportArticles.filter((article: any) => {
+      const titleMatch = article.title
+        .toLowerCase()
+        .split(' ')
+        .some((w: string) => w.length > 3 && messageLower.includes(w));
+      return titleMatch;
+    }).slice(0, 3);
+
+    const isSupport = /\b(how|help|what is|where|can i|how do|feature|setting|problem|issue|tutorial)\b/i.test(message);
+    const supportKnowledge = isSupport
+      ? (matched.length > 0 ? matched : supportArticles.slice(0, 3))
+      : matched;
+
+    if (supportKnowledge.length === 0) return '';
+
+    return '\n\n## Platform Knowledge\n' + supportKnowledge.map((a: any) =>
+      `### ${a.title}\n${a.content}`
+    ).join('\n\n');
+  } catch {
+    return '';
   }
-
-  return data || []
 }
 
-// Format search results into context for the AI
-function formatContext(results: any[]): string {
-  if (!results.length) {
-    return 'No specific memories or information found for this query. You can still have a general conversation with the user about their life.'
+// ─── Avatar persona lookup (with auto-synth on first use) ───────────────────
+async function loadAvatarSystemPrompt(userId: string): Promise<string> {
+  const admin = createAdminClient();
+
+  // Cheap path: read the cached card.
+  const { data: existing } = await (admin.from('avatar_personas') as any)
+    .select('persona_card')
+    .eq('user_id', userId)
+    .maybeSingle();
+
+  if (existing?.persona_card) {
+    return buildAvatarSystemPrompt(existing.persona_card);
   }
 
-  const grouped: Record<string, any[]> = {}
-  for (const r of results) {
-    if (!grouped[r.content_type]) grouped[r.content_type] = []
-    grouped[r.content_type].push(r)
+  // Expensive path: synthesize on first use. Synthesis can fail gracefully
+  // (no source material) — we fall back to the generic first-person prompt
+  // so the user still gets *some* avatar behavior.
+  try {
+    const result = await synthesizePersona(admin, userId);
+    if (result?.persona) return buildAvatarSystemPrompt(result.persona);
+  } catch (err) {
+    console.error('[chat] persona synthesis failed:', err);
   }
-
-  let context = ''
-
-  if (grouped.memory) {
-    context += '## Relevant Memories\n'
-    for (const m of grouped.memory) {
-      context += `- "${m.title || 'Untitled memory'}" (${m.metadata?.date || 'Date unknown'})`
-      if (m.metadata?.location) context += ` at ${m.metadata.location}`
-      context += `\n  ${m.content || ''}\n`
-    }
-  }
-
-  if (grouped.contact) {
-    context += '\n## Relevant People\n'
-    for (const c of grouped.contact) {
-      context += `- ${c.title} (${c.metadata?.relationship || 'Contact'})`
-      if (c.metadata?.birthday) context += ` - Birthday: ${c.metadata.birthday}`
-      context += '\n'
-      if (c.content) context += `  Notes: ${c.content}\n`
-    }
-  }
-
-  if (grouped.postscript) {
-    context += '\n## Relevant PostScripts (future messages)\n'
-    for (const p of grouped.postscript) {
-      context += `- "${p.title}" for ${p.metadata?.recipient || 'someone'}`
-      if (p.metadata?.deliver_on) context += ` (delivers: ${p.metadata.deliver_on})`
-      context += '\n'
-    }
-  }
-
-  if (grouped.pet) {
-    context += '\n## Pets\n'
-    for (const pet of grouped.pet) {
-      context += `- ${pet.title} (${pet.metadata?.species || 'pet'})`
-      if (pet.metadata?.breed) context += ` - ${pet.metadata.breed}`
-      context += '\n'
-      if (pet.content) context += `  ${pet.content}\n`
-    }
-  }
-
-  return context
+  return AVATAR_FALLBACK_SYSTEM_PROMPT;
 }
 
 export async function POST(request: NextRequest) {
   try {
-    // Check AI provider configuration
-    const config = checkProviderConfig()
+    const config = checkProviderConfig();
     if (!config.embeddings || !config.chat) {
-      return NextResponse.json({ 
+      return NextResponse.json({
         error: `AI not configured: ${config.errors.join(', ')}. Add API keys in Settings.`,
-      }, { status: 503 })
+      }, { status: 503 });
     }
 
-    const supabase = await createClient()
-
-    // Check auth
-    const { data: { user }, error: authError } = await supabase.auth.getUser()
+    const supabase = await createClient();
+    const { data: { user }, error: authError } = await supabase.auth.getUser();
     if (authError || !user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const body = await request.json()
-    const { message, sessionId } = body
+    const body = await request.json();
+    const { message, sessionId } = body;
+    // Default to 'concierge' so existing clients keep working without changes.
+    const mode: ChatMode = body?.mode === 'avatar' ? 'avatar' : 'concierge';
 
     if (!message) {
-      return NextResponse.json({ error: 'Message required' }, { status: 400 })
+      return NextResponse.json({ error: 'Message required' }, { status: 400 });
     }
 
-    // Get or create chat session
-    let currentSessionId = sessionId
-    if (!currentSessionId) {
-      const { data: session } = await supabase
-        .from('chat_sessions')
-        .insert({ user_id: user.id, title: message.slice(0, 50) })
-        .select()
-        .single()
-      currentSessionId = session?.id
+    // Compose the system prompt + optional context delta per mode.
+    let systemPrompt: string;
+    let personaContext: string | undefined;
+
+    if (mode === 'avatar') {
+      systemPrompt = await loadAvatarSystemPrompt(user.id);
+      // No persona context block needed — the persona IS the system prompt.
+      personaContext = undefined;
+    } else {
+      systemPrompt = CONCIERGE_SYSTEM_PROMPT;
+      // Concierge-only: append platform help articles to retrieved context.
+      const supportContext = await buildSupportContext(supabase, message);
+      personaContext = supportContext || undefined;
     }
 
-    // Save user message
-    if (currentSessionId) {
-      await supabase.from('chat_messages').insert({
-        session_id: currentSessionId,
-        user_id: user.id,
-        role: 'user',
-        content: message,
-      })
-    }
-
-    // Get conversation history for context
-    const { data: history } = currentSessionId ? await supabase
-      .from('chat_messages')
-      .select('role, content')
-      .eq('session_id', currentSessionId)
-      .order('created_at', { ascending: true })
-      .limit(10) : { data: [] }
-
-    // Generate embedding for the query
-    const queryEmbedding = await generateEmbedding(message)
-
-    // Search for relevant personal content
-    const searchResults = await searchUserContent(supabase, user.id, queryEmbedding)
-
-    // Search for relevant support knowledge (keyword-based fallback + semantic)
-    let supportContext = ''
-    try {
-      const messageLower = message.toLowerCase()
-      const { data: supportArticles } = await supabase
-        .from('support_knowledge')
-        .select('title, content, category')
-        .eq('is_active', true)
-        .order('sort_order')
-
-      if (supportArticles?.length) {
-        // Keyword match: check if any keywords appear in the message
-        const matched = supportArticles.filter(article => {
-          const titleMatch = article.title.toLowerCase().split(' ').some((w: string) => w.length > 3 && messageLower.includes(w))
-          return titleMatch
-        }).slice(0, 3)
-
-        // Also include articles whose content is likely relevant to support questions
-        const isSupport = /\b(how|help|what is|where|can i|how do|feature|setting|problem|issue|tutorial)\b/i.test(message)
-        const supportKnowledge = isSupport ? (matched.length > 0 ? matched : supportArticles.slice(0, 3)) : matched
-
-        if (supportKnowledge.length > 0) {
-          supportContext = '\n\n## Platform Knowledge\n' + supportKnowledge.map((a: any) =>
-            `### ${a.title}\n${a.content}`
-          ).join('\n\n')
-        }
-      }
-    } catch {}
-
-    // Build combined context
-    const personalContext = formatContext(searchResults)
-    const context = personalContext + supportContext
-
-    // Build conversation history (excluding the message we just added)
-    const conversationHistory = (history || [])
-      .slice(0, -1)
-      .map(msg => ({ role: msg.role as 'user' | 'assistant', content: msg.content }))
-
-    // Generate response using Claude
-    const assistantMessage = await generateChatResponse(message, {
-      systemPrompt: SYSTEM_PROMPT,
-      context,
-      history: conversationHistory,
+    const result = await runRagChat({
+      supabase,
+      userId: user.id,
+      message,
+      systemPrompt,
+      mode,
+      sessionId,
+      personaContext,
+      // Avatar gets a slightly higher temperature so its voice feels less
+      // robotic; Concierge stays deterministic for support answers.
+      temperature: mode === 'avatar' ? 0.85 : 0.7,
       maxTokens: 1000,
-      temperature: 0.7,
-    })
-
-    // Save assistant response
-    if (currentSessionId) {
-      await supabase
-        .from('chat_messages')
-        .insert({
-          session_id: currentSessionId,
-          user_id: user.id,
-          role: 'assistant',
-          content: assistantMessage,
-          sources: searchResults.map((r: any) => ({
-            type: r.content_type,
-            id: r.id,
-            title: r.title,
-            similarity: r.similarity,
-          })),
-        })
-    }
+    });
 
     return NextResponse.json({
-      message: assistantMessage,
-      sessionId: currentSessionId,
-      sources: searchResults.slice(0, 5).map((r: any) => ({
-        type: r.content_type,
-        id: r.id,
-        title: r.title,
-      })),
-    })
-
+      message: result.message,
+      sessionId: result.sessionId,
+      sources: result.sources,
+      mode,
+    });
   } catch (error) {
-    console.error('Chat API error:', error)
+    console.error('Chat API error:', error);
     return NextResponse.json(
       { error: 'Failed to process chat. Check API keys.' },
       { status: 500 }
-    )
+    );
   }
 }
 
-// Get chat history
+// Get chat history. Optionally filter by mode so the UI can list Concierge
+// vs Avatar conversations independently.
 export async function GET(request: NextRequest) {
   try {
-    const supabase = await createClient()
-
-    const { data: { user }, error: authError } = await supabase.auth.getUser()
+    const supabase = await createClient();
+    const { data: { user }, error: authError } = await supabase.auth.getUser();
     if (authError || !user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const { searchParams } = new URL(request.url)
-    const sessionId = searchParams.get('sessionId')
+    const { searchParams } = new URL(request.url);
+    const sessionId = searchParams.get('sessionId');
+    const modeParam = searchParams.get('mode');
 
     if (sessionId) {
-      // Get messages for specific session
       const { data: messages } = await supabase
         .from('chat_messages')
         .select('*')
         .eq('session_id', sessionId)
-        .order('created_at', { ascending: true })
-
-      return NextResponse.json({ messages })
-    } else {
-      // Get all sessions
-      const { data: sessions } = await supabase
-        .from('chat_sessions')
-        .select('*')
-        .eq('user_id', user.id)
-        .order('updated_at', { ascending: false })
-        .limit(20)
-
-      return NextResponse.json({ sessions })
+        .order('created_at', { ascending: true });
+      return NextResponse.json({ messages });
     }
+
+    let query = supabase
+      .from('chat_sessions')
+      .select('*')
+      .eq('user_id', user.id)
+      .order('updated_at', { ascending: false })
+      .limit(20);
+    if (modeParam === 'avatar' || modeParam === 'concierge') {
+      query = query.eq('mode', modeParam);
+    }
+    const { data: sessions } = await query;
+
+    return NextResponse.json({ sessions });
   } catch (error) {
-    console.error('Chat GET error:', error)
-    return NextResponse.json({ error: 'Failed to fetch chat' }, { status: 500 })
+    console.error('Chat GET error:', error);
+    return NextResponse.json({ error: 'Failed to fetch chat' }, { status: 500 });
   }
 }
