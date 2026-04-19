@@ -75,15 +75,30 @@ async function gatherSelfCorpus(admin: SupabaseClient, userId: string) {
     .eq('id', userId)
     .single();
 
+  // memories.body lives in `description` (canonical) — fall back to
+  // `ai_summary` (Rekognition output) and `embedding_text` (the rendered
+  // text we embed for RAG) so we don't miss rows that only have one of
+  // those populated. Pull `extracted_entities` so people/times/locations
+  // appear inline in the persona-synth user message — that gives Sonnet
+  // structured anchors to weave the voice around.
+  //
+  // Excludes interview-typed memories (memory_type IN
+  //   'interview' / 'interview_received' / 'interview_response')
+  // since those carry a CONTACT'S voice, not the user's.
   const { data: memories } = await (admin.from('memories') as any)
-    .select('title, content, metadata, memory_type, created_at')
+    .select('title, description, ai_summary, embedding_text, ai_labels, extracted_entities, memory_type, memory_date, location_name, category, ai_category, created_at')
     .eq('user_id', userId)
-    .not('content', 'is', null)
+    .not('memory_type', 'in', '(interview,interview_received,interview_response)')
     .order('created_at', { ascending: false })
     .limit(MEMORY_SAMPLE_SIZE * 2);
 
-  const ranked = (memories || [])
-    .filter((m: any) => typeof m.content === 'string' && m.content.length >= 80)
+  const enriched = (memories || []).map((m: any) => {
+    const body: string = (m.description || m.ai_summary || m.embedding_text || '').toString();
+    return { ...m, _body: body };
+  });
+
+  const ranked = enriched
+    .filter((m: any) => m._body.length >= 80)
     .sort(() => Math.random() - 0.5)
     .slice(0, MEMORY_SAMPLE_SIZE);
 
@@ -191,15 +206,28 @@ function buildUserMessage(profile: any, memories: any[]): string {
   if (memories.length > 0) {
     parts.push('## Memory samples (verbatim — these are HOW they tell stories)');
     for (const m of memories) {
-      const trimmed = (m.content || '').slice(0, MAX_MEMORY_CHARS);
+      // _body is set by gatherSelfCorpus; for contact corpora the entries
+      // already have `content` populated by gatherContactCorpus.
+      const raw: string = (m._body || m.content || '').toString();
+      const trimmed = raw.slice(0, MAX_MEMORY_CHARS);
       parts.push(`### ${m.title || 'Untitled'}`);
       parts.push(trimmed);
       // Surface the entity extraction so the model has structured anchors.
-      if (m.metadata?.people_mentioned?.length) {
-        parts.push(`(People: ${m.metadata.people_mentioned.join(', ')})`);
+      // Self memories use the new `extracted_entities` column; contact
+      // memories already have entities folded into `metadata` by the
+      // contact-corpus builder.
+      const ents = m.extracted_entities || m.metadata || {};
+      const people = ents.people || ents.people_mentioned;
+      const places = ents.locations || ents.locations_mentioned;
+      const times = ents.times || ents.times_mentioned;
+      if (Array.isArray(people) && people.length > 0) {
+        parts.push(`(People: ${people.join(', ')})`);
       }
-      if (m.metadata?.locations_mentioned?.length) {
-        parts.push(`(Places: ${m.metadata.locations_mentioned.join(', ')})`);
+      if (Array.isArray(places) && places.length > 0) {
+        parts.push(`(Places: ${places.join(', ')})`);
+      }
+      if (Array.isArray(times) && times.length > 0) {
+        parts.push(`(When: ${times.join(', ')})`);
       }
       parts.push('');
     }

@@ -132,14 +132,23 @@ export async function POST(request: NextRequest) {
       .update({ status: 'answered' })
       .eq('id', questionId);
 
-    // Create memory for the interviewer (session owner)
+    // Create memory for the interviewer (session owner). Uses the
+    // canonical memories columns: `description` (the body), `ai_labels`
+    // (the JSONB metadata bucket — we store the interview-specific
+    // pointers here so they're queryable later). The previous version
+    // wrote `content` and `metadata`, neither of which exists on the
+    // memories table, so the insert was silently failing.
+    //
+    // memory_type='interview' is already excluded from the RAG search
+    // RPC so this row won't pollute the owner's self-avatar voice.
+    const interviewBody = transcript || textResponse || '';
     const interviewerMemory = {
       user_id: session.user_id,
       title: `Interview: ${questionText.slice(0, 50)}${questionText.length > 50 ? '...' : ''}`,
-      content: transcript || textResponse || '',
+      description: interviewBody,
       memory_type: 'interview',
-      source: 'video_journalist',
-      metadata: {
+      ai_labels: {
+        source: 'video_journalist',
         interview_session: sessionId,
         question: questionText,
         answered_by: contact?.full_name,
@@ -150,11 +159,17 @@ export async function POST(request: NextRequest) {
       },
     };
 
-    const { data: interviewerMemoryRecord } = await createAdminClient()
+    const { data: interviewerMemoryRecord, error: memoryError } = await createAdminClient()
       .from('memories')
       .insert(interviewerMemory)
       .select()
       .single();
+
+    if (memoryError) {
+      // Surface in logs — pre-this-fix the error was silently swallowed
+      // and interview memories never landed.
+      console.error('[save-response] memory insert failed:', memoryError);
+    }
 
     // Fire-and-forget entity extraction. Pulls topics / people / times /
     // locations / one-line summary out of the transcript and writes them

@@ -1,7 +1,9 @@
 import { createClient } from '@/lib/supabase/server'
+import { createAdminClient } from '@/lib/supabase/admin'
 import { NextRequest, NextResponse } from 'next/server'
 import { analyzeMood } from '@/lib/ai/moodAnalysis'
 import { reverseGeocode } from '@/lib/geo/reverseGeocode'
+import { extractAndPersistWithMetrics } from '@/lib/interviews/extract-entities'
 
 // GET /api/memories - List memories
 export async function GET(request: NextRequest) {
@@ -116,6 +118,19 @@ export async function POST(request: NextRequest) {
 
   // Auto-analyze mood with AI (non-blocking)
   analyzeMoodInBackground(supabase, data.id, title, description, memory_type)
+
+  // Auto-extract entities (people / places / times / topics) from the
+  // memory text so the avatar's persona-synth and RAG pipelines see
+  // them. Skipped for memories without meaningful description (extractor
+  // also enforces a min length).
+  if (typeof description === 'string' && description.length > 0) {
+    extractAndPersistWithMetrics(createAdminClient(), {
+      videoResponseId: null,
+      memoryId: data.id,
+      transcript: description,
+      userId: user.id,
+    })
+  }
 
   return NextResponse.json({ memory: data })
 }

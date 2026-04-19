@@ -135,16 +135,21 @@ export function parseEntities(raw: string): ExtractedEntities | null {
  * outcome + duration_ms. Never throws — safe to call without `await` from
  * the request handler.
  *
- * On success: writes the full payload to video_responses.extracted_entities
- * AND merges the same fields into memories.metadata so the memory row alone
- * is enough to search/browse against.
+ * On success: writes the full payload to whichever target rows are
+ * provided. Both writes target the dedicated `extracted_entities` JSONB
+ * column on each table — `memories` got the column in
+ * 20260418_memories_entities_and_rag.sql; `video_responses` got it in
+ * 20260418_video_response_entities.sql.
+ *
+ * Either target can be omitted (pass null) — engagement-card answers
+ * create only a memory; loved-one interview saves create both.
  *
  * Outcomes: `extracted` | `skipped_short` | `skipped_no_text` | `failed_extract` | `failed_persist`
  */
 export function extractAndPersistWithMetrics(
   admin: SupabaseClient,
   args: {
-    videoResponseId: string;
+    videoResponseId: string | null;
     memoryId: string | null;
     transcript: string;
     sessionId?: string | null;
@@ -174,42 +179,25 @@ export function extractAndPersistWithMetrics(
 
   if (!transcript) return log('skipped_no_text');
   if (transcript.length < MIN_TEXT_LENGTH) return log('skipped_short');
+  if (!videoResponseId && !memoryId) return log('skipped_no_text', { reason: 'no_target' });
 
   extractEntities(transcript)
     .then(async (entities) => {
       if (!entities) return log('failed_extract');
 
       try {
-        // Persist the full payload to video_responses for downstream
-        // queries (topic search, etc.). Cast through `as any` because the
-        // generated supabase types may not yet include the new column.
-        const { error: vrErr } = await (admin.from('video_responses') as any)
-          .update({ extracted_entities: entities })
-          .eq('id', videoResponseId);
-        if (vrErr) return log('failed_persist', { stage: 'video_responses', error: vrErr.message });
+        if (videoResponseId) {
+          const { error: vrErr } = await (admin.from('video_responses') as any)
+            .update({ extracted_entities: entities })
+            .eq('id', videoResponseId);
+          if (vrErr) return log('failed_persist', { stage: 'video_responses', error: vrErr.message });
+        }
 
-        // Fold the same entities into memories.metadata so the memory row
-        // is the "comprehensive memory" the user searches against.
         if (memoryId) {
-          const { data: existing, error: fetchErr } = await (admin.from('memories') as any)
-            .select('metadata')
-            .eq('id', memoryId)
-            .single();
-          if (fetchErr) return log('failed_persist', { stage: 'memories_fetch', error: fetchErr.message });
-
-          const mergedMeta = {
-            ...(existing?.metadata || {}),
-            topics: entities.topics,
-            people_mentioned: entities.people,
-            times_mentioned: entities.times,
-            locations_mentioned: entities.locations,
-            ai_summary: entities.summary,
-            entities_extracted_at: entities.extracted_at,
-          };
           const { error: memErr } = await (admin.from('memories') as any)
-            .update({ metadata: mergedMeta })
+            .update({ extracted_entities: entities })
             .eq('id', memoryId);
-          if (memErr) return log('failed_persist', { stage: 'memories_update', error: memErr.message });
+          if (memErr) return log('failed_persist', { stage: 'memories', error: memErr.message });
         }
 
         log('extracted', {

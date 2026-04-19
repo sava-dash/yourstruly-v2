@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { z } from 'zod'
 import { createClient } from '@/lib/supabase/server'
+import { createAdminClient } from '@/lib/supabase/admin'
+import { extractAndPersistWithMetrics } from '@/lib/interviews/extract-entities'
 
 const AnswerSchema = z.object({
   promptId: z.string().uuid().optional(),
@@ -84,6 +86,18 @@ export async function POST(request: NextRequest) {
         .eq('id', promptId)
         .eq('user_id', user.id)
     }
+
+    // Fire-and-forget entity extraction so the avatar's RAG pipeline
+    // gets people / places / times / topics for this engagement answer.
+    // Uses admin client because the request will return before the
+    // background work finishes and we don't want the user's per-request
+    // supabase client GC'd mid-update.
+    extractAndPersistWithMetrics(createAdminClient(), {
+      videoResponseId: null,
+      memoryId: memory.id,
+      transcript: responseText,
+      userId: user.id,
+    })
 
     // Award XP
     const xpAmount = promptType === 'knowledge' ? 15 : 10

@@ -155,4 +155,31 @@ describe('extractAndPersistWithMetrics', () => {
       transcript: '',
     })).not.toThrow();
   });
+
+  it('skips with no_target reason when both target ids are null', () => {
+    extractAndPersistWithMetrics(fakeAdmin, {
+      videoResponseId: null,
+      memoryId: null,
+      transcript: 'this is long enough to pass the min-length check by a safe margin.',
+    });
+    expect(logSpy).toHaveBeenCalledTimes(1);
+    const payload = JSON.parse(logSpy.mock.calls[0][0] as string);
+    expect(payload.outcome).toBe('skipped_no_text');
+    expect(payload.reason).toBe('no_target');
+  });
+
+  it('accepts memory-only target (videoResponseId null) without throwing', () => {
+    // Engagement-card answers create a memory but no video_response.
+    // The function should accept this shape — actual extraction still
+    // requires the network so we only assert the skip-paths don't crash.
+    expect(() => extractAndPersistWithMetrics(fakeAdmin, {
+      videoResponseId: null,
+      memoryId: 'm-engagement',
+      transcript: 'tiny',
+    })).not.toThrow();
+    const payload = JSON.parse(logSpy.mock.calls[0][0] as string);
+    expect(payload.outcome).toBe('skipped_short');
+    expect(payload.video_response_id).toBeNull();
+    expect(payload.memory_id).toBe('m-engagement');
+  });
 });
