@@ -49,6 +49,9 @@ export interface PersonaCard {
   recurring_themes: string[];
   signature_phrases: string[];
   life_facts: string[];
+  /** Facts the user added manually via the knowledge panel. Preserved
+   *  across re-synthesis (synth only overwrites the LLM-derived fields). */
+  manual_facts?: string[];
   tone_guidance: string;
   vocabulary_notes: string;
   synthesized_from: { memories: number };
@@ -303,15 +306,25 @@ export async function synthesizePersona(
   // here because supabase-js's onConflict doesn't accept partial indexes.
   const { data: existing } = subjectContactId
     ? await (admin.from('avatar_personas') as any)
-        .select('id, version')
+        .select('id, version, persona_card')
         .eq('user_id', ownerUserId)
         .eq('subject_contact_id', subjectContactId)
         .maybeSingle()
     : await (admin.from('avatar_personas') as any)
-        .select('id, version')
+        .select('id, version, persona_card')
         .eq('user_id', ownerUserId)
         .is('subject_contact_id', null)
         .maybeSingle();
+
+  // Preserve any manually-added facts across re-synthesis. The LLM doesn't
+  // generate manual_facts; they only come from the user's knowledge panel.
+  // Wiping them on every regen would silently destroy user input.
+  const preservedManualFacts = Array.isArray(existing?.persona_card?.manual_facts)
+    ? (existing!.persona_card!.manual_facts as string[]).filter((f) => typeof f === 'string' && f.trim().length > 0)
+    : [];
+  if (preservedManualFacts.length > 0) {
+    card.manual_facts = preservedManualFacts;
+  }
 
   const nextVersion = (existing?.version ?? 0) + 1;
   const nowIso = new Date().toISOString();

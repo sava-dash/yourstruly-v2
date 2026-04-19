@@ -114,8 +114,12 @@ backs both modes; mode determines which system prompt is composed.
       no extended questionnaire needed; on-demand at first Avatar use
 - [x] **4.3 Conversation memory** — reuses existing `chat_messages` history
       window (last 10 turns) per-mode
-- [ ] **4.4 "What your avatar knows" panel** — visible knowledge + manual
-      fact-add + source citations on responses
+- [x] **4.4 "What your avatar knows" panel** — collapsible panel inside the
+      Concierge modal showing the active Persona Card (voice, themes,
+      signature phrases, life anchors); add/remove manual facts inline;
+      "Refresh" forces re-synthesis. Manual facts survive re-synth (LLM
+      never overwrites them) and feed the system prompt as authoritative.
+      Source citations were already wired in 4.1 for self/concierge.
 - [x] **4.5 Loved-one avatars** — per-contact personas built from interview
       responses; subject picker in the Concierge modal; ownership-checked
       throughout (`/api/avatar/personas`, `?contactId=` on /persona, contact

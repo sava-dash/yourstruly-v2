@@ -4,7 +4,8 @@ import { useState, useEffect, useRef, useCallback } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import {
   Mic, Square, X, Send, Loader2, MapPin, Calendar, Users, Music,
-  Sparkles, BookOpen, Heart, ChevronRight, Check, MessageSquare, Keyboard
+  Sparkles, BookOpen, Heart, ChevronRight, Check, MessageSquare, Keyboard,
+  Info, Plus, Trash2, RefreshCw
 } from 'lucide-react'
 import { useChat, type ChatMode } from '@/hooks/useChat'
 import { useRouter } from 'next/navigation'
@@ -92,6 +93,105 @@ export default function AIConcierge({ isOpen, onClose, onCreateMemory }: Concier
           subjectContactId ? p.subjectContactId === subjectContactId : p.kind === 'self'
         ) || null
       : null
+
+  // ─── Knowledge panel state (4.4) ─────────────────────────────────
+  // Lazy-loaded full Persona Card for the active subject. Refreshed when
+  // the subject changes or after a manual fact add/remove.
+  const [knowledgeOpen, setKnowledgeOpen] = useState(false)
+  const [personaDetail, setPersonaDetail] = useState<any | null>(null)
+  const [personaDetailLoading, setPersonaDetailLoading] = useState(false)
+  const [factDraft, setFactDraft] = useState('')
+  const [factBusy, setFactBusy] = useState(false)
+  const [refreshing, setRefreshing] = useState(false)
+
+  const fetchPersonaDetail = useCallback(async () => {
+    if (chatMode !== 'avatar') return
+    setPersonaDetailLoading(true)
+    try {
+      const url = subjectContactId
+        ? `/api/avatar/persona?contactId=${encodeURIComponent(subjectContactId)}`
+        : '/api/avatar/persona'
+      const res = await fetch(url)
+      const data = res.ok ? await res.json() : null
+      setPersonaDetail(data?.persona ? data : null)
+    } catch {
+      setPersonaDetail(null)
+    } finally {
+      setPersonaDetailLoading(false)
+    }
+  }, [chatMode, subjectContactId])
+
+  useEffect(() => {
+    if (knowledgeOpen) fetchPersonaDetail()
+  }, [knowledgeOpen, fetchPersonaDetail])
+
+  // Reset panel state when subject changes — its details belong to the
+  // previous subject and would be misleading.
+  useEffect(() => {
+    setPersonaDetail(null)
+    setKnowledgeOpen(false)
+    setFactDraft('')
+  }, [subjectContactId, chatMode])
+
+  const addFact = useCallback(async () => {
+    const fact = factDraft.trim()
+    if (!fact || factBusy) return
+    setFactBusy(true)
+    try {
+      const res = await fetch('/api/avatar/persona/facts', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ fact, contactId: subjectContactId }),
+      })
+      if (res.ok) {
+        const data = await res.json()
+        setPersonaDetail((prev: any) => prev ? {
+          ...prev,
+          persona: { ...prev.persona, manual_facts: data.manual_facts },
+        } : prev)
+        setFactDraft('')
+      }
+    } finally {
+      setFactBusy(false)
+    }
+  }, [factDraft, factBusy, subjectContactId])
+
+  const removeFact = useCallback(async (fact: string) => {
+    setFactBusy(true)
+    try {
+      const res = await fetch('/api/avatar/persona/facts', {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ fact, contactId: subjectContactId }),
+      })
+      if (res.ok) {
+        const data = await res.json()
+        setPersonaDetail((prev: any) => prev ? {
+          ...prev,
+          persona: { ...prev.persona, manual_facts: data.manual_facts },
+        } : prev)
+      }
+    } finally {
+      setFactBusy(false)
+    }
+  }, [subjectContactId])
+
+  const refreshPersona = useCallback(async () => {
+    if (refreshing) return
+    setRefreshing(true)
+    try {
+      const url = subjectContactId
+        ? `/api/avatar/persona?contactId=${encodeURIComponent(subjectContactId)}`
+        : '/api/avatar/persona'
+      const res = await fetch(url, { method: 'POST' })
+      if (res.ok) {
+        const data = await res.json()
+        if (data?.persona) setPersonaDetail(data)
+      }
+    } finally {
+      setRefreshing(false)
+    }
+  }, [refreshing, subjectContactId])
 
   // Voice state
   const [mode, setMode] = useState<ConciergeMode>('listening')
@@ -562,6 +662,142 @@ export default function AIConcierge({ isOpen, onClose, onCreateMemory }: Concier
               <p className="mt-2 text-[11px] text-white/40 max-w-md">
                 Avatar speaks as the chosen person, drawing on their interview answers (or your memories, for your own avatar). First reply may take a moment while we synthesize.
               </p>
+
+              {/* "What this avatar knows" toggle. Reveals the synthesized
+                  Persona Card + lets the user add/remove manual facts. */}
+              <button
+                onClick={() => setKnowledgeOpen((v) => !v)}
+                className="mt-3 inline-flex items-center gap-1.5 text-[11px] text-white/60 hover:text-white/90 transition-colors"
+              >
+                <Info size={12} />
+                {knowledgeOpen ? 'Hide what this avatar knows' : 'What this avatar knows'}
+              </button>
+
+              <AnimatePresence>
+                {knowledgeOpen && (
+                  <motion.div
+                    initial={{ opacity: 0, height: 0 }}
+                    animate={{ opacity: 1, height: 'auto' }}
+                    exit={{ opacity: 0, height: 0 }}
+                    className="mt-3 overflow-hidden"
+                  >
+                    <div className="rounded-xl border border-white/10 bg-white/5 p-4 space-y-3">
+                      {personaDetailLoading && (
+                        <p className="text-xs text-white/50">Loading…</p>
+                      )}
+
+                      {!personaDetailLoading && !personaDetail?.persona && (
+                        <p className="text-xs text-white/50">
+                          No persona synthesized yet. Send a first message in this avatar to build one.
+                        </p>
+                      )}
+
+                      {!personaDetailLoading && personaDetail?.persona && (
+                        <>
+                          <div className="flex items-center justify-between">
+                            <p className="text-[11px] uppercase tracking-wide text-white/40">Avatar voice</p>
+                            <button
+                              onClick={refreshPersona}
+                              disabled={refreshing}
+                              className="inline-flex items-center gap-1 text-[10px] text-white/50 hover:text-white/80 disabled:opacity-40"
+                              title="Re-synthesize from latest content"
+                            >
+                              {refreshing ? <Loader2 size={10} className="animate-spin" /> : <RefreshCw size={10} />}
+                              Refresh
+                            </button>
+                          </div>
+
+                          {personaDetail.persona.voice_description && (
+                            <p className="text-xs text-white/80 italic">"{personaDetail.persona.voice_description}"</p>
+                          )}
+
+                          {Array.isArray(personaDetail.persona.recurring_themes) && personaDetail.persona.recurring_themes.length > 0 && (
+                            <div>
+                              <p className="text-[11px] uppercase tracking-wide text-white/40 mb-1">Themes</p>
+                              <div className="flex flex-wrap gap-1.5">
+                                {personaDetail.persona.recurring_themes.map((t: string, i: number) => (
+                                  <span key={i} className="px-2 py-0.5 rounded-full bg-white/10 text-[11px] text-white/80">{t}</span>
+                                ))}
+                              </div>
+                            </div>
+                          )}
+
+                          {Array.isArray(personaDetail.persona.signature_phrases) && personaDetail.persona.signature_phrases.length > 0 && (
+                            <div>
+                              <p className="text-[11px] uppercase tracking-wide text-white/40 mb-1">Signature phrases</p>
+                              <ul className="text-xs text-white/80 space-y-0.5">
+                                {personaDetail.persona.signature_phrases.map((p: string, i: number) => (
+                                  <li key={i}>· {p}</li>
+                                ))}
+                              </ul>
+                            </div>
+                          )}
+
+                          {Array.isArray(personaDetail.persona.life_facts) && personaDetail.persona.life_facts.length > 0 && (
+                            <div>
+                              <p className="text-[11px] uppercase tracking-wide text-white/40 mb-1">Life anchors (synthesized)</p>
+                              <ul className="text-xs text-white/80 space-y-0.5">
+                                {personaDetail.persona.life_facts.map((f: string, i: number) => (
+                                  <li key={i}>· {f}</li>
+                                ))}
+                              </ul>
+                            </div>
+                          )}
+
+                          {/* Manual facts — always shown so the user can add the first one */}
+                          <div>
+                            <p className="text-[11px] uppercase tracking-wide text-white/40 mb-1">Facts you've added</p>
+                            {Array.isArray(personaDetail.persona.manual_facts) && personaDetail.persona.manual_facts.length > 0 ? (
+                              <ul className="text-xs text-white/80 space-y-1 mb-2">
+                                {personaDetail.persona.manual_facts.map((f: string, i: number) => (
+                                  <li key={i} className="flex items-start gap-2">
+                                    <span className="flex-1">· {f}</span>
+                                    <button
+                                      onClick={() => removeFact(f)}
+                                      disabled={factBusy}
+                                      className="text-white/30 hover:text-red-400 disabled:opacity-40 mt-0.5"
+                                      aria-label="Remove fact"
+                                    >
+                                      <Trash2 size={11} />
+                                    </button>
+                                  </li>
+                                ))}
+                              </ul>
+                            ) : (
+                              <p className="text-[11px] text-white/40 mb-2">None yet — add facts the synthesizer can't infer (favorites, allergies, anniversaries, etc.)</p>
+                            )}
+                            <div className="flex gap-1.5">
+                              <input
+                                value={factDraft}
+                                onChange={(e) => setFactDraft(e.target.value)}
+                                onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); addFact() } }}
+                                maxLength={240}
+                                placeholder='e.g. "favorite ice cream is mint chip"'
+                                className="flex-1 px-2.5 py-1.5 text-xs rounded-md bg-white/10 border border-white/10 text-white placeholder:text-white/30 focus:outline-none focus:border-white/30"
+                              />
+                              <button
+                                onClick={addFact}
+                                disabled={!factDraft.trim() || factBusy}
+                                className="px-2.5 py-1.5 rounded-md bg-[#2D5A3D] text-white text-xs disabled:opacity-40 inline-flex items-center gap-1"
+                              >
+                                {factBusy ? <Loader2 size={11} className="animate-spin" /> : <Plus size={11} />}
+                                Add
+                              </button>
+                            </div>
+                          </div>
+
+                          {personaDetail.sourceCount != null && (
+                            <p className="text-[10px] text-white/30 pt-1 border-t border-white/5">
+                              Synthesized from {personaDetail.sourceCount} source{personaDetail.sourceCount === 1 ? '' : 's'}
+                              {personaDetail.lastSynthesizedAt && ` · last refreshed ${new Date(personaDetail.lastSynthesizedAt).toLocaleDateString()}`}
+                            </p>
+                          )}
+                        </>
+                      )}
+                    </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
             </>
           )}
         </div>

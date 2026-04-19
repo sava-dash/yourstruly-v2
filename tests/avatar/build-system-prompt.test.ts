@@ -64,4 +64,21 @@ describe('buildAvatarSystemPrompt', () => {
     expect(AVATAR_FALLBACK_SYSTEM_PROMPT).toContain('Always respond in first person');
     expect(AVATAR_FALLBACK_SYSTEM_PROMPT).toContain("don't have a fully synthesized persona yet");
   });
+
+  it('renders manual_facts as authoritative when present', () => {
+    const cardWithManual: PersonaCard = {
+      ...sampleCard,
+      manual_facts: ['favorite ice cream is mint chip', 'allergic to penicillin'],
+    };
+    const prompt = buildAvatarSystemPrompt(cardWithManual);
+    expect(prompt).toContain('Additional facts you have explicitly told us');
+    expect(prompt).toContain('- favorite ice cream is mint chip');
+    expect(prompt).toContain('- allergic to penicillin');
+  });
+
+  it('omits manual_facts section when the array is empty or missing', () => {
+    const empty = { ...sampleCard, manual_facts: [] };
+    expect(buildAvatarSystemPrompt(empty)).not.toContain('Additional facts');
+    expect(buildAvatarSystemPrompt(sampleCard)).not.toContain('Additional facts');
+  });
 });

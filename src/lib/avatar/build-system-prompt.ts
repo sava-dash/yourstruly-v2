@@ -63,6 +63,15 @@ function buildPersonaBlock(card: PersonaCard): string {
     lines.push(bulletList(card.life_facts));
   }
 
+  // Manual facts the user added via the knowledge panel. Treat as
+  // authoritative — they ARE first-person facts the user wants their
+  // avatar to know.
+  if (nonEmpty(card.manual_facts)) {
+    lines.push('');
+    lines.push('Additional facts you have explicitly told us about yourself (treat as authoritative):');
+    lines.push(bulletList(card.manual_facts!));
+  }
+
   return lines.join('\n');
 }
 
