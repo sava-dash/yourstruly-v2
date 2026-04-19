@@ -116,8 +116,10 @@ backs both modes; mode determines which system prompt is composed.
       window (last 10 turns) per-mode
 - [ ] **4.4 "What your avatar knows" panel** — visible knowledge + manual
       fact-add + source citations on responses
-- [ ] **4.5 Loved-one avatars** — per-contact personas built from interview
-      responses; visibility/permissions
+- [x] **4.5 Loved-one avatars** — per-contact personas built from interview
+      responses; subject picker in the Concierge modal; ownership-checked
+      throughout (`/api/avatar/personas`, `?contactId=` on /persona, contact
+      verification before any synth/chat work)
 - [ ] **4.6 Voice synthesis (optional)** — ElevenLabs voice clone from
       interview audio
 

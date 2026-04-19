@@ -14,6 +14,8 @@ interface UseChatOptions {
   sessionId?: string
   /** Which AI surface to talk to. Defaults to 'concierge' for backwards compat. */
   mode?: ChatMode
+  /** When mode='avatar': null/undefined = self avatar; non-null = loved-one avatar. */
+  subjectContactId?: string | null
   onError?: (error: Error) => void
 }
 
@@ -23,6 +25,7 @@ export function useChat(options: UseChatOptions = {}) {
   const [sessionId, setSessionId] = useState<string | undefined>(options.sessionId)
   const [error, setError] = useState<Error | null>(null)
   const mode: ChatMode = options.mode || 'concierge'
+  const subjectContactId = options.subjectContactId ?? null
 
   const sendMessage = useCallback(async (content: string) => {
     if (!content.trim() || isLoading) return
@@ -46,6 +49,7 @@ export function useChat(options: UseChatOptions = {}) {
           message: content,
           sessionId,
           mode,
+          subjectContactId: mode === 'avatar' ? subjectContactId : null,
         }),
       })
 
@@ -83,7 +87,7 @@ export function useChat(options: UseChatOptions = {}) {
     } finally {
       setIsLoading(false)
     }
-  }, [isLoading, sessionId, options, mode])
+  }, [isLoading, sessionId, options, mode, subjectContactId])
 
   const loadHistory = useCallback(async (loadSessionId?: string) => {
     const targetSessionId = loadSessionId || sessionId

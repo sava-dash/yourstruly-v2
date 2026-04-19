@@ -66,7 +66,7 @@ export interface SynthesizePersonaResult {
  * non-trivial content; randomize within the top N most recent so each
  * regen sees fresh material rather than always the oldest entries.
  */
-async function gatherCorpus(admin: SupabaseClient, userId: string) {
+async function gatherSelfCorpus(admin: SupabaseClient, userId: string) {
   const { data: profile } = await (admin.from('profiles') as any)
     .select('full_name, display_name, bio, personality, interests, mottos, life_goals, religion')
     .eq('id', userId)
@@ -87,13 +87,88 @@ async function gatherCorpus(admin: SupabaseClient, userId: string) {
   return { profile: profile || null, memories: ranked };
 }
 
+/**
+ * Pull a contact's interview transcripts as the synthesis corpus.
+ *
+ * The "profile" here is the contact card (relationship, location, dates).
+ * The "memories" are their video_responses (transcripts + entities). We
+ * verify ownership via the WHERE clause so a contact owned by another
+ * account is invisible to this synthesizer.
+ *
+ * Returns null if the contact doesn't belong to ownerUserId.
+ */
+async function gatherContactCorpus(
+  admin: SupabaseClient,
+  ownerUserId: string,
+  subjectContactId: string
+) {
+  const { data: contact } = await (admin.from('contacts') as any)
+    .select('full_name, nickname, relationship_type, relationship_details, date_of_birth, city, state, country')
+    .eq('id', subjectContactId)
+    .eq('user_id', ownerUserId)
+    .maybeSingle();
+  if (!contact) return null;
+
+  const { data: responses } = await (admin.from('video_responses') as any)
+    .select('transcript, ai_summary, extracted_entities, session_question_id, created_at')
+    .eq('contact_id', subjectContactId)
+    .eq('user_id', ownerUserId)
+    .not('transcript', 'is', null)
+    .order('created_at', { ascending: false })
+    .limit(MEMORY_SAMPLE_SIZE * 2);
+
+  const sessionQuestionIds = (responses || [])
+    .map((r: any) => r.session_question_id)
+    .filter((id: any): id is string => typeof id === 'string');
+
+  let questionMap = new Map<string, string>();
+  if (sessionQuestionIds.length > 0) {
+    const { data: questions } = await (admin.from('session_questions') as any)
+      .select('id, question_text')
+      .in('id', sessionQuestionIds);
+    questionMap = new Map(
+      (questions || []).map((q: any) => [q.id as string, q.question_text as string])
+    );
+  }
+
+  const ranked = (responses || [])
+    .filter((r: any) => typeof r.transcript === 'string' && r.transcript.length >= 80)
+    .sort(() => Math.random() - 0.5)
+    .slice(0, MEMORY_SAMPLE_SIZE)
+    .map((r: any) => ({
+      title: r.session_question_id ? (questionMap.get(r.session_question_id) || 'Interview answer') : 'Interview answer',
+      content: r.transcript,
+      metadata: r.extracted_entities || {},
+    }));
+
+  // Re-shape the contact into a profile-like object so buildUserMessage
+  // can treat both corpora identically.
+  const profile = {
+    full_name: contact.nickname || contact.full_name,
+    bio: contact.relationship_details || null,
+    personality: [] as string[],
+    interests: [] as string[],
+    mottos: [] as string[],
+    life_goals: [] as string[],
+    religion: null as string | null,
+    relationship_type: contact.relationship_type,
+    location: [contact.city, contact.state, contact.country].filter(Boolean).join(', '),
+    date_of_birth: contact.date_of_birth,
+  };
+
+  return { profile, memories: ranked };
+}
+
 function buildUserMessage(profile: any, memories: any[]): string {
   const parts: string[] = [];
 
   if (profile) {
     parts.push('## Profile');
     if (profile.full_name) parts.push(`Name: ${profile.full_name}`);
+    if (profile.relationship_type) parts.push(`Relationship to the YoursTruly user: ${profile.relationship_type}`);
     if (profile.bio) parts.push(`Bio: ${profile.bio}`);
+    if (profile.location) parts.push(`Location: ${profile.location}`);
+    if (profile.date_of_birth) parts.push(`Born: ${profile.date_of_birth}`);
     if (Array.isArray(profile.personality) && profile.personality.length > 0) {
       parts.push(`Personality traits: ${profile.personality.join(', ')}`);
     }
@@ -170,6 +245,12 @@ export function parsePersonaCard(raw: string, sourceCount: number): PersonaCard 
   return card;
 }
 
+export interface SynthesizePersonaOptions {
+  /** When set, synthesize a loved-one persona for that contact. The
+   *  contact must belong to ownerUserId; otherwise null is returned. */
+  subjectContactId?: string | null;
+}
+
 /**
  * End-to-end synthesis: gather corpus → call Claude → parse → upsert.
  *
@@ -177,16 +258,26 @@ export function parsePersonaCard(raw: string, sourceCount: number): PersonaCard 
  * to invalidate their cached system prompt.
  *
  * Throws on infrastructure errors (auth, DB) so callers can surface them;
- * returns null if there genuinely isn't enough source material.
+ * returns null if there genuinely isn't enough source material OR if the
+ * subject contact isn't owned by ownerUserId.
  */
 export async function synthesizePersona(
   admin: SupabaseClient,
-  userId: string
+  ownerUserId: string,
+  opts: SynthesizePersonaOptions = {}
 ): Promise<SynthesizePersonaResult | null> {
-  const { profile, memories } = await gatherCorpus(admin, userId);
+  const subjectContactId = opts.subjectContactId ?? null;
 
-  // No content + no profile = nothing to synthesize from. Caller should
-  // surface a "tell us more about yourself" prompt before retrying.
+  const corpus = subjectContactId
+    ? await gatherContactCorpus(admin, ownerUserId, subjectContactId)
+    : await gatherSelfCorpus(admin, ownerUserId);
+
+  // gatherContactCorpus returns null when the contact doesn't belong to
+  // ownerUserId — we propagate that as "no persona available" rather
+  // than leak ownership info to the caller.
+  if (!corpus) return null;
+
+  const { profile, memories } = corpus;
   if (!profile && memories.length === 0) return null;
 
   const userMessage = buildUserMessage(profile, memories);
@@ -206,27 +297,49 @@ export async function synthesizePersona(
   const card = parsePersonaCard(raw, memories.length);
   if (!card) return null;
 
-  // Upsert (one row per user). Bump version so cached system prompts know
-  // to refresh.
-  const { data: existing } = await (admin.from('avatar_personas') as any)
-    .select('version')
-    .eq('user_id', userId)
-    .maybeSingle();
+  // Upsert one row per (owner, subject). Bump version so cached system
+  // prompts know to refresh. Use the partial unique indexes from the
+  // 4.5 migration as the upsert key — selected via a manual select+update
+  // here because supabase-js's onConflict doesn't accept partial indexes.
+  const { data: existing } = subjectContactId
+    ? await (admin.from('avatar_personas') as any)
+        .select('id, version')
+        .eq('user_id', ownerUserId)
+        .eq('subject_contact_id', subjectContactId)
+        .maybeSingle()
+    : await (admin.from('avatar_personas') as any)
+        .select('id, version')
+        .eq('user_id', ownerUserId)
+        .is('subject_contact_id', null)
+        .maybeSingle();
 
   const nextVersion = (existing?.version ?? 0) + 1;
-  const { error: upsertErr } = await (admin.from('avatar_personas') as any)
-    .upsert({
-      user_id: userId,
-      persona_card: card,
-      version: nextVersion,
-      source_count: memories.length,
-      last_synthesized_at: new Date().toISOString(),
-      updated_at: new Date().toISOString(),
-    }, { onConflict: 'user_id' });
+  const nowIso = new Date().toISOString();
+  const baseRow = {
+    user_id: ownerUserId,
+    subject_contact_id: subjectContactId,
+    persona_card: card,
+    version: nextVersion,
+    source_count: memories.length,
+    last_synthesized_at: nowIso,
+    updated_at: nowIso,
+  };
 
-  if (upsertErr) {
-    console.error('[synthesize-persona] upsert error:', upsertErr);
-    throw upsertErr;
+  if (existing?.id) {
+    const { error: updErr } = await (admin.from('avatar_personas') as any)
+      .update(baseRow)
+      .eq('id', existing.id);
+    if (updErr) {
+      console.error('[synthesize-persona] update error:', updErr);
+      throw updErr;
+    }
+  } else {
+    const { error: insErr } = await (admin.from('avatar_personas') as any)
+      .insert(baseRow);
+    if (insErr) {
+      console.error('[synthesize-persona] insert error:', insErr);
+      throw insErr;
+    }
   }
 
   return { persona: card, sourceCount: memories.length };

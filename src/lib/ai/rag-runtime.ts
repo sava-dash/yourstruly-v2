@@ -34,6 +34,15 @@ export interface RunRagChatArgs {
   personaContext?: string;
   /** Hard cap on retrieved memory rows — keeps prompt size bounded. */
   searchLimit?: number;
+  /** When true, skip the embed + vector retrieve step entirely and use
+   *  ONLY personaContext as the context. Loved-one avatars set this so
+   *  we don't accidentally retrieve owner content while talking AS the
+   *  contact. */
+  skipRetrieval?: boolean;
+  /** Optional contact subject for loved-one avatar threads. Used for
+   *  session scoping; doesn't change the prompt itself (caller bakes
+   *  that into systemPrompt + personaContext). */
+  subjectContactId?: string | null;
   /** Anthropic generation knobs. */
   maxTokens?: number;
   temperature?: number;
@@ -155,11 +164,14 @@ export async function runRagChat(args: RunRagChatArgs): Promise<RunRagChatResult
     sessionId: incomingSessionId,
     personaContext,
     searchLimit = DEFAULT_SEARCH_LIMIT,
+    skipRetrieval = false,
+    subjectContactId = null,
     maxTokens = 1000,
     temperature = 0.7,
   } = args;
 
-  // Ensure we have a session in this mode.
+  // Ensure we have a session in this mode (and scoped to the right
+  // subject contact, if any).
   let sessionId = incomingSessionId || null;
   if (!sessionId) {
     const { data: created } = await (supabase.from('chat_sessions') as any)
@@ -167,6 +179,7 @@ export async function runRagChat(args: RunRagChatArgs): Promise<RunRagChatResult
         user_id: userId,
         title: message.slice(0, 50),
         mode,
+        subject_contact_id: subjectContactId,
       })
       .select('id')
       .single();
@@ -197,14 +210,21 @@ export async function runRagChat(args: RunRagChatArgs): Promise<RunRagChatResult
     .slice(0, -1)
     .map((m: any) => ({ role: m.role as 'user' | 'assistant', content: m.content }));
 
-  // Embed query → vector retrieve.
-  const queryEmbedding = await generateEmbedding(message);
-  const searchResults = await searchUserContent(supabase, userId, queryEmbedding, searchLimit);
+  // Embed query → vector retrieve. Skipped for loved-one avatars: the
+  // owner's content isn't relevant when speaking AS a different person.
+  const searchResults = skipRetrieval
+    ? []
+    : await (async () => {
+        const queryEmbedding = await generateEmbedding(message);
+        return searchUserContent(supabase, userId, queryEmbedding, searchLimit);
+      })();
 
   // Compose the context block. Avatar mode prepends a Persona Card section
   // so the persona stays visible to the model alongside the retrieved facts.
-  const ragContext = formatRagContext(searchResults);
-  const context = personaContext ? `${personaContext}\n\n${ragContext}` : ragContext;
+  const ragContext = skipRetrieval ? '' : formatRagContext(searchResults);
+  const context = skipRetrieval
+    ? (personaContext || '')
+    : (personaContext ? `${personaContext}\n\n${ragContext}` : ragContext);
 
   const assistantMessage = await generateChatResponse(message, {
     systemPrompt,

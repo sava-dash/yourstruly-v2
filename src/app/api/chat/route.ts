@@ -8,6 +8,7 @@ import {
   buildAvatarSystemPrompt,
   AVATAR_FALLBACK_SYSTEM_PROMPT,
 } from '@/lib/avatar/build-system-prompt';
+import { buildContactContext } from '@/lib/avatar/contact-context';
 
 // ─── Concierge system prompt ────────────────────────────────────────────────
 // (Unchanged from the pre-refactor handler so existing Concierge behavior
@@ -70,14 +71,37 @@ async function buildSupportContext(supabase: any, message: string): Promise<stri
 }
 
 // ─── Avatar persona lookup (with auto-synth on first use) ───────────────────
-async function loadAvatarSystemPrompt(userId: string): Promise<string> {
+//
+// Works for both self avatars (subjectContactId = null) and loved-one avatars
+// (subjectContactId = a contact owned by ownerUserId). Returns null when the
+// requested contact isn't owned by ownerUserId — caller should reject the
+// request rather than silently downgrade.
+async function loadAvatarSystemPrompt(
+  ownerUserId: string,
+  subjectContactId: string | null
+): Promise<string | null> {
   const admin = createAdminClient();
 
+  // For loved-one avatars, verify ownership BEFORE doing any work — a
+  // probing client must not be able to learn whether a contact UUID is
+  // valid via timing differences in the synth path.
+  if (subjectContactId) {
+    const { data: contact } = await (admin.from('contacts') as any)
+      .select('id')
+      .eq('id', subjectContactId)
+      .eq('user_id', ownerUserId)
+      .maybeSingle();
+    if (!contact) return null;
+  }
+
   // Cheap path: read the cached card.
-  const { data: existing } = await (admin.from('avatar_personas') as any)
+  let query = (admin.from('avatar_personas') as any)
     .select('persona_card')
-    .eq('user_id', userId)
-    .maybeSingle();
+    .eq('user_id', ownerUserId);
+  query = subjectContactId
+    ? query.eq('subject_contact_id', subjectContactId)
+    : query.is('subject_contact_id', null);
+  const { data: existing } = await query.maybeSingle();
 
   if (existing?.persona_card) {
     return buildAvatarSystemPrompt(existing.persona_card);
@@ -87,7 +111,7 @@ async function loadAvatarSystemPrompt(userId: string): Promise<string> {
   // (no source material) — we fall back to the generic first-person prompt
   // so the user still gets *some* avatar behavior.
   try {
-    const result = await synthesizePersona(admin, userId);
+    const result = await synthesizePersona(admin, ownerUserId, { subjectContactId });
     if (result?.persona) return buildAvatarSystemPrompt(result.persona);
   } catch (err) {
     console.error('[chat] persona synthesis failed:', err);
@@ -105,6 +129,7 @@ export async function POST(request: NextRequest) {
     }
 
     const supabase = await createClient();
+    const admin = createAdminClient();
     const { data: { user }, error: authError } = await supabase.auth.getUser();
     if (authError || !user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
@@ -114,6 +139,10 @@ export async function POST(request: NextRequest) {
     const { message, sessionId } = body;
     // Default to 'concierge' so existing clients keep working without changes.
     const mode: ChatMode = body?.mode === 'avatar' ? 'avatar' : 'concierge';
+    const subjectContactId: string | null =
+      mode === 'avatar' && typeof body?.subjectContactId === 'string'
+        ? body.subjectContactId
+        : null;
 
     if (!message) {
       return NextResponse.json({ error: 'Message required' }, { status: 400 });
@@ -122,11 +151,29 @@ export async function POST(request: NextRequest) {
     // Compose the system prompt + optional context delta per mode.
     let systemPrompt: string;
     let personaContext: string | undefined;
+    let skipRetrieval = false;
 
     if (mode === 'avatar') {
-      systemPrompt = await loadAvatarSystemPrompt(user.id);
-      // No persona context block needed — the persona IS the system prompt.
-      personaContext = undefined;
+      const prompt = await loadAvatarSystemPrompt(user.id, subjectContactId);
+      if (!prompt) {
+        // Either the contact isn't owned by this user, or it doesn't exist.
+        return NextResponse.json(
+          { error: 'Avatar not available for this subject' },
+          { status: 404 }
+        );
+      }
+      systemPrompt = prompt;
+
+      if (subjectContactId) {
+        // Loved-one avatar: hand-build the contact's transcript context
+        // and skip the owner's RAG (we're speaking AS a different person).
+        const ctx = await buildContactContext(admin, user.id, subjectContactId);
+        personaContext = ctx || undefined;
+        skipRetrieval = true;
+      } else {
+        // Self avatar: persona IS the system prompt; let RAG fill in facts.
+        personaContext = undefined;
+      }
     } else {
       systemPrompt = CONCIERGE_SYSTEM_PROMPT;
       // Concierge-only: append platform help articles to retrieved context.
@@ -141,6 +188,8 @@ export async function POST(request: NextRequest) {
       systemPrompt,
       mode,
       sessionId,
+      subjectContactId,
+      skipRetrieval,
       personaContext,
       // Avatar gets a slightly higher temperature so its voice feels less
       // robotic; Concierge stays deterministic for support answers.
@@ -153,6 +202,7 @@ export async function POST(request: NextRequest) {
       sessionId: result.sessionId,
       sources: result.sources,
       mode,
+      subjectContactId,
     });
   } catch (error) {
     console.error('Chat API error:', error);

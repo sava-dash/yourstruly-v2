@@ -42,6 +42,17 @@ interface ConciergeProps {
   }) => void
 }
 
+interface AvatarPersonaListItem {
+  kind: 'self' | 'contact'
+  subjectContactId: string | null
+  displayName: string
+  relationship: string | null
+  avatarUrl: string | null
+  synthesized: boolean
+  sourceCount: number
+  transcriptCount: number | null
+}
+
 export default function AIConcierge({ isOpen, onClose, onCreateMemory }: ConciergeProps) {
   const router = useRouter()
   // Mode toggle: 'concierge' (talks ABOUT your life + helps with the app)
@@ -49,7 +60,38 @@ export default function AIConcierge({ isOpen, onClose, onCreateMemory }: Concier
   // Persona Card). Switching modes resets the chat thread because each
   // mode owns its own conversation in chat_sessions.
   const [chatMode, setChatMode] = useState<ChatMode>('concierge')
-  const { messages, isLoading, sendMessage, clearChat } = useChat({ mode: chatMode })
+  // When mode='avatar': null = self avatar, non-null = chat with that
+  // contact's loved-one avatar.
+  const [subjectContactId, setSubjectContactId] = useState<string | null>(null)
+  // Lazy-loaded list of personas the user can talk to. Fetched the first
+  // time the user enters Avatar mode and refreshed when re-entered.
+  const [personas, setPersonas] = useState<AvatarPersonaListItem[] | null>(null)
+  const [personasLoading, setPersonasLoading] = useState(false)
+  const { messages, isLoading, sendMessage, clearChat } = useChat({
+    mode: chatMode,
+    subjectContactId,
+  })
+
+  // Fetch the persona list whenever Avatar mode is entered (and the modal
+  // is open). The endpoint is cheap — single roundtrip, no LLM calls.
+  useEffect(() => {
+    if (!isOpen || chatMode !== 'avatar') return
+    let cancelled = false
+    setPersonasLoading(true)
+    fetch('/api/avatar/personas')
+      .then(async (r) => (r.ok ? r.json() : { personas: [] }))
+      .then((data) => { if (!cancelled) setPersonas(data?.personas || []) })
+      .catch(() => { if (!cancelled) setPersonas([]) })
+      .finally(() => { if (!cancelled) setPersonasLoading(false) })
+    return () => { cancelled = true }
+  }, [isOpen, chatMode])
+
+  const activePersona: AvatarPersonaListItem | null =
+    chatMode === 'avatar'
+      ? (personas || []).find((p) =>
+          subjectContactId ? p.subjectContactId === subjectContactId : p.kind === 'self'
+        ) || null
+      : null
 
   // Voice state
   const [mode, setMode] = useState<ConciergeMode>('listening')
@@ -422,7 +464,11 @@ export default function AIConcierge({ isOpen, onClose, onCreateMemory }: Concier
             <div>
               <h2 className="text-white font-semibold text-base">YoursTruly</h2>
               <p className="text-white/40 text-xs">
-                {chatMode === 'avatar' ? 'Talking as you (Avatar)' : 'Your memory companion'}
+                {chatMode === 'avatar'
+                  ? activePersona
+                    ? `Talking as ${activePersona.displayName}`
+                    : 'Avatar mode'
+                  : 'Your memory companion'}
               </p>
             </div>
           </div>
@@ -467,9 +513,56 @@ export default function AIConcierge({ isOpen, onClose, onCreateMemory }: Concier
             })}
           </div>
           {chatMode === 'avatar' && (
-            <p className="mt-2 text-[11px] text-white/40 max-w-md">
-              Avatar speaks as you, drawing on your memories. First reply may take a moment while we synthesize your voice.
-            </p>
+            <>
+              {/* Subject picker: scroll row of avatars the user can chat
+                  with — themselves first, then any contact who has at
+                  least one transcribed interview answer on record. */}
+              <div className="mt-3">
+                {personasLoading && (
+                  <p className="text-[11px] text-white/40">Loading avatars…</p>
+                )}
+                {!personasLoading && (personas || []).length === 0 && (
+                  <p className="text-[11px] text-white/40">
+                    No avatars yet. Add some memories or send an interview to a contact to populate avatars.
+                  </p>
+                )}
+                {!personasLoading && (personas || []).length > 0 && (
+                  <div className="flex gap-2 overflow-x-auto pb-1 -mx-1 px-1">
+                    {(personas || []).map((p) => {
+                      const active = subjectContactId === p.subjectContactId
+                      const subtitle =
+                        p.kind === 'self'
+                          ? p.synthesized ? `${p.sourceCount} memories` : 'Tap to set up'
+                          : p.transcriptCount
+                            ? `${p.transcriptCount} answer${p.transcriptCount === 1 ? '' : 's'}`
+                            : 'No answers yet'
+                      return (
+                        <button
+                          key={p.subjectContactId ?? 'self'}
+                          onClick={() => {
+                            if (subjectContactId === p.subjectContactId) return
+                            setSubjectContactId(p.subjectContactId)
+                            clearChat()
+                          }}
+                          title={p.relationship ? `${p.displayName} — ${p.relationship}` : p.displayName}
+                          className={`shrink-0 px-3 py-2 rounded-lg text-left transition-all ${
+                            active
+                              ? 'bg-[#2D5A3D]/30 border border-[#2D5A3D] text-white'
+                              : 'bg-white/5 border border-white/10 text-white/70 hover:text-white hover:bg-white/10'
+                          }`}
+                        >
+                          <div className="text-xs font-medium leading-tight">{p.displayName}</div>
+                          <div className="text-[10px] text-white/40 leading-tight">{subtitle}</div>
+                        </button>
+                      )
+                    })}
+                  </div>
+                )}
+              </div>
+              <p className="mt-2 text-[11px] text-white/40 max-w-md">
+                Avatar speaks as the chosen person, drawing on their interview answers (or your memories, for your own avatar). First reply may take a moment while we synthesize.
+              </p>
+            </>
           )}
         </div>
 
