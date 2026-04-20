@@ -88,6 +88,7 @@ async function gatherSelfCorpus(admin: SupabaseClient, userId: string) {
   const { data: memories } = await (admin.from('memories') as any)
     .select('title, description, ai_summary, embedding_text, ai_labels, extracted_entities, memory_type, memory_date, location_name, category, ai_category, created_at')
     .eq('user_id', userId)
+    .eq('exclude_from_avatar', false)
     .not('memory_type', 'in', '(interview,interview_received,interview_response)')
     .order('created_at', { ascending: false })
     .limit(MEMORY_SAMPLE_SIZE * 2);
@@ -131,6 +132,7 @@ async function gatherContactCorpus(
     .select('transcript, ai_summary, extracted_entities, session_question_id, created_at')
     .eq('contact_id', subjectContactId)
     .eq('user_id', ownerUserId)
+    .eq('exclude_from_avatar', false)
     .not('transcript', 'is', null)
     .order('created_at', { ascending: false })
     .limit(MEMORY_SAMPLE_SIZE * 2);

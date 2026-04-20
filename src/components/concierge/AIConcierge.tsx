@@ -5,7 +5,7 @@ import { motion, AnimatePresence } from 'framer-motion'
 import {
   Mic, Square, X, Send, Loader2, MapPin, Calendar, Users, Music,
   Sparkles, BookOpen, Heart, ChevronRight, Check, MessageSquare, Keyboard,
-  Info, Plus, Trash2, RefreshCw
+  Info, Plus, Trash2, RefreshCw, EyeOff, Eye
 } from 'lucide-react'
 import { useChat, type ChatMode } from '@/hooks/useChat'
 import { useRouter } from 'next/navigation'
@@ -192,6 +192,71 @@ export default function AIConcierge({ isOpen, onClose, onCreateMemory }: Concier
       setRefreshing(false)
     }
   }, [refreshing, subjectContactId])
+
+  // ─── Source management (4.x.exclude) ─────────────────────────────
+  // Lazy-loaded list of source rows (memories for self avatar,
+  // video_responses for a loved-one avatar) so the user can flip
+  // exclude_from_avatar on individual items.
+  type AvatarSource = {
+    type: 'memory' | 'video_response'
+    id: string
+    title: string
+    preview: string
+    excluded: boolean
+  }
+  const [sources, setSources] = useState<AvatarSource[] | null>(null)
+  const [sourcesLoading, setSourcesLoading] = useState(false)
+  const [sourcesOpen, setSourcesOpen] = useState(false)
+  const [togglingId, setTogglingId] = useState<string | null>(null)
+
+  const fetchSources = useCallback(async () => {
+    if (chatMode !== 'avatar') return
+    setSourcesLoading(true)
+    try {
+      const url = subjectContactId
+        ? `/api/avatar/sources?contactId=${encodeURIComponent(subjectContactId)}`
+        : '/api/avatar/sources'
+      const res = await fetch(url)
+      const data = res.ok ? await res.json() : null
+      setSources(Array.isArray(data?.sources) ? data.sources : [])
+    } catch {
+      setSources([])
+    } finally {
+      setSourcesLoading(false)
+    }
+  }, [chatMode, subjectContactId])
+
+  useEffect(() => {
+    if (sourcesOpen) fetchSources()
+  }, [sourcesOpen, fetchSources])
+
+  // Reset source-panel state on subject change (parallel to persona reset).
+  useEffect(() => {
+    setSources(null)
+    setSourcesOpen(false)
+  }, [subjectContactId, chatMode])
+
+  const toggleSource = useCallback(async (src: AvatarSource) => {
+    if (togglingId) return
+    setTogglingId(src.id)
+    // Optimistic flip
+    setSources((prev) => prev ? prev.map((s) => s.id === src.id ? { ...s, excluded: !s.excluded } : s) : prev)
+    try {
+      const res = await fetch('/api/avatar/sources/toggle', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ type: src.type, id: src.id, exclude: !src.excluded }),
+      })
+      if (!res.ok) {
+        // Roll back on failure
+        setSources((prev) => prev ? prev.map((s) => s.id === src.id ? { ...s, excluded: src.excluded } : s) : prev)
+      }
+    } catch {
+      setSources((prev) => prev ? prev.map((s) => s.id === src.id ? { ...s, excluded: src.excluded } : s) : prev)
+    } finally {
+      setTogglingId(null)
+    }
+  }, [togglingId])
 
   // Voice state
   const [mode, setMode] = useState<ConciergeMode>('listening')
@@ -792,6 +857,60 @@ export default function AIConcierge({ isOpen, onClose, onCreateMemory }: Concier
                               {personaDetail.lastSynthesizedAt && ` · last refreshed ${new Date(personaDetail.lastSynthesizedAt).toLocaleDateString()}`}
                             </p>
                           )}
+
+                          {/* Source-row management: lets the user exclude
+                              specific memories / answers from the avatar. */}
+                          <div className="pt-2 border-t border-white/5">
+                            <button
+                              onClick={() => setSourcesOpen((v) => !v)}
+                              className="inline-flex items-center gap-1.5 text-[11px] text-white/60 hover:text-white/90 transition-colors"
+                            >
+                              {sourcesOpen ? <Eye size={11} /> : <EyeOff size={11} />}
+                              {sourcesOpen ? 'Hide source list' : 'Manage what this avatar can see'}
+                            </button>
+                            {sourcesOpen && (
+                              <div className="mt-2 space-y-1.5">
+                                {sourcesLoading && <p className="text-[11px] text-white/40">Loading sources…</p>}
+                                {!sourcesLoading && (sources || []).length === 0 && (
+                                  <p className="text-[11px] text-white/40">No source rows to manage.</p>
+                                )}
+                                {!sourcesLoading && (sources || []).length > 0 && (
+                                  <ul className="space-y-1 max-h-64 overflow-y-auto pr-1">
+                                    {(sources || []).map((s) => (
+                                      <li
+                                        key={s.id}
+                                        className={`flex items-start gap-2 p-2 rounded-md border ${
+                                          s.excluded ? 'border-red-500/20 bg-red-500/5 opacity-60' : 'border-white/5 bg-white/5'
+                                        }`}
+                                      >
+                                        <div className="flex-1 min-w-0">
+                                          <p className="text-[11px] font-medium text-white/90 truncate">{s.title}</p>
+                                          <p className="text-[10px] text-white/40 line-clamp-2">{s.preview}</p>
+                                        </div>
+                                        <button
+                                          onClick={() => toggleSource(s)}
+                                          disabled={togglingId === s.id}
+                                          className={`shrink-0 px-2 py-0.5 rounded text-[10px] font-medium transition-colors disabled:opacity-40 ${
+                                            s.excluded
+                                              ? 'bg-white/10 text-white/70 hover:bg-white/20'
+                                              : 'bg-red-500/15 text-red-300 hover:bg-red-500/25'
+                                          }`}
+                                          title={s.excluded ? 'Re-include in avatar' : 'Exclude from avatar'}
+                                        >
+                                          {togglingId === s.id
+                                            ? '…'
+                                            : s.excluded ? 'Re-include' : 'Exclude'}
+                                        </button>
+                                      </li>
+                                    ))}
+                                  </ul>
+                                )}
+                                <p className="text-[10px] text-white/30">
+                                  Excluded items don't feed the avatar's persona, RAG, or transcript context. Refresh the persona afterward to bake the change in.
+                                </p>
+                              </div>
+                            )}
+                          </div>
                         </>
                       )}
                     </div>

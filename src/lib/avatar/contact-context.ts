@@ -34,6 +34,7 @@ export async function buildContactContext(
     .select('transcript, ai_summary, extracted_entities, session_question_id, created_at')
     .eq('contact_id', subjectContactId)
     .eq('user_id', ownerUserId)
+    .eq('exclude_from_avatar', false)
     .not('transcript', 'is', null)
     .order('created_at', { ascending: false })
     .limit(MAX_TRANSCRIPTS);
