@@ -3,6 +3,7 @@ import { z } from 'zod'
 import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { extractAndPersistWithMetrics } from '@/lib/interviews/extract-entities'
+import { generateEmbedding } from '@/lib/ai/providers'
 
 const AnswerSchema = z.object({
   promptId: z.string().uuid().optional(),
@@ -98,6 +99,23 @@ export async function POST(request: NextRequest) {
       transcript: responseText,
       userId: user.id,
     })
+
+    // Auto-embed so the memory is immediately retrievable in RAG.
+    ;(async () => {
+      try {
+        const text = [
+          `Memory: ${title}`,
+          responseText,
+          `Category: ${memoryType}`,
+        ].filter(Boolean).join(' | ')
+        const embedding = await generateEmbedding(text)
+        await createAdminClient().from('memories')
+          .update({ embedding, embedding_text: text })
+          .eq('id', memory.id)
+      } catch (err) {
+        console.error('[engagement/answer] embed failed:', err instanceof Error ? err.message : err)
+      }
+    })()
 
     // Award XP
     const xpAmount = promptType === 'knowledge' ? 15 : 10

@@ -77,10 +77,17 @@ async function generateOllamaEmbedding(text: string): Promise<number[]> {
 }
 
 async function generateGeminiEmbedding(text: string): Promise<number[]> {
+  // gemini-embedding-001 defaults to 3072 dims. Our pgvector columns are
+  // vector(768), so we ask Gemini to truncate (Matryoshka) to match.
+  // Dimension drift here silently breaks RAG inserts with "expected 768
+  // dimensions, not 3072" — keep these in lockstep with AI_CONFIG.
   const model = gemini.getGenerativeModel({ model: 'gemini-embedding-001' })
-  
-  const result = await model.embedContent(text.slice(0, 10000))
-  
+  // outputDimensionality is supported at runtime but not in the SDK's
+  // type — cast to satisfy the type checker.
+  const result = await model.embedContent({
+    content: { role: 'user', parts: [{ text: text.slice(0, 10000) }] },
+    outputDimensionality: AI_CONFIG.embeddingDimensions,
+  } as any)
   return result.embedding.values
 }
 

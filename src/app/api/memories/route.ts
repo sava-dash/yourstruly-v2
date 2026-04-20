@@ -4,6 +4,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { analyzeMood } from '@/lib/ai/moodAnalysis'
 import { reverseGeocode } from '@/lib/geo/reverseGeocode'
 import { extractAndPersistWithMetrics } from '@/lib/interviews/extract-entities'
+import { generateEmbedding } from '@/lib/ai/providers'
 
 // GET /api/memories - List memories
 export async function GET(request: NextRequest) {
@@ -132,7 +133,45 @@ export async function POST(request: NextRequest) {
     })
   }
 
+  // Auto-embed so the memory is immediately visible to the RAG search
+  // RPC. Non-blocking — takes ~300ms via Gemini free tier and doesn't
+  // affect the POST response.
+  embedMemoryInBackground(createAdminClient(), data.id, data)
+
   return NextResponse.json({ memory: data })
+}
+
+/**
+ * Build the embedding text for a memory and write it + the pgvector
+ * embedding onto the row. Fire-and-forget — mirrors the shape of
+ * buildEmbeddingText in /api/embeddings/route.ts so organic creates and
+ * the bulk endpoint share the same embedding space.
+ */
+async function embedMemoryInBackground(
+  admin: ReturnType<typeof createAdminClient>,
+  memoryId: string,
+  row: any
+) {
+  try {
+    const parts = [
+      `Memory: ${row.title || 'Untitled memory'}`,
+      row.description,
+      row.memory_date ? `Date: ${row.memory_date}` : '',
+      row.location_name ? `Location: ${row.location_name}` : '',
+      row.ai_category ? `Category: ${row.ai_category}` : '',
+      row.ai_mood ? `Mood: ${row.ai_mood}` : '',
+      row.ai_summary,
+    ].filter(Boolean)
+    const embeddingText = parts.join(' | ')
+    if (embeddingText.length < 10) return
+
+    const embedding = await generateEmbedding(embeddingText)
+    await admin.from('memories')
+      .update({ embedding, embedding_text: embeddingText })
+      .eq('id', memoryId)
+  } catch (err) {
+    console.error('[memories] embed failed for', memoryId, err instanceof Error ? err.message : err)
+  }
 }
 
 // Analyze mood in background (non-blocking)
