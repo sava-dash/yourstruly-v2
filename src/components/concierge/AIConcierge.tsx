@@ -601,11 +601,20 @@ export default function AIConcierge({ isOpen, onClose, onCreateMemory }: Concier
   }, [useTextMode, textInput, transcript, processInput])
 
   // ─── Navigate to source ───
+  // Open the specific row, not the list page. My Story reads ?openMemory=
+  // to pop open the detail modal for a given id (see
+  // /dashboard/memories/[id]/page.tsx which redirects into that query
+  // param). Contacts + postscripts list pages land on the item via a
+  // hash fragment that their clients can read.
   const handleSourceClick = (source: SourceCard) => {
     onClose()
-    if (source.type === 'memory') router.push('/dashboard/my-story')
-    else if (source.type === 'contact') router.push('/dashboard/contacts')
-    else if (source.type === 'postscript') router.push('/dashboard/postscripts')
+    if (source.type === 'memory') {
+      router.push(`/dashboard/my-story?openMemory=${encodeURIComponent(source.id)}`)
+    } else if (source.type === 'contact') {
+      router.push(`/dashboard/contacts#${encodeURIComponent(source.id)}`)
+    } else if (source.type === 'postscript') {
+      router.push(`/dashboard/postscripts#${encodeURIComponent(source.id)}`)
+    }
   }
 
   if (!isOpen) return null

@@ -61,6 +61,19 @@ export interface RunRagChatResult {
 
 const DEFAULT_SEARCH_LIMIT = 8;
 const HISTORY_TURN_LIMIT = 10;
+// Retrieval threshold — rows below this cosine similarity never enter
+// the prompt. Tighter value = fewer irrelevant memories in context.
+// 0.4 sits just above "distantly thematic" — empirically the band
+// where results start being about the question rather than the vibe.
+const MATCH_THRESHOLD = 0.4;
+// Citation threshold — only memories at least THIS similar make it into
+// the source-chip UI. Retrieval can still feed slightly-lower-scoring
+// rows into the prompt context (they help with grounding), but we don't
+// surface them as "here's what I drew from" unless they're genuinely on-topic.
+const CITATION_THRESHOLD = 0.5;
+// Cap displayed source chips — the model rarely actually draws on more
+// than 2-3 per answer; showing more just looks like guesswork.
+const MAX_DISPLAYED_SOURCES = 3;
 
 /**
  * Pull the top-k semantically similar rows from the user's content.
@@ -76,7 +89,7 @@ async function searchUserContent(
   const { data, error } = await supabase.rpc('search_user_content', {
     query_embedding: embeddingStr,
     search_user_id: userId,
-    match_threshold: 0.25,
+    match_threshold: MATCH_THRESHOLD,
     match_count: limit,
   });
   if (error) {
@@ -250,13 +263,20 @@ export async function runRagChat(args: RunRagChatArgs): Promise<RunRagChatResult
     });
   }
 
-  return {
-    message: assistantMessage,
-    sessionId,
-    sources: searchResults.slice(0, 5).map((r: any) => ({
+  // Only surface chips for high-confidence matches — low-sim hits often
+  // slid into the prompt context on vibe alone and shouldn't be cited.
+  const displayedSources = searchResults
+    .filter((r: any) => (r.similarity ?? 0) >= CITATION_THRESHOLD)
+    .slice(0, MAX_DISPLAYED_SOURCES)
+    .map((r: any) => ({
       type: r.content_type,
       id: r.id,
       title: r.title,
-    })),
+    }));
+
+  return {
+    message: assistantMessage,
+    sessionId,
+    sources: displayedSources,
   };
 }
