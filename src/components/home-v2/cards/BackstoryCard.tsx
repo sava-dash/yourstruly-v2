@@ -35,13 +35,22 @@ export function BackstoryCard({ promptText, category, data, onSave, saved }: Bac
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth', block: 'nearest' })
   }, [messages])
 
+  // Split the prompt into the lead question + optional thought-seed bullets
+  // (everything after the `---` separator). Bullets are surfaced as a hint
+  // panel in this Story card rather than repeated in the conversation thread
+  // — the prompt card no longer shows them.
+  const [promptQuestion, promptHints] = (() => {
+    const parts = (promptText || '').split('\n---\n')
+    return [parts[0] || '', parts[1] || '']
+  })()
+
   // Start conversation — or continue if pre-seeded from concierge
   useEffect(() => {
     if (messages.length === 0 && !saved) {
       // No messages yet — start with AI's first question
       const initialMessage = category === 'photo'
-        ? `Tell me about this photo! ${promptText}`
-        : `I'd love to hear about this. ${promptText} Take your time — just share whatever comes to mind.`
+        ? `Tell me about this photo! ${promptQuestion}`
+        : `I'd love to hear about this. ${promptQuestion} Take your time — just share whatever comes to mind.`
       setMessages([{ role: 'assistant', content: initialMessage }])
     } else if (messages.length > 0 && messages[messages.length - 1].role === 'user' && !saved) {
       // Pre-seeded from concierge — user's story is first, generate AI follow-up
@@ -201,6 +210,23 @@ export function BackstoryCard({ promptText, category, data, onSave, saved }: Bac
           <Sparkles size={12} /> {category === 'photo' ? 'Tell the Story' : 'Your Story'}
         </h3>
       </div>
+
+      {/* Thought-seed hints (from the prompt's bullet points). Shown only
+          while unsaved so the saved view stays tight. */}
+      {promptHints && !saved && (
+        <div className="mx-5 mb-2 px-3 py-2.5 rounded-xl bg-[#FAF5E4] border border-[#C4A235]/25">
+          <div className="text-[10px] uppercase tracking-wider text-[#7A6520] font-semibold mb-1 flex items-center gap-1.5">
+            <Sparkles size={10} /> Some ideas to spark the story
+          </div>
+          <div className="text-[12px] text-[#5A6660] leading-relaxed space-y-0.5">
+            {promptHints.split('\n').filter(Boolean).map((line, i) => (
+              <p key={i} className={line.startsWith('\u2022') ? 'pl-2' : ''}>
+                {line}
+              </p>
+            ))}
+          </div>
+        </div>
+      )}
 
       {/* Messages */}
       <div className="flex-1 overflow-y-auto px-5 py-2 space-y-3" style={{ scrollbarWidth: 'none' }}>

@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useRef, useCallback, useEffect } from 'react'
-import { MapPin, Calendar, Check, Loader2, Pencil } from 'lucide-react'
+import { MapPin, Calendar, Check, Loader2, Pencil, SkipForward } from 'lucide-react'
 
 interface WhenWhereCardProps {
   data: { location?: string; date?: string; lat?: number; lng?: number }
@@ -204,13 +204,22 @@ export function WhenWhereCard({ data, onSave, saved }: WhenWhereCardProps) {
         )}
       </div>
 
-      <button
-        onClick={handleSave}
-        disabled={(!location.trim() && !date.trim()) || saving}
-        className="w-full py-3 rounded-xl text-sm font-medium transition-all flex items-center justify-center gap-2 bg-[#2D5A3D] text-white hover:bg-[#234A31] disabled:opacity-40 active:scale-[0.96]"
-      >
-        {saving ? <Loader2 size={14} className="animate-spin" /> : saved ? 'Update →' : 'Next →'}
-      </button>
+      <div className="flex gap-2">
+        <button
+          onClick={async () => { setSaving(true); await onSave({ location: '', date: '' }); setSaving(false); setEditing(false) }}
+          disabled={saving}
+          className="px-4 py-3 rounded-xl text-sm font-medium transition-all flex items-center justify-center gap-1.5 bg-transparent text-[#94A09A] hover:text-[#5A6660] disabled:opacity-40"
+        >
+          <SkipForward size={14} /> Skip
+        </button>
+        <button
+          onClick={handleSave}
+          disabled={(!location.trim() && !date.trim()) || saving}
+          className="flex-1 py-3 rounded-xl text-sm font-medium transition-all flex items-center justify-center gap-2 bg-[#2D5A3D] text-white hover:bg-[#234A31] disabled:opacity-40 active:scale-[0.96]"
+        >
+          {saving ? <Loader2 size={14} className="animate-spin" /> : saved ? 'Update →' : 'Next →'}
+        </button>
+      </div>
     </div>
   )
 }

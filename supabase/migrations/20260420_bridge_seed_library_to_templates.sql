@@ -38,8 +38,14 @@ WHERE EXISTS (
 --    high priority_boost. Tier 0 (universal warm) = boost 50; tier 4
 --    (deep, rare) = boost 10. The legacy templates use boosts in the
 --    0-20 range, so tier 0 entries naturally dominate shuffle picks.
-INSERT INTO prompt_templates (prompt_text, type, category, is_active, priority_boost)
+-- prompt_templates.id is a manually-assigned TEXT key (no default), so we
+-- synthesize a deterministic id from the seed row's UUID. Deterministic ids
+-- make this idempotent: re-running won't produce duplicates because the
+-- NOT EXISTS check on prompt_text already filters, and the id itself is
+-- stable across runs.
+INSERT INTO prompt_templates (id, prompt_text, type, category, is_active, priority_boost)
 SELECT
+  'seed_' || psl.id::text,
   psl.text,
   'memory_prompt',
   psl.category,

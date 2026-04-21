@@ -13,7 +13,9 @@ export async function GET(request: NextRequest) {
   try {
     const supabase = createAdminClient()
 
-    // Load session with contact and questions
+    // Load session with contact and questions. Owner profile is fetched
+    // separately because user_id FKs to auth.users, not profiles — PostgREST
+    // can't embed across that hop.
     const { data: session, error } = await supabase
       .from('interview_sessions')
       .select(`
@@ -21,7 +23,6 @@ export async function GET(request: NextRequest) {
         progress_data, opened_at, started_at, last_response_at,
         sender_note,
         contact:contacts(id, full_name),
-        owner:profiles!interview_sessions_user_id_fkey(full_name, display_name, avatar_url),
         session_questions(id, question_text, status, sort_order, branch_rules)
       `)
       .eq('access_token', token)
@@ -34,6 +35,12 @@ export async function GET(request: NextRequest) {
         { status: 404 }
       )
     }
+
+    const { data: owner } = await supabase
+      .from('profiles')
+      .select('full_name, display_name, avatar_url')
+      .eq('id', session.user_id)
+      .maybeSingle()
 
     // Check expiration
     if (session.expires_at && new Date(session.expires_at) < new Date()) {
@@ -68,10 +75,11 @@ export async function GET(request: NextRequest) {
       }
     }
 
-    // Normalize contact (array vs object)
+    // Normalize contact (array vs object) + attach owner.
     const formattedSession = {
       ...session,
-      contact: Array.isArray(session.contact) ? session.contact[0] : session.contact
+      contact: Array.isArray(session.contact) ? session.contact[0] : session.contact,
+      owner: owner || null,
     }
 
     return NextResponse.json({ session: formattedSession })

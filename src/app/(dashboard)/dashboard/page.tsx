@@ -1,6 +1,7 @@
 'use client'
 
 import React, { useState, useCallback, useEffect, useRef } from 'react'
+import { createPortal } from 'react-dom'
 import { AnimatePresence, motion } from 'framer-motion'
 import Link from 'next/link'
 import dynamic from 'next/dynamic'
@@ -743,7 +744,26 @@ export default function HomeV2Page() {
   const lvl = getXpLevel(totalXp, gamificationConfig?.xpLevels)
 
   return (
-    <div className="feed-page" data-theme="light" style={{ background: '#FAFAF7', color: '#1A1F1C' }}>
+    <div className={`feed-page ${expandedRowId ? 'chain-open' : ''}`} data-theme="light" style={{ background: '#FAFAF7', color: '#1A1F1C' }}>
+      {/* Sticky floating close — portaled to body so no transformed ancestor can capture position:fixed */}
+      {expandedRowId && typeof document !== 'undefined' && createPortal(
+        <button
+          onClick={handleBack}
+          aria-label="Close chain"
+          style={{
+            position: 'fixed', top: '72px', right: '20px', zIndex: 9999,
+            width: '44px', height: '44px', borderRadius: '50%',
+            background: 'rgba(26, 31, 28, 0.85)', backdropFilter: 'blur(8px)',
+            border: '1px solid rgba(255,255,255,0.15)', color: '#FFFFFF',
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            cursor: 'pointer', boxShadow: '0 6px 20px rgba(0,0,0,0.18)',
+          }}
+        >
+          <X size={20} />
+        </button>,
+        document.body,
+      )}
+
       {/* ── Mobile sidebar toggle ── */}
       <button
         onClick={() => setSidebarOpen(true)}
@@ -1075,25 +1095,6 @@ export default function HomeV2Page() {
                     position: 'relative',
                   }}
                 >
-                  {/* Close button — top right, visible when expanded */}
-                  {isExpanded && (
-                    <motion.button
-                      initial={{ opacity: 0, scale: 0.8 }}
-                      animate={{ opacity: 1, scale: 1 }}
-                      onClick={(e) => { e.stopPropagation(); handleBack() }}
-                      style={{
-                        position: 'absolute', top: `${index === 0 ? 32 : 24}px`, right: '16px',
-                        zIndex: 10, width: '40px', height: '40px', borderRadius: '50%',
-                        background: '#FFFFFF', border: '1px solid #DDE3DF',
-                        boxShadow: '0 2px 10px rgba(0,0,0,0.12)',
-                        display: 'flex', alignItems: 'center', justifyContent: 'center',
-                        cursor: 'pointer', color: '#5A6660',
-                      }}
-                    >
-                      <X size={18} />
-                    </motion.button>
-                  )}
-
                   {/* Prev/Next navigation arrows — only when expanded */}
                   {isExpanded && (
                     <>
@@ -1355,16 +1356,27 @@ export default function HomeV2Page() {
           .feed-page[data-theme="light"] .profile-storage-track { height: 6px; background: #F5F1EA; border-radius: 3px; overflow: hidden; }
 
           /* ── Desktop layout ── */
-          .home-v2-main { margin-left: 280px; }
-          .dashboard-sidebar { background: #FAFAF7; border-right: 1px solid #DDE3DF; }
+          .home-v2-main { margin-left: 280px; transition: margin-left 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
+          .dashboard-sidebar { background: #FAFAF7; border-right: 1px solid #DDE3DF; transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
           aside::-webkit-scrollbar { width: 4px; }
           aside::-webkit-scrollbar-track { background: transparent; }
           aside::-webkit-scrollbar-thumb { background: rgba(0,0,0,0.1); border-radius: 2px; }
+
+          /* ── Chain-open: hide sidebar, let main take full width ── */
+          .feed-page.chain-open .dashboard-sidebar { transform: translateX(-100%); }
+          .feed-page.chain-open .home-v2-main { margin-left: 0; }
+          .feed-page.chain-open .edge-toggle-left { left: 0 !important; }
 
           /* ── Card sizing via CSS custom properties ── */
           .home-v2-main {
             --card-w: min(530px, calc(100vw - 280px - 64px));
             --card-inset: calc((100% - min(530px, calc(100vw - 280px - 64px))) / 2);
+          }
+          @media (min-width: 1025px) {
+            .feed-page.chain-open .home-v2-main {
+              --card-w: min(530px, calc(100vw - 64px));
+              --card-inset: calc((100% - min(530px, calc(100vw - 64px))) / 2);
+            }
           }
 
           /* ── Snap scroll — 1 card per swipe ── */
@@ -1705,36 +1717,15 @@ function PromptCard({ row, onClick, onClose, isExpanded, index }: {
           </div>
         )}
 
-        {(() => {
-          const parts = (row.promptText || '').split('\n---\n');
-          const question = parts[0];
-          const hints = parts.length > 1 ? parts[1] : null;
-          return (
-            <>
-              <p style={{
-                fontSize: hasPhoto ? '22px' : '24px',
-                fontWeight: 700, color: '#1A1F1C',
-                lineHeight: 1.5, letterSpacing: '0.01em', margin: 0,
-                fontFamily: 'var(--font-playfair, Playfair Display, serif)',
-              }}>
-                {question}
-              </p>
-              {hints && (
-                <div style={{
-                  fontSize: '14px', color: '#5A6660',
-                  lineHeight: 1.6, marginTop: '10px',
-                  fontFamily: 'var(--font-inter-tight, Inter Tight, sans-serif)',
-                }}>
-                  {hints.split('\n').map((line, i) => (
-                    <p key={i} style={{ margin: line.startsWith('\u2022') ? '4px 0 4px 8px' : '0 0 4px' }}>
-                      {line}
-                    </p>
-                  ))}
-                </div>
-              )}
-            </>
-          );
-        })()}
+        {/* Prompt card shows only the question — thought-seed bullets live on the Story card. */}
+        <p style={{
+          fontSize: hasPhoto ? '22px' : '24px',
+          fontWeight: 700, color: '#1A1F1C',
+          lineHeight: 1.5, letterSpacing: '0.01em', margin: 0,
+          fontFamily: 'var(--font-playfair, Playfair Display, serif)',
+        }}>
+          {(row.promptText || '').split('\n---\n')[0]}
+        </p>
 
         {(() => {
           // Only surface the "About NAME" subtitle when it actually adds

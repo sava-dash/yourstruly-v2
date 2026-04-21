@@ -393,14 +393,26 @@ export default function JournalistPage() {
           .filter(r => r.if_answer_contains.length > 0 && r.then_ask.length > 0)
           .slice(0, 3)
 
-        // Add question to session
-        await supabase.from('session_questions').insert({
+        // Add question to session. Only include branch_rules if we have any —
+        // keeps us working when the column hasn't been migrated yet.
+        const questionRow: Record<string, unknown> = {
           session_id: session.id,
           question_id: questionId,
           question_text: questionText,
           sort_order: 0,
-          branch_rules: cleanBranchRules.length > 0 ? cleanBranchRules : null,
-        })
+        }
+        if (cleanBranchRules.length > 0) {
+          questionRow.branch_rules = cleanBranchRules
+        }
+        const { error: questionError } = await supabase
+          .from('session_questions')
+          .insert(questionRow)
+        if (questionError) {
+          // Roll back the session so we don't leave a zombie that renders
+          // as "completed" on the recipient page.
+          await supabase.from('interview_sessions').delete().eq('id', session.id)
+          throw questionError
+        }
 
         // Auto-send invite via SMS and/or email
         if (recipient.phone || recipient.email) {
@@ -425,8 +437,15 @@ export default function JournalistPage() {
       closeModal()
       loadData()
     } catch (error) {
-      console.error('Error creating session:', error)
-      alert('Failed to create interview')
+      const err = error as { message?: string; code?: string; details?: string; hint?: string }
+      console.error('Error creating session:', {
+        message: err?.message,
+        code: err?.code,
+        details: err?.details,
+        hint: err?.hint,
+        raw: error,
+      })
+      alert(`Failed to create interview${err?.message ? `: ${err.message}` : ''}`)
     } finally {
       setCreating(false)
     }

@@ -97,6 +97,14 @@ export default function InterviewPage({ params }: { params: Promise<{ token: str
       const sessionData = data.session as Session
       setSession(sessionData)
 
+      // A session with no questions is malformed — treat as an error instead
+      // of silently falling through to the completed/recap screen.
+      if (!sessionData.session_questions || sessionData.session_questions.length === 0) {
+        setError('This interview has no questions. Please contact the sender.')
+        setPageState('error')
+        return
+      }
+
       if (sessionData.status === 'completed') {
         setPageState('completed')
         return
