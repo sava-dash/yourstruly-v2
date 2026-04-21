@@ -72,27 +72,50 @@ export async function POST(request: NextRequest) {
       apiKey: process.env.ANTHROPIC_API_KEY,
     });
 
+    // Cap transcript length to keep the Anthropic call fast and avoid
+    // ALB idle-timeout 503s on very long stories.
+    const cappedTranscript = transcript.length > 4000 ? transcript.slice(0, 4000) : transcript;
+
     const userMessage = context
-      ? `Context: ${context}\n\nTranscript: ${transcript}`
-      : `Transcript: ${transcript}`;
+      ? `Context: ${context}\n\nTranscript: ${cappedTranscript}`
+      : `Transcript: ${cappedTranscript}`;
 
-    const response = await anthropic.messages.create({
-      model: 'claude-haiku-4-5-20251001',
-      max_tokens: 500,
-      temperature: 0,
-      system: SYSTEM_PROMPT,
-      messages: [{ role: 'user', content: userMessage }],
-    });
+    let rawText = '{}';
+    try {
+      const response = await anthropic.messages.create({
+        model: 'claude-haiku-4-5-20251001',
+        max_tokens: 500,
+        temperature: 0,
+        system: SYSTEM_PROMPT,
+        messages: [{ role: 'user', content: userMessage }],
+      });
 
-    const textBlock = response.content.find(block => block.type === 'text');
-    const rawText = textBlock?.type === 'text' ? textBlock.text : '{}';
+      const textBlock = response.content.find(block => block.type === 'text');
+      rawText = textBlock?.type === 'text' ? textBlock.text : '{}';
+    } catch (claudeErr: any) {
+      console.error('[voice/extract] Anthropic call failed:', {
+        name: claudeErr?.name,
+        message: claudeErr?.message,
+        status: claudeErr?.status,
+        error: claudeErr?.error,
+      });
+      return NextResponse.json(
+        { error: 'AI service unavailable', detail: claudeErr?.message || 'unknown' },
+        { status: 502 }
+      );
+    }
+
+    // Strip optional markdown fences defensively — some models add them
+    // even when asked not to.
+    const cleanedText = rawText.replace(/^```(?:json)?\s*|\s*```$/g, '').trim();
 
     let extracted: ExtractedData;
     try {
-      extracted = JSON.parse(rawText);
+      extracted = JSON.parse(cleanedText);
     } catch {
+      console.error('[voice/extract] JSON parse failed. raw text:', cleanedText.slice(0, 500));
       return NextResponse.json(
-        { error: 'Failed to parse AI response', raw: rawText },
+        { error: 'Failed to parse AI response', raw: cleanedText.slice(0, 500) },
         { status: 502 }
       );
     }

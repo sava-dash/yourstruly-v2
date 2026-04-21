@@ -623,10 +623,19 @@ export default function HomeV2Page() {
               body: JSON.stringify({ transcript: storyText }),
             })
             if (!res.ok) {
-              console.warn('[voice/extract] non-OK response', res.status)
+              const errBody = await res.text().catch(() => '')
+              console.warn('[voice/extract] non-OK', res.status, errBody)
+              setErrorToast(`Extraction unavailable (${res.status}). Location and people won't auto-fill this time.`)
+              setTimeout(() => setErrorToast(null), 6000)
               return
             }
             const extracted = await res.json()
+            console.log('[voice/extract] result', {
+              people: extracted?.resolvedPeople?.length ?? 0,
+              location: extracted?.location,
+              date: extracted?.date,
+              personalPlace: extracted?.personalPlace?.name,
+            })
             const resolved: Array<{
               name: string
               contactId: string | null
