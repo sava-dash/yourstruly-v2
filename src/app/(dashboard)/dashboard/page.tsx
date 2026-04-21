@@ -1026,9 +1026,6 @@ export default function HomeV2Page() {
           </motion.button>
         </div>
 
-        {/* On This Day — memory resurfacing */}
-        <OnThisDayRow />
-
         {/* Loading — only show skeletons when there's no expanded chain
             (background refetches shouldn't yank the card chain away) */}
         {promptsLoading && !expandedRowId && (
@@ -1106,6 +1103,13 @@ export default function HomeV2Page() {
               scrollSnapType: expandedRowId ? 'none' : 'y mandatory',
             }}
           >
+            {/* On This Day — lives inside the snap-container so it scrolls
+                up with the cards instead of sitting fixed above them */}
+            {!expandedRowId && (
+              <div style={{ scrollSnapAlign: 'none' }}>
+                <OnThisDayRow />
+              </div>
+            )}
             {allPrompts.map((row, index) => {
               const isExpanded = row.promptId === expandedRowId
               const hasExpandedRow = !!expandedRowId
@@ -1398,10 +1402,11 @@ export default function HomeV2Page() {
           aside::-webkit-scrollbar-track { background: transparent; }
           aside::-webkit-scrollbar-thumb { background: rgba(0,0,0,0.1); border-radius: 2px; }
 
-          /* ── Chain-open: hide sidebar, let main take full width ── */
+          /* ── Chain-open: hide sidebar + edge toggles, let main take full width ── */
           .feed-page.chain-open .dashboard-sidebar { transform: translateX(-100%); }
           .feed-page.chain-open .home-v2-main { margin-left: 0; }
-          .feed-page.chain-open .edge-toggle-left { left: 0 !important; }
+          .feed-page.chain-open .edge-toggle-left,
+          .feed-page.chain-open .edge-toggle-right { display: none !important; }
 
           /* ── Card sizing via CSS custom properties ── */
           .home-v2-main {

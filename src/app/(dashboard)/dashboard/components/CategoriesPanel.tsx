@@ -72,6 +72,7 @@ const PRESETS: Record<string, TilePreset> = {
   religion: { label: 'Religion', icon: Church, bg: '#ECE4F5', border: '#9353D3', accent: '#3F1E6B', description: 'Beliefs & practice' },
   wisdom_legacy: { label: 'Wisdom & Legacy', icon: Brain, bg: '#EBE0F7', border: '#6020A0', accent: '#2F0A4D', description: 'What you want remembered' },
   life_moments: { label: 'Life Moments', icon: Gift, bg: '#FFF6DC', border: '#FCD34D', accent: '#7A5A00', description: 'Milestones & firsts' },
+  everyday_life: { label: 'Everyday Life', icon: Sparkles, bg: '#E6F0EE', border: '#8DACAB', accent: '#3B5755', description: 'Tastes, feelings, little things' },
   life_lessons: { label: 'Life Lessons', icon: Brain, bg: '#FBF0EB', border: '#B8562E', accent: '#6B3A1E', description: 'What you\'ve learned' },
   milestones: { label: 'Milestones', icon: Award, bg: '#FFF6DC', border: '#FCD34D', accent: '#7A5A00', description: 'Big accomplishments' },
   firsts: { label: 'Firsts', icon: Star, bg: '#FFF3DC', border: '#F5A524', accent: '#7A4F00', description: 'First time experiences' },

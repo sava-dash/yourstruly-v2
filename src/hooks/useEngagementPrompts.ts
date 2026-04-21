@@ -78,13 +78,24 @@ export function useEngagementPrompts(count: number = 5, lifeChapter: string | nu
       let rawPrompts: any[] | null = null;
       let fetchError: any = null;
 
-      // Check for new-system prompts first
-      const { data: seedPrompts, error: seedErr } = await supabase
+      // Check for new-system prompts first.
+      // When a chapter filter is active we only want seeds that belong to
+      // that chapter — otherwise the short-circuit returns mixed prompts
+      // and defeats the filter the user just selected.
+      let seedQuery = supabase
         .from('engagement_prompts')
         .select('*')
         .eq('user_id', user.id)
         .eq('status', 'pending')
-        .eq('source', 'seed_library')
+        .eq('source', 'seed_library');
+
+      if (lifeChapter) {
+        seedQuery = seedQuery.or(
+          `category.eq.${lifeChapter},life_chapter.eq.${lifeChapter}`
+        );
+      }
+
+      const { data: seedPrompts, error: seedErr } = await seedQuery
         .order('priority', { ascending: false })
         .limit(count);
 

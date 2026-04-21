@@ -35,6 +35,7 @@ export const CHAPTER_STYLES: Record<string, ChapterStyle> = {
   milestones:     { label: 'MILESTONES',      gradient: `linear-gradient(180deg, ${TOP} 35%, #FFF9C4 65%, #FFF59D 85%, #FFEE58 100%)`, accentColor: '#F9A825' },
   firsts:         { label: 'MILESTONES',      gradient: `linear-gradient(180deg, ${TOP} 35%, #FFF9C4 65%, #FFF59D 85%, #FFEE58 100%)`, accentColor: '#F9A825' },
   life_moments:   { label: 'LIFE MOMENTS',    gradient: `linear-gradient(180deg, ${TOP} 35%, #FFCDD2 65%, #EF9A9A 85%, #FFAB91 100%)`, accentColor: '#C62828' },
+  everyday_life:  { label: 'EVERYDAY LIFE',   gradient: `linear-gradient(180deg, ${TOP} 35%, #DDEEEA 65%, #BCD6D2 85%, #9BC3BD 100%)`, accentColor: '#3B5755' },
   hobbies:        { label: 'HOBBIES',         gradient: `linear-gradient(180deg, ${TOP} 35%, #C8E6C9 65%, #B2DFDB 85%, #80CBC4 100%)`, accentColor: '#00695C' },
   interests:      { label: 'INTERESTS',       gradient: `linear-gradient(180deg, ${TOP} 35%, #C8E6C9 65%, #B2DFDB 85%, #80CBC4 100%)`, accentColor: '#00695C' },
   skills:         { label: 'SKILLS',          gradient: `linear-gradient(180deg, ${TOP} 35%, #C8E6C9 65%, #B2DFDB 85%, #80CBC4 100%)`, accentColor: '#00695C' },

@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import Anthropic from '@anthropic-ai/sdk';
 import { getNextAngle, validateAngle, extractAntiRepeatGroup, extractSnowballHooks } from '@/lib/engagement/angle-rotation';
-import { normalizePromptType, normalizePromptCategory, normalizePromptText } from '@/lib/engagement/seed-types';
+import { normalizePromptType, normalizePromptCategory, normalizePromptText, mapCategoryToLifeChapter } from '@/lib/engagement/seed-types';
 
 /**
  * POST /api/engagement/generate-ai-prompts
@@ -300,6 +300,7 @@ OUTPUT: JSON object: {"prompts": [{"prompt_text": "...", "category": "...", "typ
           user_id: user.id,
           type,
           category,
+          life_chapter: mapCategoryToLifeChapter(category, type),
           prompt_text: promptText,
           tier,
           angle,

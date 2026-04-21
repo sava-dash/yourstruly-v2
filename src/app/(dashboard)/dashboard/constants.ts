@@ -98,6 +98,7 @@ export const LIFE_CHAPTERS = [
   { id: 'spirituality', label: 'Spirituality', color: '#9353D3' },
   { id: 'wisdom_legacy', label: 'Wisdom', color: '#6020A0' },
   { id: 'life_moments', label: 'Life Moments', color: '#FCD34D' },
+  { id: 'everyday_life', label: 'Everyday Life', color: '#8DACAB' },
 ]
 
 // Postscript event options

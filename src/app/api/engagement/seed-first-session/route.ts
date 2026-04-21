@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import type { SeedPrompt, PromptAnchor, PromptAngle } from '@/lib/engagement/seed-types';
+import { mapCategoryToLifeChapter } from '@/lib/engagement/seed-types';
 
 // POST /api/engagement/seed-first-session
 // Idempotent: seeds the first-session prompt sequence from onboarding data.
@@ -205,6 +206,8 @@ export async function POST(_request: NextRequest) {
       rows.push({
         user_id: user.id,
         type: 'memory_prompt',
+        category: seed.category || null,
+        life_chapter: mapCategoryToLifeChapter(seed.category, 'memory_prompt'),
         prompt_text: resolved,
         tier: 0,
         angle: seed.angle,
@@ -224,6 +227,8 @@ export async function POST(_request: NextRequest) {
       rows.push({
         user_id: user.id,
         type: 'memory_prompt',
+        category: seed.category || null,
+        life_chapter: mapCategoryToLifeChapter(seed.category, 'memory_prompt'),
         prompt_text: resolved,
         tier: 0,
         angle: seed.angle,
