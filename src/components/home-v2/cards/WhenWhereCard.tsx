@@ -20,6 +20,18 @@ export function WhenWhereCard({ data, onSave, saved }: WhenWhereCardProps) {
   const [editing, setEditing] = useState(!saved)
   const debounceRef = useRef<ReturnType<typeof setTimeout>>(null)
 
+  // Sync incoming data when the parent pushes in extracted fields after
+  // the user saves their story. Only apply fields the user hasn't already
+  // filled in, and never after the card is saved — otherwise we'd clobber
+  // what the user typed.
+  useEffect(() => {
+    if (saved) return
+    if (data.location && !location) setLocation(data.location)
+    if (data.date && !date) setDate(data.date)
+    if (data.lat && data.lng && !coords) setCoords({ lat: data.lat, lng: data.lng })
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [data.location, data.date, data.lat, data.lng])
+
   // Auto-geocode pre-filled location (from concierge) to get coords for map
   useEffect(() => {
     if (location && !coords) {

@@ -607,10 +607,11 @@ export default function HomeV2Page() {
       })
     }
 
-    // When the user saves the main story card, extract mentioned people
-    // and feed them into the "who was there" card on this row. Matched
-    // contacts auto-select; unmatched names become pending custom entries
-    // that need a relationship pick before the card can save.
+    // When the user saves the main story card, extract location/date/people
+    // from the transcript and push the results back into the companion cards
+    // on this row:
+    //   * people-present  ← detectedPeople (matched/new/relation-word)
+    //   * when-where      ← location, date, personalPlace coords
     if (cardForAnalytics && cardForAnalytics.type === 'text-voice-video') {
       const storyText = (data.text as string | undefined)?.trim()
       if (storyText && storyText.length > 8) {
@@ -621,7 +622,10 @@ export default function HomeV2Page() {
               headers: { 'Content-Type': 'application/json' },
               body: JSON.stringify({ transcript: storyText }),
             })
-            if (!res.ok) return
+            if (!res.ok) {
+              console.warn('[voice/extract] non-OK response', res.status)
+              return
+            }
             const extracted = await res.json()
             const resolved: Array<{
               name: string
@@ -629,24 +633,47 @@ export default function HomeV2Page() {
               contactName: string | null
               isNew: boolean
             }> = extracted?.resolvedPeople || []
-            if (resolved.length === 0) return
+            const extLocation: string | null = extracted?.personalPlace?.name || extracted?.location || null
+            const extDate: string | null = extracted?.date || null
+            const extLat: number | null = extracted?.personalPlace?.lat ?? null
+            const extLng: number | null = extracted?.personalPlace?.lng ?? null
+
+            // Bail only if the endpoint returned literally nothing usable
+            if (resolved.length === 0 && !extLocation && !extDate) return
+
             setRows(prev => {
               const next = new Map(prev)
               const r = next.get(promptId)
               if (!r) return prev
               const updatedCards = r.cards.map(c => {
-                if (c.type !== 'people-present') return c
-                const existing = (c.data?.detectedPeople as any[]) || []
-                const byName = new Map<string, any>()
-                for (const p of existing) byName.set((p.name || '').toLowerCase(), p)
-                for (const p of resolved) byName.set((p.name || '').toLowerCase(), p)
-                return {
-                  ...c,
-                  data: {
-                    ...c.data,
-                    detectedPeople: Array.from(byName.values()),
-                  },
+                // people-present: merge detectedPeople
+                if (c.type === 'people-present' && resolved.length > 0) {
+                  const existing = (c.data?.detectedPeople as any[]) || []
+                  const byName = new Map<string, any>()
+                  for (const p of existing) byName.set((p.name || '').toLowerCase(), p)
+                  for (const p of resolved) byName.set((p.name || '').toLowerCase(), p)
+                  return {
+                    ...c,
+                    data: {
+                      ...c.data,
+                      detectedPeople: Array.from(byName.values()),
+                    },
+                  }
                 }
+                // when-where: fill in location/date/coords only if the card
+                // hasn't been saved and the field is currently empty — the
+                // user's explicit edits win.
+                if (c.type === 'when-where' && !c.saved) {
+                  const cur = (c.data || {}) as Record<string, any>
+                  const patch: Record<string, any> = {}
+                  if (!cur.location && extLocation) patch.location = extLocation
+                  if (!cur.date && extDate) patch.date = extDate
+                  if (!cur.lat && extLat != null) patch.lat = extLat
+                  if (!cur.lng && extLng != null) patch.lng = extLng
+                  if (Object.keys(patch).length === 0) return c
+                  return { ...c, data: { ...cur, ...patch } }
+                }
+                return c
               })
               next.set(promptId, { ...r, cards: updatedCards })
               return next
