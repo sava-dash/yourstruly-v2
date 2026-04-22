@@ -48,7 +48,20 @@ const DEFAULT_STYLE: ChapterStyle = {
   accentColor: '#546E7A',
 };
 
+import { mapCategoryToLifeChapter } from './seed-types';
+
+/**
+ * Look up a chapter style. If the raw category is itself a known chapter
+ * (e.g. "childhood", "travel") we use it directly. Otherwise we fold the
+ * fine-grained seed_library category (e.g. "sensory", "nostalgia", "humor")
+ * up to its life_chapter and look that up. Falling through to "YOUR STORY"
+ * meant every thematic card rendered as a generic catch-all even when the
+ * taxonomy knew where it belonged.
+ */
 export function getChapterStyle(category: string | undefined | null): ChapterStyle {
   if (!category) return DEFAULT_STYLE;
-  return CHAPTER_STYLES[category] || DEFAULT_STYLE;
+  const direct = CHAPTER_STYLES[category];
+  if (direct) return direct;
+  const chapter = mapCategoryToLifeChapter(category);
+  return CHAPTER_STYLES[chapter] || DEFAULT_STYLE;
 }

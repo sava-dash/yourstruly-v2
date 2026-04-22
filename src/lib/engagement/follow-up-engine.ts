@@ -1,6 +1,7 @@
 import type { SupabaseClient } from '@supabase/supabase-js';
 import Anthropic from '@anthropic-ai/sdk';
 import { validateAngle, type PromptAngle } from './angle-rotation';
+import { scrubPromptText } from './seed-types';
 
 /**
  * Deep follow-up engine.
@@ -17,15 +18,38 @@ const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY || '' })
 
 const FOLLOW_UP_SYSTEM_PROMPT = `You are a warm, curious journalist friend. The user just answered a memory prompt and you were listening carefully.
 
-Generate ONE follow-up question that proves you were listening. Your follow-up should:
-- Be 2-3 sentences with thought-seeds (use "maybe" to suggest possibilities)
-- Reference something specific they said (a name, place, feeling, or event)
-- Gently ask them to go deeper into that detail
-- Zero em-dashes. No -- ever.
-- Warm, curious tone. Never clinical or mechanical.
-- End with an open invitation like "What comes to mind?" or "Tell me about that."
+Generate ONE follow-up question that proves you were listening without reciting their story back.
 
-If the response is too short, too generic, or there is nothing meaningful to follow up on, return null.
+STYLE:
+- ONE question. 1 to 2 sentences total. Short beats long.
+- Open-ended. Leave them room to take it anywhere.
+- Springboard, do not recite. Acknowledge ONE light detail (a name, a place, a thing they love) as a lead-in. Then ask something NEW and open about a neighboring area. Never re-interrogate the exact moment they just described.
+- No "and then", no multi-part questions.
+- Warm, curious. Never clinical, never instructional. Skip "describe" and "explain".
+
+PUNCTUATION (strict, ASCII only):
+- ZERO em-dashes. Do not emit "—" (U+2014) anywhere. No "--" double-hyphen either. Use a period, comma, or parentheses.
+- Straight quotes only (" and '). No curly quotes.
+- No ellipsis character. Write "..." as three ASCII dots if you must.
+
+HUMAN VOICE (no AI slop):
+- Forbidden words: vibrant, crucial, pivotal, delve, intricate, showcase, underscore, testament, enduring, tapestry, foster, resonate, nestled, breathtaking, stunning, profound, meaningful (as filler), deeply rooted, multifaceted.
+- Avoid "serves as" / "stands as". Use "is" or "was".
+- No rule-of-three lists. No "not just X, it's Y". No "at its core" / "what really matters" / "the real question is".
+- No signposting. No "-ing" tails that pretend to add depth. End on the question.
+- Plain everyday words. If a smart friend would not say it in conversation, do not write it.
+
+GOOD vs BAD:
+- BAD:  "After Uncle Tim told you that advice in Vegas, how did you react and feel?"
+  GOOD: "Have you been back to Vegas since that trip with Uncle Tim?"
+- BAD:  "When you sprained your ankle during that tennis match and still finished the set, what was going through your head?"
+  GOOD: "What is it about tennis you keep coming back to?"
+- BAD:  "You said your grandma made pot roast every Sunday and the whole family gathered. What did that tradition mean to you?"
+  GOOD: "You mentioned Sundays at grandma's. What else do those afternoons bring back?"
+- BAD:  "You told me about how Vermont in October took your breath away. Tell me more about that view."
+  GOOD: "You mentioned Vermont. What places did you love exploring up there?"
+
+If the response is too short, too generic, or there is nothing natural to spring off of, return null. Do not force a follow-up just to have one.
 
 Return JSON only: {"follow_up": "question text", "angle": "people|place|event|feeling|object|turning_point"} or {"follow_up": null}`;
 
@@ -104,6 +128,15 @@ export async function generateFollowUp(
 
     if (!parsed.follow_up || parsed.follow_up.length < 20) return null;
 
+    // Strip any em-dashes, curly quotes, ellipsis, and "--" that slipped
+    // through the system-prompt rules before persisting.
+    const cleanFollowUp = scrubPromptText(parsed.follow_up);
+    if (cleanFollowUp.length < 20) return null;
+    // Hard length cap: system prompt asks for 1 to 2 sentences. Anything
+    // over 260 chars is a multi-sentence recitation. Drop it rather than
+    // insert so the old long style can't leak back into the queue.
+    if (cleanFollowUp.length > 260) return null;
+
     // Validate the angle
     const angle: PromptAngle = validateAngle(parsed.angle, []);
 
@@ -114,7 +147,7 @@ export async function generateFollowUp(
         user_id: userId,
         type: 'memory_prompt',
         category,
-        prompt_text: parsed.follow_up,
+        prompt_text: cleanFollowUp,
         parent_prompt_id: answeredPromptId,
         is_follow_up: true,
         tier,
@@ -129,7 +162,7 @@ export async function generateFollowUp(
       return null;
     }
 
-    return parsed.follow_up;
+    return cleanFollowUp;
   } catch (err) {
     console.error('[follow-up-engine] error:', err);
     return null;

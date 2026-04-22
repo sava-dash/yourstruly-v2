@@ -170,10 +170,33 @@ export function scorePrompt(prompt: EngagementPrompt, ctx: ScoringContext = {}):
 }
 
 /**
- * Re-rank a queue of prompts by score, with one variety pass: never put
- * two same-type prompts back-to-back if an alternative scored within 8
- * points exists. Returns a new array; never mutates input.
+ * Re-rank a queue of prompts by score, with a two-dimensional variety pass:
+ *   1. Avoid two same-source picks back-to-back (within 15 points). This is
+ *      the main lever that interleaves AI-personalised prompts with generic
+ *      seed/template prompts instead of letting AI's priority=70 cluster
+ *      them all at the top of the feed.
+ *   2. Avoid two same-type picks back-to-back (within 8 points), same logic
+ *      as before.
+ * Returns a new array; never mutates input.
  */
+// Band sizing: AI rows are inserted with priority=70 while seed-library
+// rows land at priority 10 to 50 (tier-driven). The raw gap is ~20, plus
+// freshness/variety modifiers that can swing each side by ~10 more. A 30
+// band reliably lets one seed interleave between AI picks without blurring
+// the "AI goes first when relevant" intent entirely.
+const SOURCE_VARIETY_BAND = 30;
+const TYPE_VARIETY_BAND = 8;
+
+// Sources considered "personalised / AI-authored". Kept explicit so we can
+// cluster them together for the variety check; e.g. ai_generated and
+// ai_follow_up should both count as "AI" when deciding whether to break a
+// run.
+const AI_SOURCES = new Set(['ai_generated', 'ai_follow_up']);
+function sourceBucket(src: string | undefined | null): string {
+  if (!src) return 'unknown';
+  return AI_SOURCES.has(src) ? 'ai' : src;
+}
+
 export function rankPrompts(
   prompts: EngagementPrompt[],
   ctx: ScoringContext = {}
@@ -190,14 +213,29 @@ export function rankPrompts(
     const last = result[result.length - 1];
     let pickIndex = 0;
     if (last) {
-      // Prefer the highest-scored candidate that isn't the same type as last,
-      // as long as it's within 8 points of the top candidate.
       const top = remaining[0];
-      const alt = remaining.findIndex(
-        (c, i) => i > 0 && c.prompt.type !== last.type && top.score - c.score <= 8
+      const lastBucket = sourceBucket(last.source);
+      const lastType = last.type;
+
+      // First preference: break a same-source run (AI clustering is the loud
+      // failure the user sees, so this gate fires wider than the type gate).
+      const sourceAlt = remaining.findIndex(
+        (c, i) =>
+          i > 0 &&
+          sourceBucket(c.prompt.source) !== lastBucket &&
+          top.score - c.score <= SOURCE_VARIETY_BAND
       );
-      if (top.prompt.type === last.type && alt !== -1) {
-        pickIndex = alt;
+      if (sourceBucket(top.prompt.source) === lastBucket && sourceAlt !== -1) {
+        pickIndex = sourceAlt;
+      } else {
+        // Fall back to the original type-variety gate.
+        const typeAlt = remaining.findIndex(
+          (c, i) =>
+            i > 0 && c.prompt.type !== lastType && top.score - c.score <= TYPE_VARIETY_BAND
+        );
+        if (top.prompt.type === lastType && typeAlt !== -1) {
+          pickIndex = typeAlt;
+        }
       }
     }
     result.push(remaining[pickIndex].prompt);

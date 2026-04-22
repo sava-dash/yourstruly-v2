@@ -72,22 +72,29 @@ export function useEngagementPrompts(count: number = 5, lifeChapter: string | nu
       if (!session?.user) throw new Error('Not authenticated');
       const user = session.user;
 
-      // Prefer seed_library prompts (from the new progressive system) over
-      // the old shuffle RPC. Query directly, ordered by priority DESC so the
-      // "We Were Listening" first-session sequence serves in order.
+      // Pull any still-pending prompt (seed_library, template, system, AI) —
+      // not just `source = 'seed_library'`. The old filter hid every
+      // chapter-specific row that generate_engagement_prompts materialized
+      // from prompt_templates, so chapters like high_school/college/teenage
+      // fell through to the sparse AI fallback even though 50+ templates
+      // existed for each chapter. Ordered by priority DESC so the
+      // "We Were Listening" first-session sequence still serves in order.
       let rawPrompts: any[] | null = null;
       let fetchError: any = null;
 
-      // Check for new-system prompts first.
-      // When a chapter filter is active we only want seeds that belong to
-      // that chapter — otherwise the short-circuit returns mixed prompts
-      // and defeats the filter the user just selected.
+      // Exclude anything we just rendered. Without this, priority-DESC
+      // returns the same top-N rows on every shuffle / LoadMoreSentinel
+      // hit — the user sees "new cards" reload to the same cards. The
+      // 6-hour window mirrors shuffle_engagement_prompts (the legacy RPC)
+      // so both lanes rotate through the pool at the same rate.
+      const sixHoursAgo = new Date(Date.now() - 6 * 60 * 60 * 1000).toISOString();
+
       let seedQuery = supabase
         .from('engagement_prompts')
         .select('*')
         .eq('user_id', user.id)
         .eq('status', 'pending')
-        .eq('source', 'seed_library');
+        .or(`shown_at.is.null,shown_at.lt.${sixHoursAgo}`);
 
       if (lifeChapter) {
         seedQuery = seedQuery.or(
@@ -205,6 +212,7 @@ export function useEngagementPrompts(count: number = 5, lifeChapter: string | nu
         promptText: p.prompt_text,
         status: p.status,
         priority: p.priority,
+        source: p.source,
         tier: p.tier ?? 0,
         photoUrl: p.photo_id ? photosMap[p.photo_id] : undefined,
         photoId: p.photo_id,
@@ -256,6 +264,23 @@ export function useEngagementPrompts(count: number = 5, lifeChapter: string | nu
 
       setPrompts(ranked);
       await fetchStats();
+
+      // Stamp shown_at on every row we just surfaced so the next shuffle
+      // advances through the pool instead of re-serving the same
+      // priority-DESC top-N. Fire-and-forget: if this fails the user still
+      // gets cards, they just won't rotate until the 6-hour cooldown.
+      // shuffle_engagement_prompts (legacy RPC) already stamps internally,
+      // so double-stamping is harmless when that lane wins.
+      const shownIds = ranked.map((p) => p.id).filter(Boolean);
+      if (shownIds.length > 0) {
+        supabase
+          .from('engagement_prompts')
+          .update({ shown_at: new Date().toISOString() })
+          .in('id', shownIds)
+          .then(({ error: stampErr }) => {
+            if (stampErr) console.error('[useEngagementPrompts] shown_at stamp failed', stampErr);
+          });
+      }
 
     } catch (err) {
       console.error('Failed to fetch prompts:', err);

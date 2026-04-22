@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import Anthropic from '@anthropic-ai/sdk';
 import { getNextAngle, validateAngle, extractAntiRepeatGroup, extractSnowballHooks } from '@/lib/engagement/angle-rotation';
-import { normalizePromptType, normalizePromptCategory, normalizePromptText, mapCategoryToLifeChapter } from '@/lib/engagement/seed-types';
+import { normalizePromptType, normalizePromptCategory, normalizePromptText, scrubPromptText, mapCategoryToLifeChapter } from '@/lib/engagement/seed-types';
 
 /**
  * POST /api/engagement/generate-ai-prompts
@@ -42,12 +42,18 @@ const VALID_TYPES = [
 // label up to the `category` slot so the chapter taxonomy stays intact.
 const TYPE_AS_CATEGORY = new Set(['recipes_wisdom', 'favorites_firsts']);
 
+// Tier instructions lean heavily on a springboard-not-subject principle:
+// past details earn the prompt, but the question stays open. Earlier copy
+// pushed the model toward reciting specifics ("when you were in Vegas with
+// Uncle Tim, how did you feel..."), which reads as surveillance not
+// curiosity. Every AI-visible string here is ASCII-only so Haiku does not
+// mirror em-dashes or curly quotes back into user-facing prompts.
 const TIER_INSTRUCTIONS: Record<number, string> = {
-  0: 'Keep prompts broader. Use what you know about them but do not force specificity. Focus on universally meaningful moments.',
-  1: 'Start weaving in their interests, places, and people. Still accessible but more personal.',
-  2: 'Reference their contacts by name. Ask about specific relationships and shared moments. Build on what they have already told you.',
-  3: 'Go deeper. Reference specific memories they have shared. Ask about the parts of the story they might have held back. "You mentioned X..." is powerful here.',
-  4: 'Synthesize. Look across everything they have shared and find the patterns they might not see. Ask the questions that make someone pause and think. Beautiful, warm, existential.',
+  0: 'Ask universally meaningful open questions. Nothing user-specific. One clean question, no setup.',
+  1: 'A light reference to an interest or place is fine as a lead-in. Keep the question itself broad and open.',
+  2: 'You may name a contact, but do NOT package their relationship or a past story into the question. Name, then ask forward.',
+  3: 'A gentle acknowledgement of a past share is okay. Something like "you mentioned Vermont" or "you said you love tennis". The question that follows must ask something new and open, never recite or re-interrogate the moment they already described.',
+  4: 'Aim at patterns and themes, not specifics. Ask the big quiet questions that make someone pause. Do not summarize their life back to them.',
 };
 
 interface GeneratedPrompt {
@@ -224,25 +230,45 @@ RECENT PROMPT ANGLES: ${recentAnglesList || 'none yet'}
 ROTATE TO: ${nextAngleSuggestion}
 
 RULES:
-- Generate ${requestedCount} prompts
+- Generate ${requestedCount} prompts.
 - ${chapterInstruction}
-- 2-4 sentences each with 2-3 "maybe" thought-seeds
-- Suggest specific angles (people, feelings, sensory details, context) so the user cannot give a one-word answer
-- End with open invitation ("What comes to mind?" / "Tell me about that.")
-- ZERO em-dashes. No -- ever.
-- No multi-part numbered questions
-- No labels like "describe" or "explain"
-- Rotate angles: people, place, event, feeling, object, turning_point
-- Warm, curious, never clinical
-- Never mention AI, prompts, or the app itself
-- Avoid topics obviously covered by the memories listed
-- Each prompt's type must be one of: ${VALID_TYPES.join(', ')}
+- ONE question per prompt. 1 to 2 sentences total. Short beats long.
+- Open-ended. The user should feel room to take it anywhere, not hemmed in.
+- Use their details as a SPRINGBOARD, not the subject. A light "you mentioned Vermont" lead-in is fine. Then ask something new and open about that area, not about the specific moment they already shared.
+- NEVER recite, restate, or re-interrogate a story they have told. Skip "after Uncle Tim told you that advice in Vegas, how did you feel" style prompts.
+- One anchor max. Do not stack person + place + event into a single question.
+- No multi-part questions. No "and then" or "or".
+- No labels like "describe" or "explain". Ask, do not instruct.
+- Warm, curious, never clinical. Never mention AI, prompts, or the app itself.
+- Rotate angles: people, place, event, feeling, object, turning_point.
+- Each prompt's type must be one of: ${VALID_TYPES.join(', ')}.
 
-TIER-SPECIFIC:
-- Tier 0-1: broader prompts, use onboarding data lightly
-- Tier 2: reference contacts by name, ask about specific relationships
-- Tier 3: reference past answers. "You mentioned X. There is usually more to that story."
-- Tier 4: synthesize across memories, find patterns, ask beautiful hard questions
+PUNCTUATION (strict, ASCII only):
+- ZERO em-dashes. Do not emit the "—" character (U+2014) anywhere, ever.
+- No "--" double-hyphen either. Use a period, comma, or parentheses.
+- Straight quotes only. No curly quotes. Use " and ' (U+0022, U+0027), never " " ' '.
+- No ellipsis character. Write "..." as three ASCII dots if you need it.
+
+HUMAN VOICE (no AI slop):
+- Forbidden words: vibrant, crucial, pivotal, delve, intricate, showcase, underscore, testament, enduring, tapestry, foster, resonate, nestled, breathtaking, stunning, profound, meaningful (as filler), deeply rooted, multifaceted.
+- Avoid "serves as", "stands as". Use "is" or "was".
+- Avoid rule-of-three lists ("warm, curious, and alive"). Pick one word or two.
+- No "not just X, it's Y" parallelisms. No "at its core" / "what really matters" / "the real question is".
+- No signposting ("let's dive in", "here's what to think about"). Just ask.
+- No "-ing" tails that pretend to add depth ("...inviting reflection", "...highlighting the moment"). End on the question.
+- Plain everyday words. If a smart friend would not say it in a coffee-shop conversation, do not write it.
+
+GOOD vs BAD (internalize this pattern):
+- BAD:  "After Uncle Tim told you that advice one night in Vegas, how did you react and feel?"
+  GOOD: "Have you been back to Vegas since that trip with Uncle Tim?"
+- BAD:  "When your tennis match went into the third set after you sprained your ankle, what was going through your head?"
+  GOOD: "What is it about tennis you keep coming back to?"
+- BAD:  "You said your grandma made pot roast every Sunday and the whole family gathered around the table. What did that mean to you?"
+  GOOD: "You mentioned Sundays at grandma's. What else do those afternoons bring back?"
+- BAD:  "Describe the exact feeling when you graduated from UVM in 2004."
+  GOOD: "What stuck with you most from your time at UVM?"
+- BAD:  "You mentioned Vermont and how the mountains in October took your breath away. Tell me about that view."
+  GOOD: "You mentioned Vermont. What places did you like exploring up there?"
 
 Also return a "themes" array of 5-10 one-word themes you see emerging from their answers and memories (e.g., "family", "loss", "adventure", "faith", "hometown").
 
@@ -278,7 +304,9 @@ OUTPUT: JSON object: {"prompts": [{"prompt_text": "...", "category": "...", "typ
     const toInsert = prompts
       .filter((p) => p && typeof p.prompt_text === 'string')
       .map((p) => {
-        const promptText = p.prompt_text.trim().slice(0, 500);
+        // Scrub em-dashes, curly quotes, ellipsis, and double-hyphens
+        // before anything else so dedup / length checks see the final text.
+        const promptText = scrubPromptText(p.prompt_text).slice(0, 500);
         const rawCategory = requestedChapter
           ? requestedChapter
           : VALID_CATEGORIES.includes(p.category) ? p.category : 'wisdom_legacy';
@@ -312,6 +340,10 @@ OUTPUT: JSON object: {"prompts": [{"prompt_text": "...", "category": "...", "typ
         };
       })
       .filter((p) => p.prompt_text.length > 8)
+      // Hard length cap. System prompt asks for 1 to 2 sentences; anything
+      // over 260 chars is a multi-sentence recitation and gets dropped so
+      // the queue doesn't drift back to the old long/story-reciting style.
+      .filter((p) => p.prompt_text.length <= 260)
       .filter((p) => !existingPromptTexts.has(normalizePromptText(p.prompt_text)))
       .filter((p, i, arr) =>
         arr.findIndex((x) => normalizePromptText(x.prompt_text) === normalizePromptText(p.prompt_text)) === i

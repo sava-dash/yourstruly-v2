@@ -8,6 +8,9 @@ export interface EngagementPrompt {
   promptText: string;
   status: string;
   priority: number;
+  // Origin of the row: seed_library | template | system | ai_generated | ai_follow_up.
+  // Used by rankPrompts to avoid clustering AI-personalised prompts back-to-back.
+  source?: string;
   photoUrl?: string;
   photoId?: string;
   photoMetadata?: {

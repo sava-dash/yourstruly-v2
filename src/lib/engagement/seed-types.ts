@@ -206,6 +206,30 @@ export function mapCategoryToLifeChapter(
  * and strips trailing punctuation so "Tell me about..." and "Tell me about?"
  * are recognized as the same prompt.
  */
+/**
+ * Scrub display-time punctuation the AI generators are told not to emit but
+ * sometimes do anyway. Em-dashes become commas, en-dashes become hyphens,
+ * curly quotes become straight, horizontal ellipsis becomes three ASCII dots,
+ * and "--" double-hyphens collapse to ", ". The seed-library hints separator
+ * (\n---\n) is preserved so cards keep their structured rendering.
+ */
+export function scrubPromptText(text: string | null | undefined): string {
+  if (!text) return '';
+  const HINTS_SENTINEL = ' HINTS ';
+  let out = text.replace(/\n---\n/g, HINTS_SENTINEL);
+  out = out
+    .replace(/\s*—\s*/g, ', ')   // em-dash (with flanking spaces)  -> ", "
+    .replace(/–/g, '-')          // en-dash  -> hyphen
+    .replace(/…/g, '...')        // ellipsis -> three dots
+    .replace(/[“”]/g, '"') // curly double quotes -> straight
+    .replace(/[‘’]/g, "'") // curly single quotes -> straight
+    .replace(/\s*--+\s*/g, ', ')       // double-hyphen -> ", "
+    .replace(/,\s*,/g, ',')              // collapse ", ," from stacked replacements
+    .replace(/[ \t]{2,}/g, ' ');        // collapse doubled spaces/tabs
+  out = out.replace(new RegExp(HINTS_SENTINEL, 'g'), '\n---\n');
+  return out.trim();
+}
+
 export function normalizePromptText(text: string | null | undefined): string {
   if (!text) return '';
   return text
