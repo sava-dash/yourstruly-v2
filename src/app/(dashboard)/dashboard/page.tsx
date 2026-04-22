@@ -19,9 +19,11 @@ import { TagPeopleCard } from '@/components/home-v2/cards/TagPeopleCard'
 import { PlusCard } from '@/components/home-v2/cards/PlusCard'
 import { InviteCollaboratorCard } from '@/components/home-v2/cards/InviteCollaboratorCard'
 import { SongCard } from '@/components/home-v2/cards/SongCard'
+import { ConversationCard } from '@/components/home-v2/cards/ConversationCard'
+import { SynopsisCard } from '@/components/home-v2/cards/SynopsisCard'
 import { PeoplePresentCard } from '@/components/home-v2/cards/PeoplePresentCard'
 import { ListItemCard } from '@/components/home-v2/cards/ListItemCard'
-import { RefreshCw, X, Heart, Camera, Brain, User, BookOpen, Sparkles, Menu, Trash2, ChevronLeft, ChevronRight, Clock, LayoutGrid } from 'lucide-react'
+import { RefreshCw, X, Heart, Camera, Brain, User, BookOpen, Sparkles, Menu, Trash2, ChevronLeft, ChevronRight, LayoutGrid, Mic, Video, Type } from 'lucide-react'
 import type { PromptRow, ChainCard, CardType, PromptCategory } from '@/components/home-v2/types'
 import { categorizePrompt, generateInitialCards } from '@/components/home-v2/types'
 import { useDashboardData } from './hooks/useDashboardData'
@@ -32,7 +34,7 @@ import { trackEngagement } from './analytics'
 import { getChapterStyle } from '@/lib/engagement/chapter-styles'
 import { EngagementErrorBoundary } from './components/EngagementErrorBoundary'
 import { CelebrationModal } from './components/CelebrationModal'
-import { HistoryPanel } from './components/HistoryPanel'
+import { HistoryWidget } from './components/HistoryPanel'
 import { CategoriesPanel } from './components/CategoriesPanel'
 import { VisibilityModal } from './components/VisibilityModal'
 
@@ -92,6 +94,9 @@ export default function HomeV2Page() {
   const [user, setUser] = useState<any>(null)
   const [profile, setProfile] = useState<any>(null)
   const mainRef = useRef<HTMLDivElement>(null)
+  // Remembers the feed scroll position before expansion so closing a chain
+  // returns the user to where they were instead of snapping to the top.
+  const savedFeedScrollRef = useRef<number>(0)
 
   // Declared early so it can be passed to useEngagementPrompts as the
   // lifeChapter arg — flipping the filter triggers a fresh server-side
@@ -137,8 +142,10 @@ export default function HomeV2Page() {
     mentionedPeople: { id: string; name: string }[]
     onComplete: () => void
   }>({ open: false, memoryId: null, promptText: '', mentionedPeople: [], onComplete: () => {} })
-  const [historyOpen, setHistoryOpen] = useState(false)
   const [categoriesOpen, setCategoriesOpen] = useState(false)
+  // Tracks which chain card (including prompt = "-1") is currently centered
+  // in the horizontal carousel, so only that card gets the category glow.
+  const [centeredChainIdx, setCenteredChainIdx] = useState<number>(-1)
   // (categoryFilter is declared above the useEngagementPrompts call so
   // it can drive the hook's lifeChapter arg.)
   // All categories/life chapters known to the template library. Fetched
@@ -329,30 +336,72 @@ export default function HomeV2Page() {
     }
   }, [rows])
 
-  // Open: expand row, scroll to first chain card
+  // Open: expand the row. Vertical centering is handled by CSS —
+  // .feed-page.chain-open .snap-container { display:flex; justify-content:center }
+  // which centers the single visible row regardless of viewport size.
   const handleSelect = useCallback((promptId: string) => {
+    const mainEl = mainRef.current
+    if (mainEl) savedFeedScrollRef.current = mainEl.scrollTop
     setExpandedRowId(promptId)
+    setCenteredChainIdx(-1)
     const row = rows.get(promptId)
     trackEngagement('card_expanded', {
       promptId,
       promptType: row?.promptType,
       category: row?.category,
     })
-    // Wait for expansion animation to finish before centering
+  }, [rows])
+
+  // Close: collapse back to feed. Scroll the just-closed row into the
+  // center of the viewport so the user stays exactly where they were
+  // working — no "reload to the top" feeling.
+  const handleBack = useCallback(() => {
+    const closingRowId = expandedRowId
+    setExpandedRowId(null)
+    setCenteredChainIdx(-1)
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        if (!closingRowId) return
+        const rowEl = mainRef.current?.querySelector(
+          `[data-row-id="${closingRowId}"]`,
+        ) as HTMLElement | null
+        if (rowEl) {
+          rowEl.scrollIntoView({ behavior: 'auto', block: 'center' })
+        } else {
+          // Fallback: restore the saved scroll position
+          const mainEl = mainRef.current
+          if (mainEl) mainEl.scrollTop = savedFeedScrollRef.current
+        }
+      })
+    })
+  }, [expandedRowId])
+
+  // User tapped a V/V/T button on the collapsed prompt card — expand the
+  // row, pre-seed the conversation card with the chosen mode, and scroll
+  // to it once the expansion animation settles.
+  const handleModeSelect = useCallback((promptId: string, mode: 'voice' | 'video' | 'text') => {
+    setRows((prev) => {
+      const next = new Map(prev)
+      const row = next.get(promptId)
+      if (!row) return prev
+      const updatedCards = row.cards.map((c) =>
+        c.type === 'conversation' ? { ...c, data: { ...c.data, mode } } : c
+      )
+      next.set(promptId, { ...row, cards: updatedCards })
+      return next
+    })
+    setExpandedRowId(promptId)
+    trackEngagement('card_expanded', { promptId, captureMode: mode })
+    // Wait for expansion animation to finish, then scroll to the first chain card (conversation)
     setTimeout(() => {
       const scrollEl = scrollRowRefs.current.get(promptId)
       if (scrollEl) {
         const firstChainCard = scrollEl.querySelector('[data-chain-card="0"]') as HTMLElement
         if (firstChainCard) {
-          firstChainCard.scrollIntoView({ behavior: 'smooth', inline: 'start', block: 'center' })
+          firstChainCard.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'center' })
         }
       }
     }, 400)
-  }, [rows])
-
-  // Close: collapse back to feed
-  const handleBack = useCallback(() => {
-    setExpandedRowId(null)
   }, [])
 
   // Save & Finish: mark prompt as answered, remove from feed
@@ -570,6 +619,71 @@ export default function HomeV2Page() {
       // lands at most once per prompt no matter which card triggers the save.
       if (card.type === 'text-voice-video' || card.type === 'quote' || card.type === 'comment') {
         await answerPrompt(promptId, { type: 'text', text: data.text || '' })
+      } else if (card.type === 'conversation') {
+        // Submit of the V/V/T conversation creates the memory and stashes
+        // the memoryId on the row metadata so the synopsis card can target
+        // it for extraction/updates.
+        const result: any = await answerPrompt(promptId, {
+          type: 'text',
+          text: data.text || '',
+          data: { captureMode: data.mode },
+        })
+        const memId = result?.memoryId as string | undefined
+        if (memId) {
+          setRows((prev) => {
+            const next = new Map(prev)
+            const r = next.get(promptId)
+            if (!r) return prev
+            next.set(promptId, { ...r, metadata: { ...(r.metadata || {}), memoryId: memId } })
+            return next
+          })
+
+          // Upload recorded audio/video blobs to the memory-media bucket and
+          // link them to the memory so they show up on the detail page.
+          const blobs = (data.mediaBlobs || []) as Array<{ kind: 'audio' | 'video'; blob?: Blob; url: string; transcript?: string }>
+          const realBlobs = blobs.filter((b) => !!b.blob)
+          if (realBlobs.length > 0) {
+            ;(async () => {
+              try {
+                const { data: authData } = await supabase.auth.getUser()
+                const uid = authData?.user?.id
+                if (!uid) return
+                for (const entry of realBlobs) {
+                  try {
+                    const ext = 'webm'
+                    const name = `${entry.kind}-${Date.now()}-${Math.random().toString(36).slice(2, 8)}.${ext}`
+                    const path = `${uid}/${name}`
+                    const contentType = entry.kind === 'audio' ? 'audio/webm' : 'video/webm'
+                    const { error: uploadErr } = await supabase.storage
+                      .from('memory-media')
+                      .upload(path, entry.blob as Blob, { upsert: false, contentType })
+                    if (uploadErr) { console.error('[conv] upload failed', uploadErr); continue }
+                    const { data: pub } = supabase.storage.from('memory-media').getPublicUrl(path)
+                    if (!pub?.publicUrl) continue
+                    // Insert memory_media row — schema uses common columns;
+                    // keep the payload minimal to avoid column drift.
+                    const { error: mediaErr } = await supabase.from('memory_media').insert({
+                      memory_id: memId,
+                      file_url: pub.publicUrl,
+                      mime_type: contentType,
+                      uploaded_by: uid,
+                    })
+                    if (mediaErr) console.error('[conv] memory_media insert failed', mediaErr)
+                  } catch (err) {
+                    console.error('[conv] per-blob upload error', err)
+                  }
+                }
+              } catch (err) {
+                console.error('[conv] media upload pipeline failed', err)
+              }
+            })()
+          }
+        }
+      } else if (card.type === 'synopsis') {
+        // Synopsis save updates the memory row (location, date, tags) via
+        // the synopsis endpoint — already called during load. A second
+        // call isn't needed here; the card data will be picked up by
+        // handleFinish when the user hits the plus card's Save.
       } else if (card.type === 'when-where' && row.photoId) {
         await supabase.from('memory_media').update({ location_name: data.location || null, taken_at: data.date || null }).eq('id', row.photoId)
       } else if (card.type === 'field-input') {
@@ -800,23 +914,51 @@ export default function HomeV2Page() {
         document.body,
       )}
 
-      {/* ── Mobile sidebar toggle ── */}
-      <button
-        onClick={() => setSidebarOpen(true)}
-        className="sidebar-toggle-btn"
-        style={{
-          display: 'none', /* shown via media query */
-          position: 'fixed', top: '62px', left: '12px', zIndex: 20,
-          width: '36px', height: '36px', borderRadius: '10px',
-          background: 'rgba(0,0,0,0.04)', border: '1px solid #DDE3DF',
-          alignItems: 'center', justifyContent: 'center', cursor: 'pointer',
-          color: '#5A6660',
-        }}
-      >
-        <Menu size={18} />
-      </button>
+      {/* ── Top header row: hamburger + greeting + streak ── */}
+      <div className="dashboard-header-row">
+        <button
+          onClick={() => setSidebarOpen(true)}
+          className="sidebar-toggle-btn"
+          aria-label="Open sidebar"
+          style={{
+            width: '36px', height: '36px', borderRadius: '10px',
+            background: 'rgba(0,0,0,0.04)', border: '1px solid #DDE3DF',
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            cursor: 'pointer', color: '#5A6660',
+          }}
+        >
+          <Menu size={18} />
+        </button>
+        <h2
+          className="dashboard-header-greeting"
+          style={{
+            margin: 0,
+            fontSize: '17px',
+            fontWeight: 600,
+            color: '#1A1F1C',
+            fontFamily: 'var(--font-dm-serif, DM Serif Display, serif)',
+            whiteSpace: 'nowrap',
+          }}
+        >
+          Hey {firstName}
+        </h2>
+        {currentStreakDays > 0 && (
+          <div
+            className="dashboard-header-streak"
+            style={{
+              display: 'flex', alignItems: 'center', gap: '3px',
+              padding: '3px 8px',
+              background: 'linear-gradient(90deg, rgba(217,198,26,0.15), rgba(195,95,51,0.15))',
+              borderRadius: '12px',
+            }}
+          >
+            <span style={{ fontSize: '13px' }}>🔥</span>
+            <span style={{ fontSize: '13px', fontWeight: 700, color: '#B8562E' }}>{currentStreakDays}</span>
+          </div>
+        )}
+      </div>
 
-      {/* ── Mobile overlay ── */}
+      {/* ── Sidebar overlay ── */}
       <AnimatePresence>
         {sidebarOpen && (
           <motion.div
@@ -825,8 +967,8 @@ export default function HomeV2Page() {
             exit={{ opacity: 0 }}
             onClick={() => setSidebarOpen(false)}
             style={{
-              position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.6)',
-              zIndex: 25, display: 'none', /* shown via media query */
+              position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.45)',
+              backdropFilter: 'blur(3px)', zIndex: 25,
             }}
             className="sidebar-overlay"
           />
@@ -843,29 +985,21 @@ export default function HomeV2Page() {
           gap: '10px', zIndex: 30,
         }}
       >
-        {/* Mobile close button */}
+        {/* Sidebar close button */}
         <button
           onClick={() => setSidebarOpen(false)}
           className="sidebar-close-btn"
+          aria-label="Close sidebar"
           style={{
-            display: 'none', /* shown via media query */
             alignSelf: 'flex-end', padding: '4px',
             background: 'rgba(0,0,0,0.04)', borderRadius: '8px',
             border: 'none', color: '#5A6660', cursor: 'pointer',
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
           }}
         >
           <X size={18} />
         </button>
         <div className="profile-card-feed" style={{ borderRadius: '16px', padding: '16px 20px' }}>
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '12px' }}>
-            <h2 className="profile-card-name" style={{ fontSize: '18px', fontWeight: '600', margin: 0, fontFamily: 'var(--font-dm-serif, DM Serif Display, serif)' }}>Hey {firstName}</h2>
-            {currentStreakDays > 0 && (
-              <div style={{ display: 'flex', alignItems: 'center', gap: '3px', padding: '3px 8px', background: 'linear-gradient(90deg, rgba(217,198,26,0.15), rgba(195,95,51,0.15))', borderRadius: '12px' }}>
-                <span style={{ fontSize: '13px' }}>🔥</span>
-                <span style={{ fontSize: '13px', fontWeight: '700', color: '#B8562E' }}>{currentStreakDays}</span>
-              </div>
-            )}
-          </div>
           <div className="profile-card-stats" style={{ display: 'flex', alignItems: 'center', textAlign: 'center', marginBottom: '12px' }}>
             <Link href="/dashboard/my-story" style={{ flex: 1, textDecoration: 'none' }}>
               <div className="profile-stat-value">{dashboardStats?.memories ?? 0}</div>
@@ -905,18 +1039,10 @@ export default function HomeV2Page() {
           </div>
         </div>
         <WeeklyChallenges />
+        <HistoryWidget onNavigate={() => setSidebarOpen(false)} />
       </aside>
 
-      {/* ── Edge toggles for slide-out panels ── */}
-      <button
-        onClick={() => setHistoryOpen(true)}
-        className="edge-toggle edge-toggle-left"
-        aria-label="Open history"
-        title="Your history"
-      >
-        <Clock size={14} />
-        <span className="edge-toggle-label">History</span>
-      </button>
+      {/* ── Edge toggle: Chapters ── */}
       <button
         onClick={() => setCategoriesOpen(true)}
         className="edge-toggle edge-toggle-right"
@@ -1115,129 +1241,87 @@ export default function HomeV2Page() {
               const hasExpandedRow = !!expandedRowId
               const isBehind = hasExpandedRow && !isExpanded
 
+              // While one row is expanded, the other feed rows are hidden
+              // completely — display:none — so the focused chain is the only
+              // thing on screen. A category-tinted glow sits behind the
+              // active row (see glow div inside).
+              const accent = getChapterStyle(row.dbCategory || row.lifeChapter).accentColor
               return (
                 <React.Fragment key={row.promptId}>
                 <motion.div
                   data-tour={index === 0 ? 'engagement-card' : undefined}
+                  data-row-id={row.promptId}
                   animate={{
-                    opacity: isBehind ? 0.3 : 1,
-                    filter: isBehind ? 'blur(4px)' : 'blur(0px)',
+                    opacity: isBehind ? 0 : 1,
                     scale: isBehind ? 0.97 : 1,
                   }}
-                  transition={{ duration: 0.35 }}
+                  transition={{ duration: 0.25 }}
                   style={{
                     scrollSnapAlign: 'start',
-                    minHeight: `${CARD_H + 80}px`,
-                    paddingTop: index === 0 ? '24px' : '0px',
+                    // When expanded, shrink the row to its natural content
+                    // height so the CSS flex-centering on .snap-container
+                    // can actually center it. The default minHeight is only
+                    // needed for the stacked feed state.
+                    minHeight: isExpanded ? 'auto' : `${CARD_H + 80}px`,
+                    paddingTop: isExpanded ? '0' : (index === 0 ? '24px' : '0px'),
                     paddingBottom: '0px',
-                    marginBottom: '-4px',
+                    marginBottom: isExpanded ? '0' : '-4px',
                     pointerEvents: isBehind ? 'none' : 'auto',
+                    display: isBehind ? 'none' : 'block',
                     position: 'relative',
+                    // Let the flex parent decide vertical placement
+                    flexShrink: 0,
                   }}
                 >
-                  {/* Prev/Next navigation arrows — only when expanded */}
+                  {/* Navigation arrows — prev/next through the chain */}
                   {isExpanded && (
                     <>
-                      <motion.button
-                        initial={{ opacity: 0, x: -10 }}
-                        animate={{ opacity: 1, x: 0 }}
-                        whileTap={{ scale: 0.95 }}
+                      <button
+                        type="button"
                         onClick={(e) => {
                           e.stopPropagation()
                           const el = scrollRowRefs.current.get(row.promptId)
                           if (!el) return
-                          const cards = Array.from(el.querySelectorAll('[data-card-id], [data-chain-card="-1"]')) as HTMLElement[]
-                          const containerCenter = el.scrollLeft + el.clientWidth / 2
-                          let currentIdx = 0
-                          for (let i = 0; i < cards.length; i++) {
-                            const center = cards[i].offsetLeft + cards[i].offsetWidth / 2
-                            if (Math.abs(center - containerCenter) < cards[i].offsetWidth / 2) {
-                              currentIdx = i
-                              break
-                            }
-                          }
-                          const prev = cards[Math.max(0, currentIdx - 1)]
-                          if (prev) {
-                            const target = prev.offsetLeft - el.clientWidth / 2 + prev.offsetWidth / 2
-                            el.scrollTo({ left: target, behavior: 'smooth' })
-                          }
-                        }}
-                        style={{
-                          position: 'absolute',
-                          left: '20px',
-                          top: '50%',
-                          marginTop: '-28px',
-                          zIndex: 30,
-                          width: '56px',
-                          height: '56px',
-                          borderRadius: '50%',
-                          background: '#2D5A3D',
-                          border: '3px solid #FFFFFF',
-                          boxShadow: '0 8px 24px rgba(0,0,0,0.25), 0 2px 6px rgba(0,0,0,0.15)',
-                          display: 'flex',
-                          alignItems: 'center',
-                          justifyContent: 'center',
-                          cursor: 'pointer',
-                          color: '#FFFFFF',
-                          fontSize: '32px',
-                          fontWeight: 700,
-                          lineHeight: 1,
-                          padding: 0,
+                          el.scrollBy({ left: -(el.clientWidth * 0.85), behavior: 'smooth' })
                         }}
                         aria-label="Previous card"
+                        style={{
+                          position: 'absolute', left: '16px', top: '50%',
+                          transform: 'translateY(-50%)',
+                          zIndex: 30,
+                          width: '48px', height: '48px', borderRadius: '50%',
+                          background: accent, color: '#FFFFFF',
+                          border: '3px solid #FFFFFF',
+                          boxShadow: '0 8px 22px rgba(0,0,0,0.22)',
+                          display: 'flex', alignItems: 'center', justifyContent: 'center',
+                          cursor: 'pointer',
+                        }}
                       >
-                        <ChevronLeft size={28} strokeWidth={3} />
-                      </motion.button>
-                      <motion.button
-                        initial={{ opacity: 0, x: 10 }}
-                        animate={{ opacity: 1, x: 0 }}
-                        whileTap={{ scale: 0.95 }}
+                        <ChevronLeft size={22} strokeWidth={3} />
+                      </button>
+                      <button
+                        type="button"
                         onClick={(e) => {
                           e.stopPropagation()
                           const el = scrollRowRefs.current.get(row.promptId)
                           if (!el) return
-                          const cards = Array.from(el.querySelectorAll('[data-card-id], [data-chain-card="-1"]')) as HTMLElement[]
-                          const containerCenter = el.scrollLeft + el.clientWidth / 2
-                          let currentIdx = 0
-                          for (let i = 0; i < cards.length; i++) {
-                            const center = cards[i].offsetLeft + cards[i].offsetWidth / 2
-                            if (Math.abs(center - containerCenter) < cards[i].offsetWidth / 2) {
-                              currentIdx = i
-                              break
-                            }
-                          }
-                          const next = cards[Math.min(cards.length - 1, currentIdx + 1)]
-                          if (next) {
-                            const target = next.offsetLeft - el.clientWidth / 2 + next.offsetWidth / 2
-                            el.scrollTo({ left: target, behavior: 'smooth' })
-                          }
-                        }}
-                        style={{
-                          position: 'absolute',
-                          right: '20px',
-                          top: '50%',
-                          marginTop: '-28px',
-                          zIndex: 30,
-                          width: '56px',
-                          height: '56px',
-                          borderRadius: '50%',
-                          background: '#2D5A3D',
-                          border: '3px solid #FFFFFF',
-                          boxShadow: '0 8px 24px rgba(0,0,0,0.25), 0 2px 6px rgba(0,0,0,0.15)',
-                          display: 'flex',
-                          alignItems: 'center',
-                          justifyContent: 'center',
-                          cursor: 'pointer',
-                          color: '#FFFFFF',
-                          fontSize: '32px',
-                          fontWeight: 700,
-                          lineHeight: 1,
-                          padding: 0,
+                          el.scrollBy({ left: el.clientWidth * 0.85, behavior: 'smooth' })
                         }}
                         aria-label="Next card"
+                        style={{
+                          position: 'absolute', right: '16px', top: '50%',
+                          transform: 'translateY(-50%)',
+                          zIndex: 30,
+                          width: '48px', height: '48px', borderRadius: '50%',
+                          background: accent, color: '#FFFFFF',
+                          border: '3px solid #FFFFFF',
+                          boxShadow: '0 8px 22px rgba(0,0,0,0.22)',
+                          display: 'flex', alignItems: 'center', justifyContent: 'center',
+                          cursor: 'pointer',
+                        }}
                       >
-                        <ChevronRight size={28} strokeWidth={3} />
-                      </motion.button>
+                        <ChevronRight size={22} strokeWidth={3} />
+                      </button>
                     </>
                   )}
 
@@ -1245,6 +1329,22 @@ export default function HomeV2Page() {
                   <div
                     ref={(el) => { if (el) scrollRowRefs.current.set(row.promptId, el); }}
                     className="card-carousel"
+                    onScroll={isExpanded ? (e) => {
+                      const el = e.currentTarget
+                      const cards = Array.from(el.querySelectorAll('[data-chain-card]')) as HTMLElement[]
+                      const containerCenter = el.scrollLeft + el.clientWidth / 2
+                      let best = -1
+                      let bestDist = Infinity
+                      for (const c of cards) {
+                        const cCenter = c.offsetLeft + c.offsetWidth / 2
+                        const d = Math.abs(cCenter - containerCenter)
+                        if (d < bestDist) {
+                          bestDist = d
+                          best = parseInt(c.getAttribute('data-chain-card') || '-1', 10)
+                        }
+                      }
+                      setCenteredChainIdx(best)
+                    } : undefined}
                     style={{
                       display: 'flex',
                       gap: '16px',
@@ -1255,12 +1355,29 @@ export default function HomeV2Page() {
                       WebkitOverflowScrolling: 'touch',
                       paddingLeft: 'var(--card-inset)',
                       paddingRight: 'var(--card-inset)',
-                      paddingTop: '8px',
-                      paddingBottom: '40px',
+                      paddingTop: isExpanded ? '12px' : '8px',
+                      paddingBottom: isExpanded ? '16px' : '40px',
+                      position: 'relative',
+                      zIndex: 1,
                     }}
                   >
-                    {/* Prompt card */}
-                    <div style={{ flexShrink: 0, scrollSnapAlign: 'center' }} data-chain-card="-1">
+                    {/* Prompt card — higher z-index so chain cards slide out
+                        from "behind" it when the row expands. */}
+                    <div style={{ flexShrink: 0, scrollSnapAlign: 'center', position: 'relative', zIndex: 2 }} data-chain-card="-1">
+                      {isExpanded && centeredChainIdx === -1 && (
+                        <div
+                          aria-hidden
+                          style={{
+                            position: 'absolute',
+                            inset: '-24px',
+                            borderRadius: '36px',
+                            background: `radial-gradient(ellipse at 50% 50%, ${accent}28 0%, ${accent}10 45%, transparent 75%)`,
+                            filter: 'blur(24px)',
+                            pointerEvents: 'none',
+                            zIndex: -1,
+                          }}
+                        />
+                      )}
                       <PromptCard
                         row={row}
                         onClick={isExpanded ? undefined : () => handleSelect(row.promptId)}
@@ -1270,27 +1387,83 @@ export default function HomeV2Page() {
                       />
                     </div>
 
-                    {/* Chain cards — visible when expanded */}
-                    {isExpanded && row.cards.map((card, ci) => (
-                      <div
-                        key={card.id}
-                        style={{ flexShrink: 0, scrollSnapAlign: 'center' }}
-                        data-chain-card={ci}
-                        data-card-id={card.id}
-                      >
-                        <CardChainCard
-                          card={card}
-                          row={row}
-                          index={ci}
-                          onCardSave={(cardId, data) => handleCardSave(row.promptId, cardId, data)}
-                          onAddCard={(type) => handleAddCard(row.promptId, type)}
-                          onMediaUploaded={(files) => handleMediaUploaded(row.promptId, files)}
-                          onDelete={card.addedBy ? () => handleDeleteCard(row.promptId, card.id) : undefined}
-                          onFinish={card.type === 'plus' ? handleFinish : undefined}
-                          isFinishing={finishingRowId === row.promptId}
-                        />
-                      </div>
-                    ))}
+                    {/* Chain cards — all visible in horizontal flow once
+                        expanded. Synopsis/plus/tag-people are gated behind
+                        the conversation being saved so the user finishes one
+                        step before the next appears. */}
+                    {isExpanded && (() => {
+                      const convSaved = row.cards.find((c) => c.type === 'conversation')?.saved === true
+                      const synopsisSaved = row.cards.find((c) => c.type === 'synopsis')?.saved === true
+                      return row.cards.filter((card) => {
+                        if (card.type === 'synopsis') return convSaved
+                        if (card.type === 'plus') return convSaved && synopsisSaved
+                        if (card.type === 'tag-people') return convSaved
+                        return true
+                      }).map((card, visibleIdx) => {
+                        const ci = row.cards.findIndex((c) => c.id === card.id)
+                        const accentClr = getChapterStyle(row.dbCategory || row.lifeChapter).accentColor
+                        return (
+                          <motion.div
+                            key={card.id}
+                            // Start tucked directly behind the prompt card
+                            // (negative x of card-width + gap), then spring
+                            // out to the #2 spot with a pronounced bounce
+                            // overshoot before settling.
+                            initial={{ opacity: 0, x: 'calc(-1 * var(--card-w) - 16px)', scale: 0.95 }}
+                            animate={{ opacity: 1, x: 0, scale: 1 }}
+                            transition={{
+                              opacity: { duration: 0.22, delay: 0.2 + visibleIdx * 0.15 },
+                              scale: { duration: 0.3, delay: 0.2 + visibleIdx * 0.15 },
+                              x: {
+                                type: 'spring',
+                                stiffness: 180,
+                                damping: 11,
+                                mass: 0.9,
+                                delay: 0.2 + visibleIdx * 0.15,
+                              },
+                            }}
+                            style={{
+                              flexShrink: 0,
+                              scrollSnapAlign: 'center',
+                              position: 'relative',
+                              // Lower z-index so it reads as "under" the
+                              // prompt card while sliding out.
+                              zIndex: 1,
+                            }}
+                            data-chain-card={ci}
+                            data-card-id={card.id}
+                          >
+                            {centeredChainIdx === ci && (
+                              <div
+                                aria-hidden
+                                style={{
+                                  position: 'absolute',
+                                  inset: '-24px',
+                                  borderRadius: '36px',
+                                  background: `radial-gradient(ellipse at 50% 50%, ${accentClr}28 0%, ${accentClr}10 45%, transparent 75%)`,
+                                  filter: 'blur(24px)',
+                                  pointerEvents: 'none',
+                                  zIndex: -1,
+                                }}
+                              />
+                            )}
+                            <div style={{ position: 'relative', zIndex: 1 }}>
+                              <CardChainCard
+                                card={card}
+                                row={row}
+                                index={ci}
+                                onCardSave={(cardId, data) => handleCardSave(row.promptId, cardId, data)}
+                                onAddCard={(type) => handleAddCard(row.promptId, type)}
+                                onMediaUploaded={(files) => handleMediaUploaded(row.promptId, files)}
+                                onDelete={card.addedBy ? () => handleDeleteCard(row.promptId, card.id) : undefined}
+                                onFinish={card.type === 'plus' ? handleFinish : undefined}
+                                isFinishing={finishingRowId === row.promptId}
+                              />
+                            </div>
+                          </motion.div>
+                        )
+                      })
+                    })()}
                   </div>
                 </motion.div>
                 {index < allPrompts.length - 1 && !hasExpandedRow && (
@@ -1299,10 +1472,17 @@ export default function HomeV2Page() {
                 </React.Fragment>
               )
             })}
-            {/* Infinite scroll sentinel — loads more prompts when visible */}
-            <LoadMoreSentinel onVisible={shuffle} isLoading={promptsLoading} />
-            {/* Bottom spacer so last card can snap to top */}
-            <div style={{ height: `calc(100vh - ${CARD_H + 140}px)`, flexShrink: 0 }} />
+            {/* Infinite scroll sentinel — always mounted so closing a chain
+                doesn't remount it and fire a spurious "reload" of the queue.
+                Hidden via display:none when a chain is open. */}
+            <div style={{ display: expandedRowId ? 'none' : 'block', flexShrink: 0 }}>
+              <LoadMoreSentinel onVisible={shuffle} isLoading={promptsLoading} />
+            </div>
+            {/* Bottom spacer so last card can snap to top — not needed when
+                a chain is open (it would push the focused row up). */}
+            {!expandedRowId && (
+              <div style={{ height: `calc(100vh - ${CARD_H + 140}px)`, flexShrink: 0 }} />
+            )}
           </div>
           </EngagementErrorBoundary>
         )}
@@ -1350,11 +1530,6 @@ export default function HomeV2Page() {
             line-height: 1;
             color: #5A6660;
           }
-          .edge-toggle-left {
-            left: 0;
-            border-left: none;
-            border-radius: 0 14px 14px 0;
-          }
           .edge-toggle-right {
             right: 0;
             border-right: none;
@@ -1369,11 +1544,6 @@ export default function HomeV2Page() {
             border-radius: 50%;
             background: #C4A235;
             box-shadow: 0 0 0 2px #FFFFFF;
-          }
-          /* On desktop, shift the left toggle past the sidebar so it sits
-             on the edge of the main content area */
-          @media (min-width: 1025px) {
-            .edge-toggle-left { left: 280px; }
           }
 
           /* ── Profile card light theme ── */
@@ -1395,29 +1565,52 @@ export default function HomeV2Page() {
           .feed-page[data-theme="light"] .profile-storage-value { font-size: 10px; color: #5A6660; }
           .feed-page[data-theme="light"] .profile-storage-track { height: 6px; background: #F5F1EA; border-radius: 3px; overflow: hidden; }
 
-          /* ── Desktop layout ── */
-          .home-v2-main { margin-left: 280px; transition: margin-left 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
-          .dashboard-sidebar { background: #FAFAF7; border-right: 1px solid #DDE3DF; transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
+          /* ── Sidebar: always slide-out on all widths ── */
+          .home-v2-main { margin-left: 0; }
+          .dashboard-sidebar {
+            background: #FAFAF7;
+            border-right: 1px solid #DDE3DF;
+            transform: translateX(-100%);
+            transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            box-shadow: none;
+          }
+          .dashboard-sidebar.sidebar-open {
+            transform: translateX(0);
+            box-shadow: 8px 0 32px rgba(0,0,0,0.12);
+          }
           aside::-webkit-scrollbar { width: 4px; }
           aside::-webkit-scrollbar-track { background: transparent; }
           aside::-webkit-scrollbar-thumb { background: rgba(0,0,0,0.1); border-radius: 2px; }
 
-          /* ── Chain-open: hide sidebar + edge toggles, let main take full width ── */
-          .feed-page.chain-open .dashboard-sidebar { transform: translateX(-100%); }
-          .feed-page.chain-open .home-v2-main { margin-left: 0; }
-          .feed-page.chain-open .edge-toggle-left,
+          /* ── Top-left header row ── */
+          .dashboard-header-row {
+            position: fixed;
+            top: 62px;
+            left: 12px;
+            z-index: 20;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            pointer-events: none;
+          }
+          .dashboard-header-row > * { pointer-events: auto; }
+
+          /* ── Chain-open: hide header + edge toggles, let main take full width ── */
+          .feed-page.chain-open .dashboard-header-row { display: none; }
           .feed-page.chain-open .edge-toggle-right { display: none !important; }
 
-          /* ── Card sizing via CSS custom properties ── */
-          .home-v2-main {
-            --card-w: min(530px, calc(100vw - 280px - 64px));
-            --card-inset: calc((100% - min(530px, calc(100vw - 280px - 64px))) / 2);
+          /* When a chain is open, center the single visible row vertically
+             so the prompt card never gets cut off regardless of viewport. */
+          .feed-page.chain-open .snap-container {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
           }
-          @media (min-width: 1025px) {
-            .feed-page.chain-open .home-v2-main {
-              --card-w: min(530px, calc(100vw - 64px));
-              --card-inset: calc((100% - min(530px, calc(100vw - 64px))) / 2);
-            }
+
+          /* ── Card sizing: full-width everywhere — no resize on expand ── */
+          .home-v2-main {
+            --card-w: min(530px, calc(100vw - 64px));
+            --card-inset: calc((100% - min(530px, calc(100vw - 64px))) / 2);
           }
 
           /* ── Snap scroll — 1 card per swipe ── */
@@ -1438,49 +1631,13 @@ export default function HomeV2Page() {
           /* ── Loading skeleton ── */
           .card-skeleton { width: var(--card-w); margin: 0 auto; }
 
-          /* ── Mobile (< 768px) ── */
+          /* ── Mobile tweaks (< 768px): tighter card inset ── */
           @media (max-width: 767px) {
             .home-v2-main {
-              margin-left: 0 !important;
               --card-w: calc(100vw - 48px);
               --card-inset: 16px;
             }
-
-            .dashboard-sidebar {
-              transform: translateX(-100%);
-              transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-              background: #FAFAF7;
-              box-shadow: none;
-            }
-            .dashboard-sidebar.sidebar-open {
-              transform: translateX(0);
-              box-shadow: 8px 0 32px rgba(0,0,0,0.12);
-            }
-
-            .sidebar-toggle-btn { display: flex !important; }
-            .sidebar-overlay { display: block !important; }
-            .sidebar-close-btn { display: flex !important; }
-          }
-
-          /* ── Tablet (768-1024) ── */
-          @media (min-width: 768px) and (max-width: 1024px) {
-            .home-v2-main {
-              margin-left: 0 !important;
-              --card-w: min(530px, calc(100vw - 64px));
-              --card-inset: calc((100% - min(530px, calc(100vw - 64px))) / 2);
-            }
-            .dashboard-sidebar {
-              transform: translateX(-100%);
-              transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-              background: #FAFAF7;
-            }
-            .dashboard-sidebar.sidebar-open {
-              transform: translateX(0);
-              box-shadow: 8px 0 32px rgba(0,0,0,0.12);
-            }
-            .sidebar-toggle-btn { display: flex !important; }
-            .sidebar-overlay { display: block !important; }
-            .sidebar-close-btn { display: flex !important; }
+            .dashboard-header-greeting { font-size: 15px; }
           }
         `}</style>
       </main>
@@ -1513,7 +1670,6 @@ export default function HomeV2Page() {
       />
 
       {/* Slide-out panels */}
-      <HistoryPanel open={historyOpen} onClose={() => setHistoryOpen(false)} />
       <CategoriesPanel
         open={categoriesOpen}
         onClose={() => setCategoriesOpen(false)}
@@ -1597,22 +1753,30 @@ export default function HomeV2Page() {
 function LoadMoreSentinel({ onVisible, isLoading }: { onVisible: () => void; isLoading: boolean }) {
   const ref = React.useRef<HTMLDivElement>(null)
   const hasTriggered = React.useRef(false)
+  // Guard against firing immediately on mount / display:none → block
+  // transitions. Only allow triggers after a short settle period, which
+  // prevents spurious queue refreshes when closing an expanded chain.
+  const armed = React.useRef(false)
 
   React.useEffect(() => {
     if (!ref.current) return
+    armed.current = false
+    const armTimer = setTimeout(() => { armed.current = true }, 800)
     const observer = new IntersectionObserver(
       ([entry]) => {
-        if (entry.isIntersecting && !isLoading && !hasTriggered.current) {
+        if (entry.isIntersecting && !isLoading && !hasTriggered.current && armed.current) {
           hasTriggered.current = true
           onVisible()
-          // Reset after a delay so it can trigger again
           setTimeout(() => { hasTriggered.current = false }, 5000)
         }
       },
       { threshold: 0.1 }
     )
     observer.observe(ref.current)
-    return () => observer.disconnect()
+    return () => {
+      clearTimeout(armTimer)
+      observer.disconnect()
+    }
   }, [onVisible, isLoading])
 
   return (
@@ -1624,12 +1788,13 @@ function LoadMoreSentinel({ onVisible, isLoading }: { onVisible: () => void; isL
   )
 }
 
-function PromptCard({ row, onClick, onClose, isExpanded, index }: {
+function PromptCard({ row, onClick, onClose, isExpanded, index, onModeSelect }: {
   row: PromptRow
   onClick?: () => void
   onClose?: () => void
   isExpanded: boolean
   index: number
+  onModeSelect?: (mode: 'voice' | 'video' | 'text') => void
 }) {
   const meta = CATEGORY_META[row.category] || CATEGORY_META.memory
   const colors = CATEGORY_COLORS[row.category] || CATEGORY_COLORS.memory
@@ -1796,7 +1961,7 @@ function PromptCard({ row, onClick, onClose, isExpanded, index }: {
           )
         })()}
 
-        {/* Bottom caption area */}
+        {/* Bottom: meta caption */}
         <div style={{
           display: 'flex', alignItems: 'center', justifyContent: 'center',
           gap: '12px', marginTop: 'auto', paddingTop: '16px',
@@ -1865,6 +2030,37 @@ function CardChainCard({ card, row, index, onCardSave, onAddCard, onMediaUploade
 
   const renderContent = () => {
     switch (card.type) {
+      case 'conversation':
+        return (
+          <ConversationCard
+            data={card.data}
+            promptText={row.promptText}
+            accentColor={getChapterStyle(row.dbCategory || row.lifeChapter).accentColor}
+            onSave={handleSave}
+            saved={card.saved}
+          />
+        )
+      case 'synopsis': {
+        // Build the transcript from the conversation card's saved text
+        const convCard = row.cards.find((c) => c.type === 'conversation')
+        const transcript = (convCard?.data?.text as string) || ''
+        const memoryId = (row.metadata as any)?.memoryId as string | undefined
+        // Pass the prompt question so the extractor can resolve pronouns
+        // (she/he/they) against the prompt's named subject and skip them
+        // when the reference is ambiguous.
+        const promptQuestion = (row.promptText || '').split('\n---\n')[0] || row.promptText
+        return (
+          <SynopsisCard
+            data={card.data}
+            conversationTranscript={transcript}
+            promptText={promptQuestion}
+            memoryId={memoryId || null}
+            accentColor={getChapterStyle(row.dbCategory || row.lifeChapter).accentColor}
+            onSave={handleSave}
+            saved={card.saved}
+          />
+        )
+      }
       case 'when-where':
         return <WhenWhereCard data={card.data} onSave={handleSave} saved={card.saved} />
       case 'text-voice-video': {

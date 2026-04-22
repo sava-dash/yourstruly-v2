@@ -5,6 +5,8 @@
 export type CardType =
   | 'when-where'            // Location + date input
   | 'text-voice-video'      // Text, voice, or video response
+  | 'conversation'          // V/V/T chat with follow-ups, ends with Submit
+  | 'synopsis'              // Extracted where/when/who/mood/tags with edit + save
   | 'media-upload'          // Upload photos/videos
   | 'media-item'            // An uploaded media item (auto-populated)
   | 'tag-people'            // Tag people in media (photo)
@@ -105,12 +107,11 @@ export function categorizePrompt(type: string): PromptCategory {
 export function generateInitialCards(category: PromptCategory, promptType: string): CardType[] {
   switch (category) {
     case 'memory':
-      return ['text-voice-video', 'when-where', 'people-present', 'media-upload', 'plus']
+      return ['conversation', 'synopsis', 'plus']
     case 'photo':
-      // Photo backstory flow: story → when/where → who was there → more media → save
-      return ['text-voice-video', 'when-where', 'people-present', 'tag-people', 'media-upload', 'plus']
+      return ['conversation', 'synopsis', 'tag-people', 'plus']
     case 'wisdom':
-      return ['text-voice-video', 'media-upload', 'plus']
+      return ['conversation', 'synopsis', 'plus']
     case 'contact':
       return ['field-input', 'plus']
     case 'profile':
