@@ -2,7 +2,8 @@
 
 import { useEffect, useRef, useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Mic, Video as VideoIcon, Type, Send, Sparkles, Square, Loader2, Check, Trash2, Play } from 'lucide-react'
+import { Mic, Video as VideoIcon, Type, Send, Sparkles, Square, Loader2, Check, Trash2, Play, ChevronUp, ChevronDown, Maximize2, Minimize2 } from 'lucide-react'
+import { conversationBus, useConversationBus } from './conversation-bus'
 
 type Mode = 'voice' | 'video' | 'text'
 
@@ -30,9 +31,11 @@ interface ConversationCardProps {
   accentColor: string
   onSave: (data: ConversationCardData) => void
   saved: boolean
+  /** Bus key so the sibling TranscriptCard can subscribe to this card's messages. */
+  cardId?: string
 }
 
-export function ConversationCard({ data, promptText, accentColor, onSave, saved }: ConversationCardProps) {
+export function ConversationCard({ data, promptText, accentColor, onSave, saved, cardId }: ConversationCardProps) {
   // Unified conversation view. Video is ON by default — user can toggle
   // the camera off or switch to text. Text mode hides record+camera and
   // swaps in a text input bar sliding up from the bottom.
@@ -51,11 +54,35 @@ export function ConversationCard({ data, promptText, accentColor, onSave, saved 
   const [transcribing, setTranscribing] = useState(false)
   const [followupLoading, setFollowupLoading] = useState(false)
   const [streamReady, setStreamReady] = useState(false)
+  // Live timer + post-stop success flash ("Captured ✓")
+  const [recordSeconds, setRecordSeconds] = useState(0)
+  const [showCaptureFlash, setShowCaptureFlash] = useState(false)
+  // Bottom panel (transcripts + follow-up) — collapsed vs expanded.
+  const [bottomMode, setBottomMode] = useState<'minimized' | 'expanded'>('expanded')
+  // Subscribe to the bus so the bottom panel re-renders on interim transcript changes.
+  const busState = useConversationBus(cardId ?? null)
+  const interimTranscript = busState.interimTranscript
 
   const mediaRecorderRef = useRef<MediaRecorder | null>(null)
   const streamRef = useRef<MediaStream | null>(null)
   const chunksRef = useRef<Blob[]>([])
   const videoPreviewRef = useRef<HTMLVideoElement | null>(null)
+  // Live transcription infra (Deepgram WS). Runs in parallel with MediaRecorder
+  // so the blob is still captured for storage while we stream the transcript live.
+  const dgSocketRef = useRef<WebSocket | null>(null)
+  const dgAudioContextRef = useRef<AudioContext | null>(null)
+  const dgProcessorRef = useRef<ScriptProcessorNode | null>(null)
+  const dgFinalRef = useRef<string>('')
+  const dgAvailableRef = useRef<boolean | null>(null) // unknown until we probe
+
+  // Video burn-in compositing. We draw the live video + prompt + current
+  // follow-up onto a hidden canvas, then feed the canvas's captureStream
+  // into MediaRecorder so the saved file contains the text overlay.
+  const burnPromptRef = useRef<string>('')
+  const burnSuggestionRef = useRef<string>('')
+  const burnCanvasRef = useRef<HTMLCanvasElement | null>(null)
+  const burnVideoRef = useRef<HTMLVideoElement | null>(null)
+  const burnRafRef = useRef<number | null>(null)
   const bottomRef = useRef<HTMLDivElement | null>(null)
   const transcriptRunningRef = useRef('')
   const mediaBlobsRef = useRef<{ kind: 'audio' | 'video'; blob?: Blob; url: string; transcript?: string }[]>(
@@ -78,16 +105,15 @@ export function ConversationCard({ data, promptText, accentColor, onSave, saved 
     setVideoOverlays((prev) => prev.filter((o) => o.turn.kind !== 'suggestion'))
   }
 
-  // Voice + text modes: suggestion bubbles in the chat fade to 30% after
-  // 5s but remain until the user sends a response (which removes them).
+  // Suggestions flash on the Story card for 5 seconds then hide — they live
+  // persistently on the sibling Transcript card (read from the bus).
   const [fadedSuggestionIndices, setFadedSuggestionIndices] = useState<Set<number>>(new Set())
   const [hiddenSuggestionIndices, setHiddenSuggestionIndices] = useState<Set<number>>(new Set())
   useEffect(() => {
-    // When a new assistant suggestion lands, schedule it to fade at 5s
     messages.forEach((m, idx) => {
-      if (m.kind === 'suggestion' && !fadedSuggestionIndices.has(idx) && !hiddenSuggestionIndices.has(idx)) {
+      if (m.kind === 'suggestion' && !hiddenSuggestionIndices.has(idx)) {
         const timer = setTimeout(() => {
-          setFadedSuggestionIndices((prev) => {
+          setHiddenSuggestionIndices((prev) => {
             const next = new Set(prev)
             next.add(idx)
             return next
@@ -169,6 +195,10 @@ export function ConversationCard({ data, promptText, accentColor, onSave, saved 
         streamRef.current.getTracks().forEach((t) => t.stop())
         streamRef.current = null
       }
+      // Belt-and-braces: stop burn-in RAF + Deepgram socket if recording was
+      // interrupted by the user navigating away mid-take.
+      if (burnRafRef.current != null) cancelAnimationFrame(burnRafRef.current)
+      try { dgSocketRef.current?.close() } catch {}
     }
   }, [])
 
@@ -176,30 +206,307 @@ export function ConversationCard({ data, promptText, accentColor, onSave, saved 
     bottomRef.current?.scrollIntoView({ behavior: 'smooth', block: 'end' })
   }, [messages, transcribing, followupLoading])
 
+  // Tick a once-per-second recording timer while recording is live.
+  useEffect(() => {
+    if (!isRecording) return
+    const id = setInterval(() => setRecordSeconds((s) => s + 1), 1000)
+    return () => clearInterval(id)
+  }, [isRecording])
+
+  // Keep burn-in refs in sync with the latest prompt + visible follow-up so
+  // the canvas draw loop always renders the current overlay text.
+  useEffect(() => { burnPromptRef.current = promptText || '' }, [promptText])
+  useEffect(() => {
+    const active = [...messages].reverse().find(
+      (m, idx) => m.kind === 'suggestion' && !hiddenSuggestionIndices.has(messages.length - 1 - idx)
+    )
+    burnSuggestionRef.current = active?.content || ''
+  }, [messages, hiddenSuggestionIndices])
+
+  // Mirror in-flight state into the sibling Transcript card's bus channel.
+  useEffect(() => { if (cardId) conversationBus.setTranscribing(cardId, transcribing) }, [cardId, transcribing])
+  useEffect(() => { if (cardId) conversationBus.setFollowupLoading(cardId, followupLoading) }, [cardId, followupLoading])
+
+  // Seed the bus from any pre-existing messages (e.g. resuming a saved card
+  // or restoring from localStorage). Runs once on mount.
+  const seededRef = useRef(false)
+  useEffect(() => {
+    if (!cardId || seededRef.current) return
+    seededRef.current = true
+    for (const m of messages) {
+      if (m.role === 'user' && m.kind === 'transcript') {
+        conversationBus.pushUserTurn(cardId, m.content)
+      }
+    }
+  }, [cardId, messages])
+
+  // Convert Float32Array → Int16Array PCM for Deepgram's linear16 encoding.
+  const floatTo16BitPCM = (f32: Float32Array): ArrayBuffer => {
+    const buf = new ArrayBuffer(f32.length * 2)
+    const view = new DataView(buf)
+    for (let i = 0; i < f32.length; i++) {
+      const s = Math.max(-1, Math.min(1, f32[i]))
+      view.setInt16(i * 2, s < 0 ? s * 0x8000 : s * 0x7fff, true)
+    }
+    return buf
+  }
+
+  // Spin up a Deepgram WebSocket that consumes the live audio track and
+  // streams partial transcripts back while recording. Runs in parallel with
+  // MediaRecorder — blob capture is unaffected.
+  const startLiveTranscription = async (stream: MediaStream) => {
+    try {
+      const tokenRes = await fetch('/api/deepgram/token')
+      if (!tokenRes.ok) {
+        console.warn('[ConversationCard] live transcription disabled — /api/deepgram/token returned', tokenRes.status)
+        dgAvailableRef.current = false
+        return
+      }
+      const { apiKey } = await tokenRes.json()
+      if (!apiKey) {
+        console.warn('[ConversationCard] live transcription disabled — no Deepgram apiKey from token endpoint')
+        dgAvailableRef.current = false
+        return
+      }
+      dgAvailableRef.current = true
+      console.log('[ConversationCard] Deepgram live transcription online')
+
+      const audioContext = new AudioContext({ sampleRate: 16000 })
+      dgAudioContextRef.current = audioContext
+      const source = audioContext.createMediaStreamSource(stream)
+
+      const url = `wss://api.deepgram.com/v1/listen?model=nova-2&language=en-US&smart_format=true&interim_results=true&endpointing=300&punctuate=true&encoding=linear16&sample_rate=16000&channels=1`
+      const ws = new WebSocket(url, ['token', apiKey])
+      dgSocketRef.current = ws
+      dgFinalRef.current = ''
+
+      ws.onopen = () => {
+        const processor = audioContext.createScriptProcessor(4096, 1, 1)
+        dgProcessorRef.current = processor
+        processor.onaudioprocess = (e) => {
+          if (ws.readyState !== WebSocket.OPEN) return
+          const input = e.inputBuffer.getChannelData(0)
+          ws.send(floatTo16BitPCM(input))
+        }
+        source.connect(processor)
+        processor.connect(audioContext.destination)
+      }
+
+      ws.onmessage = (event) => {
+        try {
+          const data = JSON.parse(event.data)
+          if (data.type !== 'Results') return
+          const alt = data.channel?.alternatives?.[0]
+          if (!alt?.transcript) return
+          if (data.is_final) {
+            dgFinalRef.current = (dgFinalRef.current + ' ' + alt.transcript).trim()
+            if (cardId) conversationBus.setInterimTranscript(cardId, dgFinalRef.current)
+          } else {
+            // Interim — append to final for display but don't commit to final ref
+            const display = (dgFinalRef.current + ' ' + alt.transcript).trim()
+            if (cardId) conversationBus.setInterimTranscript(cardId, display)
+          }
+        } catch { /* ignore parse errors */ }
+      }
+
+      ws.onerror = () => { dgAvailableRef.current = false }
+    } catch (err) {
+      console.debug('[ConversationCard] live transcription unavailable', err)
+      dgAvailableRef.current = false
+    }
+  }
+
+  const stopLiveTranscription = (): string => {
+    const final = dgFinalRef.current.trim()
+    try { dgProcessorRef.current?.disconnect() } catch {}
+    dgProcessorRef.current = null
+    try { dgSocketRef.current?.close() } catch {}
+    dgSocketRef.current = null
+    try { dgAudioContextRef.current?.close() } catch {}
+    dgAudioContextRef.current = null
+    dgFinalRef.current = ''
+    return final
+  }
+
+  // Build a composite MediaStream that contains the live video with the
+  // prompt + current follow-up text drawn on top. The composite audio track
+  // is the same one the MediaRecorder would have used on the raw stream.
+  // Returns null if the raw stream has no video track.
+  const buildBurnedVideoStream = async (raw: MediaStream): Promise<MediaStream | null> => {
+    const videoTrack = raw.getVideoTracks()[0]
+    if (!videoTrack) return null
+
+    const settings = videoTrack.getSettings()
+    const W = settings.width || 1280
+    const H = settings.height || 720
+
+    // Hidden <video> driven by the raw video track
+    const v = document.createElement('video')
+    v.muted = true
+    v.playsInline = true
+    v.autoplay = true
+    v.srcObject = new MediaStream([videoTrack])
+    try { await v.play() } catch { /* ignored — may still produce frames */ }
+    burnVideoRef.current = v
+
+    const canvas = document.createElement('canvas')
+    canvas.width = W
+    canvas.height = H
+    burnCanvasRef.current = canvas
+    const ctx = canvas.getContext('2d')
+    if (!ctx) return null
+
+    // Word-wrap helper that draws a rounded-rect backdrop + text.
+    // Returns the Y coordinate just below the drawn block.
+    const drawBlock = (
+      text: string,
+      topY: number,
+      opts: { fontSize: number; bg: string; fg: string; pad: number; maxW: number; sidePad: number; prefix?: string }
+    ): number => {
+      ctx.font = `500 ${opts.fontSize}px -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif`
+      const full = (opts.prefix ? opts.prefix + ' ' : '') + text
+      const words = full.split(/\s+/)
+      const lines: string[] = []
+      let line = ''
+      for (const word of words) {
+        const test = line ? line + ' ' + word : word
+        if (ctx.measureText(test).width > opts.maxW) {
+          if (line) lines.push(line)
+          line = word
+        } else {
+          line = test
+        }
+      }
+      if (line) lines.push(line)
+
+      const lineH = Math.round(opts.fontSize * 1.35)
+      const blockH = lines.length * lineH + opts.pad * 2
+      const x = opts.sidePad
+      const w = W - opts.sidePad * 2
+
+      // Rounded rect
+      const r = 14
+      ctx.fillStyle = opts.bg
+      ctx.beginPath()
+      ctx.moveTo(x + r, topY)
+      ctx.lineTo(x + w - r, topY)
+      ctx.quadraticCurveTo(x + w, topY, x + w, topY + r)
+      ctx.lineTo(x + w, topY + blockH - r)
+      ctx.quadraticCurveTo(x + w, topY + blockH, x + w - r, topY + blockH)
+      ctx.lineTo(x + r, topY + blockH)
+      ctx.quadraticCurveTo(x, topY + blockH, x, topY + blockH - r)
+      ctx.lineTo(x, topY + r)
+      ctx.quadraticCurveTo(x, topY, x + r, topY)
+      ctx.closePath()
+      ctx.fill()
+
+      // Text
+      ctx.fillStyle = opts.fg
+      ctx.textBaseline = 'top'
+      let y = topY + opts.pad
+      for (const l of lines) {
+        ctx.fillText(l, x + opts.pad, y)
+        y += lineH
+      }
+      return topY + blockH
+    }
+
+    const SIDE_PAD = Math.max(24, Math.round(W * 0.04))
+    const MAX_W = W - SIDE_PAD * 2 - 32 // inner text width minus horizontal padding
+
+    const draw = () => {
+      const c = burnCanvasRef.current
+      const vid = burnVideoRef.current
+      if (!c || !vid) return
+      try {
+        ctx.drawImage(vid, 0, 0, W, H)
+      } catch { /* initial frame may not be ready */ }
+
+      // Prompt lives in the card's bottom panel (not the video overlay),
+      // so we only burn the active follow-up into the recorded frame.
+      const suggestion = burnSuggestionRef.current.trim()
+      const nextY = Math.max(28, Math.round(H * 0.04))
+      if (suggestion) {
+        drawBlock(suggestion, nextY, {
+          fontSize: Math.round(W * 0.019),
+          bg: 'rgba(196,162,53,0.55)',
+          fg: '#ffffff',
+          pad: 12,
+          maxW: MAX_W,
+          sidePad: SIDE_PAD,
+          prefix: '💡',
+        })
+      }
+      burnRafRef.current = requestAnimationFrame(draw)
+    }
+    draw()
+
+    // captureStream at 30fps; splice in the original audio track.
+    const composite = (canvas as HTMLCanvasElement & { captureStream?: (fps?: number) => MediaStream }).captureStream?.(30)
+    if (!composite) return null
+    const audioTrack = raw.getAudioTracks()[0]
+    const tracks: MediaStreamTrack[] = [composite.getVideoTracks()[0]]
+    if (audioTrack) tracks.push(audioTrack)
+    return new MediaStream(tracks)
+  }
+
+  const teardownBurnedVideo = () => {
+    if (burnRafRef.current != null) cancelAnimationFrame(burnRafRef.current)
+    burnRafRef.current = null
+    try { burnVideoRef.current?.pause() } catch {}
+    if (burnVideoRef.current) {
+      try { (burnVideoRef.current.srcObject as MediaStream | null)?.getTracks().forEach((t) => t.stop()) } catch {}
+      burnVideoRef.current.srcObject = null
+      burnVideoRef.current = null
+    }
+    burnCanvasRef.current = null
+  }
+
   const startRecord = async () => {
     const stream = streamRef.current
     if (!stream || isRecording) return
     try {
       for (const t of stream.getAudioTracks()) t.enabled = true
       const mimeType = mode === 'voice' ? 'audio/webm' : 'video/webm'
-      const rec = new MediaRecorder(stream, { mimeType })
+
+      // Video mode: record a canvas composite with the prompt + follow-up
+      // burned in so the saved file shows the question. Audio is unchanged.
+      let recordStream: MediaStream = stream
+      if (mode === 'video') {
+        const burned = await buildBurnedVideoStream(stream)
+        if (burned) recordStream = burned
+      }
+
+      const rec = new MediaRecorder(recordStream, { mimeType })
       chunksRef.current = []
       rec.ondataavailable = (e) => { if (e.data.size > 0) chunksRef.current.push(e.data) }
+
+      // Fire live transcription in parallel — if Deepgram is unavailable we
+      // fall back to the post-stop /api/transcribe call.
+      startLiveTranscription(stream)
+
       rec.onstop = async () => {
         for (const t of stream.getAudioTracks()) t.enabled = false
         const blob = new Blob(chunksRef.current, { type: mimeType })
         const url = URL.createObjectURL(blob)
 
-        setTranscribing(true)
-        let transcript = ''
-        try {
-          const fd = new FormData()
-          fd.append('audio', blob, mode === 'voice' ? 'rec.webm' : 'rec.webm')
-          const res = await fetch('/api/transcribe', { method: 'POST', body: fd })
-          const d = await res.json()
-          transcript = d.transcription || d.text || ''
-        } catch (err) {
-          console.error('[ConversationCard] transcribe failed', err)
+        // Tear down the burn-in pipeline (if any) and the Deepgram socket.
+        teardownBurnedVideo()
+        const liveTranscript = stopLiveTranscription()
+        if (cardId) conversationBus.clearInterimTranscript(cardId)
+
+        let transcript = liveTranscript
+        if (!transcript) {
+          setTranscribing(true)
+          try {
+            const fd = new FormData()
+            fd.append('audio', blob, mode === 'voice' ? 'rec.webm' : 'rec.webm')
+            const res = await fetch('/api/transcribe', { method: 'POST', body: fd })
+            const d = await res.json()
+            transcript = d.transcription || d.text || ''
+          } catch (err) {
+            console.error('[ConversationCard] transcribe failed', err)
+          }
         }
         setTranscribing(false)
 
@@ -215,19 +522,22 @@ export function ConversationCard({ data, promptText, accentColor, onSave, saved 
           const turn: Turn = { role: 'user', content: transcript, kind: 'transcript' }
           hideOpenSuggestions()
           setMessages((prev) => [...prev, turn])
+          if (cardId) conversationBus.pushUserTurn(cardId, transcript)
           if (mode === 'video') {
-            // New user response — stale suggestions go away, the new
-            // transcript rises as an overlay.
+            // New user response — stale suggestions go away.
             clearSuggestionOverlays()
-            pushOverlay(turn)
           }
           transcriptRunningRef.current = (transcriptRunningRef.current + ' ' + transcript).trim()
+          // Brief "Captured ✓" celebration so each recording feels like a win.
+          setShowCaptureFlash(true)
+          setTimeout(() => setShowCaptureFlash(false), 1200)
           await generateFollowups(transcriptRunningRef.current)
         }
       }
       rec.start()
       mediaRecorderRef.current = rec
       setIsRecording(true)
+      setRecordSeconds(0)
     } catch (err) {
       console.error('[ConversationCard] record start failed', err)
     }
@@ -241,19 +551,49 @@ export function ConversationCard({ data, promptText, accentColor, onSave, saved 
 
   const generateFollowups = async (cumulative: string) => {
     setFollowupLoading(true)
+    // Read "recent follow-up history" from localStorage so the server can apply its
+    // "don't beat a dead horse" cooldown. Keep last 5 booleans.
+    let recentHadFollowups: boolean[] = []
+    try {
+      const raw = typeof window !== 'undefined' ? window.localStorage.getItem('yt_recent_followups') : null
+      if (raw) {
+        const parsed = JSON.parse(raw)
+        if (Array.isArray(parsed)) recentHadFollowups = parsed.filter((v) => typeof v === 'boolean').slice(-5)
+      }
+    } catch {}
     try {
       const res = await fetch('/api/memory/followups', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ promptText, transcript: cumulative }),
+        body: JSON.stringify({ promptText, transcript: cumulative, force: false, recentHadFollowups }),
       })
       const d = await res.json()
-      const suggestions: string[] = Array.isArray(d.suggestions) ? d.suggestions : []
+      const suggestions: string[] = Array.isArray(d.suggestions) ? d.suggestions.slice(0, 1) : []
+      console.log('[ConversationCard] followups result', {
+        transcriptChars: cumulative.length,
+        isStarter: !cumulative.trim(),
+        suggestionCount: suggestions.length,
+        preview: suggestions[0]?.slice(0, 80) || null,
+      })
       if (suggestions.length > 0) {
-        const turn: Turn = { role: 'assistant', content: suggestions.join('\n'), kind: 'suggestion' }
+        // Only one follow-up open at a time — retire any prior suggestion bubbles
+        // before adding the new one.
+        hideOpenSuggestions()
+        if (mode === 'video') clearSuggestionOverlays()
+        const turn: Turn = { role: 'assistant', content: suggestions[0], kind: 'suggestion' }
         setMessages((prev) => [...prev, turn])
         if (mode === 'video') pushOverlay(turn)
+        // Publish to the sibling TranscriptCard so the follow-up also appears
+        // there (the Story card keeps a brief flash; Transcript is persistent).
+        if (cardId) conversationBus.setSuggestion(cardId, suggestions[0])
       }
+      // Record whether this memory yielded a follow-up, keeping the last 5 entries.
+      try {
+        if (typeof window !== 'undefined') {
+          const next = [...recentHadFollowups, suggestions.length > 0].slice(-5)
+          window.localStorage.setItem('yt_recent_followups', JSON.stringify(next))
+        }
+      } catch {}
     } catch (err) {
       console.error('[ConversationCard] followups failed', err)
     } finally {
@@ -262,14 +602,18 @@ export function ConversationCard({ data, promptText, accentColor, onSave, saved 
   }
 
   const handleSubmit = () => {
-    const fullTranscript = messages
-      .filter((m) => m.role === 'user')
-      .map((m) => m.content)
-      .join('\n\n')
-      .trim()
-    if (!fullTranscript) return
-    // Save with whichever mode is currently active (derived from toggles),
-    // so the saved-state view renders the right layout.
+    const userTurns = messages.filter((m) => m.role === 'user')
+    const fullTranscript = userTurns.map((m) => m.content).join('\n\n').trim()
+    console.log('[ConversationCard] handleSubmit', {
+      userTurnCount: userTurns.length,
+      transcriptLength: fullTranscript.length,
+      preview: fullTranscript.slice(0, 80),
+      mediaBlobs: mediaBlobsRef.current.length,
+    })
+    if (!fullTranscript) {
+      console.warn('[ConversationCard] submit skipped — empty transcript')
+      return
+    }
     const saveMode: Mode = mediaBlobsRef.current.some((b) => b.kind === 'video')
       ? 'video'
       : mediaBlobsRef.current.length > 0
@@ -461,27 +805,55 @@ export function ConversationCard({ data, promptText, accentColor, onSave, saved 
   const isVideoActive = videoEnabled && !textMode
   const dockLabel = isRecording ? 'Release to stop' : transcribing ? 'Transcribing…' : hasUserTurn ? 'Hold to add more' : 'Hold to record'
 
+  // Bottom-panel heights — video shrinks/grows so both halves fit above the dock.
+  const DOCK_PX = textMode ? 120 : 108
+  const BOTTOM_PANEL_PX = bottomMode === 'minimized' ? 48 : 200
+
   return (
-    <div style={{ position: 'relative', height: '100%', width: '100%', overflow: 'hidden', background: '#FAFAF7' }}>
-      {/* Background: live video preview OR soft category gradient */}
+    <div style={{ position: 'relative', height: '100%', width: '100%', overflow: 'hidden', background: 'transparent' }}>
+      {/* Background: live video preview OR soft category gradient. The
+          video now occupies the TOP portion only — the bottom panel hosts
+          takes + follow-up underneath. */}
       {isVideoActive ? (
         <>
           <video
             ref={videoPreviewRef}
             muted
             playsInline
-            style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover', background: '#000' }}
+            style={{
+              position: 'absolute',
+              top: 0, left: 0, right: 0,
+              bottom: `${BOTTOM_PANEL_PX + DOCK_PX}px`,
+              width: '100%', objectFit: 'cover', background: '#000',
+              transition: 'bottom 0.3s cubic-bezier(0.32, 0.72, 0, 1)',
+            }}
           />
           {!streamReady && (
-            <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', background: 'rgba(0,0,0,0.6)' }}>
+            <div style={{
+              position: 'absolute', top: 0, left: 0, right: 0,
+              bottom: `${BOTTOM_PANEL_PX + DOCK_PX}px`,
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              color: '#fff', background: 'rgba(0,0,0,0.6)',
+            }}>
               <Loader2 size={22} className="animate-spin" />
             </div>
           )}
-          <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: '55%', background: 'linear-gradient(180deg, rgba(0,0,0,0.5) 0%, rgba(0,0,0,0) 100%)', pointerEvents: 'none' }} />
-          <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, height: '40%', background: 'linear-gradient(180deg, rgba(0,0,0,0) 0%, rgba(0,0,0,0.7) 100%)', pointerEvents: 'none' }} />
+          <div style={{
+            position: 'absolute', top: 0, left: 0, right: 0,
+            height: Math.min(180, Math.round((1 - (BOTTOM_PANEL_PX + DOCK_PX) / 600) * 600 * 0.45)),
+            background: 'linear-gradient(180deg, rgba(0,0,0,0.5) 0%, rgba(0,0,0,0) 100%)',
+            pointerEvents: 'none',
+          }} />
         </>
       ) : (
-        <div style={{ position: 'absolute', inset: 0, background: `linear-gradient(180deg, ${accentColor}10 0%, #FAFAF7 60%)`, pointerEvents: 'none' }} />
+        <div style={{
+          position: 'absolute',
+          top: 0, left: 0, right: 0,
+          bottom: `${BOTTOM_PANEL_PX + DOCK_PX}px`,
+          background: `linear-gradient(180deg, ${accentColor}10 0%, ${accentColor}05 60%)`,
+          pointerEvents: 'none',
+          transition: 'bottom 0.3s cubic-bezier(0.32, 0.72, 0, 1)',
+        }} />
       )}
 
       {/* REC/Ready badge (only when recording capability shown) */}
@@ -490,7 +862,7 @@ export function ConversationCard({ data, promptText, accentColor, onSave, saved 
           {isRecording ? (
             <div style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '4px 10px', borderRadius: '999px', background: 'rgba(239,68,68,0.95)', color: '#fff', fontSize: '10.5px', fontWeight: 700, letterSpacing: '0.08em' }}>
               <span style={{ width: '7px', height: '7px', borderRadius: '50%', background: '#fff', animation: 'cconv-pulse 1s infinite' }} />
-              REC
+              REC {Math.floor(recordSeconds / 60)}:{String(recordSeconds % 60).padStart(2, '0')}
             </div>
           ) : isVideoActive && streamReady ? (
             <div style={{ display: 'flex', alignItems: 'center', gap: '5px', padding: '4px 10px', borderRadius: '999px', background: 'rgba(0,0,0,0.55)', backdropFilter: 'blur(8px)', color: '#fff', fontSize: '10px', fontWeight: 600 }}>
@@ -501,14 +873,15 @@ export function ConversationCard({ data, promptText, accentColor, onSave, saved 
         </div>
       )}
 
-      {/* Chat body — overlaid bubbles rising from the bottom, above the dock */}
+      {/* Chat body — overlaid typing indicators over the video. Transcripts
+          + persistent suggestions render in the bottom panel below. */}
       <div
         style={{
           position: 'absolute',
           left: '14px',
           right: '14px',
-          bottom: textMode ? '120px' : '108px',
-          top: '16px',
+          bottom: `${BOTTOM_PANEL_PX + DOCK_PX}px`,
+          top: '44px',
           display: 'flex',
           flexDirection: 'column',
           justifyContent: 'flex-end',
@@ -521,6 +894,9 @@ export function ConversationCard({ data, promptText, accentColor, onSave, saved 
         <AnimatePresence initial={false}>
           {messages.map((m, i) => {
             if (m.kind === 'suggestion' && hiddenSuggestionIndices.has(i)) return null
+            // User transcripts live in the sibling Transcript card. Only suggestions
+            // (and typing indicators below) flash briefly on the Story card.
+            if (m.role === 'user') return null
             const faded = m.kind === 'suggestion' && fadedSuggestionIndices.has(i)
             return (
               <motion.div
@@ -529,7 +905,7 @@ export function ConversationCard({ data, promptText, accentColor, onSave, saved 
                 animate={{ opacity: faded ? 0.3 : 1, y: 0, scale: 1 }}
                 exit={{ opacity: 0, y: -10 }}
                 transition={{ duration: 0.35 }}
-                style={{ pointerEvents: 'auto', display: 'flex', justifyContent: m.role === 'user' ? 'flex-end' : 'flex-start' }}
+                style={{ pointerEvents: 'auto', display: 'flex', justifyContent: 'flex-start' }}
               >
                 {isVideoActive
                   ? <OverlayBubble turn={m} accent={accentColor} />
@@ -550,6 +926,118 @@ export function ConversationCard({ data, promptText, accentColor, onSave, saved 
         </AnimatePresence>
         <div ref={bottomRef} />
       </div>
+
+
+      {/* Bottom panel — chat-style interleave: prompt left, user right,
+          follow-up left, next user right… shrinks/grows with one toggle. */}
+      {!textMode && (() => {
+        // Keep messages in natural order — user turns alternate with suggestions.
+        const chatItems = messages.filter(
+          (m) => m.role === 'user' || m.kind === 'suggestion'
+        )
+        return (
+          <div
+            style={{
+              position: 'absolute',
+              left: 0, right: 0,
+              bottom: `${DOCK_PX}px`,
+              height: `${BOTTOM_PANEL_PX}px`,
+              zIndex: 2,
+              background: '#ffffff',
+              borderTop: `1px solid ${accentColor}30`,
+              boxShadow: '0 -4px 16px rgba(0,0,0,0.04)',
+              display: 'flex', flexDirection: 'column',
+              transition: 'height 0.3s cubic-bezier(0.32, 0.72, 0, 1)',
+              overflow: 'hidden',
+            }}
+          >
+            {/* Compact header — single toggle, no duplicate controls */}
+            <button
+              onClick={() => setBottomMode(bottomMode === 'minimized' ? 'expanded' : 'minimized')}
+              aria-label={bottomMode === 'minimized' ? 'Expand conversation' : 'Collapse conversation'}
+              style={{
+                display: 'flex', alignItems: 'center', gap: '6px',
+                padding: '10px 14px',
+                background: `linear-gradient(90deg, ${accentColor}10 0%, transparent 100%)`,
+                border: 'none', borderBottom: bottomMode === 'minimized' ? 'none' : `1px solid ${accentColor}18`,
+                color: accentColor, cursor: 'pointer', textAlign: 'left',
+                fontSize: '10.5px', fontWeight: 700, letterSpacing: '0.06em', textTransform: 'uppercase',
+                flexShrink: 0, width: '100%',
+              }}
+            >
+              {bottomMode === 'minimized' ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
+              Conversation
+            </button>
+
+            {/* Chat body — scrollable interleave */}
+            {bottomMode !== 'minimized' && (
+              <div
+                className="conv-scroll"
+                style={{
+                  flex: 1,
+                  overflowY: 'auto',
+                  padding: '10px 12px',
+                  display: 'flex', flexDirection: 'column', gap: '6px',
+                  minHeight: 0,
+                }}
+              >
+                {/* Prompt — first message on the LEFT */}
+                {promptText && (
+                  <ChatBubble side="left" accent={accentColor} tone="prompt">
+                    {promptText}
+                  </ChatBubble>
+                )}
+
+                {/* Interleaved takes + follow-ups, in arrival order */}
+                {chatItems.map((m, i) => (
+                  <ChatBubble
+                    key={`ci-${i}-${m.content.slice(0, 20)}`}
+                    side={m.role === 'user' ? 'right' : 'left'}
+                    accent={accentColor}
+                    tone={m.role === 'user' ? 'user' : 'suggestion'}
+                  >
+                    {m.content}
+                  </ChatBubble>
+                ))}
+
+                {/* Live interim transcript — floats on the right while speaking */}
+                {interimTranscript && interimTranscript.trim() && (
+                  <ChatBubble side="right" accent={accentColor} tone="interim">
+                    {interimTranscript}
+                  </ChatBubble>
+                )}
+
+                {transcribing && (
+                  <ChatBubble side="right" accent={accentColor} tone="interim">
+                    <span style={{ fontStyle: 'italic', opacity: 0.75 }}>transcribing…</span>
+                  </ChatBubble>
+                )}
+
+                {followupLoading && (
+                  <ChatBubble side="left" accent={accentColor} tone="suggestion">
+                    <span style={{ fontStyle: 'italic', opacity: 0.75 }}>thinking of a follow-up…</span>
+                  </ChatBubble>
+                )}
+
+                {chatItems.length === 0 && !interimTranscript?.trim() && !transcribing && !promptText && (
+                  <div style={{
+                    display: 'flex', flexDirection: 'column', alignItems: 'center',
+                    justifyContent: 'center', gap: '6px',
+                    padding: '20px 12px',
+                    color: '#94A09A',
+                    textAlign: 'center',
+                    fontSize: '12.5px', lineHeight: '1.5',
+                    flex: 1,
+                  }}>
+                    <Mic size={18} style={{ opacity: 0.5 }} />
+                    <div>When you speak, your words show up here.</div>
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
+        )
+      })()}
 
       {/* Bottom dock — record + toggles OR text input bar */}
       <AnimatePresence mode="wait">
@@ -736,8 +1224,74 @@ export function ConversationCard({ data, promptText, accentColor, onSave, saved 
         </button>
       )}
 
+      {/* Capture flash — brief "Captured ✓" celebration after each recording stops
+          so every capture feels like a small win before any review step. */}
+      <AnimatePresence>
+        {showCaptureFlash && (
+          <motion.div
+            key="capture-flash"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.18 }}
+            style={{
+              position: 'absolute',
+              inset: 0,
+              zIndex: 6,
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: '10px',
+              background: 'linear-gradient(180deg, rgba(45,90,61,0.85) 0%, rgba(45,90,61,0.75) 100%)',
+              backdropFilter: 'blur(6px)',
+              pointerEvents: 'none',
+            }}
+          >
+            <motion.div
+              initial={{ scale: 0, rotate: -20 }}
+              animate={{ scale: [0, 1.2, 1], rotate: 0 }}
+              transition={{ duration: 0.5, ease: [0.34, 1.56, 0.64, 1] }}
+              style={{
+                width: '56px', height: '56px', borderRadius: '50%',
+                background: '#fff', display: 'flex',
+                alignItems: 'center', justifyContent: 'center',
+                boxShadow: '0 10px 30px rgba(0,0,0,0.25)',
+              }}
+            >
+              <Check size={28} color="#2D5A3D" strokeWidth={3} />
+            </motion.div>
+            <motion.div
+              initial={{ opacity: 0, y: 6 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.18, duration: 0.3 }}
+              style={{ color: '#fff', fontSize: '14px', fontWeight: 700, letterSpacing: '0.02em' }}
+            >
+              Captured
+            </motion.div>
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 0.85 }}
+              transition={{ delay: 0.28, duration: 0.3 }}
+              style={{ color: 'rgba(255,255,255,0.85)', fontSize: '12px' }}
+            >
+              Saved to your story
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
       <style jsx>{`
         @keyframes cconv-pulse { 0%, 100% { opacity: 1 } 50% { opacity: 0.4 } }
+        .conv-scroll::-webkit-scrollbar { width: 6px; }
+        .conv-scroll::-webkit-scrollbar-track { background: transparent; }
+        .conv-scroll::-webkit-scrollbar-thumb {
+          background: ${accentColor}40;
+          border-radius: 3px;
+        }
+        .conv-scroll::-webkit-scrollbar-thumb:hover {
+          background: ${accentColor}60;
+        }
       `}</style>
     </div>
   )
@@ -772,32 +1326,23 @@ function TakeBox({ take, index, accent, context, onDelete }: {
         boxShadow: '0 2px 8px rgba(0,0,0,0.04)',
       }}
     >
-      {/* Take # + delete */}
-      <div
+      {/* Small delete affordance, no big "Take N" label on top of the video */}
+      <button
+        onClick={onDelete}
+        aria-label="Delete this take"
         style={{
-          display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-          padding: '8px 12px',
-          background: `${accent}0A`,
-          borderBottom: '1px solid #EEF2EF',
+          position: 'absolute',
+          top: '8px', right: '8px',
+          zIndex: 2,
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+          width: '26px', height: '26px', borderRadius: '50%',
+          background: 'rgba(0,0,0,0.55)', border: '1px solid rgba(255,255,255,0.25)',
+          color: '#ffffff', cursor: 'pointer',
+          backdropFilter: 'blur(6px)',
         }}
       >
-        <span style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', fontSize: '10px', fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', color: accent }}>
-          {isVideo ? <VideoIcon size={11} /> : <Mic size={11} />}
-          Take {index + 1}
-        </span>
-        <button
-          onClick={onDelete}
-          aria-label="Delete this take"
-          style={{
-            display: 'flex', alignItems: 'center', justifyContent: 'center',
-            width: '24px', height: '24px', borderRadius: '50%',
-            background: 'rgba(0,0,0,0.04)', border: '1px solid #DDE3DF',
-            color: '#B8562E', cursor: 'pointer',
-          }}
-        >
-          <Trash2 size={11} />
-        </button>
-      </div>
+        <Trash2 size={12} />
+      </button>
 
       {/* Prompt / follow-up context for this take — helps the user see
           which question triggered this direction of the story. */}
@@ -906,6 +1451,52 @@ function ModePicker({ accent, onPick, promptText }: { accent: string; onPick: (m
 }
 
 /* ─────────────── Bubble + Typing + Record ─────────────── */
+
+// Compact chat bubble used in the bottom panel — left for prompt / follow-up,
+// right for user turns + interim transcript.
+function ChatBubble({
+  side, accent, tone, children,
+}: {
+  side: 'left' | 'right'
+  accent: string
+  tone: 'prompt' | 'suggestion' | 'user' | 'interim'
+  children: React.ReactNode
+}) {
+  const palette = (() => {
+    switch (tone) {
+      case 'prompt':
+        return { bg: '#F5F1E4', border: 'rgba(26,31,28,0.25)', color: '#1A1F1C', weight: 500 }
+      case 'suggestion':
+        return { bg: `${accent}14`, border: `${accent}40`, color: '#2d2d2d', weight: 500 }
+      case 'user':
+        return { bg: accent, border: accent, color: '#ffffff', weight: 500 }
+      case 'interim':
+      default:
+        return { bg: `${accent}08`, border: `${accent}40`, color: '#2d2d2d', weight: 400, dashed: true }
+    }
+  })() as { bg: string; border: string; color: string; weight: number; dashed?: boolean }
+  return (
+    <div style={{ display: 'flex', justifyContent: side === 'right' ? 'flex-end' : 'flex-start' }}>
+      <div
+        style={{
+          maxWidth: '82%',
+          padding: '8px 11px',
+          borderRadius: side === 'right' ? '14px 14px 4px 14px' : '14px 14px 14px 4px',
+          background: palette.bg,
+          border: `1px ${palette.dashed ? 'dashed' : 'solid'} ${palette.border}`,
+          color: palette.color,
+          fontSize: '13px',
+          lineHeight: '1.45',
+          fontWeight: palette.weight,
+          whiteSpace: 'pre-wrap',
+          wordBreak: 'break-word',
+        }}
+      >
+        {children}
+      </div>
+    </div>
+  )
+}
 
 function Bubble({ turn, accent, index, faded = false }: { turn: Turn; accent: string; index: number; faded?: boolean }) {
   const isUser = turn.role === 'user'
@@ -1090,6 +1681,8 @@ function Typing({ label }: { label: string }) {
   )
 }
 
+// Primary gesture is tap-to-toggle. Hold-to-record is kept as a secondary
+// quick-capture: press and hold >400ms without moving → record; release to stop.
 function RecordButton({ mode, isRecording, accent, onStart, onStop }: {
   mode: Mode
   isRecording: boolean
@@ -1098,12 +1691,73 @@ function RecordButton({ mode, isRecording, accent, onStart, onStop }: {
   onStop: () => void
 }) {
   const Icon = mode === 'voice' ? Mic : VideoIcon
+  const HOLD_MS = 400
+  const MOVE_TOLERANCE_PX = 10
+
+  const holdTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const gestureRef = useRef<{ x: number; y: number; holdActive: boolean; startedRecording: boolean } | null>(null)
+
+  const clearHoldTimer = () => {
+    if (holdTimerRef.current) { clearTimeout(holdTimerRef.current); holdTimerRef.current = null }
+  }
+
+  const handlePointerDown = (e: React.PointerEvent) => {
+    e.preventDefault()
+    // If already recording, wait for release and treat it as "tap to stop".
+    if (isRecording) {
+      gestureRef.current = { x: e.clientX, y: e.clientY, holdActive: false, startedRecording: false }
+      return
+    }
+    // Not recording yet — arm the hold detector.
+    gestureRef.current = { x: e.clientX, y: e.clientY, holdActive: false, startedRecording: false }
+    clearHoldTimer()
+    holdTimerRef.current = setTimeout(() => {
+      const g = gestureRef.current
+      if (!g) return
+      g.holdActive = true
+      g.startedRecording = true
+      onStart()
+    }, HOLD_MS)
+  }
+
+  const handlePointerMove = (e: React.PointerEvent) => {
+    const g = gestureRef.current
+    if (!g) return
+    const dx = Math.abs(e.clientX - g.x)
+    const dy = Math.abs(e.clientY - g.y)
+    if (dx > MOVE_TOLERANCE_PX || dy > MOVE_TOLERANCE_PX) {
+      // User is scrolling/dragging — cancel the hold detector.
+      clearHoldTimer()
+      if (!g.holdActive) gestureRef.current = null
+    }
+  }
+
+  const handlePointerUp = () => {
+    const g = gestureRef.current
+    clearHoldTimer()
+    if (!g) return
+    if (g.holdActive) {
+      onStop()
+    } else {
+      if (isRecording) onStop()
+      else onStart()
+    }
+    gestureRef.current = null
+  }
+
+  const handlePointerCancel = () => {
+    const g = gestureRef.current
+    clearHoldTimer()
+    if (g?.startedRecording) onStop()
+    gestureRef.current = null
+  }
+
   return (
     <motion.button
-      onPointerDown={(e) => { e.preventDefault(); onStart() }}
-      onPointerUp={onStop}
-      onPointerLeave={() => { if (isRecording) onStop() }}
-      onPointerCancel={onStop}
+      onPointerDown={handlePointerDown}
+      onPointerMove={handlePointerMove}
+      onPointerUp={handlePointerUp}
+      onPointerCancel={handlePointerCancel}
       whileTap={{ scale: 0.93 }}
       style={{
         position: 'relative',
@@ -1117,7 +1771,7 @@ function RecordButton({ mode, isRecording, accent, onStart, onStop }: {
         transition: 'background 0.2s ease, box-shadow 0.2s ease',
         userSelect: 'none', touchAction: 'none', flexShrink: 0,
       }}
-      aria-label={isRecording ? 'Release to stop' : 'Hold to record'}
+      aria-label={isRecording ? 'Tap to stop recording' : 'Tap to record'}
     >
       {isRecording && (
         <motion.span

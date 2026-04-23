@@ -116,7 +116,18 @@ export function CardChain({ row, onCardSave, onAddCard, onMediaUploaded, cardWid
       case 'media-upload':
         return wrapCard(<MediaUploadCard onUpload={onMediaUploaded} />)
       case 'media-item':
-        return wrapCard(<MediaItemCard url={card.data.url} name={card.data.name} type={card.data.type} addedBy={card.addedBy} />)
+        return wrapCard(
+          <MediaItemCard
+            url={card.data.url}
+            name={card.data.name}
+            type={card.data.type}
+            addedBy={card.addedBy}
+            mediaId={card.data.mediaId}
+            detectedFaces={card.data.faces}
+            displayPositionX={card.data.displayPosition?.x ?? card.data.displayPositionX ?? null}
+            displayPositionY={card.data.displayPosition?.y ?? card.data.displayPositionY ?? null}
+          />
+        )
       case 'field-input':
         return wrapCard(<FieldInputCard contactName={row.contactName} data={card.data} onSave={(data) => handleSave(card.id, data, index)} saved={card.saved} />)
       case 'pill-select':

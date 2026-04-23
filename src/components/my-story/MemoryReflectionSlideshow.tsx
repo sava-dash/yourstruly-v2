@@ -79,6 +79,11 @@ interface MemoryReflectionSlideshowProps {
   initialIndex?: number
   isOpen: boolean
   onClose: () => void
+  /**
+   * Opens the "Continue this memory" append flow for the currently-viewed
+   * memory. When provided, a CONTINUE pill appears in the slideshow chrome.
+   */
+  onContinue?: (memory: { id: string; title: string; coverUrl?: string }) => void
 }
 
 const SERIF = 'var(--font-dm-serif, "DM Serif Display", serif)'
@@ -201,6 +206,7 @@ export default function MemoryReflectionSlideshow({
   initialIndex = 0,
   isOpen,
   onClose,
+  onContinue,
 }: MemoryReflectionSlideshowProps) {
   const [index, setIndex] = useState(initialIndex)
   const [cache, setCache] = useState<Map<string, SlideData>>(new Map())
@@ -382,13 +388,38 @@ export default function MemoryReflectionSlideshow({
             <span>of</span>
             <span className="tabular-nums">{memories.length}</span>
           </div>
-          <button
-            onClick={onClose}
-            className="w-10 h-10 rounded-full bg-white/10 hover:bg-white/20 backdrop-blur-md flex items-center justify-center text-white/80 hover:text-white transition-all"
-            aria-label="Close slideshow"
-          >
-            <X size={18} />
-          </button>
+          <div className="flex items-center gap-3">
+            {onContinue && currentRef && (
+              <button
+                onClick={() => {
+                  const coverUrl = currentData?.media?.find((m) => m.is_cover)?.file_url
+                    ?? currentData?.media?.[0]?.file_url
+                  onContinue({ id: currentRef.id, title: currentRef.title || 'Memory', coverUrl })
+                }}
+                className="flex items-center gap-1.5 px-3 py-2"
+                style={{
+                  fontFamily: 'var(--font-mono, monospace)',
+                  fontWeight: 700,
+                  fontSize: 11,
+                  letterSpacing: '0.18em',
+                  background: 'var(--ed-red, #E23B2E)',
+                  color: '#fff',
+                  border: '2px solid #fff',
+                  borderRadius: 2,
+                }}
+                aria-label="Continue this memory"
+              >
+                + CONTINUE
+              </button>
+            )}
+            <button
+              onClick={onClose}
+              className="w-10 h-10 rounded-full bg-white/10 hover:bg-white/20 backdrop-blur-md flex items-center justify-center text-white/80 hover:text-white transition-all"
+              aria-label="Close slideshow"
+            >
+              <X size={18} />
+            </button>
+          </div>
         </div>
 
         {/* Slide content — scrolls vertically per slide */}

@@ -1,6 +1,7 @@
 import React, { useRef, useState } from 'react';
 import { motion } from 'framer-motion';
 import { Camera, Check, ChevronRight, Loader2, MapPin, X } from 'lucide-react';
+import { SmartPhoto } from '@/components/ui/SmartPhoto';
 
 export interface UploadedPhoto {
   id: string;
@@ -11,6 +12,8 @@ export interface UploadedPhoto {
   lng: number | null;
   locationName: string | null;
   status: 'pending' | 'uploading' | 'done' | 'error';
+  /** Focal point from Rekognition — populated after the upload response */
+  displayPosition?: { x: number; y: number } | null;
 }
 
 export interface PhotoUploadPanelProps {
@@ -44,8 +47,8 @@ export function PhotoUploadPanel({
       transition={{ type: 'spring', stiffness: 260, damping: 28 }}
     >
       <div className="globe-side-panel-header">
-        <h3>📸 Your Photos</h3>
-        <p>Upload your favorite photos. We&apos;ll place geotagged ones on the globe to map your memories around the world.</p>
+        <h3>Photos (optional)</h3>
+        <p>Add any photos you&apos;d like. If they have GPS data we&apos;ll pin them to the map.</p>
       </div>
       <div className="globe-side-panel-items" style={{ gap: '0', padding: '8px 16px', overflowY: 'auto' }}>
         {/* Drop zone */}
@@ -123,10 +126,10 @@ export function PhotoUploadPanel({
           }}>
             {uploadedPhotos.map((photo) => (
               <div key={photo.id} style={{ position: 'relative', aspectRatio: '1', borderRadius: '12px', overflow: 'hidden' }}>
-                <img
+                <SmartPhoto
                   src={photo.preview}
                   alt=""
-                  style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                  displayPosition={photo.displayPosition ?? null}
                 />
                 {/* Status overlay */}
                 {photo.status === 'uploading' && (
@@ -239,6 +242,7 @@ export function PhotoUploadPanel({
                       lat: data.metadata?.lat ?? null,
                       lng: data.metadata?.lng ?? null,
                       locationName: data.metadata?.locationName ?? null,
+                      displayPosition: data.displayPosition ?? null,
                     } : p
                   ));
                 } else {
@@ -267,7 +271,7 @@ export function PhotoUploadPanel({
           {isUploadingPhotos ? (
             <><Loader2 size={16} className="animate-spin" /> Uploading...</>
           ) : (
-            <>{uploadedPhotos.length > 0 ? 'Upload & Continue' : 'Skip'} <ChevronRight size={18} /></>
+            <>{uploadedPhotos.length > 0 ? 'Upload and continue' : 'Skip for now'} <ChevronRight size={18} /></>
           )}
         </button>
       </div>

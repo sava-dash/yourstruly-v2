@@ -18,6 +18,13 @@ export interface OnboardingData {
   heartfeltAnswer?: string;
   heartfeltConversation?: ConversationMessage[];
   uploadedImagesCount?: number;
+  // Globe-collected signals (piped through for profile + engagement engine)
+  placesLived?: string[];
+  whyHereText?: string;
+  whyHereSelections?: string[];
+  contactsCount?: number;
+  sensitiveTopicOptouts?: string[];
+  promptCadence?: string;
 }
 
 export type QuickStep =
@@ -49,7 +56,7 @@ export interface ReligionCategory {
   options: string[];
 }
 
-export type GlobeSubPhase = 'map' | 'places-lived' | 'contacts' | 'interests' | 'why-here' | 'photo-upload' | 'photo-map';
+export type GlobeSubPhase = 'basics' | 'map' | 'places-lived' | 'contacts' | 'interests' | 'why-here' | 'photo-upload' | 'photo-map' | 'preferences';
 
 export interface QuickOnboardingFlowProps {
   onComplete: (data: OnboardingData) => void;

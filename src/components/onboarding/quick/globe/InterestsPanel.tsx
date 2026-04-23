@@ -34,8 +34,8 @@ export function InterestsPanel({
       transition={{ type: 'spring', stiffness: 260, damping: 28 }}
     >
       <div className="globe-side-panel-header">
-        <h3>Your Interests</h3>
-        <p>What you care about shapes the moments ahead. Pick what you love so we can ask better questions and make your story feel true to you.</p>
+        <h3>What you&apos;re into</h3>
+        <p>Pick a few so our prompts actually feel relevant. Skip anything that doesn&apos;t fit.</p>
       </div>
       <div className="globe-side-panel-items">
         {[...CURATED_INTERESTS, ...customInterests].map(interest => {

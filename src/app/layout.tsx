@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Geist, DM_Serif_Display, DM_Sans } from "next/font/google";
+import { Geist, DM_Serif_Display, DM_Sans, Archivo_Black, Space_Mono } from "next/font/google";
 import "./globals.css";
 import "@/styles/themes.css";
 // Map CSS moved to dashboard layout — only load where maps are used
@@ -24,6 +24,20 @@ const dmSerif = DM_Serif_Display({
   variable: "--font-dm-serif",
   subsets: ["latin"],
   weight: ["400"],
+});
+
+// Editorial display face — huge bold poster-style headlines (my-story, etc.)
+const archivoBlack = Archivo_Black({
+  variable: "--font-archivo-black",
+  subsets: ["latin"],
+  weight: ["400"],
+});
+
+// Mono for uppercase meta labels ("57 MEMORIES · 19 WISDOM · …")
+const spaceMono = Space_Mono({
+  variable: "--font-space-mono",
+  subsets: ["latin"],
+  weight: ["400", "700"],
 });
 
 
@@ -56,7 +70,7 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body
-        className={`${geistSans.variable} ${dmSans.variable} ${dmSerif.variable} antialiased`}
+        className={`${geistSans.variable} ${dmSans.variable} ${dmSerif.variable} ${archivoBlack.variable} ${spaceMono.variable} antialiased`}
       >
         <CookiebotScript />
         <SkipToMain />

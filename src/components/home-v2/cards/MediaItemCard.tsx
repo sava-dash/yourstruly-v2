@@ -4,6 +4,7 @@ import { useState } from 'react'
 import Image from 'next/image'
 import { X, Play, Users } from 'lucide-react'
 import dynamic from 'next/dynamic'
+import { toObjectPositionCss } from '@/lib/photos/displayPosition'
 
 // Lazy-load FaceTagger so it doesn't bloat the initial bundle for cards
 // that have no detected faces.
@@ -27,6 +28,9 @@ interface MediaItemCardProps {
   detectedFaces?: DetectedFace[]
   /** memory_media row ID, if the upload was already persisted */
   mediaId?: string
+  /** Focal point (0-1) from memory_media.display_position_x — keeps faces in-frame under object-fit: cover */
+  displayPositionX?: number | null
+  displayPositionY?: number | null
 }
 
 export function MediaItemCard({
@@ -38,6 +42,8 @@ export function MediaItemCard({
   mediaPath,
   detectedFaces,
   mediaId: initialMediaId,
+  displayPositionX,
+  displayPositionY,
 }: MediaItemCardProps) {
   const [showPreview, setShowPreview] = useState(false)
   const [showTagger, setShowTagger] = useState(false)
@@ -120,7 +126,14 @@ export function MediaItemCard({
             />
           </div>
         ) : (
-          <Image src={url} alt={name} fill className="object-cover" unoptimized />
+          <Image
+            src={url}
+            alt={name}
+            fill
+            className="object-cover"
+            style={{ objectPosition: toObjectPositionCss({ x: displayPositionX ?? undefined, y: displayPositionY ?? undefined }) }}
+            unoptimized
+          />
         )}
 
         {/* Tag people button — always shown on images */}

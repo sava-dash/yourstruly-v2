@@ -1,7 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
+import { createAdminClient } from '@/lib/supabase/admin';
 import exifr from 'exifr';
 import { reverseGeocode } from '@/lib/geo/reverseGeocode';
+import { processUploadFaces } from '@/lib/photos/processUploadFaces';
 
 export async function POST(request: NextRequest) {
   try {
@@ -192,18 +194,24 @@ export async function POST(request: NextRequest) {
     }
 
     // =========================================================
-    // 5. TRIGGER FACE DETECTION (async - don't block response)
+    // 5. RUN FACE DETECTION INLINE
+    //    Rekognition runs synchronously so display_position_x/y is
+    //    persisted before we return — the client can frame thumbnails
+    //    correctly on first render instead of waiting for a re-detect.
     // =========================================================
-    const baseUrl = process.env.NEXT_PUBLIC_APP_URL || `https://${request.headers.get('host')}`;
-
-    fetch(`${baseUrl}/api/media/${media.id}/detect-faces`, {
-      method: 'POST',
-      headers: { 'Cookie': request.headers.get('cookie') || '' },
-    }).catch(e => console.error('Face detection trigger failed:', e));
+    const admin = createAdminClient();
+    const faceResult = await processUploadFaces({
+      admin,
+      userId: user.id,
+      mediaId: media.id,
+      imageBuffer: buffer,
+    });
 
     // =========================================================
     // 6. GENERATE ENGAGEMENT PROMPT FOR THIS PHOTO (async)
     // =========================================================
+    const baseUrl = process.env.NEXT_PUBLIC_APP_URL || `https://${request.headers.get('host')}`;
+
     fetch(`${baseUrl}/api/engagement/generate-photo-prompt`, {
       method: 'POST',
       headers: {
@@ -213,7 +221,6 @@ export async function POST(request: NextRequest) {
       body: JSON.stringify({
         mediaId: media.id,
         photoUrl: publicUrl,
-        takenAt,
         isOnboarding: true,
       }),
     }).catch(e => console.error('Engagement prompt generation failed:', e));
@@ -230,6 +237,11 @@ export async function POST(request: NextRequest) {
         lat: exifLat,
         lng: exifLng,
       },
+      faces: {
+        detected: faceResult.facesDetected,
+        autoTagged: faceResult.autoTagged,
+      },
+      displayPosition: faceResult.displayPosition,
     });
 
   } catch (error) {

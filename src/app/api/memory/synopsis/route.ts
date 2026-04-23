@@ -133,6 +133,10 @@ export async function POST(request: NextRequest) {
     const memoryId = typeof body.memoryId === 'string' ? body.memoryId : null
     const transcript = typeof body.transcript === 'string' ? body.transcript.slice(0, 6000) : ''
     const promptText = typeof body.promptText === 'string' ? body.promptText.slice(0, 600).trim() : ''
+    // "merge" means "union into existing extracted_entities rather than overwrite".
+    // Used by the Continue-this-memory append flow so the second pass doesn't
+    // clobber people/topics/locations the first pass already captured.
+    const mode: 'create' | 'merge' = body.mode === 'merge' ? 'merge' : 'create'
 
     if (!transcript.trim()) {
       return NextResponse.json({ error: 'Missing transcript' }, { status: 400 })
@@ -142,16 +146,26 @@ export async function POST(request: NextRequest) {
       ? `PROMPT:\n${promptText}\n\nTRANSCRIPT:\n${transcript}`
       : `TRANSCRIPT:\n${transcript}`
 
-    const response = await anthropic.messages.create({
-      model: 'claude-haiku-4-5-20251001',
-      max_tokens: 500,
-      temperature: 0.2,
-      system: SYNOPSIS_SYSTEM,
-      messages: [{ role: 'user', content: userMsg }],
-    })
-    const textBlock = response.content.find((b) => b.type === 'text')
-    const raw = textBlock?.type === 'text' ? textBlock.text : ''
+    let raw = ''
+    try {
+      const response = await anthropic.messages.create({
+        model: 'claude-haiku-4-5-20251001',
+        max_tokens: 500,
+        temperature: 0.2,
+        system: SYNOPSIS_SYSTEM,
+        messages: [{ role: 'user', content: userMsg }],
+      })
+      const textBlock = response.content.find((b) => b.type === 'text')
+      raw = textBlock?.type === 'text' ? textBlock.text : ''
+    } catch (llmErr) {
+      console.error('[synopsis] Anthropic call failed:', llmErr)
+      return NextResponse.json({ error: 'LLM call failed', detail: String(llmErr) }, { status: 500 })
+    }
     const synopsis = parseJSON(raw)
+    if (!synopsis) {
+      console.error('[synopsis] JSON parse failed. Raw response:', raw.slice(0, 500))
+      return NextResponse.json({ error: 'Could not parse LLM response', raw: raw.slice(0, 500) }, { status: 500 })
+    }
 
     const where = synopsis?.where || null
     const when = synopsis?.when || null
@@ -230,6 +244,22 @@ export async function POST(request: NextRequest) {
       try {
         const admin = createAdminClient()
         const updates: Record<string, any> = {}
+
+        // In merge mode, load existing entities + tags so arrays can be
+        // unioned rather than overwritten. Newer-wins applies to scalars
+        // like location/date per the product decision.
+        let existingEntities: any = {}
+        let existingTags: string[] = []
+        if (mode === 'merge') {
+          const { data: cur } = await admin
+            .from('memories')
+            .select('extracted_entities, tags')
+            .eq('id', memoryId)
+            .maybeSingle()
+          existingEntities = (cur?.extracted_entities as any) || {}
+          existingTags = Array.isArray(cur?.tags) ? (cur!.tags as string[]) : []
+        }
+
         if (where) updates.location_name = where
         // Only write memory_date when the phrase parses to a real date;
         // don't clobber with "when I was 12" etc.
@@ -239,24 +269,49 @@ export async function POST(request: NextRequest) {
             updates.memory_date = parsed.toISOString().split('T')[0]
           }
         }
-        if (tags.length > 0) updates.tags = tags
-        updates.extracted_entities = {
-          topics: tags,
-          people: whoRaw
-            .map((p) => {
-              if (p.name && p.relation) return `${p.name} (${p.relation})`
-              if (p.name) return p.name
-              if (p.relation) return `(${p.relation})`
-              return null
-            })
-            .filter(Boolean),
-          times: when ? [when] : [],
-          locations: where ? [where] : [],
-          summary: summary || '',
-          mood,
-          tags_ai: tags,
-          extracted_at: new Date().toISOString(),
+        if (tags.length > 0) {
+          updates.tags = mode === 'merge'
+            ? Array.from(new Set([...existingTags, ...tags]))
+            : tags
         }
+
+        const newPeople = whoRaw
+          .map((p) => {
+            if (p.name && p.relation) return `${p.name} (${p.relation})`
+            if (p.name) return p.name
+            if (p.relation) return `(${p.relation})`
+            return null
+          })
+          .filter((x): x is string => typeof x === 'string' && x.length > 0)
+
+        const union = (a: unknown, b: string[]): string[] => {
+          const left = Array.isArray(a) ? a.filter((x): x is string => typeof x === 'string') : []
+          return Array.from(new Set([...left, ...b]))
+        }
+
+        updates.extracted_entities = mode === 'merge'
+          ? {
+              ...existingEntities,
+              topics:    union(existingEntities.topics, tags),
+              people:    union(existingEntities.people, newPeople),
+              times:     union(existingEntities.times, when ? [when] : []),
+              locations: union(existingEntities.locations, where ? [where] : []),
+              // Newer-wins for summary/mood when the new pass produced them.
+              summary:   summary || existingEntities.summary || '',
+              mood:      mood || existingEntities.mood || null,
+              tags_ai:   union(existingEntities.tags_ai, tags),
+              last_appended_at: new Date().toISOString(),
+            }
+          : {
+              topics: tags,
+              people: newPeople,
+              times: when ? [when] : [],
+              locations: where ? [where] : [],
+              summary: summary || '',
+              mood,
+              tags_ai: tags,
+              extracted_at: new Date().toISOString(),
+            }
         await admin.from('memories').update(updates).eq('id', memoryId)
 
         // Only persist people with either a linked contact or a concrete name.
@@ -286,6 +341,6 @@ export async function POST(request: NextRequest) {
     })
   } catch (err) {
     console.error('[synopsis] error:', err)
-    return NextResponse.json({ error: 'Failed to generate synopsis' }, { status: 500 })
+    return NextResponse.json({ error: 'Failed to generate synopsis', detail: String(err) }, { status: 500 })
   }
 }

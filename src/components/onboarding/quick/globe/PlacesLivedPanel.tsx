@@ -55,7 +55,7 @@ export function PlacesLivedPanel({
       <div className="globe-welcome-card">
         <div className="globe-welcome-bar" />
         <div className="globe-welcome-body">
-          <p className="globe-welcome-greeting">Your life journey 🌍</p>
+          <p className="globe-welcome-greeting">Other places you&apos;ve lived</p>
           <h2 className="globe-welcome-headline" style={{ fontSize: '20px' }}>
             {placesAdded.length === 0
               ? 'Have you lived anywhere else?'
@@ -134,7 +134,7 @@ export function PlacesLivedPanel({
             type="text"
             value={placeWhen}
             onChange={(e) => setPlaceWhen(e.target.value)}
-            placeholder="When did you move there? (e.g. Summer 2015)"
+            placeholder='When? Year like "2015", or an age like "I was 12"'
             disabled={phase === 'places-flying'}
             style={{
               width: '100%',
@@ -176,22 +176,34 @@ export function PlacesLivedPanel({
                   onAddPlace(placeInput, match?.center);
                 }}
               >
-                {placesAdded.length === 0 ? 'Add Place' : 'Add Another'} <ChevronRight size={18} />
+                {placesAdded.length === 0 ? 'Add place' : 'Add another'} <ChevronRight size={18} />
               </button>
+              {placeInput.trim() && (
+                <p className="yt-unadded-hint" role="status">
+                  Tap <strong>Add place</strong> to keep &ldquo;{placeInput.trim()}&rdquo; — otherwise it won&apos;t be saved.
+                </p>
+              )}
               <button
-                onClick={onSpinOutAndContinue}
+                onClick={() => {
+                  // Block continue when the user has typed a place but hasn't added it.
+                  if (placeInput.trim()) return;
+                  onSpinOutAndContinue();
+                }}
+                disabled={!!placeInput.trim()}
                 style={{
                   padding: '12px',
                   border: 'none',
                   background: 'none',
-                  color: placesAdded.length > 0 ? '#2D5A3D' : 'rgba(45,45,45,0.5)',
+                  color: placeInput.trim()
+                    ? 'rgba(45,45,45,0.3)'
+                    : (placesAdded.length > 0 ? '#2D5A3D' : 'rgba(45,45,45,0.5)'),
                   fontSize: '15px',
                   fontWeight: 600,
-                  cursor: 'pointer',
+                  cursor: placeInput.trim() ? 'not-allowed' : 'pointer',
                   textAlign: 'center',
                 }}
               >
-                {placesAdded.length > 0 ? "I'm done" : 'Skip'}
+                {placesAdded.length > 0 ? "I'm done" : 'Skip for now'}
               </button>
               {onBack && (
                 <button
@@ -216,6 +228,17 @@ export function PlacesLivedPanel({
           )}
         </div>
       </div>
+      <style jsx>{`
+        .yt-unadded-hint {
+          margin: 0;
+          padding: 6px 2px 0;
+          font-size: 12px;
+          line-height: 1.4;
+          color: rgba(184, 86, 46, 0.85);
+          text-align: center;
+        }
+        .yt-unadded-hint strong { color: #B8562E; }
+      `}</style>
     </motion.div>
   );
 }

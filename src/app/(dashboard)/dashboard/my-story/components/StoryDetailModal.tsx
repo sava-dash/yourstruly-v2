@@ -56,7 +56,16 @@ interface FullWisdom {
 interface ParsedExchange {
   question: string; answer: string; audioUrl?: string; questionAudioUrl?: string
 }
-interface StoryDetailModalProps { item: StoryItem; onClose: () => void }
+interface StoryDetailModalProps {
+  item: StoryItem
+  onClose: () => void
+  /**
+   * Opens the "Continue this memory" cardchain overlay. Present on memory
+   * and wisdom items; omitted for photos (photos are append targets, not
+   * sources).
+   */
+  onContinue?: (item: StoryItem) => void
+}
 
 /* ------------------------------------------------------------------ */
 /*  Helpers                                                            */
@@ -93,6 +102,43 @@ function timeAgo(dateStr: string | null | undefined): string {
   if (months < 12) return `${months} month${months > 1 ? 's' : ''} ago`
   const years = Math.floor(months / 12)
   return `${years} year${years > 1 ? 's' : ''} ago`
+}
+
+/**
+ * Regex for the append-delimiter wrapper written by
+ * /api/memories/[id]/append. Format:
+ *   <!--APPEND id="<uuid>" at="<iso>" by="<userId>-->...<!--/APPEND-->
+ * Keeping it in one place so strip + extract can't drift out of sync.
+ */
+const APPEND_BLOCK_RE =
+  /\n*<!--APPEND id="([^"]+)" at="([^"]+)" by="([^"]*)"-->([\s\S]*?)<!--\/APPEND-->/g
+
+export interface AppendSegment {
+  id: string
+  at: string
+  by: string
+  content: string
+}
+
+/** Returns the text with all APPEND blocks removed (base memory only). */
+function stripAppendBlocks(text: string | null | undefined): string {
+  if (!text) return ''
+  return text.replace(APPEND_BLOCK_RE, '').trim()
+}
+
+/** Extracts each APPEND segment so the detail UI can render and delete it. */
+function extractAppendSegments(text: string | null | undefined): AppendSegment[] {
+  if (!text) return []
+  const out: AppendSegment[] = []
+  for (const match of text.matchAll(APPEND_BLOCK_RE)) {
+    out.push({
+      id: match[1] || '',
+      at: match[2] || '',
+      by: match[3] || '',
+      content: (match[4] || '').trim(),
+    })
+  }
+  return out
 }
 
 function parseConversation(text: string): { summary: string; exchanges: ParsedExchange[] } {
@@ -194,7 +240,7 @@ function useSlideshow(count: number, intervalMs = 5000) {
 /* ================================================================== */
 /*  COMPONENT                                                          */
 /* ================================================================== */
-export default function StoryDetailModal({ item, onClose }: StoryDetailModalProps) {
+export default function StoryDetailModal({ item, onClose, onContinue }: StoryDetailModalProps) {
   const router = useRouter()
   const [creatingBackstory, setCreatingBackstory] = useState(false)
   const [loading, setLoading] = useState(true)
@@ -324,9 +370,12 @@ export default function StoryDetailModal({ item, onClose }: StoryDetailModalProp
   }, [stopPlayback, speakText, playAudioUrl])
 
   // ---- Parsed content ----
-  const parsed = (memory?.description || wisdom?.response_text)
-    ? parseConversation(memory?.description || wisdom?.response_text || '')
-    : null
+  // Strip APPEND blocks before parsing so the main body stays clean; the
+  // appended segments render in their own "Continuations" section below.
+  const rawText = memory?.description || wisdom?.response_text || ''
+  const baseText = stripAppendBlocks(rawText)
+  const appendSegments = extractAppendSegments(rawText)
+  const parsed = baseText ? parseConversation(baseText) : null
   if (parsed) exchangesRef.current = parsed.exchanges
 
   // Location for mini map
@@ -370,6 +419,27 @@ export default function StoryDetailModal({ item, onClose }: StoryDetailModalProp
             <X size={18} className="text-[#5A6660] group-hover:text-[#1A1F1C]" />
           </button>
 
+          {/* Continue — opens the AppendMemoryChain overlay. Only shown for
+              memory/wisdom; photos are not a source of continuation. */}
+          {onContinue && item.type !== 'photo' && (
+            <button
+              onClick={() => onContinue(item)}
+              className="absolute -top-3 left-4 sm:left-6 z-20 flex items-center gap-1.5 px-3 py-2 shadow-xl"
+              style={{
+                fontFamily: 'var(--font-mono, monospace)',
+                fontWeight: 700,
+                fontSize: 11,
+                letterSpacing: '0.18em',
+                background: 'var(--ed-red, #E23B2E)',
+                color: '#fff',
+                border: '2px solid var(--ed-ink, #111)',
+                borderRadius: 2,
+              }}
+            >
+              + CONTINUE
+            </button>
+          )}
+
           {/* ========== CARD ========== */}
           <div className="rounded-3xl shadow-2xl overflow-hidden" style={{ background: 'linear-gradient(180deg, #FDFCF9 0%, #F8F4EE 100%)' }}>
 
@@ -388,6 +458,8 @@ export default function StoryDetailModal({ item, onClose }: StoryDetailModalProp
                 memory={memory}
                 photos={photos}
                 parsed={parsed}
+                baseDescription={baseText}
+                appendSegments={appendSegments}
                 collaborators={collaborators}
                 isFavorite={isFavorite}
                 onToggleFavorite={toggleFavorite}
@@ -1184,6 +1256,8 @@ function MemoryReadView({
   memory,
   photos,
   parsed,
+  baseDescription,
+  appendSegments,
   collaborators,
   isFavorite,
   onToggleFavorite,
@@ -1194,6 +1268,10 @@ function MemoryReadView({
   memory: FullMemory
   photos: FullMedia[]
   parsed: { summary: string; exchanges: ParsedExchange[] } | null
+  /** memory.description with APPEND blocks removed. */
+  baseDescription: string
+  /** Each `<!--APPEND-->` segment extracted from description. */
+  appendSegments: AppendSegment[]
   collaborators: { id: string; contact_name: string; contributor_name: string | null; response_text: string | null; status: string; completed_at: string | null }[]
   isFavorite: boolean
   onToggleFavorite: () => void
@@ -1212,8 +1290,27 @@ function MemoryReadView({
 
   const paragraphs = useMemo(() => {
     if (parsed && parsed.exchanges.length > 0) return []
-    return cleanDescription(memory.description)
-  }, [parsed, memory.description, cleanDescription])
+    return cleanDescription(baseDescription)
+  }, [parsed, baseDescription, cleanDescription])
+
+  // Local copy so we can hide a segment immediately after a successful DELETE
+  // without waiting for a full page refetch.
+  const [segments, setSegments] = useState<AppendSegment[]>(appendSegments)
+  useEffect(() => { setSegments(appendSegments) }, [appendSegments])
+
+  const handleDeleteSegment = useCallback(async (segmentId: string) => {
+    if (!confirm('Remove this addition? This only removes the appended content; the original memory stays.')) return
+    try {
+      const res = await fetch(`/api/memories/${memory.id}/append/${segmentId}`, { method: 'DELETE' })
+      if (res.ok) {
+        setSegments((s) => s.filter((seg) => seg.id !== segmentId))
+      } else {
+        console.error('[detail] delete segment failed', await res.text())
+      }
+    } catch (err) {
+      console.error('[detail] delete segment error', err)
+    }
+  }, [memory.id])
 
   const completedCollabs = collaborators.filter(c => c.status === 'completed' && c.response_text)
 
@@ -1435,6 +1532,45 @@ function MemoryReadView({
                 >
                   {label}
                 </span>
+              ))}
+            </div>
+          </section>
+        )}
+
+        {/* CONTINUATIONS — each appended segment with its own DELETE */}
+        {segments.length > 0 && (
+          <section className="px-6 sm:px-10 pt-10">
+            <h3
+              className="text-[11px] tracking-[0.22em] text-[#B8562E] mb-4"
+              style={{ fontFamily: 'var(--font-mono, monospace)', fontWeight: 700 }}
+            >
+              CONTINUATIONS · {segments.length}
+            </h3>
+            <div className="flex flex-col gap-3">
+              {segments.map((seg) => (
+                <div
+                  key={seg.id}
+                  className="relative p-4 pr-10"
+                  style={{ background: '#FFFBF1', border: '2px solid #111', borderRadius: 2 }}
+                >
+                  <p
+                    className="text-[10px] tracking-[0.2em] text-[#6F6B61] mb-2"
+                    style={{ fontFamily: 'var(--font-mono, monospace)' }}
+                  >
+                    ADDED {new Date(seg.at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }).toUpperCase()}
+                  </p>
+                  <p className="text-[14px] text-[#1A1F1C] whitespace-pre-wrap leading-relaxed">
+                    {seg.content}
+                  </p>
+                  <button
+                    onClick={() => handleDeleteSegment(seg.id)}
+                    className="absolute top-2 right-2 p-1.5 rounded-full hover:bg-[#111]/5"
+                    aria-label="Remove this continuation"
+                    title="Remove this continuation"
+                  >
+                    <X size={14} className="text-[#6F6B61]" />
+                  </button>
+                </div>
               ))}
             </div>
           </section>

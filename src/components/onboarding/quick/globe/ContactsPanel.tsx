@@ -48,8 +48,8 @@ export function ContactsPanel({
       transition={{ type: 'spring', stiffness: 260, damping: 28 }}
     >
       <div className="globe-side-panel-header">
-        <h3>Family, Friends & Loved Ones</h3>
-        <p>The people you shared life with are part of what makes those moments live on. Add the people who matter most.</p>
+        <h3>People who matter</h3>
+        <p>Add a few family members or friends. You can skip this.</p>
       </div>
       <div className="globe-side-panel-items" style={{ gap: '0', padding: '8px 16px', overflowY: 'auto' }}>
         {/* Existing contact rows */}
@@ -111,6 +111,11 @@ export function ContactsPanel({
           </button>
         </div>
       </div>
+      {(contactName.trim() || contactRelation) && (
+        <p className="yt-unadded-hint" role="status">
+          Tap <strong>+</strong> to keep {contactName.trim() ? `"${contactName.trim()}"` : 'this person'} — otherwise they won&apos;t be saved.
+        </p>
+      )}
       <div className="globe-side-panel-footer">
         {onBack && (
           <button type="button" onClick={onBack} className="globe-back-btn" aria-label="Back">
@@ -119,11 +124,30 @@ export function ContactsPanel({
         )}
         <button
           className="globe-continue-btn"
-          onClick={async () => { await onContinue(); }}
+          disabled={!!(contactName.trim() || contactRelation)}
+          style={{
+            opacity: (contactName.trim() || contactRelation) ? 0.5 : 1,
+            cursor: (contactName.trim() || contactRelation) ? 'not-allowed' : 'pointer',
+          }}
+          onClick={async () => {
+            if (contactName.trim() || contactRelation) return;
+            await onContinue();
+          }}
         >
-          {contactEntries.length > 0 ? 'Continue' : 'Skip'} <ChevronRight size={18} />
+          {contactEntries.length > 0 ? 'Continue' : 'Skip for now'} <ChevronRight size={18} />
         </button>
       </div>
+      <style jsx>{`
+        .yt-unadded-hint {
+          margin: 0;
+          padding: 6px 16px 0;
+          font-size: 12px;
+          line-height: 1.4;
+          color: rgba(184, 86, 46, 0.85);
+          text-align: center;
+        }
+        .yt-unadded-hint strong { color: #B8562E; }
+      `}</style>
     </motion.div>
   );
 }

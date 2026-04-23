@@ -3,6 +3,7 @@ import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import exifr from 'exifr'
 import { detectFaces, getDominantEmotion, searchFaces } from '@/lib/aws/rekognition'
+import { computeDisplayPosition } from '@/lib/photos/displayPosition'
 import { reverseGeocode } from '@/lib/geo/reverseGeocode'
 import { getStorageQuota } from '@/lib/storage/quota'
 
@@ -193,6 +194,12 @@ export async function POST(request: NextRequest) {
     }
   }
 
+  // Compute display_position from the faces we already detected so faces stay
+  // visible under object-fit: cover when the media is rendered.
+  const displayPosition = computeDisplayPosition(
+    detectedFaces.map((f) => ({ boundingBox: f.boundingBox, confidence: f.confidence })),
+  )
+
   // Create a memory_media row so the file is immediately visible in the
   // Media tab and FaceTagger can attach tags using the mediaId. Uses the
   // admin client to bypass RLS (memory_media INSERT is restricted).
@@ -218,6 +225,18 @@ export async function POST(request: NextRequest) {
           taken_at: exifData.takenAt || null,
           exif_lat: exifData.lat || null,
           exif_lng: exifData.lng || null,
+          ai_faces: detectedFaces.length > 0 ? detectedFaces.map((f) => ({
+            left: f.boundingBox.x,
+            top: f.boundingBox.y,
+            width: f.boundingBox.width,
+            height: f.boundingBox.height,
+            confidence: f.confidence,
+            age: f.age,
+            gender: f.gender,
+          })) : null,
+          ai_processed: fileType === 'image',
+          display_position_x: displayPosition?.x ?? null,
+          display_position_y: displayPosition?.y ?? null,
         })
         .select('id')
         .single()
@@ -268,5 +287,6 @@ export async function POST(request: NextRequest) {
     exif: exifData,
     faces: detectedFaces,
     mediaId,
+    displayPosition,
   })
 }

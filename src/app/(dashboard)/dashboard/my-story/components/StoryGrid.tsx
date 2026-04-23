@@ -5,9 +5,11 @@ import StoryCard, { type StoryItem } from './StoryCard'
 interface StoryGridProps {
   items: StoryItem[]
   onSelect?: (item: StoryItem) => void
+  /** Invoked when the hover-revealed "+ ADD" badge on a card is clicked. */
+  onAdd?: (item: StoryItem) => void
 }
 
-export default function StoryGrid({ items, onSelect }: StoryGridProps) {
+export default function StoryGrid({ items, onSelect, onAdd }: StoryGridProps) {
   if (items.length === 0) {
     return (
       <div className="flex flex-col items-center justify-center py-20 text-center">
@@ -23,7 +25,7 @@ export default function StoryGrid({ items, onSelect }: StoryGridProps) {
     return (
       <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-2">
         {items.map((item) => (
-          <StoryCard key={`${item.type}-${item.id}`} item={item} onSelect={onSelect} />
+          <StoryCard key={`${item.type}-${item.id}`} item={item} onSelect={onSelect} onAdd={onAdd} />
         ))}
       </div>
     )
@@ -32,7 +34,7 @@ export default function StoryGrid({ items, onSelect }: StoryGridProps) {
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
       {items.map((item) => (
-        <StoryCard key={`${item.type}-${item.id}`} item={item} onSelect={onSelect} />
+        <StoryCard key={`${item.type}-${item.id}`} item={item} onSelect={onSelect} onAdd={onAdd} />
       ))}
     </div>
   )

@@ -1,9 +1,9 @@
 import type { QuickStep, Pill, InterestCategory, ReligionCategory } from './types';
 
 const ALL_STEPS: QuickStep[] = [
-  'birth-info',
+  // birth-info is now the first phase inside the globe step (BasicsPanel)
   'globe',
-  // interests, contacts, why-here, photo-upload are now embedded in the globe step
+  // interests, contacts, why-here, photo-upload are also embedded in the globe step
   // religion removed
   // heartfelt (onboarding cards) removed — users will learn cards on the dashboard
   'ready',
@@ -11,7 +11,6 @@ const ALL_STEPS: QuickStep[] = [
 
 // Progress steps for the non-globe flow
 const PROGRESS_STEPS: QuickStep[] = [
-  'birth-info',
   'globe',
   'ready',
 ];

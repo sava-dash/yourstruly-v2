@@ -9,6 +9,7 @@ import { OnboardingErrorBoundary } from '@/components/ui/OnboardingErrorBoundary
 
 interface OnboardingData {
   name: string;
+  birthday?: string;
   interests: string[];
   hobbies: string[];
   skills: string[];
@@ -21,6 +22,12 @@ interface OnboardingData {
   heartfeltAnswer?: string;
   heartfeltConversation?: { role: 'assistant' | 'user'; content: string }[];
   uploadedImagesCount?: number;
+  placesLived?: string[];
+  whyHereText?: string;
+  whyHereSelections?: string[];
+  contactsCount?: number;
+  sensitiveTopicOptouts?: string[];
+  promptCadence?: string;
 }
 
 function OnboardingPageContent() {
@@ -113,10 +120,45 @@ function OnboardingPageContent() {
           updates.life_goals = data.lifeGoals;
           updates.personality_traits = data.personalityTraits;
           updates.religion = data.religion || null;
-          updates.city = locationParts[0] || null;
-          updates.state = locationParts[1] || null;
+          // hometown is now the canonical location column — we no longer write
+          // city/state from onboarding (deduped with the "Born in X" memory).
           updates.favorite_quote = data.favoriteQuote || null;
           updates.background = data.background || null;
+
+          // Columns the engagement engine actually reads (were previously dropped)
+          if (data.birthday) updates.birth_date = data.birthday;
+          if (locationParts[0]) updates.hometown = locationParts[0];
+
+          // Engagement preferences captured on the globe's preferences panel
+          if (data.promptCadence) updates.prompt_cadence = data.promptCadence;
+          if (data.sensitiveTopicOptouts && data.sensitiveTopicOptouts.length > 0) {
+            updates.sensitive_topic_optouts = data.sensitiveTopicOptouts;
+          }
+
+          const whyHereParts: string[] = [];
+          if (data.whyHereText?.trim()) whyHereParts.push(data.whyHereText.trim());
+          if (data.whyHereSelections?.length) whyHereParts.push(data.whyHereSelections.join(', '));
+          if (whyHereParts.length > 0) updates.why_here = whyHereParts.join(' — ');
+
+          if (data.placesLived && data.placesLived.length > 0) {
+            updates.locations_lived = data.placesLived;
+          }
+
+          // Signal-strength summary — lets the engagement engine tier prompts
+          // by how much we actually learned during onboarding.
+          const whyWordCount = (data.whyHereText || '').trim().split(/\s+/).filter(Boolean).length;
+          updates.onboarding_signals = {
+            captured_at: new Date().toISOString(),
+            has_birthday: !!data.birthday,
+            has_hometown: !!locationParts[0],
+            has_why_here: whyHereParts.length > 0,
+            places_count: data.placesLived?.length ?? 0,
+            contacts_count: data.contactsCount ?? 0,
+            interests_count: data.interests?.length ?? 0,
+            traits_count: data.personalityTraits?.length ?? 0,
+            photos_count: data.uploadedImagesCount ?? 0,
+            why_here_word_count: whyWordCount,
+          };
         }
 
         const { error: profileError } = await supabase

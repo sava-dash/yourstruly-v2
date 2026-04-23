@@ -324,12 +324,12 @@ function MemoryEntry({
             )}
           </div>
           {/* Description preview */}
-          {item.subtitle && (
+          {item.preview && (
             <p
               className="text-[15px] text-[#5A6660] leading-relaxed line-clamp-3 italic"
               style={{ fontFamily: 'var(--font-dm-serif, DM Serif Display, serif)' }}
             >
-              {item.subtitle}
+              {item.preview}
             </p>
           )}
           {/* Mood badge */}
@@ -370,12 +370,12 @@ function WisdomEntry({
           {item.title}
         </h4>
         {/* Response preview */}
-        {item.subtitle && (
+        {item.preview && (
           <p
             className="text-[15px] text-[#5A6660] leading-relaxed line-clamp-3 italic"
             style={{ fontFamily: 'var(--font-dm-serif, DM Serif Display, serif)' }}
           >
-            {item.subtitle}
+            {item.preview}
           </p>
         )}
         {/* Category badge + date */}

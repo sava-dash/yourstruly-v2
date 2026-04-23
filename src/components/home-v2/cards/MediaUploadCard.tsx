@@ -13,6 +13,8 @@ interface UploadedFile {
   faces?: any[]
   /** memory_media row ID — created during upload for face tagging */
   mediaId?: string
+  /** Focal point (0-1) computed from the primary face — keeps the face in-frame under object-fit: cover */
+  displayPosition?: { x: number; y: number } | null
 }
 
 interface MediaUploadCardProps {
@@ -60,6 +62,7 @@ export function MediaUploadCard({ onUpload }: MediaUploadCardProps) {
             path: data.path,
             faces: data.faces,
             mediaId: data.mediaId,
+            displayPosition: data.displayPosition ?? null,
           })
         }
       } catch (err: any) {

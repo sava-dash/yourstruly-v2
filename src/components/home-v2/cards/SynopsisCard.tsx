@@ -35,12 +35,18 @@ interface SynopsisCardProps {
   conversationTranscript: string
   promptText?: string
   memoryId?: string | null
+  /**
+   * In 'merge' mode the server unions extracted entities into the existing
+   * memory instead of overwriting them. Used by the "Continue this memory"
+   * append flow (AppendMemoryChain). Defaults to 'create'.
+   */
+  mode?: 'create' | 'merge'
   accentColor: string
   onSave: (data: SynopsisCardData) => void
   saved: boolean
 }
 
-export function SynopsisCard({ data, conversationTranscript, promptText, memoryId, accentColor, onSave, saved }: SynopsisCardProps) {
+export function SynopsisCard({ data, conversationTranscript, promptText, memoryId, mode, accentColor, onSave, saved }: SynopsisCardProps) {
   const [loading, setLoading] = useState(!data.loaded)
   const [state, setState] = useState<SynopsisCardData>({
     where: data.where ?? null,
@@ -54,19 +60,48 @@ export function SynopsisCard({ data, conversationTranscript, promptText, memoryI
   })
   const [editing, setEditing] = useState<null | 'where' | 'when' | 'mood' | 'tags'>(null)
   const [showAddMore, setShowAddMore] = useState(false)
+  const [saving, setSaving] = useState<'idle' | 'winning' | 'done'>('idle')
+  const [loadError, setLoadError] = useState<string | null>(null)
   const loadedRef = useRef(data.loaded || false)
 
   useEffect(() => {
-    if (loadedRef.current || !conversationTranscript.trim()) { setLoading(false); return }
+    if (loadedRef.current) { setLoading(false); return }
+    if (!conversationTranscript.trim()) {
+      // Transcript arrived empty — synopsis can't extract anything. We log
+      // once here so a regression is visible in the console instead of
+      // silently rendering an empty synopsis card.
+      console.warn('[SynopsisCard] empty transcript on mount — skipping extraction', { memoryId, promptText: promptText?.slice(0, 80) })
+      setLoading(false)
+      return
+    }
     let cancelled = false
     ;(async () => {
       try {
         const res = await fetch('/api/memory/synopsis', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ memoryId, transcript: conversationTranscript, promptText }),
+          body: JSON.stringify({ memoryId, transcript: conversationTranscript, promptText, mode: mode || 'create' }),
         })
-        if (!res.ok) throw new Error(`synopsis ${res.status}`)
+        if (!res.ok) {
+          const errBody = await res.text().catch(() => '')
+          console.error('[SynopsisCard] API error', res.status, errBody)
+          // Try to pull a user-friendly message out of the error body so the
+          // card can show *why* extraction failed instead of sitting blank.
+          let friendly: string | null = null
+          try {
+            const parsed = JSON.parse(errBody)
+            const detail: string = typeof parsed.detail === 'string' ? parsed.detail : ''
+            if (/credit balance is too low/i.test(detail)) {
+              friendly = 'The Anthropic account is out of credits. Top up the API key to resume extraction.'
+            } else if (/invalid_request_error/i.test(detail)) {
+              friendly = 'The extraction service rejected the request. See the server log for detail.'
+            } else if (parsed.error) {
+              friendly = String(parsed.error)
+            }
+          } catch {}
+          if (!cancelled) setLoadError(friendly || `Extraction failed (${res.status}).`)
+          throw new Error(`synopsis ${res.status}`)
+        }
         const d = await res.json()
         if (cancelled) return
         const who: PersonRef[] = Array.isArray(d.who)
@@ -105,7 +140,12 @@ export function SynopsisCard({ data, conversationTranscript, promptText, memoryI
   }
 
   const handleSave = () => {
-    onSave({ ...state, loaded: true })
+    if (saving !== 'idle') return
+    setSaving('winning')
+    setTimeout(() => {
+      setSaving('done')
+      onSave({ ...state, loaded: true })
+    }, 1000)
   }
 
   if (saved) {
@@ -257,15 +297,18 @@ export function SynopsisCard({ data, conversationTranscript, promptText, memoryI
   }
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
+    <div style={{ display: 'flex', flexDirection: 'column', height: '100%', position: 'relative' }}>
       {/* Header */}
       <div style={{ flexShrink: 0, padding: '14px 18px 8px' }}>
         <p style={{ margin: 0, fontSize: '10px', fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase', color: accentColor }}>
           Synopsis
         </p>
         <h3 style={{ margin: '3px 0 0', fontSize: '16px', fontWeight: 700, color: '#1A1F1C', fontFamily: 'var(--font-playfair, Playfair Display, serif)' }}>
-          Here&apos;s what we captured
+          We picked up a few details
         </h3>
+        <p style={{ margin: '4px 0 0', fontSize: '12px', color: '#6B7571', fontWeight: 500 }}>
+          Review or add anything we missed.
+        </p>
       </div>
 
       {/* Body */}
@@ -273,6 +316,31 @@ export function SynopsisCard({ data, conversationTranscript, promptText, memoryI
         {loading && (
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: '#94A09A', fontSize: '12px', padding: '10px 0' }}>
             <Loader2 size={14} className="animate-spin" /> Reading your memory…
+          </div>
+        )}
+
+        {loadError && !loading && (
+          <div
+            style={{
+              padding: '10px 12px',
+              borderRadius: '10px',
+              background: '#FFF4E5',
+              border: '1px solid #E8A35C',
+              fontSize: '12.5px',
+              lineHeight: '1.45',
+              color: '#6B4A1A',
+              display: 'flex',
+              flexDirection: 'column',
+              gap: '4px',
+            }}
+          >
+            <div style={{ fontSize: '10.5px', fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', color: '#B8562E' }}>
+              Couldn&apos;t extract details
+            </div>
+            <div>{loadError}</div>
+            <div style={{ fontSize: '11px', color: '#8C6A3E', marginTop: '2px' }}>
+              Your story is still saved — you can add the details manually below.
+            </div>
           </div>
         )}
 
@@ -317,7 +385,7 @@ export function SynopsisCard({ data, conversationTranscript, promptText, memoryI
             />
             <FieldRow
               icon={<Heart size={13} />}
-              label="Mood"
+              label="How it felt"
               value={state.mood}
               confirmed={!!state.confirmed?.mood}
               accent={accentColor}
@@ -387,12 +455,15 @@ export function SynopsisCard({ data, conversationTranscript, promptText, memoryI
           </button>
           <button
             onClick={handleSave}
+            disabled={saving !== 'idle'}
             style={{
               marginLeft: 'auto',
               display: 'inline-flex', alignItems: 'center', gap: '6px',
               padding: '9px 16px', borderRadius: '999px',
               background: accentColor, color: '#FFFFFF', border: 'none',
-              cursor: 'pointer', fontSize: '12.5px', fontWeight: 700,
+              cursor: saving !== 'idle' ? 'default' : 'pointer',
+              opacity: saving !== 'idle' ? 0.75 : 1,
+              fontSize: '12.5px', fontWeight: 700,
               boxShadow: `0 4px 12px ${accentColor}40`,
             }}
           >
@@ -400,6 +471,80 @@ export function SynopsisCard({ data, conversationTranscript, promptText, memoryI
           </button>
         </div>
       )}
+
+      <AnimatePresence>
+        {saving === 'winning' && (
+          <motion.div
+            key="save-win-overlay"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.2 }}
+            style={{
+              position: 'absolute',
+              inset: 0,
+              zIndex: 50,
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'center',
+              justifyContent: 'center',
+              background: `linear-gradient(135deg, ${accentColor}F0 0%, #3B8A5A 100%)`,
+              borderRadius: 'inherit',
+              overflow: 'hidden',
+              pointerEvents: 'none',
+            }}
+          >
+            <motion.div
+              initial={{ scale: 0 }}
+              animate={{ scale: [0, 1.2, 1] }}
+              transition={{ duration: 0.55, times: [0, 0.6, 1], ease: 'easeOut' }}
+              style={{
+                width: '68px', height: '68px', borderRadius: '50%',
+                background: '#FFFFFF',
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                boxShadow: '0 8px 24px rgba(0,0,0,0.18)',
+              }}
+            >
+              <Check size={36} color={accentColor} strokeWidth={3.5} />
+            </motion.div>
+            <motion.p
+              initial={{ opacity: 0, y: 6 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.35, duration: 0.3 }}
+              style={{
+                margin: '14px 0 0',
+                fontSize: '15px', fontWeight: 700, color: '#FFFFFF',
+                fontFamily: 'var(--font-playfair, Playfair Display, serif)',
+                letterSpacing: '0.01em',
+              }}
+            >
+              Saved to your story
+            </motion.p>
+            {Array.from({ length: 8 }).map((_, i) => {
+              const angle = (i / 8) * Math.PI * 2
+              const distance = 70 + (i % 3) * 14
+              const dx = Math.cos(angle) * distance
+              const dy = Math.sin(angle) * distance
+              const colors = ['#FFFFFF', '#FFE9A8', '#FFD27A', '#FFFFFF', '#FFE9A8', '#FFD27A', '#FFFFFF', '#FFE9A8']
+              return (
+                <motion.span
+                  key={`confetti-${i}`}
+                  initial={{ opacity: 0, x: 0, y: 0, scale: 0 }}
+                  animate={{ opacity: [0, 1, 0], x: dx, y: dy, scale: [0, 1, 0.8] }}
+                  transition={{ delay: i * 0.05, duration: 0.9, ease: 'easeOut' }}
+                  style={{
+                    position: 'absolute',
+                    width: '8px', height: '8px', borderRadius: '50%',
+                    background: colors[i],
+                    top: '50%', left: '50%',
+                    marginTop: '-4px', marginLeft: '-4px',
+                  }}
+                />
+              )
+            })}
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       <style jsx>{`
         .synopsis-scroll::-webkit-scrollbar { width: 6px; }
@@ -1083,7 +1228,7 @@ function TagsRow({ tags, confirmed, accent, onConfirm, setTags }: {
       </div>
       <div style={{ flex: 1, minWidth: 0 }}>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-          <p style={{ margin: 0, fontSize: '9.5px', fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', color: '#94A09A' }}>Tags</p>
+          <p style={{ margin: 0, fontSize: '9.5px', fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', color: '#94A09A' }}>Topics</p>
           {tags.length > 0 && (
             <button
               onClick={onConfirm}

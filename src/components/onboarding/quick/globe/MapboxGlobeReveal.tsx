@@ -11,6 +11,9 @@ import { InterestsPanel } from './InterestsPanel';
 import { ContactsPanel } from './ContactsPanel';
 import { PhotoUploadPanel, type UploadedPhoto } from './PhotoUploadPanel';
 import { PlacesLivedPanel } from './PlacesLivedPanel';
+import { BasicsPanel } from './BasicsPanel';
+import { PreferencesPanel } from './PreferencesPanel';
+import { logOnboardingPhase, type OnboardingPhase as LogPhase } from '../onboarding-events';
 
 // ============================================
 // GEOCODING
@@ -42,7 +45,10 @@ export function MapboxGlobeReveal({
   name,
   birthday,
   location,
+  userId,
   onDone,
+  onBasicsSubmit,
+  onInterestsCommit,
   selectedPills,
   onTogglePill,
   onSubPhaseChange,
@@ -51,15 +57,22 @@ export function MapboxGlobeReveal({
   name: string;
   birthday: string;
   location: string;
+  userId?: string;
   onDone: (globeData?: {
     places: string[];
     contacts: { name: string; relationship: string }[];
     interests: string[];
     whyHere: string[];
     whyHereText: string;
+    sensitiveOptouts: string[];
+    promptCadence: string | null;
     uploadedPhotosCount?: number;
     uploadedPhotos?: { id: string; preview: string; fileUrl?: string; locationName?: string | null }[];
   }) => void;
+  /** Captures birthday + birthplace inline on the globe view (first phase). */
+  onBasicsSubmit?: (basics: { birthday: string; location: string }) => void;
+  /** Captures interests + traits for incremental profile save. */
+  onInterestsCommit?: () => void;
   selectedPills: Set<string>;
   onTogglePill: (label: string) => void;
   onSubPhaseChange?: (subPhase: GlobeSubPhase) => void;
@@ -77,18 +90,61 @@ export function MapboxGlobeReveal({
   const markerRef = useRef<any>(null);
   const mapboxglRef = useRef<any>(null);
   const advancedRef = useRef(false);
-  const [phase, setPhase] = useState<'loading' | 'spinning' | 'flying' | 'pinned' | 'places-lived' | 'places-flying' | 'globe-spin-out' | 'adventure-message' | 'contacts' | 'interests' | 'why-here' | 'photo-upload' | 'photo-map' | 'lets-go'>('loading');
+  const [phase, setPhase] = useState<'loading' | 'basics' | 'spinning' | 'flying' | 'pinned' | 'places-lived' | 'places-flying' | 'globe-spin-out' | 'contacts' | 'interests' | 'why-here' | 'photo-upload' | 'photo-map' | 'preferences' | 'lets-go'>('loading');
+
+  // Preferences (collected just before lets-go)
+  const [sensitiveOptouts, setSensitiveOptouts] = useState<Set<string>>(new Set());
+  const [promptCadence, setPromptCadence] = useState<string | null>(null);
+
+  // Inline birth-info (first phase on the map — replaces the old BirthInfoStep page)
+  const [basicsBirthday, setBasicsBirthday] = useState(birthday || '');
+  const [basicsLocation, setBasicsLocation] = useState(location || '');
+  // Track whether we've kicked off the fly-in yet (avoid doing it twice)
+  const flyKickedOffRef = useRef(false);
+  // Rotation handle shared across effects (init starts it; fly-in stops it)
+  const rotatingRef = useRef(true);
 
   // Places-lived state
   const [placeInput, setPlaceInput] = useState('');
   const [placeSuggestions, setPlaceSuggestions] = useState<{ place_name: string; center: [number, number] }[]>([]);
   const [placeWhen, setPlaceWhen] = useState('');
-  const [placesAdded, setPlacesAdded] = useState<{ city: string; lat: number; lng: number; when: string }[]>([]);
+  const [placesAdded, setPlacesAdded] = useState<{ city: string; lat: number; lng: number; when: string; year?: number }[]>([]);
+
+  // If the user types an age reference ("when I was 12", "age 25", "12 years old",
+  // or just a small number), compute the corresponding year from their birthday.
+  const birthYearFromBirthday = (() => {
+    if (!birthday) return null;
+    const y = new Date(birthday + 'T00:00:00').getFullYear();
+    return Number.isFinite(y) ? y : null;
+  })();
+  const extractYearFromWhen = useCallback((text: string): number | null => {
+    const t = text.trim();
+    if (!t || !birthYearFromBirthday) return null;
+    // 4-digit year already provided — no calculation needed.
+    if (/\b(19|20)\d{2}\b/.test(t)) return null;
+    const agePatterns: RegExp[] = [
+      /\b(?:age|aged|was|turned|at)\s+(\d{1,3})\b/i,
+      /\bwhen\s+i\s+was\s+(\d{1,3})\b/i,
+      /\b(\d{1,3})\s*(?:yo|yrs?|years?)\s*(?:old)?\b/i,
+      /^\s*(\d{1,3})\s*$/,
+    ];
+    for (const re of agePatterns) {
+      const m = t.match(re);
+      if (m) {
+        const age = parseInt(m[1], 10);
+        if (age >= 0 && age <= 120) return birthYearFromBirthday + age;
+      }
+    }
+    return null;
+  }, [birthYearFromBirthday]);
   const placesDebounce = useRef<ReturnType<typeof setTimeout> | null>(null);
   const markersRef = useRef<any[]>([]);
   // Track the last pin coordinates for drawing arcs
   const lastCoordsRef = useRef<{ lng: number; lat: number } | null>(null);
   const arcCountRef = useRef(0);
+  // Every arc we draw registers its source here so we can clear them all on
+  // reorder (chronological re-sort when a place is added out of order).
+  const arcIdsRef = useRef<string[]>([]);
 
   // Custom options for interests
   const [customInterestInput, setCustomInterestInput] = useState('');
@@ -154,6 +210,7 @@ export function MapboxGlobeReveal({
     }
 
     const sourceId = `arc-${arcCountRef.current++}`;
+    arcIdsRef.current.push(sourceId);
     map.addSource(sourceId, {
       type: 'geojson',
       data: { type: 'Feature', properties: {}, geometry: { type: 'LineString', coordinates: coords } },
@@ -249,6 +306,59 @@ export function MapboxGlobeReveal({
     setTimeout(animatePulse, 300);
   }, []);
 
+  // Remove every arc (glow/mid/core + pulse + pulse-glow) from the map. Used
+  // before we re-draw arcs in chronological order when a place is added out
+  // of order.
+  const clearAllArcs = useCallback(() => {
+    const map = mapRef.current;
+    if (!map) return;
+    for (const sourceId of arcIdsRef.current) {
+      const pulseSourceId = `${sourceId}-pulse`;
+      const layerIds = [
+        `${sourceId}-glow`,
+        `${sourceId}-mid`,
+        sourceId,
+        pulseSourceId,
+        `${pulseSourceId}-glow`,
+      ];
+      for (const id of layerIds) {
+        try { if (map.getLayer(id)) map.removeLayer(id); } catch { /* ignore */ }
+      }
+      for (const id of [sourceId, pulseSourceId]) {
+        try { if (map.getSource(id)) map.removeSource(id); } catch { /* ignore */ }
+      }
+    }
+    arcIdsRef.current = [];
+  }, []);
+
+  // Redraw every arc between consecutive places in the given order. Safe to
+  // call repeatedly — clears the old arcs first. We don't fly the camera here;
+  // just replace the trails.
+  const redrawArcsInOrder = useCallback((
+    orderedPlaces: { lat: number; lng: number }[]
+  ) => {
+    if (orderedPlaces.length < 2) { clearAllArcs(); return; }
+    clearAllArcs();
+    for (let i = 0; i < orderedPlaces.length - 1; i++) {
+      drawArc(orderedPlaces[i], orderedPlaces[i + 1]);
+    }
+  }, [clearAllArcs, drawArc]);
+
+  // Sort places: those with a computed year come first (oldest → newest),
+  // then any without a year in original insertion order.
+  const sortPlacesChronologically = useCallback(<T extends { year?: number }>(
+    places: T[]
+  ): T[] => {
+    const withYear = places
+      .map((p, i) => ({ p, i }))
+      .filter(x => typeof x.p.year === 'number')
+      .sort((a, b) => (a.p.year! - b.p.year!) || (a.i - b.i));
+    const withoutYear = places
+      .map((p, i) => ({ p, i }))
+      .filter(x => typeof x.p.year !== 'number');
+    return [...withYear, ...withoutYear].map(x => x.p);
+  }, []);
+
   // Add a place: fly to it, drop pin, draw arc
   const handleAddPlace = useCallback(async (cityName: string, coords?: [number, number]) => {
     if (!cityName.trim()) return;
@@ -268,12 +378,7 @@ export function MapboxGlobeReveal({
       lat = result.lat;
     }
 
-    // Draw arc from previous location
-    if (lastCoordsRef.current) {
-      drawArc(lastCoordsRef.current, { lng, lat });
-    }
-
-    // Fly to new location
+    // Fly to the newly added place regardless of where it slots in time.
     map.flyTo({
       center: [lng, lat],
       zoom: 11,
@@ -283,11 +388,17 @@ export function MapboxGlobeReveal({
       essential: true,
     });
 
+    const computedYear = extractYearFromWhen(placeWhen);
+    const whenDisplay = computedYear
+      ? (/^\s*\d{1,3}\s*$/.test(placeWhen.trim()) ? String(computedYear) : `${placeWhen} (${computedYear})`)
+      : placeWhen;
+    const newPlace = { city: cityName, lat, lng, when: whenDisplay, year: computedYear ?? undefined };
+
     map.once('moveend', () => {
       // Drop pin
       const el = document.createElement('div');
       el.className = 'yt-map-marker';
-      const displayDate = placeWhen.trim() ? `<p class="marker-loc">${placeWhen}</p>` : '';
+      const displayDate = whenDisplay.trim() ? `<p class="marker-loc">${whenDisplay}</p>` : '';
       el.innerHTML = `
         <div class="marker-wrapper">
           <div class="marker-pulse"></div>
@@ -312,14 +423,22 @@ export function MapboxGlobeReveal({
         .addTo(map);
       markersRef.current.push(marker);
 
-      lastCoordsRef.current = { lng, lat };
-      setPlacesAdded(prev => [...prev, { city: cityName, lat, lng, when: placeWhen }]);
+      // Re-sort all places chronologically (year ascending; yearless at the
+      // end in insertion order) and redraw every arc in the new sequence.
+      setPlacesAdded(prev => {
+        const next = [...prev, newPlace];
+        const ordered = sortPlacesChronologically(next);
+        redrawArcsInOrder(ordered);
+        const last = ordered[ordered.length - 1];
+        if (last) lastCoordsRef.current = { lng: last.lng, lat: last.lat };
+        return ordered;
+      });
       setPlaceInput('');
       setPlaceWhen('');
       setPlaceSuggestions([]);
       setPhase('places-lived');
     });
-  }, [name, placeWhen, drawArc]);
+  }, [name, placeWhen, extractYearFromWhen, redrawArcsInOrder, sortPlacesChronologically]);
 
   // Save places to Supabase
   const placesSavedRef = useRef(false);
@@ -339,7 +458,7 @@ export function MapboxGlobeReveal({
         country: p.city.includes(',') ? p.city.split(',').pop()?.trim() || '' : '',
         latitude: p.lat,
         longitude: p.lng,
-        moved_in_date: null, // free text stored in notable_memories
+        moved_in_date: p.year ? `${p.year}-01-01` : null,
         notable_memories: p.when || null,
         life_stage: null,
       }));
@@ -405,7 +524,7 @@ export function MapboxGlobeReveal({
     setPhase('globe-spin-out');
     const map = mapRef.current;
     if (map) {
-      // Zoom out to show full globe with all trails
+      // Zoom out to show full globe with all trails, then transition to contacts.
       map.flyTo({
         center: [0, 20],
         zoom: 1.8,
@@ -415,13 +534,12 @@ export function MapboxGlobeReveal({
         essential: true,
       });
 
-      // Start spinning after zoom-out completes
       setTimeout(() => startGlobeSpin(), 3000);
-
-      // Show adventure info box after zoom-out
-      setTimeout(() => setPhase('adventure-message'), 3500);
+      // Skip the old adventure-message interstitial — go straight to contacts
+      // (the ContactsPanel already carries the "people who matter most" intro).
+      setTimeout(() => setPhase('contacts'), 3500);
     } else {
-      setTimeout(() => setPhase('adventure-message'), 500);
+      setTimeout(() => setPhase('contacts'), 500);
     }
   }, [savePlaces, startGlobeSpin]);
 
@@ -473,12 +591,104 @@ export function MapboxGlobeReveal({
     }
   }, [whyHereText, whyHereSelections]);
 
+  // Drop-off analytics: log every interactive phase the user reaches.
+  const loggedPhasesRef = useRef<Set<string>>(new Set());
+  useEffect(() => {
+    if (!userId) return;
+    const analyticsPhase: LogPhase | null = (() => {
+      switch (phase) {
+        case 'basics': return 'basics';
+        case 'pinned': return 'map';
+        case 'places-lived': return 'places-lived';
+        case 'contacts': return 'contacts';
+        case 'interests': return 'interests';
+        case 'photo-upload':
+        case 'photo-map': return 'photo-upload';
+        case 'why-here': return 'why-here';
+        case 'preferences': return 'preferences';
+        case 'lets-go': return 'lets-go';
+        default: return null;
+      }
+    })();
+    if (!analyticsPhase) return;
+    if (loggedPhasesRef.current.has(analyticsPhase)) return;
+    loggedPhasesRef.current.add(analyticsPhase);
+    logOnboardingPhase(userId, analyticsPhase);
+  }, [phase, userId]);
+
+  // Resume hydration: if the user dropped off mid-flow, bring back collected
+  // places, contacts, and why-here text so they don't start from scratch.
+  // Runs once on mount; does not re-draw map pins (the data is already
+  // persisted so saving won't duplicate thanks to our unique indexes).
+  const hydratedRef = useRef(false);
+  useEffect(() => {
+    if (!userId) return;
+    if (hydratedRef.current) return;
+    hydratedRef.current = true;
+    (async () => {
+      try {
+        const { createClient } = await import('@/lib/supabase/client');
+        const supabase = createClient();
+
+        const [placesRes, contactsRes, whyRes] = await Promise.all([
+          supabase.from('location_history')
+            .select('city, country, latitude, longitude, notable_memories, moved_in_date')
+            .eq('user_id', userId),
+          supabase.from('contacts')
+            .select('full_name, relationship_type')
+            .eq('user_id', userId)
+            .limit(50),
+          supabase.from('memories')
+            .select('description, tags')
+            .eq('user_id', userId)
+            .contains('tags', ['why-here'])
+            .limit(1)
+            .maybeSingle(),
+        ]);
+
+        if (placesRes.data && placesRes.data.length > 0) {
+          type R = { city: string; country: string | null; latitude: number; longitude: number; notable_memories: string | null; moved_in_date: string | null };
+          const rows = placesRes.data as unknown as R[];
+          setPlacesAdded(rows.map(r => ({
+            city: r.country ? `${r.city}, ${r.country}` : r.city,
+            lat: r.latitude,
+            lng: r.longitude,
+            when: r.notable_memories || '',
+            year: r.moved_in_date ? new Date(r.moved_in_date).getFullYear() : undefined,
+          })));
+          // Mark as already-saved so spinOutAndContinue doesn't duplicate.
+          placesSavedRef.current = true;
+        }
+
+        if (contactsRes.data && contactsRes.data.length > 0) {
+          type R = { full_name: string; relationship_type: string | null };
+          const rows = contactsRes.data as unknown as R[];
+          setContactEntries(rows.map(r => ({
+            name: r.full_name,
+            relationship: (r.relationship_type || '').replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase()),
+          })));
+          // Prevent re-save on completion
+          setGoogleImportedNames(new Set(rows.map(r => r.full_name)));
+        }
+
+        if (whyRes.data) {
+          const desc = (whyRes.data as unknown as { description: string | null }).description || '';
+          if (desc) setWhyHereText(desc.replace(/^Goals: [^\n]+\n\n?/, ''));
+        }
+      } catch (err) {
+        console.debug('[onboarding] hydrate failed:', err);
+      }
+    })();
+  }, [userId]);
+
   // Notify parent of sub-phase changes for progress bar
   useEffect(() => {
     if (!onSubPhaseChange) return;
-    if (phase === 'places-lived' || phase === 'places-flying') {
+    if (phase === 'basics') {
+      onSubPhaseChange('basics');
+    } else if (phase === 'places-lived' || phase === 'places-flying') {
       onSubPhaseChange('places-lived');
-    } else if (phase === 'contacts' || phase === 'adventure-message' || phase === 'globe-spin-out') {
+    } else if (phase === 'contacts' || phase === 'globe-spin-out') {
       onSubPhaseChange('contacts');
     } else if (phase === 'interests') {
       onSubPhaseChange('interests');
@@ -486,6 +696,8 @@ export function MapboxGlobeReveal({
       onSubPhaseChange('why-here');
     } else if (phase === 'photo-upload' || phase === 'photo-map') {
       onSubPhaseChange('photo-upload');
+    } else if (phase === 'preferences') {
+      onSubPhaseChange('preferences');
     } else {
       onSubPhaseChange('map');
     }
@@ -566,8 +778,8 @@ export function MapboxGlobeReveal({
   // ── Back-navigation history (interactive phases only) ──
   // Tracks the sequence of *interactive* phases the user has visited so that a
   // back button can unwind the flow. Non-interactive/animation phases are not
-  // pushed (loading, spinning, flying, pinned, globe-spin-out, adventure-message,
-  // places-flying). The current phase is NOT on the stack — only predecessors.
+  // pushed (loading, spinning, flying, pinned, globe-spin-out, places-flying).
+  // The current phase is NOT on the stack — only predecessors.
   type InteractivePhase =
     | 'places-lived'
     | 'contacts'
@@ -625,17 +837,17 @@ export function MapboxGlobeReveal({
 
       mapRef.current = map;
 
-    // Slow auto-rotation before fly-in
-    let rotating = true;
+    // Slow auto-rotation while we wait for basics (or until fly-in starts)
+    rotatingRef.current = true;
     let bearing = 0;
     const rotate = () => {
-      if (!rotating) return;
+      if (!rotatingRef.current) return;
       bearing += 0.12;
       map.setBearing(bearing % 360);
       requestAnimationFrame(rotate);
     };
 
-    map.on('style.load', async () => {
+    map.on('style.load', () => {
       map.setFog({
         color: 'rgb(15, 15, 25)',
         'high-color': 'rgb(35, 40, 60)',
@@ -644,12 +856,47 @@ export function MapboxGlobeReveal({
         'star-intensity': 0.8,
       });
 
-      setPhase('spinning');
+      // If we already have a location (resumed progress), go straight to
+      // spinning → fly-in. Otherwise open with the basics prompt; the
+      // second effect will take over once the user submits birthday+birthplace.
+      if (location && birthday) {
+        setPhase('spinning');
+      } else {
+        setPhase('basics');
+      }
       rotate();
+    });
+    };
 
-      // Pause on globe for 1.5s then fly in
-      await delay(1500);
-      rotating = false;
+    initMap();
+
+    return () => {
+      markerRef.current?.remove();
+      if (mapRef.current) {
+        mapRef.current.remove();
+        mapRef.current = null;
+      }
+    };
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Fly-in effect: triggers once we have a location AND the map is ready.
+  // Handles both the resumed-progress case (location present at mount) and
+  // the new inline basics flow (location arrives via onBasicsSubmit).
+  useEffect(() => {
+    if (flyKickedOffRef.current) return;
+    if (!location) return;
+    if (phase !== 'spinning') return;
+
+    const map = mapRef.current;
+    const mapboxgl = mapboxglRef.current;
+    if (!map || !mapboxgl) return;
+
+    flyKickedOffRef.current = true;
+
+    (async () => {
+      // Brief pause so the spin is visible before we fly in
+      await delay(800);
+      rotatingRef.current = false;
 
       const coords = await geocodeLocation(location);
       setPhase('flying');
@@ -666,7 +913,6 @@ export function MapboxGlobeReveal({
       });
 
       map.once('moveend', () => {
-        // Drop custom marker
         const el = document.createElement('div');
         el.className = 'yt-map-marker';
         el.innerHTML = `
@@ -681,7 +927,7 @@ export function MapboxGlobeReveal({
             </div>
             <div class="marker-card">
               <p class="marker-name">${name}'s adventure began</p>
-              <p class="marker-loc">${formattedBirthday}</p>
+              <p class="marker-loc">${formatBirthday(birthday)}</p>
             </div>
           </div>
         `;
@@ -693,21 +939,9 @@ export function MapboxGlobeReveal({
         markerRef.current = marker;
         lastCoordsRef.current = { lng: coords.lng, lat: coords.lat };
         setPhase('pinned');
-        // User must click Continue to advance (no auto-advance)
       });
-    });
-    };
-
-    initMap();
-
-    return () => {
-      markerRef.current?.remove();
-      if (mapRef.current) {
-        mapRef.current.remove();
-        mapRef.current = null;
-      }
-    };
-  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+    })();
+  }, [location, birthday, name, phase]);
 
   return (
     <div className="globe-fullscreen">
@@ -744,6 +978,25 @@ export function MapboxGlobeReveal({
         )}
       </AnimatePresence>
 
+      {/* Basics — inline birthday + birthplace collection while globe spins */}
+      <AnimatePresence>
+        {phase === 'basics' && (
+          <BasicsPanel
+            name={name}
+            birthday={basicsBirthday}
+            setBirthday={setBasicsBirthday}
+            location={basicsLocation}
+            setLocation={setBasicsLocation}
+            onContinue={() => {
+              onBasicsSubmit?.({ birthday: basicsBirthday, location: basicsLocation });
+              // We can't wait for prop propagation — nudge phase so the
+              // fly-in effect picks up when `location` arrives via props.
+              setPhase('spinning');
+            }}
+          />
+        )}
+      </AnimatePresence>
+
       {/* Pinned — welcome message + continue */}
       <AnimatePresence>
         {phase === 'pinned' && (
@@ -773,7 +1026,7 @@ export function MapboxGlobeReveal({
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: 1.0 }}
                 >
-                  We look forward to hearing more about this adventure.
+                  We&apos;d love to hear more about you.
                 </motion.h2>
                 <motion.div
                   className="globe-location-row"
@@ -820,9 +1073,9 @@ export function MapboxGlobeReveal({
         )}
       </AnimatePresence>
 
-      {/* ── Persistent Summary Panel — floating LEFT (only show collected data, hide at lets-go) ── */}
+      {/* ── Persistent Summary Panel — floating LEFT (only show collected data) ── */}
       <AnimatePresence>
-        {(phase === 'places-lived' || phase === 'places-flying' || phase === 'globe-spin-out' || phase === 'adventure-message' || phase === 'contacts' || phase === 'interests' || phase === 'why-here' || phase === 'photo-upload') && (
+        {(phase === 'places-lived' || phase === 'places-flying' || phase === 'globe-spin-out' || phase === 'contacts' || phase === 'interests' || phase === 'why-here' || phase === 'photo-upload' || phase === 'preferences') && (
           <motion.div
             key="summary-panel"
             className="globe-floating-panel globe-floating-left globe-summary-panel"
@@ -922,74 +1175,7 @@ export function MapboxGlobeReveal({
         )}
       </AnimatePresence>
 
-      {/* ── Phase: Adventure message → Contacts intro ── */}
-      <AnimatePresence>
-        {phase === 'adventure-message' && (
-          <motion.div
-            key="adventure-msg-bottom"
-            className="globe-bottom-panel"
-            initial={{ opacity: 0, y: 80 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: 80 }}
-            transition={{ type: 'spring', stiffness: 200, damping: 24 }}
-          >
-            <div className="globe-welcome-card">
-              <div className="globe-welcome-bar" />
-              <div className="globe-welcome-body">
-                <motion.p
-                  className="globe-welcome-greeting"
-                  initial={{ opacity: 0, y: 8 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.3 }}
-                >
-                  You&apos;ve lived in some incredible places.
-                </motion.p>
-                <motion.h2
-                  className="globe-welcome-headline"
-                  initial={{ opacity: 0, y: 8 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.6 }}
-                  style={{ fontSize: '18px', lineHeight: '1.5' }}
-                >
-                  Every place holds a story, and most of those stories include someone.
-                  <br />The people you shared life with are part of what makes those moments live on.
-                </motion.h2>
-              </div>
-              <motion.div
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                transition={{ delay: 1.0 }}
-                style={{ padding: '0 24px 20px', display: 'flex', flexDirection: 'column', gap: '8px' }}
-              >
-                <button
-                  className="globe-continue-btn"
-                  style={{ margin: 0, width: '100%' }}
-                  onClick={() => { setPhase('contacts'); }}
-                >
-                  Add your people <ChevronRight size={18} />
-                </button>
-                <button
-                  onClick={() => setPhase('interests')}
-                  style={{
-                    padding: '10px',
-                    border: 'none',
-                    background: 'none',
-                    color: 'rgba(45,45,45,0.5)',
-                    fontSize: '14px',
-                    fontWeight: 500,
-                    cursor: 'pointer',
-                    textAlign: 'center',
-                  }}
-                >
-                  I&apos;ll do this later
-                </button>
-              </motion.div>
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
-
-      {/* ── Contacts panel — floating on the right ── */}
+      {/* Contacts panel — floating on the right (adventure-message merged inline here) */}
       <AnimatePresence>
         {phase === 'contacts' && (
           <ContactsPanel
@@ -1016,7 +1202,12 @@ export function MapboxGlobeReveal({
             setCustomInterests={setCustomInterests}
             customInterestInput={customInterestInput}
             setCustomInterestInput={setCustomInterestInput}
-            onContinue={() => { setPhase('photo-upload'); }}
+            onContinue={() => {
+              // Flush interests + personality_traits to profiles right now so
+              // the engagement engine has them even if the user drops off later.
+              onInterestsCommit?.();
+              setPhase('photo-upload');
+            }}
             onBack={goBack}
           />
         )}
@@ -1032,7 +1223,7 @@ export function MapboxGlobeReveal({
             setWhyHereSelections={setWhyHereSelections}
             onContinue={async () => {
               await saveWhyHere();
-              setPhase('lets-go');
+              setPhase('preferences');
             }}
             onBack={goBack}
           />
@@ -1140,7 +1331,21 @@ export function MapboxGlobeReveal({
         })()}
       </AnimatePresence>
 
-      {/* ── "Let's bring this to life" — transition popup after why-here ── */}
+      {/* ── Preferences: cadence + sensitive-topic opt-outs ── */}
+      <AnimatePresence>
+        {phase === 'preferences' && (
+          <PreferencesPanel
+            sensitiveOptouts={sensitiveOptouts}
+            setSensitiveOptouts={setSensitiveOptouts}
+            promptCadence={promptCadence}
+            setPromptCadence={setPromptCadence}
+            onContinue={() => setPhase('lets-go')}
+            onBack={goBack}
+          />
+        )}
+      </AnimatePresence>
+
+      {/* ── "Let's bring this to life" — final set-focus prompt; button pushes to dashboard ── */}
       <AnimatePresence>
         {phase === 'lets-go' && (
           <motion.div
@@ -1161,10 +1366,10 @@ export function MapboxGlobeReveal({
               <div className="globe-welcome-bar" />
               <div className="globe-welcome-body" style={{ textAlign: 'center' }}>
                 <p className="globe-welcome-greeting">
-                  Let&apos;s bring this to life.
+                  You&apos;re set.
                 </p>
                 <h2 className="globe-welcome-headline" style={{ fontSize: '18px', lineHeight: '1.5' }}>
-                  You&apos;ve set your focus. Now see how easy it is to start capturing what matters.
+                  We&apos;ll use what you&apos;ve shared to send prompts that feel relevant. Your dashboard is ready when you are.
                 </h2>
               </div>
               <div style={{ padding: '0 24px 24px' }}>
@@ -1179,6 +1384,8 @@ export function MapboxGlobeReveal({
                       interests: Array.from(selectedPills),
                       whyHere: Array.from(whyHereSelections),
                       whyHereText,
+                      sensitiveOptouts: Array.from(sensitiveOptouts),
+                      promptCadence,
                       uploadedPhotosCount: uploadedPhotos.filter(p => p.status === 'done').length,
                       uploadedPhotos: uploadedPhotos
                         .filter(p => p.status === 'done')
@@ -1186,7 +1393,7 @@ export function MapboxGlobeReveal({
                     });
                   }}
                 >
-                  Start <ChevronRight size={18} />
+                  Open my dashboard <ChevronRight size={18} />
                 </button>
               </div>
             </motion.div>

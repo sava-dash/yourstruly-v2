@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { detectFaces, searchFaces } from '@/lib/aws/rekognition'
+import { computeDisplayPosition } from '@/lib/photos/displayPosition'
 
 // POST /api/media/[id]/detect-faces - Detect faces + search for matches in user's Rekognition collection
 export async function POST(
@@ -89,9 +90,16 @@ export async function POST(
       gender: face.gender,
     }))
 
+    const displayPosition = computeDisplayPosition(faceData)
+
     await supabase
       .from('memory_media')
-      .update({ ai_faces: faceData, ai_processed: true })
+      .update({
+        ai_faces: faceData,
+        ai_processed: true,
+        display_position_x: displayPosition?.x ?? null,
+        display_position_y: displayPosition?.y ?? null,
+      })
       .eq('id', mediaId)
 
     // Step 2: Search for matches in user's Rekognition collection

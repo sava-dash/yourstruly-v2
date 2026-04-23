@@ -21,6 +21,7 @@ import { ConversationEngine } from '@/components/conversation-engine';
 import { BubblePickerInterests, BubblePickerTraits, ALL_INTERESTS as BUBBLE_INTERESTS, TRAIT_ITEMS as BUBBLE_TRAITS } from './BubblePicker';
 import { CURATED_TRAITS, CURATED_INTERESTS } from './curated-options';
 import { GoogleContactsImport } from '@/components/contacts';
+import { createClient } from '@/lib/supabase/client';
 import type {
   ConversationMessage,
   OnboardingData,
@@ -52,7 +53,6 @@ import { PhotoUploadPanel, type UploadedPhoto } from './quick/globe/PhotoUploadP
 import { PlacesLivedPanel } from './quick/globe/PlacesLivedPanel';
 import { SHARED } from './quick/shared-styles';
 import { ReadyStep } from './quick/steps/ReadyStep';
-import { BirthInfoStep } from './quick/steps/BirthInfoStep';
 import { ReligionStep } from './quick/steps/ReligionStep';
 import { WhyHereStep } from './quick/steps/WhyHereStep';
 import { MapboxGlobeReveal } from './quick/globe/MapboxGlobeReveal';
@@ -82,7 +82,10 @@ export function QuickOnboardingFlow({
 
   const savedProgress = getSavedProgress();
   
-  const [step, setStep] = useState<QuickStep>(savedProgress?.step || 'birth-info');
+  // birth-info is now merged into the globe's first phase; restore to 'globe' if saved progress still points at it
+  const [step, setStep] = useState<QuickStep>(
+    (savedProgress?.step === 'birth-info' ? 'globe' : savedProgress?.step) || 'globe'
+  );
   const [direction, setDirection] = useState<1 | -1>(1);
   // Globe-collected data for engagement cards
   const [globeCollected, setGlobeCollected] = useState<{
@@ -169,17 +172,19 @@ export function QuickOnboardingFlow({
   const interestCount = Array.from(selectedPills).filter(l => BUBBLE_INTERESTS.some(i => i.label === l)).length;
   const traitCount = Array.from(selectedPills).filter(l => BUBBLE_TRAITS.some(t => t.label === l)).length;
 
-  // Globe sub-phase for progress bar
-  const [globeSubPhase, setGlobeSubPhase] = useState<GlobeSubPhase>('map');
+  // Globe sub-phase for progress bar (defaults to 'basics' — the first thing the user sees)
+  const [globeSubPhase, setGlobeSubPhase] = useState<GlobeSubPhase>('basics');
 
-  // Globe step progress: map → places → contacts → interests → photos → why
+  // Globe step progress: basics → map → places → contacts → interests → photos → why → prefs
   const GLOBE_SUB_STEPS: { key: GlobeSubPhase; label: string }[] = [
+    { key: 'basics', label: 'Basics' },
     { key: 'map', label: 'Map' },
     { key: 'places-lived', label: 'Places' },
     { key: 'contacts', label: 'People' },
     { key: 'interests', label: 'Interests' },
     { key: 'photo-upload', label: 'Photos' },
     { key: 'why-here', label: 'Why' },
+    { key: 'preferences', label: 'Prefs' },
   ];
   const globeSubIdx = GLOBE_SUB_STEPS.findIndex(s => s.key === globeSubPhase);
 
@@ -187,78 +192,35 @@ export function QuickOnboardingFlow({
   const progressPercent = step === 'ready' ? 100 : ((progressIdx + 1) / PROGRESS_STEPS.length) * 100;
   const tileKey = TILE_KEY[step];
 
-  // Unified progress steps: birth-info (done) + globe sub-steps + post-globe steps
-  const UNIFIED_STEPS: { key: string; label: string }[] = [
-    { key: 'birth-info', label: 'Basics' },
-    ...GLOBE_SUB_STEPS.map(s => ({ key: `globe-${s.key}`, label: s.label })),
-    { key: 'ready', label: 'Done' },
-  ];
+  // Unified progress steps: all globe sub-steps (basics is the first phase)
+  const UNIFIED_STEPS: { key: string; label: string }[] = GLOBE_SUB_STEPS.map(s => ({
+    key: `globe-${s.key}`,
+    label: s.label,
+  }));
 
   // Full-screen globe step — with unified progress bar overlay
   if (step === 'globe') {
-    // birth-info is always done (index 0), globe sub-steps start at index 1
-    const unifiedCurrentIdx = 1 + globeSubIdx; // 1 = birth-info offset
+    const unifiedCurrentIdx = globeSubIdx;
 
     return (
       <>
-        {/* Unified progress bar */}
-        <div style={{
-          position: 'fixed',
-          top: 0,
-          left: 0,
-          right: 0,
-          zIndex: 200,
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          gap: '4px',
-          padding: '16px 20px 12px',
-          background: 'linear-gradient(to bottom, rgba(8, 8, 18, 0.7) 60%, transparent)',
-        }}>
+        {/* Unified progress bar (dark theme for globe background) */}
+        <div className="step-progress-bar step-progress-bar-dark">
           {UNIFIED_STEPS.map((s, i) => {
             const isCompleted = i < unifiedCurrentIdx;
             const isCurrent = i === unifiedCurrentIdx;
             return (
-              <div key={s.key} style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-                <div style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '4px',
-                }}>
-                  <div style={{
-                    width: 20,
-                    height: 20,
-                    borderRadius: '50%',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    fontSize: 9,
-                    fontWeight: 700,
-                    border: `2px solid ${isCompleted || isCurrent ? 'rgba(255,255,255,0.8)' : 'rgba(255,255,255,0.25)'}`,
-                    color: isCompleted ? '#080812' : isCurrent ? 'white' : 'rgba(255,255,255,0.3)',
-                    background: isCompleted ? 'rgba(255,255,255,0.85)' : isCurrent ? 'rgba(255,255,255,0.15)' : 'transparent',
-                    flexShrink: 0,
-                    transition: 'all 0.3s ease',
-                  }}>
+              <div key={s.key} className="step-progress-item">
+                <div className="step-progress-pair">
+                  <div className={`step-dot ${isCompleted ? 'step-completed' : ''} ${isCurrent ? 'step-current' : ''}`}>
                     {isCompleted ? <Check size={10} strokeWidth={3} /> : i + 1}
                   </div>
-                  <span style={{
-                    fontSize: '11px',
-                    fontWeight: isCurrent ? 600 : 400,
-                    color: isCompleted || isCurrent ? 'rgba(255,255,255,0.85)' : 'rgba(255,255,255,0.35)',
-                    transition: 'all 0.3s ease',
-                    whiteSpace: 'nowrap',
-                  }}>
+                  <span className={`step-label ${isCompleted || isCurrent ? 'step-label-active' : ''} ${isCurrent ? 'step-label-current' : ''}`}>
                     {s.label}
                   </span>
                 </div>
                 {i < UNIFIED_STEPS.length - 1 && (
-                  <div style={{
-                    width: 16,
-                    height: 2,
-                    background: isCompleted ? 'rgba(255,255,255,0.6)' : 'rgba(255,255,255,0.15)',
-                    transition: 'background 0.3s ease',
-                  }} />
+                  <div className={`step-line ${isCompleted ? 'step-line-done' : ''}`} />
                 )}
               </div>
             );
@@ -267,18 +229,68 @@ export function QuickOnboardingFlow({
         <MapboxGlobeReveal
           name={data.name}
           birthday={data.birthday}
-          location={data.location || 'somewhere beautiful'}
+          location={data.location || ''}
+          userId={userId}
           onDone={(gd) => {
             commitPills();
+            const merged: OnboardingData = { ...data };
             if (gd) {
               setGlobeCollected(gd);
+              merged.placesLived = gd.places;
+              merged.whyHereText = gd.whyHereText;
+              merged.whyHereSelections = gd.whyHere;
+              merged.contactsCount = gd.contacts?.length ?? 0;
+              merged.sensitiveTopicOptouts = gd.sensitiveOptouts;
+              merged.promptCadence = gd.promptCadence ?? undefined;
               if (gd.uploadedPhotosCount) {
-                updateData({ uploadedImagesCount: gd.uploadedPhotosCount });
+                merged.uploadedImagesCount = gd.uploadedPhotosCount;
               }
             }
-            // Globe complete — go to ready (final step)
-            setStep('ready');
-            setDirection(1);
+            // Globe complete — skip the celebration step, push straight to dashboard.
+            if (userId) {
+              localStorage.removeItem(`onboarding_progress_${userId}`);
+            }
+            onComplete(merged);
+          }}
+          onBasicsSubmit={({ birthday, location }) => {
+            updateData({ birthday, location });
+            // Flush birth_date + hometown to profiles right away so we don't
+            // lose this data if the user drops off in the map flow.
+            if (userId) {
+              (async () => {
+                try {
+                  const supabase = createClient();
+                  const primary = location?.split(',')[0]?.trim() || null;
+                  await supabase.from('profiles').update({
+                    birth_date: birthday || null,
+                    hometown: primary,
+                  }).eq('id', userId);
+                } catch (err) {
+                  console.debug('[onboarding] incremental basics save failed:', err);
+                }
+              })();
+            }
+          }}
+          onInterestsCommit={() => {
+            commitPills();
+            if (!userId) return;
+            (async () => {
+              try {
+                const allInterestLabels = [...BUBBLE_INTERESTS.map(i => i.label), ...CURATED_INTERESTS.map(i => i.label)];
+                const allTraitLabels = [...BUBBLE_TRAITS.map(t => t.label), ...CURATED_TRAITS.map(t => t.label)];
+                const picked = Array.from(selectedPills);
+                const interests = picked.filter(l => allInterestLabels.includes(l));
+                const traits = picked.filter(l => allTraitLabels.includes(l));
+                const custom = picked.filter(l => !allInterestLabels.includes(l) && !allTraitLabels.includes(l));
+                const supabase = createClient();
+                await supabase.from('profiles').update({
+                  interests: [...interests, ...custom],
+                  personality_traits: traits,
+                }).eq('id', userId);
+              } catch (err) {
+                console.debug('[onboarding] incremental interests save failed:', err);
+              }
+            })();
           }}
           selectedPills={selectedPills}
           onTogglePill={handleBubbleToggle}
@@ -334,23 +346,21 @@ export function QuickOnboardingFlow({
       <div className="home-blob home-blob-1" />
       <div className="home-blob home-blob-2" />
 
-      {/* Unified Progress Bar (same steps as globe view) */}
+      {/* Unified Progress Bar (same structure as globe view — just light theme) */}
       <div className="step-progress-bar">
         {UNIFIED_STEPS.map((s, i) => {
-          // Map current non-globe step to unified index
-          const unifiedCurrentIdx = (() => {
-            if (step === 'birth-info') return 0;
-            // Globe sub-steps all done if we're past globe
-            // heartfelt step removed
-            if (step === 'ready') return UNIFIED_STEPS.length - 1;
-            return 0;
-          })();
+          const unifiedCurrentIdx = step === 'birth-info' ? 0 : 0;
           const isCompleted = i < unifiedCurrentIdx;
           const isCurrent = i === unifiedCurrentIdx;
           return (
             <div key={s.key} className="step-progress-item">
-              <div className={`step-dot ${isCompleted ? 'step-completed' : ''} ${isCurrent ? 'step-current' : ''}`}>
-                {isCompleted && <Check size={10} strokeWidth={3} />}
+              <div className="step-progress-pair">
+                <div className={`step-dot ${isCompleted ? 'step-completed' : ''} ${isCurrent ? 'step-current' : ''}`}>
+                  {isCompleted ? <Check size={10} strokeWidth={3} /> : i + 1}
+                </div>
+                <span className={`step-label ${isCompleted || isCurrent ? 'step-label-active' : ''} ${isCurrent ? 'step-label-current' : ''}`}>
+                  {s.label}
+                </span>
               </div>
               {i < UNIFIED_STEPS.length - 1 && (
                 <div className={`step-line ${isCompleted ? 'step-line-done' : ''}`} />
@@ -392,17 +402,7 @@ export function QuickOnboardingFlow({
                 exit="exit"
                 transition={{ duration: 0.3, ease: [0.32, 0.72, 0, 1] }}
               >
-                {step === 'birth-info' && (
-                  <BirthInfoStep
-                    name={data.name}
-                    birthday={data.birthday}
-                    location={data.location}
-                    onBirthdayChange={(birthday) => updateData({ birthday })}
-                    onLocationChange={(location) => updateData({ location })}
-                    onContinue={goNext}
-                  />
-                )}
-
+                {/* birth-info is now inline on the globe view (BasicsPanel) */}
                 {/* about-you is rendered separately as ThreeColAboutYou */}
 
                 {step === 'religion' && (
@@ -494,25 +494,33 @@ export function QuickOnboardingFlow({
           display: flex;
           align-items: center;
           justify-content: center;
-          padding: 16px 24px 12px;
+          gap: 4px;
+          padding: 16px 20px 12px;
           background: linear-gradient(to bottom, rgba(253, 248, 243, 0.95) 60%, transparent);
         }
 
         .step-progress-item {
           display: flex;
           align-items: center;
+          gap: 4px;
+        }
+
+        .step-progress-pair {
+          display: flex;
+          align-items: center;
+          gap: 4px;
         }
 
         .step-dot {
-          width: 18px;
-          height: 18px;
+          width: 20px;
+          height: 20px;
           border-radius: 50%;
           display: flex;
           align-items: center;
           justify-content: center;
           font-size: 9px;
           font-weight: 700;
-          border: 2px solid rgba(64, 106, 86, 0.2);
+          border: 2px solid rgba(64, 106, 86, 0.25);
           color: rgba(64, 106, 86, 0.35);
           background: white;
           flex-shrink: 0;
@@ -522,7 +530,7 @@ export function QuickOnboardingFlow({
         .step-dot.step-current {
           border-color: #2D5A3D;
           color: #2D5A3D;
-          background: rgba(64, 106, 86, 0.08);
+          background: rgba(64, 106, 86, 0.1);
           box-shadow: 0 0 0 3px rgba(64, 106, 86, 0.1);
         }
 
@@ -532,12 +540,24 @@ export function QuickOnboardingFlow({
           color: white;
         }
 
-        .step-num {
-          line-height: 1;
+        .step-label {
+          font-size: 11px;
+          font-weight: 400;
+          color: rgba(45, 45, 45, 0.35);
+          transition: all 0.3s ease;
+          white-space: nowrap;
+        }
+
+        .step-label-active {
+          color: rgba(45, 45, 45, 0.85);
+        }
+
+        .step-label-current {
+          font-weight: 600;
         }
 
         .step-line {
-          width: 12px;
+          width: 16px;
           height: 2px;
           background: rgba(64, 106, 86, 0.15);
           transition: background 0.3s ease;
@@ -547,17 +567,60 @@ export function QuickOnboardingFlow({
           background: #2D5A3D;
         }
 
-        @media (max-width: 480px) {
-          .step-progress-bar {
-            padding: 12px 12px 10px;
-          }
-          .step-dot {
-            width: 14px;
-            height: 14px;
-            font-size: 7px;
+        /* Dark variant — same structure/sizing, inverted colors for globe background */
+        .step-progress-bar-dark {
+          z-index: 200;
+          background: linear-gradient(to bottom, rgba(8, 8, 18, 0.7) 60%, transparent);
+        }
+        .step-progress-bar-dark .step-dot {
+          border-color: rgba(255,255,255,0.25);
+          color: rgba(255,255,255,0.3);
+          background: transparent;
+        }
+        .step-progress-bar-dark .step-dot.step-current {
+          border-color: rgba(255,255,255,0.8);
+          color: white;
+          background: rgba(255,255,255,0.15);
+          box-shadow: 0 0 0 3px rgba(255,255,255,0.08);
+        }
+        .step-progress-bar-dark .step-dot.step-completed {
+          border-color: rgba(255,255,255,0.8);
+          color: #080812;
+          background: rgba(255,255,255,0.85);
+        }
+        .step-progress-bar-dark .step-label {
+          color: rgba(255,255,255,0.35);
+        }
+        .step-progress-bar-dark .step-label-active {
+          color: rgba(255,255,255,0.85);
+        }
+        .step-progress-bar-dark .step-line {
+          background: rgba(255,255,255,0.15);
+        }
+        .step-progress-bar-dark .step-line-done {
+          background: rgba(255,255,255,0.6);
+        }
+
+        @media (max-width: 640px) {
+          .step-label {
+            display: none;
           }
           .step-line {
-            width: 6px;
+            width: 10px;
+          }
+        }
+
+        @media (max-width: 480px) {
+          .step-progress-bar {
+            padding: 12px 10px 10px;
+          }
+          .step-dot {
+            width: 16px;
+            height: 16px;
+            font-size: 8px;
+          }
+          .step-line {
+            width: 8px;
           }
         }
 

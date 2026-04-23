@@ -20,11 +20,27 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json();
-    const { mediaId, photoUrl, takenAt, isOnboarding = false } = body;
+    const { mediaId, photoUrl, isOnboarding = false } = body as {
+      mediaId?: string;
+      photoUrl?: string;
+      isOnboarding?: boolean;
+    };
 
     if (!mediaId || !photoUrl) {
       return NextResponse.json({ error: 'mediaId and photoUrl required' }, { status: 400 });
     }
+
+    // Pull EXIF date + reverse-geocoded location from the DB — the upload
+    // pipeline already reverse-geocodes and writes location_name to the
+    // parent memory, so callers don't need to thread it through.
+    const { data: mediaRow } = await supabase
+      .from('memory_media')
+      .select('taken_at, exif_lat, exif_lng, memory_id, memories(location_name)')
+      .eq('id', mediaId)
+      .single();
+
+    const takenAt: string | null = mediaRow?.taken_at ?? null;
+    const locationName: string | null = (mediaRow?.memories as { location_name?: string | null } | null)?.location_name ?? null;
 
     // Get user profile for personalization
     const { data: profile } = await supabase
@@ -61,14 +77,17 @@ export async function POST(request: NextRequest) {
                     {
                       text: `You are helping someone document their life story. Look at this photo and generate ONE warm question to prompt them to share the story behind it.
 
-CRITICAL RULES - never assume:
+${locationName ? `KNOWN LOCATION: This photo was taken in ${locationName}. Do NOT ask where it was taken — reference the location when useful.\n` : ''}${takenAt ? `KNOWN DATE: This photo is from ${new Date(takenAt).toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}. Do NOT ask when it was taken.\n` : ''}
+CRITICAL RULES — never assume:
+- NEVER ask "where was this taken?" — most photos have EXIF location data; if we know the place, reference it instead
+- NEVER ask "when was this taken?" — we usually have the date from EXIF
 - NEVER assume the people in the photo are the user themselves
 - NEVER say "you" when referring to people in the photo unless it's clearly a selfie
 - Always ask WHO people are before asking about their experience
-- If people are visible: ask "Who are the people in this photo?" or "Who is this a photo of?" or "What's the story behind this moment?"
+- If people are visible: ask about who they are, the moment, or what was happening
 - If it looks like a wedding: ask "Whose wedding is this?" NOT "How did you feel getting married?"
-- If it's a landscape/place: ask "Where was this taken?" or "What memories do you have of this place?"
-- If it's food/objects: ask "What's the story behind this?"
+- If it's a landscape/place: ask what drew them there, who they were with, or what memories the place holds (NOT where it is)
+- If it's food/objects: ask the story, the occasion, or why it mattered
 - Be warm and curious, like a friend looking at a photo album
 - Keep it under 20 words
 - Output ONLY the question, nothing else`

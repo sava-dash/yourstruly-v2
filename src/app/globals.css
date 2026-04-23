@@ -306,6 +306,24 @@ html, body {
   --yt-blue: #7A9B88;
   --yt-cream: #FAFAF7;
   --yt-warm-bg: #FAFAF7;
+
+  /* ============================================================
+     EDITORIAL PALETTE — Swiss/poster style (my-story redesign).
+     Flat primaries on cream, hard black borders, uppercase micro
+     labels. New pages should prefer these over the --yt-* vars.
+     ============================================================ */
+  --ed-cream:  #F3ECDC;   /* page background */
+  --ed-paper:  #FFFBF1;   /* card background */
+  --ed-ink:    #111111;   /* text + borders */
+  --ed-muted:  #6F6B61;   /* secondary text */
+  --ed-rule:   #111111;   /* divider/border color */
+  --ed-red:    #E23B2E;   /* primary action / "All" */
+  --ed-blue:   #2A5CD3;   /* memories */
+  --ed-yellow: #F2C84B;   /* media / photos */
+  --ed-black:  #111111;   /* wisdom */
+
+  --font-display: var(--font-archivo-black), 'Archivo Black', 'Arial Black', sans-serif;
+  --font-mono:    var(--font-space-mono), 'Space Mono', ui-monospace, monospace;
 }
 
 /* ============================================

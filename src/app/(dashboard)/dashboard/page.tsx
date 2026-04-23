@@ -8,28 +8,16 @@ import dynamic from 'next/dynamic'
 import { createClient } from '@/lib/supabase/client'
 import { useEngagementPrompts } from '@/hooks/useEngagementPrompts'
 import { useSubscription } from '@/hooks/useSubscription'
-import { WhenWhereCard } from '@/components/home-v2/cards/WhenWhereCard'
-import { TextVoiceVideoCard } from '@/components/home-v2/cards/TextVoiceVideoCard'
-import { BackstoryCard } from '@/components/home-v2/cards/BackstoryCard'
-import { MediaUploadCard } from '@/components/home-v2/cards/MediaUploadCard'
-import { MediaItemCard } from '@/components/home-v2/cards/MediaItemCard'
-import { FieldInputCard } from '@/components/home-v2/cards/FieldInputCard'
-import { PillSelectCard } from '@/components/home-v2/cards/PillSelectCard'
-import { TagPeopleCard } from '@/components/home-v2/cards/TagPeopleCard'
-import { PlusCard } from '@/components/home-v2/cards/PlusCard'
-import { InviteCollaboratorCard } from '@/components/home-v2/cards/InviteCollaboratorCard'
-import { SongCard } from '@/components/home-v2/cards/SongCard'
-import { ConversationCard } from '@/components/home-v2/cards/ConversationCard'
-import { SynopsisCard } from '@/components/home-v2/cards/SynopsisCard'
-import { PeoplePresentCard } from '@/components/home-v2/cards/PeoplePresentCard'
-import { ListItemCard } from '@/components/home-v2/cards/ListItemCard'
-import { RefreshCw, X, Heart, Camera, Brain, User, BookOpen, Sparkles, Menu, Trash2, ChevronLeft, ChevronRight, LayoutGrid, Mic, Video, Type } from 'lucide-react'
+// Individual cardchain card components are imported by
+// @/components/home-v2/CardChainCard (the shared renderer). Dashboard only
+// imports CardChainCard itself now.
+import { RefreshCw, X, Heart, Camera, Brain, User, BookOpen, Sparkles, Menu, ChevronLeft, ChevronRight, LayoutGrid, Mic, Video, Type } from 'lucide-react'
 import type { PromptRow, ChainCard, CardType, PromptCategory } from '@/components/home-v2/types'
 import { categorizePrompt, generateInitialCards } from '@/components/home-v2/types'
 import { useDashboardData } from './hooks/useDashboardData'
 import { useXpState } from './hooks/useXpState'
 import { useGamificationConfig } from '@/hooks/useGamificationConfig'
-import { TYPE_CONFIG, getFieldLabel, LIFE_CHAPTERS } from './constants'
+import { TYPE_CONFIG, LIFE_CHAPTERS } from './constants'
 import { trackEngagement } from './analytics'
 import { getChapterStyle } from '@/lib/engagement/chapter-styles'
 import { EngagementErrorBoundary } from './components/EngagementErrorBoundary'
@@ -39,21 +27,16 @@ import { CategoriesPanel } from './components/CategoriesPanel'
 import { VisibilityModal } from './components/VisibilityModal'
 
 const MemoryOfTheDayBanner = dynamic(() => import('@/components/dashboard/MemoryOfTheDayBanner'), { ssr: false })
+const ProfileCompletionCard = dynamic(() => import('@/components/dashboard/ProfileCompletionCard').then(m => m.ProfileCompletionCard), { ssr: false })
 const BadgeDisplay = dynamic(() => import('@/components/dashboard/BadgeDisplay'), { ssr: false })
 const WeeklyChallenges = dynamic(() => import('@/components/dashboard/WeeklyChallenges'), { ssr: false })
 const OnThisDayRow = dynamic(() => import('@/components/home-v2/OnThisDayRow'), { ssr: false })
 
 const uid = () => `card-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`
 
-// Category colors from Ogilvy brand palette
-const CATEGORY_COLORS: Record<string, { bg: string; border: string; accent: string; cardBg: string }> = {
-  memory:    { bg: '#E6F0EA', border: '#7A9B88', accent: '#2D5A3D', cardBg: '#F7FAF8' },
-  photo:     { bg: '#FAF5E4', border: '#C4A235', accent: '#7A6520', cardBg: '#FDFBF3' },
-  wisdom:    { bg: '#FBF0EB', border: '#B8562E', accent: '#6B3A1E', cardBg: '#FDF8F5' },
-  contact:   { bg: '#E6F0EA', border: '#2D7A4F', accent: '#1B3926', cardBg: '#F7FAF8' },
-  profile:   { bg: '#F5F1EA', border: '#C4A235', accent: '#5A6660', cardBg: '#FAFAF7' },
-  favorites: { bg: '#F0EAF5', border: '#8A6BA8', accent: '#4A3552', cardBg: '#FAF8FC' },
-}
+// CardChainCard + its constants were extracted to a shared module so the
+// "Continue this memory" append flow can reuse the exact same chain.
+import { CardChainCard, CATEGORY_COLORS, CARD_H } from '@/components/home-v2/CardChainCard'
 
 const CATEGORY_META: Record<string, { icon: any; label: string; hint: string; time: string }> = {
   memory: { icon: Heart, label: 'Remember When', hint: '🎙️ Talk or type', time: '~2 min' },
@@ -86,8 +69,6 @@ function getXpLevel(xp: number, levels?: any[]) {
   const xpToNext = next ? next.minXp - xp : 0
   return { ...current, nextLevel: next, progress: Math.min(progress, 100), xpToNext }
 }
-
-const CARD_H = 600
 
 export default function HomeV2Page() {
   const supabase = createClient()
@@ -585,6 +566,12 @@ export default function HomeV2Page() {
   }, [expandedRowId, finishingRowId, rows, answerPrompt, addXp, refreshDashboardStats, refreshXp, supabase, user])
 
   const handleCardSave = useCallback(async (promptId: string, cardId: string, data: Record<string, any>) => {
+    console.log('[handleCardSave]', {
+      promptId, cardId,
+      textLen: typeof data.text === 'string' ? data.text.length : null,
+      preview: typeof data.text === 'string' ? data.text.slice(0, 80) : null,
+      keys: Object.keys(data),
+    })
     setRows(prev => {
       const next = new Map(prev)
       const row = next.get(promptId)
@@ -842,14 +829,14 @@ export default function HomeV2Page() {
     })
   }, [])
 
-  const handleMediaUploaded = useCallback((promptId: string, files: { url: string; name: string; type: string; path?: string; faces?: any[]; mediaId?: string }[]) => {
+  const handleMediaUploaded = useCallback((promptId: string, files: { url: string; name: string; type: string; path?: string; faces?: any[]; mediaId?: string; displayPosition?: { x: number; y: number } | null }[]) => {
     setRows(prev => {
       const next = new Map(prev)
       const row = next.get(promptId)
       if (!row) return prev
       const newCards: ChainCard[] = files.map(file => ({
         id: uid(), type: 'media-item' as CardType,
-        data: { url: file.url, name: file.name, type: file.type, path: file.path, faces: file.faces, mediaId: file.mediaId },
+        data: { url: file.url, name: file.name, type: file.type, path: file.path, faces: file.faces, mediaId: file.mediaId, displayPosition: file.displayPosition ?? null },
         saved: true,
         addedBy: user ? { userId: user.id, name: profile?.full_name || 'You' } : undefined,
         createdAt: new Date().toISOString(),
@@ -894,7 +881,14 @@ export default function HomeV2Page() {
   const lvl = getXpLevel(totalXp, gamificationConfig?.xpLevels)
 
   return (
-    <div className={`feed-page ${expandedRowId ? 'chain-open' : ''}`} data-theme="light" style={{ background: '#FAFAF7', color: '#1A1F1C' }}>
+    <div
+      className={`feed-page ${expandedRowId ? 'chain-open' : ''}`}
+      data-theme="light"
+      style={{
+        background: "url('/backgrounds/dashboard-bg.png') center/cover fixed no-repeat",
+        color: '#1A1F1C',
+      }}
+    >
       {/* Sticky floating close — portaled to body so no transformed ancestor can capture position:fixed */}
       {expandedRowId && typeof document !== 'undefined' && createPortal(
         <button
@@ -1057,6 +1051,7 @@ export default function HomeV2Page() {
       {/* ── Main Content — snap-scroll viewport ── */}
       <main className="dashboard-main home-v2-main" style={{ minHeight: '100vh' }}>
         <MemoryOfTheDayBanner />
+        {user?.id && <ProfileCompletionCard userId={user.id} />}
         {/* Top action row: filter pill (when active) + shuffle */}
         <div
           style={{
@@ -1802,6 +1797,25 @@ function PromptCard({ row, onClick, onClose, isExpanded, index, onModeSelect }: 
   const hasPhoto = !!row.photoUrl
   const Icon = meta.icon
 
+  // Bauhaus accent palette (shared across all cards)
+  const INK = '#1A1F1C'
+  const CREAM = '#FAF7EC'
+  const ACCENT_RED = '#D94B2A'
+  const ACCENT_YELLOW = '#F5BE0C'
+
+  const aboutSubtitle = (() => {
+    if (!row.contactName) return null
+    const fullName = row.contactName.trim()
+    const firstName = fullName.split(/\s+/)[0]
+    const promptLower = (row.promptText || '').toLowerCase()
+    if (!firstName) return null
+    if (promptLower.includes(fullName.toLowerCase())) return null
+    if (promptLower.includes(firstName.toLowerCase())) return null
+    const inlineName = (row.promptText || '').match(/(?:^|\s)([A-Z][a-z]{2,})(?=['’]s|\s|$)/g)
+    if (inlineName && inlineName.length > 0) return null
+    return fullName
+  })()
+
   return (
     <motion.div
       onClick={onClick || undefined}
@@ -1811,173 +1825,186 @@ function PromptCard({ row, onClick, onClose, isExpanded, index, onModeSelect }: 
       style={{
         width: 'var(--card-w)',
         height: `${CARD_H}px`,
-        borderRadius: '20px',
+        borderRadius: '10px',
         overflow: 'hidden',
-        background: '#FAFAF7',
+        background: CREAM,
+        border: `3px solid ${INK}`,
         position: 'relative',
-        boxShadow: '0 8px 32px rgba(0,0,0,0.06), 0 2px 8px rgba(0,0,0,0.04)',
+        boxShadow: '0 6px 18px rgba(0,0,0,0.08)',
         cursor: 'pointer',
         flexShrink: 0,
         display: 'flex',
         flexDirection: 'column',
       }}
-      whileHover={!isExpanded ? { boxShadow: '0 2px 4px rgba(45,90,61,0.06), 0 8px 24px rgba(0,0,0,0.08), 0 16px 48px rgba(0,0,0,0.04)' } : {}}
-      whileTap={!isExpanded ? { scale: 0.96 } : {}}
+      whileHover={!isExpanded ? { y: -2, boxShadow: '0 14px 30px rgba(0,0,0,0.12)' } : {}}
+      whileTap={!isExpanded ? { scale: 0.98 } : {}}
     >
-      {/* Amorphous gradient blob — confined to bottom of card */}
-      <div className="chapter-gradient-blob" style={{
-        position: 'absolute', bottom: '-10%', left: '-30%', right: '-30%', height: '65%',
-        background: `radial-gradient(ellipse 90% 80% at 50% 85%, ${chapterStyle.accentColor}55 0%, ${chapterStyle.accentColor}30 35%, transparent 65%)`,
-        pointerEvents: 'none', zIndex: 0,
-      }}>
-        <div className="chapter-blob-inner" style={{
-          position: 'absolute', inset: 0,
-          background: `radial-gradient(ellipse 70% 60% at 25% 90%, ${chapterStyle.accentColor}45 0%, transparent 55%)`,
-        }} />
-        <div className="chapter-blob-inner-2" style={{
-          position: 'absolute', inset: 0,
-          background: `radial-gradient(ellipse 65% 55% at 75% 80%, ${chapterStyle.accentColor}40 0%, transparent 50%)`,
-        }} />
-      </div>
-      {/* Photo hero — fills ~60% of card */}
+      {/* Photo hero — fills ~52% of card when present */}
       {hasPhoto && (
-        <div style={{ position: 'relative', flex: '0 0 60%', overflow: 'hidden' }}>
+        <div style={{
+          position: 'relative',
+          flex: '0 0 52%',
+          overflow: 'hidden',
+          borderBottom: `3px solid ${INK}`,
+        }}>
           <img
             src={row.photoUrl}
             alt=""
             style={{ width: '100%', height: '100%', objectFit: 'cover' }}
             draggable={false}
           />
-          <div style={{
-            position: 'absolute', inset: 0,
-            background: 'linear-gradient(to top, rgba(0,0,0,0.5), transparent 60%)',
-          }} />
-          {/* Close button when expanded */}
           {isExpanded && (
             <motion.button
               initial={{ opacity: 0, scale: 0.8 }}
               animate={{ opacity: 1, scale: 1 }}
               style={{
-                position: 'absolute', top: '12px', right: '12px',
+                position: 'absolute', top: '10px', right: '10px',
                 width: '34px', height: '34px', borderRadius: '50%',
-                background: 'rgba(0,0,0,0.5)', backdropFilter: 'blur(4px)',
-                border: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center',
-                cursor: 'pointer', color: '#fff',
+                background: INK, border: `2px solid ${CREAM}`,
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                cursor: 'pointer', color: CREAM,
               }}
               onClick={(e) => { e.stopPropagation(); onClose ? onClose() : onClick?.() }}
             >
               <X size={16} />
             </motion.button>
           )}
-          {/* Category badge */}
-          <div style={{ position: 'absolute', bottom: '14px', left: '18px' }}>
-            <span style={{
-              padding: '5px 14px', borderRadius: '20px',
-              fontSize: '10px', fontWeight: 700,
-              letterSpacing: '0.12em', textTransform: 'uppercase',
-              background: 'rgba(255,255,255,0.15)', backdropFilter: 'blur(8px)',
-              color: '#fff',
-            }}>
-              {chapterStyle.label}
-            </span>
-          </div>
         </div>
       )}
 
-      {/* Content — thicker bottom padding for Polaroid-style caption area */}
+      {/* Content */}
       <div style={{
-        padding: hasPhoto ? '20px 24px 40px' : '32px 24px 40px',
-        flex: 1, display: 'flex', flexDirection: 'column',
+        padding: '18px 22px 0',
+        flex: 1,
+        display: 'flex',
+        flexDirection: 'column',
       }}>
-        {!hasPhoto && (
-          <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '16px' }}>
-            <div style={{
-              width: '40px', height: '40px', borderRadius: '50%',
-              background: 'rgba(255,255,255,0.5)',
-              display: 'flex', alignItems: 'center', justifyContent: 'center',
-            }}>
-              <Icon size={18} color={chapterStyle.accentColor} />
-            </div>
-            <span style={{
-              fontSize: '10px', fontWeight: 700,
-              color: chapterStyle.accentColor,
-              textTransform: 'uppercase', letterSpacing: '0.12em',
-            }}>
-              {chapterStyle.label}
-            </span>
-            {isExpanded && (
-              <motion.button
-                initial={{ opacity: 0, scale: 0.8 }}
-                animate={{ opacity: 1, scale: 1 }}
-                style={{
-                  marginLeft: 'auto', width: '34px', height: '34px', borderRadius: '50%',
-                  background: '#F5F1EA', border: '1px solid #DDE3DF',
-                  display: 'flex', alignItems: 'center', justifyContent: 'center',
-                  cursor: 'pointer', color: '#5A6660',
-                }}
-                onClick={(e) => { e.stopPropagation(); onClose ? onClose() : onClick?.() }}
-              >
-                <X size={16} />
-              </motion.button>
-            )}
-          </div>
-        )}
+        {/* Top row: category color square + CHAPTER label + rule + red circle */}
+        <div style={{
+          display: 'flex', alignItems: 'center', gap: '10px',
+          position: 'relative',
+          paddingRight: '48px',
+          marginBottom: '18px',
+        }}>
+          <div style={{
+            width: '18px', height: '18px',
+            background: chapterStyle.accentColor,
+            flexShrink: 0,
+          }} />
+          <span style={{
+            fontSize: '11px',
+            fontWeight: 800,
+            color: INK,
+            textTransform: 'uppercase',
+            letterSpacing: '0.16em',
+            fontFamily: 'Inter, system-ui, -apple-system, sans-serif',
+          }}>
+            {chapterStyle.label}
+          </span>
+          <div style={{ flex: 1, height: '2px', background: INK }} />
 
-        {/* Prompt card shows only the question — thought-seed bullets live on the Story card. */}
+          {/* Red circle — top-right; doubles as close affordance when expanded */}
+          <button
+            type="button"
+            aria-label={isExpanded ? 'Close' : undefined}
+            onClick={isExpanded ? (e) => { e.stopPropagation(); onClose ? onClose() : onClick?.() } : undefined}
+            tabIndex={isExpanded ? 0 : -1}
+            style={{
+              position: 'absolute',
+              top: '-4px',
+              right: '0',
+              width: '38px',
+              height: '38px',
+              borderRadius: '50%',
+              background: ACCENT_RED,
+              border: 'none',
+              padding: 0,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              cursor: isExpanded ? 'pointer' : 'default',
+              color: CREAM,
+              zIndex: 2,
+            }}
+          >
+            {isExpanded && <X size={18} strokeWidth={2.5} />}
+          </button>
+        </div>
+
+        {/* Question */}
         <p style={{
-          fontSize: hasPhoto ? '22px' : '24px',
-          fontWeight: 700, color: '#1A1F1C',
-          lineHeight: 1.5, letterSpacing: '0.01em', margin: 0,
-          fontFamily: 'var(--font-playfair, Playfair Display, serif)',
+          fontSize: hasPhoto ? '22px' : '30px',
+          fontWeight: 800,
+          color: INK,
+          lineHeight: 1.12,
+          letterSpacing: '-0.015em',
+          margin: 0,
+          fontFamily: 'Inter, system-ui, -apple-system, sans-serif',
         }}>
           {(row.promptText || '').split('\n---\n')[0]}
         </p>
 
-        {(() => {
-          // Only surface the "About NAME" subtitle when it actually adds
-          // information. If the prompt text already mentions the contact
-          // (by full name OR first name), showing "About NAME" is
-          // redundant. If the prompt text mentions a DIFFERENT name than
-          // row.contactName (happens when the prompt template was
-          // substituted with one contact but contact_id resolves to
-          // another), the subtitle would be a mismatch — so suppress it.
-          if (!row.contactName) return null
-          const fullName = row.contactName.trim()
-          const firstName = fullName.split(/\s+/)[0]
-          const promptLower = (row.promptText || '').toLowerCase()
-          if (!firstName) return null
-          if (promptLower.includes(fullName.toLowerCase())) return null
-          if (promptLower.includes(firstName.toLowerCase())) return null
-          // Heuristic: if the prompt text contains any capitalized word
-          // that looks like a person name (not the first word), the
-          // template already has a name baked in — don't add a
-          // conflicting subtitle.
-          const inlineName = (row.promptText || '').match(/(?:^|\s)([A-Z][a-z]{2,})(?=['’]s|\s|$)/g)
-          if (inlineName && inlineName.length > 0) return null
-          return (
-            <p style={{ fontSize: '13px', color: '#94A09A', margin: '8px 0 0' }}>
-              About {fullName}
-            </p>
-          )
-        })()}
+        {aboutSubtitle && (
+          <p style={{
+            fontSize: '12px',
+            color: '#6B7A73',
+            margin: '10px 0 0',
+            textTransform: 'uppercase',
+            letterSpacing: '0.12em',
+            fontWeight: 600,
+          }}>
+            About {aboutSubtitle}
+          </p>
+        )}
 
-        {/* Bottom: meta caption */}
+        <div style={{ flex: 1 }} />
+
+        {/* Bauhaus footer strip */}
         <div style={{
-          display: 'flex', alignItems: 'center', justifyContent: 'center',
-          gap: '12px', marginTop: 'auto', paddingTop: '16px',
-          borderTop: `1px solid ${colors.border}15`,
-          fontSize: '14px', fontWeight: 500, color: '#6B7A73',
-          position: 'relative', zIndex: 1,
+          display: 'flex',
+          alignItems: 'stretch',
+          height: '76px',
+          borderTop: `3px solid ${INK}`,
+          marginLeft: '-22px',
+          marginRight: '-22px',
         }}>
-          <span>{meta.hint}</span>
-          <span style={{ width: '3px', height: '3px', borderRadius: '50%', background: '#DDE3DF' }} />
-          <span>{meta.time}</span>
-          {!isExpanded && (
-            <>
-              <span style={{ width: '3px', height: '3px', borderRadius: '50%', background: '#DDE3DF' }} />
-              <span>Tap to start</span>
-            </>
-          )}
+          {/* Category color — bottom left */}
+          <div style={{
+            flex: '0 0 26%',
+            background: chapterStyle.accentColor,
+            borderRight: `3px solid ${INK}`,
+          }} />
+          {/* Black stripes — middle */}
+          <div style={{
+            flex: 1,
+            display: 'flex',
+            flexDirection: 'column',
+            justifyContent: 'center',
+            gap: '7px',
+            padding: '0 18px',
+          }}>
+            {[0, 1, 2, 3].map((i) => (
+              <div key={i} style={{ height: '3px', background: INK }} />
+            ))}
+          </div>
+          {/* Yellow mic — bottom right */}
+          <div style={{
+            flex: '0 0 26%',
+            background: ACCENT_YELLOW,
+            borderLeft: `3px solid ${INK}`,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+          }}>
+            <div style={{
+              width: '40px', height: '40px', borderRadius: '50%',
+              background: CREAM,
+              border: `2px solid ${INK}`,
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+            }}>
+              <Mic size={18} color={ACCENT_RED} />
+            </div>
+          </div>
         </div>
       </div>
     </motion.div>
@@ -1985,202 +2012,3 @@ function PromptCard({ row, onClick, onClose, isExpanded, index, onModeSelect }: 
 }
 
 
-/* ─── Chain Card — renders a single card from the chain ─── */
-const PROFILE_OPTIONS: Record<string, string[]> = {
-  personality: ['Adventurous', 'Analytical', 'Creative', 'Empathetic', 'Funny', 'Introverted', 'Leader', 'Optimistic', 'Patient', 'Thoughtful'],
-  religion: ['Christianity', 'Islam', 'Judaism', 'Buddhism', 'Hinduism', 'Spiritual', 'Agnostic', 'Atheist', 'Other'],
-  skills: ['Cooking', 'Writing', 'Music', 'Sports', 'Gardening', 'Photography', 'Teaching', 'Programming', 'Art', 'Public Speaking'],
-  languages: ['English', 'Spanish', 'French', 'Mandarin', 'Arabic', 'Hindi', 'Portuguese', 'German', 'Japanese', 'Korean'],
-}
-
-function CardChainCard({ card, row, index, onCardSave, onAddCard, onMediaUploaded, onDelete, onFinish, isFinishing }: {
-  card: ChainCard
-  row: PromptRow
-  index: number
-  onCardSave: (cardId: string, data: Record<string, any>) => void
-  onAddCard: (type: CardType) => void
-  onMediaUploaded: (files: { url: string; name: string; type: string }[]) => void
-  onDelete?: () => void
-  onFinish?: () => void
-  isFinishing?: boolean
-}) {
-  const handleSave = useCallback((data: Record<string, any>) => {
-    onCardSave(card.id, data)
-  }, [card.id, onCardSave])
-
-  const isPlus = card.type === 'plus'
-  const colors = CATEGORY_COLORS[row.category] || CATEGORY_COLORS.memory
-
-  const cardStyle: React.CSSProperties = isPlus
-    ? {
-        width: '280px', height: `${CARD_H}px`,
-        borderRadius: '24px', overflow: 'hidden',
-        background: `${colors.cardBg}80`,
-        border: `2px dashed ${colors.border}40`,
-        display: 'flex', flexDirection: 'column',
-      }
-    : {
-        width: 'var(--card-w)', height: `${CARD_H}px`,
-        borderRadius: '24px', overflow: 'hidden',
-        background: `linear-gradient(180deg, ${colors.cardBg} 0%, ${colors.cardBg}F0 100%)`,
-        border: `1px solid ${colors.border}25`,
-        boxShadow: '0 1px 2px rgba(45,90,61,0.04), 0 4px 16px rgba(0,0,0,0.05), 0 12px 40px rgba(0,0,0,0.03)',
-        display: 'flex', flexDirection: 'column',
-      }
-
-  const renderContent = () => {
-    switch (card.type) {
-      case 'conversation':
-        return (
-          <ConversationCard
-            data={card.data}
-            promptText={row.promptText}
-            accentColor={getChapterStyle(row.dbCategory || row.lifeChapter).accentColor}
-            onSave={handleSave}
-            saved={card.saved}
-          />
-        )
-      case 'synopsis': {
-        // Build the transcript from the conversation card's saved text
-        const convCard = row.cards.find((c) => c.type === 'conversation')
-        const transcript = (convCard?.data?.text as string) || ''
-        const memoryId = (row.metadata as any)?.memoryId as string | undefined
-        // Pass the prompt question so the extractor can resolve pronouns
-        // (she/he/they) against the prompt's named subject and skip them
-        // when the reference is ambiguous.
-        const promptQuestion = (row.promptText || '').split('\n---\n')[0] || row.promptText
-        return (
-          <SynopsisCard
-            data={card.data}
-            conversationTranscript={transcript}
-            promptText={promptQuestion}
-            memoryId={memoryId || null}
-            accentColor={getChapterStyle(row.dbCategory || row.lifeChapter).accentColor}
-            onSave={handleSave}
-            saved={card.saved}
-          />
-        )
-      }
-      case 'when-where':
-        return <WhenWhereCard data={card.data} onSave={handleSave} saved={card.saved} />
-      case 'text-voice-video': {
-        const isUserAdded = !!card.addedBy
-        const hasPrefilledText = !!card.data.text && !card.data.messages
-        // Use BackstoryCard (AI conversation) for photo/memory
-        if (!isUserAdded && (row.category === 'photo' || row.category === 'memory')) {
-          // Pre-seed with concierge text: user's story first, AI follow-up generated after
-          const cardData = hasPrefilledText
-            ? { ...card.data, messages: [
-                { role: 'user' as const, content: card.data.text },
-              ]}
-            : card.data
-          return <BackstoryCard promptText={row.promptText} category={row.category} data={cardData} onSave={handleSave} saved={card.saved} />
-        }
-        const addedLabel = isUserAdded ? 'Add More' : (row.category === 'wisdom' ? 'Share Your Wisdom' : 'Your Story')
-        const addedPlaceholder = isUserAdded
-          ? 'What else is on your mind about this memory?'
-          : (row.promptText || 'Share your thoughts...')
-        return <TextVoiceVideoCard label={addedLabel} placeholder={addedPlaceholder} data={card.data} onSave={handleSave} saved={card.saved} />
-      }
-      case 'tag-people':
-        return <TagPeopleCard photoUrl={row.photoUrl} photoId={row.photoId} data={card.data} onSave={handleSave} saved={card.saved} />
-      case 'people-present':
-        return <PeoplePresentCard data={card.data} onSave={handleSave} saved={card.saved} />
-      case 'media-upload':
-        return <MediaUploadCard onUpload={onMediaUploaded} />
-      case 'media-item':
-        return (
-          <MediaItemCard
-            url={card.data.url}
-            name={card.data.name}
-            type={card.data.type}
-            addedBy={card.addedBy}
-            mediaPath={card.data.path}
-            detectedFaces={card.data.faces}
-            mediaId={card.data.mediaId}
-          />
-        )
-      case 'field-input':
-        return (
-          <FieldInputCard
-            contactName={row.contactName}
-            contactPhotoUrl={row.contactPhotoUrl}
-            missingField={row.missingField}
-            missingFieldLabel={getFieldLabel(row.missingField)}
-            data={card.data}
-            onSave={handleSave}
-            saved={card.saved}
-          />
-        )
-      case 'pill-select':
-        return <PillSelectCard label={row.promptText} options={PROFILE_OPTIONS[row.promptType] || PROFILE_OPTIONS.skills} data={card.data} onSave={handleSave} saved={card.saved} />
-      case 'quote':
-        // Saved quotes show large typography; unsaved use text input
-        if (card.saved && card.data.text) {
-          return (
-            <div className="h-full flex flex-col items-center justify-center p-8 text-center" style={{ background: 'linear-gradient(135deg, #F8F0E3 0%, #EDE8DD 100%)' }}>
-              <div className="text-[#C4A235]/30 text-6xl font-serif leading-none mb-4">&ldquo;</div>
-              <p className="text-xl sm:text-2xl font-bold text-[#3A3228] leading-relaxed italic" style={{ fontFamily: 'var(--font-dm-serif, DM Serif Display, serif)' }}>
-                {card.data.text}
-              </p>
-              <div className="text-[#C4A235]/30 text-6xl font-serif leading-none mt-4">&rdquo;</div>
-              {card.addedBy && (
-                <p className="text-xs text-[#94A09A] mt-4">Added by {card.addedBy.name}</p>
-              )}
-            </div>
-          )
-        }
-        return <TextVoiceVideoCard label="Quote" placeholder="Add a memorable quote..." data={card.data} onSave={handleSave} saved={card.saved} />
-      case 'comment':
-        return <TextVoiceVideoCard label="Comment" placeholder="Add a note..." data={card.data} onSave={handleSave} saved={card.saved} />
-      case 'invite-collaborator':
-        return <InviteCollaboratorCard promptText={row.promptText} promptId={row.promptId} onSave={handleSave} saved={card.saved} data={card.data} />
-      case 'list-item': {
-        // Determine category from prompt type
-        const favCategory = row.promptType?.replace('favorite_', '') || 'books'
-        return <ListItemCard category={favCategory} promptText={row.promptText} data={card.data} onSave={handleSave} saved={card.saved} />
-      }
-      case 'song':
-        return <SongCard data={card.data} onSave={handleSave} saved={card.saved} />
-      case 'plus':
-        return (
-          <PlusCard
-            onAdd={onAddCard}
-            onFinish={onFinish}
-            category={row.category}
-            isFinishing={isFinishing}
-            xpReward={TYPE_CONFIG[row.promptType]?.xp ?? 10}
-          />
-        )
-      default:
-        return null
-    }
-  }
-
-  return (
-    <motion.div
-      initial={{ opacity: 0, scale: 0.97 }}
-      animate={{ opacity: 1, scale: 1 }}
-      transition={{ type: 'spring', stiffness: 300, damping: 25, delay: 0.05 + index * 0.05 }}
-      style={{ ...cardStyle, position: 'relative' }}
-    >
-      {/* Delete button — only on user-added cards */}
-      {onDelete && (
-        <button
-          onClick={onDelete}
-          style={{
-            position: 'absolute', top: '10px', right: '10px', zIndex: 5,
-            width: '30px', height: '30px', borderRadius: '50%',
-            background: 'rgba(255,255,255,0.9)', border: '1px solid #DDE3DF',
-            display: 'flex', alignItems: 'center', justifyContent: 'center',
-            cursor: 'pointer', color: '#B8562E',
-          }}
-          title="Remove card"
-        >
-          <Trash2 size={13} />
-        </button>
-      )}
-      {renderContent()}
-    </motion.div>
-  )
-}

@@ -3,12 +3,12 @@ import { motion } from 'framer-motion';
 import { Check, ChevronRight } from 'lucide-react';
 
 const WHY_HERE_OPTIONS = [
-  { emoji: '🧠', label: "I want to reflect on my life experiences and personal growth" },
-  { emoji: '💼', label: "I'm reflecting on my career and the lessons I've learned" },
-  { emoji: '❤️', label: "I want to preserve my parents' stories before they're lost" },
-  { emoji: '🔄', label: "I'm at a transitional moment and processing big changes" },
-  { emoji: '🌱', label: "I want to create something meaningful for my children" },
-  { emoji: '📖', label: "I want to document my life story for future generations" },
+  { emoji: '🧠', label: "I want to reflect on my life and how I've changed" },
+  { emoji: '💼', label: "I want to think through my career and what I've learned" },
+  { emoji: '❤️', label: "I want to save my parents' stories before they're gone" },
+  { emoji: '🔄', label: "I'm in the middle of a big change and want to process it" },
+  { emoji: '🌱', label: "I want to leave something for my kids" },
+  { emoji: '📖', label: "I want to document my life for the people who come after me" },
 ];
 
 export interface WhyHerePanelProps {
@@ -38,8 +38,8 @@ export function WhyHerePanel({
       transition={{ type: 'spring', stiffness: 260, damping: 28 }}
     >
       <div className="globe-side-panel-header">
-        <h3>What Brings You Here?</h3>
-        <p>Everyone starts for a different reason. What part of your life do you want to focus on? This helps us guide your experience.</p>
+        <h3>Why are you here?</h3>
+        <p>Pick whatever fits, or write your own. We&apos;ll shape prompts around it.</p>
       </div>
       <div className="globe-side-panel-items" style={{ gap: '0', padding: '8px 16px' }}>
         {WHY_HERE_OPTIONS.map(opt => {
@@ -73,7 +73,7 @@ export function WhyHerePanel({
         <textarea
           value={whyHereText}
           onChange={(e) => setWhyHereText(e.target.value)}
-          placeholder="Share what's on your heart…"
+          placeholder="Anything else we should know…"
           style={{
             width: '100%',
             padding: '14px',

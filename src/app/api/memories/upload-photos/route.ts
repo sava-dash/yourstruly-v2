@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
+import { createAdminClient } from '@/lib/supabase/admin';
 import { getStorageQuota } from '@/lib/storage/quota';
+import { processUploadFaces } from '@/lib/photos/processUploadFaces';
 
 export async function POST(request: NextRequest) {
   try {
@@ -51,17 +53,19 @@ export async function POST(request: NextRequest) {
     }
 
     const uploadedMedia: any[] = [];
+    const admin = createAdminClient();
 
     for (const photo of photos) {
       const bytes = await photo.arrayBuffer();
       const buffer = Buffer.from(bytes);
-      
+      const isImage = (photo.type || '').startsWith('image/');
+
       // Generate unique filename
       const ext = photo.name.split('.').pop() || 'jpg';
       const fileName = `${user.id}/${memoryId}/${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`;
 
       // Upload to Supabase storage (use 'memories' bucket to match existing code)
-      const { data: uploadData, error: uploadError } = await supabase.storage
+      const { error: uploadError } = await supabase.storage
         .from('memories')
         .upload(fileName, buffer, {
           contentType: photo.type || 'image/jpeg',
@@ -95,6 +99,16 @@ export async function POST(request: NextRequest) {
         .single();
 
       if (!mediaResult.error && mediaResult.data) {
+        // Run Rekognition + save display_position inline so the caller can
+        // render the photo with a face-aware crop on first paint.
+        if (isImage) {
+          await processUploadFaces({
+            admin,
+            userId: user.id,
+            mediaId: mediaResult.data.id,
+            imageBuffer: buffer,
+          });
+        }
         uploadedMedia.push(mediaResult.data);
       }
     }

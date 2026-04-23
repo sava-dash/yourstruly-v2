@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { getStorageQuota } from '@/lib/storage/quota'
+import { processUploadFaces } from '@/lib/photos/processUploadFaces'
 
 /**
  * POST /api/mobile-upload
@@ -133,6 +134,17 @@ export async function POST(request: NextRequest) {
     if (insertErr) {
       console.error('[mobile-upload] db insert failed:', insertErr)
       return NextResponse.json({ error: 'Failed to save media record' }, { status: 500 })
+    }
+
+    // Run Rekognition inline for images so display_position_x/y is persisted
+    // before the media row is surfaced in the UI.
+    if (fileType === 'image' && mediaRow?.id) {
+      await processUploadFaces({
+        admin,
+        userId,
+        mediaId: mediaRow.id,
+        imageBuffer: buffer,
+      })
     }
 
     return NextResponse.json({
