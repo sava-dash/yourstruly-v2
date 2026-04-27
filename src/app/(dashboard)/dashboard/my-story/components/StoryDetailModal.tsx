@@ -260,9 +260,17 @@ export default function StoryDetailModal({ item, onClose, onContinue, onEdit }: 
   const [wisdom, setWisdom] = useState<FullWisdom | null>(null)
   const [photoMedia, setPhotoMedia] = useState<FullMedia | null>(null)
   const [photoParentLoc, setPhotoParentLoc] = useState<{ location_name: string | null; location_lat: number | null; location_lng: number | null } | null>(null)
-  // Parent memory's voice/video story (description + Q&A audio) so photo
-  // cards can play back the saved conversation that produced the photo.
-  const [photoParentStory, setPhotoParentStory] = useState<{ id: string; description: string | null; audio_url: string | null; video_url: string | null } | null>(null)
+  // Parent memory's voice/video story (description + Q&A audio + per-clip
+  // memory_media rows) so photo cards can play back the saved conversation
+  // that produced the photo.
+  const [photoParentStory, setPhotoParentStory] = useState<{
+    id: string
+    description: string | null
+    audio_url: string | null
+    video_url: string | null
+    audioMedia: FullMedia[]
+    videoMedia: FullMedia[]
+  } | null>(null)
   const [collaborators, setCollaborators] = useState<{ id: string; contact_name: string; contributor_name: string | null; response_text: string | null; status: string; completed_at: string | null }[]>([])
   const [slideshowMode, setSlideshowMode] = useState(false)
   const [taggingMode, setTaggingMode] = useState(false)
@@ -277,10 +285,20 @@ export default function StoryDetailModal({ item, onClose, onContinue, onEdit }: 
 
   const supabase = createClient()
 
-  // Photos for slideshow
-  const photos = memoryMedia.filter(m =>
-    m.file_type?.startsWith('image') || (!m.file_type?.startsWith('audio') && m.file_url)
-  )
+  // Audio + video are stored as memory_media rows on the dashboard save
+  // path (mime_type "audio/webm" / "video/webm"). Pull them out so the
+  // detail modal can render players regardless of whether memories.audio_url
+  // / memories.video_url were ever populated by the older voice flow.
+  const isAudio = (m: FullMedia) =>
+    (m.mime_type || '').startsWith('audio/') || (m.file_type || '').startsWith('audio')
+  const isVideo = (m: FullMedia) =>
+    (m.mime_type || '').startsWith('video/') || (m.file_type || '').startsWith('video')
+  const audioMedia = memoryMedia.filter(isAudio)
+  const videoMedia = memoryMedia.filter(isVideo)
+
+  // Photos for slideshow — exclude audio + video so they don't render as
+  // broken images.
+  const photos = memoryMedia.filter(m => !isAudio(m) && !isVideo(m) && m.file_url)
   const slideshow = useSlideshow(photos.length)
 
   // Lock body scroll
@@ -335,11 +353,25 @@ export default function StoryDetailModal({ item, onClose, onContinue, onEdit }: 
         setPhotoMedia(data as FullMedia)
         // Fetch parent memory for user-specified location (takes priority over
         // EXIF) AND the saved story description / audio / video so the photo
-        // card can play back the conversation that produced it.
+        // card can play back the conversation that produced it. Modern saves
+        // store voice/video as memory_media rows (mime_type audio/* video/*),
+        // so query those alongside the legacy audio_url / video_url columns.
         if (data.memory_id) {
-          const { data: parentMem } = await supabase.from('memories')
-            .select('id, location_name, location_lat, location_lng, description, audio_url, video_url')
-            .eq('id', data.memory_id).single()
+          const [parentMemRes, parentMediaRes] = await Promise.all([
+            supabase.from('memories')
+              .select('id, location_name, location_lat, location_lng, description, audio_url, video_url')
+              .eq('id', data.memory_id).single(),
+            supabase.from('memory_media')
+              .select('*').eq('memory_id', data.memory_id),
+          ])
+          const parentMem = parentMemRes.data
+          const parentMediaAll = (parentMediaRes.data as FullMedia[]) || []
+          const parentAudio = parentMediaAll.filter(
+            (m) => (m.mime_type || '').startsWith('audio/') || (m.file_type || '').startsWith('audio'),
+          )
+          const parentVideo = parentMediaAll.filter(
+            (m) => (m.mime_type || '').startsWith('video/') || (m.file_type || '').startsWith('video'),
+          )
           if (parentMem) {
             setPhotoParentLoc({
               location_name: parentMem.location_name,
@@ -351,6 +383,8 @@ export default function StoryDetailModal({ item, onClose, onContinue, onEdit }: 
               description: parentMem.description,
               audio_url: parentMem.audio_url,
               video_url: parentMem.video_url,
+              audioMedia: parentAudio,
+              videoMedia: parentVideo,
             })
           }
         }
@@ -505,6 +539,8 @@ export default function StoryDetailModal({ item, onClose, onContinue, onEdit }: 
               <MemoryReadView
                 memory={memory}
                 photos={photos}
+                audioMedia={audioMedia}
+                videoMedia={videoMedia}
                 parsed={parsed}
                 baseDescription={baseText}
                 appendSegments={appendSegments}
@@ -767,7 +803,10 @@ export default function StoryDetailModal({ item, onClose, onContinue, onEdit }: 
                     ? parseConversation(stripAppendBlocks(photoParentStory.description))
                     : null
                   if (storyParsed) exchangesRef.current = storyParsed.exchanges
-                  const hasMedia = photoParentStory.audio_url || photoParentStory.video_url
+                  const hasMedia = photoParentStory.audio_url
+                    || photoParentStory.video_url
+                    || photoParentStory.audioMedia.length > 0
+                    || photoParentStory.videoMedia.length > 0
                   const hasQA = storyParsed && storyParsed.exchanges.length > 0
                   if (!hasMedia && !hasQA) return null
                   return (
@@ -781,6 +820,16 @@ export default function StoryDetailModal({ item, onClose, onContinue, onEdit }: 
                           style={{ maxHeight: '50vh' }}
                         />
                       )}
+                      {photoParentStory.videoMedia.map((v) => (
+                        <video
+                          key={v.id}
+                          src={v.file_url}
+                          controls
+                          playsInline
+                          className="w-full h-auto rounded-2xl border border-[#E8E2D8] bg-black"
+                          style={{ maxHeight: '50vh' }}
+                        />
+                      ))}
                       {photoParentStory.audio_url && (
                         <div className="flex items-center gap-3 px-4 py-3 rounded-2xl border border-[#E8E2D8] bg-[#FDFCF9]">
                           <div className="w-10 h-10 rounded-full bg-[#4A3552]/10 flex items-center justify-center flex-shrink-0">
@@ -792,6 +841,19 @@ export default function StoryDetailModal({ item, onClose, onContinue, onEdit }: 
                           </div>
                         </div>
                       )}
+                      {photoParentStory.audioMedia.map((a, idx) => (
+                        <div key={a.id} className="flex items-center gap-3 px-4 py-3 rounded-2xl border border-[#E8E2D8] bg-[#FDFCF9]">
+                          <div className="w-10 h-10 rounded-full bg-[#4A3552]/10 flex items-center justify-center flex-shrink-0">
+                            <Volume2 size={16} className="text-[#4A3552]" />
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <span className="text-[11px] tracking-wide text-[#94A09A] block mb-1">
+                              VOICE RECORDING{photoParentStory.audioMedia.length > 1 ? ` ${idx + 1}` : ''}
+                            </span>
+                            <audio controls className="w-full h-9" src={a.file_url} />
+                          </div>
+                        </div>
+                      ))}
                       {hasQA && (
                         <button
                           onClick={playAllExchanges}
@@ -1452,6 +1514,8 @@ function SidebarCard({
 function MemoryReadView({
   memory,
   photos,
+  audioMedia,
+  videoMedia,
   parsed,
   baseDescription,
   appendSegments,
@@ -1469,6 +1533,10 @@ function MemoryReadView({
 }: {
   memory: FullMemory
   photos: FullMedia[]
+  /** Audio attachments (memory_media rows with audio/* mime_type). */
+  audioMedia: FullMedia[]
+  /** Video attachments (memory_media rows with video/* mime_type). */
+  videoMedia: FullMedia[]
   parsed: { summary: string; exchanges: ParsedExchange[] } | null
   /** memory.description with APPEND blocks removed. */
   baseDescription: string
@@ -1621,47 +1689,99 @@ function MemoryReadView({
         <div className="grid grid-cols-1 lg:grid-cols-[1fr_360px] gap-6 px-6 sm:px-10 pb-10">
           {/* LEFT — backstory + tag chips + edit button */}
           <div className="flex flex-col gap-6 min-w-0">
-            {/* VIDEO — recorded session, when the user enabled the camera. */}
-            {memory.video_url && (
-              <section
-                className="overflow-hidden"
-                style={{ border: '2px solid var(--ed-ink, #111)', borderRadius: 2, background: '#000' }}
-              >
-                <video
-                  src={memory.video_url}
-                  controls
-                  playsInline
-                  className="w-full h-auto block"
-                  style={{ maxHeight: '60vh' }}
-                />
-              </section>
+            {/* VIDEO — recorded session(s). Modern saves attach video as
+                memory_media rows (video/webm); older saves wrote a single
+                memories.video_url. Render every available source. */}
+            {(memory.video_url || videoMedia.length > 0) && (
+              <div className="flex flex-col gap-3">
+                {memory.video_url && (
+                  <section
+                    className="overflow-hidden"
+                    style={{ border: '2px solid var(--ed-ink, #111)', borderRadius: 2, background: '#000' }}
+                  >
+                    <video
+                      src={memory.video_url}
+                      controls
+                      playsInline
+                      className="w-full h-auto block"
+                      style={{ maxHeight: '60vh' }}
+                    />
+                  </section>
+                )}
+                {videoMedia.map((v) => (
+                  <section
+                    key={v.id}
+                    className="overflow-hidden"
+                    style={{ border: '2px solid var(--ed-ink, #111)', borderRadius: 2, background: '#000' }}
+                  >
+                    <video
+                      src={v.file_url}
+                      controls
+                      playsInline
+                      className="w-full h-auto block"
+                      style={{ maxHeight: '60vh' }}
+                    />
+                  </section>
+                ))}
+              </div>
             )}
 
-            {/* AUDIO — full stitched conversation playback when recorded. */}
-            {memory.audio_url && (
-              <div
-                className="flex items-center gap-3 px-5 py-4"
-                style={{
-                  background: 'var(--ed-paper, #FFFBF1)',
-                  border: '2px solid var(--ed-ink, #111)',
-                  borderRadius: 2,
-                }}
-              >
-                <div
-                  className="w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0"
-                  style={{ background: 'var(--ed-blue, #2A5CD3)' }}
-                >
-                  <Volume2 size={18} className="text-white" />
-                </div>
-                <div className="flex-1 min-w-0">
-                  <p
-                    className="text-[10px] tracking-[0.18em] text-[var(--ed-muted,#6F6B61)] mb-1"
-                    style={{ fontFamily: 'var(--font-mono, monospace)', fontWeight: 700 }}
+            {/* AUDIO — stitched conversation OR per-clip audio rows. */}
+            {(memory.audio_url || audioMedia.length > 0) && (
+              <div className="flex flex-col gap-2">
+                {memory.audio_url && (
+                  <div
+                    className="flex items-center gap-3 px-5 py-4"
+                    style={{
+                      background: 'var(--ed-paper, #FFFBF1)',
+                      border: '2px solid var(--ed-ink, #111)',
+                      borderRadius: 2,
+                    }}
                   >
-                    VOICE RECORDING
-                  </p>
-                  <audio controls className="w-full h-9" src={memory.audio_url} />
-                </div>
+                    <div
+                      className="w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0"
+                      style={{ background: 'var(--ed-blue, #2A5CD3)' }}
+                    >
+                      <Volume2 size={18} className="text-white" />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p
+                        className="text-[10px] tracking-[0.18em] text-[var(--ed-muted,#6F6B61)] mb-1"
+                        style={{ fontFamily: 'var(--font-mono, monospace)', fontWeight: 700 }}
+                      >
+                        VOICE RECORDING
+                      </p>
+                      <audio controls className="w-full h-9" src={memory.audio_url} />
+                    </div>
+                  </div>
+                )}
+                {audioMedia.map((a, idx) => (
+                  <div
+                    key={a.id}
+                    className="flex items-center gap-3 px-5 py-4"
+                    style={{
+                      background: 'var(--ed-paper, #FFFBF1)',
+                      border: '2px solid var(--ed-ink, #111)',
+                      borderRadius: 2,
+                    }}
+                  >
+                    <div
+                      className="w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0"
+                      style={{ background: 'var(--ed-blue, #2A5CD3)' }}
+                    >
+                      <Volume2 size={18} className="text-white" />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p
+                        className="text-[10px] tracking-[0.18em] text-[var(--ed-muted,#6F6B61)] mb-1"
+                        style={{ fontFamily: 'var(--font-mono, monospace)', fontWeight: 700 }}
+                      >
+                        VOICE RECORDING{audioMedia.length > 1 ? ` ${idx + 1}` : ''}
+                      </p>
+                      <audio controls className="w-full h-9" src={a.file_url} />
+                    </div>
+                  </div>
+                ))}
               </div>
             )}
 
