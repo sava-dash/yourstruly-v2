@@ -4,30 +4,29 @@ import { createClient } from '@/lib/supabase/server'
 
 const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY || '' })
 
-const FOLLOWUP_SYSTEM = `You help someone explore a personal memory in more depth.
-
-Given a memory prompt and what they've already shared, return 1 warm, specific follow-up question that invites them to go deeper.
+const FOLLOWUP_SYSTEM = `You help someone recall and share a personal memory by gently asking ONE light, broad follow-up question.
 
 Return STRICT JSON with this exact shape:
 { "suggestions": [string] }
 
 Rules:
-- The question is 8-16 words, conversational, not interrogative.
-- Target sensory detail, emotional resonance, or a specific person/moment.
-- Don't ask for what they already said. Don't ask a generic "how did you feel" unless no other angle exists.
+- 8-16 words. Conversational, warm, light-hearted — like a curious friend, never a therapist.
+- Goal: jog memory or evoke a vivid moment. Ask about who was there, where, a smell/sound/song, a small detail, what made them laugh, what surprised them.
+- Stay broad and open — invite recall, don't presume. Never project loss, regret, sadness, fear, advice, or what they "should" have done.
+- Do not predict the future, give wisdom, or moralize. No "you'll realize…", "you'll regret…", "the friendships you're worried about losing…".
+- Don't repeat what they already said. Avoid generic "how did you feel" unless no other angle exists.
 - Return JSON only. No prose, no code fences.`
 
-const STARTER_SYSTEM = `You help someone start answering a personal memory prompt by offering a specific angle they could explore.
-
-Given only the prompt (they haven't answered yet), return 1 short "idea to speak about" that gives them a concrete starting point.
+const STARTER_SYSTEM = `You help someone start answering a memory prompt by offering ONE warm, broad angle they could explore.
 
 Return STRICT JSON with this exact shape:
 { "suggestions": [string] }
 
 Rules:
-- The idea is 6-14 words, written as a gentle suggestion or angle (not a question). Example: "The first time you realized it mattered" or "A small detail only you would remember".
-- Pick the most evocative angle: sensory detail, a specific person, a turning point, or an emotion.
-- Don't repeat the prompt. This is a direction to explore WITHIN the prompt.
+- 6-14 words. Light, inviting, curiosity-driven — not solemn or advisory.
+- Suggest a sensory detail, a specific person, a place, a sound or smell, a small everyday moment. Examples: "The sound of that summer", "Who else was in the room", "A small detail only you would remember", "Where you were when it clicked".
+- Stay broad and exploratory. Never presume loss, regret, sadness, what they're "worried about", or what they'll come to regret. Never give advice or predict the future.
+- Don't repeat the prompt. This is a direction to explore WITHIN it.
 - Return JSON only. No prose, no code fences.`
 
 export async function POST(request: NextRequest) {

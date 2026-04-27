@@ -67,6 +67,34 @@ export function ConversationCard({ data, promptText, accentColor, onSave, saved,
   const streamRef = useRef<MediaStream | null>(null)
   const chunksRef = useRef<Blob[]>([])
   const videoPreviewRef = useRef<HTMLVideoElement | null>(null)
+
+  // ─── TTS — speaks the prompt and each AI follow-up in coral. ───
+  // De-duped via spokenRef so re-renders don't replay; cancels any
+  // in-flight playback when a new line arrives.
+  const ttsAudioRef = useRef<HTMLAudioElement | null>(null)
+  const spokenRef = useRef<Set<string>>(new Set())
+  const speakLine = (text: string | null | undefined) => {
+    if (!text) return
+    const trimmed = text.trim()
+    if (!trimmed) return
+    if (spokenRef.current.has(trimmed)) return
+    spokenRef.current.add(trimmed)
+    // Don't compete with the user mic: while they're recording or
+    // transcribing we shouldn't talk over them.
+    if (isRecording || transcribing) return
+    if (ttsAudioRef.current) {
+      try { ttsAudioRef.current.pause() } catch {}
+      ttsAudioRef.current = null
+    }
+    const url = `/api/tts?text=${encodeURIComponent(trimmed)}&voice=coral`
+    const audio = new Audio(url)
+    audio.preload = 'auto'
+    ttsAudioRef.current = audio
+    audio.play().catch((err) => {
+      // Browser autoplay policies may block until first user gesture.
+      console.warn('[ConversationCard] TTS playback blocked:', err?.message || err)
+    })
+  }
   // Live transcription infra (Deepgram WS). Runs in parallel with MediaRecorder
   // so the blob is still captured for storage while we stream the transcript live.
   const dgSocketRef = useRef<WebSocket | null>(null)
@@ -142,6 +170,38 @@ export function ConversationCard({ data, promptText, accentColor, onSave, saved,
     starterFetchedRef.current = true
     generateFollowups('')
     // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
+
+  // Speak the prompt itself once when the card mounts, then speak each
+  // AI follow-up suggestion as it arrives. The user wanted voice "throughout
+  // the story card" — promptText is the question; suggestions are the
+  // gentle nudges. Both should be voiced (coral, warm female en-US).
+  useEffect(() => {
+    if (promptText) speakLine(promptText)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [promptText])
+  useEffect(() => {
+    const lastAssistant = [...messages].reverse().find(
+      (m) => m.role === 'assistant' && m.kind === 'suggestion'
+    )
+    if (lastAssistant) speakLine(lastAssistant.content)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [messages])
+
+  // Stop any in-flight TTS when the user starts recording / transcribing
+  // so the AI voice doesn't bleed into the captured audio.
+  useEffect(() => {
+    if ((isRecording || transcribing) && ttsAudioRef.current) {
+      try { ttsAudioRef.current.pause() } catch {}
+      ttsAudioRef.current = null
+    }
+  }, [isRecording, transcribing])
+  // Cleanup TTS on unmount.
+  useEffect(() => () => {
+    if (ttsAudioRef.current) {
+      try { ttsAudioRef.current.pause() } catch {}
+      ttsAudioRef.current = null
+    }
   }, [])
 
   // Prime/refresh media stream based on toggles. Text mode tears down;
@@ -944,8 +1004,10 @@ export function ConversationCard({ data, promptText, accentColor, onSave, saved,
 
 
       {/* Bottom panel — chat-style interleave: prompt left, user right,
-          follow-up left, next user right… shrinks/grows with one toggle. */}
-      {!textMode && (() => {
+          follow-up left, next user right… shrinks/grows with one toggle.
+          Renders in every mode (voice/video/text) so typed answers and
+          AI follow-ups stay visible like a normal chat. */}
+      {(() => {
         // Keep messages in natural order — user turns alternate with suggestions.
         const chatItems = messages.filter(
           (m) => m.role === 'user' || m.kind === 'suggestion'
