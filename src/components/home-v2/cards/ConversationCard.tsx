@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Mic, Video as VideoIcon, Type, Send, Sparkles, Square, Loader2, Check, Trash2, Play, ChevronUp, ChevronDown, Maximize2, Minimize2 } from 'lucide-react'
 import { conversationBus, useConversationBus } from './conversation-bus'
@@ -57,11 +57,10 @@ export function ConversationCard({ data, promptText, accentColor, onSave, saved,
   // Live timer + post-stop success flash ("Captured ✓")
   const [recordSeconds, setRecordSeconds] = useState(0)
   const [showCaptureFlash, setShowCaptureFlash] = useState(false)
-  // Bottom panel (transcripts + follow-up) — collapsed vs expanded.
-  const [bottomMode, setBottomMode] = useState<'minimized' | 'expanded'>('expanded')
-  // Subscribe to the bus so the bottom panel re-renders on interim transcript changes.
-  const busState = useConversationBus(cardId ?? null)
-  const interimTranscript = busState.interimTranscript
+  // Subscribe to the bus so the sibling Transcript card re-renders on
+  // interim transcript changes. The story card itself no longer renders
+  // the chat panel — see IdeasFAB instead.
+  useConversationBus(cardId ?? null)
 
   const mediaRecorderRef = useRef<MediaRecorder | null>(null)
   const streamRef = useRef<MediaStream | null>(null)
@@ -729,7 +728,12 @@ export function ConversationCard({ data, promptText, accentColor, onSave, saved,
   const hasUserTurn = messages.some((m) => m.role === 'user')
 
   // ─── Saved state — polished "your story" with playable takes ───
-  if (saved) {
+  // If the user deleted everything (no text and no takes left), fall back
+  // to the active recording view so they can start over instead of being
+  // stuck on an empty saved card.
+  const savedHasContent =
+    !!(data.text && data.text.trim()) || (data.mediaBlobs?.length || 0) > 0
+  if (saved && savedHasContent) {
     const modeIcon = data.mode === 'voice' ? Mic : data.mode === 'video' ? VideoIcon : Type
     const ModeIcon = modeIcon
     const wordCount = (data.text || '').trim() ? (data.text as string).trim().split(/\s+/).filter(Boolean).length : 0
@@ -853,6 +857,16 @@ export function ConversationCard({ data, promptText, accentColor, onSave, saved,
                   const rebuiltText = next.map((r) => r.transcript || '').filter(Boolean).join('\n\n')
                   onSave({ ...data, mediaBlobs: next, text: rebuiltText })
                 }}
+                onTranscriptChange={(nextTranscript) => {
+                  const nextBlobs = recordings.map((r, j) =>
+                    j === i ? { ...r, transcript: nextTranscript } : r,
+                  )
+                  const rebuiltText = nextBlobs
+                    .map((r) => r.transcript || '')
+                    .filter(Boolean)
+                    .join('\n\n')
+                  onSave({ ...data, mediaBlobs: nextBlobs, text: rebuiltText })
+                }}
               />
             )
           })}
@@ -892,9 +906,12 @@ export function ConversationCard({ data, promptText, accentColor, onSave, saved,
   const isVideoActive = videoEnabled && !textMode
   const dockLabel = isRecording ? 'Release to stop' : transcribing ? 'Transcribing…' : hasUserTurn ? 'Hold to add more' : 'Hold to record'
 
-  // Bottom-panel heights — video shrinks/grows so both halves fit above the dock.
+  // Dock height. The story card is now full-height video above the dock —
+  // we no longer reserve space for a chat panel. Suggestions surface on
+  // the sibling Transcript card; on this card they show up via the small
+  // Ideas popover below.
   const DOCK_PX = textMode ? 120 : 108
-  const BOTTOM_PANEL_PX = bottomMode === 'minimized' ? 48 : 200
+  const BOTTOM_PANEL_PX = 0
 
   return (
     <div style={{ position: 'relative', height: '100%', width: '100%', overflow: 'hidden', background: 'transparent' }}>
@@ -960,173 +977,15 @@ export function ConversationCard({ data, promptText, accentColor, onSave, saved,
         </div>
       )}
 
-      {/* Chat body — overlaid typing indicators over the video. Transcripts
-          + persistent suggestions render in the bottom panel below. */}
-      <div
-        style={{
-          position: 'absolute',
-          left: '14px',
-          right: '14px',
-          bottom: `${BOTTOM_PANEL_PX + DOCK_PX}px`,
-          top: '44px',
-          display: 'flex',
-          flexDirection: 'column',
-          justifyContent: 'flex-end',
-          overflowY: 'auto',
-          gap: '8px',
-          pointerEvents: 'none',
-          zIndex: 2,
-        }}
-      >
-        <AnimatePresence initial={false}>
-          {messages.map((m, i) => {
-            if (m.kind === 'suggestion' && hiddenSuggestionIndices.has(i)) return null
-            // User transcripts live in the sibling Transcript card. Only suggestions
-            // (and typing indicators below) flash briefly on the Story card.
-            if (m.role === 'user') return null
-            const faded = m.kind === 'suggestion' && fadedSuggestionIndices.has(i)
-            return (
-              <motion.div
-                key={`msg-${i}`}
-                initial={{ opacity: 0, y: 30, scale: 0.97 }}
-                animate={{ opacity: faded ? 0.3 : 1, y: 0, scale: 1 }}
-                exit={{ opacity: 0, y: -10 }}
-                transition={{ duration: 0.35 }}
-                style={{ pointerEvents: 'auto', display: 'flex', justifyContent: 'flex-start' }}
-              >
-                {isVideoActive
-                  ? <OverlayBubble turn={m} accent={accentColor} />
-                  : <Bubble turn={m} accent={accentColor} index={i} />}
-              </motion.div>
-            )
-          })}
-          {transcribing && (
-            <motion.div key="typing-transcribe" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }} style={{ pointerEvents: 'auto' }}>
-              {isVideoActive ? <OverlayTyping label="Transcribing…" /> : <Typing label="Transcribing…" />}
-            </motion.div>
-          )}
-          {followupLoading && (
-            <motion.div key="typing-followup" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }} style={{ pointerEvents: 'auto' }}>
-              {isVideoActive ? <OverlayTyping label="Thinking of follow-ups…" /> : <Typing label="Thinking of follow-ups…" />}
-            </motion.div>
-          )}
-        </AnimatePresence>
-        <div ref={bottomRef} />
-      </div>
-
-
-      {/* Bottom panel — chat-style interleave: prompt left, user right,
-          follow-up left, next user right… shrinks/grows with one toggle.
-          Renders in every mode (voice/video/text) so typed answers and
-          AI follow-ups stay visible like a normal chat. */}
-      {(() => {
-        // Keep messages in natural order — user turns alternate with suggestions.
-        const chatItems = messages.filter(
-          (m) => m.role === 'user' || m.kind === 'suggestion'
-        )
-        return (
-          <div
-            style={{
-              position: 'absolute',
-              left: 0, right: 0,
-              bottom: `${DOCK_PX}px`,
-              height: `${BOTTOM_PANEL_PX}px`,
-              zIndex: 2,
-              background: '#ffffff',
-              borderTop: `1px solid ${accentColor}30`,
-              boxShadow: '0 -4px 16px rgba(0,0,0,0.04)',
-              display: 'flex', flexDirection: 'column',
-              transition: 'height 0.3s cubic-bezier(0.32, 0.72, 0, 1)',
-              overflow: 'hidden',
-            }}
-          >
-            {/* Compact header — single toggle, no duplicate controls */}
-            <button
-              onClick={() => setBottomMode(bottomMode === 'minimized' ? 'expanded' : 'minimized')}
-              aria-label={bottomMode === 'minimized' ? 'Expand conversation' : 'Collapse conversation'}
-              style={{
-                display: 'flex', alignItems: 'center', gap: '6px',
-                padding: '10px 14px',
-                background: `linear-gradient(90deg, ${accentColor}10 0%, transparent 100%)`,
-                border: 'none', borderBottom: bottomMode === 'minimized' ? 'none' : `1px solid ${accentColor}18`,
-                color: accentColor, cursor: 'pointer', textAlign: 'left',
-                fontSize: '10.5px', fontWeight: 700, letterSpacing: '0.06em', textTransform: 'uppercase',
-                flexShrink: 0, width: '100%',
-              }}
-            >
-              {bottomMode === 'minimized' ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
-              Conversation
-            </button>
-
-            {/* Chat body — scrollable interleave */}
-            {bottomMode !== 'minimized' && (
-              <div
-                className="conv-scroll"
-                style={{
-                  flex: 1,
-                  overflowY: 'auto',
-                  padding: '10px 12px',
-                  display: 'flex', flexDirection: 'column', gap: '6px',
-                  minHeight: 0,
-                }}
-              >
-                {/* Prompt — first message on the LEFT */}
-                {promptText && (
-                  <ChatBubble side="left" accent={accentColor} tone="prompt">
-                    {promptText}
-                  </ChatBubble>
-                )}
-
-                {/* Interleaved takes + follow-ups, in arrival order */}
-                {chatItems.map((m, i) => (
-                  <ChatBubble
-                    key={`ci-${i}-${m.content.slice(0, 20)}`}
-                    side={m.role === 'user' ? 'right' : 'left'}
-                    accent={accentColor}
-                    tone={m.role === 'user' ? 'user' : 'suggestion'}
-                  >
-                    {m.content}
-                  </ChatBubble>
-                ))}
-
-                {/* Live interim transcript — floats on the right while speaking */}
-                {interimTranscript && interimTranscript.trim() && (
-                  <ChatBubble side="right" accent={accentColor} tone="interim">
-                    {interimTranscript}
-                  </ChatBubble>
-                )}
-
-                {transcribing && (
-                  <ChatBubble side="right" accent={accentColor} tone="interim">
-                    <span style={{ fontStyle: 'italic', opacity: 0.75 }}>transcribing…</span>
-                  </ChatBubble>
-                )}
-
-                {followupLoading && (
-                  <ChatBubble side="left" accent={accentColor} tone="suggestion">
-                    <span style={{ fontStyle: 'italic', opacity: 0.75 }}>thinking of a follow-up…</span>
-                  </ChatBubble>
-                )}
-
-                {chatItems.length === 0 && !interimTranscript?.trim() && !transcribing && !promptText && (
-                  <div style={{
-                    display: 'flex', flexDirection: 'column', alignItems: 'center',
-                    justifyContent: 'center', gap: '6px',
-                    padding: '20px 12px',
-                    color: '#94A09A',
-                    textAlign: 'center',
-                    fontSize: '12.5px', lineHeight: '1.5',
-                    flex: 1,
-                  }}>
-                    <Mic size={18} style={{ opacity: 0.5 }} />
-                    <div>When you speak, your words show up here.</div>
-                  </div>
-                )}
-              </div>
-            )}
-          </div>
-        )
-      })()}
+      {/* Floating Ideas button — opens a small popover with 3 broad
+          angles to speak about. The story card is otherwise full-height
+          video; suggestions live in the sibling Transcript card. */}
+      <IdeasFAB
+        promptText={promptText}
+        accentColor={accentColor}
+        isVideoActive={isVideoActive}
+        bottomOffset={DOCK_PX + 12}
+      />
 
       {/* Bottom dock — record + toggles OR text input bar */}
       <AnimatePresence mode="wait">
@@ -1388,18 +1247,44 @@ export function ConversationCard({ data, promptText, accentColor, onSave, saved,
 
 /* ─────────────── Saved take box (playback + delete) ─────────────── */
 
-function TakeBox({ take, index, accent, context, onDelete }: {
+function TakeBox({ take, index, accent, context, onDelete, onTranscriptChange }: {
   take: { kind: 'audio' | 'video'; blob?: Blob; url: string; transcript?: string }
   index: number
   accent: string
   context?: Turn | null
   onDelete: () => void
+  /** Called when the user edits this take's transcript. Debounced inside. */
+  onTranscriptChange?: (next: string) => void
 }) {
   const isVideo = take.kind === 'video'
   const contextIsSuggestion = context?.kind === 'suggestion'
   const contextText = context
     ? (contextIsSuggestion ? context.content.split('\n')[0] : context.content)
     : null
+
+  // Local editable transcript with debounced autosave back through
+  // onTranscriptChange. We keep a ref to the last value pushed up so we
+  // don't spam the parent with identical saves on every keystroke flush.
+  const [editValue, setEditValue] = useState(take.transcript || '')
+  const lastPushedRef = useRef(take.transcript || '')
+  useEffect(() => {
+    // If the parent re-hydrates this take with a new transcript (e.g.
+    // late-arriving STT), pick it up unless the user is mid-edit.
+    if ((take.transcript || '') !== lastPushedRef.current) {
+      setEditValue(take.transcript || '')
+      lastPushedRef.current = take.transcript || ''
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [take.transcript])
+  useEffect(() => {
+    if (!onTranscriptChange) return
+    if (editValue === lastPushedRef.current) return
+    const handle = setTimeout(() => {
+      lastPushedRef.current = editValue
+      onTranscriptChange(editValue)
+    }, 600)
+    return () => clearTimeout(handle)
+  }, [editValue, onTranscriptChange])
 
   return (
     <motion.div
@@ -1476,21 +1361,33 @@ function TakeBox({ take, index, accent, context, onDelete }: {
         </div>
       )}
 
-      {/* Transcript */}
-      {take.transcript && (
-        <div
+      {/* Transcript — editable. Autosaves through onTranscriptChange after
+          a short debounce so the user sees their edits persist without
+          clicking a button. */}
+      {(editValue || onTranscriptChange) && (
+        <textarea
+          value={editValue}
+          onChange={(e) => setEditValue(e.target.value)}
+          placeholder="Edit your transcript…"
+          rows={Math.min(8, Math.max(2, editValue.split('\n').length + 1))}
           style={{
+            display: 'block',
+            width: '100%',
             padding: '10px 14px',
             fontSize: '12.5px',
             lineHeight: 1.55,
             color: '#2A302D',
             fontFamily: 'var(--font-playfair, Playfair Display, serif)',
             whiteSpace: 'pre-wrap',
+            background: '#FFFFFF',
+            border: 'none',
+            borderTop: '1px solid #EEF2EF',
+            outline: 'none',
+            resize: 'vertical',
+            minHeight: '48px',
+            boxSizing: 'border-box',
           }}
-        >
-          <Play size={9} color={accent} style={{ display: 'inline', verticalAlign: 'middle', marginRight: '6px', marginTop: '-2px', opacity: 0.6 }} />
-          {take.transcript}
-        </div>
+        />
       )}
     </motion.div>
   )
@@ -1872,5 +1769,191 @@ function RecordButton({ mode, isRecording, accent, onStart, onStop }: {
       )}
       {isRecording ? <Square size={16} fill="#FFFFFF" /> : <Icon size={18} />}
     </motion.button>
+  )
+}
+
+/* ─────────────── Ideas FAB + popover ───────────────
+ *
+ * Small floating "Ideas" button that opens a popover listing 3 short
+ * angles the user could speak about for the current memory prompt.
+ * Powered by /api/memory/ideas; "Shuffle" requests a fresh trio,
+ * passing the previously-shown ideas in `avoid` so the model doesn't
+ * repeat itself. Designed to sit above the dock without taking space
+ * away from the full-height video preview. */
+function IdeasFAB({
+  promptText,
+  accentColor,
+  isVideoActive,
+  bottomOffset,
+}: {
+  promptText: string
+  accentColor: string
+  isVideoActive: boolean
+  bottomOffset: number
+}) {
+  const [open, setOpen] = useState(false)
+  const [ideas, setIdeas] = useState<string[]>([])
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+  const seenRef = useRef<string[]>([])
+
+  const fetchIdeas = useCallback(async (shuffle: boolean) => {
+    setLoading(true)
+    setError(null)
+    try {
+      const res = await fetch('/api/memory/ideas', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          promptText,
+          avoid: shuffle ? seenRef.current.slice(-6) : [],
+        }),
+      })
+      const d = await res.json()
+      const next: string[] = Array.isArray(d.ideas)
+        ? d.ideas.filter((s: unknown): s is string => typeof s === 'string').slice(0, 3)
+        : []
+      setIdeas(next)
+      // Track shown ideas so a subsequent shuffle can avoid them.
+      seenRef.current = [...seenRef.current, ...next].slice(-12)
+    } catch (err) {
+      console.error('[IdeasFAB] fetch failed', err)
+      setError('Could not load ideas. Try again.')
+    } finally {
+      setLoading(false)
+    }
+  }, [promptText])
+
+  // Lazy-load on first open.
+  useEffect(() => {
+    if (open && ideas.length === 0 && !loading) fetchIdeas(false)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [open])
+
+  return (
+    <>
+      <button
+        onClick={() => setOpen((v) => !v)}
+        aria-label="Show ideas to speak about"
+        style={{
+          position: 'absolute',
+          right: '12px',
+          bottom: `${bottomOffset}px`,
+          zIndex: 5,
+          display: 'inline-flex', alignItems: 'center', gap: '6px',
+          padding: '7px 12px',
+          borderRadius: '999px',
+          background: isVideoActive ? 'rgba(0,0,0,0.55)' : '#FFFFFF',
+          border: `1px solid ${isVideoActive ? 'rgba(255,255,255,0.25)' : '#DDE3DF'}`,
+          color: isVideoActive ? '#FFFFFF' : accentColor,
+          backdropFilter: 'blur(8px)',
+          cursor: 'pointer',
+          fontSize: '11.5px',
+          fontWeight: 700,
+          letterSpacing: '0.04em',
+          boxShadow: '0 4px 12px rgba(0,0,0,0.10)',
+        }}
+      >
+        <Sparkles size={13} />
+        Ideas
+      </button>
+
+      <AnimatePresence>
+        {open && (
+          <>
+            {/* Tap-anywhere-to-dismiss layer */}
+            <motion.div
+              key="ideas-scrim"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setOpen(false)}
+              style={{ position: 'absolute', inset: 0, background: 'transparent', zIndex: 5 }}
+            />
+            <motion.div
+              key="ideas-popover"
+              initial={{ opacity: 0, y: 8, scale: 0.97 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              exit={{ opacity: 0, y: 8, scale: 0.97 }}
+              transition={{ duration: 0.18 }}
+              role="dialog"
+              aria-label="Ideas to speak about"
+              style={{
+                position: 'absolute',
+                right: '12px',
+                bottom: `${bottomOffset + 44}px`,
+                zIndex: 6,
+                width: 'min(280px, calc(100% - 24px))',
+                background: '#FFFFFF',
+                border: '1px solid #EEF2EF',
+                borderRadius: '14px',
+                boxShadow: '0 12px 32px rgba(0,0,0,0.18)',
+                overflow: 'hidden',
+              }}
+            >
+              <div
+                style={{
+                  display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+                  padding: '10px 12px',
+                  borderBottom: '1px solid #EEF2EF',
+                  background: `linear-gradient(90deg, ${accentColor}10 0%, transparent 100%)`,
+                }}
+              >
+                <span style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', color: accentColor, fontSize: '10.5px', fontWeight: 700, letterSpacing: '0.06em', textTransform: 'uppercase' }}>
+                  <Sparkles size={12} />
+                  Ideas to speak about
+                </span>
+                <button
+                  onClick={() => fetchIdeas(true)}
+                  disabled={loading}
+                  aria-label="Shuffle ideas"
+                  style={{
+                    display: 'inline-flex', alignItems: 'center', gap: '4px',
+                    padding: '4px 8px',
+                    background: '#F5F1EA',
+                    border: '1px solid #E6DCC8',
+                    borderRadius: '999px',
+                    color: '#6B5A3A',
+                    cursor: loading ? 'progress' : 'pointer',
+                    fontSize: '10.5px', fontWeight: 700,
+                  }}
+                >
+                  {loading ? <Loader2 size={11} className="animate-spin" /> : <Sparkles size={11} />}
+                  Shuffle
+                </button>
+              </div>
+              <div style={{ padding: '8px', display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                {loading && ideas.length === 0 && (
+                  <div style={{ padding: '14px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#94A09A', fontSize: '12px' }}>
+                    <Loader2 size={14} className="animate-spin" style={{ marginRight: '6px' }} />
+                    Thinking of angles…
+                  </div>
+                )}
+                {!loading && error && (
+                  <div style={{ padding: '12px', color: '#B8562E', fontSize: '12px' }}>{error}</div>
+                )}
+                {ideas.map((idea, i) => (
+                  <div
+                    key={`${i}-${idea.slice(0, 16)}`}
+                    style={{
+                      padding: '10px 12px',
+                      background: '#FAFAF7',
+                      border: '1px solid #EEF2EF',
+                      borderRadius: '10px',
+                      fontSize: '13px',
+                      lineHeight: 1.45,
+                      color: '#2A302D',
+                      fontFamily: 'var(--font-playfair, Playfair Display, serif)',
+                    }}
+                  >
+                    {idea}
+                  </div>
+                ))}
+              </div>
+            </motion.div>
+          </>
+        )}
+      </AnimatePresence>
+    </>
   )
 }
