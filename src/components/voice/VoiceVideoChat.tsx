@@ -19,7 +19,7 @@ const REALTIME_VOICES: ReadonlySet<string> = new Set([
   'alloy', 'ash', 'ballad', 'coral', 'echo', 'sage', 'shimmer', 'verse',
 ])
 function asRealtimeVoice(v: string | undefined): RealtimeVoice {
-  return v && REALTIME_VOICES.has(v) ? (v as RealtimeVoice) : 'alloy'
+  return v && REALTIME_VOICES.has(v) ? (v as RealtimeVoice) : 'coral'
 }
 
 export interface VoiceVideoChatProps {
@@ -29,7 +29,7 @@ export interface VoiceVideoChatProps {
   topic?: string
   /** Optional contact ID */
   contactId?: string
-  /** Voice to use - defaults to 'alloy' */
+  /** Voice to use - defaults to 'coral' (warm female American English) */
   voice?: RealtimeVoice | string
   /** Persona name shorthand */
   personaName?: 'journalist' | 'friend' | 'life-story'
@@ -69,7 +69,7 @@ export function VoiceVideoChat({
   sessionType = 'memory_capture',
   topic,
   contactId,
-  voice = 'alloy',
+  voice = 'coral',
   personaName = 'journalist',
   persona,
   maxQuestions = 5,

@@ -24,7 +24,7 @@ export interface VoiceChatProps {
   topic?: string
   /** Optional contact ID if memory is about a specific person */
   contactId?: string
-  /** Voice to use - defaults to 'alloy'. */
+  /** Voice to use - defaults to 'coral' (warm female American English). */
   voice?: RealtimeVoice | string
   /** Persona configuration - defaults to journalist */
   persona?: PersonaConfig
@@ -50,7 +50,7 @@ const REALTIME_VOICES: ReadonlySet<string> = new Set([
   'alloy', 'ash', 'ballad', 'coral', 'echo', 'sage', 'shimmer', 'verse',
 ])
 function asRealtimeVoice(v: string | undefined): RealtimeVoice {
-  return v && REALTIME_VOICES.has(v) ? (v as RealtimeVoice) : 'alloy'
+  return v && REALTIME_VOICES.has(v) ? (v as RealtimeVoice) : 'coral'
 }
 
 /**
@@ -95,7 +95,7 @@ export function VoiceChat({
   sessionType = 'memory_capture',
   topic,
   contactId: _contactId,
-  voice = 'alloy',
+  voice = 'coral',
   persona,
   personaName = 'journalist',
   maxQuestions = 5,

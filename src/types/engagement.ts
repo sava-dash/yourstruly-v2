@@ -17,7 +17,7 @@ export interface EngagementPrompt {
     taken_at?: string | null;
     exif_lat?: number | null;
     exif_lng?: number | null;
-    location_name?: string;
+    location_name?: string | null;
   };
   contactId?: string;
   contactName?: string;

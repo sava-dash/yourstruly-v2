@@ -15,7 +15,7 @@ export interface PhotoMetadata {
   taken_at?: string | null;
   exif_lat?: number | null;
   exif_lng?: number | null;
-  location_name?: string;
+  location_name?: string | null;
 }
 
 export interface ContactInfo {
@@ -58,9 +58,12 @@ export async function fetchPromptEnrichmentMaps(
   let photosMap: Record<string, string> = {};
   let photoMetaMap: Record<string, PhotoMetadata> = {};
   if (photoIds.length > 0) {
+    // location_name lives on the parent `memories` row (the upload pipeline
+    // reverse-geocodes EXIF lat/lng there), so we need the join to surface
+    // it on the engagement card.
     const { data: photos } = await supabase
       .from('memory_media')
-      .select('id, file_url, taken_at, exif_lat, exif_lng')
+      .select('id, file_url, taken_at, exif_lat, exif_lng, memories(location_name)')
       .in('id', photoIds);
 
     if (photos) {
@@ -68,21 +71,30 @@ export async function fetchPromptEnrichmentMaps(
         photos.map((p: { id: string; file_url: string }) => [p.id, p.file_url]),
       );
       photoMetaMap = Object.fromEntries(
-        photos.map(
-          (p: {
+        photos.map((row) => {
+          const p = row as {
             id: string;
             taken_at: string | null;
             exif_lat: number | null;
             exif_lng: number | null;
-          }) => [
+            // Supabase returns joined relations as an array unless a FK hint
+            // is supplied, so accept both shapes and read the first element.
+            memories?:
+              | { location_name?: string | null }
+              | { location_name?: string | null }[]
+              | null;
+          };
+          const mem = Array.isArray(p.memories) ? p.memories[0] : p.memories;
+          return [
             p.id,
             {
               taken_at: p.taken_at,
               exif_lat: p.exif_lat,
               exif_lng: p.exif_lng,
+              location_name: mem?.location_name ?? null,
             },
-          ],
-        ),
+          ];
+        }),
       );
     }
   }

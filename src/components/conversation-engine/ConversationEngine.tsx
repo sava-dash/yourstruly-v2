@@ -94,8 +94,10 @@ export function ConversationEngine({
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const audioChunksRef = useRef<Blob[]>([]);
 
-  // TTS
+  // TTS — OpenAI gpt-4o-mini-tts via /api/tts, warm female American English voice.
   const [isMuted, setIsMuted] = useState(false);
+  const ttsAudioRef = useRef<HTMLAudioElement | null>(null);
+  const lastSpokenRef = useRef<string | null>(null);
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
@@ -126,8 +128,25 @@ export function ConversationEngine({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [initialMessage]);
 
-  // TTS disabled — pending VibeVoice integration
-  const speakMessage = useCallback((_text: string) => {}, []);
+  // Speak AI messages via OpenAI /api/tts (coral voice). De-duped so the same
+  // text isn't replayed across re-renders, and mute kills any in-flight audio.
+  const speakMessage = useCallback((text: string) => {
+    if (!text || isMuted) return;
+    if (lastSpokenRef.current === text) return;
+    lastSpokenRef.current = text;
+    if (ttsAudioRef.current) {
+      try { ttsAudioRef.current.pause(); } catch {}
+      ttsAudioRef.current = null;
+    }
+    const url = `/api/tts?text=${encodeURIComponent(text)}&voice=coral`;
+    const audio = new Audio(url);
+    audio.preload = 'auto';
+    ttsAudioRef.current = audio;
+    audio.play().catch((err) => {
+      // Autoplay may be blocked until the user interacts with the page.
+      console.warn('[ConversationEngine] TTS playback failed:', err?.message || err);
+    });
+  }, [isMuted]);
 
   useEffect(() => {
     const last = messages[messages.length - 1];
@@ -136,6 +155,20 @@ export function ConversationEngine({
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [messages, isSending, speakMessage]);
+
+  // Stop any in-flight TTS when the user mutes or unmounts.
+  useEffect(() => {
+    if (isMuted && ttsAudioRef.current) {
+      try { ttsAudioRef.current.pause(); } catch {}
+      ttsAudioRef.current = null;
+    }
+  }, [isMuted]);
+  useEffect(() => () => {
+    if (ttsAudioRef.current) {
+      try { ttsAudioRef.current.pause(); } catch {}
+      ttsAudioRef.current = null;
+    }
+  }, []);
 
   // Send message to engine
   const handleSend = async () => {

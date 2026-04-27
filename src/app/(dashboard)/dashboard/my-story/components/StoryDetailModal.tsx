@@ -44,6 +44,10 @@ interface FullMemory {
   memory_type: string | null; location_name: string | null; location_lat: number | null; location_lng: number | null
   ai_summary: string | null; ai_mood: string | null; ai_category: string | null
   ai_labels: string[] | null; is_favorite: boolean; mood: string | null; created_at: string
+  /** Stitched conversation audio (full session). Populated by VoiceVideoChat after save. */
+  audio_url: string | null
+  /** Recorded video for the session, when the user enabled the camera. */
+  video_url: string | null
 }
 interface FullMedia {
   id: string; file_url: string; file_type: string; mime_type: string | null; is_cover: boolean
@@ -256,6 +260,9 @@ export default function StoryDetailModal({ item, onClose, onContinue, onEdit }: 
   const [wisdom, setWisdom] = useState<FullWisdom | null>(null)
   const [photoMedia, setPhotoMedia] = useState<FullMedia | null>(null)
   const [photoParentLoc, setPhotoParentLoc] = useState<{ location_name: string | null; location_lat: number | null; location_lng: number | null } | null>(null)
+  // Parent memory's voice/video story (description + Q&A audio) so photo
+  // cards can play back the saved conversation that produced the photo.
+  const [photoParentStory, setPhotoParentStory] = useState<{ id: string; description: string | null; audio_url: string | null; video_url: string | null } | null>(null)
   const [collaborators, setCollaborators] = useState<{ id: string; contact_name: string; contributor_name: string | null; response_text: string | null; status: string; completed_at: string | null }[]>([])
   const [slideshowMode, setSlideshowMode] = useState(false)
   const [taggingMode, setTaggingMode] = useState(false)
@@ -326,12 +333,26 @@ export default function StoryDetailModal({ item, onClose, onContinue, onEdit }: 
       const { data } = await supabase.from('memory_media').select('*').eq('id', item.id).single()
       if (data) {
         setPhotoMedia(data as FullMedia)
-        // Fetch parent memory for user-specified location (takes priority over EXIF)
+        // Fetch parent memory for user-specified location (takes priority over
+        // EXIF) AND the saved story description / audio / video so the photo
+        // card can play back the conversation that produced it.
         if (data.memory_id) {
           const { data: parentMem } = await supabase.from('memories')
-            .select('location_name, location_lat, location_lng')
+            .select('id, location_name, location_lat, location_lng, description, audio_url, video_url')
             .eq('id', data.memory_id).single()
-          if (parentMem) setPhotoParentLoc(parentMem)
+          if (parentMem) {
+            setPhotoParentLoc({
+              location_name: parentMem.location_name,
+              location_lat: parentMem.location_lat,
+              location_lng: parentMem.location_lng,
+            })
+            setPhotoParentStory({
+              id: parentMem.id,
+              description: parentMem.description,
+              audio_url: parentMem.audio_url,
+              video_url: parentMem.video_url,
+            })
+          }
         }
       }
     }
@@ -493,6 +514,11 @@ export default function StoryDetailModal({ item, onClose, onContinue, onEdit }: 
                 hasLocation={hasLocation}
                 loc={loc}
                 cleanDescription={cleanDescription}
+                isPlaying={isPlaying}
+                currentExchangeIdx={currentExchangeIdx}
+                playingPart={playingPart}
+                onPlayAll={playAllExchanges}
+                onPlayClip={playAudioUrl}
               />
             )}
 
@@ -728,6 +754,102 @@ export default function StoryDetailModal({ item, onClose, onContinue, onEdit }: 
                       </div>
                     </div>
                   </div>
+                  )
+                })()}
+
+                {/* Saved story playback — when this photo belongs to a memory
+                    that was captured via voice/video, surface the recording
+                    and parsed Q&A so the photo card can play back the
+                    conversation. */}
+                {(() => {
+                  if (!photoParentStory) return null
+                  const storyParsed = photoParentStory.description
+                    ? parseConversation(stripAppendBlocks(photoParentStory.description))
+                    : null
+                  if (storyParsed) exchangesRef.current = storyParsed.exchanges
+                  const hasMedia = photoParentStory.audio_url || photoParentStory.video_url
+                  const hasQA = storyParsed && storyParsed.exchanges.length > 0
+                  if (!hasMedia && !hasQA) return null
+                  return (
+                    <div className="mx-5 sm:mx-6 mb-6 space-y-4">
+                      {photoParentStory.video_url && (
+                        <video
+                          src={photoParentStory.video_url}
+                          controls
+                          playsInline
+                          className="w-full h-auto rounded-2xl border border-[#E8E2D8] bg-black"
+                          style={{ maxHeight: '50vh' }}
+                        />
+                      )}
+                      {photoParentStory.audio_url && (
+                        <div className="flex items-center gap-3 px-4 py-3 rounded-2xl border border-[#E8E2D8] bg-[#FDFCF9]">
+                          <div className="w-10 h-10 rounded-full bg-[#4A3552]/10 flex items-center justify-center flex-shrink-0">
+                            <Volume2 size={16} className="text-[#4A3552]" />
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <span className="text-[11px] tracking-wide text-[#94A09A] block mb-1">VOICE RECORDING</span>
+                            <audio controls className="w-full h-9" src={photoParentStory.audio_url} />
+                          </div>
+                        </div>
+                      )}
+                      {hasQA && (
+                        <button
+                          onClick={playAllExchanges}
+                          className="flex items-center gap-3 w-full px-4 py-3 rounded-2xl border transition-all"
+                          style={{ borderColor: 'rgba(74,53,82,0.15)', background: isPlaying ? 'rgba(74,53,82,0.06)' : '#FDFCF9' }}
+                        >
+                          <div className={`w-10 h-10 rounded-full flex items-center justify-center ${isPlaying ? 'bg-[#4A3552]' : 'bg-[#4A3552]/15'}`}>
+                            {isPlaying
+                              ? <Square size={14} className="text-white" fill="white" />
+                              : <Play size={16} className="text-[#4A3552] ml-0.5" />}
+                          </div>
+                          <div className="text-left flex-1">
+                            <span className="text-[#1A1F1C] font-medium text-sm block">
+                              {isPlaying
+                                ? `Playing ${playingPart === 'question' ? 'Question' : 'Response'} ${currentExchangeIdx + 1}/${storyParsed!.exchanges.length}`
+                                : 'Listen to the Conversation'}
+                            </span>
+                            <span className="text-xs text-[#94A09A]">
+                              {isPlaying ? 'Tap to stop' : `${storyParsed!.exchanges.length} exchanges`}
+                            </span>
+                          </div>
+                        </button>
+                      )}
+                      {hasQA && (
+                        <div className="space-y-4">
+                          {storyParsed!.exchanges.map((ex, i) => (
+                            <div key={i}>
+                              <div className="flex items-start gap-2 mb-1.5">
+                                <p className="flex-1 text-[11px] tracking-wide text-[#94A09A] uppercase">
+                                  {ex.question}
+                                </p>
+                                {ex.questionAudioUrl && (
+                                  <button
+                                    onClick={() => { void playAudioUrl(ex.questionAudioUrl!) }}
+                                    className="flex items-center gap-1 px-2 py-0.5 text-[10px] font-bold rounded-full border border-[#4A3552]/30 text-[#4A3552] bg-white hover:bg-[#4A3552]/5"
+                                    aria-label="Play question audio"
+                                  >
+                                    <Play size={10} fill="currentColor" /> Q
+                                  </button>
+                                )}
+                              </div>
+                              <div className="flex items-start gap-2">
+                                <p className="flex-1 text-[#3A3228] text-[15px] leading-relaxed">{ex.answer}</p>
+                                {ex.audioUrl && (
+                                  <button
+                                    onClick={() => { void playAudioUrl(ex.audioUrl!) }}
+                                    className="flex items-center gap-1 px-2 py-1 text-[10px] font-bold rounded-full border border-[#4A3552]/30 text-[#4A3552] bg-white hover:bg-[#4A3552]/5 mt-1 flex-shrink-0"
+                                    aria-label="Play response audio"
+                                  >
+                                    <Play size={10} fill="currentColor" /> A
+                                  </button>
+                                )}
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </div>
                   )
                 })()}
               </>
@@ -1339,6 +1461,11 @@ function MemoryReadView({
   hasLocation,
   loc,
   cleanDescription,
+  isPlaying,
+  currentExchangeIdx,
+  playingPart,
+  onPlayAll,
+  onPlayClip,
 }: {
   memory: FullMemory
   photos: FullMedia[]
@@ -1353,6 +1480,12 @@ function MemoryReadView({
   hasLocation: unknown
   loc: { lat: number | null; lng: number | null; name: string | null } | null
   cleanDescription: (text: string | null) => string[]
+  // Playback state + handlers owned by the parent (StoryDetailModal).
+  isPlaying: boolean
+  currentExchangeIdx: number
+  playingPart: 'question' | 'answer' | null
+  onPlayAll: () => void
+  onPlayClip: (url: string) => Promise<void>
 }) {
   const [zoomedPhoto, setZoomedPhoto] = useState<FullMedia | null>(null)
 
@@ -1488,6 +1621,50 @@ function MemoryReadView({
         <div className="grid grid-cols-1 lg:grid-cols-[1fr_360px] gap-6 px-6 sm:px-10 pb-10">
           {/* LEFT — backstory + tag chips + edit button */}
           <div className="flex flex-col gap-6 min-w-0">
+            {/* VIDEO — recorded session, when the user enabled the camera. */}
+            {memory.video_url && (
+              <section
+                className="overflow-hidden"
+                style={{ border: '2px solid var(--ed-ink, #111)', borderRadius: 2, background: '#000' }}
+              >
+                <video
+                  src={memory.video_url}
+                  controls
+                  playsInline
+                  className="w-full h-auto block"
+                  style={{ maxHeight: '60vh' }}
+                />
+              </section>
+            )}
+
+            {/* AUDIO — full stitched conversation playback when recorded. */}
+            {memory.audio_url && (
+              <div
+                className="flex items-center gap-3 px-5 py-4"
+                style={{
+                  background: 'var(--ed-paper, #FFFBF1)',
+                  border: '2px solid var(--ed-ink, #111)',
+                  borderRadius: 2,
+                }}
+              >
+                <div
+                  className="w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0"
+                  style={{ background: 'var(--ed-blue, #2A5CD3)' }}
+                >
+                  <Volume2 size={18} className="text-white" />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p
+                    className="text-[10px] tracking-[0.18em] text-[var(--ed-muted,#6F6B61)] mb-1"
+                    style={{ fontFamily: 'var(--font-mono, monospace)', fontWeight: 700 }}
+                  >
+                    VOICE RECORDING
+                  </p>
+                  <audio controls className="w-full h-9" src={memory.audio_url} />
+                </div>
+              </div>
+            )}
+
             {(paragraphs.length > 0 || (parsed && parsed.exchanges.length > 0)) && (
               <section
                 className="p-5 sm:p-6"
@@ -1503,24 +1680,107 @@ function MemoryReadView({
                 >
                   THE BACKSTORY
                 </h3>
+
+                {/* Listen to the Conversation — only when we have per-Q&A audio
+                    clips parsed out of the description. */}
+                {parsed && parsed.exchanges.length > 0 && parsed.exchanges.some(e => e.audioUrl || e.questionAudioUrl) && (
+                  <button
+                    onClick={onPlayAll}
+                    className="mb-4 flex items-center gap-3 w-full px-4 py-3 transition-all"
+                    style={{
+                      background: isPlaying ? 'var(--ed-blue, #2A5CD3)' : 'rgba(42,92,211,0.08)',
+                      color: isPlaying ? '#fff' : 'var(--ed-ink,#111)',
+                      border: '2px solid var(--ed-ink, #111)',
+                      borderRadius: 2,
+                    }}
+                  >
+                    <span
+                      className="w-9 h-9 rounded-full flex items-center justify-center flex-shrink-0"
+                      style={{ background: isPlaying ? '#fff' : 'var(--ed-blue, #2A5CD3)' }}
+                    >
+                      {isPlaying
+                        ? <Square size={14} fill="var(--ed-blue, #2A5CD3)" className="text-[#2A5CD3]" />
+                        : <Play size={16} fill="#fff" className="text-white ml-0.5" />}
+                    </span>
+                    <span className="flex-1 text-left">
+                      <span
+                        className="block text-[11px] tracking-[0.22em]"
+                        style={{ fontFamily: 'var(--font-mono, monospace)', fontWeight: 700 }}
+                      >
+                        {isPlaying
+                          ? `PLAYING ${playingPart === 'question' ? 'QUESTION' : 'RESPONSE'} ${currentExchangeIdx + 1} / ${parsed.exchanges.length}`
+                          : 'LISTEN TO THE CONVERSATION'}
+                      </span>
+                      <span className="block text-[11px] mt-0.5 opacity-70">
+                        {isPlaying ? 'Tap to stop' : `${parsed.exchanges.length} exchanges`}
+                      </span>
+                    </span>
+                  </button>
+                )}
+
                 {parsed && parsed.exchanges.length > 0 ? (
                   <div className="space-y-5">
-                    {parsed.exchanges.map((ex, i) => (
-                      <div key={i}>
-                        <p
-                          className="text-[10px] tracking-[0.16em] text-[var(--ed-muted,#6F6B61)] mb-1.5"
-                          style={{ fontFamily: 'var(--font-mono, monospace)' }}
+                    {parsed.exchanges.map((ex, i) => {
+                      const isActive = currentExchangeIdx === i
+                      return (
+                        <div
+                          key={i}
+                          className="transition-opacity"
+                          style={{ opacity: currentExchangeIdx >= 0 && !isActive ? 0.4 : 1 }}
                         >
-                          {ex.question}
-                        </p>
-                        <p
-                          className="text-[var(--ed-ink,#111)] text-[16px] sm:text-[17px] leading-[1.7]"
-                          style={{ fontFamily: 'var(--font-dm-serif, "DM Serif Display", serif)' }}
-                        >
-                          {ex.answer}
-                        </p>
-                      </div>
-                    ))}
+                          <div className="flex items-start gap-2 mb-1.5">
+                            <p
+                              className="flex-1 text-[10px] tracking-[0.16em] text-[var(--ed-muted,#6F6B61)]"
+                              style={{ fontFamily: 'var(--font-mono, monospace)' }}
+                            >
+                              {ex.question}
+                            </p>
+                            {ex.questionAudioUrl && (
+                              <button
+                                onClick={() => { void onPlayClip(ex.questionAudioUrl!) }}
+                                className="flex items-center gap-1 px-2 py-0.5 text-[10px] tracking-[0.14em]"
+                                style={{
+                                  fontFamily: 'var(--font-mono, monospace)',
+                                  fontWeight: 700,
+                                  border: '1.5px solid var(--ed-ink, #111)',
+                                  borderRadius: 999,
+                                  color: 'var(--ed-ink, #111)',
+                                  background: isActive && playingPart === 'question' ? 'var(--ed-yellow, #F2C84B)' : '#fff',
+                                }}
+                                aria-label="Play question audio"
+                              >
+                                <Play size={10} fill="currentColor" /> Q
+                              </button>
+                            )}
+                          </div>
+                          <div className="flex items-start gap-2">
+                            <p
+                              className="flex-1 text-[var(--ed-ink,#111)] text-[16px] sm:text-[17px] leading-[1.7]"
+                              style={{ fontFamily: 'var(--font-dm-serif, "DM Serif Display", serif)' }}
+                            >
+                              {ex.answer}
+                            </p>
+                            {ex.audioUrl && (
+                              <button
+                                onClick={() => { void onPlayClip(ex.audioUrl!) }}
+                                className="flex items-center gap-1 px-2 py-1 text-[10px] tracking-[0.14em] flex-shrink-0 mt-1"
+                                style={{
+                                  fontFamily: 'var(--font-mono, monospace)',
+                                  fontWeight: 700,
+                                  border: '1.5px solid var(--ed-ink, #111)',
+                                  borderRadius: 999,
+                                  color: 'var(--ed-ink, #111)',
+                                  background: isActive && playingPart === 'answer' ? 'var(--ed-yellow, #F2C84B)' : '#fff',
+                                }}
+                                aria-label="Play response audio"
+                              >
+                                <Play size={10} fill="currentColor" /> A
+                              </button>
+                            )}
+                          </div>
+                        </div>
+                      )
+                    })}
                   </div>
                 ) : (
                   <div className="space-y-3">
