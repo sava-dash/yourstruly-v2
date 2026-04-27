@@ -625,6 +625,13 @@ export function ConversationCard({ data, promptText, accentColor, onSave, saved,
   }
 
   const generateFollowups = async (cumulative: string) => {
+    // Hard cap: at most 2 AI suggestions per card so we don't pile up
+    // "what about your hands" style probes. Once we've shown 2, stop.
+    const existingSuggestions = messages.filter((m) => m.kind === 'suggestion').length
+    if (existingSuggestions >= 2) {
+      console.log('[ConversationCard] suggestion cap reached (2), skipping')
+      return
+    }
     setFollowupLoading(true)
     // Read "recent follow-up history" from localStorage so the server can apply its
     // "don't beat a dead horse" cooldown. Keep last 5 booleans.

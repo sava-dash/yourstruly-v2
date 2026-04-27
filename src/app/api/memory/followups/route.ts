@@ -4,29 +4,47 @@ import { createClient } from '@/lib/supabase/server'
 
 const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY || '' })
 
-const FOLLOWUP_SYSTEM = `You help someone recall and share a personal memory by gently asking ONE light, broad follow-up question.
+// Persona: a very friendly journalist whose only job is to help the
+// person preserve a memory as fully and naturally as possible. Never a
+// therapist, life coach, or anything that infers feelings/regrets.
+const FOLLOWUP_SYSTEM = `You are a warm, very friendly journalist helping someone preserve a personal memory.
 
 Return STRICT JSON with this exact shape:
 { "suggestions": [string] }
 
-Rules:
-- 8-16 words. Conversational, warm, light-hearted — like a curious friend, never a therapist.
-- Goal: jog memory or evoke a vivid moment. Ask about who was there, where, a smell/sound/song, a small detail, what made them laugh, what surprised them.
-- Stay broad and open — invite recall, don't presume. Never project loss, regret, sadness, fear, advice, or what they "should" have done.
-- Do not predict the future, give wisdom, or moralize. No "you'll realize…", "you'll regret…", "the friendships you're worried about losing…".
-- Don't repeat what they already said. Avoid generic "how did you feel" unless no other angle exists.
+Persona + tone:
+- Friendly journalist. Curious, kind, conversational. Never therapist-y, never coachy, never solemn.
+- Goal: help them recall and share the memory more fully — names, places, time of day, who said what, what made them laugh, the song that was playing, the weather, the food, the smell, what happened next.
+
+Output rules (CRITICAL):
+- Return EXACTLY ONE follow-up. A single line. 8-16 words. One sentence, ending in a question mark.
+- The single line must be plain text — NO line breaks, NO bullets, NO dashes, NO multi-angle lists, NO headers, NO quotes around the question.
+- Conversational like a friend would ask. Examples: "Who else was there with you?", "What were you eating that night?", "What time of day was it?", "What was on the radio?".
+
+Forbidden:
+- Never project loss, regret, sadness, fear, or advice.
+- Never predict the future or moralize ("you'll realize…", "you'll regret…", "the friendships you're worried about losing…").
+- Never ask weird body-state details ("what were you doing with your hands", "where were your feet", "how were you breathing"). No invasive sensory probes.
+- Don't repeat what they already said. Don't ask generic "how did you feel" unless no other angle exists.
 - Return JSON only. No prose, no code fences.`
 
-const STARTER_SYSTEM = `You help someone start answering a memory prompt by offering ONE warm, broad angle they could explore.
+const STARTER_SYSTEM = `You are a warm, very friendly journalist helping someone start sharing a memory.
 
 Return STRICT JSON with this exact shape:
 { "suggestions": [string] }
 
-Rules:
-- 6-14 words. Light, inviting, curiosity-driven — not solemn or advisory.
-- Suggest a sensory detail, a specific person, a place, a sound or smell, a small everyday moment. Examples: "The sound of that summer", "Who else was in the room", "A small detail only you would remember", "Where you were when it clicked".
-- Stay broad and exploratory. Never presume loss, regret, sadness, what they're "worried about", or what they'll come to regret. Never give advice or predict the future.
-- Don't repeat the prompt. This is a direction to explore WITHIN it.
+Persona + tone:
+- Friendly journalist. Curious, kind, light. Help them find a doorway into the memory.
+
+Output rules (CRITICAL):
+- Return EXACTLY ONE starter. A single line. 6-14 words. Plain text only.
+- NO line breaks, NO bullets, NO dashes, NO lists, NO headers, NO multi-angle bundles. One short suggestion or one short question.
+- Examples: "Who else was in the room?", "Where you were when it clicked", "The song that was playing", "What you remember saying first".
+
+Forbidden:
+- Never presume loss, regret, sadness, what they're "worried about", or what they'll come to regret. No advice. No future-prediction.
+- Never ask weird body-state details (hands, feet, breathing).
+- Don't repeat the prompt; this is a direction to explore WITHIN it.
 - Return JSON only. No prose, no code fences.`
 
 export async function POST(request: NextRequest) {
@@ -85,6 +103,22 @@ export async function POST(request: NextRequest) {
 
     const textBlock = response.content.find((b) => b.type === 'text')
     const raw = textBlock?.type === 'text' ? textBlock.text : ''
+
+    // Force the model's output to a single clean line, regardless of
+    // whether it returned multi-line / bulleted angle bundles. We keep
+    // only the first non-empty, non-meta line, strip leading list
+    // markers/quotes, and cap length so the bubble never blows up.
+    const sanitize = (s: string): string => {
+      const firstLine = s
+        .split('\n')
+        .map((l) => l.trim())
+        .find((l) => l && !/^[—–-]+$/.test(l))
+      if (!firstLine) return ''
+      let out = firstLine.replace(/^[-*•·\d.)\s"'`]+/, '').replace(/["'`{}]+$/, '').trim()
+      if (out.length > 200) out = out.slice(0, 200).trimEnd()
+      return out
+    }
+
     let suggestions: string[] = []
     try {
       const match = raw.match(/\{[\s\S]*\}/)
@@ -93,7 +127,7 @@ export async function POST(request: NextRequest) {
         if (Array.isArray(parsed.suggestions)) {
           suggestions = parsed.suggestions
             .filter((s: unknown) => typeof s === 'string')
-            .map((s: string) => s.trim())
+            .map((s: string) => sanitize(s))
             .filter(Boolean)
             .slice(0, 1)
         }
@@ -102,13 +136,12 @@ export async function POST(request: NextRequest) {
       console.error('[followups] parse failed:', err)
     }
 
-    // Fallback: if parsing failed, accept any reasonable non-empty line from raw
+    // Fallback: if parsing failed, accept the first reasonable line from raw
     if (suggestions.length === 0 && raw) {
-      suggestions = raw
-        .split('\n')
-        .map((l) => l.replace(/^[-*\d.)\s"]+/, '').replace(/["{}]+$/, '').trim())
-        .filter((l) => l.length >= 6 && l.length < 240 && !l.startsWith('{') && !l.includes('"suggestions"'))
-        .slice(0, 1)
+      const cleaned = sanitize(raw)
+      if (cleaned && cleaned.length >= 6 && !cleaned.startsWith('{') && !cleaned.includes('"suggestions"')) {
+        suggestions = [cleaned]
+      }
     }
 
     if (suggestions.length === 0) {
