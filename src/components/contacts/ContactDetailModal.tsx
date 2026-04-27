@@ -6,7 +6,7 @@ import Link from 'next/link'
 import {
   X, Mail, Phone, MessageSquare, Edit2, Save, Trash2,
   Calendar, MapPin, User, Heart, Users, Loader2, Camera, FileText,
-  Video, Send, Plus
+  Video, Send, Plus, ChevronDown, Check
 } from 'lucide-react'
 import { RELATIONSHIP_OPTIONS, getRelationshipLabel } from '@/lib/relationships'
 
@@ -105,6 +105,67 @@ function formatDateDisplay(dateStr: string | undefined | null): string {
   return `${monthNames[parseInt(month, 10) - 1]} ${parseInt(day, 10)}, ${year}`
 }
 
+// Editorial palette mapping per relationship category — used by the title
+// pill, avatar bg, and sidebar card accents so the whole modal stays
+// color-keyed to the contact's group (matches the my-story / contacts grid).
+function categoryAccent(relType?: string): { bg: string; ink: string } {
+  if (!relType) return { bg: 'var(--ed-muted, #6F6B61)', ink: '#fff' }
+  const cat = getRelationshipCategory(relType)
+  switch (cat) {
+    case 'Family':       return { bg: 'var(--ed-yellow, #F2C84B)', ink: 'var(--ed-ink, #111)' }
+    case 'Friends':      return { bg: 'var(--ed-blue, #2A5CD3)',   ink: '#fff' }
+    case 'Professional': return { bg: 'var(--ed-ink, #111)',       ink: '#fff' }
+    default:             return { bg: 'var(--ed-muted, #6F6B61)',  ink: '#fff' }
+  }
+}
+
+// Editorial sidebar tile — same shape used in StoryDetailModal so the two
+// detail surfaces feel like one system.
+function SidebarCard({
+  label,
+  accent,
+  icon,
+  children,
+}: {
+  label: string
+  accent: string
+  icon: React.ReactNode
+  children: React.ReactNode
+}) {
+  return (
+    <div
+      className="p-4"
+      style={{
+        background: 'var(--ed-paper, #FFFBF1)',
+        border: '2px solid var(--ed-ink, #111)',
+        borderRadius: 2,
+      }}
+    >
+      <div className="flex items-center gap-2 mb-2.5">
+        <span
+          aria-hidden
+          className="flex items-center justify-center"
+          style={{
+            width: 22, height: 22, borderRadius: 999,
+            background: accent,
+            color: accent === 'var(--ed-yellow, #F2C84B)' ? 'var(--ed-ink, #111)' : '#fff',
+            border: '1.5px solid var(--ed-ink, #111)',
+          }}
+        >
+          {icon}
+        </span>
+        <span
+          className="text-[10px] tracking-[0.22em] text-[var(--ed-ink,#111)]"
+          style={{ fontFamily: 'var(--font-mono, monospace)', fontWeight: 700 }}
+        >
+          {label}
+        </span>
+      </div>
+      {children}
+    </div>
+  )
+}
+
 // ============================================
 // COMPONENT
 // ============================================
@@ -122,6 +183,68 @@ export default function ContactDetailModal({
   const [deleting, setDeleting] = useState(false)
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  // Gratitude PING — local to the detail modal so it carries its own
+  // dropdown + sent-confirmation state without plumbing through the parent.
+  const [pingOpen, setPingOpen] = useState(false)
+  const [pingSent, setPingSent] = useState<string | null>(null)
+  const [pingSending, setPingSending] = useState(false)
+
+  const GRATITUDE_OPTIONS = [
+    { emoji: '💛', label: 'Thinking of you' },
+    { emoji: '🌟', label: 'Proud of you' },
+    { emoji: '💜', label: 'Miss you' },
+    { emoji: '❤️', label: 'Love you' },
+    { emoji: '🙏', label: 'Thank you' },
+  ]
+
+  const handleSendPing = async (message: string) => {
+    if (pingSending) return
+    setPingSending(true)
+    try {
+      const { data: { user } } = await supabase.auth.getUser()
+      if (!user) return
+      const { data: profile } = await supabase.from('profiles').select('full_name').eq('id', user.id).single()
+      const senderName = profile?.full_name || 'Someone'
+
+      await supabase.from('gratitude_pings').insert({
+        sender_id: user.id,
+        recipient_contact_id: contact.id,
+        recipient_email: contact.email || null,
+        message,
+        sender_name: senderName,
+        recipient_name: contact.full_name,
+      })
+
+      if (contact.email) {
+        await fetch('/api/gratitude-ping', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            recipientEmail: contact.email,
+            recipientName: contact.full_name,
+            senderName,
+            message,
+          }),
+        }).catch(() => {})
+      }
+
+      setPingSent(message)
+      setPingOpen(false)
+      setTimeout(() => setPingSent(null), 3000)
+    } catch (err) {
+      console.error('Failed to send gratitude ping:', err)
+    } finally {
+      setPingSending(false)
+    }
+  }
+
+  // Close ping dropdown when clicking outside
+  useEffect(() => {
+    if (!pingOpen) return
+    const close = () => setPingOpen(false)
+    document.addEventListener('click', close)
+    return () => document.removeEventListener('click', close)
+  }, [pingOpen])
 
   // Form state for edit mode
   const [form, setForm] = useState({
@@ -351,588 +474,791 @@ export default function ContactDetailModal({
 
   return (
     <div
-      className="fixed inset-0 z-[1000] bg-black/50 backdrop-blur-sm flex items-center justify-center p-4"
+      className="fixed inset-0 z-[1000] flex items-start sm:items-center justify-center p-4 overflow-y-auto"
+      style={{ background: 'rgba(17,17,17,0.55)', backdropFilter: 'blur(6px)' }}
       onClick={onClose}
     >
       <div
-        className="bg-white rounded-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto shadow-2xl"
+        className="relative w-full max-w-6xl my-4 sm:my-8"
+        style={{
+          background: 'var(--ed-cream, #F3ECDC)',
+          border: '2px solid var(--ed-ink, #111)',
+          borderRadius: 2,
+        }}
         onClick={(e) => e.stopPropagation()}
       >
-        {/* ============ CLOSE BUTTON ============ */}
-        <div className="relative">
+        {/* Top-right action toolbar: EDIT, DELETE, PING dropdown, CLOSE.
+            Editorial pills + a circular close button. Hidden on the edit
+            pane (the form has its own SAVE/CANCEL controls). */}
+        <div className="absolute top-4 right-4 z-20 flex items-center gap-2">
+          {!editing && (
+            <>
+              <button
+                onClick={() => setEditing(true)}
+                className="flex items-center gap-1.5 px-3 py-2 text-[10px] tracking-[0.18em]"
+                style={{
+                  fontFamily: 'var(--font-mono, monospace)',
+                  fontWeight: 700,
+                  background: 'var(--ed-red, #E23B2E)',
+                  color: '#fff',
+                  border: '2px solid var(--ed-ink, #111)',
+                  borderRadius: 2,
+                }}
+                aria-label="Edit contact"
+              >
+                <Edit2 size={11} /> EDIT
+              </button>
+              <button
+                onClick={() => setShowDeleteConfirm(s => !s)}
+                className="flex items-center gap-1.5 px-3 py-2 text-[10px] tracking-[0.18em]"
+                style={{
+                  fontFamily: 'var(--font-mono, monospace)',
+                  fontWeight: 700,
+                  background: 'var(--ed-paper, #FFFBF1)',
+                  color: 'var(--ed-ink, #111)',
+                  border: '2px solid var(--ed-ink, #111)',
+                  borderRadius: 2,
+                }}
+                aria-label="Delete contact"
+              >
+                <Trash2 size={11} /> DELETE
+              </button>
+              <div
+                className="relative"
+                onClick={(e) => e.stopPropagation()}
+              >
+                {pingSent ? (
+                  <span
+                    className="inline-flex items-center gap-1.5 px-3 py-2 text-[10px] tracking-[0.18em]"
+                    style={{
+                      fontFamily: 'var(--font-mono, monospace)',
+                      fontWeight: 700,
+                      background: 'var(--ed-blue, #2A5CD3)',
+                      color: '#fff',
+                      border: '2px solid var(--ed-ink, #111)',
+                      borderRadius: 2,
+                    }}
+                  >
+                    <Check size={11} /> SENT
+                  </span>
+                ) : (
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation()
+                      setPingOpen(o => !o)
+                    }}
+                    className="flex items-center gap-1.5 px-3 py-2 text-[10px] tracking-[0.18em]"
+                    style={{
+                      fontFamily: 'var(--font-mono, monospace)',
+                      fontWeight: 700,
+                      background: 'var(--ed-yellow, #F2C84B)',
+                      color: 'var(--ed-ink, #111)',
+                      border: '2px solid var(--ed-ink, #111)',
+                      borderRadius: 2,
+                    }}
+                    aria-label="Send gratitude ping"
+                  >
+                    <Send size={11} /> PING <ChevronDown size={11} />
+                  </button>
+                )}
+                {pingOpen && (
+                  <div
+                    className="absolute top-full right-0 mt-2 min-w-[220px]"
+                    style={{
+                      background: 'var(--ed-paper, #FFFBF1)',
+                      border: '2px solid var(--ed-ink, #111)',
+                      borderRadius: 2,
+                    }}
+                    onClick={(e) => e.stopPropagation()}
+                  >
+                    <div
+                      className="px-3 py-2 text-[9px] tracking-[0.18em] text-[var(--ed-muted,#6F6B61)]"
+                      style={{
+                        fontFamily: 'var(--font-mono, monospace)',
+                        fontWeight: 700,
+                        borderBottom: '2px solid var(--ed-ink, #111)',
+                      }}
+                    >
+                      SEND TO {contact.full_name.split(' ')[0].toUpperCase()}
+                    </div>
+                    {GRATITUDE_OPTIONS.map(opt => (
+                      <button
+                        key={opt.label}
+                        onClick={() => handleSendPing(opt.label)}
+                        disabled={pingSending}
+                        className="w-full px-3 py-2 text-left text-[12px] text-[var(--ed-ink,#111)] hover:bg-[var(--ed-cream,#F3ECDC)] flex items-center gap-2 disabled:opacity-50"
+                      >
+                        <span>{opt.emoji}</span>
+                        <span>{opt.label}</span>
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </>
+          )}
           <button
             onClick={onClose}
-            className="absolute top-4 right-4 p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-lg transition-colors z-10"
+            className="flex items-center justify-center"
+            style={{
+              width: 36,
+              height: 36,
+              borderRadius: 999,
+              border: '2px solid var(--ed-ink, #111)',
+              background: 'var(--ed-paper, #FFFBF1)',
+            }}
             aria-label="Close"
           >
-            <X size={20} />
+            <X size={16} className="text-[var(--ed-ink,#111)]" />
           </button>
         </div>
 
-        {/* ============ TWO-COLUMN TOP SECTION ============ */}
-        <div className="flex flex-col sm:flex-row gap-0 sm:gap-6 p-6">
-          {/* LEFT COLUMN: Avatar, Name, Badge, Quick Actions */}
-          <div className="sm:w-[40%] flex-shrink-0 flex flex-col items-center sm:items-start text-center sm:text-left mb-6 sm:mb-0">
-            {/* Avatar */}
-            {contact.avatar_url ? (
-              <img
-                src={contact.avatar_url}
-                alt={contact.full_name}
-                className="w-20 h-20 rounded-full object-cover border-2 border-[#DDE3DF] mb-3"
-              />
-            ) : (
-              <div className="w-20 h-20 rounded-full bg-gradient-to-br from-[#2D5A3D] to-[#5a8a6e] flex items-center justify-center text-white text-2xl font-semibold flex-shrink-0 mb-3">
-                {getInitials(contact.full_name)}
-              </div>
-            )}
-
-            <h2
-              className="text-2xl font-bold text-[#1A1F1C] truncate max-w-full"
-              style={{ fontFamily: 'var(--font-dm-serif, "DM Serif Display", serif)' }}
+        {/* ───── HEADER: type pill + display name + red dot accent ─────
+            Padding-top accommodates the absolute action toolbar above. */}
+        <header className="px-6 sm:px-10 pt-20 sm:pt-24 pb-6">
+          <div className="flex items-center gap-2 mb-3">
+            <span
+              aria-hidden
+              className="inline-block rounded-full"
+              style={{ width: 8, height: 8, background: categoryAccent(contact.relationship_type).bg }}
+            />
+            <span
+              className="text-[10px] tracking-[0.22em] text-[var(--ed-ink,#111)]"
+              style={{ fontFamily: 'var(--font-mono, monospace)', fontWeight: 700 }}
             >
-              {contact.full_name}
-            </h2>
-
-            <div className="flex items-center gap-2 mt-1.5 flex-wrap justify-center sm:justify-start">
-              <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium border ${getBadgeColor(contact.relationship_type)}`}>
-                {getRelationshipLabel(contact.relationship_type)}
-              </span>
-              {contact.nickname && (
-                <span className="text-sm text-gray-400">({contact.nickname})</span>
-              )}
-            </div>
-
-            {/* Quick Actions */}
-            <div className="flex flex-wrap items-center gap-2 mt-4">
-              {contact.email && (
-                <a
-                  href={`mailto:${contact.email}`}
-                  className="flex items-center gap-1.5 px-3 py-2 text-sm text-[#2D5A3D] bg-[#2D5A3D]/5 hover:bg-[#2D5A3D]/10 rounded-xl transition-colors"
-                  title={`Email ${contact.email}`}
-                >
-                  <Mail size={15} />
-                  <span>Email</span>
-                </a>
-              )}
-              {contact.phone && (
-                <a
-                  href={`tel:${contact.phone}`}
-                  className="flex items-center gap-1.5 px-3 py-2 text-sm text-[#2D5A3D] bg-[#2D5A3D]/5 hover:bg-[#2D5A3D]/10 rounded-xl transition-colors"
-                  title={`Call ${contact.phone}`}
-                >
-                  <Phone size={15} />
-                  <span>Call</span>
-                </a>
-              )}
-              <Link
-                href="/dashboard/messages"
-                className="flex items-center gap-1.5 px-3 py-2 text-sm text-[#2D5A3D] bg-[#2D5A3D]/5 hover:bg-[#2D5A3D]/10 rounded-xl transition-colors"
-              >
-                <MessageSquare size={15} />
-                <span>Message</span>
-              </Link>
-            </div>
+              CONTACT · {(getRelationshipLabel(contact.relationship_type) || 'OTHER').toUpperCase()}
+            </span>
           </div>
-
-          {/* RIGHT COLUMN: Details with edit toggle */}
-          <div className="sm:w-[60%] min-w-0">
-          <div className="flex items-center justify-between mb-4">
-            <h3 className="text-xs font-semibold text-[#94A09A] uppercase tracking-wider">Details</h3>
-            {!editing ? (
-              <button
-                onClick={() => setEditing(true)}
-                className="flex items-center gap-1.5 px-3 py-1.5 text-sm text-[#2D5A3D] hover:bg-[#2D5A3D]/5 rounded-lg transition-colors"
-              >
-                <Edit2 size={14} />
-                Edit
-              </button>
-            ) : (
-              <div className="flex items-center gap-2">
-                <button
-                  onClick={() => {
-                    setEditing(false)
-                    setError(null)
-                    // Reset form to original contact data
-                    setForm({
-                      full_name: contact.full_name || '',
-                      nickname: contact.nickname || '',
-                      email: contact.email || '',
-                      phone: contact.phone || '',
-                      relationship_type: contact.relationship_type || '',
-                      relationship_details: contact.relationship_details || '',
-                      date_of_birth: contact.date_of_birth || '',
-                      address: contact.address || '',
-                      city: contact.city || '',
-                      state: contact.state || '',
-                      country: contact.country || '',
-                      zipcode: contact.zipcode || '',
-                      notes: contact.notes || '',
-                    })
-                  }}
-                  className="px-3 py-1.5 text-sm text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-lg transition-colors"
-                >
-                  Cancel
-                </button>
-                <button
-                  onClick={handleSave}
-                  disabled={saving}
-                  className="flex items-center gap-1.5 px-3 py-1.5 text-sm text-white bg-[#2D5A3D] hover:bg-[#234A31] rounded-lg transition-colors disabled:opacity-50"
-                >
-                  {saving ? <Loader2 size={14} className="animate-spin" /> : <Save size={14} />}
-                  Save
-                </button>
-              </div>
-            )}
+          <div className="flex items-start gap-4 sm:gap-6">
+            <h1
+              className="flex-1 leading-[1.05] text-[var(--ed-ink,#111)]"
+              style={{
+                fontFamily: 'var(--font-display, "Archivo Black", sans-serif)',
+                fontSize: 'clamp(28px, 4.5vw, 44px)',
+              }}
+            >
+              {contact.full_name.toUpperCase()}
+            </h1>
+            <span
+              aria-hidden
+              className="shrink-0"
+              style={{ width: 28, height: 28, background: 'var(--ed-red, #E23B2E)', borderRadius: 999, marginTop: 8 }}
+            />
           </div>
-
-          {error && (
-            <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-xl text-red-600 text-sm">
-              {error}
-            </div>
+          {contact.nickname && (
+            <p className="text-[12px] text-[var(--ed-muted,#6F6B61)] mt-2 italic">
+              also &ldquo;{contact.nickname}&rdquo;
+            </p>
           )}
+        </header>
 
-          {editing ? (
-            /* ---- EDIT MODE ---- */
-            <div className="space-y-4">
-              {/* Personal */}
-              <fieldset className="space-y-3">
-                <legend className="text-xs font-medium text-gray-400 uppercase tracking-wider mb-2">Personal</legend>
-                <div>
-                  <label className="block text-sm text-[#666] mb-1">Full Name *</label>
-                  <input
-                    value={form.full_name}
-                    onChange={e => setForm({ ...form, full_name: e.target.value })}
-                    className="w-full p-2.5 bg-[#2D5A3D]/5 border border-[#DDE3DF] rounded-xl text-gray-800 focus:outline-none focus:ring-2 focus:ring-[#2D5A3D]/30 transition-all text-sm"
-                  />
-                </div>
-                <div className="grid grid-cols-2 gap-3">
-                  <div>
-                    <label className="block text-sm text-[#666] mb-1">Nickname</label>
-                    <input
-                      value={form.nickname}
-                      onChange={e => setForm({ ...form, nickname: e.target.value })}
-                      className="w-full p-2.5 bg-[#2D5A3D]/5 border border-[#DDE3DF] rounded-xl text-gray-800 focus:outline-none focus:ring-2 focus:ring-[#2D5A3D]/30 transition-all text-sm"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm text-[#666] mb-1">Birthday</label>
-                    <input
-                      type="date"
-                      value={form.date_of_birth}
-                      onChange={e => setForm({ ...form, date_of_birth: e.target.value })}
-                      className="w-full p-2.5 bg-[#2D5A3D]/5 border border-[#DDE3DF] rounded-xl text-gray-800 focus:outline-none focus:ring-2 focus:ring-[#2D5A3D]/30 transition-all text-sm"
-                    />
-                  </div>
-                </div>
-                <div>
-                  <label className="block text-sm text-[#666] mb-1">Relationship *</label>
-                  <select
-                    value={form.relationship_type}
-                    onChange={e => setForm({ ...form, relationship_type: e.target.value })}
-                    className="w-full p-2.5 bg-[#2D5A3D]/5 border border-[#DDE3DF] rounded-xl text-gray-800 focus:outline-none focus:ring-2 focus:ring-[#2D5A3D]/30 transition-all text-sm"
+        {error && (
+          <div
+            className="mx-6 sm:mx-10 mb-4 px-4 py-2 text-[12px]"
+            style={{
+              border: '2px solid var(--ed-ink, #111)',
+              background: 'var(--ed-red, #E23B2E)',
+              color: '#fff',
+              fontFamily: 'var(--font-mono, monospace)',
+              letterSpacing: '0.1em',
+            }}
+          >
+            {error.toUpperCase()}
+          </div>
+        )}
+
+        {editing ? (
+          /* ───── EDIT MODE ───── */
+          <div className="px-6 sm:px-10 pb-8">
+            <div
+              className="p-5 sm:p-6"
+              style={{
+                background: 'var(--ed-paper, #FFFBF1)',
+                border: '2px solid var(--ed-ink, #111)',
+                borderRadius: 2,
+              }}
+            >
+              <div className="flex items-center justify-between mb-4">
+                <h3
+                  className="text-[11px] tracking-[0.22em] text-[var(--ed-ink,#111)]"
+                  style={{ fontFamily: 'var(--font-mono, monospace)', fontWeight: 700 }}
+                >
+                  EDIT DETAILS
+                </h3>
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={() => {
+                      setEditing(false)
+                      setError(null)
+                      setForm({
+                        full_name: contact.full_name || '',
+                        nickname: contact.nickname || '',
+                        email: contact.email || '',
+                        phone: contact.phone || '',
+                        relationship_type: contact.relationship_type || '',
+                        relationship_details: contact.relationship_details || '',
+                        date_of_birth: contact.date_of_birth || '',
+                        address: contact.address || '',
+                        city: contact.city || '',
+                        state: contact.state || '',
+                        country: contact.country || '',
+                        zipcode: contact.zipcode || '',
+                        notes: contact.notes || '',
+                      })
+                    }}
+                    className="px-3 py-1.5 text-[10px] tracking-[0.18em]"
+                    style={{
+                      fontFamily: 'var(--font-mono, monospace)',
+                      fontWeight: 700,
+                      background: 'transparent',
+                      color: 'var(--ed-ink, #111)',
+                      border: '2px solid var(--ed-ink, #111)',
+                      borderRadius: 2,
+                    }}
                   >
-                    <option value="">Select...</option>
-                    {RELATIONSHIP_OPTIONS.map(group => (
-                      <optgroup key={group.category} label={group.category}>
-                        {group.options.map(opt => (
-                          <option key={opt.id} value={opt.id}>{opt.label}</option>
-                        ))}
-                      </optgroup>
-                    ))}
-                  </select>
+                    CANCEL
+                  </button>
+                  <button
+                    onClick={handleSave}
+                    disabled={saving}
+                    className="flex items-center gap-1.5 px-3 py-1.5 text-[10px] tracking-[0.18em] disabled:opacity-50"
+                    style={{
+                      fontFamily: 'var(--font-mono, monospace)',
+                      fontWeight: 700,
+                      background: 'var(--ed-red, #E23B2E)',
+                      color: '#fff',
+                      border: '2px solid var(--ed-ink, #111)',
+                      borderRadius: 2,
+                    }}
+                  >
+                    {saving ? <Loader2 size={12} className="animate-spin" /> : <Save size={12} />}
+                    SAVE
+                  </button>
                 </div>
-                <div>
-                  <label className="block text-sm text-[#666] mb-1">Relationship details</label>
-                  <input
-                    value={form.relationship_details}
-                    onChange={e => setForm({ ...form, relationship_details: e.target.value })}
-                    placeholder="e.g. Father-in-law on my wife's side"
-                    className="w-full p-2.5 bg-[#2D5A3D]/5 border border-[#DDE3DF] rounded-xl text-gray-800 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#2D5A3D]/30 transition-all text-sm"
-                  />
-                </div>
-              </fieldset>
+              </div>
 
-              {/* Contact info */}
-              <fieldset className="space-y-3">
-                <legend className="text-xs font-medium text-gray-400 uppercase tracking-wider mb-2">Contact</legend>
-                <div className="grid grid-cols-2 gap-3">
+              <div className="space-y-4">
+                <fieldset className="space-y-3">
+                  <legend className="text-[10px] tracking-[0.18em] text-[var(--ed-muted,#6F6B61)] mb-2" style={{ fontFamily: 'var(--font-mono, monospace)', fontWeight: 700 }}>PERSONAL</legend>
                   <div>
-                    <label className="block text-sm text-[#666] mb-1">Email</label>
+                    <label className="block text-xs text-[var(--ed-muted,#6F6B61)] mb-1">Full name *</label>
                     <input
-                      type="email"
-                      value={form.email}
-                      onChange={e => setForm({ ...form, email: e.target.value })}
-                      placeholder="email@example.com"
-                      className="w-full p-2.5 bg-[#2D5A3D]/5 border border-[#DDE3DF] rounded-xl text-gray-800 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#2D5A3D]/30 transition-all text-sm"
+                      value={form.full_name}
+                      onChange={e => setForm({ ...form, full_name: e.target.value })}
+                      className="w-full p-2.5 text-sm text-[var(--ed-ink,#111)]"
+                      style={{ background: 'var(--ed-cream, #F3ECDC)', border: '2px solid var(--ed-ink, #111)', borderRadius: 2 }}
                     />
                   </div>
+                  <div className="grid grid-cols-2 gap-3">
+                    <div>
+                      <label className="block text-xs text-[var(--ed-muted,#6F6B61)] mb-1">Nickname</label>
+                      <input
+                        value={form.nickname}
+                        onChange={e => setForm({ ...form, nickname: e.target.value })}
+                        className="w-full p-2.5 text-sm text-[var(--ed-ink,#111)]"
+                        style={{ background: 'var(--ed-cream, #F3ECDC)', border: '2px solid var(--ed-ink, #111)', borderRadius: 2 }}
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-xs text-[var(--ed-muted,#6F6B61)] mb-1">Birthday</label>
+                      <input
+                        type="date"
+                        value={form.date_of_birth}
+                        onChange={e => setForm({ ...form, date_of_birth: e.target.value })}
+                        className="w-full p-2.5 text-sm text-[var(--ed-ink,#111)]"
+                        style={{ background: 'var(--ed-cream, #F3ECDC)', border: '2px solid var(--ed-ink, #111)', borderRadius: 2 }}
+                      />
+                    </div>
+                  </div>
                   <div>
-                    <label className="block text-sm text-[#666] mb-1">Phone</label>
+                    <label className="block text-xs text-[var(--ed-muted,#6F6B61)] mb-1">Relationship *</label>
+                    <select
+                      value={form.relationship_type}
+                      onChange={e => setForm({ ...form, relationship_type: e.target.value })}
+                      className="w-full p-2.5 text-sm text-[var(--ed-ink,#111)]"
+                      style={{ background: 'var(--ed-cream, #F3ECDC)', border: '2px solid var(--ed-ink, #111)', borderRadius: 2 }}
+                    >
+                      <option value="">Select…</option>
+                      {RELATIONSHIP_OPTIONS.map(group => (
+                        <optgroup key={group.category} label={group.category}>
+                          {group.options.map(opt => (
+                            <option key={opt.id} value={opt.id}>{opt.label}</option>
+                          ))}
+                        </optgroup>
+                      ))}
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block text-xs text-[var(--ed-muted,#6F6B61)] mb-1">Relationship details</label>
                     <input
-                      type="tel"
-                      value={form.phone}
-                      onChange={e => setForm({ ...form, phone: e.target.value })}
-                      placeholder="(555) 123-4567"
-                      className="w-full p-2.5 bg-[#2D5A3D]/5 border border-[#DDE3DF] rounded-xl text-gray-800 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#2D5A3D]/30 transition-all text-sm"
+                      value={form.relationship_details}
+                      onChange={e => setForm({ ...form, relationship_details: e.target.value })}
+                      placeholder="e.g. Father-in-law on my wife's side"
+                      className="w-full p-2.5 text-sm text-[var(--ed-ink,#111)] placeholder-[var(--ed-muted,#6F6B61)]"
+                      style={{ background: 'var(--ed-cream, #F3ECDC)', border: '2px solid var(--ed-ink, #111)', borderRadius: 2 }}
                     />
                   </div>
-                </div>
-              </fieldset>
+                </fieldset>
 
-              {/* Address */}
-              <fieldset className="space-y-3">
-                <legend className="text-xs font-medium text-gray-400 uppercase tracking-wider mb-2">Address</legend>
-                <input
-                  value={form.address}
-                  onChange={e => setForm({ ...form, address: e.target.value })}
-                  placeholder="Street address"
-                  className="w-full p-2.5 bg-[#2D5A3D]/5 border border-[#DDE3DF] rounded-xl text-gray-800 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#2D5A3D]/30 transition-all text-sm"
-                />
-                <div className="grid grid-cols-4 gap-2">
-                  <input
-                    value={form.city}
-                    onChange={e => setForm({ ...form, city: e.target.value })}
-                    placeholder="City"
-                    className="w-full p-2.5 bg-[#2D5A3D]/5 border border-[#DDE3DF] rounded-xl text-gray-800 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#2D5A3D]/30 transition-all text-sm"
-                  />
-                  <input
-                    value={form.state}
-                    onChange={e => setForm({ ...form, state: e.target.value })}
-                    placeholder="State"
-                    className="w-full p-2.5 bg-[#2D5A3D]/5 border border-[#DDE3DF] rounded-xl text-gray-800 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#2D5A3D]/30 transition-all text-sm"
-                  />
-                  <input
-                    value={form.zipcode}
-                    onChange={e => setForm({ ...form, zipcode: e.target.value })}
-                    placeholder="Zip"
-                    className="w-full p-2.5 bg-[#2D5A3D]/5 border border-[#DDE3DF] rounded-xl text-gray-800 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#2D5A3D]/30 transition-all text-sm"
-                  />
-                  <input
-                    value={form.country}
-                    onChange={e => setForm({ ...form, country: e.target.value })}
-                    placeholder="Country"
-                    className="w-full p-2.5 bg-[#2D5A3D]/5 border border-[#DDE3DF] rounded-xl text-gray-800 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#2D5A3D]/30 transition-all text-sm"
-                  />
-                </div>
-              </fieldset>
+                <fieldset className="space-y-3">
+                  <legend className="text-[10px] tracking-[0.18em] text-[var(--ed-muted,#6F6B61)] mb-2" style={{ fontFamily: 'var(--font-mono, monospace)', fontWeight: 700 }}>CONTACT</legend>
+                  <div className="grid grid-cols-2 gap-3">
+                    <div>
+                      <label className="block text-xs text-[var(--ed-muted,#6F6B61)] mb-1">Email</label>
+                      <input
+                        type="email"
+                        value={form.email}
+                        onChange={e => setForm({ ...form, email: e.target.value })}
+                        placeholder="email@example.com"
+                        className="w-full p-2.5 text-sm text-[var(--ed-ink,#111)] placeholder-[var(--ed-muted,#6F6B61)]"
+                        style={{ background: 'var(--ed-cream, #F3ECDC)', border: '2px solid var(--ed-ink, #111)', borderRadius: 2 }}
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-xs text-[var(--ed-muted,#6F6B61)] mb-1">Phone</label>
+                      <input
+                        type="tel"
+                        value={form.phone}
+                        onChange={e => setForm({ ...form, phone: e.target.value })}
+                        placeholder="(555) 123-4567"
+                        className="w-full p-2.5 text-sm text-[var(--ed-ink,#111)] placeholder-[var(--ed-muted,#6F6B61)]"
+                        style={{ background: 'var(--ed-cream, #F3ECDC)', border: '2px solid var(--ed-ink, #111)', borderRadius: 2 }}
+                      />
+                    </div>
+                  </div>
+                </fieldset>
 
-              {/* Notes */}
-              <fieldset className="space-y-3">
-                <legend className="text-xs font-medium text-gray-400 uppercase tracking-wider mb-2">Notes</legend>
-                <textarea
-                  value={form.notes}
-                  onChange={e => setForm({ ...form, notes: e.target.value })}
-                  placeholder="Personal notes about this person..."
-                  rows={3}
-                  className="w-full p-2.5 bg-[#2D5A3D]/5 border border-[#DDE3DF] rounded-xl text-gray-800 placeholder-gray-400 resize-none focus:outline-none focus:ring-2 focus:ring-[#2D5A3D]/30 transition-all text-sm"
-                />
-              </fieldset>
+                <fieldset className="space-y-3">
+                  <legend className="text-[10px] tracking-[0.18em] text-[var(--ed-muted,#6F6B61)] mb-2" style={{ fontFamily: 'var(--font-mono, monospace)', fontWeight: 700 }}>ADDRESS</legend>
+                  <input
+                    value={form.address}
+                    onChange={e => setForm({ ...form, address: e.target.value })}
+                    placeholder="Street address"
+                    className="w-full p-2.5 text-sm text-[var(--ed-ink,#111)] placeholder-[var(--ed-muted,#6F6B61)]"
+                    style={{ background: 'var(--ed-cream, #F3ECDC)', border: '2px solid var(--ed-ink, #111)', borderRadius: 2 }}
+                  />
+                  <div className="grid grid-cols-4 gap-2">
+                    <input value={form.city} onChange={e => setForm({ ...form, city: e.target.value })} placeholder="City" className="w-full p-2.5 text-sm text-[var(--ed-ink,#111)] placeholder-[var(--ed-muted,#6F6B61)]" style={{ background: 'var(--ed-cream, #F3ECDC)', border: '2px solid var(--ed-ink, #111)', borderRadius: 2 }} />
+                    <input value={form.state} onChange={e => setForm({ ...form, state: e.target.value })} placeholder="State" className="w-full p-2.5 text-sm text-[var(--ed-ink,#111)] placeholder-[var(--ed-muted,#6F6B61)]" style={{ background: 'var(--ed-cream, #F3ECDC)', border: '2px solid var(--ed-ink, #111)', borderRadius: 2 }} />
+                    <input value={form.zipcode} onChange={e => setForm({ ...form, zipcode: e.target.value })} placeholder="Zip" className="w-full p-2.5 text-sm text-[var(--ed-ink,#111)] placeholder-[var(--ed-muted,#6F6B61)]" style={{ background: 'var(--ed-cream, #F3ECDC)', border: '2px solid var(--ed-ink, #111)', borderRadius: 2 }} />
+                    <input value={form.country} onChange={e => setForm({ ...form, country: e.target.value })} placeholder="Country" className="w-full p-2.5 text-sm text-[var(--ed-ink,#111)] placeholder-[var(--ed-muted,#6F6B61)]" style={{ background: 'var(--ed-cream, #F3ECDC)', border: '2px solid var(--ed-ink, #111)', borderRadius: 2 }} />
+                  </div>
+                </fieldset>
+
+                <fieldset className="space-y-3">
+                  <legend className="text-[10px] tracking-[0.18em] text-[var(--ed-muted,#6F6B61)] mb-2" style={{ fontFamily: 'var(--font-mono, monospace)', fontWeight: 700 }}>NOTES</legend>
+                  <textarea
+                    value={form.notes}
+                    onChange={e => setForm({ ...form, notes: e.target.value })}
+                    placeholder="Personal notes about this person…"
+                    rows={3}
+                    className="w-full p-2.5 text-sm text-[var(--ed-ink,#111)] placeholder-[var(--ed-muted,#6F6B61)] resize-none"
+                    style={{ background: 'var(--ed-cream, #F3ECDC)', border: '2px solid var(--ed-ink, #111)', borderRadius: 2 }}
+                  />
+                </fieldset>
+              </div>
             </div>
-          ) : (
-            /* ---- VIEW MODE (compact) ---- */
-            <div className="space-y-2.5">
-              {/* Compact info rows — only show fields that AREN'T already in the left column */}
-              {contact.relationship_details && (
-                <div className="flex items-center gap-2 text-sm">
-                  <FileText size={13} className="text-[#94A09A] flex-shrink-0" />
-                  <span className="text-[#5A6660]">{contact.relationship_details}</span>
-                </div>
-              )}
-              {contact.date_of_birth && (
-                <div className="flex items-center gap-2 text-sm">
-                  <Calendar size={13} className="text-[#94A09A] flex-shrink-0" />
-                  <span className="text-[#5A6660]">{formatDateDisplay(contact.date_of_birth)}</span>
-                </div>
-              )}
-              {contact.email && (
-                <div className="flex items-center gap-2 text-sm">
-                  <Mail size={13} className="text-[#94A09A] flex-shrink-0" />
-                  <a href={`mailto:${contact.email}`} className="text-[#2D5A3D] hover:underline">{contact.email}</a>
-                </div>
-              )}
-              {contact.phone && (
-                <div className="flex items-center gap-2 text-sm">
-                  <Phone size={13} className="text-[#94A09A] flex-shrink-0" />
-                  <a href={`tel:${contact.phone}`} className="text-[#2D5A3D] hover:underline">{contact.phone}</a>
-                </div>
-              )}
-              {hasAddress && (
-                <div className="flex items-center gap-2 text-sm">
-                  <MapPin size={13} className="text-[#94A09A] flex-shrink-0" />
-                  <span className="text-[#5A6660]">{addressParts.join(', ')}</span>
-                </div>
-              )}
-              {contact.notes && (
-                <div className="flex items-start gap-2 text-sm mt-1">
-                  <FileText size={13} className="text-[#94A09A] flex-shrink-0 mt-0.5" />
-                  <p className="text-[#5A6660] leading-relaxed line-clamp-3">{contact.notes}</p>
-                </div>
-              )}
-              {/* Show placeholder if nothing to display */}
-              {!contact.date_of_birth && !contact.email && !contact.phone && !hasAddress && !contact.notes && !contact.relationship_details && (
-                <p className="text-sm text-[#94A09A] italic">No details added yet</p>
-              )}
-            </div>
-          )}
-          </div>{/* end right column */}
-        </div>{/* end two-column container */}
-
-        {/* ============ CONNECTED CONTENT ============ */}
-        <div className="border-t border-[#DDE3DF]" />
-        <div className="p-6">
-          <h3 className="text-xs font-semibold text-[#94A09A] uppercase tracking-wider mb-4">Connected</h3>
-
-          {loadingConnected ? (
-            <div className="flex items-center gap-2 text-sm text-gray-400 py-2">
-              <Loader2 size={14} className="animate-spin" />
-              Loading...
-            </div>
-          ) : (
-            <div className="space-y-4">
-              {/* Memories together */}
-              <div>
-                <div className="flex items-center gap-2 mb-2">
-                  <Camera size={14} className="text-[#2D5A3D]" />
-                  <span className="text-sm font-medium text-gray-700">
-                    Memories together
-                    {memories.length > 0 && (
-                      <span className="ml-1.5 text-xs text-gray-400">({memories.length})</span>
+          </div>
+        ) : (
+          /* ───── VIEW MODE — editorial 2-column layout ───── */
+          <>
+            <div className="grid grid-cols-1 lg:grid-cols-[1fr_360px] gap-6 px-6 sm:px-10 pb-8">
+              {/* LEFT — about + memories together + actions */}
+              <div className="flex flex-col gap-6 min-w-0">
+                {(contact.notes || contact.relationship_details) && (
+                  <section
+                    className="p-5 sm:p-6"
+                    style={{
+                      background: 'var(--ed-paper, #FFFBF1)',
+                      border: '2px solid var(--ed-ink, #111)',
+                      borderRadius: 2,
+                    }}
+                  >
+                    <h3
+                      className="text-[11px] tracking-[0.22em] text-[var(--ed-ink,#111)] mb-4"
+                      style={{ fontFamily: 'var(--font-mono, monospace)', fontWeight: 700 }}
+                    >
+                      ABOUT
+                    </h3>
+                    {contact.relationship_details && (
+                      <p className="text-[14px] text-[var(--ed-ink,#111)] mb-3">
+                        {contact.relationship_details}
+                      </p>
                     )}
-                  </span>
-                </div>
-                {memories.length > 0 ? (
-                  <div className="flex gap-2 overflow-x-auto pb-1">
-                    {memories.map(memory => (
-                      <Link
-                        key={memory.id}
-                        href={`/dashboard/memories/${memory.id}`}
-                        className="flex-shrink-0 w-16 h-16 rounded-lg overflow-hidden bg-[#DDE3DF] hover:opacity-80 transition-opacity"
-                        title={memory.title}
+                    {contact.notes && (
+                      <p className="text-[15px] text-[var(--ed-ink,#111)] leading-[1.65] whitespace-pre-wrap">
+                        {contact.notes}
+                      </p>
+                    )}
+                  </section>
+                )}
+
+                <section
+                  className="p-5 sm:p-6"
+                  style={{
+                    background: 'var(--ed-paper, #FFFBF1)',
+                    border: '2px solid var(--ed-ink, #111)',
+                    borderRadius: 2,
+                  }}
+                >
+                  <h3
+                    className="text-[11px] tracking-[0.22em] text-[var(--ed-ink,#111)] mb-4"
+                    style={{ fontFamily: 'var(--font-mono, monospace)', fontWeight: 700 }}
+                  >
+                    MEMORIES TOGETHER {memories.length > 0 && `· ${memories.length}`}
+                  </h3>
+                  {loadingConnected ? (
+                    <p className="text-[12px] text-[var(--ed-muted,#6F6B61)] flex items-center gap-2" style={{ fontFamily: 'var(--font-mono, monospace)' }}>
+                      <Loader2 size={12} className="animate-spin" /> LOADING…
+                    </p>
+                  ) : memories.length === 0 ? (
+                    <p className="text-[12px] text-[var(--ed-muted,#6F6B61)]">
+                      No tagged memories yet.
+                    </p>
+                  ) : (
+                    <div className="grid grid-cols-3 sm:grid-cols-4 gap-2">
+                      {memories.map(m => (
+                        <Link
+                          key={m.id}
+                          href={`/dashboard/memories/${m.id}`}
+                          className="block relative aspect-square overflow-hidden"
+                          style={{ border: '2px solid var(--ed-ink, #111)', borderRadius: 2 }}
+                          title={m.title}
+                        >
+                          {m.cover_url ? (
+                            // eslint-disable-next-line @next/next/no-img-element
+                            <img src={m.cover_url} alt={m.title} className="w-full h-full object-cover" />
+                          ) : (
+                            <div className="w-full h-full flex items-center justify-center" style={{ background: 'var(--ed-cream, #F3ECDC)' }}>
+                              <Camera size={20} className="text-[var(--ed-muted,#6F6B61)]" />
+                            </div>
+                          )}
+                        </Link>
+                      ))}
+                    </div>
+                  )}
+                </section>
+
+                {/* EDIT and DELETE moved to the top-right toolbar; the
+                    inline confirm panel still surfaces here when the
+                    DELETE button (now in the header) is clicked. */}
+
+                {showDeleteConfirm && (
+                  <div
+                    className="p-4"
+                    style={{
+                      background: 'var(--ed-red, #E23B2E)',
+                      color: '#fff',
+                      border: '2px solid var(--ed-ink, #111)',
+                      borderRadius: 2,
+                    }}
+                  >
+                    <p className="text-[13px] mb-3">
+                      Delete <strong>{contact.full_name}</strong>? This cannot be undone.
+                    </p>
+                    <div className="flex flex-wrap gap-2">
+                      <button
+                        onClick={handleDelete}
+                        disabled={deleting}
+                        className="flex items-center gap-1.5 px-3 py-1.5 text-[11px] tracking-[0.18em] disabled:opacity-60"
+                        style={{
+                          fontFamily: 'var(--font-mono, monospace)',
+                          fontWeight: 700,
+                          background: 'var(--ed-ink, #111)',
+                          color: '#fff',
+                          border: '2px solid #fff',
+                          borderRadius: 2,
+                        }}
                       >
-                        {memory.cover_url ? (
-                          <img
-                            src={memory.cover_url}
-                            alt={memory.title}
-                            className="w-full h-full object-cover"
-                          />
-                        ) : (
-                          <div className="w-full h-full flex items-center justify-center text-[#2D5A3D]/30">
-                            <Camera size={20} />
-                          </div>
-                        )}
-                      </Link>
-                    ))}
+                        {deleting ? <Loader2 size={12} className="animate-spin" /> : <Trash2 size={12} />}
+                        YES, DELETE
+                      </button>
+                      <button
+                        onClick={() => setShowDeleteConfirm(false)}
+                        className="px-3 py-1.5 text-[11px] tracking-[0.18em]"
+                        style={{
+                          fontFamily: 'var(--font-mono, monospace)',
+                          fontWeight: 700,
+                          background: 'transparent',
+                          color: '#fff',
+                          border: '2px solid #fff',
+                          borderRadius: 2,
+                        }}
+                      >
+                        CANCEL
+                      </button>
+                    </div>
                   </div>
-                ) : (
-                  <p className="text-sm text-gray-400">No tagged memories yet</p>
                 )}
               </div>
 
-              {/* Shared in circles */}
-              <div>
-                <div className="flex items-center gap-2 mb-2">
-                  <Users size={14} className="text-[#2D5A3D]" />
-                  <span className="text-sm font-medium text-gray-700">Shared in circles</span>
+              {/* RIGHT — sidebar tiles */}
+              <aside className="flex flex-col gap-3 min-w-0">
+                <SidebarCard
+                  label="RELATIONSHIP"
+                  accent={categoryAccent(contact.relationship_type).bg}
+                  icon={<User size={13} />}
+                >
+                  <p className="text-[15px] text-[var(--ed-ink,#111)] font-semibold">
+                    {getRelationshipLabel(contact.relationship_type) || 'Other'}
+                  </p>
+                  {contact.relationship_details && (
+                    <p className="text-[12px] text-[var(--ed-muted,#6F6B61)] mt-1">{contact.relationship_details}</p>
+                  )}
+                </SidebarCard>
+
+                {contact.date_of_birth && (
+                  <SidebarCard label="BIRTHDAY" accent="var(--ed-blue, #2A5CD3)" icon={<Calendar size={13} />}>
+                    <p className="text-[15px] text-[var(--ed-ink,#111)] font-semibold">
+                      {formatDateDisplay(contact.date_of_birth) || contact.date_of_birth}
+                    </p>
+                  </SidebarCard>
+                )}
+
+                {contact.email && (
+                  <SidebarCard label="EMAIL" accent="var(--ed-yellow, #F2C84B)" icon={<Mail size={13} />}>
+                    <a
+                      href={`mailto:${contact.email}`}
+                      className="text-[14px] text-[var(--ed-ink,#111)] hover:underline break-all"
+                    >
+                      {contact.email}
+                    </a>
+                  </SidebarCard>
+                )}
+
+                {contact.phone && (
+                  <SidebarCard label="PHONE" accent="var(--ed-ink, #111)" icon={<Phone size={13} />}>
+                    <a
+                      href={`tel:${contact.phone}`}
+                      className="text-[14px] text-[var(--ed-ink,#111)] hover:underline"
+                    >
+                      {contact.phone}
+                    </a>
+                  </SidebarCard>
+                )}
+
+                {hasAddress && (
+                  <SidebarCard label="LOCATION" accent="var(--ed-red, #E23B2E)" icon={<MapPin size={13} />}>
+                    <p className="text-[14px] text-[var(--ed-ink,#111)] leading-snug">
+                      {addressParts.join(', ')}
+                    </p>
+                  </SidebarCard>
+                )}
+
+                {circles.length > 0 && (
+                  <SidebarCard label="IN CIRCLES" accent="var(--ed-ink, #111)" icon={<Users size={13} />}>
+                    <div className="flex flex-wrap gap-1.5">
+                      {circles.map(circle => (
+                        <Link
+                          key={circle.id}
+                          href={`/dashboard/circles/${circle.id}`}
+                          className="inline-flex items-center gap-1 px-2 py-1 text-[10px] tracking-[0.14em]"
+                          style={{
+                            fontFamily: 'var(--font-mono, monospace)',
+                            fontWeight: 700,
+                            background: 'var(--ed-cream, #F3ECDC)',
+                            color: 'var(--ed-ink, #111)',
+                            border: '1.5px solid var(--ed-ink, #111)',
+                            borderRadius: 999,
+                          }}
+                        >
+                          <Users size={10} />
+                          {circle.name.toUpperCase()}
+                        </Link>
+                      ))}
+                    </div>
+                  </SidebarCard>
+                )}
+
+                {/* Quick actions row — Email / Call / Message */}
+                <div className="flex flex-wrap gap-2">
+                  {contact.email && (
+                    <a
+                      href={`mailto:${contact.email}`}
+                      className="flex items-center gap-1.5 px-3 py-2 text-[10px] tracking-[0.18em]"
+                      style={{
+                        fontFamily: 'var(--font-mono, monospace)',
+                        fontWeight: 700,
+                        background: 'var(--ed-paper, #FFFBF1)',
+                        color: 'var(--ed-ink, #111)',
+                        border: '2px solid var(--ed-ink, #111)',
+                        borderRadius: 2,
+                      }}
+                    >
+                      <Mail size={11} /> EMAIL
+                    </a>
+                  )}
+                  {contact.phone && (
+                    <a
+                      href={`tel:${contact.phone}`}
+                      className="flex items-center gap-1.5 px-3 py-2 text-[10px] tracking-[0.18em]"
+                      style={{
+                        fontFamily: 'var(--font-mono, monospace)',
+                        fontWeight: 700,
+                        background: 'var(--ed-paper, #FFFBF1)',
+                        color: 'var(--ed-ink, #111)',
+                        border: '2px solid var(--ed-ink, #111)',
+                        borderRadius: 2,
+                      }}
+                    >
+                      <Phone size={11} /> CALL
+                    </a>
+                  )}
+                  <Link
+                    href="/dashboard/messages"
+                    className="flex items-center gap-1.5 px-3 py-2 text-[10px] tracking-[0.18em]"
+                    style={{
+                      fontFamily: 'var(--font-mono, monospace)',
+                      fontWeight: 700,
+                      background: 'var(--ed-paper, #FFFBF1)',
+                      color: 'var(--ed-ink, #111)',
+                      border: '2px solid var(--ed-ink, #111)',
+                      borderRadius: 2,
+                    }}
+                  >
+                    <MessageSquare size={11} /> MESSAGE
+                  </Link>
                 </div>
-                {circles.length > 0 ? (
-                  <div className="flex flex-wrap gap-2">
-                    {circles.map(circle => (
+              </aside>
+            </div>
+
+            {/* INTERVIEWS + POSTSCRIPTS — 2-col below the main grid */}
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 px-6 sm:px-10 pb-8">
+              <section
+                className="p-5"
+                style={{
+                  background: 'var(--ed-paper, #FFFBF1)',
+                  border: '2px solid var(--ed-ink, #111)',
+                  borderRadius: 2,
+                }}
+              >
+                <div className="flex items-center justify-between mb-4">
+                  <h3 className="text-[11px] tracking-[0.22em] text-[var(--ed-ink,#111)]" style={{ fontFamily: 'var(--font-mono, monospace)', fontWeight: 700 }}>
+                    INTERVIEWS {interviews.length > 0 && `· ${interviews.length}`}
+                  </h3>
+                  <Link
+                    href="/dashboard/journalist"
+                    className="flex items-center gap-1 text-[10px] tracking-[0.18em]"
+                    style={{ fontFamily: 'var(--font-mono, monospace)', fontWeight: 700, color: 'var(--ed-red, #E23B2E)' }}
+                  >
+                    <Plus size={11} /> START
+                  </Link>
+                </div>
+                {interviews.length === 0 ? (
+                  <p className="text-[12px] text-[var(--ed-muted,#6F6B61)]">No interviews yet.</p>
+                ) : (
+                  <div className="flex flex-col gap-2">
+                    {interviews.map(s => (
                       <Link
-                        key={circle.id}
-                        href={`/dashboard/circles/${circle.id}`}
-                        className="inline-flex items-center gap-1.5 px-2.5 py-1 text-xs text-[#2D5A3D] bg-[#2D5A3D]/5 hover:bg-[#2D5A3D]/10 rounded-full border border-[#2D5A3D]/10 transition-colors"
+                        key={s.id}
+                        href={`/dashboard/journalist/${s.id}`}
+                        className="flex items-start justify-between gap-3 p-3"
+                        style={{ background: 'var(--ed-cream, #F3ECDC)', border: '1.5px solid var(--ed-ink, #111)', borderRadius: 2 }}
                       >
-                        <Users size={11} />
-                        {circle.name}
+                        <div className="min-w-0 flex-1">
+                          <p className="text-[13px] text-[var(--ed-ink,#111)] truncate font-semibold">
+                            {s.title || 'Untitled interview'}
+                          </p>
+                          <p className="text-[10px] tracking-[0.14em] text-[var(--ed-muted,#6F6B61)] mt-0.5" style={{ fontFamily: 'var(--font-mono, monospace)' }}>
+                            {new Date(s.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }).toUpperCase()}
+                          </p>
+                        </div>
+                        <span
+                          className="text-[9px] tracking-[0.16em] px-2 py-0.5 shrink-0"
+                          style={{
+                            fontFamily: 'var(--font-mono, monospace)',
+                            fontWeight: 700,
+                            background: s.status === 'completed' ? 'var(--ed-blue, #2A5CD3)' : s.status === 'in_progress' ? 'var(--ed-yellow, #F2C84B)' : 'var(--ed-paper, #FFFBF1)',
+                            color: s.status === 'in_progress' ? 'var(--ed-ink, #111)' : (s.status === 'completed' ? '#fff' : 'var(--ed-ink, #111)'),
+                            border: '1.5px solid var(--ed-ink, #111)',
+                            borderRadius: 2,
+                          }}
+                        >
+                          {s.status === 'completed' ? 'DONE' : s.status === 'in_progress' ? 'ACTIVE' : s.status.toUpperCase()}
+                        </span>
                       </Link>
                     ))}
                   </div>
-                ) : (
-                  <p className="text-sm text-gray-400">Not in any circles</p>
                 )}
+              </section>
+
+              <section
+                className="p-5"
+                style={{
+                  background: 'var(--ed-paper, #FFFBF1)',
+                  border: '2px solid var(--ed-ink, #111)',
+                  borderRadius: 2,
+                }}
+              >
+                <div className="flex items-center justify-between mb-4">
+                  <h3 className="text-[11px] tracking-[0.22em] text-[var(--ed-ink,#111)]" style={{ fontFamily: 'var(--font-mono, monospace)', fontWeight: 700 }}>
+                    POSTSCRIPTS {postscripts.length > 0 && `· ${postscripts.length}`}
+                  </h3>
+                  <Link
+                    href="/dashboard/postscripts/new"
+                    className="flex items-center gap-1 text-[10px] tracking-[0.18em]"
+                    style={{ fontFamily: 'var(--font-mono, monospace)', fontWeight: 700, color: 'var(--ed-red, #E23B2E)' }}
+                  >
+                    <Plus size={11} /> NEW
+                  </Link>
+                </div>
+                {postscripts.length === 0 ? (
+                  <p className="text-[12px] text-[var(--ed-muted,#6F6B61)]">No postscripts yet.</p>
+                ) : (
+                  <div className="flex flex-col gap-2">
+                    {postscripts.map(p => (
+                      <Link
+                        key={p.id}
+                        href={`/dashboard/postscripts/${p.id}`}
+                        className="flex items-start justify-between gap-3 p-3"
+                        style={{ background: 'var(--ed-cream, #F3ECDC)', border: '1.5px solid var(--ed-ink, #111)', borderRadius: 2 }}
+                      >
+                        <div className="min-w-0 flex-1">
+                          <p className="text-[13px] text-[var(--ed-ink,#111)] truncate font-semibold">
+                            {p.title || (p.message ? p.message.slice(0, 40) + (p.message.length > 40 ? '…' : '') : 'Untitled')}
+                          </p>
+                          <p className="text-[10px] tracking-[0.14em] text-[var(--ed-muted,#6F6B61)] mt-0.5" style={{ fontFamily: 'var(--font-mono, monospace)' }}>
+                            {p.delivery_date
+                              ? new Date(p.delivery_date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }).toUpperCase()
+                              : 'NO DELIVERY DATE'}
+                          </p>
+                        </div>
+                        <span
+                          className="text-[9px] tracking-[0.16em] px-2 py-0.5 shrink-0"
+                          style={{
+                            fontFamily: 'var(--font-mono, monospace)',
+                            fontWeight: 700,
+                            background: (p.status === 'sent' || p.status === 'opened') ? 'var(--ed-blue, #2A5CD3)' : p.status === 'scheduled' ? 'var(--ed-yellow, #F2C84B)' : 'var(--ed-paper, #FFFBF1)',
+                            color: p.status === 'scheduled' ? 'var(--ed-ink, #111)' : ((p.status === 'sent' || p.status === 'opened') ? '#fff' : 'var(--ed-ink, #111)'),
+                            border: '1.5px solid var(--ed-ink, #111)',
+                            borderRadius: 2,
+                          }}
+                        >
+                          {p.status.toUpperCase()}
+                        </span>
+                      </Link>
+                    ))}
+                  </div>
+                )}
+              </section>
+            </div>
+
+            {/* FOOTER — mono caps */}
+            <div className="px-6 sm:px-10 pb-6">
+              <div
+                className="pt-4 text-center"
+                style={{ borderTop: '2px solid var(--ed-ink, #111)' }}
+              >
+                <p
+                  className="text-[10px] tracking-[0.18em] text-[var(--ed-muted,#6F6B61)]"
+                  style={{ fontFamily: 'var(--font-mono, monospace)' }}
+                >
+                  CONTACT IN YOUR STORY
+                </p>
               </div>
             </div>
-          )}
-        </div>
-
-        {/* ============ INTERVIEWS ============ */}
-        <div className="border-t border-[#DDE3DF]" />
-        <div className="p-6">
-          <div className="flex items-center justify-between mb-4">
-            <h3 className="text-xs font-semibold text-[#94A09A] uppercase tracking-wider">Interviews</h3>
-            <Link
-              href="/dashboard/journalist"
-              className="flex items-center gap-1.5 px-3 py-1.5 text-sm text-[#2D5A3D] hover:bg-[#2D5A3D]/5 rounded-lg transition-colors"
-            >
-              <Plus size={14} />
-              Start Interview
-            </Link>
-          </div>
-
-          {interviews.length > 0 ? (
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-              {interviews.map(session => (
-                <Link
-                  key={session.id}
-                  href={`/dashboard/journalist/${session.id}`}
-                  className="p-3 rounded-xl border border-[#DDE3DF] hover:border-[#2D5A3D]/30 hover:bg-[#2D5A3D]/5 transition-colors group"
-                >
-                  <div className="flex items-start justify-between gap-2">
-                    <div className="min-w-0 flex-1">
-                      <p className="text-sm font-medium text-[#1A1F1C] truncate group-hover:text-[#2D5A3D]">
-                        {session.title || 'Untitled Interview'}
-                      </p>
-                      <p className="text-xs text-gray-400 mt-0.5">
-                        {new Date(session.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
-                      </p>
-                    </div>
-                    <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-medium flex-shrink-0 ${
-                      session.status === 'completed' ? 'bg-[#2D5A3D]/10 text-[#2D5A3D]' :
-                      session.status === 'in_progress' ? 'bg-[#C4A235]/10 text-[#8B7320]' :
-                      'bg-gray-100 text-gray-500'
-                    }`}>
-                      {session.status === 'completed' ? 'Done' :
-                       session.status === 'in_progress' ? 'In Progress' :
-                       session.status.charAt(0).toUpperCase() + session.status.slice(1)}
-                    </span>
-                  </div>
-                </Link>
-              ))}
-            </div>
-          ) : (
-            <div className="text-center py-4">
-              <Video size={20} className="mx-auto text-gray-300 mb-2" />
-              <p className="text-sm text-gray-400 mb-2">No interviews yet</p>
-              <Link
-                href="/dashboard/journalist"
-                className="inline-flex items-center gap-1.5 px-3 py-1.5 text-sm text-[#2D5A3D] bg-[#2D5A3D]/5 hover:bg-[#2D5A3D]/10 rounded-lg transition-colors"
-              >
-                <Video size={14} />
-                Start first interview
-              </Link>
-            </div>
-          )}
-        </div>
-
-        {/* ============ POSTSCRIPTS ============ */}
-        <div className="border-t border-[#DDE3DF]" />
-        <div className="p-6">
-          <div className="flex items-center justify-between mb-4">
-            <h3 className="text-xs font-semibold text-[#94A09A] uppercase tracking-wider">PostScripts</h3>
-            <Link
-              href="/dashboard/postscripts/new"
-              className="flex items-center gap-1.5 px-3 py-1.5 text-sm text-[#2D5A3D] hover:bg-[#2D5A3D]/5 rounded-lg transition-colors"
-            >
-              <Plus size={14} />
-              Create PostScript
-            </Link>
-          </div>
-
-          {postscripts.length > 0 ? (
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-              {postscripts.map(ps => (
-                <Link
-                  key={ps.id}
-                  href={`/dashboard/postscripts/${ps.id}`}
-                  className="p-3 rounded-xl border border-[#DDE3DF] hover:border-[#2D5A3D]/30 hover:bg-[#2D5A3D]/5 transition-colors group"
-                >
-                  <div className="flex items-start justify-between gap-2">
-                    <div className="min-w-0 flex-1">
-                      <p className="text-sm font-medium text-[#1A1F1C] truncate group-hover:text-[#2D5A3D]">
-                        {ps.title || (ps.message ? ps.message.slice(0, 40) + (ps.message.length > 40 ? '...' : '') : 'Untitled')}
-                      </p>
-                      <p className="text-xs text-gray-400 mt-0.5">
-                        {ps.delivery_date
-                          ? new Date(ps.delivery_date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
-                          : 'No delivery date'}
-                      </p>
-                    </div>
-                    <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-medium flex-shrink-0 ${
-                      ps.status === 'sent' || ps.status === 'opened' ? 'bg-[#2D5A3D]/10 text-[#2D5A3D]' :
-                      ps.status === 'scheduled' ? 'bg-[#C4A235]/10 text-[#8B7320]' :
-                      'bg-gray-100 text-gray-500'
-                    }`}>
-                      {ps.status.charAt(0).toUpperCase() + ps.status.slice(1)}
-                    </span>
-                  </div>
-                </Link>
-              ))}
-            </div>
-          ) : (
-            <div className="text-center py-4">
-              <Send size={20} className="mx-auto text-gray-300 mb-2" />
-              <p className="text-sm text-gray-400 mb-2">No PostScripts yet</p>
-              <Link
-                href="/dashboard/postscripts/new"
-                className="inline-flex items-center gap-1.5 px-3 py-1.5 text-sm text-[#2D5A3D] bg-[#2D5A3D]/5 hover:bg-[#2D5A3D]/10 rounded-lg transition-colors"
-              >
-                <Send size={14} />
-                Create first PostScript
-              </Link>
-            </div>
-          )}
-        </div>
-
-        {/* ============ DANGER ZONE ============ */}
-        <div className="border-t border-[#DDE3DF]" />
-        <div className="p-6">
-          {!showDeleteConfirm ? (
-            <button
-              onClick={() => setShowDeleteConfirm(true)}
-              className="flex items-center gap-2 text-sm text-red-400 hover:text-red-600 transition-colors"
-            >
-              <Trash2 size={14} />
-              Delete contact
-            </button>
-          ) : (
-            <div className="p-4 bg-red-50 border border-red-200 rounded-xl">
-              <p className="text-sm text-red-700 mb-3">
-                Are you sure you want to delete <strong>{contact.full_name}</strong>? This cannot be undone.
-              </p>
-              <div className="flex items-center gap-2">
-                <button
-                  onClick={handleDelete}
-                  disabled={deleting}
-                  className="flex items-center gap-1.5 px-3 py-1.5 text-sm text-white bg-red-500 hover:bg-red-600 rounded-lg transition-colors disabled:opacity-50"
-                >
-                  {deleting ? <Loader2 size={14} className="animate-spin" /> : <Trash2 size={14} />}
-                  Yes, delete
-                </button>
-                <button
-                  onClick={() => setShowDeleteConfirm(false)}
-                  className="px-3 py-1.5 text-sm text-gray-600 hover:bg-gray-100 rounded-lg transition-colors"
-                >
-                  Cancel
-                </button>
-              </div>
-            </div>
-          )}
-        </div>
-      </div>
-    </div>
-  )
-}
-
-// ============================================
-// INFO ROW SUB-COMPONENT
-// ============================================
-function InfoRow({
-  icon,
-  label,
-  value,
-}: {
-  icon: React.ReactNode
-  label: string
-  value: string | undefined | null
-}) {
-  return (
-    <div className="flex items-start gap-3 py-1">
-      <span className="text-[#2D5A3D]/60 mt-0.5 flex-shrink-0">{icon}</span>
-      <div className="min-w-0">
-        <span className="text-xs text-gray-400">{label}</span>
-        <p className={`text-sm ${value ? 'text-gray-800' : 'text-gray-300 italic'}`}>
-          {value || 'Not set'}
-        </p>
+          </>
+        )}
       </div>
     </div>
   )

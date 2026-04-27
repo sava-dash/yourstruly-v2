@@ -1,21 +1,21 @@
 /**
  * Unified transcription service
- * 
- * Provider priority: Gemini → OpenAI Whisper → Deepgram
- * 
+ *
+ * Provider priority: Gemini → OpenAI Whisper
+ *
  * Usage:
  *   import { transcribeAudio, transcribeBuffer } from '@/lib/ai/transcription';
- *   
+ *
  *   // From URL
  *   const text = await transcribeAudio('https://...');
- *   
+ *
  *   // From buffer
  *   const result = await transcribeBuffer(buffer, 'audio/webm');
  */
 
 export interface TranscriptionResult {
   transcription: string;
-  provider?: 'gemini' | 'openai-whisper' | 'deepgram';
+  provider?: 'gemini' | 'openai-whisper';
   confidence?: number;
   duration?: number;
   warning?: string;
@@ -47,10 +47,9 @@ export async function transcribeBuffer(
 ): Promise<TranscriptionResult> {
   const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
   const OPENAI_API_KEY = process.env.OPENAI_API_KEY;
-  const DEEPGRAM_API_KEY = process.env.DEEPGRAM_API_KEY;
 
   // No providers configured
-  if (!GEMINI_API_KEY && !OPENAI_API_KEY && !DEEPGRAM_API_KEY) {
+  if (!GEMINI_API_KEY && !OPENAI_API_KEY) {
     console.warn('No transcription API configured');
     return { transcription: '', warning: 'Transcription service not configured' };
   }
@@ -117,40 +116,6 @@ export async function transcribeBuffer(
       console.warn('Whisper failed, trying next provider...');
     } catch (e) {
       console.error('Whisper error:', e);
-    }
-  }
-
-  // Try Deepgram
-  if (DEEPGRAM_API_KEY) {
-    try {
-      console.log('Attempting Deepgram transcription...');
-      // Convert Buffer to Uint8Array for fetch body compatibility
-      const uint8Array = new Uint8Array(buffer);
-      const response = await fetch(
-        'https://api.deepgram.com/v1/listen?model=nova-2&smart_format=true&punctuate=true',
-        {
-          method: 'POST',
-          headers: {
-            Authorization: `Token ${DEEPGRAM_API_KEY}`,
-            'Content-Type': mimeType,
-          },
-          body: uint8Array,
-        }
-      );
-
-      if (response.ok) {
-        const data = await response.json();
-        const transcription = data.results?.channels?.[0]?.alternatives?.[0]?.transcript || '';
-        console.log('Deepgram transcription successful');
-        return {
-          transcription,
-          provider: 'deepgram',
-          confidence: data.results?.channels?.[0]?.alternatives?.[0]?.confidence,
-          duration: data.metadata?.duration,
-        };
-      }
-    } catch (e) {
-      console.error('Deepgram error:', e);
     }
   }
 

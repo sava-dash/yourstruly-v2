@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { X, Heart, Brain, ImagePlus, Mic, ChevronRight, Scan, Sparkles, RefreshCw, Smartphone, QrCode, Loader2 } from 'lucide-react'
+import { X, Heart, Brain, ImagePlus, Mic, ChevronRight, Scan, RefreshCw, Smartphone, QrCode, Loader2 } from 'lucide-react'
 import { QRCodeSVG } from 'qrcode.react'
 import { createClient } from '@/lib/supabase/client'
 import { VoiceVideoChat } from '@/components/voice'
@@ -293,7 +293,6 @@ export default function AddContentModal({ isOpen, onClose, onContentAdded }: Add
                   {selectedPrompt.id !== 'free' && (
                     <div className="mb-4 p-3 rounded-xl bg-[#F5F0EA] border border-[#E8E2D8]">
                       <div className="flex items-center gap-2 mb-1">
-                        <Sparkles size={14} className="text-[#C4A235]" />
                         <span className="text-xs font-medium text-[#94A09A] uppercase tracking-wide">Prompt</span>
                       </div>
                       <p className="text-sm text-[#1A1F1C] font-medium">{selectedPrompt.promptText}</p>

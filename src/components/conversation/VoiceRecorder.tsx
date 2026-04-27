@@ -43,10 +43,10 @@ export function VoiceRecorder({
 
   // Check if Deepgram is available
   useEffect(() => {
-    fetch('/api/deepgram/token')
+    fetch('/api/realtime/transcribe-session', { method: 'POST' })
       .then(res => res.json())
       .then(data => {
-        if (data.apiKey) {
+        if (data.clientSecret) {
           setIsDeepgramAvailable(true);
         } else {
           setMode('recorded');
@@ -88,24 +88,25 @@ export function VoiceRecorder({
     return buffer;
   };
 
-  // Start live recognition with Deepgram
+  // Start live recognition with OpenAI Realtime transcription.
+  // (Function name kept for diff hygiene — `Deepgram` is now a misnomer.)
   const startDeepgramLive = useCallback(async () => {
     try {
       setError(null);
       setLiveTranscript('');
-      
+
       // Clear any existing timer
       if (recordingTimerRef.current) {
         clearInterval(recordingTimerRef.current);
         recordingTimerRef.current = null;
       }
 
-      // Get Deepgram credentials
-      const tokenRes = await fetch('/api/deepgram/token');
-      const { apiKey, wsUrl } = await tokenRes.json();
-      
-      if (!apiKey) {
-        throw new Error('Deepgram not configured');
+      // Mint an ephemeral OpenAI Realtime transcription session.
+      const tokenRes = await fetch('/api/realtime/transcribe-session', { method: 'POST' });
+      const { clientSecret, wsUrl } = await tokenRes.json();
+
+      if (!clientSecret) {
+        throw new Error('Live transcription not configured');
       }
 
       // Get microphone access
@@ -132,30 +133,34 @@ export function VoiceRecorder({
       source.connect(analyser);
       analyserRef.current = analyser;
 
-      // Connect to Deepgram WebSocket. Deepgram requires auth via WebSocket
-      // subprotocol (`['token', <key>]`), NOT `?token=` — that query param is
-      // ignored and the connection drops on first audio frame.
-      const dgUrl = `wss://api.deepgram.com/v1/listen?model=nova-2&language=en-US&smart_format=true&interim_results=true&endpointing=300&punctuate=true&encoding=linear16&sample_rate=16000&channels=1`;
-      const ws = new WebSocket(dgUrl, ['token', apiKey]);
+      // OpenAI Realtime transcription socket. Browsers can't set headers on
+      // WebSocket, so the ephemeral key rides in subprotocols.
+      const ws = new WebSocket(wsUrl || 'wss://api.openai.com/v1/realtime?intent=transcription', [
+        'realtime',
+        `openai-insecure-api-key.${clientSecret}`,
+        'openai-beta.realtime-v1',
+      ]);
       websocketRef.current = ws;
 
       finalTranscriptRef.current = '';
 
       ws.onopen = () => {
-        console.log('Deepgram WebSocket connected, ready to send audio');
+        console.log('Realtime transcription WebSocket connected');
 
         // Create processor to send audio data
         const processor = audioContext.createScriptProcessor(4096, 1, 1);
         processorRef.current = processor;
-        
+
         processor.onaudioprocess = (e) => {
-          if (ws.readyState === WebSocket.OPEN) {
-            const inputData = e.inputBuffer.getChannelData(0);
-            const pcmData = floatTo16BitPCM(inputData);
-            ws.send(pcmData);
-          }
+          if (ws.readyState !== WebSocket.OPEN) return;
+          const pcm = floatTo16BitPCM(e.inputBuffer.getChannelData(0));
+          let binary = '';
+          const bytes = new Uint8Array(pcm);
+          for (let i = 0; i < bytes.length; i++) binary += String.fromCharCode(bytes[i]);
+          const b64 = btoa(binary);
+          ws.send(JSON.stringify({ type: 'input_audio_buffer.append', audio: b64 }));
         };
-        
+
         source.connect(processor);
         processor.connect(audioContext.destination);
       };
@@ -163,50 +168,40 @@ export function VoiceRecorder({
       ws.onmessage = (event) => {
         try {
           const data = JSON.parse(event.data);
-          
-          // Handle transcription results
-          if (data.type === 'Results') {
-            const alt = data.channel?.alternatives?.[0];
-            if (alt && alt.transcript) {
-              const transcript = alt.transcript;
-              
-              if (data.is_final) {
-                finalTranscriptRef.current += transcript + ' ';
-                console.log('Final transcript:', finalTranscriptRef.current.trim());
-              }
-              // Always show the current state (final + interim)
-              const display = data.is_final 
-                ? finalTranscriptRef.current.trim() 
-                : (finalTranscriptRef.current + transcript).trim();
-              setLiveTranscript(display);
-            }
-          } else if (data.type === 'Metadata') {
-            console.log('Deepgram ready:', data);
-          } else if (data.type === 'Error') {
-            console.error('Deepgram error:', data);
+
+          if (data.type === 'conversation.item.input_audio_transcription.delta') {
+            const delta: string = data.delta || '';
+            if (!delta) return;
+            const display = (finalTranscriptRef.current + delta).trim();
+            setLiveTranscript(display);
+          } else if (data.type === 'conversation.item.input_audio_transcription.completed') {
+            const transcript: string = data.transcript || '';
+            if (!transcript) return;
+            finalTranscriptRef.current += transcript + ' ';
+            setLiveTranscript(finalTranscriptRef.current.trim());
+          } else if (data.type === 'error') {
+            console.error('Realtime error:', data.error);
             setError('Transcription error. Try Record mode.');
           }
         } catch (err) {
-          console.error('Error parsing Deepgram response:', err);
+          console.error('Error parsing Realtime response:', err);
         }
       };
 
       ws.onerror = (err) => {
-        console.error('Deepgram WebSocket error:', err);
+        console.error('Realtime WebSocket error:', err);
         // Auto-switch to Record mode
         setMode('recorded');
         setError(null);
-        // Clean up
         if (streamRef.current) {
           streamRef.current.getTracks().forEach(track => track.stop());
         }
         setIsRecording(false);
-        // Start recorded mode instead
         setTimeout(() => startRecordedMode(), 100);
       };
 
       ws.onclose = () => {
-        console.log('Deepgram disconnected, final transcript:', finalTranscriptRef.current.trim());
+        console.log('Realtime disconnected, final transcript:', finalTranscriptRef.current.trim());
       };
 
       setIsRecording(true);

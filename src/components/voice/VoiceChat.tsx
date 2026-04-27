@@ -1,17 +1,17 @@
 'use client'
 
 import { useCallback, useState } from 'react'
-import { usePersonaPlexVoice, type PersonaPlexVoice } from '@/hooks/usePersonaPlexVoice'
+import { useOpenAIRealtimeVoice, type RealtimeVoice } from '@/hooks/useOpenAIRealtimeVoice'
 import { VoiceChatUI } from './VoiceChatUI'
-import type { 
-  VoiceSessionType, 
+import type {
+  VoiceSessionType,
   PersonaConfig,
   VoiceSessionResult,
 } from '@/types/voice'
-import { 
-  JOURNALIST_PERSONA, 
-  FRIEND_PERSONA, 
-  LIFE_STORY_PERSONA 
+import {
+  JOURNALIST_PERSONA,
+  FRIEND_PERSONA,
+  LIFE_STORY_PERSONA
 } from '@/types/voice'
 
 // Re-export personas for convenience
@@ -24,8 +24,8 @@ export interface VoiceChatProps {
   topic?: string
   /** Optional contact ID if memory is about a specific person */
   contactId?: string
-  /** Voice to use - defaults to 'NATF3' (warm, friendly female) */
-  voice?: PersonaPlexVoice | string
+  /** Voice to use - defaults to 'alloy'. */
+  voice?: RealtimeVoice | string
   /** Persona configuration - defaults to journalist */
   persona?: PersonaConfig
   /** Pre-configured persona name shorthand */
@@ -44,6 +44,13 @@ export interface VoiceChatProps {
   showTranscript?: boolean
   /** Additional CSS classes */
   className?: string
+}
+
+const REALTIME_VOICES: ReadonlySet<string> = new Set([
+  'alloy', 'ash', 'ballad', 'coral', 'echo', 'sage', 'shimmer', 'verse',
+])
+function asRealtimeVoice(v: string | undefined): RealtimeVoice {
+  return v && REALTIME_VOICES.has(v) ? (v as RealtimeVoice) : 'alloy'
 }
 
 /**
@@ -87,14 +94,14 @@ export interface VoiceChatProps {
 export function VoiceChat({
   sessionType = 'memory_capture',
   topic,
-  contactId,
-  voice = 'yourstruly-voice.mp3',
+  contactId: _contactId,
+  voice = 'alloy',
   persona,
   personaName = 'journalist',
   maxQuestions = 5,
-  maxDurationSeconds = 600,
+  maxDurationSeconds: _maxDurationSeconds = 600,
   onComplete,
-  onMemorySaved,
+  onMemorySaved: _onMemorySaved,
   onError,
   showTranscript = true,
   className,
@@ -105,19 +112,16 @@ export function VoiceChat({
   // Track session duration and question count
   const [sessionDuration, setSessionDuration] = useState(0)
   const [questionCount, setQuestionCount] = useState(0)
-  const [isSaving, setIsSaving] = useState(false)
+  const [, setIsSaving] = useState(false)
 
-  // PersonaPlex hook - the only voice provider
-  const personaPlex = usePersonaPlexVoice({
-    serverUrl: process.env.NEXT_PUBLIC_PERSONAPLEX_URL,
+  // OpenAI Realtime voice agent.
+  const realtime = useOpenAIRealtimeVoice({
     systemPrompt: selectedPersona.systemPrompt,
-    initialTopic: topic, // AI will speak this prompt first
-    voice: voice,
-    enableRecording: true,
-    onTranscript: (userText, aiText) => {
-      // Count AI questions (roughly)
+    initialTopic: topic, // AI will open with this
+    voice: asRealtimeVoice(typeof voice === 'string' ? voice : undefined),
+    onTranscript: (_userText, aiText) => {
       if (aiText && aiText.includes('?')) {
-        setQuestionCount(prev => prev + 1)
+        setQuestionCount((prev) => prev + 1)
       }
     },
     onComplete: (transcript) => {
@@ -131,48 +135,39 @@ export function VoiceChat({
       })
     },
     onError,
-    onRecordingComplete: async (blob) => {
-      // Save the recording when session ends
-      if (blob && onMemorySaved) {
-        console.log('Recording complete, size:', blob.size)
-      }
-    },
   })
 
-  // Adapt state for UI
-  const state = personaPlex.state
-  const transcript = personaPlex.transcript
-  const currentUserText = personaPlex.currentUserText
-  const currentAiText = personaPlex.currentAiText
+  const state = realtime.state
+  const transcript = realtime.transcript
+  const currentUserText = realtime.currentUserText
+  const currentAiText = realtime.currentAiText
   const canSave = transcript.length >= 2
-  const error = personaPlex.error
-  const isSupported = personaPlex.isSupported
+  const error = realtime.error
+  const isSupported = realtime.isSupported
 
   const handleStart = useCallback(async () => {
-    await personaPlex.start()
-  }, [personaPlex])
+    await realtime.start()
+  }, [realtime])
 
   const handleStop = useCallback(async () => {
-    personaPlex.stop()
-  }, [personaPlex])
+    realtime.stop()
+  }, [realtime])
 
   const handleSave = useCallback(async () => {
     setIsSaving(true)
-    // For PersonaPlex, save the transcript + recording
-    console.log('Saving PersonaPlex memory...', personaPlex.transcript)
-    // TODO: Implement proper memory save
+    // Persisting the transcript is the parent's job via onComplete.
     setIsSaving(false)
-  }, [personaPlex])
+  }, [])
 
   const handleReset = useCallback(() => {
-    personaPlex.abort()
+    realtime.abort()
     setQuestionCount(0)
     setSessionDuration(0)
-  }, [personaPlex])
+  }, [realtime])
 
   const handleAbort = useCallback(() => {
-    personaPlex.abort()
-  }, [personaPlex])
+    realtime.abort()
+  }, [realtime])
 
   // Show loading while checking browser support
   if (isSupported === null) {

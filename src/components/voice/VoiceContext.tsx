@@ -138,14 +138,14 @@ export function VoiceProvider({ children }: { children: React.ReactNode }) {
     const formData = new FormData()
     formData.append('audio', blob, 'recording.webm')
 
-    const res = await fetch('/api/deepgram/transcribe', { method: 'POST', body: formData })
+    const res = await fetch('/api/transcribe', { method: 'POST', body: formData })
 
     if (!res.ok) {
       throw new Error('Transcription failed')
     }
 
-    const data = (await res.json()) as { transcript?: string }
-    return data.transcript ?? ''
+    const data = (await res.json()) as { transcription?: string }
+    return data.transcription ?? ''
   }, [])
 
   const extractFromTranscript = useCallback(

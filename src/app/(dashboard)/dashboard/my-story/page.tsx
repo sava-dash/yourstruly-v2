@@ -454,23 +454,13 @@ export default function MyStoryPage() {
     window.location.reload()
   }, [])
 
-  // Route memory clicks to the reflection slideshow;
-  // photos and wisdom still use the detail modal.
+  // Card clicks open the editorial Memory Details modal (StoryDetailModal).
+  // The MemoryReflectionSlideshow is kept as a separate experience reachable
+  // via its own entry — opening the redesigned detail surface is the
+  // primary action now that it carries the full editorial layout.
   const handleItemSelect = useCallback((item: StoryItem) => {
-    if (item.type === 'memory') {
-      const idx = memories
-        .slice()
-        .sort((a, b) => {
-          const ad = new Date(a.memory_date || a.created_at).getTime()
-          const bd = new Date(b.memory_date || b.created_at).getTime()
-          return ad - bd
-        })
-        .findIndex(m => m.id === item.id)
-      setReflectIndex(idx >= 0 ? idx : 0)
-    } else {
-      setSelectedItem(item)
-    }
-  }, [memories])
+    setSelectedItem(item)
+  }, [])
 
   const isEmpty = memories.length === 0 && wisdom.length === 0 && media.length === 0
 
@@ -784,6 +774,13 @@ export default function MyStoryPage() {
             onClose={() => setSelectedItem(null)}
             onContinue={(item) => {
               // Closing the modal first prevents a stacked overlay flash.
+              setSelectedItem(null)
+              handleAddToItem(item)
+            }}
+            // EDIT MEMORY button currently routes to the same append flow —
+            // closest existing surface that lets the user mutate the memory.
+            // Replace once a true editor exists.
+            onEdit={(item) => {
               setSelectedItem(null)
               handleAddToItem(item)
             }}

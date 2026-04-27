@@ -131,48 +131,111 @@ export default function InterviewInboxPage() {
   }
 
   return (
-    <div className="min-h-screen bg-[#F2F1E5]">
-      <div className="max-w-6xl mx-auto px-4 py-6">
+    <div className="min-h-screen" style={{ background: 'var(--ed-cream, #F3ECDC)' }}>
+      <div className="max-w-6xl mx-auto px-6 pt-20 pb-24">
         <div className="flex items-center gap-3 mb-6">
           <Link
             href="/dashboard/journalist"
             aria-label="Back to journalist dashboard"
-            className="min-w-[44px] min-h-[44px] flex items-center justify-center rounded-full hover:bg-[#D3E1DF] transition"
+            className="flex items-center justify-center"
+            style={{
+              width: 36, height: 36,
+              borderRadius: 999,
+              border: '2px solid var(--ed-ink, #111)',
+              background: 'var(--ed-paper, #FFFBF1)',
+            }}
           >
-            <ChevronLeft className="text-[#406A56]" />
+            <ChevronLeft size={16} className="text-[var(--ed-ink,#111)]" />
           </Link>
-          <Inbox className="text-[#406A56]" />
-          <h1 className="text-2xl font-semibold text-[#406A56]" style={{ fontFamily: 'Playfair Display, serif' }}>
-            Response inbox
+          <span
+            aria-hidden
+            className="flex items-center justify-center"
+            style={{
+              width: 56, height: 56,
+              background: 'var(--ed-paper, #FFFBF1)',
+              border: '2px solid var(--ed-ink, #111)',
+              borderRadius: 999,
+            }}
+          >
+            <Inbox size={26} className="text-[var(--ed-ink,#111)]" />
+          </span>
+          <h1
+            className="text-[var(--ed-ink,#111)] leading-tight"
+            style={{
+              fontFamily: 'var(--font-display, "Archivo Black", sans-serif)',
+              fontSize: 'clamp(28px, 5vw, 44px)',
+            }}
+          >
+            RESPONSE INBOX
           </h1>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-[220px_1fr] gap-4">
           {/* Sidebar filters */}
-          <nav aria-label="Inbox filters" className="bg-white rounded-lg p-2 h-fit">
+          <nav
+            aria-label="Inbox filters"
+            className="p-2 h-fit flex flex-col gap-1.5"
+            style={{
+              background: 'var(--ed-paper, #FFFBF1)',
+              border: '2px solid var(--ed-ink, #111)',
+              borderRadius: 2,
+            }}
+          >
             {(['all','new','flagged','followup'] as Filter[]).map(f => {
-              const label = f === 'all' ? 'All' : f === 'new' ? 'New' : f === 'flagged' ? 'Flagged' : 'Awaiting Follow-up'
+              const label = f === 'all' ? 'ALL' : f === 'new' ? 'NEW' : f === 'flagged' ? 'FLAGGED' : 'FOLLOW-UP'
               const active = filter === f
+              const palette: Record<Filter, { bg: string; ink: string }> = {
+                all:      { bg: 'var(--ed-red, #E23B2E)',    ink: '#fff' },
+                new:      { bg: 'var(--ed-blue, #2A5CD3)',   ink: '#fff' },
+                flagged:  { bg: 'var(--ed-yellow, #F2C84B)', ink: 'var(--ed-ink, #111)' },
+                followup: { bg: 'var(--ed-ink, #111)',       ink: '#fff' },
+              }
+              const c = palette[f]
               return (
                 <button
                   key={f}
                   onClick={() => setFilter(f)}
                   aria-current={active}
-                  className={`w-full text-left min-h-[44px] px-3 py-2 rounded-md flex items-center justify-between gap-2 transition ${
-                    active ? 'bg-[#406A56] text-[#F2F1E5]' : 'text-[#406A56] hover:bg-[#D3E1DF]'
-                  }`}
+                  className="w-full text-left min-h-[40px] px-3 py-2 flex items-center justify-between gap-2"
+                  style={{
+                    fontFamily: 'var(--font-mono, monospace)',
+                    fontWeight: 700,
+                    background: active ? c.bg : 'transparent',
+                    color: active ? c.ink : 'var(--ed-ink, #111)',
+                    border: active ? '2px solid var(--ed-ink, #111)' : '2px solid transparent',
+                    borderRadius: 2,
+                  }}
                 >
-                  <span className="text-sm font-medium">{label}</span>
-                  <span className={`text-xs px-2 py-0.5 rounded-full ${
-                    active ? 'bg-[#F2F1E5] text-[#406A56]' : 'bg-[#D3E1DF] text-[#406A56]'
-                  }`}>{counts[f]}</span>
+                  <span className="text-[10px] tracking-[0.18em]">{label}</span>
+                  <span
+                    className="inline-flex items-center justify-center text-[9px]"
+                    style={{
+                      minWidth: 18,
+                      height: 18,
+                      padding: '0 4px',
+                      background: active ? '#fff' : 'var(--ed-ink, #111)',
+                      color: active ? 'var(--ed-ink, #111)' : '#fff',
+                      borderRadius: 999,
+                    }}
+                  >
+                    {counts[f]}
+                  </span>
                 </button>
               )
             })}
           </nav>
 
           {/* List */}
-          <div className="bg-white rounded-lg p-2" role="list" aria-live="polite">
+          <div
+            className="p-2"
+            style={{
+              background: 'var(--ed-paper, #FFFBF1)',
+              border: '2px solid var(--ed-ink, #111)',
+              borderRadius: 2,
+            }}
+            role="list"
+            aria-live="polite"
+          >
             {loading && (
               <div className="p-6 text-center text-[#406A56]">Loading…</div>
             )}

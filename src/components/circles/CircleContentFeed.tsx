@@ -286,128 +286,161 @@ export default function CircleContentFeed({
   const memoryCount = content.filter(c => c.type === 'memory').length
   const wisdomCount = content.filter(c => c.type === 'wisdom').length
 
+  // Editorial sub-tab pills (Shared Content / Memories / Wisdom).
+  const SUB_TABS: { key: 'all' | 'memory' | 'wisdom'; label: string; count: number; bg: string; ink: string }[] = [
+    { key: 'all',     label: 'SHARED CONTENT', count: content.length, bg: 'var(--ed-yellow, #F2C84B)', ink: 'var(--ed-ink, #111)' },
+    { key: 'memory',  label: 'MEMORIES',       count: memoryCount,    bg: 'var(--ed-blue, #2A5CD3)',   ink: '#fff' },
+    { key: 'wisdom',  label: 'WISDOM',         count: wisdomCount,    bg: 'var(--ed-ink, #111)',       ink: '#fff' },
+  ]
+
   return (
     <div>
-      {/* Header */}
-      <div className="section-header mb-4">
-        <div className="section-title">
-          <div className="section-title-icon bg-[#2D5A3D]/10">
-            <FileText size={18} className="text-[#2D5A3D]" />
-          </div>
-          <span>Shared Content</span>
+      {/* Editorial sub-tabs row + view toggle */}
+      <div
+        className="flex items-center justify-between flex-wrap gap-3 mb-5 p-2"
+        style={{
+          background: 'var(--ed-paper, #FFFBF1)',
+          border: '2px solid var(--ed-ink, #111)',
+          borderRadius: 2,
+        }}
+      >
+        <div className="flex flex-wrap gap-2">
+          {SUB_TABS.map((t) => {
+            const isActive = filter === t.key
+            return (
+              <button
+                key={t.key}
+                onClick={() => setFilter(t.key)}
+                className="flex items-center gap-1.5 px-3 py-1.5 text-[10px] tracking-[0.18em]"
+                style={{
+                  fontFamily: 'var(--font-mono, monospace)',
+                  fontWeight: 700,
+                  background: isActive ? t.bg : 'transparent',
+                  color: isActive ? t.ink : 'var(--ed-ink, #111)',
+                  border: '2px solid var(--ed-ink, #111)',
+                  borderRadius: 999,
+                }}
+              >
+                {t.label}
+                {t.count > 0 && (
+                  <span
+                    className="inline-flex items-center justify-center text-[9px]"
+                    style={{
+                      minWidth: 18,
+                      height: 18,
+                      padding: '0 4px',
+                      background: isActive ? '#fff' : 'var(--ed-ink, #111)',
+                      color: isActive ? 'var(--ed-ink, #111)' : '#fff',
+                      borderRadius: 999,
+                    }}
+                  >
+                    {t.count}
+                  </span>
+                )}
+              </button>
+            )
+          })}
         </div>
         <div className="flex items-center gap-2">
-          {/* View Toggle */}
-          <div className="flex bg-[#2D5A3D]/5 rounded-lg p-1">
+          <div className="flex items-stretch" style={{ border: '2px solid var(--ed-ink, #111)', borderRadius: 2 }}>
             <button
               onClick={() => setViewMode('list')}
-              className={`p-1.5 rounded-md transition-colors ${
-                viewMode === 'list' ? 'bg-white shadow-sm text-[#2D5A3D]' : 'text-[#5A6660]'
-              }`}
+              className="p-2"
+              style={{
+                background: viewMode === 'list' ? 'var(--ed-ink, #111)' : 'transparent',
+                color: viewMode === 'list' ? '#fff' : 'var(--ed-ink, #111)',
+              }}
+              aria-label="List view"
             >
-              <List size={16} />
+              <List size={14} strokeWidth={2.5} />
             </button>
             <button
               onClick={() => setViewMode('grid')}
-              className={`p-1.5 rounded-md transition-colors ${
-                viewMode === 'grid' ? 'bg-white shadow-sm text-[#2D5A3D]' : 'text-[#5A6660]'
-              }`}
+              className="p-2"
+              style={{
+                background: viewMode === 'grid' ? 'var(--ed-ink, #111)' : 'transparent',
+                color: viewMode === 'grid' ? '#fff' : 'var(--ed-ink, #111)',
+                borderLeft: '2px solid var(--ed-ink, #111)',
+              }}
+              aria-label="Grid view"
             >
-              <Grid size={16} />
+              <Grid size={14} strokeWidth={2.5} />
             </button>
           </div>
-          
-          {/* Filter Toggle */}
           <button
             onClick={() => setShowFilters(!showFilters)}
-            className={`p-2 rounded-lg transition-colors ${
-              showFilters ? 'bg-[#2D5A3D] text-white' : 'bg-[#2D5A3D]/10 text-[#2D5A3D]'
-            }`}
+            className="p-2"
+            style={{
+              background: showFilters ? 'var(--ed-ink, #111)' : 'var(--ed-paper, #FFFBF1)',
+              color: showFilters ? '#fff' : 'var(--ed-ink, #111)',
+              border: '2px solid var(--ed-ink, #111)',
+              borderRadius: 2,
+            }}
+            aria-label="Filters"
           >
-            <Filter size={16} />
+            <Filter size={14} strokeWidth={2.5} />
           </button>
         </div>
       </div>
 
-      {/* Filters Panel */}
+      {/* Filters drawer */}
       {showFilters && (
-        <div className="content-card mb-4">
-          <div className="flex flex-wrap items-center gap-4">
-            <div>
-              <label className="text-xs text-[#5A6660] block mb-1">Type</label>
-              <div className="flex gap-1">
-                <button
-                  onClick={() => setFilter('all')}
-                  className={`filter-btn text-xs ${filter === 'all' ? 'filter-btn-active' : ''}`}
-                >
-                  All ({content.length})
-                </button>
-                <button
-                  onClick={() => setFilter('memory')}
-                  className={`filter-btn text-xs ${filter === 'memory' ? 'filter-btn-active' : ''}`}
-                >
-                  <ImageIcon size={12} className="inline mr-1" />
-                  Memories ({memoryCount})
-                </button>
-                <button
-                  onClick={() => setFilter('wisdom')}
-                  className={`filter-btn text-xs ${filter === 'wisdom' ? 'filter-btn-active' : ''}`}
-                >
-                  <BookOpen size={12} className="inline mr-1" />
-                  Wisdom ({wisdomCount})
-                </button>
-              </div>
-            </div>
-            
-            <div>
-              <label className="text-xs text-[#5A6660] block mb-1">Sort by</label>
-              <select
-                value={sortBy}
-                onChange={e => setSortBy(e.target.value as 'recent' | 'popular')}
-                className="form-select text-sm py-1.5"
-              >
-                <option value="recent">Most Recent</option>
-                <option value="popular">Most Popular</option>
-              </select>
-            </div>
+        <div
+          className="mb-4 p-4 flex flex-wrap items-center gap-4"
+          style={{
+            background: 'var(--ed-paper, #FFFBF1)',
+            border: '2px solid var(--ed-ink, #111)',
+            borderRadius: 2,
+          }}
+        >
+          <div>
+            <label
+              className="block text-[10px] tracking-[0.18em] text-[var(--ed-muted,#6F6B61)] mb-1"
+              style={{ fontFamily: 'var(--font-mono, monospace)', fontWeight: 700 }}
+            >
+              SORT BY
+            </label>
+            <select
+              value={sortBy}
+              onChange={e => setSortBy(e.target.value as 'recent' | 'popular')}
+              className="px-3 py-1.5 text-sm text-[var(--ed-ink,#111)]"
+              style={{ background: 'var(--ed-cream, #F3ECDC)', border: '2px solid var(--ed-ink, #111)', borderRadius: 2 }}
+            >
+              <option value="recent">Most Recent</option>
+              <option value="popular">Most Popular</option>
+            </select>
           </div>
         </div>
       )}
 
-      {/* Quick Filters (always visible) */}
-      {!showFilters && (
-        <div className="flex gap-2 mb-4">
-          <button
-            onClick={() => setFilter('all')}
-            className={`filter-btn ${filter === 'all' ? 'filter-btn-active' : ''}`}
-          >
-            All
-          </button>
-          <button
-            onClick={() => setFilter('memory')}
-            className={`filter-btn ${filter === 'memory' ? 'filter-btn-active' : ''}`}
-          >
-            <ImageIcon size={12} className="inline mr-1" />
-            Memories
-          </button>
-          <button
-            onClick={() => setFilter('wisdom')}
-            className={`filter-btn ${filter === 'wisdom' ? 'filter-btn-active' : ''}`}
-          >
-            <BookOpen size={12} className="inline mr-1" />
-            Wisdom
-          </button>
-        </div>
-      )}
-
-      {/* Content List */}
+      {/* Content list */}
       {filteredContent.length === 0 ? (
-        <div className="empty-state">
-          <div className="empty-state-icon">
-            <FileText size={32} className="text-[#2D5A3D]" />
+        <div
+          className="flex flex-col items-center justify-center text-center py-20 px-6"
+          style={{
+            background: 'var(--ed-paper, #FFFBF1)',
+            border: '2px solid var(--ed-ink, #111)',
+            borderRadius: 2,
+          }}
+        >
+          <div
+            className="flex items-center justify-center mb-4"
+            style={{
+              width: 56, height: 56,
+              background: 'var(--ed-yellow, #F2C84B)',
+              border: '2px solid var(--ed-ink, #111)',
+              borderRadius: 999,
+            }}
+          >
+            <FileText size={24} className="text-[var(--ed-ink,#111)]" />
           </div>
-          <h3 className="empty-state-title">No Content Yet</h3>
-          <p className="empty-state-text">
+          <p
+            className="text-xl text-[var(--ed-ink,#111)] mb-2 leading-tight"
+            style={{ fontFamily: 'var(--font-display, "Archivo Black", sans-serif)' }}
+          >
+            NO CONTENT YET
+          </p>
+          <p className="text-sm text-[var(--ed-muted,#6F6B61)] max-w-sm">
             Memories and wisdom shared with this circle will appear here.
           </p>
         </div>

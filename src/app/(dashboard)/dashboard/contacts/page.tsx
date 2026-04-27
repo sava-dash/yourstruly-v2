@@ -2,15 +2,10 @@
 
 import { useState, useEffect } from 'react'
 import { createClient } from '@/lib/supabase/client'
-import { Plus, Edit2, Trash2, X, Users, ChevronLeft, Calendar, MapPin, Phone, Mail, Heart, Search, Cake, Sparkles, Send, Check } from 'lucide-react'
-import Link from 'next/link'
+import { Plus, Trash2, X, Users, MapPin, Phone, Search, Send, Check, Heart, ChevronDown } from 'lucide-react'
 import { useSearchParams, useRouter } from 'next/navigation'
 import '@/styles/page-styles.css'
-import '@/styles/engagement.css'
-import '@/styles/home.css'
-import { getCategoryIcon } from '@/lib/dashboard/icons'
 import { GoogleContactsImport } from '@/components/contacts'
-import { TornEdgeFilterPill } from '@/components/ui/TornEdgeFilter'
 import ContactDetailModal from '@/components/contacts/ContactDetailModal'
 
 // ============================================
@@ -137,13 +132,17 @@ export default function ContactsPage() {
   const [contacts, setContacts] = useState<Contact[]>([])
   const [pets, setPets] = useState<Pet[]>([])
   const [contactCircles, setContactCircles] = useState<ContactCircleMap>(new Map())
+  const [memoryCounts, setMemoryCounts] = useState<Map<string, number>>(new Map())
   const [loading, setLoading] = useState(true)
   const [showContactModal, setShowContactModal] = useState(false)
   const [showPetModal, setShowPetModal] = useState(false)
   const [editingContact, setEditingContact] = useState<Contact | null>(null)
   const [editingPet, setEditingPet] = useState<Pet | null>(null)
   const [searchQuery, setSearchQuery] = useState('')
-  const [selectedCategory, setSelectedCategory] = useState<string | null>(null)
+  // 'all' | 'family' | 'friends' | 'professional' | 'pets' — uppercase pill labels
+  // map to these lowercase keys.
+  const [selectedCategory, setSelectedCategory] = useState<string>('all')
+  const [viewMode, setViewMode] = useState<'grid' | 'map'>('grid')
   const [selectedDetailContact, setSelectedDetailContact] = useState<Contact | null>(null)
   const [pingOpenFor, setPingOpenFor] = useState<string | null>(null) // contact id with open dropdown
   const [pingSent, setPingSent] = useState<Record<string, string>>({}) // contact id -> sent message
@@ -244,32 +243,46 @@ export default function ContactsPage() {
     'step_family': 'Family',
   }
 
-  // Check if a relationship type belongs to a category (including legacy mappings)
+  // Check if a relationship type belongs to a category (including legacy mappings).
+  // Accepts either canonical capitalized labels ("Family") or lowercase keys
+  // ("family") so the new editorial pill keys and the legacy callers both work.
   const relationshipMatchesCategory = (relType: string | undefined, category: string): boolean => {
     if (!relType) return false
-    
-    // Direct match with current options
-    const categoryOptions = RELATIONSHIP_OPTIONS.find(g => g.category === category)?.options.map(o => o.id) || []
+    const cat = category.toLowerCase()
+    const canonical = ({
+      family: 'Family', friends: 'Friends', professional: 'Professional', other: 'Other',
+    } as Record<string, string>)[cat] || category
+
+    const categoryOptions = RELATIONSHIP_OPTIONS.find(g => g.category === canonical)?.options.map(o => o.id) || []
     if (categoryOptions.includes(relType)) return true
-    
-    // Check legacy mapping
+
     const legacyCategory = LEGACY_RELATIONSHIP_MAP[relType]
-    if (legacyCategory === category) return true
-    
+    if (legacyCategory === canonical) return true
+
     return false
   }
 
-  // Filter contacts based on search and category
+  // Filter contacts based on search + category. 'all' and 'pets' both pass
+  // through here (pets shows zero contacts; the unified items grid below
+  // handles surfacing pets on the Pets tab).
   const filteredContacts = contacts.filter(contact => {
-    const matchesSearch = !searchQuery || 
-      contact.full_name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      contact.nickname?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      contact.email?.toLowerCase().includes(searchQuery.toLowerCase())
-    
-    const matchesCategory = !selectedCategory || 
-      relationshipMatchesCategory(contact.relationship_type, selectedCategory)
-    
+    const q = searchQuery.toLowerCase()
+    const matchesSearch = !q
+      || contact.full_name.toLowerCase().includes(q)
+      || contact.nickname?.toLowerCase().includes(q)
+      || contact.email?.toLowerCase().includes(q)
+
+    const matchesCategory = selectedCategory === 'all'
+      || (selectedCategory !== 'pets' && relationshipMatchesCategory(contact.relationship_type, selectedCategory))
+
     return matchesSearch && matchesCategory
+  })
+
+  // Pets visible on the All and Pets tabs (filtered by search on name).
+  const filteredPets = pets.filter(pet => {
+    if (selectedCategory !== 'all' && selectedCategory !== 'pets') return false
+    const q = searchQuery.toLowerCase()
+    return !q || pet.name.toLowerCase().includes(q) || pet.species.toLowerCase().includes(q)
   })
 
   const loadData = async () => {
@@ -290,6 +303,25 @@ export default function ContactsPage() {
 
     setContacts(contactsRes.data || [])
     setPets(petsRes.data || [])
+
+    // Build a map of contact_id -> memory count by aggregating memory_people
+    // rows. Pets aren't tracked here, so they fall back to 0 in the UI.
+    try {
+      const { data: memPeople } = await supabase
+        .from('memory_people')
+        .select('contact_id')
+        .eq('user_id', user.id)
+        .not('contact_id', 'is', null)
+      const counts = new Map<string, number>()
+      for (const row of memPeople || []) {
+        const cid = (row as any).contact_id as string | null
+        if (!cid) continue
+        counts.set(cid, (counts.get(cid) || 0) + 1)
+      }
+      setMemoryCounts(counts)
+    } catch (e) {
+      console.warn('[contacts] memory count fetch failed', e)
+    }
 
     // Fetch circles the user is a member of
     const { data: userCircleMemberships } = await supabase
@@ -434,354 +466,515 @@ export default function ContactsPage() {
     return Math.ceil((bday.getTime() - now.getTime()) / (1000 * 60 * 60 * 24))
   }
 
+  // Editorial pill tabs — same color palette as the my-story page so the
+  // two surfaces stay visually consistent.
+  const TABS: { key: string; label: string; color: string; ink: string }[] = [
+    { key: 'all',          label: 'ALL',          color: 'var(--ed-red, #E23B2E)',    ink: '#fff' },
+    { key: 'family',       label: 'FAMILY',       color: 'var(--ed-yellow, #F2C84B)', ink: 'var(--ed-ink, #111)' },
+    { key: 'friends',      label: 'FRIENDS',      color: 'var(--ed-blue, #2A5CD3)',   ink: '#fff' },
+    { key: 'professional', label: 'PROFESSIONAL', color: 'var(--ed-ink, #111)',       ink: '#fff' },
+    { key: 'pets',         label: 'PETS',         color: 'var(--ed-yellow, #F2C84B)', ink: 'var(--ed-ink, #111)' },
+  ]
+
+  // Editorial flag color per relationship/species for the top-left card flag.
+  const groupColor = (kind: 'contact' | 'pet', relType?: string): { bg: string; ink: string } => {
+    if (kind === 'pet') return { bg: 'var(--ed-yellow, #F2C84B)', ink: 'var(--ed-ink, #111)' }
+    const family = RELATIONSHIP_OPTIONS.find(g => g.category === 'Family')?.options.map(o => o.id) || []
+    const friends = RELATIONSHIP_OPTIONS.find(g => g.category === 'Friends')?.options.map(o => o.id) || []
+    const professional = RELATIONSHIP_OPTIONS.find(g => g.category === 'Professional')?.options.map(o => o.id) || []
+    if (relType && family.includes(relType)) return { bg: 'var(--ed-yellow, #F2C84B)', ink: 'var(--ed-ink, #111)' }
+    if (relType && friends.includes(relType)) return { bg: 'var(--ed-blue, #2A5CD3)', ink: '#fff' }
+    if (relType && professional.includes(relType)) return { bg: 'var(--ed-ink, #111)', ink: '#fff' }
+    if (relType && LEGACY_RELATIONSHIP_MAP[relType] === 'Family') return { bg: 'var(--ed-yellow, #F2C84B)', ink: 'var(--ed-ink, #111)' }
+    return { bg: 'var(--ed-muted, #6F6B61)', ink: '#fff' }
+  }
+
   if (loading) {
     return (
-      <div className="page-container">
-        <div className="page-background">
-          <div className="page-blob page-blob-1" />
-          <div className="page-blob page-blob-2" />
-          <div className="page-blob page-blob-3" />
-        </div>
-        <div className="relative z-10 loading-container">
-          <div className="loading-text">Loading...</div>
+      <div
+        className="relative min-h-screen"
+        style={{ background: 'var(--ed-cream, #F3ECDC)', paddingTop: 80, paddingBottom: 100, paddingLeft: 24, paddingRight: 24 }}
+      >
+        <div className="relative z-10 max-w-6xl mx-auto flex items-center justify-center" style={{ minHeight: 'calc(100vh - 200px)' }}>
+          <div
+            className="w-8 h-8 rounded-full animate-spin"
+            style={{ border: '3px solid var(--ed-ink, #111)', borderTopColor: 'transparent' }}
+          />
         </div>
       </div>
     )
   }
 
   return (
-    <div className="page-container">
-      {/* Warm gradient background with blobs */}
-      <div className="page-background">
-        <div className="page-blob page-blob-1" />
-        <div className="page-blob page-blob-2" />
-        <div className="page-blob page-blob-3" />
-      </div>
-
-      {/* Content */}
-      <div className="relative z-10 max-w-5xl mx-auto">
-        {/* Header */}
-        <div className="page-header">
-          <Link href="/dashboard" className="page-header-back">
-            <ChevronLeft size={20} />
-          </Link>
+    <div
+      className="relative min-h-screen"
+      style={{
+        background: 'var(--ed-cream, #F3ECDC)',
+        paddingTop: 80,
+        paddingBottom: 100,
+        paddingLeft: 24,
+        paddingRight: 24,
+      }}
+    >
+      {/* Width-locked container — matches /dashboard/my-story exactly. */}
+      <div className="relative z-10 max-w-6xl mx-auto">
+        {/* ───── Editorial header ───── */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 lg:gap-10 items-start mb-6">
+          {/* Left: huge CONTACTS / & PETS display + subtitle */}
           <div>
-            <h1 className="page-header-title" style={{ fontFamily: 'var(--font-dm-serif, DM Serif Display, serif)' }}>Contacts & Pets</h1>
-            <p className="page-header-subtitle">People and companions in your life</p>
+            <h1
+              className="text-[var(--ed-ink,#111)] leading-[0.85] tracking-[-0.02em] flex items-start gap-4"
+              style={{
+                fontFamily: 'var(--font-display, "Archivo Black", sans-serif)',
+                fontSize: 'clamp(56px, 9vw, 116px)',
+              }}
+            >
+              <span>
+                CONTACTS<br />& PETS
+              </span>
+              <span
+                aria-hidden
+                className="shrink-0"
+                style={{ width: 36, height: 36, background: 'var(--ed-red, #E23B2E)', borderRadius: 999, marginTop: 12 }}
+              />
+            </h1>
+            <p className="mt-4 text-[14px] text-[var(--ed-muted,#6F6B61)] max-w-md">
+              The people and pets who are part of your story.
+            </p>
           </div>
-        </div>
 
-        {/* Contacts Section */}
-        <section className="mb-10">
-          <div className="section-header">
-            <div className="section-title">
-              <div className="section-title-icon bg-[#2D5A3D]/10">
-                <Users size={18} className="text-[#2D5A3D]" />
-              </div>
-              <div>
-                <span className="text-[#2d2d2d]">People</span>
-                <span className="text-[#2D5A3D]/60 text-sm font-normal ml-2">({filteredContacts.length} of {contacts.length})</span>
-              </div>
-            </div>
-            <div className="flex items-center gap-2">
+          {/* Right: action buttons (IMPORT FROM GOOGLE + + ADD CONTACT) + search */}
+          <div className="flex flex-col gap-3 lg:items-end">
+            <div className="flex flex-wrap items-center gap-3 lg:justify-end">
               <GoogleContactsImport onImportComplete={loadData} />
               <button
                 onClick={() => { setEditingContact(null); setShowContactModal(true) }}
-                className="btn-primary"
+                className="flex items-center gap-2 px-5 py-2.5 text-[11px] tracking-[0.18em]"
+                style={{
+                  fontFamily: 'var(--font-mono, monospace)',
+                  fontWeight: 700,
+                  background: 'var(--ed-red, #E23B2E)',
+                  color: '#fff',
+                  border: '2px solid var(--ed-ink, #111)',
+                  borderRadius: 2,
+                }}
               >
-                <Plus size={16} />
-                Add Contact
+                <Plus size={13} strokeWidth={3} />
+                ADD CONTACT
               </button>
             </div>
-          </div>
-
-          {/* Search and Filters */}
-          <div className="flex flex-col sm:flex-row gap-3 mb-5">
-            {/* Search Bar */}
-            <div className="relative flex-1 max-w-md">
-              <Search size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-[#2D5A3D]/50" />
-              <input
-                type="text"
-                aria-label="Search" placeholder="Search contacts..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="form-input !pl-12"
-              />
-            </div>
-
-            {/* Category Filter Buttons - Torn Edge Style */}
-            <TornEdgeFilterPill
-              options={RELATIONSHIP_OPTIONS.map(g => g.category)}
-              value={selectedCategory}
-              onChange={setSelectedCategory}
-              allLabel="All"
-            />
-          </div>
-
-          {/* Upcoming Birthdays */}
-          {upcomingBirthdays.length > 0 && (
-            <div className="mb-6 bg-white border border-[#DDE3DF] rounded-xl shadow-sm p-4">
-              <div className="flex items-center gap-2 mb-3">
-                <Cake size={16} className="text-[#C4A235]" />
-                <h3 className="text-sm font-semibold text-[#2d2d2d]">Upcoming Birthdays</h3>
+            {/* Search bar — editorial frame; same shape as my-story. */}
+            <div
+              className="flex items-stretch w-full lg:max-w-md"
+              style={{ border: '2px solid var(--ed-ink, #111)', background: 'var(--ed-paper, #FFFBF1)', borderRadius: 2 }}
+            >
+              <div className="flex items-center flex-1 px-3 gap-2">
+                <Search size={16} className="text-[var(--ed-muted,#6F6B61)]" />
+                <input
+                  type="text"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  placeholder="Search contacts…"
+                  className="w-full py-2.5 bg-transparent text-sm text-[var(--ed-ink,#111)] placeholder-[var(--ed-muted,#6F6B61)] focus:outline-none"
+                />
+                {searchQuery && (
+                  <button
+                    onClick={() => setSearchQuery('')}
+                    className="text-[var(--ed-muted,#6F6B61)] hover:text-[var(--ed-ink,#111)]"
+                    aria-label="Clear search"
+                  >
+                    <X size={14} />
+                  </button>
+                )}
               </div>
-              <div className="flex flex-wrap gap-3">
-                {upcomingBirthdays.map(c => {
-                  const days = daysUntilBirthday(c.date_of_birth!)
+            </div>
+          </div>
+        </div>
+
+        {/* ───── Filter pills (color-coded) + view toggle ───── */}
+        <div className="flex items-center justify-between flex-wrap gap-3 mb-6">
+          <div className="flex flex-wrap gap-2">
+            {TABS.map((t) => {
+              const isActive = selectedCategory === t.key
+              return (
+                <button
+                  key={t.key}
+                  onClick={() => setSelectedCategory(t.key)}
+                  className="px-4 py-2 text-[11px] tracking-[0.18em] transition-transform hover:-translate-y-0.5"
+                  style={{
+                    fontFamily: 'var(--font-mono, monospace)',
+                    fontWeight: 700,
+                    background: isActive ? t.color : 'var(--ed-paper, #FFFBF1)',
+                    color: isActive ? t.ink : 'var(--ed-ink, #111)',
+                    border: '2px solid var(--ed-ink, #111)',
+                    borderRadius: 999,
+                  }}
+                >
+                  {t.label}
+                </button>
+              )
+            })}
+          </div>
+
+          {/* View toggle — visual parity with my-story. Map view is reserved
+              for later; clicking it just stays on grid for now. */}
+          <div
+            className="flex items-stretch"
+            style={{ border: '2px solid var(--ed-ink, #111)', borderRadius: 2, background: 'var(--ed-paper, #FFFBF1)' }}
+          >
+            <button
+              onClick={() => setViewMode('grid')}
+              className="flex items-center gap-2 px-3 py-2 text-[10px] tracking-[0.18em]"
+              style={{
+                fontFamily: 'var(--font-mono, monospace)',
+                fontWeight: 700,
+                background: viewMode === 'grid' ? 'var(--ed-ink, #111)' : 'transparent',
+                color: viewMode === 'grid' ? '#fff' : 'var(--ed-ink, #111)',
+              }}
+              aria-label="Grid view"
+            >
+              <Users size={13} strokeWidth={2.5} />
+              <span className="hidden sm:inline">GRID VIEW</span>
+            </button>
+            <button
+              onClick={() => setViewMode('map')}
+              className="flex items-center gap-2 px-3 py-2 text-[10px] tracking-[0.18em]"
+              style={{
+                fontFamily: 'var(--font-mono, monospace)',
+                fontWeight: 700,
+                background: viewMode === 'map' ? 'var(--ed-ink, #111)' : 'transparent',
+                color: viewMode === 'map' ? '#fff' : 'var(--ed-ink, #111)',
+                borderLeft: '2px solid var(--ed-ink, #111)',
+              }}
+              aria-label="Map view"
+            >
+              <MapPin size={13} strokeWidth={2.5} />
+              <span className="hidden sm:inline">MAP VIEW</span>
+            </button>
+          </div>
+        </div>
+
+        {/* ───── Unified card grid (contacts + pets) ───── */}
+        <section>
+          {(() => {
+            // Build the unified card list: contacts + pets, filtered by the
+            // active pill. Avoids two separate sections so the layout reads
+            // as one editorial grid (matches the design mock).
+            type UnifiedItem =
+              | { kind: 'contact'; data: Contact }
+              | { kind: 'pet'; data: Pet }
+            const items: UnifiedItem[] = []
+            if (selectedCategory !== 'pets') {
+              for (const c of filteredContacts) items.push({ kind: 'contact', data: c })
+            }
+            for (const p of filteredPets) items.push({ kind: 'pet', data: p })
+
+            // Empty states.
+            if (contacts.length === 0 && pets.length === 0) {
+              return (
+                <div
+                  className="flex flex-col items-center justify-center text-center py-20 px-6"
+                  style={{ background: 'var(--ed-paper, #FFFBF1)', border: '2px solid var(--ed-ink, #111)', borderRadius: 2 }}
+                >
+                  <p
+                    className="text-xl text-[var(--ed-ink,#111)] mb-2 leading-tight"
+                    style={{ fontFamily: 'var(--font-display, "Archivo Black", sans-serif)' }}
+                  >
+                    WHO MATTERS MOST?
+                  </p>
+                  <p className="text-sm text-[var(--ed-muted,#6F6B61)] mb-6 max-w-sm">
+                    Start here. Add the people and pets in your story.
+                  </p>
+                  <div className="flex flex-wrap gap-3 justify-center">
+                    <button
+                      onClick={() => { setEditingContact(null); setShowContactModal(true) }}
+                      className="px-5 py-2.5 text-[11px] tracking-[0.18em]"
+                      style={{ fontFamily: 'var(--font-mono, monospace)', fontWeight: 700, background: 'var(--ed-red, #E23B2E)', color: '#fff', border: '2px solid var(--ed-ink, #111)', borderRadius: 2 }}
+                    >
+                      + ADD CONTACT
+                    </button>
+                    <button
+                      onClick={() => { setEditingPet(null); setShowPetModal(true) }}
+                      className="px-5 py-2.5 text-[11px] tracking-[0.18em]"
+                      style={{ fontFamily: 'var(--font-mono, monospace)', fontWeight: 700, background: 'var(--ed-paper, #FFFBF1)', color: 'var(--ed-ink, #111)', border: '2px solid var(--ed-ink, #111)', borderRadius: 2 }}
+                    >
+                      + ADD PET
+                    </button>
+                  </div>
+                </div>
+              )
+            }
+            if (items.length === 0) {
+              return (
+                <div
+                  className="text-center py-16 px-6"
+                  style={{ background: 'var(--ed-paper, #FFFBF1)', border: '2px solid var(--ed-ink, #111)', borderRadius: 2 }}
+                >
+                  <p
+                    className="text-[11px] tracking-[0.18em] text-[var(--ed-muted,#6F6B61)] mb-3"
+                    style={{ fontFamily: 'var(--font-mono, monospace)' }}
+                  >
+                    NO MATCHES
+                  </p>
+                  <button
+                    onClick={() => { setSearchQuery(''); setSelectedCategory('all') }}
+                    className="text-[11px] tracking-[0.18em] underline text-[var(--ed-ink,#111)]"
+                    style={{ fontFamily: 'var(--font-mono, monospace)', fontWeight: 700 }}
+                  >
+                    CLEAR FILTERS
+                  </button>
+                </div>
+              )
+            }
+
+            // Add a "+ ADD PET" trailing tile when on the Pets tab.
+            const showAddPetTile = selectedCategory === 'pets'
+
+            return (
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                {items.map((it) => {
+                  const isContact = it.kind === 'contact'
+                  const c = isContact ? (it.data as Contact) : null
+                  const p = !isContact ? (it.data as Pet) : null
+                  const id = isContact ? c!.id : p!.id
+                  const name = isContact ? c!.full_name : p!.name
+                  const phone = isContact ? c!.phone : undefined
+                  const subLabel = isContact
+                    ? getRelationshipLabel(c!.relationship_type) || 'CONTACT'
+                    : (p!.species + (p!.breed ? ` · ${p!.breed}` : ''))
+                  const flag = groupColor(it.kind, isContact ? c!.relationship_type : undefined)
+                  const memCount = isContact ? (memoryCounts.get(c!.id) || 0) : 0
+
                   return (
                     <div
-                      key={c.id}
-                      className="flex items-center gap-2 px-3 py-2 bg-[#C4A235]/10 rounded-lg cursor-pointer hover:bg-[#C4A235]/20 transition-colors"
-                      onClick={() => setSelectedDetailContact(c)}
+                      key={`${it.kind}-${id}`}
+                      onClick={() => {
+                        if (isContact) setSelectedDetailContact(c!)
+                        else window.location.href = `/dashboard/pets/${p!.id}`
+                      }}
+                      className="relative cursor-pointer transition-transform hover:-translate-y-0.5 group"
+                      style={{
+                        background: 'var(--ed-paper, #FFFBF1)',
+                        border: '2px solid var(--ed-ink, #111)',
+                        borderRadius: 2,
+                        overflow: 'hidden',
+                      }}
                     >
-                      <div className="w-7 h-7 rounded-full bg-gradient-to-br from-[#2D5A3D] to-[#5a8a6e] flex items-center justify-center text-white text-xs font-bold flex-shrink-0">
-                        {c.full_name.charAt(0)}
+                      {/* Top-left triangular color flag — type cue */}
+                      <span
+                        aria-hidden
+                        className="absolute top-0 left-0"
+                        style={{
+                          width: 32, height: 32,
+                          background: flag.bg,
+                          clipPath: 'polygon(0 0, 100% 0, 0 100%)',
+                          borderRight: '2px solid var(--ed-ink, #111)',
+                        }}
+                      />
+
+                      {/* Hover delete X — top-right */}
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation()
+                          if (isContact) handleDeleteContact(c!.id)
+                          else handleDeletePet(p!.id)
+                        }}
+                        className="absolute top-2 right-2 p-1.5 opacity-0 group-hover:opacity-100 transition-opacity z-10"
+                        style={{
+                          background: 'var(--ed-paper, #FFFBF1)',
+                          border: '1.5px solid var(--ed-ink, #111)',
+                          borderRadius: 999,
+                        }}
+                        aria-label="Delete"
+                      >
+                        <X size={12} className="text-[var(--ed-ink,#111)]" />
+                      </button>
+
+                      <div className="p-4 sm:p-5 pt-6">
+                        <div className="flex items-center gap-3 mb-3">
+                          <span
+                            className="flex items-center justify-center font-bold shrink-0"
+                            style={{
+                              width: 44, height: 44, borderRadius: 999,
+                              background: flag.bg,
+                              color: flag.ink,
+                              border: '2px solid var(--ed-ink, #111)',
+                              fontFamily: 'var(--font-mono, monospace)',
+                              fontSize: 16,
+                            }}
+                          >
+                            {name.charAt(0).toUpperCase()}
+                          </span>
+                          <div className="min-w-0">
+                            <h3
+                              className="text-[15px] sm:text-[16px] text-[var(--ed-ink,#111)] truncate leading-tight"
+                              style={{ fontFamily: 'var(--font-display, "Archivo Black", sans-serif)' }}
+                            >
+                              {name.toUpperCase()}
+                            </h3>
+                            <p
+                              className="text-[10px] tracking-[0.16em] text-[var(--ed-muted,#6F6B61)] truncate uppercase"
+                              style={{ fontFamily: 'var(--font-mono, monospace)', fontWeight: 700 }}
+                            >
+                              {subLabel}
+                            </p>
+                          </div>
+                        </div>
+
+                        {/* Circle membership chips — small mono pills, contact-only.
+                            Surfaces shared circles directly on the card so the
+                            user doesn't have to open the detail to see context. */}
+                        {isContact && (() => {
+                          const cs = getContactCircles(c!)
+                          if (cs.length === 0) return null
+                          return (
+                            <div className="flex flex-wrap items-center gap-1.5 mb-2">
+                              {cs.slice(0, 2).map(circle => (
+                                <span
+                                  key={circle.circleId}
+                                  className="inline-flex items-center gap-1 px-2 py-0.5 text-[9px] tracking-[0.14em]"
+                                  style={{
+                                    fontFamily: 'var(--font-mono, monospace)',
+                                    fontWeight: 700,
+                                    background: 'var(--ed-cream, #F3ECDC)',
+                                    color: 'var(--ed-ink, #111)',
+                                    border: '1.5px solid var(--ed-ink, #111)',
+                                    borderRadius: 999,
+                                  }}
+                                >
+                                  <Users size={9} />
+                                  {circle.circleName.toUpperCase()}
+                                </span>
+                              ))}
+                              {cs.length > 2 && (
+                                <span
+                                  className="text-[9px] tracking-[0.14em] text-[var(--ed-muted,#6F6B61)]"
+                                  style={{ fontFamily: 'var(--font-mono, monospace)', fontWeight: 700 }}
+                                >
+                                  +{cs.length - 2}
+                                </span>
+                              )}
+                            </div>
+                          )
+                        })()}
+
+                        {phone && (
+                          <p className="flex items-center gap-1.5 text-[12px] text-[var(--ed-ink,#111)] mb-2">
+                            <Phone size={12} />
+                            <span className="truncate">{phone}</span>
+                          </p>
+                        )}
+
+                        {/* Bottom row: memory count (left) + PING dropdown (right).
+                            Pets don't get PING — only people. */}
+                        <div className="flex items-center justify-between gap-2 mt-3">
+                          <p
+                            className="text-[10px] tracking-[0.18em] text-[var(--ed-muted,#6F6B61)]"
+                            style={{ fontFamily: 'var(--font-mono, monospace)', fontWeight: 700 }}
+                          >
+                            {memCount} {memCount === 1 ? 'MEMORY' : 'MEMORIES'}
+                          </p>
+                          {isContact && (
+                            <div className="relative" onClick={(e) => e.stopPropagation()}>
+                              {pingSent[c!.id] ? (
+                                <span
+                                  className="inline-flex items-center gap-1 px-2.5 py-1 text-[10px] tracking-[0.18em]"
+                                  style={{
+                                    fontFamily: 'var(--font-mono, monospace)',
+                                    fontWeight: 700,
+                                    background: 'var(--ed-blue, #2A5CD3)',
+                                    color: '#fff',
+                                    border: '1.5px solid var(--ed-ink, #111)',
+                                    borderRadius: 999,
+                                  }}
+                                >
+                                  <Check size={11} /> SENT
+                                </span>
+                              ) : (
+                                <button
+                                  onClick={(e) => {
+                                    e.stopPropagation()
+                                    setPingOpenFor(pingOpenFor === c!.id ? null : c!.id)
+                                  }}
+                                  className="inline-flex items-center gap-1 px-2.5 py-1 text-[10px] tracking-[0.18em]"
+                                  style={{
+                                    fontFamily: 'var(--font-mono, monospace)',
+                                    fontWeight: 700,
+                                    background: 'var(--ed-red, #E23B2E)',
+                                    color: '#fff',
+                                    border: '1.5px solid var(--ed-ink, #111)',
+                                    borderRadius: 999,
+                                  }}
+                                  title="Send a gratitude ping"
+                                >
+                                  <Send size={10} /> PING
+                                  <ChevronDown size={10} />
+                                </button>
+                              )}
+                              {pingOpenFor === c!.id && (
+                                <div
+                                  className="absolute bottom-full right-0 mb-2 z-30 min-w-[200px]"
+                                  style={{
+                                    background: 'var(--ed-paper, #FFFBF1)',
+                                    border: '2px solid var(--ed-ink, #111)',
+                                    borderRadius: 2,
+                                  }}
+                                  onClick={(e) => e.stopPropagation()}
+                                >
+                                  <div
+                                    className="px-3 py-2 text-[9px] tracking-[0.18em] text-[var(--ed-muted,#6F6B61)]"
+                                    style={{
+                                      fontFamily: 'var(--font-mono, monospace)',
+                                      fontWeight: 700,
+                                      borderBottom: '2px solid var(--ed-ink, #111)',
+                                    }}
+                                  >
+                                    SEND TO {c!.full_name.split(' ')[0].toUpperCase()}
+                                  </div>
+                                  {GRATITUDE_OPTIONS.map(opt => (
+                                    <button
+                                      key={opt.label}
+                                      onClick={() => handleSendPing(c!, opt.label)}
+                                      className="w-full px-3 py-2 text-left text-[12px] text-[var(--ed-ink,#111)] hover:bg-[var(--ed-cream,#F3ECDC)] flex items-center gap-2"
+                                    >
+                                      <span>{opt.emoji}</span>
+                                      <span>{opt.label}</span>
+                                    </button>
+                                  ))}
+                                </div>
+                              )}
+                            </div>
+                          )}
+                        </div>
                       </div>
-                      <div>
-                        <span className="text-sm font-medium text-[#2d2d2d]">{c.full_name}</span>
-                        <span className="text-xs text-[#666] ml-1.5">
-                          {formatDateNoTimezone(c.date_of_birth, 'short')}
-                        </span>
-                      </div>
-                      <span className="text-xs font-medium text-[#C4A235] ml-1">
-                        {days === 0 ? 'Today!' : days === 1 ? 'Tomorrow' : `${days}d`}
-                      </span>
                     </div>
                   )
                 })}
-              </div>
-            </div>
-          )}
 
-          {contacts.length === 0 ? (
-            <div className="empty-state">
-              <div className="empty-state-icon">
-                
-<img src={getCategoryIcon('contact')} alt="" className="w-12 h-12 opacity-50" />
-              </div>
-              <h3 className="empty-state-title mb-2">Who matters most to you?</h3>
-              <p className="empty-state-text mb-4">Start here. Add the people in your story.</p>
-              <button
-                onClick={() => { setEditingContact(null); setShowContactModal(true) }}
-                className="btn-primary"
-              >
-                <Plus size={16} />
-                Add Your First Contact
-              </button>
-            </div>
-          ) : filteredContacts.length === 0 ? (
-            <div className="empty-state">
-              <div className="empty-state-icon">
-                <Search size={32} className="text-[#2D5A3D]/50" />
-              </div>
-              <p className="empty-state-text mb-2">No contacts match your search</p>
-              <button
-                onClick={() => { setSearchQuery(''); setSelectedCategory(null) }}
-                className="text-[#2D5A3D] hover:text-[#234A31] text-sm font-medium"
-              >
-                Clear filters
-              </button>
-            </div>
-          ) : (
-            <div className="contacts-grid">
-              {filteredContacts.map(contact => (
-                <div
-                  key={contact.id}
-                  className="bg-white border border-[#DDE3DF] rounded-xl shadow-sm hover:shadow-md transition-all group cursor-pointer"
-                  onClick={() => setSelectedDetailContact(contact)}
-                >
-                  <div className="p-5">
-                    <div className="flex items-start justify-between mb-3">
-                      <div className="flex items-center gap-3">
-                        <div className="contact-avatar">
-                          {contact.full_name.charAt(0)}
-                        </div>
-                        <div>
-                          <h3 className="contact-name">{contact.full_name}</h3>
-                          <div className="flex items-center gap-1.5 flex-wrap mt-1">
-                            <span className={`contact-badge contact-badge-${getRelationshipColor(contact.relationship_type)}`}>
-                              {getRelationshipLabel(contact.relationship_type)}
-                            </span>
-                            {getContactCircles(contact).map(circle => (
-                              <span
-                                key={circle.circleId}
-                                className="contact-circle-badge"
-                                title={`Member of ${circle.circleName} circle`}
-                              >
-                                <Users size={11} />
-                                {circle.circleName}
-                              </span>
-                            ))}
-                          </div>
-                        </div>
-                      </div>
-                      <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity" onClick={(e) => e.stopPropagation()}>
-                        <button onClick={() => { setEditingContact(contact); setShowContactModal(true) }} className="p-2 text-[#2D5A3D]/50 hover:text-[#2D5A3D] hover:bg-[#2D5A3D]/10 rounded-lg transition-colors">
-                          <Edit2 size={15} />
-                        </button>
-                        <button onClick={() => handleDeleteContact(contact.id)} className="p-2 text-[#2D5A3D]/50 hover:text-[#B8562E] hover:bg-[#B8562E]/10 rounded-lg transition-colors">
-                          <Trash2 size={15} />
-                        </button>
-                      </div>
-                    </div>
-                    <div className="contact-details">
-                      {contact.date_of_birth && (
-                        <div className="contact-detail-row">
-                          <Calendar size={14} className="text-[#2D5A3D]" />
-                          <span>{formatDateNoTimezone(contact.date_of_birth, 'short')}</span>
-                        </div>
-                      )}
-                      {(contact.city || contact.country) && (
-                        <div className="contact-detail-row">
-                          <MapPin size={14} className="text-[#2D5A3D]" />
-                          <span>{[contact.city, contact.state, contact.country].filter(Boolean).join(', ')}</span>
-                        </div>
-                      )}
-                    </div>
-                    {/* Quick action icons */}
-                    <div className="flex items-center gap-2 mt-3 pt-3 border-t border-[#DDE3DF]" onClick={(e) => e.stopPropagation()}>
-                      {contact.email && (
-                        <a
-                          href={`mailto:${contact.email}`}
-                          className="inline-flex items-center gap-1.5 px-2.5 py-1.5 text-xs text-[#2D5A3D] bg-[#2D5A3D]/5 hover:bg-[#2D5A3D]/10 rounded-lg transition-colors"
-                          title={contact.email}
-                        >
-                          <Mail size={13} />
-                          <span className="hidden sm:inline truncate max-w-[120px]">{contact.email}</span>
-                        </a>
-                      )}
-                      {contact.phone && (
-                        <a
-                          href={`tel:${contact.phone}`}
-                          className="inline-flex items-center gap-1.5 px-2.5 py-1.5 text-xs text-[#2D5A3D] bg-[#2D5A3D]/5 hover:bg-[#2D5A3D]/10 rounded-lg transition-colors"
-                          title={contact.phone}
-                        >
-                          <Phone size={13} />
-                          <span className="hidden sm:inline">{contact.phone}</span>
-                        </a>
-                      )}
-                      {/* Gratitude ping */}
-                      <div className="relative ml-auto">
-                        {pingSent[contact.id] ? (
-                          <span className="inline-flex items-center gap-1 px-2.5 py-1.5 text-xs text-[#2D5A3D] bg-[#2D5A3D]/10 rounded-lg">
-                            <Check size={13} /> Sent
-                          </span>
-                        ) : (
-                          <button
-                            onClick={(e) => { e.stopPropagation(); setPingOpenFor(pingOpenFor === contact.id ? null : contact.id) }}
-                            className="inline-flex items-center gap-1.5 px-2.5 py-1.5 text-xs text-[#C4A235] bg-[#C4A235]/10 hover:bg-[#C4A235]/20 rounded-lg transition-colors"
-                            title="Send a gratitude ping"
-                          >
-                            <Sparkles size={13} />
-                            <span className="hidden sm:inline">Ping</span>
-                          </button>
-                        )}
-                        {/* Dropdown */}
-                        {pingOpenFor === contact.id && (
-                          <div
-                            className="absolute bottom-full right-0 mb-2 bg-white border border-[#DDE3DF] rounded-xl shadow-lg z-20 py-1 min-w-[180px]"
-                            onClick={(e) => e.stopPropagation()}
-                          >
-                            <div className="px-3 py-1.5 text-[10px] uppercase tracking-wider text-[#94A09A] font-semibold">
-                              Send to {contact.full_name.split(' ')[0]}
-                            </div>
-                            {GRATITUDE_OPTIONS.map(opt => (
-                              <button
-                                key={opt.label}
-                                onClick={() => handleSendPing(contact, opt.label)}
-                                className="w-full px-3 py-2 text-left text-sm text-[#2d2d2d] hover:bg-[#F5F1EA] transition-colors flex items-center gap-2"
-                              >
-                                <span>{opt.emoji}</span>
-                                <span>{opt.label}</span>
-                              </button>
-                            ))}
-                          </div>
-                        )}
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </div>
-          )}
-        </section>
-
-        {/* Pets Section - Only show in "All" category view */}
-        {!selectedCategory && (
-          <section>
-            <div className="section-header">
-              <div className="section-title">
-                <div className="section-title-icon bg-[#B8562E]/10">
-                  <Heart size={18} className="text-[#B8562E]" />
-                </div>
-                <div>
-                  <span className="text-[#2d2d2d]">Pets</span>
-                  <span className="text-[#2D5A3D]/60 text-sm font-normal ml-2">({pets.length})</span>
-                </div>
-              </div>
-              <button
-                onClick={() => { setEditingPet(null); setShowPetModal(true) }}
-                className="btn-accent"
-              >
-                <Plus size={16} />
-                Add Pet
-              </button>
-            </div>
-
-            {pets.length === 0 ? (
-              <div className="empty-state">
-                <p className="empty-state-text mb-4">No pets yet</p>
-                <button
-                  onClick={() => { setEditingPet(null); setShowPetModal(true) }}
-                  className="btn-accent"
-                >
-                  Add Your First Pet
-                </button>
-              </div>
-            ) : (
-              <div className="cards-grid">
-                {pets.map(pet => (
-                  <div
-                    key={pet.id}
-                    className={`bubble-tile glass-card group cursor-pointer ${pet.is_deceased ? 'opacity-70' : ''}`}
-                    onClick={() => window.location.href = `/dashboard/pets/${pet.id}`}
+                {showAddPetTile && (
+                  <button
+                    onClick={() => { setEditingPet(null); setShowPetModal(true) }}
+                    className="flex flex-col items-center justify-center min-h-[160px] text-center transition-transform hover:-translate-y-0.5"
+                    style={{
+                      background: 'var(--ed-paper, #FFFBF1)',
+                      border: '2px dashed var(--ed-ink, #111)',
+                      borderRadius: 2,
+                      color: 'var(--ed-ink, #111)',
+                    }}
                   >
-                    <div className="bubble-content">
-                      <div className="flex items-start justify-between mb-4">
-                        <div className="flex items-center gap-3">
-                          <div className="w-11 h-11 rounded-full bg-gradient-to-br from-[#B8562E] to-[#D87A55] flex items-center justify-center text-white font-semibold">
-                            {pet.name.charAt(0)}
-                          </div>
-                          <div>
-                            <h3 className="text-[#2d2d2d] font-semibold">{pet.name}</h3>
-                            <p className="text-[#B8562E] text-sm">{pet.species}{pet.breed ? ` - ${pet.breed}` : ''}</p>
-                          </div>
-                        </div>
-                        <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity" onClick={(e) => e.stopPropagation()}>
-                          <button onClick={() => { setEditingPet(pet); setShowPetModal(true) }} className="p-2 text-[#2D5A3D]/50 hover:text-[#2D5A3D] hover:bg-[#2D5A3D]/10 rounded-lg transition-colors">
-                            <Edit2 size={14} />
-                          </button>
-                          <button onClick={() => handleDeletePet(pet.id)} className="p-2 text-[#2D5A3D]/50 hover:text-[#B8562E] hover:bg-[#B8562E]/10 rounded-lg transition-colors">
-                            <Trash2 size={14} />
-                          </button>
-                        </div>
-                      </div>
-                      <div className="space-y-1.5 text-sm">
-                        {pet.color && <p className="text-[#666]">Color: {pet.color}</p>}
-                        {pet.personality && <p className="text-[#666] line-clamp-1">{pet.personality}</p>}
-                        {pet.is_deceased && (
-                          <p className="text-[#888] italic">
-                            🌈 Rainbow Bridge {pet.date_of_passing ? `· ${formatDateNoTimezone(pet.date_of_passing, 'long')}` : ''}
-                          </p>
-                        )}
-                      </div>
-                    </div>
-                  </div>
-                ))}
+                    <Plus size={20} strokeWidth={3} />
+                    <span
+                      className="mt-2 text-[11px] tracking-[0.18em]"
+                      style={{ fontFamily: 'var(--font-mono, monospace)', fontWeight: 700 }}
+                    >
+                      ADD PET
+                    </span>
+                  </button>
+                )}
               </div>
-            )}
-          </section>
-        )}
+            )
+          })()}
+        </section>
       </div>
 
       {/* Contact Detail Modal */}

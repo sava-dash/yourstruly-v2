@@ -379,16 +379,21 @@ export default function PostScriptDetailPage({ params }: { params: Promise<{ id:
 
   if (loading) {
     return (
-      <div className="page-container">
-        <div className="page-background">
-          <div className="page-blob page-blob-1" />
-          <div className="page-blob page-blob-2" />
-        </div>
-        <div className="relative z-10 flex items-center justify-center min-h-screen">
-          <div className="flex flex-col items-center gap-3">
-            <div className="w-10 h-10 border-3 border-[#B8562E] border-t-transparent rounded-full animate-spin" />
-            <p className="text-gray-600">Loading PostScript...</p>
-          </div>
+      <div
+        className="relative min-h-screen flex items-center justify-center"
+        style={{ background: 'var(--ed-cream, #F3ECDC)' }}
+      >
+        <div className="flex flex-col items-center gap-4">
+          <div
+            className="w-8 h-8 rounded-full animate-spin"
+            style={{ border: '3px solid var(--ed-ink, #111)', borderTopColor: 'transparent' }}
+          />
+          <p
+            className="text-[10px] tracking-[0.22em] text-[var(--ed-muted,#6F6B61)]"
+            style={{ fontFamily: 'var(--font-mono, monospace)', fontWeight: 700 }}
+          >
+            LOADING POSTSCRIPT…
+          </p>
         </div>
       </div>
     )
@@ -396,27 +401,53 @@ export default function PostScriptDetailPage({ params }: { params: Promise<{ id:
 
   if (error || !postscript) {
     return (
-      <div className="page-container">
-        <div className="page-background">
-          <div className="page-blob page-blob-1" />
-          <div className="page-blob page-blob-2" />
-        </div>
-        <div className="relative z-10 flex items-center justify-center min-h-screen">
-          <div className="glass-card-page p-8 text-center max-w-md">
-            <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-[#B8562E]/10 flex items-center justify-center">
-              <AlertCircle size={32} className="text-[#B8562E]" />
-            </div>
-            <h2 className="text-xl font-bold text-[#2d2d2d] mb-2">PostScript Not Found</h2>
-            <p className="text-gray-600 mb-6">{error || 'This PostScript may have been deleted or you don\'t have access to it.'}</p>
-            <Link 
-              href="/dashboard/postscripts" 
-              className="btn-primary inline-flex"
-              style={{ background: '#B8562E' }}
-            >
-              <ChevronLeft size={18} />
-              Back to PostScripts
-            </Link>
+      <div
+        className="relative min-h-screen flex items-center justify-center px-4"
+        style={{ background: 'var(--ed-cream, #F3ECDC)' }}
+      >
+        <div
+          className="p-8 text-center max-w-md"
+          style={{
+            background: 'var(--ed-paper, #FFFBF1)',
+            border: '2px solid var(--ed-ink, #111)',
+            borderRadius: 2,
+          }}
+        >
+          <div
+            className="w-14 h-14 mx-auto mb-4 flex items-center justify-center"
+            style={{
+              background: 'var(--ed-red, #E23B2E)',
+              color: '#fff',
+              border: '2px solid var(--ed-ink, #111)',
+              borderRadius: 999,
+            }}
+          >
+            <AlertCircle size={24} />
           </div>
+          <p
+            className="text-[10px] tracking-[0.22em] text-[var(--ed-red,#E23B2E)] mb-2"
+            style={{ fontFamily: 'var(--font-mono, monospace)', fontWeight: 700 }}
+          >
+            POSTSCRIPT NOT FOUND
+          </p>
+          <p className="text-sm text-[var(--ed-muted,#6F6B61)] mb-5">
+            {error || "This PostScript may have been deleted or you don't have access to it."}
+          </p>
+          <Link
+            href="/dashboard/postscripts"
+            className="inline-flex items-center gap-1.5 px-5 py-2.5 text-[11px] tracking-[0.18em]"
+            style={{
+              fontFamily: 'var(--font-mono, monospace)',
+              fontWeight: 700,
+              background: 'var(--ed-red, #E23B2E)',
+              color: '#fff',
+              border: '2px solid var(--ed-ink, #111)',
+              borderRadius: 2,
+            }}
+          >
+            <ChevronLeft size={13} />
+            BACK TO POSTSCRIPTS
+          </Link>
         </div>
       </div>
     )

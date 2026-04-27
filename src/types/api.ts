@@ -13,7 +13,7 @@ export interface TranscriptionResponse {
   /** Transcribed text from the audio */
   transcription: string;
   /** Which provider was used */
-  provider?: 'gemini' | 'openai-whisper' | 'deepgram';
+  provider?: 'gemini' | 'openai-whisper';
   /** Transcription confidence (0-1) */
   confidence?: number;
   /** Audio duration in seconds */

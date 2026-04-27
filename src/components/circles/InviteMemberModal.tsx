@@ -160,21 +160,54 @@ export default function InviteMemberModal({
   }
 
   return (
-    <div className="modal-overlay-page" onClick={onClose}>
-      <div className="modal-content-page max-w-lg" onClick={e => e.stopPropagation()}>
-        {/* Header */}
-        <div className="flex items-center justify-between mb-6">
-          <div>
-            <h2 className="text-xl font-semibold text-[#1A1F1C]">Invite to Circle</h2>
-            <p className="text-sm text-[#5A6660] mt-1">{circleName}</p>
+    <div
+      className="fixed inset-0 z-[1000] flex items-center justify-center p-4 overflow-y-auto"
+      style={{ background: 'rgba(17,17,17,0.55)', backdropFilter: 'blur(6px)' }}
+      onClick={onClose}
+    >
+      <div
+        className="relative w-full max-w-2xl my-4 sm:my-8"
+        style={{
+          background: 'var(--ed-cream, #F3ECDC)',
+          border: '2px solid var(--ed-ink, #111)',
+          borderRadius: 2,
+        }}
+        onClick={(e) => e.stopPropagation()}
+      >
+        <button
+          onClick={onClose}
+          className="absolute top-4 right-4 z-10 flex items-center justify-center"
+          style={{
+            width: 36,
+            height: 36,
+            borderRadius: 999,
+            border: '2px solid var(--ed-ink, #111)',
+            background: 'var(--ed-paper, #FFFBF1)',
+          }}
+          aria-label="Close"
+        >
+          <X size={16} className="text-[var(--ed-ink,#111)]" />
+        </button>
+
+        <div className="px-6 sm:px-8 pt-8 pb-8">
+          <div className="flex items-center gap-2 mb-2">
+            <span aria-hidden className="inline-block rounded-full" style={{ width: 8, height: 8, background: 'var(--ed-red, #E23B2E)' }} />
+            <span
+              className="text-[10px] tracking-[0.22em] text-[var(--ed-ink,#111)]"
+              style={{ fontFamily: 'var(--font-mono, monospace)', fontWeight: 700 }}
+            >
+              INVITE TO {circleName.toUpperCase()}
+            </span>
           </div>
-          <button
-            onClick={onClose}
-            className="p-2 text-[#2D5A3D]/50 hover:text-[#2D5A3D] hover:bg-[#2D5A3D]/10 rounded-lg transition-colors"
+          <h2
+            className="text-[var(--ed-ink,#111)] leading-tight mb-6"
+            style={{
+              fontFamily: 'var(--font-display, "Archivo Black", sans-serif)',
+              fontSize: 'clamp(28px, 5vw, 36px)',
+            }}
           >
-            <X size={20} />
-          </button>
-        </div>
+            INVITE MEMBER
+          </h2>
 
         {/* Search Users */}
         <div className="mb-6">
@@ -377,10 +410,22 @@ export default function InviteMemberModal({
         )}
 
         {/* Close Button */}
-        <div className="flex justify-end mt-6 pt-4 border-t border-[#2D5A3D]/10">
-          <button onClick={onClose} className="btn-secondary">
-            Done
+        <div className="flex justify-end mt-6 pt-4" style={{ borderTop: '2px solid var(--ed-ink, #111)' }}>
+          <button
+            onClick={onClose}
+            className="px-4 py-2 text-[10px] tracking-[0.18em]"
+            style={{
+              fontFamily: 'var(--font-mono, monospace)',
+              fontWeight: 700,
+              background: 'var(--ed-ink, #111)',
+              color: '#fff',
+              border: '2px solid var(--ed-ink, #111)',
+              borderRadius: 2,
+            }}
+          >
+            DONE
           </button>
+        </div>
         </div>
       </div>
     </div>

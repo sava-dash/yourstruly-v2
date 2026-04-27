@@ -1,42 +1,22 @@
 /**
- * Voice Types - Voice Memory Capture
- * 
- * Type definitions for voice-based memory capture sessions.
- * Supports multiple voice providers: OpenAI Realtime API, PersonaPlex.
+ * Voice Types — Voice Memory Capture
+ *
+ * Type definitions for voice-based memory capture sessions backed by the
+ * OpenAI Realtime API.
  */
 
 // ============================================================================
 // Voice Provider Types
 // ============================================================================
 
-export type VoiceProvider = 'openai' | 'personaplex'
+export type VoiceProvider = 'openai'
 
 // ============================================================================
 // OpenAI Voice Types
 // ============================================================================
 
-// Voice options — we use PersonaPlex custom voice throughout for brand consistency
-export type Voice = 'yourstruly-voice.mp3' | 'alloy' | 'ash' | 'ballad' | 'coral' | 'echo' | 'fable' | 'marin' | 'nova' | 'onyx' | 'sage' | 'shimmer' | 'verse' | 'cedar'
-
-// ============================================================================
-// PersonaPlex Voice Types
-// ============================================================================
-
-// PersonaPlex native voice IDs (all 18 voices + custom)
-export type PersonaPlexVoice = 
-  // Custom YoursTruly voice
-  | 'yourstruly-voice.mp3'
-  // Natural Female (4)
-  | 'NATF0' | 'NATF1' | 'NATF2' | 'NATF3'
-  // Natural Male (4)
-  | 'NATM0' | 'NATM1' | 'NATM2' | 'NATM3'
-  // Variety Female (5)
-  | 'VARF0' | 'VARF1' | 'VARF2' | 'VARF3' | 'VARF4'
-  // Variety Male (5)
-  | 'VARM0' | 'VARM1' | 'VARM2' | 'VARM3' | 'VARM4'
-
-// Union type for any supported voice
-export type AnyVoice = Voice | PersonaPlexVoice
+// OpenAI Realtime / TTS voice ids.
+export type Voice = 'alloy' | 'ash' | 'ballad' | 'coral' | 'echo' | 'sage' | 'shimmer' | 'verse'
 
 // Connection and interaction states
 export type VoiceChatState = 
@@ -126,7 +106,7 @@ export interface PersonaConfig {
 export const JOURNALIST_PERSONA: PersonaConfig = {
   name: 'Journalist',
   description: 'A warm, thoughtful biographer who draws out stories naturally',
-  voice: 'yourstruly-voice.mp3',
+  voice: 'alloy',
   style: 'warm',
   systemPrompt: `You're a warm biographer capturing someone's story. Be brief and conversational.
 
@@ -152,7 +132,7 @@ GOOD: "That's beautiful! Who first taught you to make it?"`
 export const FRIEND_PERSONA: PersonaConfig = {
   name: 'Friend',
   description: 'A close friend catching up and reminiscing',
-  voice: 'yourstruly-voice.mp3',
+  voice: 'alloy',
   style: 'casual',
   systemPrompt: `You are a close, caring friend catching up with someone you genuinely care about. You're warm, supportive, and love hearing their stories. You chat naturally, showing enthusiasm for their experiences and asking follow-up questions like a friend would - curious but never pushy.
 
@@ -181,7 +161,7 @@ Never:
 export const LIFE_STORY_PERSONA: PersonaConfig = {
   name: 'Life Story Guide',
   description: 'A professional life story interviewer for structured interviews',
-  voice: 'yourstruly-voice.mp3',
+  voice: 'alloy',
   style: 'professional',
   systemPrompt: `You are a professional life story interviewer, skilled at helping people document their most meaningful experiences. You're warm yet purposeful - you guide the conversation with gentle expertise, knowing which details matter for preserving a legacy.
 

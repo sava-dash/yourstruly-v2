@@ -1956,57 +1956,99 @@ export default function NewPostScriptPage() {
         preselectedContactName={form.recipient_name || contacts.find(c => c.id === form.recipient_contact_id)?.full_name}
       />
 
-      {/* Warm background */}
-      <div className="home-background">
-        <div className="home-blob home-blob-1" />
-        <div className="home-blob home-blob-2" />
-        <div className="home-blob home-blob-3" />
-      </div>
+      {/* Editorial cream canvas */}
+      <div
+        className="absolute inset-0 -z-10"
+        style={{ background: 'var(--ed-cream, #F3ECDC)' }}
+      />
 
-      <div className="relative z-10 p-6 max-w-4xl mx-auto">
-        {/* Header */}
+      <div className="relative z-10 p-6 max-w-6xl mx-auto">
+        {/* Editorial header */}
         <header className="flex items-center gap-4 mb-6">
-          <Link 
-            href="/dashboard/postscripts" 
-            className="p-2 bg-white/80 rounded-xl hover:bg-white transition-colors"
+          <Link
+            href="/dashboard/postscripts"
+            aria-label="Back to postscripts"
+            className="flex items-center justify-center shrink-0"
+            style={{
+              width: 36,
+              height: 36,
+              borderRadius: 999,
+              border: '2px solid var(--ed-ink, #111)',
+              background: 'var(--ed-paper, #FFFBF1)',
+            }}
           >
-            <ChevronLeft size={20} />
+            <ChevronLeft size={16} className="text-[var(--ed-ink,#111)]" />
           </Link>
           <div className="flex-1">
-            <h1 className="text-lg font-bold text-gray-900">
-              {editMode ? 'Edit PostScript' : 'Create PostScript'}
+            <p
+              className="text-[10px] tracking-[0.22em] text-[var(--ed-red,#E23B2E)]"
+              style={{ fontFamily: 'var(--font-mono, monospace)', fontWeight: 700 }}
+            >
+              STEP {step} OF 4
+            </p>
+            <h1
+              className="text-[var(--ed-ink,#111)] leading-tight"
+              style={{
+                fontFamily: 'var(--font-display, "Archivo Black", sans-serif)',
+                fontSize: 'clamp(28px, 4vw, 36px)',
+              }}
+            >
+              {editMode ? 'EDIT POSTSCRIPT' : 'CREATE POSTSCRIPT'}
             </h1>
-            <p className="text-sm text-gray-500">Step {step} of 4</p>
           </div>
           {showSavedPulse && (
-            <span className="inline-flex items-center gap-1 px-3 py-1.5 rounded-full bg-[#406A56]/10 text-[#406A56] text-xs font-medium animate-in fade-in">
-              <Check size={12} /> Saved
+            <span
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 text-[10px] tracking-[0.18em] animate-in fade-in"
+              style={{
+                fontFamily: 'var(--font-mono, monospace)',
+                fontWeight: 700,
+                background: 'var(--ed-blue, #2A5CD3)',
+                color: '#fff',
+                border: '2px solid var(--ed-ink, #111)',
+                borderRadius: 2,
+              }}
+            >
+              <Check size={11} /> SAVED
             </span>
           )}
         </header>
 
-        {/* Bug 1: warn when editing an already-scheduled postscript so the user
-            knows saving will reschedule / interrupt the pending delivery. */}
+        {/* Edit-warn banner — editorial alert */}
         {editMode && editOriginalStatus === 'scheduled' && (
           <div
             role="alert"
-            className="mb-5 rounded-xl border border-[#C35F33]/40 bg-[#C35F33]/10 px-4 py-3 text-sm text-[#7A3A1E]"
+            className="mb-5 px-4 py-3 text-sm"
+            style={{
+              background: 'var(--ed-yellow, #F2C84B)',
+              color: 'var(--ed-ink, #111)',
+              border: '2px solid var(--ed-ink, #111)',
+              borderRadius: 2,
+            }}
           >
-            <p className="font-semibold mb-0.5">Heads up — this postscript is scheduled.</p>
-            <p>
+            <p
+              className="text-[10px] tracking-[0.22em] mb-1"
+              style={{ fontFamily: 'var(--font-mono, monospace)', fontWeight: 700 }}
+            >
+              HEADS UP — SCHEDULED POSTSCRIPT
+            </p>
+            <p className="text-[13px]">
               Editing it will cancel the pending delivery and re-schedule with your changes.
               The recipient won&apos;t receive anything until you save again.
             </p>
           </div>
         )}
 
-        {/* Progress */}
+        {/* Progress segments — ink-bordered editorial bars */}
         <div className="flex gap-2 mb-8">
           {STEPS.map(s => (
-            <div 
+            <div
               key={s.id}
-              className={`flex-1 h-1 rounded-full transition-colors
-                ${s.id <= step ? 'bg-[#B8562E]' : 'bg-gray-200'}`}
+              className="flex-1 h-2 transition-colors"
+              style={{
+                background: s.id <= step ? 'var(--ed-red, #E23B2E)' : 'var(--ed-paper, #FFFBF1)',
+                border: '2px solid var(--ed-ink, #111)',
+                borderRadius: 2,
+              }}
             />
           ))}
         </div>

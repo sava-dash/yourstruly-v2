@@ -1,12 +1,12 @@
 /**
  * Audio Clip Stitcher
- * 
- * Extracts individual audio clips from a stereo PersonaPlex recording
+ *
+ * Extracts individual audio clips from a stereo recording
  * where left channel = AI voice and right channel = user voice.
  * Uses transcript timestamps to split the recording into per-exchange clips.
  */
 
-import type { TranscriptEntry } from '@/hooks/usePersonaPlexVoice'
+import type { TranscriptEntry } from '@/types/voice'
 
 export interface AudioClip {
   /** Which exchange this clip belongs to (0-indexed) */

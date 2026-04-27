@@ -667,60 +667,120 @@ export default function CircleScheduling({
     }, 100)
   }
 
+  // Editorial filter pills for the schedule view (matches mock legend).
+  const SCHEDULE_FILTERS: { key: 'all' | 'voting' | 'confirmed'; label: string; bg: string; ink: string }[] = [
+    { key: 'all',       label: 'ALL',       bg: 'var(--ed-ink, #111)',    ink: '#fff' },
+    { key: 'voting',    label: 'VOTING',    bg: 'var(--ed-yellow, #F2C84B)', ink: 'var(--ed-ink, #111)' },
+    { key: 'confirmed', label: 'CONFIRMED', bg: 'var(--ed-blue, #2A5CD3)',   ink: '#fff' },
+  ]
+
   return (
     <div>
-      {/* Header */}
-      <div className="section-header mb-4">
-        <div className="section-title">
-          <div className="section-title-icon bg-[#C4A235]/10">
-            <Calendar size={18} className="text-[#8a7c08]" />
-          </div>
-          <span>Scheduling</span>
+      {/* SCHEDULING bar — yellow header with title + propose button */}
+      <div
+        className="flex items-center justify-between mb-4 p-3"
+        style={{
+          background: 'var(--ed-yellow, #F2C84B)',
+          border: '2px solid var(--ed-ink, #111)',
+          borderRadius: 2,
+        }}
+      >
+        <div className="flex items-center gap-2">
+          <Calendar size={14} className="text-[var(--ed-ink,#111)]" />
+          <span
+            className="text-[11px] tracking-[0.22em] text-[var(--ed-ink,#111)]"
+            style={{ fontFamily: 'var(--font-mono, monospace)', fontWeight: 700 }}
+          >
+            SCHEDULING
+          </span>
         </div>
-        <button onClick={() => setShowCreateModal(true)} className="btn-primary">
-          <Plus size={16} />
-          Propose Event
+        <button
+          onClick={() => setShowCreateModal(true)}
+          className="flex items-center gap-1.5 px-3 py-1.5 text-[10px] tracking-[0.18em]"
+          style={{
+            fontFamily: 'var(--font-mono, monospace)',
+            fontWeight: 700,
+            background: 'var(--ed-ink, #111)',
+            color: '#fff',
+            border: '2px solid var(--ed-ink, #111)',
+            borderRadius: 2,
+          }}
+        >
+          <Plus size={12} />
+          PROPOSE NEW EVENT
         </button>
       </div>
 
-      {/* Mini Calendar */}
       <MiniCalendar events={events} onEventClick={handleCalendarEventClick} />
 
-      {/* Filters */}
-      <div className="flex gap-2 mb-4">
-        <button
-          onClick={() => setFilter('all')}
-          className={`filter-btn ${filter === 'all' ? 'filter-btn-active' : ''}`}
-        >
-          All
-        </button>
-        <button
-          onClick={() => setFilter('voting')}
-          className={`filter-btn ${filter === 'voting' ? 'filter-btn-active' : ''}`}
-        >
-          Voting
-        </button>
-        <button
-          onClick={() => setFilter('confirmed')}
-          className={`filter-btn ${filter === 'confirmed' ? 'filter-btn-active' : ''}`}
-        >
-          Confirmed
-        </button>
+      {/* Editorial filter pills */}
+      <div className="flex flex-wrap gap-2 mb-4">
+        {SCHEDULE_FILTERS.map((f) => {
+          const isActive = filter === f.key
+          return (
+            <button
+              key={f.key}
+              onClick={() => setFilter(f.key)}
+              className="px-3 py-1.5 text-[10px] tracking-[0.18em]"
+              style={{
+                fontFamily: 'var(--font-mono, monospace)',
+                fontWeight: 700,
+                background: isActive ? f.bg : 'var(--ed-paper, #FFFBF1)',
+                color: isActive ? f.ink : 'var(--ed-ink, #111)',
+                border: '2px solid var(--ed-ink, #111)',
+                borderRadius: 999,
+              }}
+            >
+              {f.label}
+            </button>
+          )
+        })}
       </div>
 
       {/* Events List */}
       {filteredEvents.length === 0 ? (
-        <div className="empty-state">
-          <div className="empty-state-icon">
-            <Calendar size={32} className="text-[#2D5A3D]" />
+        <div
+          className="flex flex-col items-center justify-center text-center py-16 px-6"
+          style={{
+            background: 'var(--ed-paper, #FFFBF1)',
+            border: '2px solid var(--ed-ink, #111)',
+            borderRadius: 2,
+          }}
+        >
+          <div
+            className="flex items-center justify-center mb-4"
+            style={{
+              width: 56, height: 56,
+              background: 'var(--ed-yellow, #F2C84B)',
+              border: '2px solid var(--ed-ink, #111)',
+              borderRadius: 999,
+            }}
+          >
+            <Calendar size={24} className="text-[var(--ed-ink,#111)]" />
           </div>
-          <h3 className="empty-state-title">No Events Yet</h3>
-          <p className="empty-state-text">
-            Propose an event and let members vote on the best time.
+          <p
+            className="text-xl text-[var(--ed-ink,#111)] mb-2 leading-tight"
+            style={{ fontFamily: 'var(--font-display, "Archivo Black", sans-serif)' }}
+          >
+            NO EVENTS YET
           </p>
-          <button onClick={() => setShowCreateModal(true)} className="btn-primary mt-4">
-            <Plus size={16} />
-            Propose First Event
+          <p className="text-sm text-[var(--ed-muted,#6F6B61)] mb-5 max-w-sm">
+            Propose a group event to schedule with the circle.
+          </p>
+          <button
+            onClick={() => setShowCreateModal(true)}
+            className="flex items-center gap-1.5 px-5 py-2.5 text-[10px] tracking-[0.18em]"
+            style={{
+              fontFamily: 'var(--font-mono, monospace)',
+              fontWeight: 700,
+              background: 'var(--ed-red, #E23B2E)',
+              color: '#fff',
+              border: '2px solid var(--ed-ink, #111)',
+              borderRadius: 2,
+            }}
+          >
+            <Plus size={12} />
+            PROPOSE FIRST EVENT
           </button>
         </div>
       ) : (

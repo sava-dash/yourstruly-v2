@@ -12,11 +12,18 @@ export default function GenerateNowButton() {
     setBusy(true);
     setMsg(null);
     try {
-      const res = await fetch('/api/cron/quarterly-timecapsule', { method: 'GET' });
+      const res = await fetch('/api/timecapsule/generate', { method: 'POST' });
+      const data = await res.json().catch(() => ({}));
       if (res.ok) {
-        setMsg('Your time capsule is being generated. Check your email shortly.');
+        if (data.skipped) {
+          setMsg(data.reason || 'No content yet for the previous quarter.');
+        } else if (data.emailSent) {
+          setMsg('Your time capsule is on its way. Check your email shortly.');
+        } else {
+          setMsg('Time capsule generated. ' + (data.reason || ''));
+        }
       } else {
-        setMsg('Could not generate right now. Please try again later.');
+        setMsg(data.error || 'Could not generate right now. Please try again later.');
       }
     } catch {
       setMsg('Could not generate right now. Please try again later.');

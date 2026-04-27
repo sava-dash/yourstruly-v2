@@ -251,32 +251,39 @@ export function ConversationCard({ data, promptText, accentColor, onSave, saved,
     return buf
   }
 
-  // Spin up a Deepgram WebSocket that consumes the live audio track and
-  // streams partial transcripts back while recording. Runs in parallel with
-  // MediaRecorder — blob capture is unaffected.
+  // Spin up an OpenAI Realtime transcription-only session and stream PCM16
+  // audio frames into it while recording. Runs in parallel with MediaRecorder
+  // — blob capture is unaffected.
+  //
+  // dg* ref names are kept for diff hygiene but back the OpenAI socket now.
   const startLiveTranscription = async (stream: MediaStream) => {
     try {
-      const tokenRes = await fetch('/api/deepgram/token')
+      const tokenRes = await fetch('/api/realtime/transcribe-session', { method: 'POST' })
       if (!tokenRes.ok) {
-        console.warn('[ConversationCard] live transcription disabled — /api/deepgram/token returned', tokenRes.status)
+        console.warn('[ConversationCard] live transcription disabled — /api/realtime/transcribe-session returned', tokenRes.status)
         dgAvailableRef.current = false
         return
       }
-      const { apiKey } = await tokenRes.json()
-      if (!apiKey) {
-        console.warn('[ConversationCard] live transcription disabled — no Deepgram apiKey from token endpoint')
+      const { clientSecret, wsUrl } = await tokenRes.json()
+      if (!clientSecret) {
+        console.warn('[ConversationCard] live transcription disabled — no clientSecret')
         dgAvailableRef.current = false
         return
       }
       dgAvailableRef.current = true
-      console.log('[ConversationCard] Deepgram live transcription online')
+      console.log('[ConversationCard] OpenAI Realtime transcription online')
 
       const audioContext = new AudioContext({ sampleRate: 16000 })
       dgAudioContextRef.current = audioContext
       const source = audioContext.createMediaStreamSource(stream)
 
-      const url = `wss://api.deepgram.com/v1/listen?model=nova-2&language=en-US&smart_format=true&interim_results=true&endpointing=300&punctuate=true&encoding=linear16&sample_rate=16000&channels=1`
-      const ws = new WebSocket(url, ['token', apiKey])
+      // Browsers can't set Authorization headers on WebSocket — OpenAI accepts
+      // the ephemeral key via subprotocol.
+      const ws = new WebSocket(wsUrl || 'wss://api.openai.com/v1/realtime?intent=transcription', [
+        'realtime',
+        `openai-insecure-api-key.${clientSecret}`,
+        'openai-beta.realtime-v1',
+      ])
       dgSocketRef.current = ws
       dgFinalRef.current = ''
 
@@ -285,8 +292,14 @@ export function ConversationCard({ data, promptText, accentColor, onSave, saved,
         dgProcessorRef.current = processor
         processor.onaudioprocess = (e) => {
           if (ws.readyState !== WebSocket.OPEN) return
-          const input = e.inputBuffer.getChannelData(0)
-          ws.send(floatTo16BitPCM(input))
+          const pcm = floatTo16BitPCM(e.inputBuffer.getChannelData(0))
+          // OpenAI Realtime expects base64-encoded PCM16 in
+          // input_audio_buffer.append events.
+          let binary = ''
+          const bytes = new Uint8Array(pcm)
+          for (let i = 0; i < bytes.length; i++) binary += String.fromCharCode(bytes[i])
+          const b64 = btoa(binary)
+          ws.send(JSON.stringify({ type: 'input_audio_buffer.append', audio: b64 }))
         }
         source.connect(processor)
         processor.connect(audioContext.destination)
@@ -295,16 +308,18 @@ export function ConversationCard({ data, promptText, accentColor, onSave, saved,
       ws.onmessage = (event) => {
         try {
           const data = JSON.parse(event.data)
-          if (data.type !== 'Results') return
-          const alt = data.channel?.alternatives?.[0]
-          if (!alt?.transcript) return
-          if (data.is_final) {
-            dgFinalRef.current = (dgFinalRef.current + ' ' + alt.transcript).trim()
-            if (cardId) conversationBus.setInterimTranscript(cardId, dgFinalRef.current)
-          } else {
-            // Interim — append to final for display but don't commit to final ref
-            const display = (dgFinalRef.current + ' ' + alt.transcript).trim()
+          if (data.type === 'conversation.item.input_audio_transcription.delta') {
+            const delta: string = data.delta || ''
+            if (!delta) return
+            const display = (dgFinalRef.current + ' ' + delta).trim()
             if (cardId) conversationBus.setInterimTranscript(cardId, display)
+          } else if (data.type === 'conversation.item.input_audio_transcription.completed') {
+            const transcript: string = data.transcript || ''
+            if (!transcript) return
+            dgFinalRef.current = (dgFinalRef.current + ' ' + transcript).trim()
+            if (cardId) conversationBus.setInterimTranscript(cardId, dgFinalRef.current)
+          } else if (data.type === 'error') {
+            console.warn('[ConversationCard] realtime error', data.error)
           }
         } catch { /* ignore parse errors */ }
       }

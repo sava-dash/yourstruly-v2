@@ -3,17 +3,24 @@
 import { useCallback, useRef, useEffect, useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { VideoOff, Camera, Loader2 } from 'lucide-react'
-import { usePersonaPlexVoice, type PersonaPlexVoice } from '@/hooks/usePersonaPlexVoice'
+import { useOpenAIRealtimeVoice, type RealtimeVoice } from '@/hooks/useOpenAIRealtimeVoice'
 import { useVideoRecorder } from '@/hooks/useVideoRecorder'
 import { VoiceChatUI } from './VoiceChatUI'
 import { createClient } from '@/lib/supabase/client'
 import { extractConversationClips } from '@/lib/audio/clip-stitcher'
-import type { 
-  VoiceSessionType, 
+import type {
+  VoiceSessionType,
   PersonaConfig,
   VoiceSessionResult,
 } from '@/types/voice'
 import { JOURNALIST_PERSONA, FRIEND_PERSONA, LIFE_STORY_PERSONA } from '@/types/voice'
+
+const REALTIME_VOICES: ReadonlySet<string> = new Set([
+  'alloy', 'ash', 'ballad', 'coral', 'echo', 'sage', 'shimmer', 'verse',
+])
+function asRealtimeVoice(v: string | undefined): RealtimeVoice {
+  return v && REALTIME_VOICES.has(v) ? (v as RealtimeVoice) : 'alloy'
+}
 
 export interface VoiceVideoChatProps {
   /** Session type */
@@ -22,8 +29,8 @@ export interface VoiceVideoChatProps {
   topic?: string
   /** Optional contact ID */
   contactId?: string
-  /** Voice to use - defaults to 'NATF3' (warm female) */
-  voice?: PersonaPlexVoice | string
+  /** Voice to use - defaults to 'alloy' */
+  voice?: RealtimeVoice | string
   /** Persona name shorthand */
   personaName?: 'journalist' | 'friend' | 'life-story'
   /** Custom persona config */
@@ -62,7 +69,7 @@ export function VoiceVideoChat({
   sessionType = 'memory_capture',
   topic,
   contactId,
-  voice = 'yourstruly-voice.mp3',
+  voice = 'alloy',
   personaName = 'journalist',
   persona,
   maxQuestions = 5,
@@ -110,24 +117,24 @@ export function VoiceVideoChat({
   const [sessionDuration, setSessionDuration] = useState(0)
   const [isSaving, setIsSaving] = useState(false)
 
-  // PersonaPlex hook
-  const personaPlex = usePersonaPlexVoice({
-    serverUrl: process.env.NEXT_PUBLIC_PERSONAPLEX_URL,
+  // OpenAI Realtime voice agent. enableRecording=true so we capture a stereo
+  // (AI=left, user=right) blob that the clip-stitcher can split into
+  // per-exchange WAVs after save.
+  const realtime = useOpenAIRealtimeVoice({
     systemPrompt: selectedPersona.systemPrompt,
     initialTopic: topic,
-    voice: voice,
+    voice: asRealtimeVoice(typeof voice === 'string' ? voice : undefined),
     enableRecording: true,
-    onTranscript: (userText, aiText) => {
+    onTranscript: (_userText, aiText) => {
       if (aiText && aiText.includes('?')) {
-        setQuestionCount(prev => prev + 1)
+        setQuestionCount((prev) => prev + 1)
       }
     },
     onComplete: async (transcript) => {
-      // Stop video if recording
       if (videoRecording) {
         stopVideoRecording()
       }
-      
+
       onComplete?.({
         success: true,
         sessionId: Date.now().toString(),
@@ -140,15 +147,14 @@ export function VoiceVideoChat({
     onError,
   })
 
-  // State from PersonaPlex
-  const state = personaPlex.state
+  const state = realtime.state
   const isConnected = ['connected', 'listening', 'thinking', 'aiSpeaking'].includes(state)
-  const transcript = personaPlex.transcript
-  const currentUserText = personaPlex.currentUserText
-  const currentAiText = personaPlex.currentAiText
+  const transcript = realtime.transcript
+  const currentUserText = realtime.currentUserText
+  const currentAiText = realtime.currentAiText
   const canSave = transcript.length >= 2
-  const error = personaPlex.error
-  const isSupported = personaPlex.isSupported
+  const error = realtime.error
+  const isSupported = realtime.isSupported
 
   // Handle start - start voice and optionally video
   const handleStart = useCallback(async () => {
@@ -158,16 +164,16 @@ export function VoiceVideoChat({
       startVideoRecording()
     }
     // Then start voice
-    await personaPlex.start()
-  }, [videoEnabled, videoSupported, startCamera, startVideoRecording, personaPlex])
+    await realtime.start()
+  }, [videoEnabled, videoSupported, startCamera, startVideoRecording, realtime])
 
   // Handle stop
   const handleStop = useCallback(async () => {
-    personaPlex.stop()
+    realtime.stop()
     if (videoRecording) {
       stopVideoRecording()
     }
-  }, [personaPlex, videoRecording, stopVideoRecording])
+  }, [realtime, videoRecording, stopVideoRecording])
 
   // Upload conversation audio recording to Supabase storage
   const uploadConversationAudio = async (memoryId: string, blob: Blob): Promise<string | undefined> => {
@@ -357,13 +363,14 @@ export function VoiceVideoChat({
         videoUrl = await uploadVideo(memoryId, recordedBlob)
       }
 
-      // Kick off background clip extraction (don't await — runs in background)
-      if (personaPlex.recordingBlob && personaPlex.recordingStartTime) {
+      // Background: split the stereo conversation into per-exchange clips
+      // and upload them. Don't await — runs after onMemorySaved fires.
+      if (realtime.recordingBlob && realtime.recordingStartTime) {
         processConversationClips(
           memoryId,
           user.id,
-          personaPlex.recordingBlob,
-          personaPlex.recordingStartTime,
+          realtime.recordingBlob,
+          realtime.recordingStartTime,
           transcript,
         )
       }
@@ -376,30 +383,30 @@ export function VoiceVideoChat({
     }
   }, [
     videoRecording, stopVideoRecording, transcript, supabase,
-    personaPlex.recordingBlob, personaPlex.recordingStartTime,
+    realtime.recordingBlob, realtime.recordingStartTime,
     sessionType, topic, contactId, sessionDuration, recordedBlob,
     onMemorySaved, onEntitiesExtracted, onError, processConversationClips,
   ])
 
   // Handle abort
   const handleAbort = useCallback(() => {
-    personaPlex.abort()
+    realtime.abort()
     if (videoActive) {
       stopCamera()
     }
     resetVideo()
-  }, [personaPlex, videoActive, stopCamera, resetVideo])
+  }, [realtime, videoActive, stopCamera, resetVideo])
 
   // Handle reset
   const handleReset = useCallback(() => {
-    personaPlex.abort()
+    realtime.abort()
     setQuestionCount(0)
     setSessionDuration(0)
     if (videoActive) {
       stopCamera()
     }
     resetVideo()
-  }, [personaPlex, videoActive, stopCamera, resetVideo])
+  }, [realtime, videoActive, stopCamera, resetVideo])
 
   // Toggle video
   const handleToggleVideo = useCallback(async () => {

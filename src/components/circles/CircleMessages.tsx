@@ -57,21 +57,48 @@ function MessageBubble({
     return `${mins}:${secs.toString().padStart(2, '0')}`
   }
 
+  // Pick a deterministic incoming-bubble color from the editorial palette
+  // so different senders read as visually distinct without storing per-user
+  // color metadata.
+  const PALETTE: { bg: string; ink: string }[] = [
+    { bg: 'var(--ed-red, #E23B2E)',    ink: '#fff' },
+    { bg: 'var(--ed-blue, #2A5CD3)',   ink: '#fff' },
+    { bg: 'var(--ed-ink, #111)',       ink: '#fff' },
+  ]
+  let hash = 0
+  for (let i = 0; i < message.senderId.length; i += 1) {
+    hash = (hash * 31 + message.senderId.charCodeAt(i)) | 0
+  }
+  const incoming = PALETTE[Math.abs(hash) % PALETTE.length]
+  const bubbleStyle: React.CSSProperties = message.isOwn
+    ? { background: 'var(--ed-yellow, #F2C84B)', color: 'var(--ed-ink, #111)' }
+    : { background: incoming.bg, color: incoming.ink }
+
   return (
     <div className={`flex gap-3 ${message.isOwn ? 'flex-row-reverse' : ''}`}>
-      {/* Avatar */}
+      {/* Avatar — editorial square, color-keyed to bubble */}
       <div className="flex-shrink-0 w-9">
         {showAvatar && !message.isOwn && (
           message.senderAvatar ? (
             <img
               src={message.senderAvatar}
               alt={message.senderName}
-              className="w-9 h-9 rounded-full object-cover"
+              className="w-9 h-9 object-cover"
+              style={{ border: '2px solid var(--ed-ink, #111)', borderRadius: 2 }}
             />
           ) : (
-            <div className="w-9 h-9 rounded-full bg-gradient-to-br from-[#2D5A3D]/20 to-[#8DACAB]/30 flex items-center justify-center text-xs font-semibold text-[#2D5A3D]">
+            <span
+              className="flex items-center justify-center w-9 h-9 text-xs font-bold"
+              style={{
+                background: incoming.bg,
+                color: incoming.ink,
+                border: '2px solid var(--ed-ink, #111)',
+                borderRadius: 2,
+                fontFamily: 'var(--font-mono, monospace)',
+              }}
+            >
               {initials}
-            </div>
+            </span>
           )
         )}
       </div>
@@ -80,18 +107,22 @@ function MessageBubble({
       <div className={`max-w-[70%] ${message.isOwn ? 'items-end' : 'items-start'}`}>
         {/* Sender name */}
         {showName && !message.isOwn && (
-          <p className="text-xs font-semibold text-[#2D5A3D] mb-1 px-1">
-            {message.senderName}
+          <p
+            className="text-[10px] tracking-[0.18em] text-[var(--ed-muted,#6F6B61)] mb-1 px-1"
+            style={{ fontFamily: 'var(--font-mono, monospace)', fontWeight: 700 }}
+          >
+            {message.senderName.toUpperCase()}
           </p>
         )}
 
-        {/* Bubble */}
+        {/* Bubble — editorial flat colored block with ink border */}
         <div
-          className={`rounded-2xl px-4 py-2.5 ${
-            message.isOwn
-              ? 'bg-[#2D5A3D] text-white rounded-br-md'
-              : 'bg-white border border-[#2D5A3D]/10 text-[#1A1F1C] rounded-bl-md'
-          }`}
+          className="px-3.5 py-2.5"
+          style={{
+            ...bubbleStyle,
+            border: '2px solid var(--ed-ink, #111)',
+            borderRadius: 2,
+          }}
         >
           {/* Text message */}
           {message.type === 'text' && (
@@ -213,29 +244,34 @@ function CircleMessageInput({
   const quickEmojis = ['😊', '❤️', '👍', '😂', '🙏', '✨', '🎉', '💪']
 
   return (
-    <div className="p-4 border-t border-[#2D5A3D]/10 bg-white/50">
-      {/* Emoji Quick Picker */}
+    <div className="p-3" style={{ borderTop: '2px solid var(--ed-ink, #111)', background: 'var(--ed-paper, #FFFBF1)' }}>
       {showEmojiPicker && (
-        <div className="mb-3 p-2 bg-white rounded-xl border border-[#2D5A3D]/10 shadow-sm">
+        <div
+          className="mb-3 p-2"
+          style={{ background: 'var(--ed-cream, #F3ECDC)', border: '2px solid var(--ed-ink, #111)', borderRadius: 2 }}
+        >
           <div className="flex items-center justify-between mb-2">
-            <span className="text-xs font-medium text-[#5A6660]">Quick Reactions</span>
-            <button 
-              onClick={() => setShowEmojiPicker(false)}
-              className="text-[#5A6660] hover:text-[#1A1F1C]"
+            <span
+              className="text-[10px] tracking-[0.18em] text-[var(--ed-muted,#6F6B61)]"
+              style={{ fontFamily: 'var(--font-mono, monospace)', fontWeight: 700 }}
             >
+              QUICK REACTIONS
+            </span>
+            <button onClick={() => setShowEmojiPicker(false)} className="text-[var(--ed-muted,#6F6B61)] hover:text-[var(--ed-ink,#111)]">
               <X size={14} />
             </button>
           </div>
           <div className="flex gap-1 flex-wrap">
-            {quickEmojis.map(emoji => (
+            {quickEmojis.map((emoji) => (
               <button
                 key={emoji}
                 onClick={() => {
-                  setMessage(prev => prev + emoji)
+                  setMessage((prev) => prev + emoji)
                   setShowEmojiPicker(false)
                   textareaRef.current?.focus()
                 }}
-                className="w-9 h-9 text-xl hover:bg-[#2D5A3D]/10 rounded-lg transition-colors"
+                className="w-9 h-9 text-xl"
+                style={{ border: '1.5px solid var(--ed-ink, #111)', borderRadius: 2, background: 'var(--ed-paper, #FFFBF1)' }}
               >
                 {emoji}
               </button>
@@ -244,52 +280,59 @@ function CircleMessageInput({
         </div>
       )}
 
-      {/* Attachment Menu */}
       {showAttachMenu && (
-        <div className="mb-3 p-3 bg-white rounded-xl border border-[#2D5A3D]/10 shadow-sm">
+        <div
+          className="mb-3 p-3"
+          style={{ background: 'var(--ed-cream, #F3ECDC)', border: '2px solid var(--ed-ink, #111)', borderRadius: 2 }}
+        >
           <div className="flex items-center justify-between mb-2">
-            <span className="text-xs font-medium text-[#5A6660]">Attach</span>
-            <button 
-              onClick={() => setShowAttachMenu(false)}
-              className="text-[#5A6660] hover:text-[#1A1F1C]"
+            <span
+              className="text-[10px] tracking-[0.18em] text-[var(--ed-muted,#6F6B61)]"
+              style={{ fontFamily: 'var(--font-mono, monospace)', fontWeight: 700 }}
             >
+              ATTACH
+            </span>
+            <button onClick={() => setShowAttachMenu(false)} className="text-[var(--ed-muted,#6F6B61)] hover:text-[var(--ed-ink,#111)]">
               <X size={14} />
             </button>
           </div>
           <div className="flex gap-2">
-            <button className="flex flex-col items-center gap-1 p-3 rounded-xl hover:bg-[#2D5A3D]/10 transition-colors">
-              <div className="w-10 h-10 rounded-full bg-[#2D5A3D]/10 flex items-center justify-center">
-                <ImageIcon size={18} className="text-[#2D5A3D]" />
-              </div>
-              <span className="text-[10px] text-[#5A6660]">Photo</span>
+            <button
+              className="flex flex-col items-center gap-1 p-2"
+              style={{ background: 'var(--ed-paper, #FFFBF1)', border: '2px solid var(--ed-ink, #111)', borderRadius: 2 }}
+            >
+              <ImageIcon size={18} className="text-[var(--ed-ink,#111)]" />
+              <span className="text-[10px] tracking-[0.16em]" style={{ fontFamily: 'var(--font-mono, monospace)', fontWeight: 700 }}>PHOTO</span>
             </button>
-            <button className="flex flex-col items-center gap-1 p-3 rounded-xl hover:bg-[#2D5A3D]/10 transition-colors">
-              <div className="w-10 h-10 rounded-full bg-[#B8562E]/10 flex items-center justify-center">
-                <Mic size={18} className="text-[#B8562E]" />
-              </div>
-              <span className="text-[10px] text-[#5A6660]">Voice</span>
+            <button
+              className="flex flex-col items-center gap-1 p-2"
+              style={{ background: 'var(--ed-paper, #FFFBF1)', border: '2px solid var(--ed-ink, #111)', borderRadius: 2 }}
+            >
+              <Mic size={18} className="text-[var(--ed-red,#E23B2E)]" />
+              <span className="text-[10px] tracking-[0.16em]" style={{ fontFamily: 'var(--font-mono, monospace)', fontWeight: 700 }}>VOICE</span>
             </button>
           </div>
         </div>
       )}
 
-      {/* Input Row */}
       <div className="flex items-end gap-2">
         <button
-          onClick={() => {
-            setShowAttachMenu(!showAttachMenu)
-            setShowEmojiPicker(false)
+          onClick={() => { setShowAttachMenu(!showAttachMenu); setShowEmojiPicker(false) }}
+          className="flex-shrink-0 w-10 h-10 flex items-center justify-center"
+          style={{
+            background: showAttachMenu ? 'var(--ed-ink, #111)' : 'var(--ed-paper, #FFFBF1)',
+            color: showAttachMenu ? '#fff' : 'var(--ed-ink, #111)',
+            border: '2px solid var(--ed-ink, #111)',
+            borderRadius: 2,
           }}
-          className={`flex-shrink-0 w-10 h-10 rounded-xl flex items-center justify-center transition-all ${
-            showAttachMenu
-              ? 'bg-[#2D5A3D] text-white'
-              : 'bg-[#2D5A3D]/10 text-[#2D5A3D] hover:bg-[#2D5A3D]/20'
-          }`}
         >
-          <Paperclip size={18} />
+          <Paperclip size={16} />
         </button>
 
-        <div className="flex-1 relative">
+        <div
+          className="flex-1 flex items-stretch"
+          style={{ background: 'var(--ed-cream, #F3ECDC)', border: '2px solid var(--ed-ink, #111)', borderRadius: 2 }}
+        >
           <textarea
             ref={textareaRef}
             value={message}
@@ -298,34 +341,31 @@ function CircleMessageInput({
             placeholder={placeholder}
             disabled={disabled}
             rows={1}
-            className="w-full px-4 py-2.5 pr-10 bg-[#2D5A3D]/5 border border-[#2D5A3D]/10 rounded-xl text-sm text-[#1A1F1C] placeholder:text-[#94A09A] focus:outline-none focus:border-[#2D5A3D]/30 focus:bg-white transition-all resize-none min-h-[44px] max-h-[120px]"
+            className="w-full px-3 py-2.5 bg-transparent text-sm text-[var(--ed-ink,#111)] placeholder:text-[var(--ed-muted,#6F6B61)] focus:outline-none resize-none min-h-[40px] max-h-[120px]"
           />
-          
           <button
-            onClick={() => {
-              setShowEmojiPicker(!showEmojiPicker)
-              setShowAttachMenu(false)
-            }}
-            className={`absolute right-3 bottom-2.5 p-1 rounded transition-colors ${
-              showEmojiPicker
-                ? 'text-[#C4A235]'
-                : 'text-[#94A09A] hover:text-[#5A6660]'
-            }`}
+            onClick={() => { setShowEmojiPicker(!showEmojiPicker); setShowAttachMenu(false) }}
+            className="px-3"
+            style={{ color: showEmojiPicker ? 'var(--ed-yellow, #C09020)' : 'var(--ed-muted, #6F6B61)' }}
+            aria-label="Emoji picker"
           >
-            <Smile size={18} />
+            <Smile size={16} />
           </button>
         </div>
 
         <button
           onClick={handleSend}
           disabled={!message.trim() || disabled}
-          className={`flex-shrink-0 w-10 h-10 rounded-xl flex items-center justify-center transition-all ${
-            message.trim() && !disabled
-              ? 'bg-[#2D5A3D] text-white hover:bg-[#234A31] shadow-sm'
-              : 'bg-[#2D5A3D]/10 text-[#2D5A3D]/40 cursor-not-allowed'
-          }`}
+          className="flex-shrink-0 w-10 h-10 flex items-center justify-center disabled:opacity-50"
+          style={{
+            background: 'var(--ed-red, #E23B2E)',
+            color: '#fff',
+            border: '2px solid var(--ed-ink, #111)',
+            borderRadius: 2,
+          }}
+          aria-label="Send"
         >
-          <Send size={18} />
+          <Send size={16} strokeWidth={2.5} />
         </button>
       </div>
     </div>
@@ -366,29 +406,53 @@ export default function CircleMessages({
   })
 
   return (
-    <div className="h-[600px] flex flex-col bg-[#FAF7E8]/50 rounded-2xl border border-[#2D5A3D]/10 overflow-hidden">
+    <div
+      className="h-[600px] flex flex-col overflow-hidden"
+      style={{
+        background: 'var(--ed-cream, #F3ECDC)',
+        border: '2px solid var(--ed-ink, #111)',
+        borderRadius: 2,
+      }}
+    >
       {/* Messages Area */}
       <div className="flex-1 overflow-y-auto p-4 space-y-6">
         {messages.length === 0 ? (
           <div className="flex flex-col items-center justify-center h-full text-center">
-            <div className="w-16 h-16 rounded-full bg-[#2D5A3D]/10 flex items-center justify-center mb-4">
-              <Send size={24} className="text-[#2D5A3D]" />
+            <div
+              className="flex items-center justify-center mb-4"
+              style={{
+                width: 56, height: 56,
+                background: 'var(--ed-red, #E23B2E)',
+                color: '#fff',
+                border: '2px solid var(--ed-ink, #111)',
+                borderRadius: 999,
+              }}
+            >
+              <Send size={22} />
             </div>
-            <h3 className="font-semibold text-[#1A1F1C] mb-1">Start the conversation</h3>
-            <p className="text-sm text-[#5A6660]">
-              Send the first message to {circleName}
+            <p
+              className="text-xl text-[var(--ed-ink,#111)] mb-2 leading-tight"
+              style={{ fontFamily: 'var(--font-display, "Archivo Black", sans-serif)' }}
+            >
+              START THE CONVERSATION
+            </p>
+            <p className="text-sm text-[var(--ed-muted,#6F6B61)]">
+              Send the first message to {circleName}.
             </p>
           </div>
         ) : (
           groupedMessages.map(({ date, messages: dayMessages }, groupIndex) => (
             <div key={groupIndex}>
-              {/* Date Separator */}
-              <div className="flex items-center gap-4 mb-4">
-                <div className="flex-1 h-px bg-[#2D5A3D]/10" />
-                <span className="text-xs font-medium text-[#5A6660] bg-[#FAF7E8] px-3 py-1 rounded-full">
-                  {formatDateSeparator(date)}
+              {/* Editorial date separator: red dot + DATE mono */}
+              <div className="flex items-center gap-3 mb-4">
+                <span aria-hidden style={{ width: 8, height: 8, background: 'var(--ed-red, #E23B2E)', borderRadius: 999 }} />
+                <span
+                  className="text-[10px] tracking-[0.22em] text-[var(--ed-ink,#111)]"
+                  style={{ fontFamily: 'var(--font-mono, monospace)', fontWeight: 700 }}
+                >
+                  {formatDateSeparator(date).toUpperCase()}
                 </span>
-                <div className="flex-1 h-px bg-[#2D5A3D]/10" />
+                <div className="flex-1 h-px bg-[var(--ed-ink,#111)]/30" />
               </div>
 
               {/* Messages */}

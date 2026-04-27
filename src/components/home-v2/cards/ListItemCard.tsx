@@ -13,18 +13,21 @@ interface ListItemCardProps {
   saved: boolean
 }
 
-const CATEGORY_CONFIG: Record<string, { icon: any; color: string; bg: string; searchApi?: string; placeholder: string }> = {
-  books:        { icon: BookOpen, color: '#2D5A3D', bg: '#E6F0EA', placeholder: 'Book title...', searchApi: 'books' },
-  movies:       { icon: Film,     color: '#B8562E', bg: '#FBF0EB', placeholder: 'Movie title...', searchApi: 'movies' },
-  music:        { icon: Music,    color: '#6B5B95', bg: '#EFEAF5', placeholder: 'Song or artist...', searchApi: 'music' },
-  tv_shows:     { icon: Film,     color: '#C4A235', bg: '#FAF5E4', placeholder: 'TV show...', searchApi: 'tv' },
-  foods:        { icon: Utensils, color: '#B8562E', bg: '#FBF0EB', placeholder: 'Dish or cuisine...' },
-  cars:         { icon: Car,      color: '#5A6660', bg: '#F0F0EC', placeholder: 'Make and model...' },
-  clothes:      { icon: Shirt,    color: '#8A6BA8', bg: '#F0EAF5', placeholder: 'Brand or style...' },
-  places:       { icon: MapPin,   color: '#2D5A3D', bg: '#E6F0EA', placeholder: 'Place name...' },
-  quotes:       { icon: Quote,    color: '#C4A235', bg: '#FAF5E4', placeholder: 'The quote...' },
-  hobbies:      { icon: Dumbbell, color: '#5B8A72', bg: '#E6F0EB', placeholder: 'Activity...' },
-  sports_teams: { icon: Trophy,   color: '#B8562E', bg: '#FBF0EB', placeholder: 'Team name...' },
+// Editorial palette — color cycles across the 4 brand colors so different
+// categories look distinct without losing system consistency. Used for the
+// header tile + cover thumbnail + rating + SAVE button accents.
+const CATEGORY_CONFIG: Record<string, { icon: any; color: string; ink: string; searchApi?: string; placeholder: string }> = {
+  books:        { icon: BookOpen, color: 'var(--ed-yellow, #F2C84B)', ink: 'var(--ed-ink, #111)', placeholder: 'Book title…', searchApi: 'books' },
+  movies:       { icon: Film,     color: 'var(--ed-red, #E23B2E)',    ink: '#fff',                placeholder: 'Movie title…', searchApi: 'movies' },
+  music:        { icon: Music,    color: 'var(--ed-blue, #2A5CD3)',   ink: '#fff',                placeholder: 'Song or artist…', searchApi: 'music' },
+  tv_shows:     { icon: Film,     color: 'var(--ed-yellow, #F2C84B)', ink: 'var(--ed-ink, #111)', placeholder: 'TV show…', searchApi: 'tv' },
+  foods:        { icon: Utensils, color: 'var(--ed-red, #E23B2E)',    ink: '#fff',                placeholder: 'Dish or cuisine…' },
+  cars:         { icon: Car,      color: 'var(--ed-ink, #111)',       ink: '#fff',                placeholder: 'Make and model…' },
+  clothes:      { icon: Shirt,    color: 'var(--ed-ink, #111)',       ink: '#fff',                placeholder: 'Brand or style…' },
+  places:       { icon: MapPin,   color: 'var(--ed-blue, #2A5CD3)',   ink: '#fff',                placeholder: 'Place name…' },
+  quotes:       { icon: Quote,    color: 'var(--ed-yellow, #F2C84B)', ink: 'var(--ed-ink, #111)', placeholder: 'The quote…' },
+  hobbies:      { icon: Dumbbell, color: 'var(--ed-blue, #2A5CD3)',   ink: '#fff',                placeholder: 'Activity…' },
+  sports_teams: { icon: Trophy,   color: 'var(--ed-red, #E23B2E)',    ink: '#fff',                placeholder: 'Team name…' },
 }
 
 export function ListItemCard({ category, promptText, data, onSave, saved }: ListItemCardProps) {
@@ -151,8 +154,16 @@ export function ListItemCard({ category, promptText, data, onSave, saved }: List
         <div className={`relative z-10 flex-1 flex flex-col p-6 ${data.imageUrl ? 'text-white' : ''}`}>
           {/* Category badge */}
           <div className="flex items-center gap-2 mb-4">
-            <div className="w-7 h-7 rounded-lg flex items-center justify-center" style={{ background: data.imageUrl ? 'rgba(255,255,255,0.15)' : config.bg }}>
-              <Icon size={14} style={{ color: data.imageUrl ? 'white' : config.color }} />
+            <div
+              className="w-7 h-7 flex items-center justify-center"
+              style={{
+                background: data.imageUrl ? 'rgba(255,255,255,0.15)' : config.color,
+                color: data.imageUrl ? 'white' : config.ink,
+                border: data.imageUrl ? 'none' : '2px solid var(--ed-ink, #111)',
+                borderRadius: 2,
+              }}
+            >
+              <Icon size={14} />
             </div>
             <span className={`text-[10px] uppercase tracking-wider font-semibold ${data.imageUrl ? 'text-white/60' : 'text-[#94A09A]'}`}>
               {category.replace(/_/g, ' ')}
@@ -215,50 +226,86 @@ export function ListItemCard({ category, promptText, data, onSave, saved }: List
     )
   }
 
-  // ── Edit view ──
+  // ── Edit view (editorial) ──
   return (
-    <div className="h-full flex flex-col p-5 gap-3">
+    <div
+      className="h-full flex flex-col p-5 gap-3"
+      style={{ background: 'var(--ed-cream, #F3ECDC)' }}
+    >
       <div className="flex items-center gap-2">
-        <div className="w-7 h-7 rounded-lg flex items-center justify-center" style={{ background: config.bg }}>
-          <Icon size={14} style={{ color: config.color }} />
-        </div>
-        <p className="text-sm font-medium text-[#1A1F1C] flex-1">{promptText}</p>
+        <span
+          className="flex items-center justify-center"
+          style={{
+            width: 28,
+            height: 28,
+            background: config.color,
+            color: config.ink,
+            border: '2px solid var(--ed-ink, #111)',
+            borderRadius: 2,
+          }}
+        >
+          <Icon size={13} />
+        </span>
+        <p
+          className="text-[10px] tracking-[0.18em] text-[var(--ed-ink,#111)] flex-1 truncate"
+          style={{ fontFamily: 'var(--font-mono, monospace)', fontWeight: 700 }}
+        >
+          {promptText.toUpperCase()}
+        </p>
       </div>
 
       {/* Item input + cover preview */}
       <div className="relative">
-        <div className="flex gap-3">
+        <div className="flex gap-2">
           <div className="flex-1">
             <input
               value={item}
               onChange={(e) => handleItemChange(e.target.value)}
               placeholder={config.placeholder}
-              className="w-full px-3 py-2.5 bg-[#FAFAF7] rounded-xl border border-[#DDE3DF] text-[#1A1F1C] text-sm focus:outline-none focus:ring-2 focus:ring-[#3D6B52]/30 placeholder-[#94A09A]"
+              className="w-full px-3 py-2.5 text-sm text-[var(--ed-ink,#111)] placeholder-[var(--ed-muted,#6F6B61)] focus:outline-none editorial-input"
             />
           </div>
           {(imageUrl || enriching) && (
-            <div className="w-12 h-12 rounded-xl overflow-hidden bg-[#F5F3EE] flex-shrink-0 flex items-center justify-center">
-              {enriching ? <Loader2 size={14} className="animate-spin text-[#94A09A]" /> :
-               imageUrl ? <img src={imageUrl} alt="" className="w-full h-full object-cover" /> : null}
+            <div
+              className="w-12 h-12 flex-shrink-0 flex items-center justify-center overflow-hidden"
+              style={{
+                background: 'var(--ed-paper, #FFFBF1)',
+                border: '2px solid var(--ed-ink, #111)',
+                borderRadius: 2,
+              }}
+            >
+              {enriching ? (
+                <Loader2 size={14} className="animate-spin text-[var(--ed-muted,#6F6B61)]" />
+              ) : imageUrl ? (
+                /* eslint-disable-next-line @next/next/no-img-element */
+                <img src={imageUrl} alt="" className="w-full h-full object-cover" />
+              ) : null}
             </div>
           )}
         </div>
         {/* Search suggestions dropdown */}
         {item.length >= 2 && (searchResults.length > 0 || enriching || searchAttempted) && (
-          <div className="absolute top-full left-0 right-0 mt-1 bg-white rounded-xl shadow-lg border border-[#DDE3DF] z-20 max-h-[360px] overflow-y-auto overscroll-contain">
+          <div
+            className="absolute top-full left-0 right-0 mt-1 z-20 max-h-[360px] overflow-y-auto overscroll-contain"
+            style={{
+              background: 'var(--ed-paper, #FFFBF1)',
+              border: '2px solid var(--ed-ink, #111)',
+              borderRadius: 2,
+            }}
+          >
             {/* Loading skeleton */}
             {enriching && searchResults.length === 0 && (
               <div className="p-2 space-y-2">
                 {[0, 1, 2].map(i => (
                   <div key={i} className="flex items-center gap-3 px-2 py-2 min-h-[44px]">
                     {category === 'books' ? (
-                      <div className="w-10 h-[60px] rounded bg-[#E6F0EA] animate-pulse flex-shrink-0" />
+                      <div className="w-10 h-[60px] bg-[var(--ed-cream,#F3ECDC)] animate-pulse flex-shrink-0" style={{ border: '1.5px solid var(--ed-ink, #111)', borderRadius: 2 }} />
                     ) : (
-                      <div className="w-8 h-8 rounded-lg bg-[#E6F0EA] animate-pulse flex-shrink-0" />
+                      <div className="w-8 h-8 bg-[var(--ed-cream,#F3ECDC)] animate-pulse flex-shrink-0" style={{ border: '1.5px solid var(--ed-ink, #111)', borderRadius: 2 }} />
                     )}
                     <div className="flex-1 space-y-1.5">
-                      <div className="h-3 bg-[#E6F0EA] rounded animate-pulse w-3/4" />
-                      <div className="h-2.5 bg-[#E6F0EA] rounded animate-pulse w-1/2" />
+                      <div className="h-3 bg-[var(--ed-cream,#F3ECDC)] animate-pulse w-3/4" />
+                      <div className="h-2.5 bg-[var(--ed-cream,#F3ECDC)] animate-pulse w-1/2" />
                     </div>
                   </div>
                 ))}
@@ -267,8 +314,11 @@ export function ListItemCard({ category, promptText, data, onSave, saved }: List
 
             {/* No results */}
             {!enriching && searchAttempted && searchResults.length === 0 && (
-              <div className="px-4 py-6 text-center text-sm text-[#94A09A]">
-                No matches found — try a different search
+              <div
+                className="px-4 py-6 text-center text-[10px] tracking-[0.18em] text-[var(--ed-muted,#6F6B61)]"
+                style={{ fontFamily: 'var(--font-mono, monospace)', fontWeight: 700 }}
+              >
+                NO MATCHES — TRY A DIFFERENT SEARCH
               </div>
             )}
 
@@ -286,30 +336,54 @@ export function ListItemCard({ category, promptText, data, onSave, saved }: List
                   setSearchResults([])
                   setSearchAttempted(false)
                 }}
-                className={`w-full flex items-center gap-3 px-3 py-2 text-left hover:bg-[#F5F0E6] transition-colors text-sm min-h-[44px] ${category === 'books' ? 'border-b border-[#F0EDE5] last:border-0' : ''}`}
+                className="w-full flex items-center gap-3 px-3 py-2 text-left hover:bg-[var(--ed-cream,#F3ECDC)] transition-colors text-sm min-h-[44px]"
+                style={{ borderBottom: '1.5px solid var(--ed-ink, #111)' }}
               >
                 {category === 'books' ? (
                   <>
                     {result.imageUrl ? (
-                      <img src={result.imageUrl} alt="" className="w-10 h-[60px] rounded object-cover flex-shrink-0 shadow-sm" />
+                      /* eslint-disable-next-line @next/next/no-img-element */
+                      <img
+                        src={result.imageUrl}
+                        alt=""
+                        className="w-10 h-[60px] object-cover flex-shrink-0"
+                        style={{ border: '1.5px solid var(--ed-ink, #111)', borderRadius: 2 }}
+                      />
                     ) : (
-                      <div className="w-10 h-[60px] rounded bg-[#E6F0EA] flex items-center justify-center flex-shrink-0">
-                        <BookOpen size={16} className="text-[#2D5A3D]/40" />
+                      <div
+                        className="w-10 h-[60px] flex items-center justify-center flex-shrink-0"
+                        style={{ background: 'var(--ed-yellow, #F2C84B)', border: '1.5px solid var(--ed-ink, #111)', borderRadius: 2 }}
+                      >
+                        <BookOpen size={16} className="text-[var(--ed-ink,#111)]" />
                       </div>
                     )}
                     <div className="flex-1 min-w-0">
-                      <div className="text-[#1A1F1C] truncate font-medium" style={{ fontFamily: 'var(--font-playfair, Playfair Display, serif)' }}>
-                        {result.name}
+                      <div
+                        className="text-[var(--ed-ink,#111)] truncate"
+                        style={{ fontFamily: 'var(--font-display, "Archivo Black", sans-serif)', fontSize: 13 }}
+                      >
+                        {result.name.toUpperCase()}
                       </div>
-                      <div className="text-xs text-[#5A6660] truncate mt-0.5" style={{ fontFamily: 'var(--font-inter-tight, Inter Tight, sans-serif)' }}>
-                        {result.artist}{result.year ? ` · ${result.year}` : ''}
+                      <div
+                        className="text-[10px] tracking-[0.14em] text-[var(--ed-muted,#6F6B61)] truncate mt-0.5"
+                        style={{ fontFamily: 'var(--font-mono, monospace)', fontWeight: 700 }}
+                      >
+                        {result.artist?.toUpperCase()}{result.year ? ` · ${result.year}` : ''}
                       </div>
                     </div>
                   </>
                 ) : (
                   <>
-                    {result.imageUrl && <img src={result.imageUrl} alt="" className="w-8 h-8 rounded-lg object-cover flex-shrink-0" />}
-                    <span className="text-[#1A1F1C] truncate">{result.name}</span>
+                    {result.imageUrl && (
+                      /* eslint-disable-next-line @next/next/no-img-element */
+                      <img
+                        src={result.imageUrl}
+                        alt=""
+                        className="w-8 h-8 object-cover flex-shrink-0"
+                        style={{ border: '1.5px solid var(--ed-ink, #111)', borderRadius: 2 }}
+                      />
+                    )}
+                    <span className="text-[var(--ed-ink,#111)] truncate text-sm">{result.name}</span>
                   </>
                 )}
               </button>
@@ -326,7 +400,7 @@ export function ListItemCard({ category, promptText, data, onSave, saved }: List
         spellCheck
         autoCapitalize="sentences"
         autoCorrect="on"
-        className="w-full px-3 py-2.5 bg-[#FAFAF7] rounded-xl border border-[#DDE3DF] text-[#1A1F1C] text-sm focus:outline-none focus:ring-2 focus:ring-[#3D6B52]/30 placeholder-[#94A09A] resize-none flex-1 min-h-[60px]"
+        className="w-full px-3 py-2.5 text-sm text-[var(--ed-ink,#111)] placeholder-[var(--ed-muted,#6F6B61)] focus:outline-none editorial-input resize-none flex-1 min-h-[60px]"
       />
 
       {/* Optional fields row */}
@@ -335,7 +409,7 @@ export function ListItemCard({ category, promptText, data, onSave, saved }: List
           value={year}
           onChange={(e) => setYear(e.target.value)}
           placeholder="Year"
-          className="w-20 px-2 py-2 bg-[#FAFAF7] rounded-lg border border-[#DDE3DF] text-[#1A1F1C] text-xs focus:outline-none focus:ring-2 focus:ring-[#3D6B52]/30 placeholder-[#94A09A]"
+          className="w-20 px-2 py-2 text-xs text-[var(--ed-ink,#111)] placeholder-[var(--ed-muted,#6F6B61)] focus:outline-none editorial-input"
         />
         {/* Who introduced you — with contact suggestions */}
         <div className="flex-1 relative">
@@ -345,17 +419,25 @@ export function ListItemCard({ category, promptText, data, onSave, saved }: List
             onFocus={() => setShowPersonSuggestions(true)}
             onBlur={() => setTimeout(() => setShowPersonSuggestions(false), 200)}
             placeholder="Who introduced you?"
-            className="w-full px-2 py-2 bg-[#FAFAF7] rounded-lg border border-[#DDE3DF] text-[#1A1F1C] text-xs focus:outline-none focus:ring-2 focus:ring-[#3D6B52]/30 placeholder-[#94A09A]"
+            className="w-full px-2 py-2 text-xs text-[var(--ed-ink,#111)] placeholder-[var(--ed-muted,#6F6B61)] focus:outline-none editorial-input"
           />
           {showPersonSuggestions && contacts.length > 0 && (
-            <div className="absolute top-full left-0 right-0 mt-1 bg-white rounded-xl shadow-lg border border-[#DDE3DF] z-20 max-h-[200px] overflow-y-auto">
+            <div
+              className="absolute top-full left-0 right-0 mt-1 z-20 max-h-[200px] overflow-y-auto"
+              style={{
+                background: 'var(--ed-paper, #FFFBF1)',
+                border: '2px solid var(--ed-ink, #111)',
+                borderRadius: 2,
+              }}
+            >
               {contacts
                 .filter(c => !person || c.full_name.toLowerCase().includes(person.toLowerCase()))
                 .map(c => (
                   <button
                     key={c.id}
                     onMouseDown={(e) => { e.preventDefault(); setPerson(c.full_name); setShowPersonSuggestions(false) }}
-                    className="w-full px-3 py-1.5 text-left text-xs text-[#1A1F1C] hover:bg-[#E6F0EA] transition-colors"
+                    className="w-full px-3 py-1.5 text-left text-xs text-[var(--ed-ink,#111)] hover:bg-[var(--ed-cream,#F3ECDC)] transition-colors"
+                    style={{ borderBottom: '1.5px solid var(--ed-ink, #111)' }}
                   >
                     {c.full_name}
                   </button>
@@ -368,10 +450,19 @@ export function ListItemCard({ category, promptText, data, onSave, saved }: List
 
       {/* Star rating */}
       <div className="flex items-center gap-1">
-        <span className="text-[10px] text-[#94A09A] uppercase tracking-wider mr-2">Rating</span>
+        <span
+          className="text-[10px] tracking-[0.18em] text-[var(--ed-muted,#6F6B61)] mr-2"
+          style={{ fontFamily: 'var(--font-mono, monospace)', fontWeight: 700 }}
+        >
+          RATING
+        </span>
         {[1, 2, 3, 4, 5].map(i => (
           <button key={i} onClick={() => setRating(rating === i ? 0 : i)} className="p-0.5">
-            <Star size={18} className={i <= rating ? 'text-[#C4A235]' : 'text-[#DDE3DF]'} fill={i <= rating ? '#C4A235' : 'none'} />
+            <Star
+              size={18}
+              className={i <= rating ? 'text-[var(--ed-red,#E23B2E)]' : 'text-[var(--ed-muted,#6F6B61)]/30'}
+              fill={i <= rating ? 'var(--ed-red, #E23B2E)' : 'none'}
+            />
           </button>
         ))}
       </div>
@@ -380,9 +471,17 @@ export function ListItemCard({ category, promptText, data, onSave, saved }: List
       <button
         onClick={handleSave}
         disabled={!item.trim() || saving}
-        className="w-full py-3 rounded-xl text-sm font-medium flex items-center justify-center gap-2 bg-[#2D5A3D] text-white hover:bg-[#234A31] disabled:opacity-40 transition-all active:scale-[0.96]"
+        className="w-full py-3 text-[10px] tracking-[0.18em] flex items-center justify-center gap-2 disabled:opacity-50 transition-transform hover:-translate-y-0.5 active:translate-y-0"
+        style={{
+          fontFamily: 'var(--font-mono, monospace)',
+          fontWeight: 700,
+          background: 'var(--ed-red, #E23B2E)',
+          color: '#fff',
+          border: '2px solid var(--ed-ink, #111)',
+          borderRadius: 2,
+        }}
       >
-        {saving ? <Loader2 size={14} className="animate-spin" /> : <><Check size={14} /> Save</>}
+        {saving ? <Loader2 size={14} className="animate-spin" /> : <><Check size={14} strokeWidth={3} /> SAVE</>}
       </button>
     </div>
   )

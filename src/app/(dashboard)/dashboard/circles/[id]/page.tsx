@@ -2,11 +2,11 @@
 
 import { useState, useEffect, use } from 'react'
 import { createClient } from '@/lib/supabase/client'
-import { 
-  ChevronLeft, Users, Settings, FileText, UserPlus, 
+import {
+  ChevronLeft, Users, Settings, FileText, UserPlus,
   Crown, Shield, User, Edit2, Trash2, LogOut, Vote,
   Image as ImageIcon, BookOpen, Clock, MessageCircle,
-  Calendar, BarChart3, Bell
+  Calendar, BarChart3, Bell, X, Save
 } from 'lucide-react'
 import Link from 'next/link'
 import CircleMemberCard, { CircleRole } from '@/components/circles/CircleMemberCard'
@@ -71,13 +71,23 @@ type TabType = 'content' | 'messages' | 'schedule' | 'polls' | 'members' | 'sett
 // ============================================
 // TAB CONFIG
 // ============================================
-const TABS: { id: TabType; label: string; icon: React.ReactNode; adminOnly?: boolean }[] = [
-  { id: 'content', label: 'Content', icon: <FileText size={14} /> },
-  { id: 'messages', label: 'Messages', icon: <MessageCircle size={14} /> },
-  { id: 'schedule', label: 'Schedule', icon: <Calendar size={14} /> },
-  { id: 'polls', label: 'Polls', icon: <BarChart3 size={14} /> },
-  { id: 'members', label: 'Members', icon: <Users size={14} /> },
-  { id: 'settings', label: 'Settings', icon: <Settings size={14} />, adminOnly: true },
+interface TabConfig {
+  id: TabType
+  label: string
+  icon: React.ReactNode
+  /** Editorial accent shown when this tab is active. */
+  bg: string
+  ink: string
+  adminOnly?: boolean
+}
+
+const TABS: TabConfig[] = [
+  { id: 'content',  label: 'CONTENT',  icon: <FileText size={13} />,     bg: 'var(--ed-yellow, #F2C84B)', ink: 'var(--ed-ink, #111)' },
+  { id: 'messages', label: 'MESSAGES', icon: <MessageCircle size={13} />, bg: 'var(--ed-red, #E23B2E)',    ink: '#fff' },
+  { id: 'schedule', label: 'SCHEDULE', icon: <Calendar size={13} />,      bg: 'var(--ed-yellow, #F2C84B)', ink: 'var(--ed-ink, #111)' },
+  { id: 'polls',    label: 'POLLS',    icon: <BarChart3 size={13} />,     bg: 'var(--ed-blue, #2A5CD3)',   ink: '#fff' },
+  { id: 'members',  label: 'MEMBERS',  icon: <Users size={13} />,         bg: 'var(--ed-red, #E23B2E)',    ink: '#fff' },
+  { id: 'settings', label: 'SETTINGS', icon: <Settings size={13} />,      bg: 'var(--ed-ink, #111)',       ink: '#fff', adminOnly: true },
 ]
 
 // ============================================
@@ -668,44 +678,15 @@ export default function CircleDetailPage({ params }: { params: Promise<{ id: str
 
   if (loading) {
     return (
-      <div className="page-container">
-        <div className="page-background">
-          <div className="page-blob page-blob-1" />
-          <div className="page-blob page-blob-2" />
-          <div className="page-blob page-blob-3" />
-        </div>
-        <div className="relative z-10 max-w-5xl mx-auto animate-pulse">
-          {/* Header skeleton */}
-          <header className="mb-6">
-            <div className="flex items-center gap-4">
-              <div className="w-10 h-10 rounded-xl bg-[#2D5A3D]/10" />
-              <div className="flex items-center gap-4">
-                <div className="w-14 h-14 rounded-xl bg-[#2D5A3D]/10" />
-                <div>
-                  <div className="h-6 w-48 bg-[#2D5A3D]/10 rounded mb-2" />
-                  <div className="h-4 w-24 bg-[#2D5A3D]/10 rounded" />
-                </div>
-              </div>
-            </div>
-          </header>
-          
-          {/* Tabs skeleton */}
-          <div className="flex gap-2 mb-6">
-            {[1, 2, 3, 4, 5].map(i => (
-              <div key={i} className="h-9 w-24 bg-[#2D5A3D]/10 rounded-full" />
-            ))}
-          </div>
-          
-          {/* Content skeleton */}
-          <div className="space-y-4">
-            {[1, 2, 3].map(i => (
-              <div key={i} className="bg-white/80 rounded-2xl p-6 border border-[#2D5A3D]/10">
-                <div className="h-5 w-3/4 bg-[#2D5A3D]/10 rounded mb-3" />
-                <div className="h-4 w-1/2 bg-[#2D5A3D]/10 rounded mb-2" />
-                <div className="h-4 w-2/3 bg-[#2D5A3D]/10 rounded" />
-              </div>
-            ))}
-          </div>
+      <div
+        className="relative min-h-screen"
+        style={{ background: 'var(--ed-cream, #F3ECDC)', paddingTop: 80, paddingBottom: 100, paddingLeft: 24, paddingRight: 24 }}
+      >
+        <div className="relative z-10 max-w-6xl mx-auto flex items-center justify-center" style={{ minHeight: 'calc(100vh - 200px)' }}>
+          <div
+            className="w-8 h-8 rounded-full animate-spin"
+            style={{ border: '3px solid var(--ed-ink, #111)', borderTopColor: 'transparent' }}
+          />
         </div>
       </div>
     )
@@ -713,15 +694,31 @@ export default function CircleDetailPage({ params }: { params: Promise<{ id: str
 
   if (error || !circle) {
     return (
-      <div className="page-container">
-        <div className="page-background">
-          <div className="page-blob page-blob-1" />
-          <div className="page-blob page-blob-2" />
-        </div>
-        <div className="relative z-10 flex flex-col items-center justify-center min-h-[60vh]">
-          <p className="text-[#5A6660] mb-4">{error || 'Circle not found'}</p>
-          <Link href="/dashboard/circles" className="text-[#2D5A3D] hover:underline">
-            Back to circles
+      <div
+        className="relative min-h-screen"
+        style={{ background: 'var(--ed-cream, #F3ECDC)', paddingTop: 80, paddingBottom: 100, paddingLeft: 24, paddingRight: 24 }}
+      >
+        <div className="relative z-10 max-w-6xl mx-auto flex flex-col items-center justify-center text-center" style={{ minHeight: 'calc(100vh - 200px)' }}>
+          <p
+            className="text-[11px] tracking-[0.22em] text-[var(--ed-red,#E23B2E)] mb-3"
+            style={{ fontFamily: 'var(--font-mono, monospace)', fontWeight: 700 }}
+          >
+            {error ? 'COULD NOT LOAD CIRCLE' : 'CIRCLE NOT FOUND'}
+          </p>
+          {error && <p className="text-[14px] text-[var(--ed-muted,#6F6B61)] mb-5">{error}</p>}
+          <Link
+            href="/dashboard/circles"
+            className="px-5 py-2.5 text-[11px] tracking-[0.18em]"
+            style={{
+              fontFamily: 'var(--font-mono, monospace)',
+              fontWeight: 700,
+              background: 'var(--ed-paper, #FFFBF1)',
+              color: 'var(--ed-ink, #111)',
+              border: '2px solid var(--ed-ink, #111)',
+              borderRadius: 2,
+            }}
+          >
+            ← BACK TO CIRCLES
           </Link>
         </div>
       </div>
@@ -731,65 +728,121 @@ export default function CircleDetailPage({ params }: { params: Promise<{ id: str
   const visibleTabs = TABS.filter(tab => !tab.adminOnly || isAdmin)
 
   return (
-    <div className="page-container">
-      {/* Warm gradient background with blobs */}
-      <div className="page-background">
-        <div className="page-blob page-blob-1" />
-        <div className="page-blob page-blob-2" />
-        <div className="page-blob page-blob-3" />
-      </div>
-
-      {/* Content */}
-      <div className="relative z-10 max-w-5xl mx-auto">
-        {/* Header */}
-        <header className="mb-6">
-          <div className="flex items-start justify-between">
-            <div className="flex items-center gap-4">
-              <Link href="/dashboard/circles" className="page-header-back">
-                <ChevronLeft size={20} />
-              </Link>
-              <div className="flex items-center gap-4">
-                <div className="w-14 h-14 rounded-xl bg-gradient-to-br from-[#2D5A3D]/20 to-[#C4A235]/20 flex items-center justify-center">
-                  <Users size={28} className="text-[#2D5A3D]" />
-                </div>
-                <div>
-                  <h1 className="text-2xl font-bold text-[#1A1F1C]" style={{ fontFamily: 'var(--font-dm-serif, DM Serif Display, serif)' }}>{circle.name}</h1>
-                  <p className="text-[#5A6660] text-sm">{members.length} member{members.length !== 1 ? 's' : ''}</p>
-                </div>
-              </div>
-            </div>
+    <div
+      className="relative min-h-screen"
+      style={{
+        background: 'var(--ed-cream, #F3ECDC)',
+        paddingTop: 80,
+        paddingBottom: 100,
+        paddingLeft: 24,
+        paddingRight: 24,
+      }}
+    >
+      <div className="relative z-10 max-w-6xl mx-auto">
+        {/* ───── Editorial header ───── */}
+        <div className="flex items-center gap-4 mb-6">
+          <Link
+            href="/dashboard/circles"
+            className="flex items-center justify-center shrink-0"
+            style={{
+              width: 36,
+              height: 36,
+              borderRadius: 999,
+              border: '2px solid var(--ed-ink, #111)',
+              background: 'var(--ed-paper, #FFFBF1)',
+            }}
+            aria-label="Back to circles"
+          >
+            <ChevronLeft size={16} className="text-[var(--ed-ink,#111)]" />
+          </Link>
+          <span
+            aria-hidden
+            className="flex items-center justify-center shrink-0"
+            style={{
+              width: 56,
+              height: 56,
+              borderRadius: 999,
+              background: 'var(--ed-paper, #FFFBF1)',
+              border: '2px solid var(--ed-ink, #111)',
+              color: 'var(--ed-ink, #111)',
+            }}
+          >
+            <Users size={26} strokeWidth={2} />
+          </span>
+          <div className="min-w-0 flex-1">
+            <h1
+              className="text-[var(--ed-ink,#111)] leading-tight truncate"
+              style={{
+                fontFamily: 'var(--font-display, "Archivo Black", sans-serif)',
+                fontSize: 'clamp(28px, 5vw, 56px)',
+              }}
+            >
+              {circle.name.toUpperCase()}
+            </h1>
+            <p
+              className="text-[11px] tracking-[0.18em] text-[var(--ed-muted,#6F6B61)] mt-1"
+              style={{ fontFamily: 'var(--font-mono, monospace)', fontWeight: 700 }}
+            >
+              {members.length} {members.length === 1 ? 'MEMBER' : 'MEMBERS'}
+              {circle.description && (
+                <span> · {circle.description.toUpperCase()}</span>
+              )}
+            </p>
           </div>
-          {circle.description && (
-            <p className="text-[#5A6660] mt-4 ml-[72px]">{circle.description}</p>
-          )}
-        </header>
+        </div>
 
-        {/* Active Votes Banner */}
-        {votes.filter(v => v.status === 'active').length > 0 && (
-          <div className="mb-6 p-4 bg-[#C4A235]/10 border border-[#C4A235]/30 rounded-xl">
+        {/* Active Votes Banner — editorial frame, same data + behaviour. */}
+        {votes.filter((v) => v.status === 'active').length > 0 && (
+          <div
+            className="mb-6 p-4"
+            style={{
+              background: 'var(--ed-yellow, #F2C84B)',
+              border: '2px solid var(--ed-ink, #111)',
+              borderRadius: 2,
+            }}
+          >
             <div className="flex items-center gap-2 mb-2">
-              <Vote size={18} className="text-[#8a7c08]" />
-              <span className="font-medium text-[#8a7c08]">Active Votes</span>
+              <Vote size={14} className="text-[var(--ed-ink,#111)]" />
+              <span
+                className="text-[10px] tracking-[0.22em] text-[var(--ed-ink,#111)]"
+                style={{ fontFamily: 'var(--font-mono, monospace)', fontWeight: 700 }}
+              >
+                ACTIVE VOTES
+              </span>
             </div>
             <div className="space-y-2">
-              {votes.filter(v => v.status === 'active').map(vote => (
+              {votes.filter((v) => v.status === 'active').map((vote) => (
                 <button
                   key={vote.id}
                   onClick={() => setSelectedVote(vote)}
-                  className="w-full flex items-center justify-between p-3 bg-white rounded-lg hover:bg-[#C4A235]/5 transition-colors text-left"
+                  className="w-full flex items-center justify-between p-3 text-left"
+                  style={{ background: 'var(--ed-paper, #FFFBF1)', border: '2px solid var(--ed-ink, #111)', borderRadius: 2 }}
                 >
                   <div>
-                    <p className="text-sm font-medium text-[#1A1F1C]">
+                    <p className="text-[14px] font-semibold text-[var(--ed-ink,#111)]">
                       {vote.vote_type === 'promote' ? 'Promote' : 'Demote'} {vote.target_member_name}
                     </p>
-                    <p className="text-xs text-[#5A6660]">
-                      {vote.yes_votes}/{vote.required_votes} votes needed
+                    <p
+                      className="text-[10px] tracking-[0.16em] text-[var(--ed-muted,#6F6B61)] mt-0.5"
+                      style={{ fontFamily: 'var(--font-mono, monospace)', fontWeight: 700 }}
+                    >
+                      {vote.yes_votes}/{vote.required_votes} VOTES NEEDED
                     </p>
                   </div>
                   {vote.has_voted ? (
-                    <span className="text-xs text-[#2D5A3D]">Voted ✓</span>
+                    <span
+                      className="text-[10px] tracking-[0.18em] text-[var(--ed-blue,#2A5CD3)]"
+                      style={{ fontFamily: 'var(--font-mono, monospace)', fontWeight: 700 }}
+                    >
+                      VOTED ✓
+                    </span>
                   ) : isAdmin ? (
-                    <span className="text-xs text-[#B8562E] font-medium">Vote Now →</span>
+                    <span
+                      className="text-[10px] tracking-[0.18em] text-[var(--ed-red,#E23B2E)]"
+                      style={{ fontFamily: 'var(--font-mono, monospace)', fontWeight: 700 }}
+                    >
+                      VOTE NOW →
+                    </span>
                   ) : null}
                 </button>
               ))}
@@ -800,31 +853,80 @@ export default function CircleDetailPage({ params }: { params: Promise<{ id: str
         {/* Activity Sidebar (on larger screens) */}
         <div className="lg:grid lg:grid-cols-[1fr,280px] lg:gap-6">
           <div>
-            {/* Tabs */}
-            <div className="flex gap-2 mb-6 overflow-x-auto pb-2 scrollbar-hide">
-              {visibleTabs.map(tab => (
-                <button
-                  key={tab.id}
-                  onClick={() => setActiveTab(tab.id)}
-                  className={`filter-btn flex items-center gap-1.5 whitespace-nowrap ${
-                    activeTab === tab.id ? 'filter-btn-active' : ''
-                  }`}
-                >
-                  {tab.icon}
-                  {tab.label}
-                  {/* Badges */}
-                  {tab.id === 'schedule' && activeEventsCount > 0 && (
-                    <span className="ml-1 w-5 h-5 rounded-full bg-[#C4A235] text-[10px] font-bold flex items-center justify-center text-[#1A1F1C]">
-                      {activeEventsCount}
-                    </span>
-                  )}
-                  {tab.id === 'polls' && activePollsCount > 0 && (
-                    <span className="ml-1 w-5 h-5 rounded-full bg-[#2D5A3D] text-[10px] font-bold flex items-center justify-center text-white">
-                      {activePollsCount}
-                    </span>
-                  )}
-                </button>
-              ))}
+            {/* Editorial pill tabs — color-coded active state matches mock. */}
+            <div className="flex flex-wrap gap-2 mb-6 pb-2">
+              {visibleTabs.map((tab) => {
+                const isActive = activeTab === tab.id
+                return (
+                  <button
+                    key={tab.id}
+                    onClick={() => setActiveTab(tab.id)}
+                    className="flex items-center gap-1.5 px-4 py-2 text-[10px] tracking-[0.18em] whitespace-nowrap transition-transform hover:-translate-y-0.5"
+                    style={{
+                      fontFamily: 'var(--font-mono, monospace)',
+                      fontWeight: 700,
+                      background: isActive ? tab.bg : 'var(--ed-paper, #FFFBF1)',
+                      color: isActive ? tab.ink : 'var(--ed-ink, #111)',
+                      border: '2px solid var(--ed-ink, #111)',
+                      borderRadius: 999,
+                    }}
+                  >
+                    {tab.icon}
+                    {tab.label}
+                    {tab.id === 'schedule' && activeEventsCount > 0 && (
+                      <span
+                        className="ml-1 inline-flex items-center justify-center text-[9px]"
+                        style={{
+                          minWidth: 18,
+                          height: 18,
+                          padding: '0 4px',
+                          background: 'var(--ed-ink, #111)',
+                          color: '#fff',
+                          fontFamily: 'var(--font-mono, monospace)',
+                          fontWeight: 700,
+                          borderRadius: 999,
+                        }}
+                      >
+                        {activeEventsCount}
+                      </span>
+                    )}
+                    {tab.id === 'polls' && activePollsCount > 0 && (
+                      <span
+                        className="ml-1 inline-flex items-center justify-center text-[9px]"
+                        style={{
+                          minWidth: 18,
+                          height: 18,
+                          padding: '0 4px',
+                          background: 'var(--ed-ink, #111)',
+                          color: '#fff',
+                          fontFamily: 'var(--font-mono, monospace)',
+                          fontWeight: 700,
+                          borderRadius: 999,
+                        }}
+                      >
+                        {activePollsCount}
+                      </span>
+                    )}
+                    {tab.id === 'members' && members.length > 0 && (
+                      <span
+                        className="ml-1 inline-flex items-center justify-center text-[9px]"
+                        style={{
+                          minWidth: 18,
+                          height: 18,
+                          padding: '0 4px',
+                          background: isActive ? '#fff' : 'var(--ed-ink, #111)',
+                          color: isActive ? 'var(--ed-ink, #111)' : '#fff',
+                          fontFamily: 'var(--font-mono, monospace)',
+                          fontWeight: 700,
+                          borderRadius: 999,
+                        }}
+                      >
+                        {members.length}
+                      </span>
+                    )}
+                  </button>
+                )
+              })}
             </div>
 
             {/* Tab Content */}
@@ -875,147 +977,413 @@ export default function CircleDetailPage({ params }: { params: Promise<{ id: str
 
             {activeTab === 'members' && (
               <div>
-                <div className="section-header">
-                  <div className="section-title">
-                    <div className="section-title-icon bg-[#2D5A3D]/10">
-                      <Users size={18} className="text-[#2D5A3D]" />
-                    </div>
-                    <span>Members ({members.length})</span>
+                {/* Editorial section header — count + invite button */}
+                <div className="flex items-center justify-between mb-4">
+                  <div className="flex items-center gap-2">
+                    <span
+                      aria-hidden
+                      className="inline-block rounded-full"
+                      style={{ width: 8, height: 8, background: 'var(--ed-red, #E23B2E)' }}
+                    />
+                    <span
+                      className="text-[11px] tracking-[0.22em] text-[var(--ed-ink,#111)]"
+                      style={{ fontFamily: 'var(--font-mono, monospace)', fontWeight: 700 }}
+                    >
+                      MEMBERS ({members.length})
+                    </span>
                   </div>
                   {isAdmin && (
                     <button
                       onClick={() => setShowInviteModal(true)}
-                      className="btn-primary"
+                      className="flex items-center gap-1.5 px-4 py-2 text-[10px] tracking-[0.18em]"
+                      style={{
+                        fontFamily: 'var(--font-mono, monospace)',
+                        fontWeight: 700,
+                        background: 'var(--ed-red, #E23B2E)',
+                        color: '#fff',
+                        border: '2px solid var(--ed-ink, #111)',
+                        borderRadius: 2,
+                      }}
                     >
-                      <UserPlus size={16} />
-                      Invite
+                      <UserPlus size={12} /> INVITE
                     </button>
                   )}
                 </div>
 
-                <div className="space-y-3">
-                  {members.map(member => (
-                    <CircleMemberCard
-                      key={member.id}
-                      member={member}
-                      currentUserRole={myRole}
-                      currentUserId={currentUserId}
-                      onRemove={handleRemoveMember}
-                      onInitiateVote={handleInitiateVote}
-                    />
-                  ))}
+                {/* Editorial member rows. Avatar square color cycles through
+                    the palette so the list reads as a graphic block (mock).
+                    The existing CircleMemberCard handlers are still wired
+                    via Remove / Promote / Demote buttons inside each row. */}
+                <div className="flex flex-col gap-2">
+                  {members.map((m, idx) => {
+                    const palette = [
+                      { bg: 'var(--ed-red, #E23B2E)',    fg: '#fff' },
+                      { bg: 'var(--ed-yellow, #F2C84B)', fg: 'var(--ed-ink, #111)' },
+                      { bg: 'var(--ed-blue, #2A5CD3)',   fg: '#fff' },
+                      { bg: 'var(--ed-ink, #111)',       fg: '#fff' },
+                    ]
+                    const colors = palette[idx % palette.length]
+                    const isMe = m.user_id === currentUserId
+                    const canManage = isAdmin && !isMe && m.role !== 'owner'
+                    const roleColor =
+                      m.role === 'owner'
+                        ? { bg: 'var(--ed-yellow, #F2C84B)', fg: 'var(--ed-ink, #111)' }
+                        : m.role === 'admin'
+                        ? { bg: 'var(--ed-blue, #2A5CD3)', fg: '#fff' }
+                        : { bg: 'var(--ed-red, #E23B2E)', fg: '#fff' }
+                    return (
+                      <div
+                        key={m.id}
+                        className="flex items-center gap-3 p-3"
+                        style={{
+                          background: 'var(--ed-paper, #FFFBF1)',
+                          border: '2px solid var(--ed-ink, #111)',
+                          borderRadius: 2,
+                        }}
+                      >
+                        <span
+                          className="flex items-center justify-center text-[14px] font-bold shrink-0"
+                          style={{
+                            width: 40,
+                            height: 40,
+                            background: colors.bg,
+                            color: colors.fg,
+                            border: '2px solid var(--ed-ink, #111)',
+                            borderRadius: 2,
+                            fontFamily: 'var(--font-mono, monospace)',
+                          }}
+                        >
+                          {(m.full_name || '?').charAt(0).toUpperCase()}
+                        </span>
+                        <div className="flex-1 min-w-0">
+                          <p className="text-[14px] text-[var(--ed-ink,#111)] font-semibold truncate">
+                            {(m.full_name || 'Unknown').toUpperCase()}
+                            {isMe && <span className="ml-1 text-[10px] text-[var(--ed-muted,#6F6B61)]">(you)</span>}
+                          </p>
+                          <p
+                            className="text-[10px] tracking-[0.18em] text-[var(--ed-muted,#6F6B61)]"
+                            style={{ fontFamily: 'var(--font-mono, monospace)', fontWeight: 700 }}
+                          >
+                            JOINED {formatDate(m.joined_at).toUpperCase()}
+                          </p>
+                        </div>
+                        <span
+                          className="inline-flex items-center gap-1 px-2 py-1 text-[9px] tracking-[0.16em] shrink-0"
+                          style={{
+                            fontFamily: 'var(--font-mono, monospace)',
+                            fontWeight: 700,
+                            background: roleColor.bg,
+                            color: roleColor.fg,
+                            border: '1.5px solid var(--ed-ink, #111)',
+                            borderRadius: 999,
+                          }}
+                        >
+                          {m.role === 'owner' ? <Crown size={10} /> : m.role === 'admin' ? <Shield size={10} /> : <User size={10} />}
+                          {m.role.toUpperCase()}
+                        </span>
+                        {canManage && (
+                          <div className="flex items-center gap-1 shrink-0">
+                            {m.role === 'member' && (
+                              <button
+                                onClick={() => handleInitiateVote(m.id, 'promote')}
+                                className="px-2 py-1 text-[9px] tracking-[0.16em]"
+                                style={{
+                                  fontFamily: 'var(--font-mono, monospace)',
+                                  fontWeight: 700,
+                                  background: 'var(--ed-paper, #FFFBF1)',
+                                  color: 'var(--ed-ink, #111)',
+                                  border: '1.5px solid var(--ed-ink, #111)',
+                                  borderRadius: 2,
+                                }}
+                                title="Propose promotion to admin"
+                              >
+                                PROMOTE
+                              </button>
+                            )}
+                            {m.role === 'admin' && (
+                              <button
+                                onClick={() => handleInitiateVote(m.id, 'demote')}
+                                className="px-2 py-1 text-[9px] tracking-[0.16em]"
+                                style={{
+                                  fontFamily: 'var(--font-mono, monospace)',
+                                  fontWeight: 700,
+                                  background: 'var(--ed-paper, #FFFBF1)',
+                                  color: 'var(--ed-ink, #111)',
+                                  border: '1.5px solid var(--ed-ink, #111)',
+                                  borderRadius: 2,
+                                }}
+                                title="Propose demotion"
+                              >
+                                DEMOTE
+                              </button>
+                            )}
+                            <button
+                              onClick={() => handleRemoveMember(m.id)}
+                              className="p-1.5"
+                              style={{
+                                background: 'var(--ed-paper, #FFFBF1)',
+                                color: 'var(--ed-red, #E23B2E)',
+                                border: '1.5px solid var(--ed-ink, #111)',
+                                borderRadius: 999,
+                              }}
+                              title="Remove member"
+                            >
+                              <Trash2 size={11} />
+                            </button>
+                          </div>
+                        )}
+                      </div>
+                    )
+                  })}
                 </div>
               </div>
             )}
 
             {activeTab === 'settings' && isAdmin && (
-              <div className="space-y-6">
-                {/* Circle Info */}
-                <div className="content-card">
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                {/* CIRCLE DETAILS panel */}
+                <section
+                  className="p-5"
+                  style={{ background: 'var(--ed-paper, #FFFBF1)', border: '2px solid var(--ed-ink, #111)', borderRadius: 2 }}
+                >
                   <div className="flex items-center justify-between mb-4">
-                    <h3 className="text-lg font-semibold text-[#1A1F1C]">Circle Information</h3>
+                    <div className="flex items-center gap-2">
+                      <span aria-hidden className="inline-block rounded-full" style={{ width: 8, height: 8, background: 'var(--ed-red, #E23B2E)' }} />
+                      <h3
+                        className="text-[11px] tracking-[0.22em] text-[var(--ed-ink,#111)]"
+                        style={{ fontFamily: 'var(--font-mono, monospace)', fontWeight: 700 }}
+                      >
+                        CIRCLE DETAILS
+                      </h3>
+                    </div>
                     {!editMode && (
                       <button
                         onClick={() => setEditMode(true)}
-                        className="p-2 text-[#2D5A3D]/50 hover:text-[#2D5A3D] hover:bg-[#2D5A3D]/10 rounded-lg transition-colors"
+                        className="p-1.5"
+                        style={{
+                          background: 'var(--ed-paper, #FFFBF1)',
+                          color: 'var(--ed-ink, #111)',
+                          border: '1.5px solid var(--ed-ink, #111)',
+                          borderRadius: 999,
+                        }}
+                        title="Edit details"
                       >
-                        <Edit2 size={18} />
+                        <Edit2 size={11} />
                       </button>
                     )}
                   </div>
 
                   {editMode ? (
-                    <div className="space-y-4">
+                    <div className="space-y-3">
                       <div>
-                        <label className="block text-sm text-[#5A6660] mb-1.5">Circle Name</label>
+                        <label
+                          className="block text-[10px] tracking-[0.18em] text-[var(--ed-muted,#6F6B61)] mb-1"
+                          style={{ fontFamily: 'var(--font-mono, monospace)', fontWeight: 700 }}
+                        >
+                          CIRCLE NAME
+                        </label>
                         <input
                           type="text"
                           value={editForm.name}
                           onChange={e => setEditForm({ ...editForm, name: e.target.value })}
-                          className="form-input"
+                          className="w-full p-2.5 text-sm text-[var(--ed-ink,#111)]"
+                          style={{ background: 'var(--ed-cream, #F3ECDC)', border: '2px solid var(--ed-ink, #111)', borderRadius: 2 }}
                         />
                       </div>
                       <div>
-                        <label className="block text-sm text-[#5A6660] mb-1.5">Description</label>
+                        <label
+                          className="block text-[10px] tracking-[0.18em] text-[var(--ed-muted,#6F6B61)] mb-1"
+                          style={{ fontFamily: 'var(--font-mono, monospace)', fontWeight: 700 }}
+                        >
+                          DESCRIPTION
+                        </label>
                         <textarea
                           value={editForm.description}
                           onChange={e => setEditForm({ ...editForm, description: e.target.value })}
-                          className="form-textarea"
                           rows={3}
+                          className="w-full p-2.5 text-sm text-[var(--ed-ink,#111)] resize-none"
+                          style={{ background: 'var(--ed-cream, #F3ECDC)', border: '2px solid var(--ed-ink, #111)', borderRadius: 2 }}
                         />
                       </div>
-                      <div className="flex gap-3">
+                      <div className="flex gap-2">
                         <button
                           onClick={() => {
                             setEditMode(false)
                             setEditForm({ name: circle.name, description: circle.description || '' })
                           }}
-                          className="btn-secondary"
+                          className="px-3 py-1.5 text-[10px] tracking-[0.18em]"
+                          style={{
+                            fontFamily: 'var(--font-mono, monospace)',
+                            fontWeight: 700,
+                            background: 'transparent',
+                            color: 'var(--ed-ink, #111)',
+                            border: '2px solid var(--ed-ink, #111)',
+                            borderRadius: 2,
+                          }}
                         >
-                          Cancel
+                          CANCEL
                         </button>
-                        <button onClick={handleSaveSettings} className="btn-primary">
-                          Save Changes
+                        <button
+                          onClick={handleSaveSettings}
+                          className="flex items-center gap-1.5 px-3 py-1.5 text-[10px] tracking-[0.18em]"
+                          style={{
+                            fontFamily: 'var(--font-mono, monospace)',
+                            fontWeight: 700,
+                            background: 'var(--ed-red, #E23B2E)',
+                            color: '#fff',
+                            border: '2px solid var(--ed-ink, #111)',
+                            borderRadius: 2,
+                          }}
+                        >
+                          <Save size={11} /> SAVE
                         </button>
                       </div>
                     </div>
                   ) : (
                     <div className="space-y-3">
                       <div>
-                        <p className="text-sm text-[#5A6660]">Name</p>
-                        <p className="text-[#1A1F1C] font-medium">{circle.name}</p>
+                        <p
+                          className="text-[10px] tracking-[0.18em] text-[var(--ed-muted,#6F6B61)] mb-0.5"
+                          style={{ fontFamily: 'var(--font-mono, monospace)', fontWeight: 700 }}
+                        >
+                          NAME
+                        </p>
+                        <p className="text-[15px] text-[var(--ed-ink,#111)] font-semibold">{circle.name}</p>
                       </div>
                       <div>
-                        <p className="text-sm text-[#5A6660]">Description</p>
-                        <p className="text-[#1A1F1C]">{circle.description || 'No description'}</p>
+                        <p
+                          className="text-[10px] tracking-[0.18em] text-[var(--ed-muted,#6F6B61)] mb-0.5"
+                          style={{ fontFamily: 'var(--font-mono, monospace)', fontWeight: 700 }}
+                        >
+                          DESCRIPTION
+                        </p>
+                        <p className="text-[14px] text-[var(--ed-ink,#111)]">{circle.description || 'No description'}</p>
                       </div>
-                      <div>
-                        <p className="text-sm text-[#5A6660]">Created</p>
-                        <p className="text-[#1A1F1C]">{formatDate(circle.created_at)}</p>
+                      <div className="grid grid-cols-2 gap-3">
+                        <div>
+                          <p
+                            className="text-[10px] tracking-[0.18em] text-[var(--ed-muted,#6F6B61)] mb-0.5"
+                            style={{ fontFamily: 'var(--font-mono, monospace)', fontWeight: 700 }}
+                          >
+                            CREATED
+                          </p>
+                          <p className="text-[13px] text-[var(--ed-ink,#111)]">{formatDate(circle.created_at)}</p>
+                        </div>
+                        <div>
+                          <p
+                            className="text-[10px] tracking-[0.18em] text-[var(--ed-muted,#6F6B61)] mb-0.5"
+                            style={{ fontFamily: 'var(--font-mono, monospace)', fontWeight: 700 }}
+                          >
+                            MEMBERS
+                          </p>
+                          <p className="text-[13px] text-[var(--ed-ink,#111)]">{members.length}</p>
+                        </div>
                       </div>
                     </div>
                   )}
-                </div>
+                </section>
 
-                {/* Voting Settings */}
-                <div className="content-card">
-                  <h3 className="text-lg font-semibold text-[#1A1F1C] mb-4">Voting</h3>
+                {/* VOTING SETTINGS panel */}
+                <section
+                  className="p-5"
+                  style={{ background: 'var(--ed-paper, #FFFBF1)', border: '2px solid var(--ed-ink, #111)', borderRadius: 2 }}
+                >
+                  <div className="flex items-center gap-2 mb-4">
+                    <span aria-hidden className="inline-block rounded-full" style={{ width: 8, height: 8, background: 'var(--ed-blue, #2A5CD3)' }} />
+                    <h3
+                      className="text-[11px] tracking-[0.22em] text-[var(--ed-ink,#111)]"
+                      style={{ fontFamily: 'var(--font-mono, monospace)', fontWeight: 700 }}
+                    >
+                      VOTING SETTINGS
+                    </h3>
+                  </div>
                   <div className="space-y-3">
-                    <div className="flex items-center justify-between p-3 bg-[#2D5A3D]/5 rounded-xl">
+                    <div
+                      className="flex items-center justify-between p-3"
+                      style={{ background: 'var(--ed-cream, #F3ECDC)', border: '2px solid var(--ed-ink, #111)', borderRadius: 2 }}
+                    >
                       <div>
-                        <p className="font-medium text-[#1A1F1C]">Promotion Votes Required</p>
-                        <p className="text-sm text-[#5A6660]">Majority of admins must approve</p>
+                        <p className="text-[14px] font-semibold text-[var(--ed-ink,#111)]">Promotion votes required</p>
+                        <p className="text-[12px] text-[var(--ed-muted,#6F6B61)]">Majority of admins must approve</p>
                       </div>
-                      <span className="text-[#2D5A3D] font-medium">50%+</span>
+                      <span
+                        className="text-[10px] tracking-[0.18em] text-[var(--ed-blue,#2A5CD3)]"
+                        style={{ fontFamily: 'var(--font-mono, monospace)', fontWeight: 700 }}
+                      >
+                        50%+
+                      </span>
                     </div>
-                    <div className="flex items-center justify-between p-3 bg-[#2D5A3D]/5 rounded-xl">
+                    <div
+                      className="flex items-center justify-between p-3"
+                      style={{ background: 'var(--ed-cream, #F3ECDC)', border: '2px solid var(--ed-ink, #111)', borderRadius: 2 }}
+                    >
                       <div>
-                        <p className="font-medium text-[#1A1F1C]">Vote Duration</p>
-                        <p className="text-sm text-[#5A6660]">Time before vote expires</p>
+                        <p className="text-[14px] font-semibold text-[var(--ed-ink,#111)]">Vote duration</p>
+                        <p className="text-[12px] text-[var(--ed-muted,#6F6B61)]">Time before vote expires</p>
                       </div>
-                      <span className="text-[#2D5A3D] font-medium">7 days</span>
+                      <span
+                        className="text-[10px] tracking-[0.18em] text-[var(--ed-blue,#2A5CD3)]"
+                        style={{ fontFamily: 'var(--font-mono, monospace)', fontWeight: 700 }}
+                      >
+                        7 DAYS
+                      </span>
                     </div>
                   </div>
-                </div>
+                </section>
 
-                {/* Danger Zone */}
-                <div className="danger-zone">
-                  <h3 className="danger-zone-title">Danger Zone</h3>
-                  <div className="space-y-3">
+                {/* DANGER ZONE — leave/delete row spanning full width */}
+                <section
+                  className="lg:col-span-2 p-5"
+                  style={{
+                    background: 'rgba(226,59,46,0.08)',
+                    border: '2px solid var(--ed-red, #E23B2E)',
+                    borderRadius: 2,
+                  }}
+                >
+                  <div className="flex items-center gap-2 mb-3">
+                    <span aria-hidden className="inline-block rounded-full" style={{ width: 8, height: 8, background: 'var(--ed-red, #E23B2E)' }} />
+                    <h3
+                      className="text-[11px] tracking-[0.22em] text-[var(--ed-red,#E23B2E)]"
+                      style={{ fontFamily: 'var(--font-mono, monospace)', fontWeight: 700 }}
+                    >
+                      DANGER ZONE
+                    </h3>
+                  </div>
+                  <div className="flex flex-wrap gap-2">
                     {!isOwner && (
-                      <button onClick={handleLeaveCircle} className="btn-danger">
-                        <LogOut size={16} />
-                        Leave Circle
+                      <button
+                        onClick={handleLeaveCircle}
+                        className="flex items-center gap-1.5 px-4 py-2 text-[10px] tracking-[0.18em]"
+                        style={{
+                          fontFamily: 'var(--font-mono, monospace)',
+                          fontWeight: 700,
+                          background: 'var(--ed-yellow, #F2C84B)',
+                          color: 'var(--ed-ink, #111)',
+                          border: '2px solid var(--ed-ink, #111)',
+                          borderRadius: 2,
+                        }}
+                      >
+                        <LogOut size={12} /> LEAVE CIRCLE
                       </button>
                     )}
                     {isOwner && (
-                      <button onClick={handleDeleteCircle} className="btn-danger">
-                        <Trash2 size={16} />
-                        Delete Circle
+                      <button
+                        onClick={handleDeleteCircle}
+                        className="flex items-center gap-1.5 px-4 py-2 text-[10px] tracking-[0.18em]"
+                        style={{
+                          fontFamily: 'var(--font-mono, monospace)',
+                          fontWeight: 700,
+                          background: 'var(--ed-red, #E23B2E)',
+                          color: '#fff',
+                          border: '2px solid var(--ed-ink, #111)',
+                          borderRadius: 2,
+                        }}
+                      >
+                        <Trash2 size={12} /> DELETE CIRCLE
                       </button>
                     )}
                   </div>
-                </div>
+                </section>
               </div>
             )}
           </div>

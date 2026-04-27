@@ -441,57 +441,116 @@ export default function CirclePolling({
     setShowCreateModal(false)
   }
 
+  // Editorial filter pills (matches mock).
+  const POLL_FILTERS: { key: 'all' | 'active' | 'closed'; label: string; bg: string; ink: string }[] = [
+    { key: 'all',    label: 'ALL',    bg: 'var(--ed-red, #E23B2E)',    ink: '#fff' },
+    { key: 'active', label: 'ACTIVE', bg: 'var(--ed-blue, #2A5CD3)',   ink: '#fff' },
+    { key: 'closed', label: 'CLOSED', bg: 'var(--ed-ink, #111)',       ink: '#fff' },
+  ]
+
   return (
     <div>
-      {/* Header */}
-      <div className="section-header mb-4">
-        <div className="section-title">
-          <div className="section-title-icon bg-[#2D5A3D]/10">
-            <BarChart3 size={18} className="text-[#2D5A3D]" />
+      {/* POLLS bar — yellow header with sub-tabs + Create button */}
+      <div
+        className="flex items-center justify-between mb-4 p-3 flex-wrap gap-2"
+        style={{
+          background: 'var(--ed-yellow, #F2C84B)',
+          border: '2px solid var(--ed-ink, #111)',
+          borderRadius: 2,
+        }}
+      >
+        <div className="flex items-center gap-3">
+          <BarChart3 size={14} className="text-[var(--ed-ink,#111)]" />
+          <span
+            className="text-[11px] tracking-[0.22em] text-[var(--ed-ink,#111)]"
+            style={{ fontFamily: 'var(--font-mono, monospace)', fontWeight: 700 }}
+          >
+            POLLS
+          </span>
+          <div className="flex flex-wrap gap-1.5 ml-2">
+            {POLL_FILTERS.map((f) => {
+              const isActive = filter === f.key
+              return (
+                <button
+                  key={f.key}
+                  onClick={() => setFilter(f.key)}
+                  className="px-2.5 py-1 text-[10px] tracking-[0.18em]"
+                  style={{
+                    fontFamily: 'var(--font-mono, monospace)',
+                    fontWeight: 700,
+                    background: isActive ? f.bg : 'var(--ed-paper, #FFFBF1)',
+                    color: isActive ? f.ink : 'var(--ed-ink, #111)',
+                    border: '2px solid var(--ed-ink, #111)',
+                    borderRadius: 999,
+                  }}
+                >
+                  {f.label}
+                </button>
+              )
+            })}
           </div>
-          <span>Polls</span>
         </div>
-        <button onClick={() => setShowCreateModal(true)} className="btn-primary">
-          <Plus size={16} />
-          Create Poll
-        </button>
-      </div>
-
-      {/* Filters */}
-      <div className="flex gap-2 mb-4">
         <button
-          onClick={() => setFilter('all')}
-          className={`filter-btn ${filter === 'all' ? 'filter-btn-active' : ''}`}
+          onClick={() => setShowCreateModal(true)}
+          className="flex items-center gap-1.5 px-3 py-1.5 text-[10px] tracking-[0.18em]"
+          style={{
+            fontFamily: 'var(--font-mono, monospace)',
+            fontWeight: 700,
+            background: 'var(--ed-blue, #2A5CD3)',
+            color: '#fff',
+            border: '2px solid var(--ed-ink, #111)',
+            borderRadius: 2,
+          }}
         >
-          All ({polls.length})
-        </button>
-        <button
-          onClick={() => setFilter('active')}
-          className={`filter-btn ${filter === 'active' ? 'filter-btn-active' : ''}`}
-        >
-          Active
-        </button>
-        <button
-          onClick={() => setFilter('closed')}
-          className={`filter-btn ${filter === 'closed' ? 'filter-btn-active' : ''}`}
-        >
-          Closed
+          <Plus size={12} />
+          CREATE POLL
         </button>
       </div>
 
       {/* Polls List */}
       {filteredPolls.length === 0 ? (
-        <div className="empty-state">
-          <div className="empty-state-icon">
-            <BarChart3 size={32} className="text-[#2D5A3D]" />
+        <div
+          className="flex flex-col items-center justify-center text-center py-16 px-6"
+          style={{
+            background: 'var(--ed-paper, #FFFBF1)',
+            border: '2px solid var(--ed-ink, #111)',
+            borderRadius: 2,
+          }}
+        >
+          <div
+            className="flex items-center justify-center mb-4"
+            style={{
+              width: 56, height: 56,
+              background: 'var(--ed-yellow, #F2C84B)',
+              border: '2px solid var(--ed-ink, #111)',
+              borderRadius: 999,
+            }}
+          >
+            <BarChart3 size={24} className="text-[var(--ed-ink,#111)]" />
           </div>
-          <h3 className="empty-state-title">No Polls Yet</h3>
-          <p className="empty-state-text">
-            Create a poll to get everyone's opinion on decisions.
+          <p
+            className="text-xl text-[var(--ed-ink,#111)] mb-2 leading-tight"
+            style={{ fontFamily: 'var(--font-display, "Archivo Black", sans-serif)' }}
+          >
+            NO POLLS YET
           </p>
-          <button onClick={() => setShowCreateModal(true)} className="btn-primary mt-4">
-            <Plus size={16} />
-            Create First Poll
+          <p className="text-sm text-[var(--ed-muted,#6F6B61)] mb-5 max-w-sm">
+            Create a poll to get everyone's opinion on circle decisions.
+          </p>
+          <button
+            onClick={() => setShowCreateModal(true)}
+            className="flex items-center gap-1.5 px-5 py-2.5 text-[10px] tracking-[0.18em]"
+            style={{
+              fontFamily: 'var(--font-mono, monospace)',
+              fontWeight: 700,
+              background: 'var(--ed-red, #E23B2E)',
+              color: '#fff',
+              border: '2px solid var(--ed-ink, #111)',
+              borderRadius: 2,
+            }}
+          >
+            <Plus size={12} />
+            CREATE NEW POLL
           </button>
         </div>
       ) : (

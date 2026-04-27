@@ -236,73 +236,155 @@ export default function SessionDetailPage({ params }: { params: Promise<{ id: st
 
   if (loading) {
     return (
-      <div className="page-container">
-        <div className="page-background"><div className="page-blob page-blob-1"/><div className="page-blob page-blob-2"/></div>
-        <div className="loading-container"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#2D5A3D]"/></div>
+      <div
+        className="relative min-h-screen flex items-center justify-center"
+        style={{ background: 'var(--ed-cream, #F3ECDC)' }}
+      >
+        <div
+          className="w-8 h-8 rounded-full animate-spin"
+          style={{ border: '3px solid var(--ed-ink, #111)', borderTopColor: 'transparent' }}
+        />
       </div>
     )
   }
 
   if (!session) {
     return (
-      <div className="page-container">
-        <div className="page-background"><div className="page-blob page-blob-1"/></div>
-        <div className="flex flex-col items-center justify-center min-h-[50vh] text-center">
-          <p className="text-gray-500 mb-4">Interview not found</p>
-          <Link href="/dashboard/journalist" className="text-[#2D5A3D] hover:underline">← Back</Link>
-        </div>
+      <div
+        className="relative min-h-screen flex flex-col items-center justify-center text-center"
+        style={{ background: 'var(--ed-cream, #F3ECDC)' }}
+      >
+        <p
+          className="text-[11px] tracking-[0.22em] text-[var(--ed-red,#E23B2E)] mb-3"
+          style={{ fontFamily: 'var(--font-mono, monospace)', fontWeight: 700 }}
+        >
+          INTERVIEW NOT FOUND
+        </p>
+        <Link
+          href="/dashboard/journalist"
+          className="text-[10px] tracking-[0.18em] underline text-[var(--ed-ink,#111)]"
+          style={{ fontFamily: 'var(--font-mono, monospace)', fontWeight: 700 }}
+        >
+          ← BACK TO INTERVIEWS
+        </Link>
       </div>
     )
   }
 
-  const statusColors: Record<string, string> = {
-    completed: 'bg-[#2D5A3D]/10 text-[#2D5A3D]',
-    sent: 'bg-[#C4A235]/10 text-[#9a8c12]',
-    pending: 'bg-gray-100 text-gray-500',
+  const statusColors: Record<string, { bg: string; ink: string }> = {
+    completed: { bg: 'var(--ed-blue, #2A5CD3)',   ink: '#fff' },
+    sent:      { bg: 'var(--ed-yellow, #F2C84B)', ink: 'var(--ed-ink, #111)' },
+    pending:   { bg: 'var(--ed-muted, #6F6B61)',  ink: '#fff' },
   }
+  const statusStyle = statusColors[session.status] || statusColors.pending
 
   return (
-    <div className="page-container">
-      <div className="page-background">
-        <div className="page-blob page-blob-1"/>
-        <div className="page-blob page-blob-2"/>
-        <div className="page-blob page-blob-3"/>
-      </div>
-
-      <div className="relative z-10">
+    <div
+      className="relative min-h-screen"
+      style={{
+        background: 'var(--ed-cream, #F3ECDC)',
+        paddingTop: 80,
+        paddingBottom: 100,
+        paddingLeft: 24,
+        paddingRight: 24,
+      }}
+    >
+      <div className="relative z-10 max-w-6xl mx-auto">
         {/* Header */}
         <header className="mb-8">
           <div className="flex items-start justify-between gap-4 flex-wrap">
             <div className="flex items-center gap-4">
-              <Link href="/dashboard/journalist" className="page-header-back">
-                <ChevronLeft size={20}/>
+              <Link
+                href="/dashboard/journalist"
+                aria-label="Back to interviews"
+                className="flex items-center justify-center"
+                style={{
+                  width: 36, height: 36,
+                  borderRadius: 999,
+                  border: '2px solid var(--ed-ink, #111)',
+                  background: 'var(--ed-paper, #FFFBF1)',
+                }}
+              >
+                <ChevronLeft size={16} className="text-[var(--ed-ink,#111)]" />
               </Link>
               <div>
                 <div className="flex items-center gap-3 flex-wrap">
-                  <h1 className="page-header-title">
-                    {session.contact?.full_name || session.title}
+                  <h1
+                    className="text-[var(--ed-ink,#111)] leading-tight"
+                    style={{
+                      fontFamily: 'var(--font-display, "Archivo Black", sans-serif)',
+                      fontSize: 'clamp(28px, 5vw, 44px)',
+                    }}
+                  >
+                    {(session.contact?.full_name || session.title).toUpperCase()}
                   </h1>
-                  <span className={`text-xs px-2.5 py-1 rounded-full font-medium capitalize ${statusColors[session.status] || statusColors.pending}`}>
-                    {session.status}
+                  <span
+                    className="inline-flex items-center text-[10px] tracking-[0.18em] px-2.5 py-1"
+                    style={{
+                      fontFamily: 'var(--font-mono, monospace)',
+                      fontWeight: 700,
+                      background: statusStyle.bg,
+                      color: statusStyle.ink,
+                      border: '1.5px solid var(--ed-ink, #111)',
+                      borderRadius: 999,
+                    }}
+                  >
+                    {session.status.toUpperCase()}
                   </span>
                 </div>
-                <p className="page-header-subtitle">{formatDate(session.created_at)}</p>
+                <p
+                  className="text-[10px] tracking-[0.18em] text-[var(--ed-muted,#6F6B61)] mt-1"
+                  style={{ fontFamily: 'var(--font-mono, monospace)', fontWeight: 700 }}
+                >
+                  {formatDate(session.created_at).toUpperCase()}
+                </p>
               </div>
             </div>
 
             <div className="flex items-center gap-2">
-              <button onClick={openFollowupModal}
-                className="flex items-center gap-2 px-4 py-2.5 bg-[#2D5A3D] hover:bg-[#234A31] text-white rounded-xl transition-all text-sm font-medium">
-                <Plus size={16}/> Ask More
+              <button
+                onClick={openFollowupModal}
+                className="flex items-center gap-1.5 px-4 py-2.5 text-[11px] tracking-[0.18em]"
+                style={{
+                  fontFamily: 'var(--font-mono, monospace)',
+                  fontWeight: 700,
+                  background: 'var(--ed-red, #E23B2E)',
+                  color: '#fff',
+                  border: '2px solid var(--ed-ink, #111)',
+                  borderRadius: 2,
+                }}
+              >
+                <Plus size={13} strokeWidth={3} />
+                ASK MORE
               </button>
-              <button onClick={copyLink}
-                className="flex items-center gap-2 px-4 py-2.5 glass-card-page hover:shadow-md text-[#2D5A3D] rounded-xl transition-all text-sm font-medium">
-                {copied ? <Check size={16}/> : <Copy size={16}/>}
-                {copied ? 'Copied!' : 'Copy Link'}
+              <button
+                onClick={copyLink}
+                className="flex items-center gap-1.5 px-4 py-2.5 text-[11px] tracking-[0.18em]"
+                style={{
+                  fontFamily: 'var(--font-mono, monospace)',
+                  fontWeight: 700,
+                  background: 'var(--ed-paper, #FFFBF1)',
+                  color: 'var(--ed-ink, #111)',
+                  border: '2px solid var(--ed-ink, #111)',
+                  borderRadius: 2,
+                }}
+              >
+                {copied ? <Check size={13} /> : <Copy size={13} />}
+                {copied ? 'COPIED!' : 'COPY LINK'}
               </button>
-              <button onClick={handleDelete}
-                className="p-2.5 glass-card-page text-gray-400 hover:text-red-500 rounded-xl transition-all">
-                <Trash2 size={18}/>
+              <button
+                onClick={handleDelete}
+                className="flex items-center justify-center"
+                style={{
+                  width: 40, height: 40,
+                  background: 'var(--ed-paper, #FFFBF1)',
+                  color: 'var(--ed-red, #E23B2E)',
+                  border: '2px solid var(--ed-ink, #111)',
+                  borderRadius: 2,
+                }}
+                aria-label="Delete interview"
+              >
+                <Trash2 size={16} />
               </button>
             </div>
           </div>
@@ -310,13 +392,31 @@ export default function SessionDetailPage({ params }: { params: Promise<{ id: st
           {/* Stats row */}
           <div className="grid grid-cols-3 gap-3 mt-6">
             {[
-              { label: 'Answered', value: `${answeredCount}/${questions.length}` },
-              { label: 'Duration', value: formatDuration(totalDuration) },
-              { label: 'Created', value: formatDate(session.created_at) },
+              { label: 'ANSWERED', value: `${answeredCount}/${questions.length}`, accent: 'var(--ed-red, #E23B2E)' },
+              { label: 'DURATION', value: formatDuration(totalDuration),           accent: 'var(--ed-blue, #2A5CD3)' },
+              { label: 'CREATED',  value: formatDate(session.created_at),          accent: 'var(--ed-yellow, #F2C84B)' },
             ].map(s => (
-              <div key={s.label} className="glass-card-page p-4 text-center">
-                <p className="text-xs text-gray-400 mb-1">{s.label}</p>
-                <p className="font-semibold text-[#2d2d2d]">{s.value}</p>
+              <div
+                key={s.label}
+                className="p-4 text-center"
+                style={{
+                  background: 'var(--ed-paper, #FFFBF1)',
+                  border: '2px solid var(--ed-ink, #111)',
+                  borderRadius: 2,
+                }}
+              >
+                <p
+                  className="text-[10px] tracking-[0.22em] mb-1"
+                  style={{ fontFamily: 'var(--font-mono, monospace)', fontWeight: 700, color: s.accent }}
+                >
+                  {s.label}
+                </p>
+                <p
+                  className="text-[var(--ed-ink,#111)]"
+                  style={{ fontFamily: 'var(--font-display, "Archivo Black", sans-serif)', fontSize: 16 }}
+                >
+                  {s.value}
+                </p>
               </div>
             ))}
           </div>

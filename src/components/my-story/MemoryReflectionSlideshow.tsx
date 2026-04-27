@@ -17,7 +17,7 @@ import { createPortal } from 'react-dom'
 import Image from 'next/image'
 import { motion, AnimatePresence } from 'framer-motion'
 import {
-  X, ChevronLeft, ChevronRight, Calendar, MapPin, Quote, MessageCircle, Sparkles, Loader2,
+  X, ChevronLeft, ChevronRight, Calendar, MapPin, Quote, MessageCircle, Loader2,
   Users, Smile, BookOpen, Play, ChevronDown, ImageIcon, Share2, Music, Headphones,
 } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
@@ -809,7 +809,6 @@ function SlideContent({ data }: { data: SlideData }) {
                         }}
                       >
                         <p className="text-[12px] uppercase tracking-wider text-[#C4A235]/80 font-medium mb-2 flex items-center gap-2">
-                          <Sparkles size={11} className="text-[#C4A235]/60" />
                           {ex.question || `Question ${i + 1}`}
                         </p>
                         <p
@@ -834,7 +833,6 @@ function SlideContent({ data }: { data: SlideData }) {
                         }}
                       >
                         <p className="text-[12px] uppercase tracking-wider text-[#C4A235]/80 font-medium mb-2 flex items-center gap-2">
-                          <Sparkles size={11} className="text-[#C4A235]/60" />
                           {memory.title}
                         </p>
                         {parsed.paragraphs.map((p, i) => (
@@ -1014,7 +1012,6 @@ function ConversationDisclosure({ exchanges }: { exchanges: Exchange[] }) {
         }}
       >
         <span className="flex items-center gap-2 text-[11px] uppercase tracking-[0.2em] text-[#D4C8A0]/70">
-          <Sparkles size={11} className="text-[#C4A235]/60" />
           Full conversation
           <span className="text-[#D4C8A0]/40 normal-case tracking-normal">
             · {exchanges.length} {exchanges.length === 1 ? 'exchange' : 'exchanges'}

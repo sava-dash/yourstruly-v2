@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { X, Users } from 'lucide-react'
+import { X, Users, Save } from 'lucide-react'
 
 interface CreateCircleModalProps {
   onClose: () => void
@@ -16,7 +16,6 @@ export default function CreateCircleModal({ onClose, onSave }: CreateCircleModal
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     if (!name.trim()) return
-    
     setSaving(true)
     try {
       await onSave({ name: name.trim(), description: description.trim() })
@@ -26,73 +25,155 @@ export default function CreateCircleModal({ onClose, onSave }: CreateCircleModal
   }
 
   return (
-    <div className="modal-overlay-page" onClick={onClose}>
-      <div className="modal-content-page" onClick={e => e.stopPropagation()}>
+    <div
+      className="fixed inset-0 z-[1000] flex items-center justify-center p-4"
+      style={{ background: 'rgba(17,17,17,0.55)', backdropFilter: 'blur(6px)' }}
+      onClick={onClose}
+    >
+      <div
+        className="relative w-full max-w-lg"
+        style={{
+          background: 'var(--ed-cream, #F3ECDC)',
+          border: '2px solid var(--ed-ink, #111)',
+          borderRadius: 2,
+        }}
+        onClick={(e) => e.stopPropagation()}
+      >
+        <button
+          onClick={onClose}
+          className="absolute top-4 right-4 z-10 flex items-center justify-center"
+          style={{
+            width: 36,
+            height: 36,
+            borderRadius: 999,
+            border: '2px solid var(--ed-ink, #111)',
+            background: 'var(--ed-paper, #FFFBF1)',
+          }}
+          aria-label="Close"
+        >
+          <X size={16} className="text-[var(--ed-ink,#111)]" />
+        </button>
+
         {/* Header */}
-        <div className="flex items-center justify-between mb-6">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[#2D5A3D]/20 to-[#C4A235]/20 flex items-center justify-center">
-              <Users size={20} className="text-[#2D5A3D]" />
-            </div>
-            <h2 className="text-xl font-semibold text-[#1A1F1C]">Create Circle</h2>
+        <header className="px-6 sm:px-8 pt-8 pb-4">
+          <div className="flex items-center gap-2 mb-2">
+            <span aria-hidden className="inline-block rounded-full" style={{ width: 8, height: 8, background: 'var(--ed-red, #E23B2E)' }} />
+            <span
+              className="text-[10px] tracking-[0.22em] text-[var(--ed-ink,#111)]"
+              style={{ fontFamily: 'var(--font-mono, monospace)', fontWeight: 700 }}
+            >
+              NEW CIRCLE
+            </span>
           </div>
-          <button
-            onClick={onClose}
-            className="p-2 text-[#2D5A3D]/50 hover:text-[#2D5A3D] hover:bg-[#2D5A3D]/10 rounded-lg transition-colors"
+          <h2
+            className="text-[var(--ed-ink,#111)] leading-tight"
+            style={{
+              fontFamily: 'var(--font-display, "Archivo Black", sans-serif)',
+              fontSize: 'clamp(28px, 5vw, 36px)',
+            }}
           >
-            <X size={20} />
-          </button>
-        </div>
+            CREATE CIRCLE
+          </h2>
+        </header>
 
         {/* Form */}
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div>
-            <label className="block text-sm text-[#5A6660] mb-1.5">Circle Name *</label>
-            <input
-              type="text"
-              value={name}
-              onChange={e => setName(e.target.value)}
-              className="form-input"
-              placeholder="Family, Close Friends, Work..."
-              autoFocus
-              maxLength={50}
-            />
+        <form onSubmit={handleSubmit} className="px-6 sm:px-8 pb-8">
+          <div
+            className="p-5 mb-4"
+            style={{
+              background: 'var(--ed-paper, #FFFBF1)',
+              border: '2px solid var(--ed-ink, #111)',
+              borderRadius: 2,
+            }}
+          >
+            <div className="space-y-4">
+              <div>
+                <label
+                  className="block text-[10px] tracking-[0.18em] text-[var(--ed-muted,#6F6B61)] mb-1"
+                  style={{ fontFamily: 'var(--font-mono, monospace)', fontWeight: 700 }}
+                >
+                  CIRCLE NAME *
+                </label>
+                <input
+                  type="text"
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                  className="w-full p-2.5 text-sm text-[var(--ed-ink,#111)] placeholder-[var(--ed-muted,#6F6B61)]"
+                  placeholder="Family, Close Friends, Work…"
+                  autoFocus
+                  maxLength={50}
+                  style={{ background: 'var(--ed-cream, #F3ECDC)', border: '2px solid var(--ed-ink, #111)', borderRadius: 2 }}
+                />
+              </div>
+              <div>
+                <label
+                  className="block text-[10px] tracking-[0.18em] text-[var(--ed-muted,#6F6B61)] mb-1"
+                  style={{ fontFamily: 'var(--font-mono, monospace)', fontWeight: 700 }}
+                >
+                  DESCRIPTION
+                </label>
+                <textarea
+                  value={description}
+                  onChange={(e) => setDescription(e.target.value)}
+                  className="w-full p-2.5 text-sm text-[var(--ed-ink,#111)] placeholder-[var(--ed-muted,#6F6B61)] resize-none"
+                  placeholder="What is this circle about? (optional)"
+                  rows={3}
+                  maxLength={200}
+                  style={{ background: 'var(--ed-cream, #F3ECDC)', border: '2px solid var(--ed-ink, #111)', borderRadius: 2 }}
+                />
+                <p className="text-[10px] tracking-[0.14em] text-[var(--ed-muted,#6F6B61)] mt-1" style={{ fontFamily: 'var(--font-mono, monospace)' }}>
+                  {description.length}/200
+                </p>
+              </div>
+            </div>
           </div>
 
-          <div>
-            <label className="block text-sm text-[#5A6660] mb-1.5">Description</label>
-            <textarea
-              value={description}
-              onChange={e => setDescription(e.target.value)}
-              className="form-textarea"
-              placeholder="What is this circle about? (optional)"
-              rows={3}
-              maxLength={200}
-            />
-            <p className="text-xs text-[#94A09A] mt-1">{description.length}/200</p>
-          </div>
-
-          <div className="p-4 bg-[#2D5A3D]/5 rounded-xl">
-            <p className="text-sm text-[#2D5A3D]">
-              <strong>You'll be the Owner</strong> of this circle and can invite others, manage members, and configure settings.
+          {/* Owner notice */}
+          <div
+            className="p-3 mb-4 flex items-start gap-2"
+            style={{
+              background: 'var(--ed-yellow, #F2C84B)',
+              border: '2px solid var(--ed-ink, #111)',
+              borderRadius: 2,
+            }}
+          >
+            <Users size={14} className="shrink-0 mt-0.5 text-[var(--ed-ink,#111)]" />
+            <p className="text-[12px] text-[var(--ed-ink,#111)]">
+              <strong>You'll be the owner</strong> — invite others, manage members, configure settings.
             </p>
           </div>
 
-          {/* Actions */}
-          <div className="flex justify-end gap-3 pt-4 border-t border-[#2D5A3D]/10">
+          <div className="flex justify-end gap-2">
             <button
               type="button"
               onClick={onClose}
-              className="btn-secondary"
+              className="px-4 py-2 text-[10px] tracking-[0.18em]"
+              style={{
+                fontFamily: 'var(--font-mono, monospace)',
+                fontWeight: 700,
+                background: 'transparent',
+                color: 'var(--ed-ink, #111)',
+                border: '2px solid var(--ed-ink, #111)',
+                borderRadius: 2,
+              }}
             >
-              Cancel
+              CANCEL
             </button>
             <button
               type="submit"
               disabled={saving || !name.trim()}
-              className="btn-primary"
+              className="flex items-center gap-1.5 px-4 py-2 text-[10px] tracking-[0.18em] disabled:opacity-50"
+              style={{
+                fontFamily: 'var(--font-mono, monospace)',
+                fontWeight: 700,
+                background: 'var(--ed-red, #E23B2E)',
+                color: '#fff',
+                border: '2px solid var(--ed-ink, #111)',
+                borderRadius: 2,
+              }}
             >
-              {saving ? 'Creating...' : 'Create Circle'}
+              <Save size={12} />
+              {saving ? 'CREATING…' : 'CREATE CIRCLE'}
             </button>
           </div>
         </form>

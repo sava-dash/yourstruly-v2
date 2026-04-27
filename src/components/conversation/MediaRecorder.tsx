@@ -51,10 +51,10 @@ export function MediaRecorder({
 
   // Check if Deepgram is available
   useEffect(() => {
-    fetch('/api/deepgram/token')
+    fetch('/api/realtime/transcribe-session', { method: 'POST' })
       .then(res => res.json())
       .then(data => {
-        if (data.apiKey) {
+        if (data.clientSecret) {
           setIsDeepgramAvailable(true);
         }
       })

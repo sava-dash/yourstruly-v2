@@ -320,33 +320,71 @@ export function GiftSelectionModal({
   // --- Render ---
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
-      <div className="bg-white rounded-2xl w-full max-w-4xl max-h-[90vh] overflow-hidden flex flex-col shadow-2xl">
+    <div
+      className="fixed inset-0 z-[1000] flex items-center justify-center p-4"
+      style={{ background: 'rgba(17,17,17,0.55)', backdropFilter: 'blur(6px)' }}
+    >
+      <div
+        className="w-full max-w-4xl max-h-[90vh] overflow-hidden flex flex-col"
+        style={{
+          background: 'var(--ed-cream, #F3ECDC)',
+          border: '2px solid var(--ed-ink, #111)',
+          borderRadius: 2,
+        }}
+      >
         {/* Header */}
-        <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100 bg-gradient-to-r from-[#C35F33]/5 to-transparent">
+        <div
+          className="flex items-center justify-between px-6 py-4"
+          style={{ borderBottom: '2px solid var(--ed-ink, #111)' }}
+        >
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-[#C35F33] flex items-center justify-center">
-              <Gift className="w-5 h-5 text-white" />
-            </div>
+            <span
+              className="flex items-center justify-center"
+              style={{
+                width: 40, height: 40,
+                background: 'var(--ed-red, #E23B2E)',
+                color: '#fff',
+                border: '2px solid var(--ed-ink, #111)',
+                borderRadius: 2,
+              }}
+            >
+              <Gift className="w-5 h-5" />
+            </span>
             <div>
-              <h2 className="text-lg font-semibold text-gray-900">
-                {step === 'browse' && 'Choose a Gift'}
-                {step === 'flex_amount' && 'Gift of Choice'}
-                {step === 'configure' && 'Configure Gift'}
-              </h2>
-              <p className="text-sm text-gray-500">
-                {step === 'browse' && (preselectedContactName ? `Choose a gift for ${preselectedContactName}` : 'Choose something special')}
-                {preselectedContactName && step !== 'browse' && `For ${preselectedContactName}`}
+              <p
+                className="text-[10px] tracking-[0.22em] text-[var(--ed-muted,#6F6B61)]"
+                style={{ fontFamily: 'var(--font-mono, monospace)', fontWeight: 700 }}
+              >
+                {step === 'browse' && (preselectedContactName ? `FOR ${preselectedContactName.toUpperCase()}` : 'POSTSCRIPT GIFT')}
+                {preselectedContactName && step !== 'browse' && `FOR ${preselectedContactName.toUpperCase()}`}
               </p>
+              <h2
+                className="text-[var(--ed-ink,#111)] leading-tight"
+                style={{ fontFamily: 'var(--font-display, "Archivo Black", sans-serif)', fontSize: 22 }}
+              >
+                {step === 'browse' && 'CHOOSE A GIFT'}
+                {step === 'flex_amount' && 'GIFT OF CHOICE'}
+                {step === 'configure' && 'CONFIGURE GIFT'}
+              </h2>
               {!isNearTermDelivery && step === 'browse' && (
-                <p className="text-xs text-amber-600 mt-1">
+                <p className="text-[11px] text-[var(--ed-red,#E23B2E)] mt-1">
                   For future delivery, we recommend Gift of Choice
                 </p>
               )}
             </div>
           </div>
-          <button onClick={onClose} className="p-2 hover:bg-gray-100 rounded-lg transition-colors min-w-[44px] min-h-[44px] flex items-center justify-center">
-            <X className="w-5 h-5 text-gray-500" />
+          <button
+            onClick={onClose}
+            className="flex items-center justify-center"
+            style={{
+              width: 36, height: 36,
+              borderRadius: 999,
+              border: '2px solid var(--ed-ink, #111)',
+              background: 'var(--ed-paper, #FFFBF1)',
+            }}
+            aria-label="Close"
+          >
+            <X size={16} className="text-[var(--ed-ink,#111)]" />
           </button>
         </div>
 

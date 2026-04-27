@@ -5,9 +5,9 @@ import { createClient } from '@/lib/supabase/client'
 import Image from 'next/image'
 import { motion, AnimatePresence } from 'framer-motion'
 import {
-  X, Heart, MapPin, Calendar, Sparkles, ChevronLeft, ChevronRight,
+  X, Heart, MapPin, Calendar, ChevronLeft, ChevronRight,
   Play, Pause, Square, Quote, Tag, Volume2, MessageCircle, Send,
-  Lightbulb, Briefcase, Baby, Users, BookOpen,
+  Lightbulb, Briefcase, Baby, Users, BookOpen, Pencil, Camera,
   Activity, Moon, Palette, Compass, Utensils, GraduationCap, HelpCircle
 } from 'lucide-react'
 import { useRouter } from 'next/navigation'
@@ -65,6 +65,12 @@ interface StoryDetailModalProps {
    * sources).
    */
   onContinue?: (item: StoryItem) => void
+  /**
+   * Opens an edit flow for this memory. For now wired to the same append
+   * overlay (the closest existing surface), but isolated as its own prop
+   * so a true editor can replace it without touching the modal.
+   */
+  onEdit?: (item: StoryItem) => void
 }
 
 /* ------------------------------------------------------------------ */
@@ -240,7 +246,7 @@ function useSlideshow(count: number, intervalMs = 5000) {
 /* ================================================================== */
 /*  COMPONENT                                                          */
 /* ================================================================== */
-export default function StoryDetailModal({ item, onClose, onContinue }: StoryDetailModalProps) {
+export default function StoryDetailModal({ item, onClose, onContinue, onEdit }: StoryDetailModalProps) {
   const router = useRouter()
   const [creatingBackstory, setCreatingBackstory] = useState(false)
   const [loading, setLoading] = useState(true)
@@ -274,9 +280,21 @@ export default function StoryDetailModal({ item, onClose, onContinue }: StoryDet
   useEffect(() => { document.body.style.overflow = 'hidden'; return () => { document.body.style.overflow = '' } }, [])
   // Escape to close
   useEffect(() => {
+    // EDIT MEMORY button inside MemoryReadView dispatches this event so
+    // we don't have to plumb yet another prop deep into the read view.
+    const onEditEvent = (e: Event) => {
+      const detail = (e as CustomEvent).detail as { id?: string } | undefined
+      if (detail?.id === item.id && onEdit) onEdit(item)
+    }
+    document.addEventListener('memory:edit', onEditEvent)
+
     const h = (e: KeyboardEvent) => { if (e.key === 'Escape') onClose() }
-    window.addEventListener('keydown', h); return () => window.removeEventListener('keydown', h)
-  }, [onClose])
+    window.addEventListener('keydown', h)
+    return () => {
+      window.removeEventListener('keydown', h)
+      document.removeEventListener('memory:edit', onEditEvent)
+    }
+  }, [onClose, onEdit, item])
   // Cleanup audio
   useEffect(() => () => { stopPlayback() }, [])
 
@@ -407,7 +425,7 @@ export default function StoryDetailModal({ item, onClose, onContinue }: StoryDet
         onClick={onClose}
       >
         <div
-          className="relative w-full max-w-2xl mx-4 mt-20 mb-10 sm:mt-24"
+          className={`relative w-full ${item.type === 'memory' ? 'max-w-6xl' : 'max-w-2xl'} mx-4 mt-12 mb-10 sm:mt-16`}
           onClick={e => e.stopPropagation()}
         >
           {/* Close */}
@@ -440,8 +458,17 @@ export default function StoryDetailModal({ item, onClose, onContinue }: StoryDet
             </button>
           )}
 
-          {/* ========== CARD ========== */}
-          <div className="rounded-3xl shadow-2xl overflow-hidden" style={{ background: 'linear-gradient(180deg, #FDFCF9 0%, #F8F4EE 100%)' }}>
+          {/* ========== CARD ==========
+              Memory uses a flat editorial sheet; wisdom/photo keep the
+              soft rounded card. */}
+          <div
+            className={item.type === 'memory' ? 'overflow-hidden' : 'rounded-3xl shadow-2xl overflow-hidden'}
+            style={
+              item.type === 'memory'
+                ? { background: 'var(--ed-cream, #F3ECDC)', border: '2px solid var(--ed-ink, #111)', borderRadius: 2 }
+                : { background: 'linear-gradient(180deg, #FDFCF9 0%, #F8F4EE 100%)' }
+            }
+          >
 
             {/* Loading */}
             {loading && (
@@ -1250,6 +1277,54 @@ function PieceContent({ piece, zoomed }: { piece: Piece; zoomed: boolean }) {
 }
 
 /* ------------------------------------------------------------------ */
+/*  SidebarCard — editorial sidebar tile (LOCATION / DATE / MOOD …)    */
+/* ------------------------------------------------------------------ */
+function SidebarCard({
+  label,
+  accent,
+  icon,
+  children,
+}: {
+  label: string
+  accent: string
+  icon: React.ReactNode
+  children: React.ReactNode
+}) {
+  return (
+    <div
+      className="p-4"
+      style={{
+        background: 'var(--ed-paper, #FFFBF1)',
+        border: '2px solid var(--ed-ink, #111)',
+        borderRadius: 2,
+      }}
+    >
+      <div className="flex items-center gap-2 mb-2.5">
+        <span
+          aria-hidden
+          className="flex items-center justify-center"
+          style={{
+            width: 22, height: 22, borderRadius: 999,
+            background: accent,
+            color: accent === 'var(--ed-yellow, #F2C84B)' ? 'var(--ed-ink, #111)' : '#fff',
+            border: '1.5px solid var(--ed-ink, #111)',
+          }}
+        >
+          {icon}
+        </span>
+        <span
+          className="text-[10px] tracking-[0.22em] text-[var(--ed-ink,#111)]"
+          style={{ fontFamily: 'var(--font-mono, monospace)', fontWeight: 700 }}
+        >
+          {label}
+        </span>
+      </div>
+      {children}
+    </div>
+  )
+}
+
+/* ------------------------------------------------------------------ */
 /*  MemoryReadView — vertical scroll "Read Mode"                       */
 /* ------------------------------------------------------------------ */
 function MemoryReadView({
@@ -1314,234 +1389,352 @@ function MemoryReadView({
 
   const completedCollabs = collaborators.filter(c => c.status === 'completed' && c.response_text)
 
+  // Editorial palette cycle for the bottom tag chips.
+  const TAG_PALETTE = [
+    { bg: 'var(--ed-red, #E23B2E)',    fg: '#fff' },
+    { bg: 'var(--ed-blue, #2A5CD3)',   fg: '#fff' },
+    { bg: 'var(--ed-yellow, #F2C84B)', fg: 'var(--ed-ink, #111)' },
+    { bg: 'var(--ed-ink, #111)',       fg: '#fff' },
+  ]
+
+  // Aggregate "synopsis category" tags. Prefers human-curated `tags`,
+  // falls back to ai_labels, dedupes case-insensitive.
+  const tagPills = useMemo(() => {
+    const raw: string[] = []
+    const memTags = (memory as any).tags as string[] | null
+    if (Array.isArray(memTags)) raw.push(...memTags)
+    if (Array.isArray(memory.ai_labels)) raw.push(...memory.ai_labels)
+    const seen = new Set<string>()
+    const out: string[] = []
+    for (const t of raw) {
+      if (typeof t !== 'string') continue
+      const key = t.trim().toLowerCase()
+      if (!key || seen.has(key)) continue
+      seen.add(key)
+      out.push(t.trim())
+    }
+    return out.slice(0, 6)
+  }, [memory])
+
+  const dateFormatted = (() => {
+    const src = memory.memory_date || memory.created_at
+    const d = new Date(src)
+    if (isNaN(d.getTime())) return ''
+    return d.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })
+  })()
+
+  const dateUpper = (() => {
+    const src = memory.memory_date || memory.created_at
+    const d = new Date(src)
+    if (isNaN(d.getTime())) return ''
+    return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }).toUpperCase()
+  })()
+
+  const moodLabel = (memory.ai_mood || memory.mood || '').trim()
+
   return (
     <>
       <article className="flex flex-col">
-        {/* HERO */}
-        {coverPhoto ? (
-          <div className="relative mx-4 mt-4 sm:mx-6 sm:mt-6">
-            <div className="relative w-full aspect-[4/3] sm:aspect-[16/10] rounded-2xl overflow-hidden shadow-lg">
-              <Image
-                src={coverPhoto.file_url}
-                alt={memory.title}
-                fill
-                className="object-cover"
-                sizes="(max-width: 768px) 100vw, 700px"
-                priority
-              />
-              <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/10 to-transparent" />
-              <div className="absolute inset-x-0 bottom-0 p-5 sm:p-7">
-                <div className="flex items-center gap-2 text-white/80 text-xs mb-2">
-                  <Calendar size={12} />
-                  <span>{formatDateJournal(memory.memory_date || memory.created_at)}</span>
-                  {memory.location_name && (
-                    <>
-                      <span className="opacity-50">•</span>
-                      <MapPin size={12} />
-                      <span className="truncate max-w-[160px]">{memory.location_name}</span>
-                    </>
-                  )}
-                </div>
-                <h1
-                  className="text-2xl sm:text-3xl font-semibold text-white leading-tight drop-shadow-lg"
-                  style={{ fontFamily: 'var(--font-dm-serif, DM Serif Display, serif)' }}
-                >
-                  {memory.title}
-                </h1>
-              </div>
-              <button
-                onClick={onToggleFavorite}
-                className="absolute top-3 right-3 p-2.5 rounded-full bg-white/90 backdrop-blur-sm shadow-lg hover:bg-white transition-colors"
-                aria-label="Favorite"
-              >
-                <Heart
-                  size={16}
-                  className={isFavorite ? 'text-[#B8562E] fill-[#B8562E]' : 'text-[#5A6660]'}
-                />
-              </button>
-            </div>
-          </div>
-        ) : (
-          <div className="px-6 pt-6 pb-2">
-            <div className="flex items-center gap-2 text-[#94A09A] text-xs mb-2">
-              <Calendar size={12} />
-              <span>{formatDateJournal(memory.memory_date || memory.created_at)}</span>
-              {memory.location_name && (
-                <>
-                  <span className="opacity-50">•</span>
-                  <MapPin size={12} />
-                  <span>{memory.location_name}</span>
-                </>
-              )}
-            </div>
-            <div className="flex items-start justify-between gap-4">
-              <h1
-                className="text-2xl sm:text-3xl font-semibold text-[#1A1F1C] leading-tight"
-                style={{ fontFamily: 'var(--font-dm-serif, DM Serif Display, serif)' }}
-              >
-                {memory.title}
-              </h1>
-              <button
-                onClick={onToggleFavorite}
-                className="p-2 rounded-full hover:bg-[#F0EBE2] transition-colors flex-shrink-0"
-                aria-label="Favorite"
-              >
-                <Heart
-                  size={18}
-                  className={isFavorite ? 'text-[#B8562E] fill-[#B8562E]' : 'text-[#5A6660]'}
-                />
-              </button>
-            </div>
-          </div>
-        )}
+        {/* ───── Top breadcrumb-style row ───── */}
+        <div className="flex items-center justify-between px-6 sm:px-10 pt-6">
+          <button
+            onClick={() => onToggleFavorite() /* favorite toggle stays here visually */}
+            className="opacity-0 pointer-events-none"
+            aria-hidden
+          />
+          <button
+            onClick={onToggleFavorite}
+            className="ml-auto p-2 rounded-full hover:bg-black/5 transition-colors"
+            aria-label="Favorite"
+          >
+            <Heart size={18} className={isFavorite ? 'text-[#E23B2E] fill-[#E23B2E]' : 'text-[#6F6B61]'} />
+          </button>
+        </div>
 
-        {/* STORY */}
-        {(paragraphs.length > 0 || (parsed && parsed.exchanges.length > 0)) && (
-          <section className="px-6 sm:px-10 pt-8 pb-2">
-            {parsed && parsed.exchanges.length > 0 ? (
-              <div className="space-y-5">
-                {parsed.exchanges.map((ex, i) => (
-                  <div key={i}>
-                    <p className="text-xs uppercase tracking-wider text-[#94A09A] mb-1.5 flex items-center gap-1.5">
-                      <Sparkles size={11} /> {ex.question}
-                    </p>
-                    <p
-                      className="text-[#3A3228] text-[17px] leading-[1.75]"
-                      style={{ fontFamily: 'var(--font-dm-serif, DM Serif Display, serif)' }}
-                    >
-                      {ex.answer}
-                    </p>
+        {/* ───── Title block: type/date pill + big serif title + red dot ───── */}
+        <header className="px-6 sm:px-10 pt-2 pb-6">
+          <div className="flex items-center gap-2 mb-3">
+            <span
+              aria-hidden
+              className="inline-block rounded-full"
+              style={{ width: 8, height: 8, background: 'var(--ed-blue, #2A5CD3)' }}
+            />
+            <span
+              className="text-[10px] tracking-[0.22em] text-[var(--ed-ink,#111)]"
+              style={{ fontFamily: 'var(--font-mono, monospace)', fontWeight: 700 }}
+            >
+              MEMORY · {dateUpper}
+            </span>
+          </div>
+          <div className="flex items-start gap-4 sm:gap-6">
+            <h1
+              className="flex-1 leading-[1.05] text-[var(--ed-ink,#111)]"
+              style={{
+                fontFamily: 'var(--font-dm-serif, "DM Serif Display", serif)',
+                fontSize: 'clamp(28px, 4.5vw, 44px)',
+              }}
+            >
+              {memory.title}
+            </h1>
+            <span
+              aria-hidden
+              className="shrink-0"
+              style={{ width: 28, height: 28, background: 'var(--ed-red, #E23B2E)', borderRadius: 999, marginTop: 8 }}
+            />
+          </div>
+        </header>
+
+        {/* ───── Two-column main: backstory (left) + sidebar (right) ───── */}
+        <div className="grid grid-cols-1 lg:grid-cols-[1fr_360px] gap-6 px-6 sm:px-10 pb-10">
+          {/* LEFT — backstory + tag chips + edit button */}
+          <div className="flex flex-col gap-6 min-w-0">
+            {(paragraphs.length > 0 || (parsed && parsed.exchanges.length > 0)) && (
+              <section
+                className="p-5 sm:p-6"
+                style={{
+                  background: 'var(--ed-paper, #FFFBF1)',
+                  border: '2px solid var(--ed-ink, #111)',
+                  borderRadius: 2,
+                }}
+              >
+                <h3
+                  className="text-[11px] tracking-[0.22em] text-[var(--ed-ink,#111)] mb-4"
+                  style={{ fontFamily: 'var(--font-mono, monospace)', fontWeight: 700 }}
+                >
+                  THE BACKSTORY
+                </h3>
+                {parsed && parsed.exchanges.length > 0 ? (
+                  <div className="space-y-5">
+                    {parsed.exchanges.map((ex, i) => (
+                      <div key={i}>
+                        <p
+                          className="text-[10px] tracking-[0.16em] text-[var(--ed-muted,#6F6B61)] mb-1.5"
+                          style={{ fontFamily: 'var(--font-mono, monospace)' }}
+                        >
+                          {ex.question}
+                        </p>
+                        <p
+                          className="text-[var(--ed-ink,#111)] text-[16px] sm:text-[17px] leading-[1.7]"
+                          style={{ fontFamily: 'var(--font-dm-serif, "DM Serif Display", serif)' }}
+                        >
+                          {ex.answer}
+                        </p>
+                      </div>
+                    ))}
                   </div>
-                ))}
-              </div>
-            ) : (
-              <div className="space-y-4">
-                {paragraphs.map((p, i) => (
-                  <p
-                    key={i}
-                    className="text-[#3A3228] text-[17px] leading-[1.75]"
-                    style={{ fontFamily: 'var(--font-dm-serif, DM Serif Display, serif)' }}
-                  >
-                    {p}
-                  </p>
-                ))}
+                ) : (
+                  <div className="space-y-3">
+                    {paragraphs.map((p, i) => (
+                      <p
+                        key={i}
+                        className="text-[var(--ed-ink,#111)] text-[15px] sm:text-[16px] leading-[1.65]"
+                      >
+                        {p}
+                      </p>
+                    ))}
+                  </div>
+                )}
+              </section>
+            )}
+
+            {/* TAG PILLS — color-coded across the editorial palette */}
+            {tagPills.length > 0 && (
+              <div className="flex flex-wrap gap-2">
+                {tagPills.map((label, i) => {
+                  const c = TAG_PALETTE[i % TAG_PALETTE.length]
+                  return (
+                    <span
+                      key={label + i}
+                      className="inline-flex items-center px-3 py-1.5 text-[10px] tracking-[0.18em]"
+                      style={{
+                        background: c.bg,
+                        color: c.fg,
+                        border: '2px solid var(--ed-ink, #111)',
+                        borderRadius: 999,
+                        fontFamily: 'var(--font-mono, monospace)',
+                        fontWeight: 700,
+                      }}
+                    >
+                      {label.toUpperCase()}
+                    </span>
+                  )
+                })}
               </div>
             )}
-          </section>
-        )}
 
-        {/* PHOTO GRID — asymmetric */}
-        {otherPhotos.length > 0 && (
-          <section className="px-4 sm:px-6 pt-8">
-            <h3 className="text-xs font-semibold uppercase tracking-wider text-[#5A6660] mb-3 px-2">
-              Photos
-            </h3>
-            <div className="grid grid-cols-6 auto-rows-[90px] sm:auto-rows-[110px] gap-2">
-              {otherPhotos.map((photo, i) => {
-                // asymmetric pattern — tasteful variety
-                const patterns = [
-                  'col-span-4 row-span-2',
-                  'col-span-2 row-span-1',
-                  'col-span-2 row-span-1',
-                  'col-span-3 row-span-2',
-                  'col-span-3 row-span-1',
-                  'col-span-3 row-span-1',
-                ]
-                const cls = patterns[i % patterns.length]
-                return (
-                  <button
-                    key={photo.id}
-                    onClick={() => setZoomedPhoto(photo)}
-                    className={`${cls} relative rounded-xl overflow-hidden group focus:outline-none focus:ring-2 focus:ring-[#2D5A3D]/40`}
+            {/* EDIT MEMORY — opens the Continue/append flow as the closest
+                existing edit path. Wire to a true editor later if needed. */}
+            <button
+              onClick={() => {
+                // Bubble to parent via a synthesized custom event so we don't
+                // have to plumb yet another prop into MemoryReadView for a
+                // single button. The modal listens at the document level.
+                document.dispatchEvent(new CustomEvent('memory:edit', { detail: { id: memory.id } }))
+              }}
+              className="self-start flex items-center gap-2 px-5 py-3"
+              style={{
+                background: 'var(--ed-red, #E23B2E)',
+                color: '#fff',
+                border: '2px solid var(--ed-ink, #111)',
+                borderRadius: 2,
+                fontFamily: 'var(--font-mono, monospace)',
+                fontWeight: 700,
+                fontSize: 12,
+                letterSpacing: '0.18em',
+              }}
+            >
+              EDIT MEMORY
+              <Pencil size={13} />
+            </button>
+          </div>
+
+          {/* RIGHT — sidebar cards (location/date/mood/collaborators) + photos */}
+          <aside className="flex flex-col gap-3 min-w-0">
+            {memory.location_name && (
+              <SidebarCard
+                label="LOCATION"
+                accent="var(--ed-red, #E23B2E)"
+                icon={<MapPin size={13} />}
+              >
+                <p className="text-[15px] text-[var(--ed-ink,#111)] font-semibold">
+                  {memory.location_name}
+                </p>
+              </SidebarCard>
+            )}
+
+            <SidebarCard
+              label="DATE"
+              accent="var(--ed-blue, #2A5CD3)"
+              icon={<Calendar size={13} />}
+            >
+              <p className="text-[15px] text-[var(--ed-ink,#111)] font-semibold">
+                {dateFormatted}
+              </p>
+            </SidebarCard>
+
+            {moodLabel && (
+              <SidebarCard
+                label="MOOD"
+                accent="var(--ed-yellow, #F2C84B)"
+                icon={<Heart size={13} />}
+              >
+                <p className="text-[15px] text-[var(--ed-ink,#111)] font-semibold capitalize">
+                  {moodLabel}
+                </p>
+              </SidebarCard>
+            )}
+
+            {completedCollabs.length > 0 && (
+              <SidebarCard
+                label="COLLABORATORS"
+                accent="var(--ed-ink, #111)"
+                icon={<MessageCircle size={13} />}
+              >
+                <ul className="flex flex-col gap-2.5">
+                  {completedCollabs.slice(0, 4).map((c) => {
+                    const name = c.contributor_name || c.contact_name
+                    return (
+                      <li key={c.id} className="flex items-center gap-3">
+                        <span
+                          className="flex items-center justify-center text-[11px] font-bold shrink-0"
+                          style={{
+                            width: 32, height: 32, borderRadius: 999,
+                            background: 'var(--ed-blue, #2A5CD3)',
+                            color: '#fff',
+                            border: '2px solid var(--ed-ink, #111)',
+                            fontFamily: 'var(--font-mono, monospace)',
+                          }}
+                        >
+                          {name.split(/\s+/).map(p => p[0]).slice(0, 2).join('').toUpperCase()}
+                        </span>
+                        <div className="min-w-0">
+                          <p className="text-[13px] text-[var(--ed-ink,#111)] font-semibold truncate">
+                            {name}
+                          </p>
+                          <p
+                            className="text-[10px] tracking-[0.14em] text-[var(--ed-muted,#6F6B61)]"
+                            style={{ fontFamily: 'var(--font-mono, monospace)' }}
+                          >
+                            CONTRIBUTOR
+                          </p>
+                        </div>
+                      </li>
+                    )
+                  })}
+                </ul>
+              </SidebarCard>
+            )}
+
+            {/* PHOTOS — simple grid, separate sidebar block */}
+            {imagePhotos.length > 0 && (
+              <SidebarCard
+                label="PHOTOS"
+                accent="var(--ed-yellow, #F2C84B)"
+                icon={<Camera size={13} />}
+              >
+                <div className="grid grid-cols-3 gap-1.5">
+                  {imagePhotos.slice(0, 6).map((photo) => (
+                    <button
+                      key={photo.id}
+                      onClick={() => setZoomedPhoto(photo)}
+                      className="relative aspect-square overflow-hidden focus:outline-none"
+                      style={{ border: '2px solid var(--ed-ink, #111)', borderRadius: 2 }}
+                    >
+                      <Image
+                        src={photo.file_url}
+                        alt=""
+                        fill
+                        className="object-cover"
+                        sizes="120px"
+                      />
+                    </button>
+                  ))}
+                </div>
+                {imagePhotos.length > 6 && (
+                  <p
+                    className="text-[10px] tracking-[0.14em] text-[var(--ed-muted,#6F6B61)] mt-2"
+                    style={{ fontFamily: 'var(--font-mono, monospace)' }}
                   >
-                    <Image
-                      src={photo.file_url}
-                      alt=""
-                      fill
-                      className="object-cover group-hover:scale-[1.03] transition-transform duration-500"
-                      sizes="(max-width: 768px) 50vw, 350px"
-                    />
-                  </button>
-                )
-              })}
-            </div>
-          </section>
-        )}
+                    +{imagePhotos.length - 6} MORE
+                  </p>
+                )}
+              </SidebarCard>
+            )}
+          </aside>
+        </div>
 
-        {/* MAP */}
+        {/* MAP — kept as a wide block under the two-column area */}
         {Boolean(hasLocation) && loc && loc.lat != null && loc.lng != null && staticMapUrl(loc.lat, loc.lng) && (
-          <section className="px-4 sm:px-6 pt-8">
-            <h3 className="text-xs font-semibold uppercase tracking-wider text-[#5A6660] mb-3 px-2 flex items-center gap-1.5">
-              <MapPin size={12} /> Where it happened
-            </h3>
-            <div className="relative rounded-2xl overflow-hidden shadow-sm border border-[#E8E2D8]">
+          <section className="px-6 sm:px-10 pb-10">
+            <div
+              className="relative overflow-hidden"
+              style={{ border: '2px solid var(--ed-ink, #111)', borderRadius: 2 }}
+            >
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
-                src={staticMapUrl(loc.lat, loc.lng, 10, 800, 300)}
+                src={staticMapUrl(loc.lat, loc.lng, 10, 1200, 320)}
                 alt={loc.name || 'Location'}
                 className="w-full h-auto block"
               />
               {loc.name && (
                 <div className="absolute bottom-0 inset-x-0 p-3 bg-gradient-to-t from-black/70 to-transparent">
-                  <p className="text-white text-sm font-medium">{loc.name}</p>
+                  <p
+                    className="text-white text-[11px] tracking-[0.18em]"
+                    style={{ fontFamily: 'var(--font-mono, monospace)', fontWeight: 700 }}
+                  >
+                    {loc.name.toUpperCase()}
+                  </p>
                 </div>
               )}
-            </div>
-          </section>
-        )}
-
-        {/* COLLABORATOR VOICES */}
-        {completedCollabs.length > 0 && (
-          <section className="px-6 sm:px-10 pt-10">
-            <h3 className="text-xs font-semibold uppercase tracking-wider text-[#5A6660] mb-4 flex items-center gap-1.5">
-              <MessageCircle size={12} /> Their voices
-            </h3>
-            <div className="space-y-5">
-              {completedCollabs.map(c => (
-                <blockquote
-                  key={c.id}
-                  className="relative pl-5 border-l-2 border-[#2D5A3D]/30"
-                >
-                  <Quote
-                    size={18}
-                    className="absolute -left-[10px] top-0 bg-[#FDFCF9] text-[#2D5A3D]/40"
-                  />
-                  <p
-                    className="text-[#3A3228] text-[16px] leading-[1.7] italic"
-                    style={{ fontFamily: 'var(--font-dm-serif, DM Serif Display, serif)' }}
-                  >
-                    {c.response_text}
-                  </p>
-                  <footer className="mt-2 text-xs text-[#94A09A]">
-                    — {c.contributor_name || c.contact_name}
-                  </footer>
-                </blockquote>
-              ))}
-            </div>
-          </section>
-        )}
-
-        {/* TAGS */}
-        {(memory.ai_labels && memory.ai_labels.length > 0) && (
-          <section className="px-6 sm:px-10 pt-8">
-            <div className="flex flex-wrap gap-1.5">
-              {memory.ai_labels.slice(0, 8).map((label, i) => (
-                <span
-                  key={i}
-                  className="px-2.5 py-1 rounded-full text-[11px] bg-[#F0EBE2] text-[#5A6660]"
-                >
-                  {label}
-                </span>
-              ))}
             </div>
           </section>
         )}
 
         {/* CONTINUATIONS — each appended segment with its own DELETE */}
         {segments.length > 0 && (
-          <section className="px-6 sm:px-10 pt-10">
+          <section className="px-6 sm:px-10 pb-10">
             <h3
-              className="text-[11px] tracking-[0.22em] text-[#B8562E] mb-4"
+              className="text-[11px] tracking-[0.22em] text-[var(--ed-red,#E23B2E)] mb-4"
               style={{ fontFamily: 'var(--font-mono, monospace)', fontWeight: 700 }}
             >
               CONTINUATIONS · {segments.length}
@@ -1551,24 +1744,24 @@ function MemoryReadView({
                 <div
                   key={seg.id}
                   className="relative p-4 pr-10"
-                  style={{ background: '#FFFBF1', border: '2px solid #111', borderRadius: 2 }}
+                  style={{ background: 'var(--ed-paper, #FFFBF1)', border: '2px solid var(--ed-ink, #111)', borderRadius: 2 }}
                 >
                   <p
-                    className="text-[10px] tracking-[0.2em] text-[#6F6B61] mb-2"
+                    className="text-[10px] tracking-[0.2em] text-[var(--ed-muted,#6F6B61)] mb-2"
                     style={{ fontFamily: 'var(--font-mono, monospace)' }}
                   >
                     ADDED {new Date(seg.at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }).toUpperCase()}
                   </p>
-                  <p className="text-[14px] text-[#1A1F1C] whitespace-pre-wrap leading-relaxed">
+                  <p className="text-[14px] text-[var(--ed-ink,#111)] whitespace-pre-wrap leading-relaxed">
                     {seg.content}
                   </p>
                   <button
                     onClick={() => handleDeleteSegment(seg.id)}
-                    className="absolute top-2 right-2 p-1.5 rounded-full hover:bg-[#111]/5"
+                    className="absolute top-2 right-2 p-1.5 rounded-full hover:bg-black/5"
                     aria-label="Remove this continuation"
                     title="Remove this continuation"
                   >
-                    <X size={14} className="text-[#6F6B61]" />
+                    <X size={14} className="text-[var(--ed-muted,#6F6B61)]" />
                   </button>
                 </div>
               ))}
@@ -1577,10 +1770,16 @@ function MemoryReadView({
         )}
 
         {/* FOOTER */}
-        <div className="px-6 sm:px-10 pt-10 pb-8">
-          <div className="pt-6 border-t border-[#E8E2D8] text-center">
-            <p className="text-xs text-[#94A09A]">
-              {timeAgo(memory.created_at)} · Saved to your story
+        <div className="px-6 sm:px-10 pb-8">
+          <div
+            className="pt-4 text-center"
+            style={{ borderTop: '2px solid var(--ed-ink, #111)' }}
+          >
+            <p
+              className="text-[10px] tracking-[0.18em] text-[var(--ed-muted,#6F6B61)]"
+              style={{ fontFamily: 'var(--font-mono, monospace)' }}
+            >
+              {timeAgo(memory.created_at).toUpperCase()} · SAVED TO YOUR STORY
             </p>
           </div>
         </div>

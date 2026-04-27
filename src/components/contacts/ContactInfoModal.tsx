@@ -342,40 +342,91 @@ export default function ContactInfoModal({ task, isOpen, onClose, onComplete }: 
   }
   
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
-      <div 
-        className="bg-white/95 backdrop-blur-xl rounded-2xl border border-white/50 w-full max-w-md shadow-2xl animate-in fade-in zoom-in-95 duration-200"
+    <div
+      className="fixed inset-0 z-[1000] flex items-center justify-center p-4"
+      style={{ background: 'rgba(17,17,17,0.55)', backdropFilter: 'blur(6px)' }}
+    >
+      <div
+        className="relative w-full max-w-lg max-h-[90vh] overflow-y-auto"
+        style={{
+          background: 'var(--ed-cream, #F3ECDC)',
+          border: '2px solid var(--ed-ink, #111)',
+          borderRadius: 2,
+        }}
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
-        <div className="flex items-center justify-between p-5 border-b border-[#2D5A3D]/10">
+        <div
+          className="flex items-center justify-between p-5"
+          style={{ borderBottom: '2px solid var(--ed-ink, #111)' }}
+        >
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-full bg-gradient-to-br from-[#2D5A3D] to-[#8DACAB] flex items-center justify-center text-white font-semibold">
+            <span
+              className="flex items-center justify-center font-bold"
+              style={{
+                width: 40, height: 40,
+                background: 'var(--ed-red, #E23B2E)',
+                color: '#fff',
+                border: '2px solid var(--ed-ink, #111)',
+                borderRadius: 2,
+                fontFamily: 'var(--font-mono, monospace)',
+              }}
+            >
               {contactName.charAt(0).toUpperCase()}
+            </span>
+            <div>
+              <p
+                className="text-[10px] tracking-[0.22em] text-[var(--ed-muted,#6F6B61)]"
+                style={{ fontFamily: 'var(--font-mono, monospace)', fontWeight: 700 }}
+              >
+                QUICK FILL
+              </p>
+              <h3
+                className="text-[var(--ed-ink,#111)] leading-tight"
+                style={{ fontFamily: 'var(--font-display, "Archivo Black", sans-serif)', fontSize: 18 }}
+              >
+                {getTitle().toUpperCase()}
+              </h3>
             </div>
-            <h3 className="text-[#2d2d2d] font-semibold text-lg">{getTitle()}</h3>
           </div>
-          <button 
-            onClick={onClose} 
-            className="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-lg transition-colors"
+          <button
+            onClick={onClose}
+            className="flex items-center justify-center"
+            style={{
+              width: 32, height: 32,
+              borderRadius: 999,
+              border: '2px solid var(--ed-ink, #111)',
+              background: 'var(--ed-paper, #FFFBF1)',
+            }}
+            aria-label="Close"
           >
-            <X size={20} />
+            <X size={14} className="text-[var(--ed-ink,#111)]" />
           </button>
         </div>
-        
+
         {/* Content */}
         <div className="p-5 space-y-4">
           {/* Error message */}
           {error && (
-            <div className="p-3 bg-red-50 border border-red-200 rounded-xl text-red-600 text-sm">
-              {error}
+            <div
+              className="p-3 text-[12px]"
+              style={{
+                background: 'var(--ed-red, #E23B2E)',
+                color: '#fff',
+                border: '2px solid var(--ed-ink, #111)',
+                borderRadius: 2,
+                fontFamily: 'var(--font-mono, monospace)',
+                letterSpacing: '0.1em',
+              }}
+            >
+              {error.toUpperCase()}
             </div>
           )}
           
           {/* Birthday field */}
           {(infoType === 'birthday' || infoType === 'multiple') && (
             <div>
-              <label className="block text-sm text-[#666] mb-1.5 flex items-center gap-2">
+              <label className="block text-[10px] tracking-[0.18em] text-[var(--ed-muted,#6F6B61)] mb-1.5 flex items-center gap-2" style={{ fontFamily: 'var(--font-mono, monospace)', fontWeight: 700 }}>
                 <Calendar size={14} className="text-[#2D5A3D]" />
                 Birthday
               </label>
@@ -383,7 +434,7 @@ export default function ContactInfoModal({ task, isOpen, onClose, onComplete }: 
                 type="date"
                 value={form.date_of_birth}
                 onChange={(e) => setForm({ ...form, date_of_birth: e.target.value })}
-                className="w-full px-4 py-3 bg-[#2D5A3D]/5 border border-[#2D5A3D]/10 rounded-xl text-gray-800 focus:outline-none focus:ring-2 focus:ring-[#2D5A3D]/30 transition-all"
+                className="w-full px-3 py-2.5 text-sm text-[var(--ed-ink,#111)] focus:outline-none editorial-input"
               />
             </div>
           )}
@@ -391,7 +442,7 @@ export default function ContactInfoModal({ task, isOpen, onClose, onComplete }: 
           {/* Phone field */}
           {(infoType === 'phone' || infoType === 'multiple') && (
             <div>
-              <label className="block text-sm text-[#666] mb-1.5 flex items-center gap-2">
+              <label className="block text-[10px] tracking-[0.18em] text-[var(--ed-muted,#6F6B61)] mb-1.5 flex items-center gap-2" style={{ fontFamily: 'var(--font-mono, monospace)', fontWeight: 700 }}>
                 <Phone size={14} className="text-[#2D5A3D]" />
                 Phone Number
               </label>
@@ -400,7 +451,7 @@ export default function ContactInfoModal({ task, isOpen, onClose, onComplete }: 
                 value={form.phone}
                 onChange={(e) => setForm({ ...form, phone: e.target.value })}
                 placeholder="(555) 123-4567"
-                className="w-full px-4 py-3 bg-[#2D5A3D]/5 border border-[#2D5A3D]/10 rounded-xl text-gray-800 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#2D5A3D]/30 transition-all"
+                className="w-full px-3 py-2.5 text-sm text-[var(--ed-ink,#111)] placeholder-[var(--ed-muted,#6F6B61)] focus:outline-none editorial-input"
               />
             </div>
           )}
@@ -408,7 +459,7 @@ export default function ContactInfoModal({ task, isOpen, onClose, onComplete }: 
           {/* Email field */}
           {(infoType === 'email' || infoType === 'multiple') && (
             <div>
-              <label className="block text-sm text-[#666] mb-1.5 flex items-center gap-2">
+              <label className="block text-[10px] tracking-[0.18em] text-[var(--ed-muted,#6F6B61)] mb-1.5 flex items-center gap-2" style={{ fontFamily: 'var(--font-mono, monospace)', fontWeight: 700 }}>
                 <Mail size={14} className="text-[#2D5A3D]" />
                 Email Address
               </label>
@@ -417,7 +468,7 @@ export default function ContactInfoModal({ task, isOpen, onClose, onComplete }: 
                 value={form.email}
                 onChange={(e) => setForm({ ...form, email: e.target.value })}
                 placeholder="email@example.com"
-                className="w-full px-4 py-3 bg-[#2D5A3D]/5 border border-[#2D5A3D]/10 rounded-xl text-gray-800 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#2D5A3D]/30 transition-all"
+                className="w-full px-3 py-2.5 text-sm text-[var(--ed-ink,#111)] placeholder-[var(--ed-muted,#6F6B61)] focus:outline-none editorial-input"
               />
             </div>
           )}
@@ -425,7 +476,7 @@ export default function ContactInfoModal({ task, isOpen, onClose, onComplete }: 
           {/* Nickname field */}
           {(infoType === 'nickname' || infoType === 'multiple') && (
             <div>
-              <label className="block text-sm text-[#666] mb-1.5 flex items-center gap-2">
+              <label className="block text-[10px] tracking-[0.18em] text-[var(--ed-muted,#6F6B61)] mb-1.5 flex items-center gap-2" style={{ fontFamily: 'var(--font-mono, monospace)', fontWeight: 700 }}>
                 <User size={14} className="text-[#2D5A3D]" />
                 Nickname
               </label>
@@ -434,7 +485,7 @@ export default function ContactInfoModal({ task, isOpen, onClose, onComplete }: 
                 value={form.nickname}
                 onChange={(e) => setForm({ ...form, nickname: e.target.value })}
                 placeholder="What do you call them?"
-                className="w-full px-4 py-3 bg-[#2D5A3D]/5 border border-[#2D5A3D]/10 rounded-xl text-gray-800 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#2D5A3D]/30 transition-all"
+                className="w-full px-3 py-2.5 text-sm text-[var(--ed-ink,#111)] placeholder-[var(--ed-muted,#6F6B61)] focus:outline-none editorial-input"
               />
             </div>
           )}
@@ -442,7 +493,7 @@ export default function ContactInfoModal({ task, isOpen, onClose, onComplete }: 
           {/* Address fields */}
           {(infoType === 'address' || infoType === 'multiple') && (
             <div className="space-y-3">
-              <label className="block text-sm text-[#666] mb-1.5 flex items-center gap-2">
+              <label className="block text-[10px] tracking-[0.18em] text-[var(--ed-muted,#6F6B61)] mb-1.5 flex items-center gap-2" style={{ fontFamily: 'var(--font-mono, monospace)', fontWeight: 700 }}>
                 <MapPin size={14} className="text-[#2D5A3D]" />
                 Address
               </label>
@@ -451,7 +502,7 @@ export default function ContactInfoModal({ task, isOpen, onClose, onComplete }: 
                 value={form.address}
                 onChange={(e) => setForm({ ...form, address: e.target.value })}
                 placeholder="Street address"
-                className="w-full px-4 py-3 bg-[#2D5A3D]/5 border border-[#2D5A3D]/10 rounded-xl text-gray-800 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#2D5A3D]/30 transition-all"
+                className="w-full px-3 py-2.5 text-sm text-[var(--ed-ink,#111)] placeholder-[var(--ed-muted,#6F6B61)] focus:outline-none editorial-input"
               />
               <div className="grid grid-cols-2 gap-3">
                 <input
@@ -459,14 +510,14 @@ export default function ContactInfoModal({ task, isOpen, onClose, onComplete }: 
                   value={form.city}
                   onChange={(e) => setForm({ ...form, city: e.target.value })}
                   placeholder="City"
-                  className="w-full px-4 py-3 bg-[#2D5A3D]/5 border border-[#2D5A3D]/10 rounded-xl text-gray-800 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#2D5A3D]/30 transition-all"
+                  className="w-full px-3 py-2.5 text-sm text-[var(--ed-ink,#111)] placeholder-[var(--ed-muted,#6F6B61)] focus:outline-none editorial-input"
                 />
                 <input
                   type="text"
                   value={form.state}
                   onChange={(e) => setForm({ ...form, state: e.target.value })}
                   placeholder="State"
-                  className="w-full px-4 py-3 bg-[#2D5A3D]/5 border border-[#2D5A3D]/10 rounded-xl text-gray-800 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#2D5A3D]/30 transition-all"
+                  className="w-full px-3 py-2.5 text-sm text-[var(--ed-ink,#111)] placeholder-[var(--ed-muted,#6F6B61)] focus:outline-none editorial-input"
                 />
               </div>
               <div className="grid grid-cols-2 gap-3">
@@ -475,14 +526,14 @@ export default function ContactInfoModal({ task, isOpen, onClose, onComplete }: 
                   value={form.zipcode}
                   onChange={(e) => setForm({ ...form, zipcode: e.target.value })}
                   placeholder="ZIP Code"
-                  className="w-full px-4 py-3 bg-[#2D5A3D]/5 border border-[#2D5A3D]/10 rounded-xl text-gray-800 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#2D5A3D]/30 transition-all"
+                  className="w-full px-3 py-2.5 text-sm text-[var(--ed-ink,#111)] placeholder-[var(--ed-muted,#6F6B61)] focus:outline-none editorial-input"
                 />
                 <input
                   type="text"
                   value={form.country}
                   onChange={(e) => setForm({ ...form, country: e.target.value })}
                   placeholder="Country"
-                  className="w-full px-4 py-3 bg-[#2D5A3D]/5 border border-[#2D5A3D]/10 rounded-xl text-gray-800 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#2D5A3D]/30 transition-all"
+                  className="w-full px-3 py-2.5 text-sm text-[var(--ed-ink,#111)] placeholder-[var(--ed-muted,#6F6B61)] focus:outline-none editorial-input"
                 />
               </div>
             </div>
@@ -491,42 +542,52 @@ export default function ContactInfoModal({ task, isOpen, onClose, onComplete }: 
           {/* Notes field */}
           {infoType === 'notes' && (
             <div>
-              <label className="block text-sm text-[#666] mb-1.5">Notes</label>
+              <label className="block text-[10px] tracking-[0.18em] text-[var(--ed-muted,#6F6B61)] mb-1.5" style={{ fontFamily: 'var(--font-mono, monospace)', fontWeight: 700 }}>NOTES</label>
               <textarea
                 value={form.notes}
                 onChange={(e) => setForm({ ...form, notes: e.target.value })}
                 placeholder={`Add notes about ${contactName}...`}
                 rows={3}
-                className="w-full px-4 py-3 bg-[#2D5A3D]/5 border border-[#2D5A3D]/10 rounded-xl text-gray-800 placeholder-gray-400 resize-none focus:outline-none focus:ring-2 focus:ring-[#2D5A3D]/30 transition-all"
+                className="w-full px-3 py-2.5 text-sm text-[var(--ed-ink,#111)] placeholder-[var(--ed-muted,#6F6B61)] resize-none focus:outline-none editorial-input"
               />
             </div>
           )}
         </div>
-        
+
         {/* Footer */}
-        <div className="flex justify-end gap-3 p-5 border-t border-[#2D5A3D]/10">
+        <div
+          className="flex justify-end gap-2 p-5"
+          style={{ borderTop: '2px solid var(--ed-ink, #111)' }}
+        >
           <button
             onClick={onClose}
-            className="px-5 py-2.5 text-gray-600 hover:text-gray-800 hover:bg-gray-100 rounded-xl font-medium transition-colors"
+            className="px-4 py-2 text-[10px] tracking-[0.18em]"
+            style={{
+              fontFamily: 'var(--font-mono, monospace)',
+              fontWeight: 700,
+              background: 'transparent',
+              color: 'var(--ed-ink, #111)',
+              border: '2px solid var(--ed-ink, #111)',
+              borderRadius: 2,
+            }}
           >
-            Cancel
+            CANCEL
           </button>
           <button
             onClick={handleSave}
             disabled={saving}
-            className="flex items-center gap-2 px-5 py-2.5 bg-[#2D5A3D] hover:bg-[#234A31] text-white rounded-xl font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            className="flex items-center gap-1.5 px-4 py-2 text-[10px] tracking-[0.18em] disabled:opacity-50"
+            style={{
+              fontFamily: 'var(--font-mono, monospace)',
+              fontWeight: 700,
+              background: 'var(--ed-red, #E23B2E)',
+              color: '#fff',
+              border: '2px solid var(--ed-ink, #111)',
+              borderRadius: 2,
+            }}
           >
-            {saving ? (
-              <>
-                <Loader2 size={16} className="animate-spin" />
-                Saving...
-              </>
-            ) : (
-              <>
-                <Save size={16} />
-                Save
-              </>
-            )}
+            {saving ? <Loader2 size={12} className="animate-spin" /> : <Save size={12} />}
+            {saving ? 'SAVING…' : 'SAVE'}
           </button>
         </div>
       </div>

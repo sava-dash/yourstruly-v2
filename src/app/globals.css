@@ -326,6 +326,19 @@ html, body {
   --font-mono:    var(--font-space-mono), 'Space Mono', ui-monospace, monospace;
 }
 
+/* Editorial input — flat cream-on-ink style used by every form field on the
+   redesigned surfaces (contact details, contact info quick-fill, circle
+   settings, etc.). One class so the look stays in sync. */
+.editorial-input {
+  background: var(--ed-cream, #F3ECDC);
+  border: 2px solid var(--ed-ink, #111);
+  border-radius: 2px;
+}
+.editorial-input:focus {
+  outline: 2px solid var(--ed-red, #E23B2E);
+  outline-offset: -2px;
+}
+
 /* ============================================
    REFINEMENT STYLES - Glass, Typography, Depth
    ============================================ */

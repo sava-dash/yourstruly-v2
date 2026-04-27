@@ -584,98 +584,158 @@ export default function JournalistPage() {
     }
   }
 
+  // Editorial filter pills
+  const STATUS_FILTERS: { key: typeof statusFilter; label: string; bg: string; ink: string }[] = [
+    { key: 'all',       label: 'ALL',       bg: 'var(--ed-red, #E23B2E)',    ink: '#fff' },
+    { key: 'active',    label: 'ACTIVE',    bg: 'var(--ed-blue, #2A5CD3)',   ink: '#fff' },
+    { key: 'completed', label: 'COMPLETED', bg: 'var(--ed-yellow, #F2C84B)', ink: 'var(--ed-ink, #111)' },
+    { key: 'draft',     label: 'DRAFT',     bg: 'var(--ed-ink, #111)',       ink: '#fff' },
+  ]
+
   return (
-    <div className="page-container">
-      {/* Warm gradient background with blobs */}
-      <div className="page-background">
-        <div className="page-blob page-blob-1" />
-        <div className="page-blob page-blob-2" />
-        <div className="page-blob page-blob-3" />
-      </div>
+    <div
+      className="relative min-h-screen"
+      style={{
+        background: 'var(--ed-cream, #F3ECDC)',
+        paddingTop: 80,
+        paddingBottom: 100,
+        paddingLeft: 24,
+        paddingRight: 24,
+      }}
+    >
+      <div className="relative z-10 max-w-6xl mx-auto">
+        {/* ───── Editorial header ───── */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 lg:gap-10 items-start mb-6">
+          <div>
+            <h1
+              className="text-[var(--ed-ink,#111)] leading-[0.85] tracking-[-0.02em] flex items-start gap-4"
+              style={{
+                fontFamily: 'var(--font-display, "Archivo Black", sans-serif)',
+                fontSize: 'clamp(56px, 9vw, 116px)',
+              }}
+            >
+              <span>INTER<br />VIEWS</span>
+              <span
+                aria-hidden
+                className="shrink-0"
+                style={{ width: 36, height: 36, background: 'var(--ed-red, #E23B2E)', borderRadius: 999, marginTop: 12 }}
+              />
+            </h1>
+            <p className="mt-4 text-[14px] text-[var(--ed-muted,#6F6B61)] max-w-md">
+              Capture family stories remotely.
+            </p>
+          </div>
 
-      {/* Content */}
-      <div className="relative z-10 max-w-5xl mx-auto">
-        {/* Header */}
-        <header className="mb-6">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-4">
-              <Link href="/dashboard" className="page-header-back">
-                <ChevronLeft size={20} />
-              </Link>
-              <div>
-                <h1
-                  className="text-2xl font-bold text-[#1A1F1C]"
-                  style={{ fontFamily: 'var(--font-dm-serif, DM Serif Display, serif)' }}
-                >
-                  Interviews
-                </h1>
-                <p className="page-header-subtitle">Capture family stories remotely</p>
-              </div>
-            </div>
-
-            <div className="flex items-center gap-2">
+          <div className="flex flex-col gap-3 lg:items-end">
+            <div className="flex flex-wrap items-center gap-3 lg:justify-end">
               <Link
                 href="/dashboard/journalist/inbox"
                 aria-label={unreadInbox > 0 ? `Inbox, ${unreadInbox} unread` : 'Inbox'}
-                className="relative flex items-center gap-2 px-4 py-2 bg-white hover:bg-[#D3E1DF] text-[#2D5A3D] text-sm font-medium rounded-xl transition-colors min-h-[44px]"
+                className="relative flex items-center gap-2 px-4 py-2.5 text-[11px] tracking-[0.18em]"
+                style={{
+                  fontFamily: 'var(--font-mono, monospace)',
+                  fontWeight: 700,
+                  background: 'var(--ed-paper, #FFFBF1)',
+                  color: 'var(--ed-ink, #111)',
+                  border: '2px solid var(--ed-ink, #111)',
+                  borderRadius: 2,
+                }}
               >
-                <Inbox size={18} />
-                <span className="hidden sm:inline">Inbox</span>
+                <Inbox size={13} />
+                INBOX
                 {unreadInbox > 0 && (
-                  <span className="absolute -top-1 -right-1 min-w-[20px] h-5 px-1 bg-[#C35F33] text-white text-xs font-semibold rounded-full flex items-center justify-center">
+                  <span
+                    className="inline-flex items-center justify-center text-[9px]"
+                    style={{
+                      minWidth: 18,
+                      height: 18,
+                      padding: '0 4px',
+                      background: 'var(--ed-red, #E23B2E)',
+                      color: '#fff',
+                      borderRadius: 999,
+                      fontWeight: 700,
+                    }}
+                  >
                     {unreadInbox > 99 ? '99+' : unreadInbox}
                   </span>
                 )}
               </Link>
               <button
                 onClick={() => setShowNewSession(true)}
-                className="flex items-center gap-2 px-4 py-2 bg-[#2D5A3D] hover:bg-[#244B32] text-white text-sm font-medium rounded-xl transition-colors min-h-[44px]"
+                className="flex items-center gap-2 px-5 py-2.5 text-[11px] tracking-[0.18em]"
+                style={{
+                  fontFamily: 'var(--font-mono, monospace)',
+                  fontWeight: 700,
+                  background: 'var(--ed-red, #E23B2E)',
+                  color: '#fff',
+                  border: '2px solid var(--ed-ink, #111)',
+                  borderRadius: 2,
+                }}
               >
-                <Plus size={18} />
-                <span className="hidden sm:inline">New Interview</span>
+                <Plus size={13} strokeWidth={3} />
+                NEW INTERVIEW
               </button>
             </div>
           </div>
-        </header>
+        </div>
 
-        {/* Search and Filter */}
+        {/* Search + filter pills */}
         {!loading && sessions.length > 0 && (
-          <div className="mb-5 space-y-3">
-            {/* Search input */}
-            <div className="relative">
-              <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-[#94A09A]" />
-              <input
-                type="text"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder="Search by contact name, question, or status..."
-                className="w-full pl-9 pr-4 py-2 rounded-xl border border-[#DDE3DF] bg-white text-sm text-[#1A1F1C] placeholder-[#94A09A] focus:outline-none focus:ring-2 focus:ring-[#2D5A3D]/20 focus:border-[#2D5A3D]"
-              />
-              {searchQuery && (
-                <button
-                  onClick={() => setSearchQuery('')}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-[#94A09A] hover:text-[#5A6660]"
-                >
-                  <X size={14} />
-                </button>
-              )}
+          <div className="mb-6 flex flex-col gap-3">
+            <div
+              className="flex items-stretch w-full lg:max-w-md"
+              style={{ border: '2px solid var(--ed-ink, #111)', background: 'var(--ed-paper, #FFFBF1)', borderRadius: 2 }}
+            >
+              <div className="flex items-center flex-1 px-3 gap-2">
+                <Search size={16} className="text-[var(--ed-muted,#6F6B61)]" />
+                <input
+                  type="text"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  placeholder="Search interviews…"
+                  className="w-full py-2.5 bg-transparent text-sm text-[var(--ed-ink,#111)] placeholder-[var(--ed-muted,#6F6B61)] focus:outline-none"
+                />
+                {searchQuery && (
+                  <button
+                    onClick={() => setSearchQuery('')}
+                    className="text-[var(--ed-muted,#6F6B61)] hover:text-[var(--ed-ink,#111)]"
+                    aria-label="Clear search"
+                  >
+                    <X size={14} />
+                  </button>
+                )}
+              </div>
+              <button
+                type="button"
+                aria-label="Search"
+                className="flex items-center justify-center px-4"
+                style={{ background: 'var(--ed-red, #E23B2E)', color: '#fff', borderLeft: '2px solid var(--ed-ink, #111)' }}
+              >
+                <Search size={16} strokeWidth={2.5} />
+              </button>
             </div>
 
-            {/* Status filter pills */}
-            <div className="flex gap-2">
-              {(['all', 'active', 'completed', 'draft'] as const).map((status) => (
-                <button
-                  key={status}
-                  onClick={() => setStatusFilter(status)}
-                  className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${
-                    statusFilter === status
-                      ? 'bg-[#2D5A3D] text-white'
-                      : 'bg-white border border-[#DDE3DF] text-[#5A6660] hover:bg-[#F0F0EC]'
-                  }`}
-                >
-                  {status.charAt(0).toUpperCase() + status.slice(1)}
-                </button>
-              ))}
+            <div className="flex flex-wrap gap-2">
+              {STATUS_FILTERS.map((s) => {
+                const isActive = statusFilter === s.key
+                return (
+                  <button
+                    key={s.key}
+                    onClick={() => setStatusFilter(s.key)}
+                    className="px-4 py-2 text-[11px] tracking-[0.18em] transition-transform hover:-translate-y-0.5"
+                    style={{
+                      fontFamily: 'var(--font-mono, monospace)',
+                      fontWeight: 700,
+                      background: isActive ? s.bg : 'var(--ed-paper, #FFFBF1)',
+                      color: isActive ? s.ink : 'var(--ed-ink, #111)',
+                      border: '2px solid var(--ed-ink, #111)',
+                      borderRadius: 999,
+                    }}
+                  >
+                    {s.label}
+                  </button>
+                )
+              })}
             </div>
           </div>
         )}
@@ -684,32 +744,82 @@ export default function JournalistPage() {
         <main className="pb-12">
           <div>
           {loading ? (
-            <div className="flex items-center justify-center h-64">
-              <div className="text-[#666]">Loading...</div>
+            <div className="flex flex-col items-center justify-center h-64">
+              <div
+                className="w-8 h-8 rounded-full animate-spin"
+                style={{ border: '3px solid var(--ed-ink, #111)', borderTopColor: 'transparent' }}
+              />
+              <p
+                className="text-[10px] tracking-[0.22em] text-[var(--ed-muted,#6F6B61)] mt-4"
+                style={{ fontFamily: 'var(--font-mono, monospace)', fontWeight: 700 }}
+              >
+                LOADING…
+              </p>
             </div>
           ) : sessions.length === 0 ? (
-            <div className="bg-white border border-[#DDE3DF] rounded-xl p-12 text-center shadow-sm">
-              <div className="w-16 h-16 bg-[#2D5A3D]/10 rounded-full flex items-center justify-center mx-auto mb-4">
-                <Video size={32} className="text-[#2D5A3D]" />
+            <div
+              className="flex flex-col items-center justify-center text-center py-20 px-6"
+              style={{ background: 'var(--ed-paper, #FFFBF1)', border: '2px solid var(--ed-ink, #111)', borderRadius: 2 }}
+            >
+              <div
+                className="flex items-center justify-center mb-4"
+                style={{
+                  width: 56,
+                  height: 56,
+                  background: 'var(--ed-red, #E23B2E)',
+                  color: '#fff',
+                  border: '2px solid var(--ed-ink, #111)',
+                  borderRadius: 999,
+                }}
+              >
+                <Video size={24} />
               </div>
-              <h3 className="text-lg font-semibold text-[#2d2d2d] mb-2">No interviews yet</h3>
-              <p className="text-[#666] mb-6 max-w-md mx-auto">
+              <p
+                className="text-xl text-[var(--ed-ink,#111)] mb-2 leading-tight"
+                style={{ fontFamily: 'var(--font-display, "Archivo Black", sans-serif)' }}
+              >
+                NO INTERVIEWS YET
+              </p>
+              <p className="text-sm text-[var(--ed-muted,#6F6B61)] mb-6 max-w-md">
                 Send a question to family or friends, and they can record a video response from anywhere.
               </p>
               <button
                 onClick={() => setShowNewSession(true)}
-                className="inline-flex items-center gap-2 px-5 py-2.5 bg-[#2D5A3D] hover:bg-[#244B32] text-white rounded-xl transition-colors"
+                className="flex items-center gap-2 px-5 py-2.5 text-[11px] tracking-[0.18em]"
+                style={{
+                  fontFamily: 'var(--font-mono, monospace)',
+                  fontWeight: 700,
+                  background: 'var(--ed-red, #E23B2E)',
+                  color: '#fff',
+                  border: '2px solid var(--ed-ink, #111)',
+                  borderRadius: 2,
+                }}
               >
-                <Plus size={18} />
-                Start your first interview
+                <Plus size={13} strokeWidth={3} />
+                START YOUR FIRST INTERVIEW
               </button>
             </div>
           ) : (
             <div className="space-y-4">
               {/* No results after filtering */}
               {!hasFilteredResults && (
-                <div className="bg-white border border-[#DDE3DF] rounded-xl p-8 text-center shadow-sm">
-                  <p className="text-[#5A6660] text-sm">No interviews match your search or filter.</p>
+                <div
+                  className="text-center py-16 px-6"
+                  style={{ background: 'var(--ed-paper, #FFFBF1)', border: '2px solid var(--ed-ink, #111)', borderRadius: 2 }}
+                >
+                  <p
+                    className="text-[11px] tracking-[0.18em] text-[var(--ed-muted,#6F6B61)] mb-3"
+                    style={{ fontFamily: 'var(--font-mono, monospace)', fontWeight: 700 }}
+                  >
+                    NO INTERVIEWS MATCH
+                  </p>
+                  <button
+                    onClick={() => { setSearchQuery(''); setStatusFilter('all') }}
+                    className="text-[11px] tracking-[0.18em] underline text-[var(--ed-ink,#111)]"
+                    style={{ fontFamily: 'var(--font-mono, monospace)', fontWeight: 700 }}
+                  >
+                    CLEAR FILTERS
+                  </button>
                 </div>
               )}
 

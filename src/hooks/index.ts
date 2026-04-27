@@ -11,7 +11,7 @@ export { useContacts } from './useContacts';
 export { useEngagementPrompts } from './useEngagementPrompts';
 export { useMarketplaceProducts, useGiftSuggestions, useCategories } from './useMarketplace';
 export { useNotificationPreferences } from './useNotificationPreferences';
-export { usePersonaPlexVoice } from './usePersonaPlexVoice';
+export { useOpenAIRealtimeVoice, type RealtimeVoice } from './useOpenAIRealtimeVoice';
 export { usePostscriptCredits } from './usePostscriptCredits';
 export { useSMS } from './useSMS';
 export { useSubscription } from './useSubscription';

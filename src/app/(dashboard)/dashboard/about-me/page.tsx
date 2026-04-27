@@ -4,49 +4,56 @@ import { useState, useEffect } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { motion } from 'framer-motion'
 import {
-  Star, Sparkles, BookOpen, Music, Film,
+  Star, BookOpen, Music, Film,
   Utensils, MapPin, ChevronRight, ChefHat, Clock, Plus,
-  Edit2, Trash2, ExternalLink, X, Loader2, Check,
+  Edit2, Trash2, ExternalLink, X, Loader2, Check, Sparkles,
+  Car, Shirt, Trophy, Quote,
 } from 'lucide-react'
-import Link from 'next/link'
 import { AnimatePresence } from 'framer-motion'
 import { ListItemCard } from '@/components/home-v2/cards/ListItemCard'
 import '@/styles/page-styles.css'
 
-// ── Category config for favorites ──
+// ── Editorial palette per category ──
+// Each tab gets one of the four editorial colors so the pills, card flags,
+// and avatar tiles all stay color-keyed to the same identity.
 const FAV_CATEGORIES: {
-  key: string; label: string; icon: any; color: string; bg: string; includes?: string[]
+  key: string
+  label: string
+  icon: any
+  color: string
+  ink: string
+  includes?: string[]
 }[] = [
-  { key: 'music', label: 'Music', icon: Music, color: '#6B5B95', bg: '#EFEAF5' },
-  { key: 'movies', label: 'Movies & TV', icon: Film, color: '#B8562E', bg: '#FBF0EB', includes: ['movies', 'tv_shows'] },
-  { key: 'books', label: 'Books', icon: BookOpen, color: '#2D5A3D', bg: '#E6F0EA' },
-  { key: 'foods', label: 'Food & Drink', icon: Utensils, color: '#B8562E', bg: '#FBF0EB', includes: ['foods'] },
-  { key: 'places', label: 'Places', icon: MapPin, color: '#2D5A3D', bg: '#E6F0EA' },
-  { key: 'lifestyle', label: 'Life & Style', icon: Sparkles, color: '#C4A235', bg: '#FAF5E4', includes: ['cars', 'clothes', 'hobbies', 'sports_teams', 'quotes'] },
-  { key: 'recipes', label: 'Recipes', icon: ChefHat, color: '#B8562E', bg: '#FBF0EB' },
+  { key: 'music',     label: 'MUSIC',        icon: Music,    color: 'var(--ed-blue, #2A5CD3)',   ink: '#fff' },
+  { key: 'movies',    label: 'MOVIES & TV',  icon: Film,     color: 'var(--ed-red, #E23B2E)',    ink: '#fff', includes: ['movies', 'tv_shows'] },
+  { key: 'books',     label: 'BOOKS',        icon: BookOpen, color: 'var(--ed-yellow, #F2C84B)', ink: 'var(--ed-ink, #111)' },
+  { key: 'foods',     label: 'FOOD & DRINK', icon: Utensils, color: 'var(--ed-red, #E23B2E)',    ink: '#fff', includes: ['foods'] },
+  { key: 'places',    label: 'PLACES',       icon: MapPin,   color: 'var(--ed-blue, #2A5CD3)',   ink: '#fff' },
+  { key: 'lifestyle', label: 'LIFE & STYLE', icon: Sparkles, color: 'var(--ed-ink, #111)',       ink: '#fff', includes: ['cars', 'clothes', 'hobbies', 'sports_teams', 'quotes'] },
+  { key: 'recipes',   label: 'RECIPES',      icon: ChefHat,  color: 'var(--ed-yellow, #F2C84B)', ink: 'var(--ed-ink, #111)' },
 ]
 
 // Sub-category options for merged tabs
 const LIFESTYLE_SUBCATEGORIES = [
-  { key: 'cars', label: 'Cars' },
-  { key: 'clothes', label: 'Style' },
-  { key: 'hobbies', label: 'Hobbies' },
-  { key: 'sports_teams', label: 'Sports' },
-  { key: 'quotes', label: 'Quotes' },
+  { key: 'cars',         label: 'Cars',   icon: Car },
+  { key: 'clothes',      label: 'Style',  icon: Shirt },
+  { key: 'hobbies',      label: 'Hobbies', icon: Sparkles },
+  { key: 'sports_teams', label: 'Sports', icon: Trophy },
+  { key: 'quotes',       label: 'Quotes', icon: Quote },
 ]
 
 const MOVIES_SUBCATEGORIES = [
-  { key: 'movies', label: 'Movies' },
-  { key: 'tv_shows', label: 'TV Shows' },
+  { key: 'movies',    label: 'Movies' },
+  { key: 'tv_shows',  label: 'TV Shows' },
 ]
 
 // Empty state quotes
 const EMPTY_QUOTES = [
-  "Every family has a story worth telling.",
-  "The things you love say more about you than any biography.",
-  "Your favorites are the soundtrack of your life.",
-  "What you love defines who you are.",
-  "The best stories start with 'my favorite...'",
+  "EVERY FAMILY HAS A STORY WORTH TELLING.",
+  "THE THINGS YOU LOVE SAY MORE THAN ANY BIOGRAPHY.",
+  "YOUR FAVORITES ARE THE SOUNDTRACK OF YOUR LIFE.",
+  "WHAT YOU LOVE DEFINES WHO YOU ARE.",
+  "THE BEST STORIES START WITH 'MY FAVORITE…'",
 ]
 
 interface Favorite {
@@ -156,6 +163,7 @@ export default function AboutMePage() {
   }
 
   const handleDeleteFavorite = async (favId: string) => {
+    if (!confirm('Remove this favorite?')) return
     await supabase.from('favorites').delete().eq('id', favId)
     setFavorites(prev => prev.filter(f => f.id !== favId))
   }
@@ -196,7 +204,6 @@ export default function AboutMePage() {
 
   // Group favorites by category, mapping sub-categories to their parent tab
   const grouped = favorites.reduce<Record<string, Favorite[]>>((acc, f) => {
-    // Find which tab this favorite belongs to
     const tab = FAV_CATEGORIES.find(c =>
       c.key === f.category || c.includes?.includes(f.category)
     )
@@ -206,97 +213,242 @@ export default function AboutMePage() {
     return acc
   }, {})
 
-  // Show all categories — active tab defaults to first with items, or first overall
   const catsWithItems = FAV_CATEGORIES.filter(c => grouped[c.key]?.length)
   const displayCategory = activeCategory || catsWithItems[0]?.key || FAV_CATEGORIES[0].key
   const displayItems = displayCategory ? (grouped[displayCategory] || []) : []
   const displayConfig = FAV_CATEGORIES.find(c => c.key === displayCategory)
+  const totalFaves = favorites.length + recipes.length
 
+  // ──────── Loading ────────
   if (loading) {
     return (
-      <div className="max-w-3xl mx-auto px-6 py-12">
-        <div className="animate-pulse space-y-6">
-          <div className="h-8 bg-gray-100 rounded w-48" />
-          <div className="h-40 bg-gray-100 rounded-2xl" />
-          <div className="h-40 bg-gray-100 rounded-2xl" />
+      <div
+        className="relative min-h-screen"
+        style={{ background: 'var(--ed-cream, #F3ECDC)', paddingTop: 80, paddingBottom: 100, paddingLeft: 24, paddingRight: 24 }}
+      >
+        <div className="relative z-10 max-w-6xl mx-auto flex items-center justify-center" style={{ minHeight: 'calc(100vh - 200px)' }}>
+          <div
+            className="w-8 h-8 rounded-full animate-spin"
+            style={{ border: '3px solid var(--ed-ink, #111)', borderTopColor: 'transparent' }}
+          />
         </div>
       </div>
     )
   }
 
   return (
-    <div className="max-w-3xl mx-auto px-4 sm:px-6 py-8 pb-24">
-      {/* Page header */}
-      <div className="mb-10">
-        <h1 className="text-3xl font-bold text-[#1A1F1C]" style={{ fontFamily: 'var(--font-dm-serif, DM Serif Display, serif)' }}>
-          My Faves
-        </h1>
-        <p className="text-[#94A09A] text-sm mt-1">The things that make you, you.</p>
-      </div>
+    <div
+      className="relative min-h-screen"
+      style={{
+        background: 'var(--ed-cream, #F3ECDC)',
+        paddingTop: 80,
+        paddingBottom: 100,
+        paddingLeft: 24,
+        paddingRight: 24,
+      }}
+    >
+      <div className="relative z-10 max-w-6xl mx-auto">
+        {/* ───── Editorial header ───── */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 lg:gap-10 items-start mb-6">
+          <div>
+            <h1
+              className="text-[var(--ed-ink,#111)] leading-[0.85] tracking-[-0.02em] flex items-start gap-4"
+              style={{
+                fontFamily: 'var(--font-display, "Archivo Black", sans-serif)',
+                fontSize: 'clamp(56px, 9vw, 116px)',
+              }}
+            >
+              <span>
+                MY<br />FAVES
+              </span>
+              <span
+                aria-hidden
+                className="shrink-0"
+                style={{ width: 36, height: 36, background: 'var(--ed-red, #E23B2E)', borderRadius: 999, marginTop: 12 }}
+              />
+            </h1>
+            <p className="mt-4 text-[14px] text-[var(--ed-muted,#6F6B61)] max-w-md">
+              The things that make you, you.
+            </p>
+            {totalFaves > 0 && (
+              <div
+                className="mt-4 flex flex-wrap items-baseline gap-x-5 gap-y-2 text-[11px] sm:text-[12px] tracking-[0.18em]"
+                style={{ fontFamily: 'var(--font-mono, monospace)' }}
+              >
+                <span>
+                  <span className="text-[18px] sm:text-[20px] mr-1.5" style={{ color: 'var(--ed-red, #E23B2E)', fontWeight: 700 }}>
+                    {favorites.length}
+                  </span>
+                  <span className="text-[var(--ed-ink,#111)]">FAVORITES</span>
+                </span>
+                {recipes.length > 0 && (
+                  <>
+                    <span aria-hidden className="text-[var(--ed-muted,#6F6B61)]">·</span>
+                    <span>
+                      <span className="text-[18px] sm:text-[20px] mr-1.5" style={{ color: 'var(--ed-blue, #2A5CD3)', fontWeight: 700 }}>
+                        {recipes.length}
+                      </span>
+                      <span className="text-[var(--ed-ink,#111)]">RECIPES</span>
+                    </span>
+                  </>
+                )}
+                <span aria-hidden className="text-[var(--ed-muted,#6F6B61)]">·</span>
+                <span>
+                  <span className="text-[18px] sm:text-[20px] mr-1.5" style={{ color: 'var(--ed-yellow, #F2C84B)', fontWeight: 700, WebkitTextStroke: '1px var(--ed-ink, #111)' }}>
+                    {catsWithItems.length}
+                  </span>
+                  <span className="text-[var(--ed-ink,#111)]">CATEGORIES</span>
+                </span>
+              </div>
+            )}
+          </div>
 
-      {/* ══════════════════════════════════════════ */}
-      {/*  MY FAVORITES                               */}
-      {/* ══════════════════════════════════════════ */}
-      <section className="mb-10">
-        <SectionHeader icon={Star} label="My Favorites" color="#B8562E" />
+          {/* Right: Add button keyed to active category */}
+          <div className="flex flex-col gap-3 lg:items-end">
+            <button
+              onClick={() => setAddingTo(displayCategory)}
+              className="flex items-center gap-2 px-5 py-2.5 text-[11px] tracking-[0.18em] self-start lg:self-end"
+              style={{
+                fontFamily: 'var(--font-mono, monospace)',
+                fontWeight: 700,
+                background: 'var(--ed-red, #E23B2E)',
+                color: '#fff',
+                border: '2px solid var(--ed-ink, #111)',
+                borderRadius: 2,
+              }}
+            >
+              <Plus size={13} strokeWidth={3} />
+              ADD {displayConfig?.label || 'FAVE'}
+            </button>
+          </div>
+        </div>
 
-        {/* Category tabs — horizontal scroll, ALL categories shown */}
-        <div className="flex gap-2 overflow-x-auto pb-3 -mx-1 px-1 mb-4" style={{ scrollbarWidth: 'none' }}>
-          {FAV_CATEGORIES.map(cat => {
+        {/* ───── Color-coded category pills ───── */}
+        <div className="flex flex-wrap gap-2 mb-6">
+          {FAV_CATEGORIES.map((cat) => {
             const Icon = cat.icon
             const isActive = displayCategory === cat.key
-            const count = grouped[cat.key]?.length || 0
+            const count = grouped[cat.key]?.length || (cat.key === 'recipes' ? recipes.length : 0)
             return (
               <button
                 key={cat.key}
                 onClick={() => setActiveCategory(cat.key)}
-                className={`flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium whitespace-nowrap transition-all flex-shrink-0 ${
-                  isActive
-                    ? 'text-white shadow-sm'
-                    : 'bg-[#FAFAF7] text-[#5A6660] hover:bg-[#F0F0EC] border border-[#E8E2D8]'
-                }`}
-                style={isActive ? { background: cat.color } : undefined}
+                className="inline-flex items-center gap-1.5 px-4 py-2 text-[11px] tracking-[0.18em] transition-transform hover:-translate-y-0.5"
+                style={{
+                  fontFamily: 'var(--font-mono, monospace)',
+                  fontWeight: 700,
+                  background: isActive ? cat.color : 'var(--ed-paper, #FFFBF1)',
+                  color: isActive ? cat.ink : 'var(--ed-ink, #111)',
+                  border: '2px solid var(--ed-ink, #111)',
+                  borderRadius: 999,
+                }}
               >
-                <Icon size={14} />
+                <Icon size={13} />
                 {cat.label}
                 {count > 0 && (
-                  <span className={`text-xs ${isActive ? 'text-white/70' : 'text-[#94A09A]'}`}>{count}</span>
+                  <span
+                    className="inline-flex items-center justify-center text-[9px]"
+                    style={{
+                      minWidth: 18,
+                      height: 18,
+                      padding: '0 4px',
+                      background: isActive ? '#fff' : 'var(--ed-ink, #111)',
+                      color: isActive ? 'var(--ed-ink, #111)' : '#fff',
+                      borderRadius: 999,
+                    }}
+                  >
+                    {count}
+                  </span>
                 )}
               </button>
             )
           })}
         </div>
 
-        {/* Add button for active category */}
-        <div className="flex justify-end mb-3">
-          <button
-            onClick={() => setAddingTo(displayCategory)}
-            className="flex items-center gap-1.5 px-4 py-2 rounded-xl bg-[#2D5A3D] text-white text-sm font-medium hover:bg-[#234A31] active:scale-[0.96] transition-all"
-          >
-            <Plus size={14} /> Add {displayConfig?.label}
-          </button>
-        </div>
-
-        {/* Content — recipes tab shows recipe cards, others show favorites */}
+        {/* ───── Content area ───── */}
         {displayCategory === 'recipes' ? (
           recipes.length > 0 ? (
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
               {recipes.map((recipe, i) => {
-                const title = recipe.prompt_text?.replace(/^(share|tell|what'?s|capture).*?:/i, '').trim()
-                  || recipe.response_text?.split('\n')[0]?.slice(0, 60) || 'Untitled Recipe'
+                const title =
+                  recipe.prompt_text?.replace(/^(share|tell|what'?s|capture).*?:/i, '').trim() ||
+                  recipe.response_text?.split('\n')[0]?.slice(0, 60) ||
+                  'Untitled Recipe'
                 return (
-                  <motion.div key={recipe.id} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.05 }}
-                    className="rounded-2xl border border-[#E8E2D8] bg-white overflow-hidden hover:shadow-md transition-shadow">
-                    <div className="flex gap-3 p-4">
-                      <div className="w-16 h-16 rounded-xl flex items-center justify-center flex-shrink-0 bg-[#FBF0EB]">
-                        <Utensils size={20} className="text-[#B8562E]" />
-                      </div>
+                  <motion.div
+                    key={recipe.id}
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: i * 0.04 }}
+                    className="relative"
+                    style={{
+                      background: 'var(--ed-paper, #FFFBF1)',
+                      border: '2px solid var(--ed-ink, #111)',
+                      borderRadius: 2,
+                      overflow: 'hidden',
+                    }}
+                  >
+                    <span
+                      aria-hidden
+                      className="absolute top-0 left-0"
+                      style={{
+                        width: 32,
+                        height: 32,
+                        background: 'var(--ed-yellow, #F2C84B)',
+                        clipPath: 'polygon(0 0, 100% 0, 0 100%)',
+                        borderRight: '2px solid var(--ed-ink, #111)',
+                      }}
+                    />
+                    <div className="flex gap-3 p-4 pt-6">
+                      <span
+                        className="flex items-center justify-center shrink-0"
+                        style={{
+                          width: 44,
+                          height: 44,
+                          background: 'var(--ed-yellow, #F2C84B)',
+                          color: 'var(--ed-ink, #111)',
+                          border: '2px solid var(--ed-ink, #111)',
+                          borderRadius: 2,
+                        }}
+                      >
+                        <Utensils size={18} />
+                      </span>
                       <div className="flex-1 min-w-0">
-                        <h4 className="font-semibold text-[#1A1F1C] text-sm">{title}</h4>
-                        {recipe.response_text && <p className="text-xs text-[#5A6660] mt-1 line-clamp-2">{recipe.response_text.slice(0, 150)}</p>}
-                        <div className="flex items-center gap-2 mt-1.5 text-[10px] text-[#94A09A]">
-                          {recipe.tags?.slice(0, 2).map(t => <span key={t} className="px-2 py-0.5 rounded-full bg-[#B8562E]/10 text-[#B8562E]">{t}</span>)}
-                          <Clock size={10} /> {new Date(recipe.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+                        <h4
+                          className="text-[var(--ed-ink,#111)] leading-tight truncate"
+                          style={{ fontFamily: 'var(--font-display, "Archivo Black", sans-serif)', fontSize: 15 }}
+                        >
+                          {title.toUpperCase()}
+                        </h4>
+                        {recipe.response_text && (
+                          <p className="text-[12px] text-[var(--ed-muted,#6F6B61)] mt-1 line-clamp-2">
+                            {recipe.response_text.slice(0, 150)}
+                          </p>
+                        )}
+                        <div
+                          className="flex items-center gap-2 mt-2 text-[10px] tracking-[0.14em] text-[var(--ed-muted,#6F6B61)]"
+                          style={{ fontFamily: 'var(--font-mono, monospace)', fontWeight: 700 }}
+                        >
+                          {recipe.tags?.slice(0, 2).map((t) => (
+                            <span
+                              key={t}
+                              className="inline-flex items-center px-1.5 py-0.5"
+                              style={{
+                                background: 'var(--ed-cream, #F3ECDC)',
+                                border: '1.5px solid var(--ed-ink, #111)',
+                                color: 'var(--ed-ink, #111)',
+                                borderRadius: 2,
+                              }}
+                            >
+                              {t.toUpperCase()}
+                            </span>
+                          ))}
+                          <span className="inline-flex items-center gap-1">
+                            <Clock size={10} />
+                            {new Date(recipe.created_at)
+                              .toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
+                              .toUpperCase()}
+                          </span>
                         </div>
                       </div>
                     </div>
@@ -305,124 +457,241 @@ export default function AboutMePage() {
               })}
             </div>
           ) : (
-            <div className="text-center py-12 rounded-2xl border-2 border-dashed border-[#E8E2D8]">
-              <Utensils size={22} className="text-[#B8562E]/30 mx-auto mb-2" />
-              <p className="text-sm text-[#5A6660] font-medium mb-1">No recipes added yet</p>
-              <p className="text-xs text-[#94A09A] mb-4">Capture family recipes with ingredients, instructions, and the story behind them</p>
-              <button onClick={() => setAddingTo('recipes')} className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-[#2D5A3D] text-white text-sm font-medium hover:bg-[#234A31] active:scale-[0.96] transition-all">
-                <Plus size={14} /> Add Recipe
-              </button>
-            </div>
+            <EmptyState
+              label="recipes"
+              tip="Capture family recipes with ingredients, instructions, and the story behind them."
+              accent="var(--ed-yellow, #F2C84B)"
+              icon={<ChefHat size={24} className="text-[var(--ed-ink,#111)]" />}
+              onAdd={() => setAddingTo('recipes')}
+              addLabel="ADD RECIPE"
+            />
           )
         ) : displayItems.length > 0 ? (
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
             {displayItems.map((fav, i) => (
               <motion.div
                 key={fav.id}
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: i * 0.05 }}
-                className="rounded-2xl border border-[#E8E2D8] overflow-hidden bg-white hover:shadow-md transition-shadow"
+                transition={{ delay: i * 0.04 }}
+                className="relative group"
+                style={{
+                  background: 'var(--ed-paper, #FFFBF1)',
+                  border: '2px solid var(--ed-ink, #111)',
+                  borderRadius: 2,
+                  overflow: 'hidden',
+                }}
               >
-                <div className="flex gap-3 p-4">
+                <span
+                  aria-hidden
+                  className="absolute top-0 left-0"
+                  style={{
+                    width: 32,
+                    height: 32,
+                    background: displayConfig?.color || 'var(--ed-red, #E23B2E)',
+                    clipPath: 'polygon(0 0, 100% 0, 0 100%)',
+                    borderRight: '2px solid var(--ed-ink, #111)',
+                  }}
+                />
+
+                <div className="flex gap-3 p-4 pt-6">
                   {fav.image_url ? (
-                    <img src={fav.image_url} alt={fav.item_name} className="w-16 h-16 rounded-xl object-cover flex-shrink-0" />
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img
+                      src={fav.image_url}
+                      alt={fav.item_name}
+                      className="shrink-0 object-cover"
+                      style={{
+                        width: 56,
+                        height: 56,
+                        border: '2px solid var(--ed-ink, #111)',
+                        borderRadius: 2,
+                      }}
+                    />
                   ) : (
-                    <div className="w-16 h-16 rounded-xl flex items-center justify-center flex-shrink-0" style={{ background: displayConfig?.bg }}>
-                      {displayConfig && <displayConfig.icon size={20} style={{ color: displayConfig.color }} />}
-                    </div>
+                    <span
+                      className="flex items-center justify-center shrink-0"
+                      style={{
+                        width: 56,
+                        height: 56,
+                        background: displayConfig?.color || 'var(--ed-red, #E23B2E)',
+                        color: displayConfig?.ink || '#fff',
+                        border: '2px solid var(--ed-ink, #111)',
+                        borderRadius: 2,
+                      }}
+                    >
+                      {displayConfig && <displayConfig.icon size={22} />}
+                    </span>
                   )}
                   <div className="flex-1 min-w-0">
-                    <h4 className="font-semibold text-[#1A1F1C] text-sm truncate">{fav.item_name}</h4>
+                    <h4
+                      className="text-[var(--ed-ink,#111)] leading-tight truncate"
+                      style={{ fontFamily: 'var(--font-display, "Archivo Black", sans-serif)', fontSize: 15 }}
+                    >
+                      {fav.item_name.toUpperCase()}
+                    </h4>
                     {fav.rating && (
-                      <div className="flex gap-0.5 mt-0.5">
-                        {[1, 2, 3, 4, 5].map(s => (
-                          <Star key={s} size={10} className={s <= fav.rating! ? 'text-[#C4A235]' : 'text-[#E8E2D8]'} fill={s <= fav.rating! ? '#C4A235' : 'none'} />
+                      <div className="flex gap-0.5 mt-1">
+                        {[1, 2, 3, 4, 5].map((s) => (
+                          <Star
+                            key={s}
+                            size={11}
+                            className={s <= fav.rating! ? 'text-[var(--ed-red,#E23B2E)]' : 'text-[var(--ed-muted,#6F6B61)]/30'}
+                            fill={s <= fav.rating! ? 'var(--ed-red, #E23B2E)' : 'none'}
+                          />
                         ))}
                       </div>
                     )}
                     {fav.story && (
-                      <p className="text-xs text-[#5A6660] mt-1 line-clamp-2 italic">&ldquo;{fav.story}&rdquo;</p>
+                      <p
+                        className="text-[12px] text-[var(--ed-muted,#6F6B61)] mt-1.5 line-clamp-2 italic"
+                        style={{ fontFamily: 'var(--font-dm-serif, "DM Serif Display", serif)' }}
+                      >
+                        &ldquo;{fav.story}&rdquo;
+                      </p>
                     )}
-                    <div className="flex items-center gap-2 mt-1.5 text-[10px] text-[#94A09A]">
-                      {fav.year && <span>{fav.year}</span>}
-                      {fav.associated_person && <><span>·</span><span>via {fav.associated_person}</span></>}
-                    </div>
-                    {/* Actions row */}
-                    <div className="flex items-center gap-1.5 mt-2 pt-2 border-t border-[#E8E2D8]">
-                      {fav.metadata?.externalUrl && (
-                        <a
-                          href={fav.metadata.externalUrl}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="inline-flex items-center gap-1 px-2 py-1 text-[10px] text-[#2D5A3D] bg-[#2D5A3D]/5 hover:bg-[#2D5A3D]/10 rounded-lg transition-colors"
-                        >
-                          <ExternalLink size={10} />
-                          {displayCategory === 'music' ? 'Listen' : displayCategory === 'movies' || displayCategory === 'tv_shows' ? 'IMDB' : displayCategory === 'books' ? 'Preview' : 'View'}
-                        </a>
-                      )}
-                      {fav.metadata?.previewUrl && (
-                        <audio src={fav.metadata.previewUrl} controls className="h-6 flex-1 max-w-[120px]" />
-                      )}
-                      <div className="ml-auto flex gap-0.5">
-                        <button
-                          onClick={() => setEditingFav(fav)}
-                          className="p-1.5 text-[#94A09A] hover:text-[#2D5A3D] hover:bg-[#E6F0EA] rounded-lg transition-colors"
-                          title="Edit"
-                        >
-                          <Edit2 size={12} />
-                        </button>
-                        <button
-                          onClick={() => handleDeleteFavorite(fav.id)}
-                          className="p-1.5 text-[#94A09A] hover:text-[#B8562E] hover:bg-[#FBF0EB] rounded-lg transition-colors"
-                          title="Remove"
-                        >
-                          <Trash2 size={12} />
-                        </button>
-                      </div>
-                    </div>
+                    {(fav.year || fav.associated_person) && (
+                      <p
+                        className="text-[10px] tracking-[0.14em] text-[var(--ed-muted,#6F6B61)] mt-1.5"
+                        style={{ fontFamily: 'var(--font-mono, monospace)', fontWeight: 700 }}
+                      >
+                        {fav.year && <span>{fav.year}</span>}
+                        {fav.year && fav.associated_person && <span> · </span>}
+                        {fav.associated_person && <span>VIA {fav.associated_person.toUpperCase()}</span>}
+                      </p>
+                    )}
+                  </div>
+                </div>
+
+                {/* Footer actions row */}
+                <div
+                  className="flex items-center gap-1.5 px-4 py-2"
+                  style={{ borderTop: '2px solid var(--ed-ink, #111)' }}
+                >
+                  {fav.metadata?.externalUrl && (
+                    <a
+                      href={fav.metadata.externalUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center gap-1 px-2 py-1 text-[10px] tracking-[0.14em]"
+                      style={{
+                        fontFamily: 'var(--font-mono, monospace)',
+                        fontWeight: 700,
+                        background: 'var(--ed-cream, #F3ECDC)',
+                        color: 'var(--ed-ink, #111)',
+                        border: '1.5px solid var(--ed-ink, #111)',
+                        borderRadius: 2,
+                      }}
+                    >
+                      <ExternalLink size={10} />
+                      {displayCategory === 'music'
+                        ? 'LISTEN'
+                        : displayCategory === 'movies'
+                        ? 'IMDB'
+                        : displayCategory === 'books'
+                        ? 'PREVIEW'
+                        : 'VIEW'}
+                    </a>
+                  )}
+                  {fav.metadata?.previewUrl && (
+                    <audio src={fav.metadata.previewUrl} controls className="h-6 max-w-[140px]" />
+                  )}
+                  <div className="ml-auto flex gap-1">
+                    <button
+                      onClick={() => setEditingFav(fav)}
+                      className="p-1.5"
+                      style={{
+                        background: 'var(--ed-paper, #FFFBF1)',
+                        color: 'var(--ed-ink, #111)',
+                        border: '1.5px solid var(--ed-ink, #111)',
+                        borderRadius: 999,
+                      }}
+                      title="Edit"
+                    >
+                      <Edit2 size={11} />
+                    </button>
+                    <button
+                      onClick={() => handleDeleteFavorite(fav.id)}
+                      className="p-1.5"
+                      style={{
+                        background: 'var(--ed-paper, #FFFBF1)',
+                        color: 'var(--ed-red, #E23B2E)',
+                        border: '1.5px solid var(--ed-ink, #111)',
+                        borderRadius: 999,
+                      }}
+                      title="Remove"
+                    >
+                      <Trash2 size={11} />
+                    </button>
                   </div>
                 </div>
               </motion.div>
             ))}
           </div>
         ) : (
-          <div className="text-center py-12 rounded-2xl border-2 border-dashed border-[#E8E2D8]">
-            <div className="w-12 h-12 rounded-xl mx-auto mb-3 flex items-center justify-center" style={{ background: displayConfig?.bg }}>
-              {displayConfig && <displayConfig.icon size={22} style={{ color: displayConfig.color }} />}
-            </div>
-            <p className="text-sm text-[#5A6660] font-medium mb-1">No {displayConfig?.label?.toLowerCase()} added yet</p>
-            <p className="text-xs text-[#94A09A] mb-4">Add your first one to start building your collection</p>
-            <button
-              onClick={() => setAddingTo(displayCategory)}
-              className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-[#2D5A3D] text-white text-sm font-medium hover:bg-[#234A31] active:scale-[0.96] transition-all"
+          <EmptyState
+            label={displayConfig?.label.toLowerCase() || 'items'}
+            tip="Add your first one to start building your collection."
+            accent={displayConfig?.color || 'var(--ed-red, #E23B2E)'}
+            icon={
+              displayConfig ? (
+                <displayConfig.icon size={24} className="text-[var(--ed-ink,#111)]" />
+              ) : (
+                <Star size={24} className="text-[var(--ed-ink,#111)]" />
+              )
+            }
+            onAdd={() => setAddingTo(displayCategory)}
+            addLabel={`ADD ${displayConfig?.label || 'FAVE'}`}
+          />
+        )}
+
+        {/* Empty-everything quote (no profile, no favorites, no recipes) */}
+        {!profile?.personality_type &&
+          !profile?.favorite_quote &&
+          favorites.length === 0 &&
+          recipes.length === 0 && (
+          <div className="text-center py-12 mt-12">
+            <p
+              className="text-[11px] tracking-[0.22em] text-[var(--ed-red,#E23B2E)] mb-3"
+              style={{ fontFamily: 'var(--font-mono, monospace)', fontWeight: 700 }}
             >
-              <Plus size={14} /> Add {displayConfig?.label}
-            </button>
+              ✦ A LITTLE WISDOM
+            </p>
+            <h2
+              className="text-xl text-[var(--ed-ink,#111)] max-w-xl mx-auto leading-snug"
+              style={{ fontFamily: 'var(--font-display, "Archivo Black", sans-serif)' }}
+            >
+              {EMPTY_QUOTES[Math.floor(Math.random() * EMPTY_QUOTES.length)]}
+            </h2>
           </div>
         )}
-      </section>
+      </div>
 
       {/* ══════════════════════════════════════════ */}
-      {/*  ADD FAVORITE MODAL                         */}
+      {/*  EDIT FAVORITE MODAL                        */}
       {/* ══════════════════════════════════════════ */}
-      {/* Edit modal */}
       <AnimatePresence>
         {editingFav && (
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4"
+            className="fixed inset-0 z-[1000] flex items-center justify-center p-4"
+            style={{ background: 'rgba(17,17,17,0.55)', backdropFilter: 'blur(6px)' }}
             onClick={() => setEditingFav(null)}
           >
             <motion.div
-              initial={{ scale: 0.95, opacity: 0 }}
+              initial={{ scale: 0.96, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
-              exit={{ scale: 0.95, opacity: 0 }}
+              exit={{ scale: 0.96, opacity: 0 }}
               onClick={(e) => e.stopPropagation()}
-              className="bg-white rounded-2xl shadow-xl w-full max-w-md overflow-hidden"
-              style={{ height: '600px' }}
+              className="w-full max-w-md overflow-hidden"
+              style={{
+                background: 'var(--ed-cream, #F3ECDC)',
+                border: '2px solid var(--ed-ink, #111)',
+                borderRadius: 2,
+                height: 600,
+              }}
             >
               <ListItemCard
                 category={editingFav.category}
@@ -444,72 +713,72 @@ export default function AboutMePage() {
         )}
       </AnimatePresence>
 
-      {/* Add modal — recipe form or ListItemCard */}
+      {/* ══════════════════════════════════════════ */}
+      {/*  ADD MODAL — recipe form / sub-cat picker / ListItemCard */}
+      {/* ══════════════════════════════════════════ */}
       <AnimatePresence>
         {addingTo && (
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4"
-            onClick={() => { setAddingTo(null); setAddSubCategory(null) }}
+            className="fixed inset-0 z-[1000] flex items-center justify-center p-4"
+            style={{ background: 'rgba(17,17,17,0.55)', backdropFilter: 'blur(6px)' }}
+            onClick={() => {
+              setAddingTo(null)
+              setAddSubCategory(null)
+            }}
           >
             <motion.div
-              initial={{ scale: 0.95, opacity: 0 }}
+              initial={{ scale: 0.96, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
-              exit={{ scale: 0.95, opacity: 0 }}
+              exit={{ scale: 0.96, opacity: 0 }}
               onClick={(e) => e.stopPropagation()}
-              className="bg-white rounded-2xl shadow-xl w-full max-w-md overflow-hidden max-h-[90vh] overflow-y-auto"
+              className="w-full max-w-md max-h-[90vh] overflow-y-auto"
+              style={{
+                background: 'var(--ed-cream, #F3ECDC)',
+                border: '2px solid var(--ed-ink, #111)',
+                borderRadius: 2,
+              }}
             >
               {addingTo === 'recipes' ? (
-                <RecipeForm onSave={async (recipe) => {
-                  const { data: { user } } = await supabase.auth.getUser()
-                  if (!user) return
-                  const { data: inserted } = await supabase.from('knowledge_entries').insert({
-                    user_id: user.id,
-                    category: 'recipes',
-                    prompt_text: recipe.name,
-                    response_text: `${recipe.story ? recipe.story + '\n\n' : ''}**Ingredients:**\n${recipe.ingredients}\n\n**Instructions:**\n${recipe.instructions}${recipe.tips ? '\n\n**Tips:**\n' + recipe.tips : ''}`,
-                    tags: [recipe.cuisine, recipe.difficulty].filter(Boolean),
-                  }).select('id, prompt_text, response_text, audio_url, tags, created_at').single()
-                  if (inserted) setRecipes(prev => [inserted, ...prev])
-                  setAddingTo(null)
-                }} onClose={() => setAddingTo(null)} />
+                <RecipeForm
+                  onSave={async (recipe) => {
+                    const { data: { user } } = await supabase.auth.getUser()
+                    if (!user) return
+                    const { data: inserted } = await supabase
+                      .from('knowledge_entries')
+                      .insert({
+                        user_id: user.id,
+                        category: 'recipes',
+                        prompt_text: recipe.name,
+                        response_text: `${recipe.story ? recipe.story + '\n\n' : ''}**Ingredients:**\n${recipe.ingredients}\n\n**Instructions:**\n${recipe.instructions}${recipe.tips ? '\n\n**Tips:**\n' + recipe.tips : ''}`,
+                        tags: [recipe.cuisine, recipe.difficulty].filter(Boolean),
+                      })
+                      .select('id, prompt_text, response_text, audio_url, tags, created_at')
+                      .single()
+                    if (inserted) setRecipes((prev) => [inserted, ...prev])
+                    setAddingTo(null)
+                  }}
+                  onClose={() => setAddingTo(null)}
+                />
               ) : (addingTo === 'lifestyle' || addingTo === 'movies') && !addSubCategory ? (
-                /* Sub-category selector for merged tabs */
-                <div className="p-5 space-y-4">
-                  <div className="flex items-center justify-between">
-                    <h3 className="font-semibold text-[#1A1F1C]">
-                      Add to {FAV_CATEGORIES.find(c => c.key === addingTo)?.label}
-                    </h3>
-                    <button onClick={() => setAddingTo(null)} className="p-1 text-[#94A09A] hover:text-[#5A6660]">
-                      <X size={18} />
-                    </button>
-                  </div>
-                  <p className="text-sm text-[#94A09A]">Choose a sub-category:</p>
-                  <div className="space-y-2">
-                    {(addingTo === 'lifestyle' ? LIFESTYLE_SUBCATEGORIES : MOVIES_SUBCATEGORIES).map(sub => (
-                      <button
-                        key={sub.key}
-                        onClick={() => setAddSubCategory(sub.key)}
-                        className="w-full text-left px-4 py-3 rounded-xl border border-[#E8E2D8] hover:bg-[#FAFAF7] text-sm font-medium text-[#1A1F1C] transition-colors flex items-center justify-between"
-                      >
-                        {sub.label}
-                        <ChevronRight size={14} className="text-[#94A09A]" />
-                      </button>
-                    ))}
-                  </div>
-                </div>
+                <SubcategoryPicker
+                  parent={addingTo}
+                  options={addingTo === 'lifestyle' ? LIFESTYLE_SUBCATEGORIES : MOVIES_SUBCATEGORIES}
+                  onPick={(key) => setAddSubCategory(key)}
+                  onClose={() => setAddingTo(null)}
+                />
               ) : (
-                <div style={{ height: '600px' }}>
+                <div style={{ height: 600 }}>
                   <ListItemCard
                     category={addSubCategory || addingTo}
                     promptText={`Add a favorite ${
                       addSubCategory
-                        ? (LIFESTYLE_SUBCATEGORIES.find(s => s.key === addSubCategory)?.label
-                          || MOVIES_SUBCATEGORIES.find(s => s.key === addSubCategory)?.label
-                          || addSubCategory)
-                        : (FAV_CATEGORIES.find(c => c.key === addingTo)?.label?.toLowerCase() || 'item')
+                        ? LIFESTYLE_SUBCATEGORIES.find((s) => s.key === addSubCategory)?.label ||
+                          MOVIES_SUBCATEGORIES.find((s) => s.key === addSubCategory)?.label ||
+                          addSubCategory
+                        : FAV_CATEGORIES.find((c) => c.key === addingTo)?.label?.toLowerCase() || 'item'
                     }`}
                     data={{}}
                     onSave={(data) => {
@@ -524,38 +793,156 @@ export default function AboutMePage() {
           </motion.div>
         )}
       </AnimatePresence>
-
-      {/* ══════════════════════════════════════════ */}
-
-
-      {/* Empty state */}
-      {!profile?.personality_type && !profile?.favorite_quote && favorites.length === 0 && recipes.length === 0 && (
-        <div className="text-center py-16">
-          <Sparkles size={40} className="text-[#DDE3DF] mx-auto mb-4" />
-          <h2 className="text-lg font-semibold text-[#1A1F1C] mb-2" style={{ fontFamily: 'var(--font-dm-serif, DM Serif Display, serif)', fontStyle: 'italic' }}>
-            &ldquo;{EMPTY_QUOTES[Math.floor(Math.random() * EMPTY_QUOTES.length)]}&rdquo;
-          </h2>
-        </div>
-      )}
     </div>
   )
 }
 
-// ── Section header ──
-function SectionHeader({ icon: Icon, label, color }: { icon: any; label: string; color: string }) {
+// ── Editorial empty state used by every category ──────────────────────────
+function EmptyState({
+  label,
+  tip,
+  accent,
+  icon,
+  onAdd,
+  addLabel,
+}: {
+  label: string
+  tip: string
+  accent: string
+  icon: React.ReactNode
+  onAdd: () => void
+  addLabel: string
+}) {
   return (
-    <div className="flex items-center gap-2.5 mb-4">
-      <div className="w-8 h-8 rounded-lg flex items-center justify-center" style={{ background: `${color}15` }}>
-        <Icon size={16} style={{ color }} />
+    <div
+      className="flex flex-col items-center justify-center text-center py-16 px-6"
+      style={{
+        background: 'var(--ed-paper, #FFFBF1)',
+        border: '2px solid var(--ed-ink, #111)',
+        borderRadius: 2,
+      }}
+    >
+      <div
+        className="flex items-center justify-center mb-4"
+        style={{
+          width: 56,
+          height: 56,
+          background: accent,
+          border: '2px solid var(--ed-ink, #111)',
+          borderRadius: 999,
+        }}
+      >
+        {icon}
       </div>
-      <h2 className="text-lg font-bold text-[#1A1F1C]">{label}</h2>
+      <p
+        className="text-xl text-[var(--ed-ink,#111)] mb-2 leading-tight"
+        style={{ fontFamily: 'var(--font-display, "Archivo Black", sans-serif)' }}
+      >
+        NO {label.toUpperCase()} YET
+      </p>
+      <p className="text-sm text-[var(--ed-muted,#6F6B61)] mb-5 max-w-sm">{tip}</p>
+      <button
+        onClick={onAdd}
+        className="flex items-center gap-1.5 px-5 py-2.5 text-[10px] tracking-[0.18em]"
+        style={{
+          fontFamily: 'var(--font-mono, monospace)',
+          fontWeight: 700,
+          background: 'var(--ed-red, #E23B2E)',
+          color: '#fff',
+          border: '2px solid var(--ed-ink, #111)',
+          borderRadius: 2,
+        }}
+      >
+        <Plus size={12} strokeWidth={3} />
+        {addLabel}
+      </button>
     </div>
   )
 }
 
-// ── Recipe form ──
-function RecipeForm({ onSave, onClose }: {
-  onSave: (recipe: { name: string; story: string; ingredients: string; instructions: string; tips: string; cuisine: string; difficulty: string }) => void
+// ── Subcategory picker for lifestyle / movies ─────────────────────────────
+function SubcategoryPicker({
+  parent,
+  options,
+  onPick,
+  onClose,
+}: {
+  parent: string
+  options: { key: string; label: string }[]
+  onPick: (key: string) => void
+  onClose: () => void
+}) {
+  const parentLabel = parent === 'lifestyle' ? 'LIFE & STYLE' : 'MOVIES & TV'
+  return (
+    <div className="p-5 sm:p-6">
+      <div className="flex items-center justify-between mb-2">
+        <div>
+          <p
+            className="text-[10px] tracking-[0.22em] text-[var(--ed-muted,#6F6B61)]"
+            style={{ fontFamily: 'var(--font-mono, monospace)', fontWeight: 700 }}
+          >
+            ADD TO {parentLabel}
+          </p>
+          <h3
+            className="text-[var(--ed-ink,#111)] leading-tight"
+            style={{
+              fontFamily: 'var(--font-display, "Archivo Black", sans-serif)',
+              fontSize: 24,
+            }}
+          >
+            CHOOSE A TYPE
+          </h3>
+        </div>
+        <button
+          onClick={onClose}
+          className="flex items-center justify-center"
+          style={{
+            width: 32,
+            height: 32,
+            borderRadius: 999,
+            border: '2px solid var(--ed-ink, #111)',
+            background: 'var(--ed-paper, #FFFBF1)',
+          }}
+          aria-label="Close"
+        >
+          <X size={14} className="text-[var(--ed-ink,#111)]" />
+        </button>
+      </div>
+      <div className="space-y-2 mt-4">
+        {options.map((sub) => (
+          <button
+            key={sub.key}
+            onClick={() => onPick(sub.key)}
+            className="w-full flex items-center justify-between px-4 py-3 text-[13px] text-[var(--ed-ink,#111)] font-semibold transition-transform hover:-translate-y-0.5"
+            style={{
+              background: 'var(--ed-paper, #FFFBF1)',
+              border: '2px solid var(--ed-ink, #111)',
+              borderRadius: 2,
+            }}
+          >
+            {sub.label}
+            <ChevronRight size={14} className="text-[var(--ed-muted,#6F6B61)]" />
+          </button>
+        ))}
+      </div>
+    </div>
+  )
+}
+
+// ── Recipe form (editorial) ───────────────────────────────────────────────
+function RecipeForm({
+  onSave,
+  onClose,
+}: {
+  onSave: (recipe: {
+    name: string
+    story: string
+    ingredients: string
+    instructions: string
+    tips: string
+    cuisine: string
+    difficulty: string
+  }) => void
   onClose: () => void
 }) {
   const [name, setName] = useState('')
@@ -570,58 +957,147 @@ function RecipeForm({ onSave, onClose }: {
   const handleSave = async () => {
     if (!name.trim()) return
     setSaving(true)
-    await onSave({ name: name.trim(), story: story.trim(), ingredients: ingredients.trim(), instructions: instructions.trim(), tips: tips.trim(), cuisine, difficulty })
+    await onSave({
+      name: name.trim(),
+      story: story.trim(),
+      ingredients: ingredients.trim(),
+      instructions: instructions.trim(),
+      tips: tips.trim(),
+      cuisine,
+      difficulty,
+    })
     setSaving(false)
   }
 
+  const labelClass =
+    'block text-[10px] tracking-[0.18em] text-[var(--ed-muted,#6F6B61)] mb-1'
+  const labelStyle: React.CSSProperties = {
+    fontFamily: 'var(--font-mono, monospace)',
+    fontWeight: 700,
+  }
+
   return (
-    <div className="p-5 space-y-4">
+    <div className="p-5 sm:p-6 space-y-4">
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
-          <div className="w-8 h-8 rounded-lg bg-[#FBF0EB] flex items-center justify-center">
-            <ChefHat size={16} className="text-[#B8562E]" />
+          <span
+            className="flex items-center justify-center"
+            style={{
+              width: 32,
+              height: 32,
+              background: 'var(--ed-yellow, #F2C84B)',
+              border: '2px solid var(--ed-ink, #111)',
+              borderRadius: 2,
+            }}
+          >
+            <ChefHat size={14} className="text-[var(--ed-ink,#111)]" />
+          </span>
+          <div>
+            <p
+              className="text-[10px] tracking-[0.22em] text-[var(--ed-muted,#6F6B61)]"
+              style={{ fontFamily: 'var(--font-mono, monospace)', fontWeight: 700 }}
+            >
+              NEW RECIPE
+            </p>
+            <h3
+              className="text-[var(--ed-ink,#111)] leading-tight"
+              style={{
+                fontFamily: 'var(--font-display, "Archivo Black", sans-serif)',
+                fontSize: 22,
+              }}
+            >
+              ADD RECIPE
+            </h3>
           </div>
-          <h3 className="font-semibold text-[#1A1F1C]">Add Recipe</h3>
         </div>
-        <button onClick={onClose} className="p-1 text-[#94A09A] hover:text-[#5A6660]">
-          <X size={18} />
+        <button
+          onClick={onClose}
+          className="flex items-center justify-center"
+          style={{
+            width: 32,
+            height: 32,
+            borderRadius: 999,
+            border: '2px solid var(--ed-ink, #111)',
+            background: 'var(--ed-paper, #FFFBF1)',
+          }}
+          aria-label="Close"
+        >
+          <X size={14} className="text-[var(--ed-ink,#111)]" />
         </button>
       </div>
 
       <div>
-        <label className="block text-[11px] text-[#94A09A] uppercase tracking-wider font-semibold mb-1">Recipe Name *</label>
-        <input value={name} onChange={e => setName(e.target.value)} placeholder="Grandma's Sunday Sauce" className="w-full px-3 py-2.5 bg-[#FAFAF7] rounded-xl border border-[#DDE3DF] text-sm focus:outline-none focus:ring-2 focus:ring-[#3D6B52]/30 placeholder-[#94A09A]" />
+        <label className={labelClass} style={labelStyle}>RECIPE NAME *</label>
+        <input
+          value={name}
+          onChange={(e) => setName(e.target.value)}
+          placeholder="Grandma's Sunday Sauce"
+          className="w-full px-3 py-2.5 text-sm text-[var(--ed-ink,#111)] placeholder-[var(--ed-muted,#6F6B61)] focus:outline-none editorial-input"
+        />
       </div>
 
       <div>
-        <label className="block text-[11px] text-[#94A09A] uppercase tracking-wider font-semibold mb-1">The Story Behind It</label>
-        <textarea value={story} onChange={e => setStory(e.target.value)} placeholder="Who made this? Why does it matter?" rows={2} className="w-full px-3 py-2.5 bg-[#FAFAF7] rounded-xl border border-[#DDE3DF] text-sm focus:outline-none focus:ring-2 focus:ring-[#3D6B52]/30 placeholder-[#94A09A] resize-none" />
+        <label className={labelClass} style={labelStyle}>THE STORY BEHIND IT</label>
+        <textarea
+          value={story}
+          onChange={(e) => setStory(e.target.value)}
+          placeholder="Who made this? Why does it matter?"
+          rows={2}
+          className="w-full px-3 py-2.5 text-sm text-[var(--ed-ink,#111)] placeholder-[var(--ed-muted,#6F6B61)] focus:outline-none editorial-input resize-none"
+        />
       </div>
 
       <div>
-        <label className="block text-[11px] text-[#94A09A] uppercase tracking-wider font-semibold mb-1">Ingredients</label>
-        <textarea value={ingredients} onChange={e => setIngredients(e.target.value)} placeholder="One ingredient per line..." rows={4} className="w-full px-3 py-2.5 bg-[#FAFAF7] rounded-xl border border-[#DDE3DF] text-sm focus:outline-none focus:ring-2 focus:ring-[#3D6B52]/30 placeholder-[#94A09A] resize-none" />
+        <label className={labelClass} style={labelStyle}>INGREDIENTS</label>
+        <textarea
+          value={ingredients}
+          onChange={(e) => setIngredients(e.target.value)}
+          placeholder="One ingredient per line…"
+          rows={4}
+          className="w-full px-3 py-2.5 text-sm text-[var(--ed-ink,#111)] placeholder-[var(--ed-muted,#6F6B61)] focus:outline-none editorial-input resize-none"
+        />
       </div>
 
       <div>
-        <label className="block text-[11px] text-[#94A09A] uppercase tracking-wider font-semibold mb-1">Instructions</label>
-        <textarea value={instructions} onChange={e => setInstructions(e.target.value)} placeholder="Step by step..." rows={4} className="w-full px-3 py-2.5 bg-[#FAFAF7] rounded-xl border border-[#DDE3DF] text-sm focus:outline-none focus:ring-2 focus:ring-[#3D6B52]/30 placeholder-[#94A09A] resize-none" />
+        <label className={labelClass} style={labelStyle}>INSTRUCTIONS</label>
+        <textarea
+          value={instructions}
+          onChange={(e) => setInstructions(e.target.value)}
+          placeholder="Step by step…"
+          rows={4}
+          className="w-full px-3 py-2.5 text-sm text-[var(--ed-ink,#111)] placeholder-[var(--ed-muted,#6F6B61)] focus:outline-none editorial-input resize-none"
+        />
       </div>
 
       <div>
-        <label className="block text-[11px] text-[#94A09A] uppercase tracking-wider font-semibold mb-1">Tips & Secrets</label>
-        <textarea value={tips} onChange={e => setTips(e.target.value)} placeholder="Any special tricks?" rows={2} className="w-full px-3 py-2.5 bg-[#FAFAF7] rounded-xl border border-[#DDE3DF] text-sm focus:outline-none focus:ring-2 focus:ring-[#3D6B52]/30 placeholder-[#94A09A] resize-none" />
+        <label className={labelClass} style={labelStyle}>TIPS &amp; SECRETS</label>
+        <textarea
+          value={tips}
+          onChange={(e) => setTips(e.target.value)}
+          placeholder="Any special tricks?"
+          rows={2}
+          className="w-full px-3 py-2.5 text-sm text-[var(--ed-ink,#111)] placeholder-[var(--ed-muted,#6F6B61)] focus:outline-none editorial-input resize-none"
+        />
       </div>
 
       <div className="flex gap-3">
         <div className="flex-1">
-          <label className="block text-[11px] text-[#94A09A] uppercase tracking-wider font-semibold mb-1">Cuisine</label>
-          <input value={cuisine} onChange={e => setCuisine(e.target.value)} placeholder="Italian, Mexican..." className="w-full px-3 py-2 bg-[#FAFAF7] rounded-lg border border-[#DDE3DF] text-xs focus:outline-none focus:ring-2 focus:ring-[#3D6B52]/30 placeholder-[#94A09A]" />
+          <label className={labelClass} style={labelStyle}>CUISINE</label>
+          <input
+            value={cuisine}
+            onChange={(e) => setCuisine(e.target.value)}
+            placeholder="Italian, Mexican…"
+            className="w-full px-3 py-2 text-sm text-[var(--ed-ink,#111)] placeholder-[var(--ed-muted,#6F6B61)] focus:outline-none editorial-input"
+          />
         </div>
         <div className="flex-1">
-          <label className="block text-[11px] text-[#94A09A] uppercase tracking-wider font-semibold mb-1">Difficulty</label>
-          <select value={difficulty} onChange={e => setDifficulty(e.target.value)} className="w-full px-3 py-2 bg-[#FAFAF7] rounded-lg border border-[#DDE3DF] text-xs focus:outline-none focus:ring-2 focus:ring-[#3D6B52]/30 text-[#1A1F1C]">
-            <option value="">Select...</option>
+          <label className={labelClass} style={labelStyle}>DIFFICULTY</label>
+          <select
+            value={difficulty}
+            onChange={(e) => setDifficulty(e.target.value)}
+            className="w-full px-3 py-2 text-sm text-[var(--ed-ink,#111)] focus:outline-none editorial-input"
+          >
+            <option value="">Select…</option>
             <option value="Easy">Easy</option>
             <option value="Medium">Medium</option>
             <option value="Hard">Hard</option>
@@ -629,8 +1105,21 @@ function RecipeForm({ onSave, onClose }: {
         </div>
       </div>
 
-      <button onClick={handleSave} disabled={!name.trim() || saving} className="w-full py-3 rounded-xl text-sm font-medium bg-[#2D5A3D] text-white hover:bg-[#234A31] disabled:opacity-40 transition-colors flex items-center justify-center gap-2">
-        {saving ? <Loader2 size={14} className="animate-spin" /> : <><Check size={14} /> Save Recipe</>}
+      <button
+        onClick={handleSave}
+        disabled={!name.trim() || saving}
+        className="w-full flex items-center justify-center gap-2 py-3 text-[10px] tracking-[0.18em] disabled:opacity-50"
+        style={{
+          fontFamily: 'var(--font-mono, monospace)',
+          fontWeight: 700,
+          background: 'var(--ed-red, #E23B2E)',
+          color: '#fff',
+          border: '2px solid var(--ed-ink, #111)',
+          borderRadius: 2,
+        }}
+      >
+        {saving ? <Loader2 size={12} className="animate-spin" /> : <Check size={12} strokeWidth={3} />}
+        {saving ? 'SAVING…' : 'SAVE RECIPE'}
       </button>
     </div>
   )
