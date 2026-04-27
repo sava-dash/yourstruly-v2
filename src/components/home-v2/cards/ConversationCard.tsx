@@ -172,19 +172,24 @@ export function ConversationCard({ data, promptText, accentColor, onSave, saved,
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
-  // Speak the prompt itself once when the card mounts, then speak each
-  // AI follow-up suggestion as it arrives. The user wanted voice "throughout
-  // the story card" — promptText is the question; suggestions are the
-  // gentle nudges. Both should be voiced (alloy).
+  // Voice rules:
+  //   1. Read the MAIN question (promptText) once when the card mounts.
+  //   2. Read each subsequent AI follow-up question — but NOT the
+  //      initial starter angle (the one fired before the user has said
+  //      anything). Heuristic: a suggestion is a real follow-up only if
+  //      it arrives after at least one user turn.
   useEffect(() => {
     if (promptText) speakLine(promptText)
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [promptText])
   useEffect(() => {
-    const lastAssistant = [...messages].reverse().find(
-      (m) => m.role === 'assistant' && m.kind === 'suggestion'
-    )
-    if (lastAssistant) speakLine(lastAssistant.content)
+    const last = messages[messages.length - 1]
+    if (!last || last.role !== 'assistant' || last.kind !== 'suggestion') return
+    const hasPriorUserTurn = messages
+      .slice(0, -1)
+      .some((m) => m.role === 'user')
+    if (!hasPriorUserTurn) return
+    speakLine(last.content)
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [messages])
 
