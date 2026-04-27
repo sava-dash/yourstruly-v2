@@ -68,7 +68,7 @@ export function ConversationCard({ data, promptText, accentColor, onSave, saved,
   const chunksRef = useRef<Blob[]>([])
   const videoPreviewRef = useRef<HTMLVideoElement | null>(null)
 
-  // ─── TTS — speaks the prompt and each AI follow-up in coral. ───
+  // ─── TTS — speaks the prompt and each AI follow-up in alloy. ───
   // De-duped via spokenRef so re-renders don't replay; cancels any
   // in-flight playback when a new line arrives.
   const ttsAudioRef = useRef<HTMLAudioElement | null>(null)
@@ -86,7 +86,7 @@ export function ConversationCard({ data, promptText, accentColor, onSave, saved,
       try { ttsAudioRef.current.pause() } catch {}
       ttsAudioRef.current = null
     }
-    const url = `/api/tts?text=${encodeURIComponent(trimmed)}&voice=coral`
+    const url = `/api/tts?text=${encodeURIComponent(trimmed)}&voice=alloy`
     const audio = new Audio(url)
     audio.preload = 'auto'
     ttsAudioRef.current = audio
@@ -175,7 +175,7 @@ export function ConversationCard({ data, promptText, accentColor, onSave, saved,
   // Speak the prompt itself once when the card mounts, then speak each
   // AI follow-up suggestion as it arrives. The user wanted voice "throughout
   // the story card" — promptText is the question; suggestions are the
-  // gentle nudges. Both should be voiced (coral, warm female en-US).
+  // gentle nudges. Both should be voiced (alloy).
   useEffect(() => {
     if (promptText) speakLine(promptText)
     // eslint-disable-next-line react-hooks/exhaustive-deps

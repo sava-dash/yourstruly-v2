@@ -94,7 +94,7 @@ export function ConversationEngine({
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const audioChunksRef = useRef<Blob[]>([]);
 
-  // TTS — OpenAI gpt-4o-mini-tts via /api/tts, warm female American English voice.
+  // TTS — OpenAI gpt-4o-mini-tts via /api/tts (alloy voice).
   const [isMuted, setIsMuted] = useState(false);
   const ttsAudioRef = useRef<HTMLAudioElement | null>(null);
   const lastSpokenRef = useRef<string | null>(null);
@@ -128,7 +128,7 @@ export function ConversationEngine({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [initialMessage]);
 
-  // Speak AI messages via OpenAI /api/tts (coral voice). De-duped so the same
+  // Speak AI messages via OpenAI /api/tts (alloy voice). De-duped so the same
   // text isn't replayed across re-renders, and mute kills any in-flight audio.
   const speakMessage = useCallback((text: string) => {
     if (!text || isMuted) return;
@@ -138,7 +138,7 @@ export function ConversationEngine({
       try { ttsAudioRef.current.pause(); } catch {}
       ttsAudioRef.current = null;
     }
-    const url = `/api/tts?text=${encodeURIComponent(text)}&voice=coral`;
+    const url = `/api/tts?text=${encodeURIComponent(text)}&voice=alloy`;
     const audio = new Audio(url);
     audio.preload = 'auto';
     ttsAudioRef.current = audio;

@@ -12,8 +12,8 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 
 const DEFAULT_MODEL = 'gpt-4o-mini-tts';
-// Warm female American English; kept in sync with /api/realtime/session.
-const DEFAULT_VOICE = 'coral';
+// Default OpenAI voice — kept in sync with /api/realtime/session.
+const DEFAULT_VOICE = 'alloy';
 const ALLOWED_VOICES = new Set([
   'alloy', 'ash', 'ballad', 'coral', 'echo', 'sage', 'shimmer', 'verse', 'nova',
 ]);

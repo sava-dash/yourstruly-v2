@@ -57,8 +57,8 @@ export interface UseOpenAIRealtimeVoiceReturn {
   abort: () => void;
 }
 
-// Warm female American English; kept in sync with /api/realtime/session route.
-const DEFAULT_VOICE: RealtimeVoice = 'coral';
+// Default OpenAI voice; kept in sync with /api/realtime/session route.
+const DEFAULT_VOICE: RealtimeVoice = 'alloy';
 const RECORDER_MIME = 'audio/webm';
 
 export function useOpenAIRealtimeVoice({

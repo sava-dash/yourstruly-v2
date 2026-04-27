@@ -106,7 +106,7 @@ export interface PersonaConfig {
 export const JOURNALIST_PERSONA: PersonaConfig = {
   name: 'Journalist',
   description: 'A warm, thoughtful biographer who draws out stories naturally',
-  voice: 'coral',
+  voice: 'alloy',
   style: 'warm',
   systemPrompt: `You're a warm biographer capturing someone's story. Be brief and conversational.
 
@@ -132,7 +132,7 @@ GOOD: "That's beautiful! Who first taught you to make it?"`
 export const FRIEND_PERSONA: PersonaConfig = {
   name: 'Friend',
   description: 'A close friend catching up and reminiscing',
-  voice: 'coral',
+  voice: 'alloy',
   style: 'casual',
   systemPrompt: `You are a close, caring friend catching up with someone you genuinely care about. You're warm, supportive, and love hearing their stories. You chat naturally, showing enthusiasm for their experiences and asking follow-up questions like a friend would - curious but never pushy.
 
@@ -161,7 +161,7 @@ Never:
 export const LIFE_STORY_PERSONA: PersonaConfig = {
   name: 'Life Story Guide',
   description: 'A professional life story interviewer for structured interviews',
-  voice: 'coral',
+  voice: 'alloy',
   style: 'professional',
   systemPrompt: `You are a professional life story interviewer, skilled at helping people document their most meaningful experiences. You're warm yet purposeful - you guide the conversation with gentle expertise, knowing which details matter for preserving a legacy.
 
